@@ -18,6 +18,7 @@ var ModuleNames = {
 	shapeshift: "Shape Shift",
 	http: "HTTP Response",
 	spwiz3DMaze: "3D Maze",
+	DoubleOhModule: "Double-Oh",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
