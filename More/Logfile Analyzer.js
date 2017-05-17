@@ -130,7 +130,7 @@ $(function() {
 			parseLog(clipText);
 		}
 	}
-	
+
 	// Read Output Log
 	var readwarning = false;
 	var buildwarning = false;
@@ -255,11 +255,6 @@ $(function() {
 				TotalModules += bomb.TotalModules
 				Needies += bomb.Needies
 			})
-				
-			$("<div class='module-count'>").text(TotalModules).appendTo(bomb)
-			if (Needies > 0) {
-				$("<div class='needy-count'>").text(Needies).appendTo(bomb)
-			}
 
 			this.Bombs.forEach(function(bombinfo) {
 				$("<div class='serial'>").text(bombinfo.Serial).appendTo(bomb)
@@ -297,7 +292,12 @@ $(function() {
 					})
 				}
 			})
-			
+
+			$("<div class='module-count'>").text(TotalModules).appendTo(bomb)
+			if (Needies > 0) {
+				$("<div class='needy-count'>").text(Needies).appendTo(bomb)
+			}
+
 			// Modules
 			var modules = $("<div class='modules'>").appendTo(info)
 
@@ -329,7 +329,7 @@ $(function() {
 				var batteries = 0
 				bombinfo.Batteries.forEach(function(val) {
 					batteries += val
-				}) 
+				})
 
 				var edgeinfo = $("<div class='module-info'>").appendTo(info)
 				makeTree([
@@ -341,7 +341,7 @@ $(function() {
 					"Port Plates: " + bombinfo.PortPlates.length,
 					"Widgets: " + (bombinfo.Batteries.length + ind.length + bombinfo.PortPlates.length + bombinfo.ModdedWidgets),
 				], $("<ul>").appendTo(edgeinfo))
-				
+
 				$("<a href='#' class='module'>")
 				.text("Edgework #" + (n + 1))
 				.appendTo(modules)
@@ -356,7 +356,7 @@ $(function() {
 				"Total Time: " + formatTime(this.Time),
 				"Time Left: ~" + formatTime(this.TimeLeft),*/
 			], $("<ul>").appendTo(missioninfo))
-			
+
 			$("<a href='#' class='module'>")
 			.text("Mission Information")
 			.appendTo(modules)
@@ -488,17 +488,17 @@ $(function() {
 			var log = ""
 			for (var i = this.StartLine; i < linen; i++) {
 				var line = lines[i]
-				
+
 				var blacklisted = false
 				blacklist.forEach(function(val) {
 					blacklisted = blacklisted || line.includes(val)
 				})
-				
+
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
 					blacklisted = true
 					i += 3
 				}
-				
+
 				if (!blacklisted) {
 					log += line + "\n"
 				}
@@ -542,12 +542,12 @@ $(function() {
 			}).mousedown(function() { return false })
 
 			$("<div class='serial'>").text(this.Serial).appendTo(bomb)
-			
+
 			$("<div class='module-count'>").text(this.TotalModules).appendTo(bomb)
 			if (this.Needies > 0) {
 				$("<div class='needy-count'>").text(this.Needies).appendTo(bomb)
 			}
-			
+
 			// Build the edgework.
 			var edgework = $("<div class='edgework'>").appendTo(info)
 
@@ -610,7 +610,7 @@ $(function() {
 			var batteries = 0
 			this.Batteries.forEach(function(val) {
 				batteries += val
-			}) 
+			})
 
 			var edgeinfo = $("<div class='module-info'>").appendTo(info)
 			makeTree([
@@ -622,7 +622,7 @@ $(function() {
 				"Port Plates: " + this.PortPlates.length,
 				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
 			], $("<ul>").appendTo(edgeinfo))
-			
+
 			$("<a href='#' class='module'>")
 			.text("Edgework")
 			.appendTo(modules)
@@ -636,7 +636,7 @@ $(function() {
 				"Total Time: " + formatTime(this.Time),
 				"Time Left: ~" + formatTime(this.TimeLeft),
 			], $("<ul>").appendTo(missioninfo))
-			
+
 			$("<a href='#' class='module'>")
 			.text("Mission Information")
 			.appendTo(modules)
@@ -776,17 +776,17 @@ $(function() {
 			var log = ""
 			for (var i = this.StartLine; i < linen; i++) {
 				var line = lines[i]
-				
+
 				var blacklisted = false
 				blacklist.forEach(function(val) {
 					blacklisted = blacklisted || line.includes(val)
 				})
-				
+
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
 					blacklisted = true
 					i += 3
 				}
-				
+
 				if (!blacklisted) {
 					log += line + "\n"
 				}
