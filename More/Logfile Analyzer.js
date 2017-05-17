@@ -125,14 +125,14 @@ $(function() {
 			$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
 				parseLog(data);
 			}).fail(function() {
-				toastr.error("Unable to get output log from URL.", "Upload Error");
+				toastr.error("Unable to get logfile from URL.", "Upload Error");
 			});
 		} else {
 			parseLog(clipText);
 		}
 	}
 
-	// Read Output Log
+	// Read Logfile
 	var readwarning = false;
 	var buildwarning = false;
 	var debugging = true;
@@ -184,7 +184,7 @@ $(function() {
 
 			if (!buildwarning) {
 				buildwarning = true;
-				toastr.warning("An error occurred while building your output log, some information might be missing.", "Building Warning");
+				toastr.warning("An error occurred while generating the page. Some information might be missing.", "Page Generation Warning");
 			}
 		}
 	}
@@ -807,7 +807,7 @@ $(function() {
 		log = log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
-			toastr.error("Invalid output log file.", "Reading Error");
+			toastr.error("Invalid logfile.", "Reading Error");
 			return false;
 		}
 
@@ -1793,7 +1793,7 @@ $(function() {
 
 									if (!readwarning) {
 										readwarning = true;
-										toastr.warning("An error occurred while reading the output log, some information might be missing.", "Reading Warning");
+										toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
 									}
 								}
 							}
@@ -1817,7 +1817,7 @@ $(function() {
 
 								if (!readwarning) {
 									readwarning = true;
-									toastr.warning("An error occurred while reading the output log, some information might be missing.", "Reading Warning");
+									toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
 								}
 							}
 						}
