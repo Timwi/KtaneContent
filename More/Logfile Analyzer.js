@@ -265,25 +265,30 @@ $(function() {
 
 				$("<div class='widget serial'>").text(bombinfo.Serial).appendTo(edgework)
 
+                var group;
 				if (bombinfo.Batteries.length > 0) {
-					var group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework)
 
 					bombinfo.Batteries.forEach(function(val) {
-						$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(group)
+						$("<div class='widget battery'>")
+                            .addClass(val == 1 ? "d" : "aa")
+                            .appendTo(group)
 					})
 				}
 
 				if (bombinfo.Indicators.length > 0) {
-					var group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework)
 
 					bombinfo.Indicators.forEach(function(val) {
-						$("<div class='widget indicator'>").addClass(val[0]).appendTo(group)
-						.append($("<span class='label'>").text(val[1]))
+						$("<div class='widget indicator'>")
+                            .addClass(val[0])
+                            .appendTo(group)
+                            .append($("<span class='label'>").text(val[1]))
 					})
 				}
 
 				if (bombinfo.PortPlates.length > 0) {
-					var group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework)
 
 					bombinfo.PortPlates.forEach(function(val) {
 						var plate = $("<div class='widget portplate'>").appendTo(group)
