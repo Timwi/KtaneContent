@@ -85,16 +85,16 @@ var blacklist = [
 
 $(function() {
 	// Handle uploading
-	var upload = $(".upload-log");
+	var dropMsg = $("#full-screen-drop");
 	$(document).on("dragover", function(event) {
 		event.preventDefault();
 		event.stopPropagation();
-		upload.addClass("hovering");
+		dropMsg.addClass("hovering");
 	}).on("dragleave", function(event) {
 		event.preventDefault();
 		event.stopPropagation();
 
-		upload.removeClass("hovering");
+		dropMsg.removeClass("hovering");
 	}).on("drop", function(event) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -104,7 +104,7 @@ $(function() {
 			uploadFiles(event.originalEvent.dataTransfer.files);
 		} else {
 			readPaste(text);
-			upload.removeClass("hovering");
+			dropMsg.removeClass("hovering");
 		}
 	}).on("paste", function(event) {
 		var oEvent = event.originalEvent;
@@ -116,9 +116,21 @@ $(function() {
 		} else if (typeof oEvent == "object" && oEvent.clipboardData) {
 			clipText = oEvent.clipboardData.getData("text/plain");
 		}
-
 		readPaste(clipText);
+		$('#paste').show();
+        $('#paste-box').hide();
 	});
+
+    $('#paste-box').on("blur", function(oEvent) {
+		$('#paste').show();
+        $('#paste-box').hide();
+        return false;
+    });
+    $('#paste').click(function() {
+        $('#paste').hide();
+        $('#paste-box').show().focus();
+        return false;
+    });
 
 	function readPaste(clipText) {
 		if (/^https?:\/\/.+$/.exec(clipText)) { // Very basic regex to detect a url being pasted.
@@ -154,12 +166,12 @@ $(function() {
 						bullet.prependTo($("<span>").addClass("label").html(node).appendTo(elem));
 					} else if (node[1].length > 0) {
 						bullet.text("+").click(function(argument) {
-							nodes.toggleClass("hidden");
+							nodes.toggleClass("collapsed");
 							text.toggleClass("expanded");
 							bullet.toggleClass("expanded");
 						});
 						var text = $("<span>").addClass("label").html(node[0]).click(function() {
-							nodes.toggleClass("hidden");
+							nodes.toggleClass("collapsed");
 							text.toggleClass("expanded");
 							bullet.toggleClass("expanded");
 						});
@@ -170,7 +182,7 @@ $(function() {
 						elem.addClass("expandable");
 						var nodes = $("<ul>").appendTo(elem);
 						if (!node[2]) {
-							nodes.addClass("hidden");
+							nodes.addClass("collapsed");
 						} else {
 							text.addClass("expanded");
 						}
@@ -1838,6 +1850,7 @@ $(function() {
 			}
 		});
 
+        $('#ui').addClass('has-bomb');
 		toastr.success("Log read successfully!");
 	}
 
@@ -1845,16 +1858,16 @@ $(function() {
 		if (files.length == 1) {
 			var fr = new FileReader();
 			fr.onload = function() {
-				upload.removeClass("hovering");
+				dropMsg.removeClass("hovering");
 				parseLog(fr.result);
 			};
 			fr.readAsText(files[0]);
 		} else if (files.length === 0) {
 			toastr.error("No file found.", "Upload Error");
-			upload.removeClass("hovering");
+			dropMsg.removeClass("hovering");
 		} else {
-			toastr.error("Please only upload 1 file at a time.", "Upload Error");
-			upload.removeClass("hovering");
+			toastr.error("Please only dropMsg 1 file at a time.", "Upload Error");
+			dropMsg.removeClass("hovering");
 		}
 	}
 
