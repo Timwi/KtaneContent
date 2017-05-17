@@ -7,8 +7,24 @@ var PortNames = {
 	DVI: "DVI-D"
 };
 
+
 // A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
 var ModuleNames = {
+	// Vanilla
+	Keypad: "Keypads",
+	BigButton: "The Button",
+	Venn: "Complicated Wires",
+	Maze: "Mazes",
+	Morse: "Morse Code",
+	Password: "Passwords",
+	Simon: "Simon Says",
+	WireSequence: "Wire Sequences",
+	WhosOnFirst: "Who’s on First",
+	NeedyVentGas: "Venting Gas",
+	NeedyCapacitor: "Capacitor Discharge",
+	NeedyKnob: "Knobs",
+
+	// Modded
 	switchModule: "Switches",
 	monsplodeFight: "Monsplode, Fight!",
 	monsplodeWho: "Who's That Monsplode?",
@@ -19,6 +35,15 @@ var ModuleNames = {
 	http: "HTTP Response",
 	spwiz3DMaze: "3D Maze",
 	DoubleOhModule: "Double-Oh",
+	TicTacToeModule: "Tic-Tac-Toe",
+	LetterKeys: "Lettered Keys",
+	colormath: "Color Math",
+	ColourFlash: "Color Flash",
+	RubiksCubeModule: "Rubik’s Cube",
+	RockPaperScissorsLizardSpockModule: "Rock-Paper-Scissors-Lizard-Spock",
+	fizzBuzzModule: "FizzBuzz",
+	ModuleAgainstHumanity: "Modules Against Humanity",
+	BitOps: "Bitwise Operators",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -99,14 +124,14 @@ $(function() {
 			$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
 				parseLog(data);
 			}).fail(function() {
-				toastr.error("Unable to get logfile from URL.", "Upload Error");
+				toastr.error("Unable to get output log from URL.", "Upload Error");
 			});
 		} else {
 			parseLog(clipText);
 		}
 	}
 	
-	// Read Logfile
+	// Read Output Log
 	var readwarning = false;
 	var buildwarning = false;
 	var debugging = true;
@@ -158,7 +183,7 @@ $(function() {
 
 			if (!buildwarning) {
 				buildwarning = true;
-				toastr.warning("An error occurred while generating the page. Some information might be missing.", "Page Generation Warning");
+				toastr.warning("An error occurred while building your output log, some information might be missing.", "Building Warning");
 			}
 		}
 	}
@@ -186,47 +211,201 @@ $(function() {
 		return zeroFill(date.getUTCMinutes(), 2) + ":" + zeroFill(date.getUTCSeconds(), 2) + "." + zeroFill(date.getUTCMilliseconds(), 2).substring(0, 2);
 	}
 
+	$.fn.addCardClick = function(info) {
+		var infoCard = $(this)
+		var parent = infoCard.parent()
+		infoCard
+		.click(function() {
+			parent.parent().children(".module-info").hide()
+			info.show()
+			parent.children(".selected").removeClass("selected")
+			infoCard.addClass("selected")
+
+			return false
+		}).mousedown(function() { return false })
+
+		return infoCard
+	}
+
 	function BombGroup(total) {
 		var current = this
 		this.Bombs = [];
+		this.Modules = {}
 		this.TotalBombs = total;
 		this.State = "Unsolved";
 		this.Solved = 0;
 		this.MissionName = "Unknown";
 		this.StartLine = 0
 		this.FilteredLog = ""
-		this.Tree = function() {
-			var serials = [];
-			var bombs = [];
-			var modules = [];
+		this.ToHTML = function(id) {
+			// Build up the bomb.
+			var info = $("<div class='bomb-info'>").hide().appendTo($("#wrap"))
+			var bomb = $("<a href='#' class='bomb'>").appendTo($("#bombs")).click(function() {
+				$(".bomb.selected").removeClass("selected")
+				$(this).addClass("selected")
+				$(".bomb-info").hide()
+				info.show()
+
+				return false
+			}).mousedown(function() { return false })
+
+			var TotalModules = 0
+			var Needies = 0
 			this.Bombs.forEach(function(bomb) {
-				serials.push(bomb.Serial);
-				bombs.push(bomb.Tree(true));
-				Object.keys(bomb.Modules).forEach(function(m) {
-					var mod = bomb.Modules[m];
-					var name = getModuleName(m);
+				TotalModules += bomb.TotalModules
+				Needies += bomb.Needies
+			})
+				
+			$("<div class='module-count'>").text(TotalModules).appendTo(bomb)
+			if (Needies > 0) {
+				$("<div class='needy-count'>").text(Needies).appendTo(bomb)
+			}
+
+			this.Bombs.forEach(function(bombinfo) {
+				$("<div class='serial'>").text(bombinfo.Serial).appendTo(bomb)
+
+				// Build the edgework.
+				var edgework = $("<div class='edgework'>").appendTo(info)
+
+				$("<div class='widget serial'>").text(bombinfo.Serial).appendTo(edgework)
+
+				if (bombinfo.Batteries.length > 0) {
+					var group = $("<div class='widget-group'>").appendTo(edgework)
+
+					bombinfo.Batteries.forEach(function(val) {
+						$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(group)
+					})
+				}
+
+				if (bombinfo.Indicators.length > 0) {
+					var group = $("<div class='widget-group'>").appendTo(edgework)
+
+					bombinfo.Indicators.forEach(function(val) {
+						$("<div class='widget indicator'>").addClass(val[0]).appendTo(group)
+						.append($("<span class='label'>").text(val[1]))
+					})
+				}
+
+				if (bombinfo.PortPlates.length > 0) {
+					var group = $("<div class='widget-group'>").appendTo(edgework)
+
+					bombinfo.PortPlates.forEach(function(val) {
+						var plate = $("<div class='widget portplate'>").appendTo(group)
+						val.forEach(function(port) {
+							$("<span>").addClass(port.toLowerCase()).appendTo(plate)
+						})
+					})
+				}
+			})
+			
+			// Modules
+			var modules = $("<div class='modules'>").appendTo(info)
+
+			// Edgework Information
+			this.Bombs.forEach(function(bombinfo, n) {
+				var ind = []
+
+				bombinfo.Indicators.forEach(function(val) {
+					ind.push(val[0] + " " + val[1])
+				})
+
+				var ports = {}
+				bombinfo.PortPlates.forEach(function(plate) {
+					plate.forEach(function(port) {
+						if (!ports[port]) {
+							ports[port] = 0
+						}
+
+						ports[port]++
+					})
+				})
+
+				var portlist = []
+				Object.keys(ports).forEach(function(port) {
+					var count = ports[port]
+					portlist.push((count > 1 ? count + " × " : "") + port)
+				})
+
+				var batteries = 0
+				bombinfo.Batteries.forEach(function(val) {
+					batteries += val
+				}) 
+
+				var edgeinfo = $("<div class='module-info'>").appendTo(info)
+				makeTree([
+					"Serial: " + bombinfo.Serial,
+					"Batteries: " + batteries,
+					"Holders: " + bombinfo.Batteries.length,
+					"Ports: " + portlist.join(", "),
+					"Indicators: " + ind.join(", "),
+					"Port Plates: " + bombinfo.PortPlates.length,
+					"Widgets: " + (bombinfo.Batteries.length + ind.length + bombinfo.PortPlates.length + bombinfo.ModdedWidgets),
+				], $("<ul>").appendTo(edgeinfo))
+				
+				$("<a href='#' class='module'>")
+				.text("Edgework #" + (n + 1))
+				.appendTo(modules)
+				.addCardClick(edgeinfo).click()
+			})
+
+			// Mission Information
+			var missioninfo = $("<div class='module-info'>").appendTo(info)
+			makeTree(["Mission: " + this.MissionName,
+				"State: " + this.State,
+				/*"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
+				"Total Time: " + formatTime(this.Time),
+				"Time Left: ~" + formatTime(this.TimeLeft),*/
+			], $("<ul>").appendTo(missioninfo))
+			
+			$("<a href='#' class='module'>")
+			.text("Mission Information")
+			.appendTo(modules)
+			.addCardClick(missioninfo)
+
+			// Convert modules
+			this.Bombs.forEach(function(bombinfo) {
+				for (var m in bombinfo.Modules) {
+					if (bombinfo.Modules.hasOwnProperty(m)) {
+						var mod = bombinfo.Modules[m]
+						if (mod.IDs.length > 0 || mod.Info.length > 0 || !current.Modules[m]) {
+							current.Modules[m] = mod
+						}
+					}
+				}
+			})
+
+			var mods = []
+			for (var m in this.Modules) {
+				if (this.Modules.hasOwnProperty(m)) {
+					var mod = this.Modules[m];
+					var name = ModuleNames[m] || convertID(m);
+
 					if (mod.IDs.length === 0) {
 						if (mod.Info.length === 0) {
-							modules.push(name);
+							mods.push([name]);
 						} else {
-							modules.push([name, mod.Info]);
+							mods.push([name, mod.Info]);
 						}
 					} else if (mod.IDs.length == 1) {
-						modules.push([name, mod.IDs[0][1]]);
+						mods.push([name, mod.IDs[0][1]]);
 					} else {
 						mod.IDs.forEach(function(info) {
-							modules.push([name + " " + info[0], info[1]]);
+							mods.push([name, info[1], info[0]]);
 						});
 					}
-				});
-			});
+				}
+			}
 
-			modules = modules.sort(function(a, b) {
-				if (typeof(a) == "object") {
+			mods = mods.sort(function(a, b) {
+				if (a[2]) {
+					a = a[0] + a[2]
+				} else {
 					a = a[0];
 				}
 
-				if (typeof(b) == "object") {
+				if (b[2]) {
+					b = b[0] + b[2]
+				} else {
 					b = b[0];
 				}
 
@@ -239,28 +418,44 @@ $(function() {
 				return 0;
 			});
 
-			return ["Multibomb (" + serials.join(", ") + ")", [
-				["Filtered Log", 
-					[
-						function(element) {
-							if (current.FilteredLog != "") {
-								current.FilterLines()
-							}
+			// Display modules
+			mods.forEach(function(minfo, n) {
+				// Information
+				var modinfo = $("<div class='module-info'>").appendTo(info)
+				$("<h3>").text(minfo[0]).appendTo(modinfo)
+				if (minfo[1]) {
+					makeTree(minfo[1], $("<ul>").appendTo(modinfo))
+				} else {
+					$("<p>").text("No information found.").appendTo(modinfo)
+				}
 
-							if (current.FilteredLog != "") {
-								$("<textarea readonly>").text(current.FilteredLog).appendTo(element.parent())
-							} else {
-								element.text("Unable to filter log.")
-							}
-						}
-					]
-				],
-				["Bombs", bombs],
-				["Modules:", modules, true],
-				"Mission: " + this.MissionName,
-				"State: " + this.State
-			]];
-		};
+				// Listing
+				var mod = $("<a href='#' class='module'>")
+				.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
+				.appendTo(modules)
+				.addCardClick(modinfo)
+				$("<img>")
+				.on("error", function() {
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed")
+				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod)
+			})
+
+			// Filtered log
+			if (this.FilteredLog == "") {
+				this.FilterLines()
+			}
+
+			var loginfo = $("<div class='module-info'>").appendTo(info)
+			$("<h3>").text("Filtered Log").appendTo(loginfo)
+			$("<textarea>").text(this.FilteredLog).appendTo(loginfo)
+
+			$("<a href='#' class='module'>")
+			.text("Filtered Log")
+			.appendTo(modules)
+			.addCardClick(loginfo)
+
+			return bomb
+		}
 		this.GetMod = function(name, id) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
@@ -308,7 +503,7 @@ $(function() {
 					log += line + "\n"
 				}
 			}
-			console.log(log.length)
+
 			this.StartLine = undefined
 			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n")
 		}
@@ -323,63 +518,163 @@ $(function() {
 		this.TotalStrikes = 0;
 		this.Modules = {};
 		this.TotalModules = 0;
+		this.Needies = 0;
 		this.Solved = 0;
 		this.Indicators = [];
-		this.Batteries = 0;
-		this.Holders = 0;
+		this.Batteries = [];
 		this.ModdedWidgets = 0;
-		this.Ports = {};
-		this.PortPlates = 0;
+		this.PortPlates = [];
 		this.Serial = "";
 		this.State = "Unsolved";
 		this.MissionName = "Unknown";
 		this.StartLine = 0
 		this.FilteredLog = ""
-		this.Tree = function(limited) {
-			var ports = this.Ports;
-			var portlist = [];
-			var ind = this.Indicators;
-			var modules = ["Modules: (" + this.Solved + " solved, " + this.TotalModules + " total)", [], true];
+		this.ToHTML = function(id) {
+			// Build up the bomb.
+			var info = $("<div class='bomb-info'>").hide().appendTo($("#wrap"))
+			var bomb = $("<a href='#' class='bomb'>").appendTo($("#bombs")).click(function() {
+				$(".bomb.selected").removeClass("selected")
+				$(this).addClass("selected")
+				$(".bomb-info").hide()
+				info.show()
 
-			if (Object.keys(ports).length === 0) {
-				portlist = ["None"];
-			} else {
-				Object.keys(ports).forEach(function(port) {
-					portlist.push((PortNames[port] || port) + (ports[port] > 1 ? (" × " + ports[port]) : ""));
-				});
+				return false
+			}).mousedown(function() { return false })
+
+			$("<div class='serial'>").text(this.Serial).appendTo(bomb)
+			
+			$("<div class='module-count'>").text(this.TotalModules).appendTo(bomb)
+			if (this.Needies > 0) {
+				$("<div class='needy-count'>").text(this.Needies).appendTo(bomb)
+			}
+			
+			// Build the edgework.
+			var edgework = $("<div class='edgework'>").appendTo(info)
+
+			$("<div class='widget serial'>").text(this.Serial).appendTo(edgework)
+
+			if (this.Batteries.length > 0) {
+				var group = $("<div class='widget-group'>").appendTo(edgework)
+
+				this.Batteries.forEach(function(val) {
+					$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(group)
+				})
 			}
 
-			if (this.Indicators.length === 0) {
-				ind = ["None"];
+			if (this.Indicators.length > 0) {
+				var group = $("<div class='widget-group'>").appendTo(edgework)
+
+				this.Indicators.forEach(function(val) {
+					$("<div class='widget indicator'>").addClass(val[0]).appendTo(group)
+					.append($("<span class='label'>").text(val[1]))
+				})
 			}
 
+			if (this.PortPlates.length > 0) {
+				var group = $("<div class='widget-group'>").appendTo(edgework)
+
+				this.PortPlates.forEach(function(val) {
+					var plate = $("<div class='widget portplate'>").appendTo(group)
+					val.forEach(function(port) {
+						$("<span>").addClass(port.toLowerCase()).appendTo(plate)
+					})
+				})
+			}
+
+			// Modules
+			var modules = $("<div class='modules'>").appendTo(info)
+
+			// Edgework Information
+			var ind = []
+			this.Indicators.forEach(function(val) {
+				ind.push(val[0] + " " + val[1])
+			})
+
+			var ports = {}
+			this.PortPlates.forEach(function(plate) {
+				plate.forEach(function(port) {
+					if (!ports[port]) {
+						ports[port] = 0
+					}
+
+					ports[port]++
+				})
+			})
+
+			var portlist = []
+			Object.keys(ports).forEach(function(port) {
+				var count = ports[port]
+				portlist.push((count > 1 ? count + " × " : "") + port)
+			})
+
+			var batteries = 0
+			this.Batteries.forEach(function(val) {
+				batteries += val
+			}) 
+
+			var edgeinfo = $("<div class='module-info'>").appendTo(info)
+			makeTree([
+				"Serial: " + this.Serial,
+				"Batteries: " + batteries,
+				"Holders: " + this.Batteries.length,
+				"Ports: " + portlist.join(", "),
+				"Indicators: " + ind.join(", "),
+				"Port Plates: " + this.PortPlates.length,
+				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
+			], $("<ul>").appendTo(edgeinfo))
+			
+			$("<a href='#' class='module'>")
+			.text("Edgework")
+			.appendTo(modules)
+			.addCardClick(edgeinfo).click()
+
+			// Mission Information
+			var missioninfo = $("<div class='module-info'>").appendTo(info)
+			makeTree(["Mission: " + this.MissionName,
+				"State: " + this.State,
+				"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
+				"Total Time: " + formatTime(this.Time),
+				"Time Left: ~" + formatTime(this.TimeLeft),
+			], $("<ul>").appendTo(missioninfo))
+			
+			$("<a href='#' class='module'>")
+			.text("Mission Information")
+			.appendTo(modules)
+			.addCardClick(missioninfo)
+
+			// Convert modules
+			var mods = []
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
-				var mod = this.Modules[m];
+					var mod = this.Modules[m];
 					var name = ModuleNames[m] || convertID(m);
 
 					if (mod.IDs.length === 0) {
 						if (mod.Info.length === 0) {
-							modules[1].push(name);
+							mods.push([name]);
 						} else {
-							modules[1].push([name, mod.Info]);
+							mods.push([name, mod.Info]);
 						}
 					} else if (mod.IDs.length == 1) {
-						modules[1].push([name, mod.IDs[0][1]]);
+						mods.push([name, mod.IDs[0][1]]);
 					} else {
 						mod.IDs.forEach(function(info) {
-							modules[1].push([name + " " + info[0], info[1]]);
+							mods.push([name, info[1], info[0]]);
 						});
 					}
 				}
 			}
 
-			modules[1] = modules[1].sort(function(a, b) {
-				if (typeof(a) == "object") {
+			mods = mods.sort(function(a, b) {
+				if (a[2]) {
+					a = a[0] + a[2]
+				} else {
 					a = a[0];
 				}
 
-				if (typeof(b) == "object") {
+				if (b[2]) {
+					b = b[0] + b[2]
+				} else {
 					b = b[0];
 				}
 
@@ -392,61 +687,44 @@ $(function() {
 				return 0;
 			});
 
-			var tree = ["Bomb (" + this.Serial + ")", [
-				["Filtered Log", 
-					[
-						function(element) {
-							if (current.FilteredLog == "") {
-								current.FilterLines()
-							}
+			// Display modules
+			mods.forEach(function(minfo, n) {
+				// Information
+				var modinfo = $("<div class='module-info'>").appendTo(info)
+				$("<h3>").text(minfo[0]).appendTo(modinfo)
+				if (minfo[1]) {
+					makeTree(minfo[1], $("<ul>").appendTo(modinfo))
+				} else {
+					$("<p>").text("No information found.").appendTo(modinfo)
+				}
 
-							if (current.FilteredLog != "") {
-								$("<textarea readonly>").text(current.FilteredLog).appendTo(element.parent())
-							} else {
-								element.text("Unable to filter log.")
-							}
-						}
-					]
-				],
-				["Edgework", [
-					"Serial: " + this.Serial,
-					"Batteries: " + this.Batteries,
-					"Holders: " + this.Holders,
-					"Ports: " + portlist.join(", "),
-					"Indicators: " + ind.join(", "),
-					"Port Plates: " + this.PortPlates,
-					"Widgets: " + (this.Holders + ind.length + this.PortPlates + this.ModdedWidgets),
-				], true],
-				["Mission: " + this.MissionName, [
-					"State: " + this.State,
-					"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
-					"Total Time: " + formatTime(this.Time),
-					"Time Left: ~" + formatTime(this.TimeLeft),
-				], true],
-				modules,
-				
-				//"Seed: " + this.Seed,
-			]];
+				// Listing
+				var mod = $("<a href='#' class='module'>")
+				.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
+				.appendTo(modules)
+				.addCardClick(modinfo)
+				$("<img>")
+				.on("error", function() {
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed")
+				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod)
+			})
 
-			if (this.ModdedWigets > 0) {
-				tree[1].push("Two Factors: " + this.ModdedWidgets);
+			// Filtered log
+			if (this.FilteredLog == "") {
+				this.FilterLines()
 			}
 
-			if (limited) {
-				return ["Bomb (" + this.Serial + ")", [
-					"Serial: " + this.Serial,
-					"Batteries: " + this.Batteries,
-					"Holders: " + this.Holders,
-					"Ports: " + portlist.join(", "),
-					"Indicators: " + ind.join(", "),
-					"Port Plates: " + this.PortPlates,
-					"Widgets: " + (this.Holders + ind.length + this.PortPlates + this.ModdedWidgets),
-					//"Seed: " + this.Seed,
-				]];
-			}
+			var loginfo = $("<div class='module-info'>").appendTo(info)
+			$("<h3>").text("Filtered Log").appendTo(loginfo)
+			$("<textarea>").text(this.FilteredLog).appendTo(loginfo)
 
-			return tree;
-		};
+			$("<a href='#' class='module'>")
+			.text("Filtered Log")
+			.appendTo(modules)
+			.addCardClick(loginfo)
+
+			return bomb
+		}
 		this.GetMod = function(name) {
 			if (!(name in this.Modules) && debugging) {
 				console.warn("Unable to find module: " + name);
@@ -523,7 +801,7 @@ $(function() {
 		log = log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
-			toastr.error("Invalid logfile.", "Reading Error");
+			toastr.error("Invalid output log file.", "Reading Error");
 			return false;
 		}
 
@@ -726,12 +1004,17 @@ $(function() {
 					bomb.TimeLeft = bomb.Time;
 					bomb.TotalStrikes = parseInt(matches[2]);
 				},
-				"Selected ([A-z0-9 ]+) \\(": function(matches) {
+				"Selected ([A-z0-9 ]+) \\(.+ \\((.+)\\)\\)": function(matches) {
 					bomb.Modules[matches[1]] = {
 						IDs: [],
 						Info: []
 					};
+
 					bomb.TotalModules++;
+					if (matches[2].includes("Needy")) {
+						bomb.Needies++;
+					}
+
 				},
 				"Instantiated CryptModule on face": function() {
 					var mod = bomb.GetModule("CryptModule")
@@ -741,25 +1024,21 @@ $(function() {
 			},
 			"IndicatorWidget": {
 				"Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})": function(matches) {
-					bomb.Indicators.push(matches[1] + " " + matches[2]);
+					bomb.Indicators.push([matches[1], matches[2]]);
 				}
 			},
 			"BatteryWidget": {
 				"Randomizing Battery Widget: (\\d)": function(matches) {
-					bomb.Batteries += parseInt(matches[1]);
-					bomb.Holders++;
+					bomb.Batteries.push(parseInt(matches[1]))
 				}
 			},
 			"PortWidget": {
 				"Randomizing Port Widget: (.+)": function(matches) {
-					bomb.PortPlates++;
-					matches[1].split(", ").forEach(function(port) {
-						if (!bomb.Ports[port]) {
-							bomb.Ports[port] = 0;
-						}
-
-						bomb.Ports[port]++;
-					});
+					if (matches[1] != "0") {
+						bomb.PortPlates.push(matches[1].split(", "))
+					} else {
+						bomb.PortPlates.push([])
+					}
 				}
 			},
 			"SerialNumber": {
@@ -1387,7 +1666,7 @@ $(function() {
 			"Perspective Pegs": {
 				"Pegs:": function(matches, id) {
 					readDirectly(matches.input, "spwizPerspectivePegs", id)
-					readDirectly(pre(readMultiple(22).replace(/\n{2}/g, "\n")), "spwizPerspectivePegs", id)
+					readDirectly(pre(readMultiple(11).replace(/\n{2}/g, "\n")), "spwizPerspectivePegs", id)
 
 					return true
 				},
@@ -1508,7 +1787,7 @@ $(function() {
 
 									if (!readwarning) {
 										readwarning = true;
-										toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+										toastr.warning("An error occurred while reading the output log, some information might be missing.", "Reading Warning");
 									}
 								}
 							}
@@ -1519,7 +1798,6 @@ $(function() {
 						var func = taglessRegex[val]
 						var matches = new RegExp(val).exec(line)
 						if (matches) {
-							console.log("matched")
 							try {
 								if (typeof(func) == "function") {
 									if (func(matches)) {
@@ -1533,7 +1811,7 @@ $(function() {
 
 								if (!readwarning) {
 									readwarning = true;
-									toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+									toastr.warning("An error occurred while reading the output log, some information might be missing.", "Reading Warning");
 								}
 							}
 						}
@@ -1544,13 +1822,17 @@ $(function() {
 			linen++;
 		}
 
-		parsed.forEach(function(obj) {
-			tree.push(obj.Tree());
+		$(".bomb, .bomb-info").remove()
+
+		parsed.forEach(function(obj, n) {
+			var bomb = obj.ToHTML(n)
+			console.log(obj)
+			if (n == parsed.length - 1) {
+				bomb.click()
+			}
 		});
 
-		makeTree(tree, $(".tree"));
-
-		toastr.success("File read successfully!");
+		toastr.success("Log read successfully!");
 	}
 
 	function uploadFiles(files) {
