@@ -44,6 +44,7 @@ var ModuleNames = {
 	fizzBuzzModule: "FizzBuzz",
 	ModuleAgainstHumanity: "Modules Against Humanity",
 	BitOps: "Bitwise Operators",
+	TurnTheKeyAdvanced: "Turn The Keys",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
