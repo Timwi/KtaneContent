@@ -1866,7 +1866,7 @@ $(function() {
 			toastr.error("No file found.", "Upload Error");
 			dropMsg.removeClass("hovering");
 		} else {
-			toastr.error("Please only dropMsg 1 file at a time.", "Upload Error");
+			toastr.error("Please only upload 1 file at a time.", "Upload Error");
 			dropMsg.removeClass("hovering");
 		}
 	}
