@@ -2125,6 +2125,12 @@ $(function() {
 					regex: /.+/,
 					value: "BitOps"
 				}
+			],
+			"LED Encryption": [
+				{
+					regex: /.+/,
+					value: "LEDEnc"
+				}
 			]
 		}
 
@@ -2190,7 +2196,7 @@ $(function() {
 										} else if (value(matches, id)) {
 											return true
 										}
-									} else if (value instanceof String) {
+									} else {
 										readDirectly(match[2], value, id);
 									}
 								} catch (e) {
