@@ -1046,7 +1046,7 @@ $(function() {
 			],
 			"BatteryWidget": [  
 				{  
-					regex: /Randomizing Battery Widget: (\\d)/,
+					regex: /Randomizing Battery Widget: (\d)/,
 					value: function(matches) {
 						bomb.Batteries.push(parseInt(matches[1]))
 					}
@@ -1129,7 +1129,7 @@ $(function() {
 			],
 			"Assets.Scripts.Pacing.PaceMaker": [  
 				{  
-					regex: /PlayerSuccessRating: .+ \\(Factors: solved: (.+), strikes: (.+), time: (.+)\\)/,
+					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (!bombgroup) {
 							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
@@ -1157,7 +1157,7 @@ $(function() {
 			],
 			"MultipleBombs": [  
 				{  
-					regex: /Bombs to spawn: (\\d+)/,
+					regex: /Bombs to spawn: (\d+)/,
 					value: function(matches) {
 						if (matches[1] != "1") {
 							bombgroup = new BombGroup(parseInt(matches[1]));
