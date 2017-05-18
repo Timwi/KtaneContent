@@ -437,7 +437,7 @@ $(function() {
 
 			var loginfo = $("<div class='module-info'>").appendTo(info)
 			$("<h3>").text("Filtered Log").appendTo(loginfo)
-			$("<textarea>").text(this.FilteredLog).appendTo(loginfo)
+			$("<pre>").css("white-space", "pre-line").text(this.FilteredLog).appendTo(loginfo)
 
 			$("<a href='#' class='module'>")
 			.text("Filtered Log")
@@ -705,7 +705,7 @@ $(function() {
 
 			var loginfo = $("<div class='module-info'>").appendTo(info)
 			$("<h3>").text("Filtered Log").appendTo(loginfo)
-			$("<textarea>").text(this.FilteredLog).appendTo(loginfo)
+			$("<pre>").css("white-space", "pre-line").text(this.FilteredLog).appendTo(loginfo)
 
 			$("<a href='#' class='module'>")
 			.text("Filtered Log")
