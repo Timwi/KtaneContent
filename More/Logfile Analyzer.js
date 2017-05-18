@@ -1421,7 +1421,7 @@ $(function() {
 					var mod = GetBomb().GetModule("monsplodeFight");
 					mod[mod.length - 1][1].push(matches.input);
 				},
-				"(?:Opponent|Move Name)": function(matches) {
+				"(?:Opponent:|Move Name)": function(matches) {
 					var mod = GetBomb().GetModule("monsplodeFight");
 					mod[mod.length - 1][1].push(readLine());
 				},
