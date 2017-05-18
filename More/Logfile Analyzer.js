@@ -90,8 +90,14 @@ $(function() {
         $('#full-screen-msg').addClass("hovering");
 
         window.setTimeout(function() {
-            if (/^https?:\/\/.+$/.exec(clipText)) { // Very basic regex to detect a url being pasted.
+            if (/^https?:\/\//.exec(clipText)) { // Very basic regex to detect a URL being pasted.
                 $.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
+                    parseLog(data);
+                }).fail(function() {
+                    toastr.error("Unable to get logfile from URL.", "Upload Error");
+                });
+            } else if (/^https?%3A%2F%2F/.exec(clipText)) { // URL-encoded URL...
+                $.get("https://cors-anywhere.herokuapp.com/" + decodeURIComponent(clipText), function(data) {
                     parseLog(data);
                 }).fail(function() {
                     toastr.error("Unable to get logfile from URL.", "Upload Error");
@@ -116,43 +122,44 @@ $(function() {
     var linen = 0
     var lines = []
 
+    function makeExpandable(parent, label) {
+        parent
+            .addClass('expandable')
+            .append($("<a href='#'>")
+                .addClass("expander")
+                .text(label)
+                .click(function() { parent.toggleClass("expanded"); return false; }));
+    }
+
     function makeTree(tree, parent) {
         try {
             tree.forEach(function(node) {
                 if (node !== null) {
-                    var textnode = (typeof(node) == "string");
                     var elem = $("<li>").appendTo(parent);
 
-                    var bullet = $("<span>").addClass("bullet").text("•");
-                    if ((typeof(node) == "function")) {
-                        bullet.remove();
+                    if (typeof(node) === "function") {
                         node($("<span>").appendTo(elem));
-                    } else if (textnode) {
-                        bullet.prependTo($("<span>").addClass("label").html(node).appendTo(elem));
-                    } else if (node[1].length > 0) {
-                        bullet.text("+").click(function(argument) {
-                            nodes.toggleClass("collapsed");
-                            text.toggleClass("expanded");
-                            bullet.toggleClass("expanded");
-                        });
-                        var text = $("<span>").addClass("label").html(node[0]).click(function() {
-                            nodes.toggleClass("collapsed");
-                            text.toggleClass("expanded");
-                            bullet.toggleClass("expanded");
-                        });
-
-                        bullet.prependTo(text);
-                        text.appendTo(elem);
-
-                        elem.addClass("expandable");
-                        var nodes = $("<ul>").appendTo(elem);
-                        if (!node[2]) {
-                            nodes.addClass("collapsed");
+                    } else if (node instanceof $) {
+                        elem.append(node);
+                    } else if (typeof(node) === "string") {
+                        elem.text(node);
+                    } else if (node instanceof Array) {
+                        makeExpandable(elem, node[0]);
+                        if (node[2])
+                            elem.addClass("expanded");
+                        makeTree(node[1].length ? node[1] : [$('<em>').text("(none)")], $("<ul>").appendTo(elem));
+                    } else if (typeof(node) === 'object' && 'label' in node && 'obj' in node) {
+                        if (node.expandable) {
+                            makeExpandable(elem, node.label);
+                            if (node.expanded)
+                                elem.addClass("expanded");
+                            elem.append(node.obj);
                         } else {
-                            text.addClass("expanded");
+                            elem.text(node.label).append(node.obj);
                         }
-
-                        makeTree(node[1], nodes);
+                    } else {
+                        console.log('Unrecognized node: ' + node);
+                        console.log(node);
                     }
                 }
             });
@@ -217,15 +224,14 @@ $(function() {
         this.FilteredLog = ""
         this.ToHTML = function(id) {
             // Build up the bomb.
-            var info = $("<div class='bomb-info'>").hide().appendTo($("#wrap"))
-            var bomb = $("<a href='#' class='bomb'>").appendTo($("#bombs")).click(function() {
-                $(".bomb.selected").removeClass("selected")
-                $(this).addClass("selected")
-                $(".bomb-info").hide()
-                info.show()
-
-                return false
-            }).mousedown(function() { return false })
+            var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"))
+            var bomb = $("<a href='#bomb-" + this.Bombs[0].Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
+                $(".bomb.selected").removeClass("selected");
+                $(this).addClass("selected");
+                $(".bomb-info").hide();
+                info.show();
+                return true;
+            }).mousedown(function() { return false });
 
             var TotalModules = 0
             var Needies = 0
@@ -514,15 +520,14 @@ $(function() {
         this.FilteredLog = ""
         this.ToHTML = function(id) {
             // Build up the bomb.
-            var info = $("<div class='bomb-info'>").hide().appendTo($("#wrap"))
-            var bomb = $("<a href='#' class='bomb'>").appendTo($("#bombs")).click(function() {
-                $(".bomb.selected").removeClass("selected")
-                $(this).addClass("selected")
-                $(".bomb-info").hide()
-                info.show()
-
-                return false
-            }).mousedown(function() { return false })
+            var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"))
+            var bomb = $("<a href='#bomb-" + this.Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
+                $(".bomb.selected").removeClass("selected");
+                $(this).addClass("selected");
+                $(".bomb-info").hide();
+                info.show();
+                return true;
+            }).mousedown(function() { return false });
 
             $("<div class='serial'>").text(this.Serial).appendTo(bomb)
 
@@ -788,8 +793,6 @@ $(function() {
             return false;
         }
 
-        $(".tree").text("");
-
         var tree = [];
         var bombgroup;
         var bomb;
@@ -801,49 +804,42 @@ $(function() {
         }
 
         function monospace(line) {
-            return "<span class=\"monospaced\">" + line + "</span>";
+            return $('<span>').addClass('monospaced').text(line);
         }
 
         function pre(line) {
-            return function(elem) {
-                elem.addClass("monospaced").text(line.replace(/^\n/g, ""));
-            };
+            return $('<pre>').text(line.replace(/^\n/g, ""));
         }
 
         function readDirectly(line, name, id) {
-            if (typeof(line) == "object") {
+            if (line instanceof Array) {
                 line.forEach(function(val) {
                     readDirectly(val, name, id);
                 });
                 return;
             }
 
-            var mod;
-            if (!id) {
-                mod = GetBomb().GetModule(name);
+            if (id) {
+                GetBomb().GetModuleID(name, id).push(line);
             } else {
-                mod = GetBomb().GetModuleID(name, id);
+                GetBomb().GetModule(name).push(line);
             }
-
-            mod.push(line);
         }
 
         lines = log.split("\n");
         linen = 0;
 
-        function readLine(monospaced) {
+        function readLine() {
             linen++;
-            var line = lines[linen];
-            return monospaced ? monospace(line) : line;
+            return lines[linen];
         }
 
-        function readMultiple(count) {
-            var line = "";
+        function readMultiple(count, fnc) {
+            var lines = '';
             for (var i = 0; i < count; i++) {
-                line += "\n" + readLine();
+                lines += (i === 0 ? '' : "\n") + (fnc ? fnc(readLine()) : readLine());
             }
-
-            return line.replace(/^\n/, "");
+            return lines;
         }
 
         // A listed used for matching lines and executing a function if it matches the line.
@@ -869,8 +865,9 @@ $(function() {
              - GetModule(modname) gets the information tree for that module.
              - GetModuleID(modname, id) gets the information tree for that module id.
              - readDirectly(object, modname, id) pushes information into the tree for the specified module. id is optional.
-             - readLine(monospace) reads the next line, if monospace is true the line is returned with a monospace font tag.
+             - readLine() reads the next line.
              - readMultiple(count) reads multiple lines and returns them with a new line break inbetween.
+             - readMultiple(count, fnc) reads multiple lines, maps them through the function fnc, and then returns them with a new line break inbetween.
              - monospace(line) wraps a line in a monospace font tag.
              - pre(line) returns a function to which makes an text element similar to the <pre> tag. Typically used in conjuction with readMultiple().
 
@@ -1125,11 +1122,8 @@ $(function() {
                 }
             },
             "Mystic Square": {
-                "Field:": function(matches) {
-                    readDirectly(matches[0], "MysticSquareModule");
-                    for (var i = 0; i < 3; i++) {
-                        readDirectly(readLine(true).replace("0", " "), "MysticSquareModule");
-                    }
+                "Field:": function(matches, id) {
+                    readDirectly({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) }, "MysticSquareModule", id);
                 },
                 "Last serial digit": "MysticSquareModule",
                 "Skull path": "MysticSquareModule"
@@ -1137,7 +1131,7 @@ $(function() {
             "Battleship": {
                 ".+": "BattleshipModule",
                 "Ships: .+": function(matches, id) {
-                    readDirectly(["Solution:", pre(readMultiple(6))], "BattleshipModule", id);
+                    readDirectly({ label: "Solution:", obj: pre(readMultiple(6)) }, "BattleshipModule", id);
                 }
             },
             "ColoredSquares": {
@@ -1152,8 +1146,7 @@ $(function() {
                     var module = GetBomb().GetModuleID("BrokenButtonsModule", id);
                     var step = module.Step || module;
 
-                    step.push("Buttons:");
-                    step.push(pre(readMultiple(4)));
+                    step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
                 },
                 "Step: (.+)": function(matches, id) {
                     var module = GetBomb().GetModuleID("BrokenButtonsModule", id);
@@ -1230,7 +1223,7 @@ $(function() {
                         y--;
                     }
 
-                    readDirectly(["Grid:", pre(grid)], "CoordinatesModule", id);
+                    readDirectly({label: "Grid:", obj: pre(grid)}, "CoordinatesModule", id);
                     return true;
                 },
                 ".+": "CoordinatesModule"
@@ -1284,8 +1277,7 @@ $(function() {
 
                     mod.push(["Step " + mod.length + ":", step]);
 
-                    step.push(matches.input);
-                    step.push(pre(readMultiple(3)));
+                    step.push({ label: matches.input, obj: pre(readMultiple(3)) });
 
                     step.push(readLine()); // up next
                     step.push(readLine()); // current row
@@ -1302,9 +1294,7 @@ $(function() {
                     readDirectly("Wrong Words: " + matches[1], "WordSearchModule", id);
                 },
                 "Field:": function(matches, id) {
-                    readDirectly(matches[0], "WordSearchModule", id);
-
-                    GetBomb().GetModuleID("WordSearchModule", id).push(pre(readMultiple(6)));
+                    GetBomb().GetModuleID("WordSearchModule", id).push({ label: 'Field:', obj: pre(readMultiple(6)) });
                 },
                 "Coordinates clicked": "WordSearchModule"
             },
@@ -1362,17 +1352,16 @@ $(function() {
                     readDirectly("Display: " + locations.join(", "), "ChessModule", id);
                     readDirectly("Solution: " + solution, "ChessModule", id);
                     readLine();
-                    readDirectly("Board:", "ChessModule", id);
-                    readDirectly(pre(readMultiple(13)), "ChessModule", id);
+                    readDirectly({ label: "Board:", obj: pre(readMultiple(13)) }, "ChessModule", id);
                 },
                 "Entered answer": "ChessModule"
             },
             "Blind Alley": {
                 "Region condition counts:": function(_, id) {
-                    readDirectly([
-                        "Region counts:",
-                        pre(readMultiple(3))
-                    ], "BlindAlleyModule", id);
+                    readDirectly({
+                        label: "Region counts:",
+                        obj: pre(readMultiple(3))
+                    }, "BlindAlleyModule", id);
                 },
                 "Must press regions:|Region .+ is correct|You pressed region": "BlindAlleyModule"
             },
@@ -1393,10 +1382,10 @@ $(function() {
             },
             "Colour Flash": {
                 "Module generated": function(matches, id) {
-                    readDirectly([
-                        "Color Sequence:",
-                        pre(readMultiple(10))
-                    ], "ColourFlash", id);
+                    readDirectly({
+                        label: "Color Sequence:",
+                        obj: pre(readMultiple(10))
+                    }, "ColourFlash", id);
                     readLine();
                     for (var i = 0; i < 3; i++) {
                         readDirectly(readLine(), "ColourFlash", id);
@@ -1407,9 +1396,7 @@ $(function() {
             },
             "Cheap Checkout": {
                 "Receipt": function(matches, id) {
-                    var mod = GetBomb().GetModuleID("CheapCheckoutModule", id);
-                    mod.push(matches.input);
-                    mod.push(pre(readMultiple(10)));
+                    readDirectly({ label: 'Receipt:', obj: pre(readMultiple(10)) }, "CheapCheckoutModule", id);
                     return true;
                 },
                 ".+": "CheapCheckoutModule",
@@ -1451,7 +1438,7 @@ $(function() {
                     mod.Pipes.push(matches.input);
 
                     if (mod.Pipes.length == 6) {
-                        mod.push([mod.Title, [pre(mod.Pipes.join("\n"))]]);
+                        mod.push({ label: mod.Title, obj: pre(mod.Pipes.join("\n")) });
                     }
                 },
             },
@@ -1529,23 +1516,25 @@ $(function() {
             "Modules Against Humanity": {
                 "Modules:": function(matches, id) {
                     var mod = GetBomb().GetModuleID("ModuleAgainstHumanity", id);
-                    mod.push(["Cards:", [pre(readMultiple(11))]]);
+                    var lines = readMultiple(11);
+                    while (/  \|/.test(lines) && !/[^ ] \|/.test(lines))
+                        lines = lines.replace(/ \|/g, '|');
+                    while (/\|  /.test(lines) && !/\| [^ ]/.test(lines))
+                        lines = lines.replace(/\| /g, '|');
+                    mod.push({ label: "Cards:", obj: pre(lines) });
 
-                    var misc = "";
-                    var line = readLine();
-                    while (!((/^Final cards/).exec(line))) {
-                        misc += line + "\n";
+                    var line;
+                    do {
                         line = readLine();
+                        mod.push(line.replace(/Black:/g, "Black: ").trim());
                     }
-                    misc += line + "\n";
-
-                    mod.push(misc.replace(/Black:/g, "Black: ").trim());
+                    while (!/^Final cards/.test(line));
                 },
                 "Submitted:": "ModuleAgainstHumanity"
             },
             "Semaphore": {
                 "Module generated": function(matches, id) {
-                    GetBomb().GetModuleID("Semaphore", id).push(["Flags", [pre(readMultiple(8), true)]]);
+                    GetBomb().GetModuleID("Semaphore", id).push({ label: "Flags", obj: pre(readMultiple(8)) });
                     return true;
                 },
                 ".+": "Semaphore"
@@ -1565,16 +1554,13 @@ $(function() {
             },
             "Silly Slots": {
                 "Stage": function(matches, id) {
-                    readDirectly(matches.input, "SillySlots", id);
-                    readDirectly(pre(readMultiple(2)), "SillySlots", id);
+                    readDirectly({ label: matches.input, obj: pre(readMultiple(2)) }, "SillySlots", id);
                     return true;
                 },
                 ".+": "SillySlots",
             },
             "Web design": {
                 "For reference purpose": function(matches, id) {
-                    readDirectly(matches.input, "webDesign", id);
-
                     var lines = "";
                     var line = readLine();
                     while (!line.match("}") && line) {
@@ -1583,7 +1569,7 @@ $(function() {
                     }
                     lines += "}";
 
-                    readDirectly(pre(lines), "webDesign", id);
+                    readDirectly({ label: matches.input, obj: pre(lines) }, "webDesign", id);
 
                     return true;
                 },
@@ -1634,8 +1620,11 @@ $(function() {
                 ".+": "MusicRhythms"
             },
             "Only Connect": {
-                "(Hieroglyph|Two Reeds|Lion|Twisted Flax|Horned Viper|Water|Eye of Horus)  ": function(matches, id) {
-                    GetBomb().GetModuleID("OnlyConnectModule", id).push(pre(matches.input));
+                "Hieroglyph +Position +Serial# +Ports +num": function(matches, id) {
+                    GetBomb().GetModuleID("OnlyConnectModule", id).push({
+                        label: 'Egyptian Hieroglyphs:',
+                        obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+                    });
                     return true;
                 },
                 ".+": "OnlyConnectModule"
@@ -1648,18 +1637,14 @@ $(function() {
             },
             "Perspective Pegs": {
                 "Pegs:": function(matches, id) {
-                    readDirectly(matches.input, "spwizPerspectivePegs", id)
-                    readDirectly(pre(readMultiple(11).replace(/\n{2}/g, "\n")), "spwizPerspectivePegs", id)
-
-                    return true
+                    readDirectly({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) }, "spwizPerspectivePegs", id);
+                    return true;
                 },
                 ".+": "spwizPerspectivePegs"
             },
             "3D Maze": {
                 "You walked into a wrong wall:": function(matches, id) {
-                    readDirectly(matches.input, "spwiz3DMaze", id);
-                    readDirectly(pre(readMultiple(13)), "spwiz3DMaze", id);
-
+                    readDirectly({ label: matches.input, obj: pre(readMultiple(13)) }, "spwiz3DMaze", id);
                     return true;
                 },
                 ".+": "spwiz3DMaze"
@@ -1691,6 +1676,18 @@ $(function() {
                 ".+": "fizzBuzzModule"
             },
             "Bitmaps": {
+                "Bitmap \\((red|green|blue|yellow|cyan|pink)\\):": function(matches, id) {
+                    readDirectly({ 
+                        label: matches.input, 
+                        obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+                            .css('color', matches[1] === 'red'    ? '#800' :
+                                          matches[1] === 'green'  ? '#080' :
+                                          matches[1] === 'blue'   ? '#008' :
+                                          matches[1] === 'yellow' ? '#880' :
+                                          matches[1] === 'cyan'   ? '#088' : '#808')
+                    }, "BitmapsModule", id);
+                    return true;
+                },
                 ".+": "BitmapsModule"
             },
             "Connection Check": {
@@ -1711,18 +1708,20 @@ $(function() {
         };
 
         var taglessRegex = {
-            "Query(Responses|Lookups): (\\[[\\d\\w]{1,2}\\]: [\\d\\w]{1,2})": function(matches) { // TwoBits
+            // TwoBits
+            "Query(Responses|Lookups): (\\[[\\d\\w]{1,2}\\]: [\\d\\w]{1,2})": function(matches) {
                 var id = GetBomb().GetMod("TwoBits").IDs.length;
                 if (matches[1] == "Lookups") {
                     id = GetBomb().GetMod("TwoBits").IDs.length + 1;
                 }
 
-                var mod = bomb.GetModuleID("TwoBits", id)
-                mod.push(["Query " + matches[1], [pre(matches[2] + "\n" + readMultiple(99))]])
+                var mod = bomb.GetModuleID("TwoBits", id);
+                mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
                 if (matches[1] == "Responses") {
-                    mod.push(readLine())
+                    mod.push(readLine());
                 }
             },
+
             // Emoji Math
             "\\d{1,}[+-]\\d{1,}": function(matches) {
                 readDirectly(matches.input, "Emoji Math")
@@ -1809,7 +1808,6 @@ $(function() {
 
         parsed.forEach(function(obj, n) {
             var bomb = obj.ToHTML(n)
-            console.log(obj)
             if (n == parsed.length - 1) {
                 bomb.click()
             }
@@ -1892,11 +1890,8 @@ $(function() {
     });
 
     window.onhashchange = function() {
-        if (window.location.hash.length < 2) {
-            $(".bomb, .bomb-info").remove()
-            $('#ui').removeClass('has-bomb');
-        } else {
-            readPaste(window.location.hash.substr(1));
+        if (window.location.hash.startsWith('#url=')) {
+            readPaste(window.location.hash.substr(5));
         }
     };
     window.onhashchange();
