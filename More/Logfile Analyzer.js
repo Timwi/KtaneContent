@@ -803,10 +803,6 @@ $(function() {
             return bombgroup || bomb;
         }
 
-        function monospace(line) {
-            return $('<span>').addClass('monospaced').text(line);
-        }
-
         function pre(line) {
             return $('<pre>').text(line.replace(/^\n/g, ""));
         }
@@ -868,7 +864,6 @@ $(function() {
              - readLine() reads the next line.
              - readMultiple(count) reads multiple lines and returns them with a new line break inbetween.
              - readMultiple(count, fnc) reads multiple lines, maps them through the function fnc, and then returns them with a new line break inbetween.
-             - monospace(line) wraps a line in a monospace font tag.
              - pre(line) returns a function to which makes an text element similar to the <pre> tag. Typically used in conjuction with readMultiple().
 
             Tree Format
