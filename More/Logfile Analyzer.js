@@ -1375,7 +1375,7 @@ $(function() {
                     var mod = GetBomb().GetModule("monsplodeFight");
                     mod[mod.length - 1][1].push(matches.input);
                 },
-                "(?:Opponent|Move Name)": function(matches) {
+                "(?:Opponent:|Move Name)": function(matches) {
                     var mod = GetBomb().GetModule("monsplodeFight");
                     mod[mod.length - 1][1].push(readLine());
                 },
@@ -1677,8 +1677,8 @@ $(function() {
             },
             "Bitmaps": {
                 "Bitmap \\((red|green|blue|yellow|cyan|pink)\\):": function(matches, id) {
-                    readDirectly({ 
-                        label: matches.input, 
+                    readDirectly({
+                        label: matches.input,
                         obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
                             .css('color', matches[1] === 'red'    ? '#800' :
                                           matches[1] === 'green'  ? '#080' :
