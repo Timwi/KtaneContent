@@ -1643,14 +1643,14 @@ $(function() {
 					}
 				},
 				{  
-					regex: /\[[A-Z]{3}/,
+					regex: /\[[A-Z]{3}[-+]\].*/,
 					value: function(matches, id) {
 						var mod = GetBomb().GetModuleID("MazeV2", id);
 						if (!mod.Conditions) {
 							mod.Conditions = [];
 						}
 
-						mod.Conditions.push(match.input);
+						mod.Conditions.push(matches[0]);
 
 						return true;
 					}
