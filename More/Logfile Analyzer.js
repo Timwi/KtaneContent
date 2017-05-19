@@ -1377,7 +1377,7 @@ $(function() {
 				],
 			},
 			"Murder": {
-				ID: "murder", 
+				ID: "murder",
 				Lines: [
 					{
 						regex: /Number of batteries/,
@@ -1713,7 +1713,7 @@ $(function() {
 				],
 			},
 			"Safety Safe": {
-				ID: "PasswordV2", 
+				ID: "PasswordV2",
 				Lines: [
 					{
 						regex: /offset|Answer|Input|solved/,
@@ -1901,7 +1901,7 @@ $(function() {
 			},
 			"Silly Slots": {
 				ID: "SillySlots",
-				Line: [
+				Lines: [
 					{
 						regex: /Stage/,
 						value: function(matches, module) {
@@ -2244,7 +2244,7 @@ $(function() {
 					} else obj = lineRegex[match[1]];
 
 					if (obj) {
-						var regex = (obj.Lines || obj)
+						var regex = (obj.Lines || obj);
 						regex.some(function(handler) {
 							var value = handler.value
 							var matches = handler.regex.exec(match[2]);
