@@ -986,9 +986,9 @@ $(function() {
 			*/
 
 		// A listed used for matching lines and executing a function if it matches the line.
-		var lineRegex = {  
-			"BombGenerator": [  
-				{  
+		var lineRegex = {
+			"BombGenerator": [
+				{
 					regex: /Generating bomb with seed (\d+)/,
 					value: function(matches) {
 						bomb = new Bomb(parseInt(matches[1]));
@@ -1004,7 +1004,7 @@ $(function() {
 						}
 					}
 				},
-				{  
+				{
 					regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
 					value: function(matches) {
 						bomb.Time = parseInt(matches[1]);
@@ -1012,7 +1012,7 @@ $(function() {
 						bomb.TotalStrikes = parseInt(matches[2]);
 					}
 				},
-				{  
+				{
 					regex: /Selected ([A-z0-9 ]+) \(.+ \((.+)\)\)/,
 					value: function(matches) {
 						bomb.Modules[matches[1]] = {
@@ -1027,7 +1027,7 @@ $(function() {
 
 					}
 				},
-				{  
+				{
 					regex: /Instantiated CryptModule on face/,
 					value: function() {
 						var mod = bomb.GetModule("CryptModule")
@@ -1036,24 +1036,24 @@ $(function() {
 					}
 				}
 			],
-			"IndicatorWidget": [  
-				{  
+			"IndicatorWidget": [
+				{
 					regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.Indicators.push([matches[1], matches[2]]);
 					}
 				}
 			],
-			"BatteryWidget": [  
-				{  
+			"BatteryWidget": [
+				{
 					regex: /Randomizing Battery Widget: (\d)/,
 					value: function(matches) {
 						bomb.Batteries.push(parseInt(matches[1]))
 					}
 				}
 			],
-			"PortWidget": [  
-				{  
+			"PortWidget": [
+				{
 					regex: /Randomizing Port Widget: (.+)/,
 					value: function(matches) {
 						if (matches[1] != "0") {
@@ -1064,16 +1064,16 @@ $(function() {
 					}
 				}
 			],
-			"SerialNumber": [  
-				{  
+			"SerialNumber": [
+				{
 					regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
 					value: function(matches) {
 						bomb.Serial = matches[1];
 					}
 				}
 			],
-			"WidgetGenerator": [  
-				{  
+			"WidgetGenerator": [
+				{
 					regex: /Added widget: (.+) at/,
 					value: function(matches) {
 						if (matches[1] == "ModWidget") {
@@ -1082,8 +1082,8 @@ $(function() {
 					}
 				}
 			],
-			"Bomb": [  
-				{  
+			"Bomb": [
+				{
 					regex: /Strike! (\d+) \/ \d+ strikes/,
 					value: function(matches) {
 						if (!bombgroup) {
@@ -1095,7 +1095,7 @@ $(function() {
 						}
 					}
 				},
-				{  
+				{
 					regex: /Boom/,
 					value: function(matches) {
 						GetBomb().FilterLines()
@@ -1109,7 +1109,7 @@ $(function() {
 						}
 					}
 				},
-				{  
+				{
 					regex: /A winner is you!!/,
 					value: function(matches) {
 						var currentBomb = GetBomb();
@@ -1119,16 +1119,16 @@ $(function() {
 					}
 				}
 			],
-			"BombComponent": [  
-				{  
+			"BombComponent": [
+				{
 					regex: /Pass/,
 					value: function(matches) {
 						GetBomb().Solved++;
 					}
 				}
 			],
-			"Assets.Scripts.Pacing.PaceMaker": [  
-				{  
+			"Assets.Scripts.Pacing.PaceMaker": [
+				{
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (!bombgroup) {
@@ -1140,23 +1140,23 @@ $(function() {
 						}
 					}
 				},
-				{  
+				{
 					regex: /Round start! Mission: (.+) Pacing Enabled: /,
 					value: function(matches) {
 						GetBomb().MissionName = matches[1];
 					}
 				}
 			],
-			"Assets.Scripts.DossierMenu.MenuPage": [  
-				{  
+			"Assets.Scripts.DossierMenu.MenuPage": [
+				{
 					regex: /ReturnToSetupRoom/,
 					value: function() {
 						GetBomb().FilterLines()
 					}
 				}
 			],
-			"MultipleBombs": [  
-				{  
+			"MultipleBombs": [
+				{
 					regex: /Bombs to spawn: (\d+)/,
 					value: function(matches) {
 						if (matches[1] != "1") {
@@ -1168,7 +1168,7 @@ $(function() {
 						}
 					}
 				},
-				{  
+				{
 					regex: /All bombs solved, what a winner!/,
 					value: function() {
 						var currentBomb = GetBomb();
@@ -1178,357 +1178,357 @@ $(function() {
 					}
 				}
 			],
-			"Light Cycle": [  
-				{  
-					regex: /Start sequence: ([A-Z]{6})/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("LightCycleModule", id);
-						mod.Presses = [];
-						mod.push("Starting Seq: " + matches[1]);
-						mod.push(["Buttons:", mod.Presses]);
 
-					}
-				},
-				{  
-					regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
-					value: function(matches, id) {
-						readDirectly("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3], "LightCycleModule", id);
-					}
-				},
-				{  
-					regex: /Pressed button/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("LightCycleModule", id).Presses.push(matches.input);
-					}
-				}
-			],
-			"Mystic Square": [  
-				{  
-					regex: /Field:/,
-					value: function(matches, id) {
-						readDirectly({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) }, "MysticSquareModule", id);
-					}
-				},
-				{  
-					regex: /Last serial digit/,
-					value: "MysticSquareModule"
-				},
-				{  
-					regex: /Skull path/,
-					value: "MysticSquareModule"
-				}
-			],
-			"Battleship": [  
-				{  
-					regex: /.+/,
-					value: "BattleshipModule"
-				},
-				{  
-					regex: /Ships: .+/,
-					value: function(matches, id) {
-						readDirectly({ label: "Solution:", obj: pre(readMultiple(6)) }, "BattleshipModule", id);
-					}
-				}
-			],
-			"ColoredSquares": [  
-				{  
-					regex: /First stage color is (.+); count=(\d+)./,
-					value: function(matches, id) {
-						readDirectly("First stage is: " + matches[1] + ". Count: " + matches[2], "ColoredSquaresModule", id);
-					}
-				},
-				{  
-					regex: /\d+ lit:/,
-					value: "ColoredSquaresModule"
-				},
-				{  
-					regex: /Button #\d/,
-					value: "ColoredSquaresModule"
-				}
-			],
-			"Broken Buttons": [  
-				{  
-					regex: /Buttons:/,
-					value: function(_, id) {
-						var module = GetBomb().GetModuleID("BrokenButtonsModule", id);
-						var step = module.Step || module;
-
-						step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
-					}
-				},
-				{  
-					regex: /Step: (.+)/,
-					value: function(matches, id) {
-						var module = GetBomb().GetModuleID("BrokenButtonsModule", id);
-						module.Steps = (module.Steps || 0) + 1;
-						module.Step = [matches[1]];
-						module.push(["Step #" + module.Steps, module.Step]);
-					}
-				},
-				{  
-					regex: /Press: (.+)/,
-					value: function(matches, id) {
-						var module = GetBomb().GetModuleID("BrokenButtonsModule", id);
-						var step = module.Step;
-						step.push("Press: " + matches[1]);
-
-						var line = readLine();
-						while ((/".+" at \d, \d/).exec(line)) {
-							step.push(line);
-							line = readLine();
+			// Module Reading
+			"Light Cycle": {
+			 	ID: "LightCycleModule",
+			 	Lines: [
+					{
+						regex: /Start sequence: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.Presses = [];
+							module.push("Starting Seq: " + matches[1]);
+							module.push(["Buttons:", module.Presses]);
 						}
+					},
+					{
+						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
+						}
+					},
+					{
+						regex: /Pressed button/,
+						value: function(matches, module) {
+							module.Presses.push(matches.input);
+						}
+					}
+				]
+			},
+			"Mystic Square": {
+				ID: "MysticSquareModule",
+				Lines: [
+					{
+						regex: /Field:/,
+						value: function(matches, module) {
+							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) })
+						}
+					},
+					{
+						regex: /Last serial digit|Skull path/,
+					}
+				]
+			},
+			"Battleship": {
+				ID: "BattleshipModule",
+				Lines:[
+					{
+						regex: /.+/,
+					},
+					{
+						regex: /Ships: .+/,
+						value: function(matches, module) {
+							module.push({ label: "Solution:", obj: pre(readMultiple(6)) });
+						}
+					}
+				]
+			},
+			"ColoredSquares": {
+				ID: "ColoredSquaresModule",
+				Lines: [
+					{
+						regex: /First stage color is (.+); count=(\d+)./,
+						value: function(matches, module) {
+							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
+						}
+					},
+					{
+						regex: /\d+ lit:|Button #\d/
+					}
+				],
+			},
+			"Broken Buttons": {
+				ID: "BrokenButtonsModule",
+				Lines: [
+					{
+						regex: /Buttons:/,
+						value: function(_, module) {
+							var step = module.Step || module;
 
-						linen--;
-					}
-				},
-				{  
-					regex: /Solution:/,
-					value: "BrokenButtonsModule"
-				}
-			],
-			"TheBulb": [  
-				{  
-					regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
-					value: function(matches, id) {
-						readDirectly([
-							"Color: " + matches[1],
-							"Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"),
-							"Initially: " + (matches[3] == "True" ? "On" : "Off")
-						], "TheBulbModule", id);
-					}
-				},
-				{  
-					regex: /(?:Pressing|Unscrewing|Screwing|Module solved.) .+/,
-					value: "TheBulbModule"
-				}
-			],
-			"AdjacentLetters": [  
-				{  
-					regex: /Solution:/,
-					value: function(_, id) {
-						readDirectly(["Solution:", pre(readMultiple(3))], "AdjacentLettersModule", id);
-					}
-				},
-				{  
-					regex: /You submitted:/,
-					value: function(_, id) {
-						readDirectly(["You submitted:", pre(readMultiple(3))], "AdjacentLettersModule", id);
-					}
-				}
-			],
-			"Skewed Slots": [  
-				{  
-					regex: /Rule Log/,
-					value: function(_, id) {
-						readDirectly(readLine(), "SkewedSlotsModule", id); // Initial
-						module = GetBomb().GetModuleID("SkewedSlotsModule", id);
-
-						for (var i = 0; i < 3; i++) {
-							readLine();
-							var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
-							var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
+							step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
+						}
+					},
+					{
+						regex: /Step: (.+)/,
+						value: function(matches, module) {
+							module.Steps = (module.Steps || 0) + 1;
+							module.Step = [matches[1]];
+							module.push(["Step #" + module.Steps, module.Step]);
+						}
+					},
+					{
+						regex: /Press: (.+)/,
+						value: function(matches, module) {
+							var step = module.Step;
+							step.push("Press: " + matches[1]);
 
 							var line = readLine();
-							while (!(/Final digit/).exec(line)) {
-								slot[1].push(line);
+							while ((/".+" at \d, \d/).exec(line)) {
+								step.push(line);
 								line = readLine();
 							}
-							slot[1].push(line);
 
-							module.push(slot);
+							linen--;
 						}
-
-						readLine();
-						readDirectly(readLine(), "SkewedSlotsModule", id); // Final
+					},
+					{
+						regex: /Solution:/
 					}
-				}
-			],
-			"Coordinates": [  
-				{  
-					regex: /(\d)×(\d)/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("CoordinatesModule", id).Y = parseInt(matches[2]);
-					}
-				},
-				{  
-					regex: /Grid:/,
-					value: function(_, id) {
-						var grid = "";
-						var y = GetBomb().GetModuleID("CoordinatesModule", id).Y;
-						while (y > 0) {
-							grid += "\n" + readLine();
-							y--;
+				],
+			},
+			"TheBulb": {
+				ID: "TheBulbModule",
+				Lines: [
+					{
+						regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
+						value: function(matches, module) {
+							module.push([
+								"Color: " + matches[1],
+								"Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"),
+								"Initially: " + (matches[3] == "True" ? "On" : "Off")
+							]);
 						}
-
-						readDirectly({label: "Grid:", obj: pre(grid)}, "CoordinatesModule", id);
-						return true;
+					},
+					{
+						regex: /(?:Pressing|Unscrewing|Screwing|Module solved.) .+/
 					}
-				},
-				{  
-					regex: /.+/,
-					value: "CoordinatesModule"
-				}
-			],
-			"Murder": [  
-				{  
-					regex: /Number of batteries/,
-					value: function(matches) {
-						var id = GetBomb().GetMod("murder").IDs.length + 1;
-						var mod = GetBomb().GetModuleID("murder", id);
-						mod.BombInfo = [];
-						mod.Rows = [];
-						mod.push(["Bomb Info", mod.BombInfo]);
-					}
-				},
-				{  
-					regex: /Number of|Has/,
-					value: function(matches) {
-						GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
-						return true;
-					}
-				},
-				{  
-					regex: /row/,
-					value: function(matches) {
-						GetBomb().GetModuleID("murder").Rows.push(matches.input);
-					}
-				},
-				{  
-					regex: /Body found in/,
-					value: function(matches) {
-						GetBomb().GetModuleID("murder").Body = matches.input;
-					}
-				},
-				{  
-					regex: /Actual solution:/,
-					value: function(matches) {
-						var mod = GetBomb().GetModuleID("murder");
-						mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
-						mod.push(["Suspects", mod.Suspects]);
-						mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Pipe", "Revolver"];
-						mod.push(["Weapons", mod.Weapons]);
-						mod.push(mod.Body);
-						mod.Rows.forEach(function(row) {
-							mod.push(row);
-						});
-						mod.push(matches.input);
-					}
-				},
-				{  
-					regex: /Eliminating (.+) to re/,
-					value: function(matches) {
-						var mod = GetBomb().GetModuleID("murder");
-						var index = mod.Suspects.indexOf(matches[1]);
-						if (index > -1) {
-							mod.Suspects.splice(index, 1);
-						} else {
-							mod.Weapons.splice(mod.Weapons.indexOf(matches[1]), 1);
+				],
+			},
+			"AdjacentLetters": {
+				ID: "AdjacentLettersModule",
+				Lines: [
+					{
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push(["Solution:", pre(readMultiple(3))]);
+						}
+					},
+					{
+						regex: /You submitted:/,
+						value: function(_, module) {
+							module.push(["You submitted:", pre(readMultiple(3))]);
 						}
 					}
-				}
-			],
-			"TicTacToe": [  
-				{  
-					regex: /Starting row/,
-					value: "TicTacToeModule"
-				},
-				{  
-					regex: /Keypad is now/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("TicTacToeModule", id);
-						var step = [];
-						mod.Step = step;
+				],
+			},
+			"Skewed Slots": {
+				ID: "SkewedSlotsModule",
+				Lines: [
+					{
+						regex: /Rule Log/,
+						value: function(_, module) {
+							module.push(readLine()); // Initial
 
-						mod.push(["Step " + mod.length + ":", step]);
+							for (var i = 0; i < 3; i++) {
+								readLine();
+								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
+								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
 
-						step.push({ label: matches.input, obj: pre(readMultiple(3)) });
+								var line = readLine();
+								while (!(/Final digit/).exec(line)) {
+									slot[1].push(line);
+									line = readLine();
+								}
+								slot[1].push(line);
 
-						step.push(readLine()); // up next
-						step.push(readLine()); // current row
-					}
-				},
-				{  
-					regex: /Next expectation is|Clicked/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("TicTacToeModule", id).Step.push(matches.input);
-					}
-				}
-			],
-			"Word Search": [  
-				{  
-					regex: /Correct word is (.+)/,
-					value: function(matches, id) {
-						readDirectly("Solution: " + matches[1], "WordSearchModule", id);
-					}
-				},
-				{  
-					regex: /Wrong words are (.+)/,
-					value: function(matches, id) {
-						readDirectly("Wrong Words: " + matches[1], "WordSearchModule", id);
-					}
-				},
-				{  
-					regex: /Field:/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("WordSearchModule", id).push({ label: 'Field:', obj: pre(readMultiple(6)) });
-					}
-				},
-				{  
-					regex: /Coordinates clicked/,
-					value: "WordSearchModule"
-				}
-			],
-			"Simon Screams": [  
-				{  
-					regex: /Colors in|Small table/,
-					value: function(matches, id) {
-						readDirectly(matches.input, "SimonScreamsModule", id);
-						return true;
-					}
-				},
-				{  
-					regex: /Stage (.) sequence/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("SimonScreamsModule", id);
-						mod.Stage = ["Stage #" + matches[1],
-							[]
-						];
-						mod.push(mod.Stage);
-					}
-				},
-				{  
-					regex: /.+/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("SimonScreamsModule", id).Stage[1].push(matches.input);
-					}
-				}
-			],
-			"FollowTheLeader": [  
-				{  
-					regex: /Starting at wire:/,
-					value: "FollowTheLeaderModule"
-				},
-				{  
-					regex: /Wire state:/,
-					value: function() {
-						var states = [];
+								module.push(slot);
+							}
 
-						var line = readLine();
-						while ((/^Wire \d+-to-\d+/).exec(line)) {
-							states.push(line);
-							line = readLine();
+							readLine();
+							module.push(readLine()); // Final
 						}
-						linen--;
-
-						GetBomb().GetModuleID("FollowTheLeaderModule", id).push(["Wire states:", states]);
 					}
-				},
-				{  
-					regex: /Expectation/,
-					value: function(matches) {
-						if (matches.input.match(/Expectation now is that you’re done./)) {
-							GetBomb().GetModuleID("FollowTheLeaderModule", id).push(matches.input);
-						} else {
+				]
+			},
+			"Coordinates": {
+				ID: "CoordinatesModule",
+				Lines: [
+					{
+						regex: /(\d)×(\d)/,
+						value: function(matches, module) {
+							module.Y = parseInt(matches[2]);
+						}
+					},
+					{
+						regex: /Grid:/,
+						value: function(_, module) {
+							var grid = "";
+							var y = module.Y;
+							while (y > 0) {
+								grid += "\n" + readLine();
+								y--;
+							}
+
+							module.push({label: "Grid:", obj: pre(grid)});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Murder": {
+				ID: "murder", 
+				Lines: [
+					{
+						regex: /Number of batteries/,
+						value: function(matches) {
+							var id = GetBomb().GetMod("murder").IDs.length + 1;
+							var mod = GetBomb().GetModuleID("murder", id);
+							mod.BombInfo = [];
+							mod.Rows = [];
+							mod.push(["Bomb Info", mod.BombInfo]);
+						}
+					},
+					{
+						regex: /Number of|Has/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /row/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").Rows.push(matches.input);
+						}
+					},
+					{
+						regex: /Body found in/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").Body = matches.input;
+						}
+					},
+					{
+						regex: /Actual solution:/,
+						value: function(matches) {
+							var mod = GetBomb().GetModuleID("murder");
+							mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
+							mod.push(["Suspects", mod.Suspects]);
+							mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Pipe", "Revolver"];
+							mod.push(["Weapons", mod.Weapons]);
+							mod.push(mod.Body);
+							mod.Rows.forEach(function(row) {
+								mod.push(row);
+							});
+							mod.push(matches.input);
+						}
+					},
+					{
+						regex: /Eliminating (.+) to re/,
+						value: function(matches) {
+							var mod = GetBomb().GetModuleID("murder");
+							var index = mod.Suspects.indexOf(matches[1]);
+							if (index > -1) {
+								mod.Suspects.splice(index, 1);
+							} else {
+								mod.Weapons.splice(mod.Weapons.indexOf(matches[1]), 1);
+							}
+						}
+					}
+				],
+			},
+			"TicTacToe": {
+				ID: "TicTacToeModule",
+				Lines: [
+					{
+						regex: /Starting row/
+					},
+					{
+						regex: /Keypad is now/,
+						value: function(matches, module) {
+							var step = [];
+							module.Step = step;
+
+							module.push(["Step " + module.length + ":", step]);
+
+							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
+
+							step.push(readLine()); // up next
+							step.push(readLine()); // current row
+						}
+					},
+					{
+						regex: /Next expectation is|Clicked/,
+						value: function(matches, module) {
+							module.Step.push(matches.input);
+						}
+					}
+				],
+			},
+			"Word Search": {
+				ID: "WordSearchModule",
+				Lines: [
+					{
+						regex: /Correct word is (.+)/,
+						value: function(matches, module) {
+							module.push("Solution: " + matches[1]);
+						}
+					},
+					{
+						regex: /Wrong words are (.+)/,
+						value: function(matches, module) {
+							module.push("Wrong Words: " + matches[1]);
+						}
+					},
+					{
+						regex: /Field:/,
+						value: function(matches, module) {
+							module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
+						}
+					},
+					{
+						regex: /Coordinates clicked/
+					}
+				],
+			},
+			"Simon Screams": {
+				ID: "SimonScreamsModule",
+				Lines: [
+					{
+						regex: /Colors in|Small table/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /Stage (.) sequence/,
+						value: function(matches, module) {
+							module.Stage = ["Stage #" + matches[1],
+								[]
+							];
+							module.push(module.Stage);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Stage[1].push(matches.input);
+						}
+					}
+				],
+			},
+			"FollowTheLeader": {
+				ID: "FollowTheLeaderModule",
+				Lines: [
+					{
+						regex: /Starting at wire:/
+					},
+					{
+						regex: /Wire state:/,
+						value: function(_, module) {
 							var states = [];
 
 							var line = readLine();
@@ -1537,591 +1537,647 @@ $(function() {
 								line = readLine();
 							}
 							linen--;
-							GetBomb().GetModuleID("FollowTheLeaderModule", id).push([matches.input, states]);
+
+							module.push(["Wire states:", states]);
+						}
+					},
+					{
+						regex: /Expectation/,
+						value: function(matches, module) {
+							if (matches.input.match(/Expectation now is that you’re done./)) {
+								module.push(matches.input);
+							} else {
+								var states = [];
+
+								var line = readLine();
+								while ((/^Wire \d+-to-\d+/).exec(line)) {
+									states.push(line);
+									line = readLine();
+								}
+								linen--;
+								module.push([matches.input, states]);
+							}
 						}
 					}
-				}
-			],
-			"Chess": [  
-				{  
-					regex: /Selected Solution: (.+)/,
-					value: function(matches, id) {
-						var locations = matches[1].split(", ");
-						var solution = locations[locations.length - 1];
-						locations.splice(locations.length - 1, 1);
-						readDirectly("Display: " + locations.join(", "), "ChessModule", id);
-						readDirectly("Solution: " + solution, "ChessModule", id);
-						readLine();
-						readDirectly({ label: "Board:", obj: pre(readMultiple(13)) }, "ChessModule", id);
+				],
+			},
+			"Chess": {
+				ID: "ChessModule",
+				Lines: [
+					{
+						regex: /Selected Solution: (.+)/,
+						value: function(matches, module) {
+							var locations = matches[1].split(", ");
+							var solution = locations[locations.length - 1];
+							locations.splice(locations.length - 1, 1);
+							module.push("Display: " + locations.join(", "));
+							module.push("Solution: " + solution);
+							readLine();
+							module.push({ label: "Board:", obj: pre(readMultiple(13)) });
+						}
+					},
+					{
+						regex: /Entered answer/
 					}
-				},
-				{  
-					regex: /Entered answer/,
-					value: "ChessModule"
-				}
-			],
-			"Blind Alley": [  
-				{  
-					regex: /Region condition counts:/,
-					value: function(_, id) {
-						readDirectly({
-							label: "Region counts:",
-							obj: pre(readMultiple(3))
-						}, "BlindAlleyModule", id);
+				],
+			},
+			"Blind Alley": {
+				ID: "BlindAlleyModule",
+				Lines: [
+					{
+						regex: /Region condition counts:/,
+						value: function(_, module) {
+							module.push({
+								label: "Region counts:",
+								obj: pre(readMultiple(3))
+							});
+						}
+					},
+					{
+						regex: /Must press regions:|Region .+ is correct|You pressed region/
 					}
-				},
-				{  
-					regex: /Must press regions:|Region .+ is correct|You pressed region/,
-					value: "BlindAlleyModule"
-				}
-			],
-			"MonsplodeFight": [  
-				{  
-					regex: /Opponent: (.+)/,
-					value: function(matches) {
-						GetBomb().GetModule("monsplodeFight").push([matches[1],
-							[]
-						]);
-					}
-				},
-				{  
-					regex: /.+/,
-					value: function(matches) {
-						var mod = GetBomb().GetModule("monsplodeFight");
-						mod[mod.length - 1][1].push(matches.input);
-					}
-				},
-				{  
-					regex: /(?:Opponent:|Move Name)/,
-					value: function(matches) {
-						var mod = GetBomb().GetModule("monsplodeFight");
-						mod[mod.length - 1][1].push(readLine());
-					}
-				}
-			],
-			"Colour Flash": [  
-				{  
-					regex: /Module generated/,
-					value: function(matches, id) {
-						readDirectly({
-							label: "Color Sequence:",
-							obj: pre(readMultiple(10))
-						}, "ColourFlash", id);
-						readLine();
-						for (var i = 0; i < 3; i++) {
-							readDirectly(readLine(), "ColourFlash", id);
+				],
+			},
+			"MonsplodeFight": {
+				ID: "monsplodeFight",
+				Lines: [
+					{
+						regex: /Opponent: (.+)/,
+						value: function(matches, module) {
+							module.push([matches[1],
+								[]
+							]);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(matches.input);
+						}
+					},
+					{
+						regex: /(?:Opponent:|Move Name)/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(readLine());
 						}
 					}
-				},
-				{  
-					regex: /.+ button was pressed/,
-					value: "ColourFlash"
-				},
-				{  
-					regex: /.+ answer!/,
-					value: "ColourFlash"
-				}
-			],
-			"Cheap Checkout": [  
-				{  
-					regex: /Receipt/,
-					value: function(matches, id) {
-						readDirectly({ label: 'Receipt:', obj: pre(readMultiple(10)) }, "CheapCheckoutModule", id);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "CheapCheckoutModule"
-				}
-			],
-			"Plumbing": [  
-				{  
-					regex: /Module solved/,
-					value: function() {
-						return true;
-					}
-				},
-				{  
-					regex: /\[[A-Z]{3}[-+]\].*/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("MazeV2", id);
-						if (!mod.Conditions) {
-							mod.Conditions = [];
+				],
+			},
+			"Colour Flash": {
+				ID: "ColourFlash",
+				Lines: [
+					{
+						regex: /Module generated/,
+						value: function(matches, module) {
+							module.push({
+								label: "Color Sequence:",
+								obj: pre(readMultiple(10))
+							});
+							readLine();
+							for (var i = 0; i < 3; i++) {
+								module.push(readLine());
+							}
 						}
-
-						mod.Conditions.push(matches[0]);
-
-						return true;
+					},
+					{
+						regex: /.+ button was pressed|.+ answer!/
 					}
-				},
-				{  
-					regex: /^[A-Z]+ (?:IN|OUT)/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("MazeV2", id);
-						if (mod.Conditions) {
-							mod.push([matches.input, mod.Conditions]);
-						} else {
-							mod.push(matches.input);
+				],
+			},
+			"Cheap Checkout": {
+				ID: "CheapCheckoutModule",
+				Lines: [
+					{
+						regex: /Receipt/,
+						value: function(matches, module) {
+							module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
+							return true;
 						}
-						mod.Conditions = null;
-
-						return true;
+					},
+					{
+						regex: /.+/
 					}
-				},
-				{  
-					regex: /:/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("MazeV2", id);
-						mod.Pipes = [];
-						mod.Title = matches.input;
-
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("MazeV2", id);
-						mod.Pipes.push(matches.input);
-
-						if (mod.Pipes.length == 6) {
-							mod.push({ label: mod.Title, obj: pre(mod.Pipes.join("\n")) });
+				],
+			}
+			"Plumbing": {
+				ID: "MazeV2",
+				Lines: [
+					{
+						regex: /Module solved/,
+						value: function() {
+							return true;
 						}
-					}
-				}
-			],
-			"Safety Safe": [  
-				{  
-					regex: /offset|Answer|Input|solved/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("PasswordV2", id).push(matches.input.replace(/,/g, ", "));
-					}
-				}
-			],
-			"Round Keypad": [  
-				{  
-					regex: /.+/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("KeypadV2", id).push(matches[0].replace(/,/g, " "));
-					}
-				}
-			],
-			"Piano Keys": [  
-				{  
-					regex: /Module generated with the following symbols/,
-					value: "PianoKeys"
-				},
-				{  
-					regex: /The correct rule is the following/,
-					value: function(matches, id) {
-						var input = [];
-						var mod = GetBomb().GetModuleID("PianoKeys", id);
-						mod.Input = input;
-						readDirectly(matches.input, "PianoKeys", id);
-						readDirectly(readLine().trim(), "PianoKeys", id);
-						readDirectly(readLine().trim(), "PianoKeys", id);
-						readLine();
-						readDirectly(readLine().replace(/[|]/g, ""), "PianoKeys", id);
-						mod.push(["Key Presses", input]);
+					},
+					{
+						regex: /\[[A-Z]{3}[-+]\].*/,
+						value: function(matches, module) {
+							if (!module.Conditions) {
+								module.Conditions = [];
+							}
 
-						return true;
-					}
-				},
-				{  
-					regex: /Input .+ was received|The current valid sequence/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("PianoKeys", id).Input.push(matches.input);
-					}
-				}
-			],
-			"Resistors": [  
-				{  
-					regex: /Serial number digits/,
-					value: function(matches) {
-						var mod = GetBomb().GetModule("resistors");
-						mod.BombInfo = [];
-						mod.push(["Bomb Info", mod.BombInfo]);
-					}
-				},
-				{  
-					regex: /Serial number digits|batteries|Lit FRK/,
-					value: function(matches) {
-						GetBomb().GetModule("resistors").BombInfo.push(matches.input);
-						return true;
-					}
-				},
-				{  
-					regex: /Already placed/,
-					value: function() {
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "resistors"
-				}
-			],
-			"Souvenir": [  
-				{  
-					regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
-					value: function(matches, id) {
-						readDirectly("Question: " + matches[1], "SouvenirModule", id);
-						readDirectly("Answers: " + matches[2], "SouvenirModule", id);
-					}
-				}
-			],
-			"Hexamaze": [  
-				{  
-					regex: /Moving from|Walking out|There’s an|However, we wanted/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("HexamazeModule", id);
-						if (!mod.Moves) {
-							mod.Moves = [];
-							mod.push(["Moves", mod.Moves]);
+							module.Conditions.push(matches[0]);
+
+							return true;
 						}
+					},
+					{
+						regex: /^[A-Z]+ (?:IN|OUT)/,
+						value: function(matches, module) {
+							if (module.Conditions) {
+								module.push([matches.input, module.Conditions]);
+							} else {
+								module.push(matches.input);
+							}
+							module.Conditions = null;
 
-						mod.Moves.push(matches.input);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "HexamazeModule"
-				}
-			],
-			"Laundry": [  
-				{  
-					regex: /.+/,
-					value: function(matches, id) {
-						readDirectly(matches.input, "Laundry", id);
-						for (var i = 0; i < 4; i++) {
-							readDirectly(readLine(), "Laundry", id);
+							return true;
+						}
+					},
+					{
+						regex: /:/,
+						value: function(matches, module) {
+							module.Pipes = [];
+							module.Title = matches.input;
+
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Pipes.push(matches.input);
+
+							if (module.Pipes.length == 6) {
+								module.push({ label: module.Title, obj: pre(module.Pipes.join("\n")) });
+							}
 						}
 					}
-				}
-			],
-			"Modules Against Humanity": [  
-				{  
-					regex: /Modules:/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("ModuleAgainstHumanity", id);
-						var lines = readMultiple(11);
-						while (/  \|/.test(lines) && !/[^ ] \|/.test(lines))
-							lines = lines.replace(/ \|/g, '|');
-						while (/\|  /.test(lines) && !/\| [^ ]/.test(lines))
-							lines = lines.replace(/\| /g, '|');
-						mod.push({ label: "Cards:", obj: pre(lines) });
-
-						var line;
-						do {
-							line = readLine();
-							mod.push(line.replace(/Black:/g, "Black: ").trim());
+				],
+			},
+			"Safety Safe": {
+				ID: "PasswordV2", 
+				Lines: [
+					{
+						regex: /offset|Answer|Input|solved/,
+						value: function(matches, module) {
+							module.push(matches.input.replace(/,/g, ", "));
 						}
-						while (!/^Final cards/.test(line));
 					}
-				},
-				{  
-					regex: /Submitted:/,
-					value: "ModuleAgainstHumanity"
-				}
-			],
-			"Semaphore": [  
-				{  
-					regex: /Module generated/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("Semaphore", id).push({ label: "Flags", obj: pre(readMultiple(8)) });
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "Semaphore"
-				}
-			],
-			"Friendship": [  
-				{  
-					regex: /Friendship symbol/,
-					value: function(matches, id) {
-						var mod = GetBomb().GetModuleID("FriendshipModule", id);
-						if (!mod.Symbols) {
-							mod.Symbols = [];
-							mod.push(["Symbols", mod.Symbols]);
+				],
+			},
+			"Round Keypad": {
+				ID: "KeypadV2",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.push(matches[0].replace(/,/g, " "));
 						}
+					}
+				],
+			},
+			"Piano Keys": {
+				ID: "PianoKeys",
+				Lines: [
+					{
+						regex: /Module generated with the following symbols/
+					},
+					{
+						regex: /The correct rule is the following/,
+						value: function(matches, module) {
+							var input = [];
+							module.Input = input;
+							module.push(matches.input);
+							module.push(readLine().trim());
+							module.push(readLine().trim());
+							readLine();
+							module.push(readLine().replace(/[|]/g, ""));
+							module.push(["Key Presses", input]);
 
-						mod.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "FriendshipModule"
-				}
-			],
-			"Silly Slots": [  
-				{  
-					regex: /Stage/,
-					value: function(matches, id) {
-						readDirectly({ label: matches.input, obj: pre(readMultiple(2)) }, "SillySlots", id);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "SillySlots"
-				}
-			],
-			"Web design": [  
-				{  
-					regex: /For reference purpose/,
-					value: function(matches, id) {
-						var lines = "";
-						var line = readLine();
-						while (!line.match("}") && line) {
-							lines += line + "\n";
-							line = readLine();
+							return true;
 						}
-						lines += "}";
-
-						readDirectly({ label: matches.input, obj: pre(lines) }, "webDesign", id);
-
-						return true;
+					},
+					{
+						regex: /Input .+ was received|The current valid sequence/,
+						value: function(matches, module) {
+							module.Input.push(matches.input);
+						}
 					}
-				},
-				{  
-					regex: /.+/,
-					value: "webDesign"
-				}
-			],
-			"Wire Placement": [  
-				{  
+				],
+			},
+			"Resistors": {
+				ID: "resistors",
+				Lines: [
+					{
+						regex: /Serial number digits/,
+						value: function(matches, module) {
+							module.BombInfo = [];
+							module.push(["Bomb Info", module.BombInfo]);
+						}
+					},
+					{
+						regex: /Serial number digits|batteries|Lit FRK/,
+						value: function(matches, module) {
+							module.BombInfo.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /Already placed/,
+						value: function() {
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: "resistors"
+					}
+				],
+			},
+			"Souvenir": {
+				ID: "SouvenirModule",
+				Lines: [
+					{
+						regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
+						value: function(matches, module) {
+							module.push("Question: " + matches[1]);
+							module.push("Answers: " + matches[2]);
+						}
+					}
+				],
+			},
+			"Hexamaze": {
+				ID: "HexamazeModule",
+				Lines: [
+					{
+						regex: /Moving from|Walking out|There’s an|However, we wanted/,
+						value: function(matches, module) {
+							if (!module.Moves) {
+								module.Moves = [];
+								module.push(["Moves", module.Moves]);
+							}
+
+							module.Moves.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Laundry": {
+				ID: "Laundry",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							for (var i = 0; i < 4; i++) {
+								module.push(readLine());
+							}
+						}
+					}
+				],
+			},
+			"Modules Against Humanity": {
+				ID: "ModuleAgainstHumanity",
+				Lines: [
+					{
+						regex: /Modules:/,
+						value: function(matches, id) {
+							var lines = readMultiple(11);
+							while (/  \|/.test(lines) && !/[^ ] \|/.test(lines))
+								lines = lines.replace(/ \|/g, '|');
+							while (/\|  /.test(lines) && !/\| [^ ]/.test(lines))
+								lines = lines.replace(/\| /g, '|');
+							module.push({ label: "Cards:", obj: pre(lines) });
+
+							var line;
+							do {
+								line = readLine();
+								module.push(line.replace(/Black:/g, "Black: ").trim());
+							}
+							while (!/^Final cards/.test(line));
+						}
+					},
+					{
+						regex: /Submitted:/
+					}
+				],
+			},
+			"Semaphore": {
+				ID: "Semaphore",
+				Lines: [
+					{
+						regex: /Module generated/,
+						value: function(matches, module) {
+							module.push({ label: "Flags", obj: pre(readMultiple(8)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Friendship": {
+				ID: "FriendshipModule",
+				Lines: [
+					{
+						regex: /Friendship symbol/,
+						value: function(matches, module) {
+							if (!module.Symbols) {
+								module.Symbols = [];
+								module.push(["Symbols", module.Symbols]);
+							}
+
+							module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Silly Slots": {
+				ID: "SillySlots",
+				Line: [
+					{
+						regex: /Stage/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(2)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Web design": {
+				ID: "webDesign",
+				Lines: [
+					{
+						regex: /For reference purpose/,
+						value: function(matches, module) {
+							var lines = "";
+							var line = readLine();
+							while (!line.match("}") && line) {
+								lines += line + "\n";
+								line = readLine();
+							}
+							lines += "}";
+
+							module.push({ label: matches.input, obj: pre(lines) });
+
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Creation": {
+				ID: "CreationModule",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							if (module.length === 0) {
+								module.push(["Initial State", []]);
+							}
+
+							module[module.length - 1][1].push(matches.input);
+						}
+					},
+					{
+						regex: /Restarting module.../,
+						value: function(matches, module) {
+							module.push(["Restart #" + module.length, []]);
+						}
+					}
+				],
+			},
+			"Only Connect": {
+				ID: "OnlyConnectModule",
+				Lines: [
+					{
+						regex: /Hieroglyph +Position +Serial# +Ports +num/,
+						value: function(matches, module) {
+							module.push({
+								label: 'Egyptian Hieroglyphs:',
+								obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Perspective Pegs": {
+				ID: "spwizPerspectivePegs",
+				Lines: [
+					{
+						regex: /Pegs:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"3D Maze": {
+				ID: "spwiz3DMaze",
+				Lines: [
+					{
+						regex: /You walked into a wrong wall:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(13)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Bitmaps": {
+				ID: "BitmapsModule",
+				Lines: [
+					{
+						regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
+						value: function(matches, module) {
+							module.push({
+								label: matches.input,
+								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+									.css('color', matches[1] === 'red'    ? '#800' :
+												  matches[1] === 'green'  ? '#080' :
+												  matches[1] === 'blue'   ? '#008' :
+												  matches[1] === 'yellow' ? '#880' :
+												  matches[1] === 'cyan'   ? '#088' : '#808')
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Wire Placement": [
+				{
 					regex: /.+/,
 					value: "WirePlacementModule"
 				}
 			],
-			"Text Field": [  
-				{  
+			"Text Field": [
+				{
 					regex: /.+/,
 					value: "TextField"
 				}
 			],
-			"The Gamepad": [  
-				{  
+			"The Gamepad": [
+				{
 					regex: /.+/,
 					value: "TheGamepadModule"
 				}
 			],
-			"Double-Oh": [  
-				{  
+			"Double-Oh": [
+				{
 					regex: /.+/,
 					value: "DoubleOhModule"
 				}
 			],
-			"Mouse in the Maze": [  
-				{  
+			"Mouse in the Maze": [
+				{
 					regex: /.+/,
 					value: "MouseInTheMaze"
 				}
 			],
-			"CaesarCipher": [  
-				{  
+			"CaesarCipher": [
+				{
 					regex: /.+/,
 					value: "CaesarCipherModule"
 				}
 			],
-			"Simon States": [  
-				{  
+			"Simon States": [
+				{
 					regex: /.+/,
 					value: "SimonV2"
 				}
 			],
-			"Square Button": [  
-				{  
+			"Square Button": [
+				{
 					regex: /.+/,
 					value: "ButtonV2"
 				}
 			],
-			"Morsematics": [  
-				{  
+			"Morsematics": [
+				{
 					regex: /.+/,
 					value: "MorseV2"
 				}
 			],
-			"Forget Me Not": [  
-				{  
+			"Forget Me Not": [
+				{
 					regex: /.+/,
 					value: "MemoryV2"
 				}
 			],
-			"Logic": [  
-				{  
+			"Logic": [
+				{
 					regex: /.+/,
 					value: "Logic"
 				}
 			],
-			"Rock-Paper-Scissors-Lizard-Spock": [  
-				{  
+			"Rock-Paper-Scissors-Lizard-Spock": [
+				{
 					regex: /.+/,
 					value: "RockPaperScissorsLizardSpockModule"
 				}
 			],
-			"Color Math": [  
-				{  
+			"Color Math": [
+				{
 					regex: /.+/,
 					value: "colormath"
 				}
 			],
-			"Rhythms": [  
-				{  
+			"Rhythms": [
+				{
 					regex: /.+/,
 					value: "MusicRhythms"
 				}
 			],
-			"Only Connect": [  
-				{  
-					regex: /Hieroglyph +Position +Serial# +Ports +num/,
-					value: function(matches, id) {
-						GetBomb().GetModuleID("OnlyConnectModule", id).push({
-							label: 'Egyptian Hieroglyphs:',
-							obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
-						});
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "OnlyConnectModule"
-				}
-			],
-			"Neutralization": [  
-				{  
+			"Neutralization": [
+				{
 					regex: /.+/,
 					value: "neutralization"
 				}
 			],
-			"Astrology": [  
-				{  
+			"Astrology": [
+				{
 					regex: /.+/,
 					value: "spwizAstrology"
 				}
 			],
-			"Perspective Pegs": [  
-				{  
-					regex: /Pegs:/,
-					value: function(matches, id) {
-						readDirectly({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) }, "spwizPerspectivePegs", id);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "spwizPerspectivePegs"
-				}
-			],
-			"3D Maze": [  
-				{  
-					regex: /You walked into a wrong wall:/,
-					value: function(matches, id) {
-						readDirectly({ label: matches.input, obj: pre(readMultiple(13)) }, "spwiz3DMaze", id);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "spwiz3DMaze"
-				}
-			],
-			"Adventure Game": [  
-				{  
+			"Adventure Game": [
+				{
 					regex: /.+/,
 					value: "spwizAdventureGame"
 				}
 			],
-			"Creation": [  
-				{  
-					regex: /.+/,
-					value: function(matches, id) {
-						var mod = bomb.GetModuleID("CreationModule", id);
-						if (mod.length === 0) {
-							mod.push(["Initial State", []]);
-						}
-
-						mod[mod.length - 1][1].push(matches.input);
-					}
-				},
-				{  
-					regex: /Restarting module.../,
-					value: function(matches, id) {
-						var mod = bomb.GetModuleID("CreationModule", id);
-						mod.push(["Restart #" + mod.length, []]);
-					}
-				}
-			],
-			"ChordQualities": [  
-				{  
+			"ChordQualities": [
+				{
 					regex: /.+/,
 					value: "ChordQualities"
 				}
 			],
-			"Rubik’s Cube": [  
-				{  
+			"Rubik’s Cube": [
+				{
 					regex: /.+/,
 					value: "RubiksCubeModule"
 				}
 			],
-			"FizzBuzz": [  
-				{  
+			"FizzBuzz": [
+				{
 					regex: /.+/,
 					value: "fizzBuzzModule"
 				}
 			],
-			"Bitmaps": [  
-				{  
-					regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
-					value: function(matches, id) {
-						readDirectly({
-							label: matches.input,
-							obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
-								.css('color', matches[1] === 'red'    ? '#800' :
-											  matches[1] === 'green'  ? '#080' :
-											  matches[1] === 'blue'   ? '#008' :
-											  matches[1] === 'yellow' ? '#880' :
-											  matches[1] === 'cyan'   ? '#088' : '#808')
-						}, "BitmapsModule", id);
-						return true;
-					}
-				},
-				{  
-					regex: /.+/,
-					value: "BitmapsModule"
-				}
-			],
-			"Connection Check": [  
-				{  
+			"Connection Check": [
+				{
 					regex: /.+/,
 					value: "graphModule"
 				}
 			],
-			"Complicated Buttons": [  
-				{  
+			"Complicated Buttons": [
+				{
 					regex: /.+/,
 					value: "complicatedButtonsModule"
 				}
 			],
-			"Symbolic Password": [  
-				{  
+			"Symbolic Password": [
+				{
 					regex: /.+/,
 					value: "symbolicPasswordModule"
 				}
 			],
-			"The Clock": [  
-				{  
+			"The Clock": [
+				{
 					regex: /.+/,
 					value: "TheClockModule"
 				}
 			],
-			"Bitwise Operators": [  
-				{  
+			"Bitwise Operators": [
+				{
 					regex: /.+/,
 					value: "BitOps"
 				}
@@ -2134,29 +2190,38 @@ $(function() {
 			]
 		}
 
-		var taglessRegex = {
+		var taglessRegex = [
 			// TwoBits
-			"Query(Responses|Lookups): (\\[[\\d\\w]{1,2}\\]: [\\d\\w]{1,2})": function(matches) {
-				var id = GetBomb().GetMod("TwoBits").IDs.length;
-				if (matches[1] == "Lookups") {
-					id = GetBomb().GetMod("TwoBits").IDs.length + 1;
-				}
+			{
+				regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
+				value: function(matches) {
+					var id = GetBomb().GetMod("TwoBits").IDs.length;
+					if (matches[1] == "Lookups") {
+						id = GetBomb().GetMod("TwoBits").IDs.length + 1;
+					}
 
-				var mod = bomb.GetModuleID("TwoBits", id);
-				mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
-				if (matches[1] == "Responses") {
-					mod.push(readLine());
-				}
+					var mod = bomb.GetModuleID("TwoBits", id);
+					mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
+					if (matches[1] == "Responses") {
+						mod.push(readLine());
+					}
+				},
 			},
 
 			// Emoji Math
-			"\\d{1,}[+-]\\d{1,}": function(matches) {
-				readDirectly(matches.input, "Emoji Math")
+			{
+				regex: /\\d{1,}[+-]\\d{1,}/,
+				value: function(matches) {
+					readDirectly(matches.input, "Emoji Math")
+				},
 			},
-			"Enter button pressed": function() {
-				readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math")
+			{
+				regex: /Enter button pressed/,
+				value: function() {
+					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math")
+				}
 			}
-		}
+		]
 
 		readwarning = false;
 		buildwarning = false;
@@ -2197,7 +2262,7 @@ $(function() {
 											return true
 										}
 									} else {
-										readDirectly(match[2], value, id);
+										readDirectly(match[2], obj.ID || value, id);
 									}
 								} catch (e) {
 									console.log(e);
@@ -2211,17 +2276,15 @@ $(function() {
 						});
 					}
 				} else {
-					Object.keys(taglessRegex).some(function(val) {
-						var func = taglessRegex[val]
-						var matches = new RegExp(val).exec(line)
+					taglessRegex.some(function(handler) {
+						var value = handler.value
+						var matches = handler.regex.exec(line)
 						if (matches) {
 							try {
-								if (typeof(func) == "function") {
-									if (func(matches)) {
-										return true;
-									}
+								if (value instanceof Function) {
+									value(matches)
 								} else {
-									readDirectly(match[2], func);
+									readDirectly(match[2], value);
 								}
 							} catch (e) {
 								console.log(e);
