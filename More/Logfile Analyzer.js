@@ -1310,13 +1310,13 @@ $(function() {
 					{
 						regex: /Solution:/,
 						value: function(_, module) {
-							module.push(["Solution:", pre(readMultiple(3))]);
+							module.push({label: "Solution:", obj: pre(readMultiple(3))});
 						}
 					},
 					{
 						regex: /You submitted:/,
 						value: function(_, module) {
-							module.push(["You submitted:", pre(readMultiple(3))]);
+							module.push({label: "You submitted:", obj: pre(readMultiple(3))});
 						}
 					}
 				],
@@ -1658,7 +1658,7 @@ $(function() {
 						regex: /.+/
 					}
 				],
-			}
+			},
 			"Plumbing": {
 				ID: "MazeV2",
 				Lines: [
@@ -2254,7 +2254,7 @@ $(function() {
 								try {
 									if (value instanceof Function) {
 										if (obj.Lines) {
-											var module = id ? bomb.GetModuleID(obj.ID, id) : bomb.GetModule(obj.Module)
+											var module = id ? bomb.GetModuleID(obj.ID, id) : bomb.GetModule(obj.ID)
 											if (value(matches, module, bomb.GetMod(obj.ID))) {
 												return true;
 											}
