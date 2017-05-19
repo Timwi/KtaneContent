@@ -1843,7 +1843,7 @@ $(function() {
 				Lines: [
 					{
 						regex: /Modules:/,
-						value: function(matches, id) {
+						value: function(matches, module) {
 							var lines = readMultiple(11);
 							while (/  \|/.test(lines) && !/[^ ] \|/.test(lines))
 								lines = lines.replace(/ \|/g, '|');
