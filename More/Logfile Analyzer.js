@@ -667,6 +667,9 @@ $(function() {
 					b = b[0];
 				}
 
+				a = a.replace(/^The/, "")
+				b = b.replace(/^The/, "")
+
 				if (a < b) {
 					return -1;
 				} else if (a > b) {
@@ -1202,7 +1205,7 @@ $(function() {
 					{
 						regex: /State randomized: Phase: (\d), Keypads: (.+)/,
 						value: function(matches, module) {
-							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].replace(/,/g, ", "))
+							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "))
 						}
 					},
 					{
@@ -1256,7 +1259,7 @@ $(function() {
 					value: "Keypad"
 				}
 			],
-			"Assets.Scripts.Rules.KeypadRuleSet": {
+			"Assets\.Scripts\.Rules\.KeypadRuleSet": {
 				ID: "Keypad",
 				Lines: [
 					{
@@ -1284,7 +1287,7 @@ $(function() {
 					}
 				],
 			},
-			"Assets.Scripts.Rules.VennWireRuleSet": {
+			"Assets\.Scripts\.Rules\.VennWireRuleSet": {
 				ID: "Venn",
 				Lines: [
 					{
