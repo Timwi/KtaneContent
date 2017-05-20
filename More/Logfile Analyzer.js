@@ -80,7 +80,7 @@ var blacklist = [
 	"[Rules]",
 	"Tick delay:",
 	"Calculated FPS: "
-]
+];
 
 // Search for 'var lineRegex' for the list of all the line matching regex & the reference.
 
@@ -120,8 +120,8 @@ $(function() {
 	var readwarning = false;
 	var buildwarning = false;
 	var debugging = true;
-	var linen = 0
-	var lines = []
+	var linen = 0;
+	var lines = [];
 
 	function makeExpandable(parent, label) {
 		parent
@@ -198,130 +198,130 @@ $(function() {
 	}
 
 	$.fn.addCardClick = function(info) {
-		var infoCard = $(this)
-		var parent = infoCard.parent()
+		var infoCard = $(this);
+		var parent = infoCard.parent();
 		infoCard
 		.click(function() {
-			parent.parent().children(".module-info").hide()
-			info.show()
-			parent.children(".selected").removeClass("selected")
-			infoCard.addClass("selected")
+			parent.parent().children(".module-info").hide();
+			info.show();
+			parent.children(".selected").removeClass("selected");
+			infoCard.addClass("selected");
 
-			return false
-		}).mousedown(function() { return false })
+			return false;
+		}).mousedown(function() { return false; });
 
-		return infoCard
-	}
+		return infoCard;
+	};
 
 	function BombGroup(total) {
-		var current = this
+		var current = this;
 		this.Bombs = [];
-		this.Modules = {}
+		this.Modules = {};
 		this.TotalBombs = total;
 		this.State = "Unsolved";
 		this.Solved = 0;
 		this.MissionName = "Unknown";
-		this.StartLine = 0
-		this.FilteredLog = ""
+		this.StartLine = 0;
+		this.FilteredLog = "";
 		this.ToHTML = function(id) {
 			// Build up the bomb.
-			var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"))
+			var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"));
 			var bombHTML = $("<a href='#bomb-" + this.Bombs[0].Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
 				$(".bomb.selected").removeClass("selected");
 				$(this).addClass("selected");
 				$(".bomb-info").hide();
 				info.show();
 				return true;
-			}).mousedown(function() { return false });
+			}).mousedown(function() { return false; });
 
-			var TotalModules = 0
-			var Needies = 0
+			var TotalModules = 0;
+			var Needies = 0;
 			this.Bombs.forEach(function(bomb) {
-				TotalModules += bomb.TotalModules
-				Needies += bomb.Needies
-			})
+				TotalModules += bomb.TotalModules;
+				Needies += bomb.Needies;
+			});
 
 			this.Bombs.forEach(function(bomb) {
-				$("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML)
+				$("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML);
 
 				// Build the edgework.
-				var edgework = $("<div class='edgework'>").appendTo(info)
+				var edgework = $("<div class='edgework'>").appendTo(info);
 
-				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework)
+				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
 
 				var group;
 				if (bomb.Batteries.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework);
 
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
 							.addClass(val == 1 ? "d" : "aa")
-							.appendTo(group)
-					})
+							.appendTo(group);
+					});
 				}
 
 				if (bomb.Indicators.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework);
 
 					bomb.Indicators.forEach(function(val) {
 						$("<div class='widget indicator'>")
 							.addClass(val[0])
 							.appendTo(group)
-							.append($("<span class='label'>").text(val[1]))
-					})
+							.append($("<span class='label'>").text(val[1]));
+					});
 				}
 
 				if (bomb.PortPlates.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework)
+					group = $("<div class='widget-group'>").appendTo(edgework);
 
 					bomb.PortPlates.forEach(function(val) {
-						var plate = $("<div class='widget portplate'>").appendTo(group)
+						var plate = $("<div class='widget portplate'>").appendTo(group);
 						val.forEach(function(port) {
-							$("<span>").addClass(port.toLowerCase()).appendTo(plate)
-						})
-					})
+							$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+						});
+					});
 				}
-			})
+			});
 
-			$("<div class='module-count'>").text(TotalModules).appendTo(bombHTML)
+			$("<div class='module-count'>").text(TotalModules).appendTo(bombHTML);
 			if (Needies > 0) {
-				$("<div class='needy-count'>").text(Needies).appendTo(bombHTML)
+				$("<div class='needy-count'>").text(Needies).appendTo(bombHTML);
 			}
 
 			// Modules
-			var modules = $("<div class='modules'>").appendTo(info)
+			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Edgework Information
 			this.Bombs.forEach(function(bomb, n) {
-				var ind = []
+				var ind = [];
 
 				bomb.Indicators.forEach(function(val) {
-					ind.push(val[0] + " " + val[1])
-				})
+					ind.push(val[0] + " " + val[1]);
+				});
 
-				var ports = {}
+				var ports = {};
 				bomb.PortPlates.forEach(function(plate) {
 					plate.forEach(function(port) {
 						if (!ports[port]) {
-							ports[port] = 0
+							ports[port] = 0;
 						}
 
-						ports[port]++
-					})
-				})
+						ports[port]++;
+					});
+				});
 
-				var portlist = []
+				var portlist = [];
 				Object.keys(ports).forEach(function(port) {
-					var count = ports[port]
-					portlist.push((count > 1 ? count + " × " : "") + port)
-				})
+					var count = ports[port];
+					portlist.push((count > 1 ? count + " × " : "") + port);
+				});
 
-				var batteries = 0
+				var batteries = 0;
 				bomb.Batteries.forEach(function(val) {
-					batteries += val
-				})
+					batteries += val;
+				});
 
-				var edgeinfo = $("<div class='module-info'>").appendTo(info)
+				var edgeinfo = $("<div class='module-info'>").appendTo(info);
 				makeTree([
 					"Serial: " + bomb.Serial,
 					"Batteries: " + batteries,
@@ -330,41 +330,41 @@ $(function() {
 					"Indicators: " + ind.join(", "),
 					"Port Plates: " + bomb.PortPlates.length,
 					"Widgets: " + (bomb.Batteries.length + ind.length + bomb.PortPlates.length + bomb.ModdedWidgets),
-				], $("<ul>").appendTo(edgeinfo))
+				], $("<ul>").appendTo(edgeinfo));
 
 				$("<a href='#' class='module'>")
 				.text("Edgework #" + (n + 1))
 				.appendTo(modules)
-				.addCardClick(edgeinfo).click()
-			})
+				.addCardClick(edgeinfo).click();
+			});
 
 			// Mission Information
-			var missioninfo = $("<div class='module-info'>").appendTo(info)
+			var missioninfo = $("<div class='module-info'>").appendTo(info);
 			makeTree(["Mission: " + this.MissionName,
 				"State: " + this.State,
 				/*"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
 				"Total Time: " + formatTime(this.Time),
 				"Time Left: ~" + formatTime(this.TimeLeft),*/
-			], $("<ul>").appendTo(missioninfo))
+			], $("<ul>").appendTo(missioninfo));
 
 			$("<a href='#' class='module'>")
 			.text("Mission Information")
 			.appendTo(modules)
-			.addCardClick(missioninfo)
+			.addCardClick(missioninfo);
 
 			// Convert modules
 			this.Bombs.forEach(function(bomb) {
 				for (var m in bomb.Modules) {
 					if (bomb.Modules.hasOwnProperty(m)) {
-						var mod = bomb.Modules[m]
+						var mod = bomb.Modules[m];
 						if (mod.IDs.length > 0 || mod.Info.length > 0 || !current.Modules[m]) {
-							current.Modules[m] = mod
+							current.Modules[m] = mod;
 						}
 					}
 				}
-			})
+			});
 
-			var mods = []
+			var mods = [];
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
@@ -388,13 +388,13 @@ $(function() {
 
 			mods = mods.sort(function(a, b) {
 				if (a[2]) {
-					a = a[0] + a[2]
+					a = a[0] + a[2];
 				} else {
 					a = a[0];
 				}
 
 				if (b[2]) {
-					b = b[0] + b[2]
+					b = b[0] + b[2];
 				} else {
 					b = b[0];
 				}
@@ -411,41 +411,41 @@ $(function() {
 			// Display modules
 			mods.forEach(function(minfo, n) {
 				// Information
-				var modinfo = $("<div class='module-info'>").appendTo(info)
-				$("<h3>").text(minfo[0]).appendTo(modinfo)
+				var modinfo = $("<div class='module-info'>").appendTo(info);
+				$("<h3>").text(minfo[0]).appendTo(modinfo);
 				if (minfo[1]) {
-					makeTree(minfo[1], $("<ul>").appendTo(modinfo))
+					makeTree(minfo[1], $("<ul>").appendTo(modinfo));
 				} else {
-					$("<p>").text("No information found.").appendTo(modinfo)
+					$("<p>").text("No information found.").appendTo(modinfo);
 				}
 
 				// Listing
 				var mod = $("<a href='#' class='module'>")
 				.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
 				.appendTo(modules)
-				.addCardClick(modinfo)
+				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed")
-				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod)
-			})
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
+			});
 
 			// Filtered log
-			if (this.FilteredLog == "") {
-				this.FilterLines()
+			if (this.FilteredLog === "") {
+				this.FilterLines();
 			}
 
-			var loginfo = $("<div class='module-info'>").appendTo(info)
-			$("<h3>").text("Filtered Log").appendTo(loginfo)
-			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo)
+			var loginfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Filtered Log").appendTo(loginfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
 
 			$("<a href='#' class='module'>")
 			.text("Filtered Log")
 			.appendTo(modules)
-			.addCardClick(loginfo)
+			.addCardClick(loginfo);
 
-			return bombHTML
-		}
+			return bombHTML;
+		};
 		this.GetMod = function(name, id) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
@@ -472,35 +472,35 @@ $(function() {
 		};
 		this.FilterLines = function() {
 			if (!this.StartLine) {
-				return
+				return;
 			}
 
-			var log = ""
+			var log = "";
 			for (var i = this.StartLine; i < linen; i++) {
-				var line = lines[i]
+				var line = lines[i];
 
-				var blacklisted = false
+				var blacklisted = false;
 				blacklist.forEach(function(val) {
-					blacklisted = blacklisted || line.includes(val)
-				})
+					blacklisted = blacklisted || line.includes(val);
+				});
 
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
-					blacklisted = true
-					i += 3
+					blacklisted = true;
+					i += 3;
 				}
 
 				if (!blacklisted) {
-					log += line + "\n"
+					log += line + "\n";
 				}
 			}
 
-			this.StartLine = undefined
-			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n")
-		}
+			this.StartLine = undefined;
+			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n");
+		};
 	}
 
 	function Bomb(seed) {
-		var current = this
+		var current = this;
 		this.Seed = seed;
 		this.Time = 0;
 		this.TimeLeft = 0;
@@ -517,91 +517,91 @@ $(function() {
 		this.Serial = "";
 		this.State = "Unsolved";
 		this.MissionName = "Unknown";
-		this.StartLine = 0
-		this.FilteredLog = ""
+		this.StartLine = 0;
+		this.FilteredLog = "";
 		this.ToHTML = function(id) {
 			// Build up the bomb.
-			var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"))
+			var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"));
 			var bombHTML = $("<a href='#bomb-" + this.Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
 				$(".bomb.selected").removeClass("selected");
 				$(this).addClass("selected");
 				$(".bomb-info").hide();
 				info.show();
 				return true;
-			}).mousedown(function() { return false });
+			}).mousedown(function() { return false; });
 
-			$("<div class='serial'>").text(this.Serial).appendTo(bombHTML)
+			$("<div class='serial'>").text(this.Serial).appendTo(bombHTML);
 
-			$("<div class='module-count'>").text(this.TotalModules).appendTo(bombHTML)
+			$("<div class='module-count'>").text(this.TotalModules).appendTo(bombHTML);
 			if (this.Needies > 0) {
-				$("<div class='needy-count'>").text(this.Needies).appendTo(bombHTML)
+				$("<div class='needy-count'>").text(this.Needies).appendTo(bombHTML);
 			}
 
 			// Build the edgework.
-			var edgework = $("<div class='edgework'>").appendTo(info)
+			var edgework = $("<div class='edgework'>").appendTo(info);
 
-			$("<div class='widget serial'>").text(this.Serial).appendTo(edgework)
+			$("<div class='widget serial'>").text(this.Serial).appendTo(edgework);
 
 			if (this.Batteries.length > 0) {
-				var group = $("<div class='widget-group'>").appendTo(edgework)
+				var bGroup = $("<div class='widget-group'>").appendTo(edgework);
 
 				this.Batteries.forEach(function(val) {
-					$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(group)
-				})
+					$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(bGroup);
+				});
 			}
 
 			if (this.Indicators.length > 0) {
-				var group = $("<div class='widget-group'>").appendTo(edgework)
+				var iGroup = $("<div class='widget-group'>").appendTo(edgework);
 
 				this.Indicators.forEach(function(val) {
-					$("<div class='widget indicator'>").addClass(val[0]).appendTo(group)
-					.append($("<span class='label'>").text(val[1]))
-				})
+					$("<div class='widget indicator'>").addClass(val[0]).appendTo(iGroup)
+					.append($("<span class='label'>").text(val[1]));
+				});
 			}
 
 			if (this.PortPlates.length > 0) {
-				var group = $("<div class='widget-group'>").appendTo(edgework)
+				var pGroup = $("<div class='widget-group'>").appendTo(edgework);
 
 				this.PortPlates.forEach(function(val) {
-					var plate = $("<div class='widget portplate'>").appendTo(group)
+					var plate = $("<div class='widget portplate'>").appendTo(pGroup);
 					val.forEach(function(port) {
-						$("<span>").addClass(port.toLowerCase()).appendTo(plate)
-					})
-				})
+						$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+					});
+				});
 			}
 
 			// Modules
-			var modules = $("<div class='modules'>").appendTo(info)
+			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Edgework Information
-			var ind = []
+			var ind = [];
 			this.Indicators.forEach(function(val) {
-				ind.push(val[0] + " " + val[1])
-			})
+				ind.push(val[0] + " " + val[1]);
+			});
 
-			var ports = {}
+			var ports = {};
 			this.PortPlates.forEach(function(plate) {
 				plate.forEach(function(port) {
 					if (!ports[port]) {
-						ports[port] = 0
+						ports[port] = 0;
 					}
 
-					ports[port]++
-				})
-			})
+					ports[port]++;
+				});
+			});
 
-			var portlist = []
+			var portlist = [];
 			Object.keys(ports).forEach(function(port) {
-				var count = ports[port]
-				portlist.push((count > 1 ? count + " × " : "") + port)
-			})
+				var count = ports[port];
+				portlist.push((count > 1 ? count + " × " : "") + port);
+			});
 
-			var batteries = 0
+			var batteries = 0;
 			this.Batteries.forEach(function(val) {
-				batteries += val
-			})
+				batteries += val;
+			});
 
-			var edgeinfo = $("<div class='module-info'>").appendTo(info)
+			var edgeinfo = $("<div class='module-info'>").appendTo(info);
 			makeTree([
 				"Serial: " + this.Serial,
 				"Batteries: " + batteries,
@@ -610,29 +610,29 @@ $(function() {
 				"Indicators: " + ind.join(", "),
 				"Port Plates: " + this.PortPlates.length,
 				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
-			], $("<ul>").appendTo(edgeinfo))
+			], $("<ul>").appendTo(edgeinfo));
 
 			$("<a href='#' class='module'>")
 			.text("Edgework")
 			.appendTo(modules)
-			.addCardClick(edgeinfo).click()
+			.addCardClick(edgeinfo).click();
 
 			// Mission Information
-			var missioninfo = $("<div class='module-info'>").appendTo(info)
+			var missioninfo = $("<div class='module-info'>").appendTo(info);
 			makeTree(["Mission: " + this.MissionName,
 				"State: " + this.State,
 				"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
 				"Total Time: " + formatTime(this.Time),
 				"Time Left: ~" + formatTime(this.TimeLeft),
-			], $("<ul>").appendTo(missioninfo))
+			], $("<ul>").appendTo(missioninfo));
 
 			$("<a href='#' class='module'>")
 			.text("Mission Information")
 			.appendTo(modules)
-			.addCardClick(missioninfo)
+			.addCardClick(missioninfo);
 
 			// Convert modules
-			var mods = []
+			var mods = [];
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
@@ -656,13 +656,13 @@ $(function() {
 
 			mods = mods.sort(function(a, b) {
 				if (a[2]) {
-					a = a[0] + a[2]
+					a = a[0] + a[2];
 				} else {
 					a = a[0];
 				}
 
 				if (b[2]) {
-					b = b[0] + b[2]
+					b = b[0] + b[2];
 				} else {
 					b = b[0];
 				}
@@ -679,41 +679,41 @@ $(function() {
 			// Display modules
 			mods.forEach(function(minfo, n) {
 				// Information
-				var modinfo = $("<div class='module-info'>").appendTo(info)
-				$("<h3>").text(minfo[0]).appendTo(modinfo)
+				var modinfo = $("<div class='module-info'>").appendTo(info);
+				$("<h3>").text(minfo[0]).appendTo(modinfo);
 				if (minfo[1]) {
-					makeTree(minfo[1], $("<ul>").appendTo(modinfo))
+					makeTree(minfo[1], $("<ul>").appendTo(modinfo));
 				} else {
-					$("<p>").text("No information found.").appendTo(modinfo)
+					$("<p>").text("No information found.").appendTo(modinfo);
 				}
 
 				// Listing
 				var mod = $("<a href='#' class='module'>")
 				.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
 				.appendTo(modules)
-				.addCardClick(modinfo)
+				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed")
-				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod)
-			})
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
+			});
 
 			// Filtered log
-			if (this.FilteredLog == "") {
-				this.FilterLines()
+			if (this.FilteredLog === "") {
+				this.FilterLines();
 			}
 
-			var loginfo = $("<div class='module-info'>").appendTo(info)
-			$("<h3>").text("Filtered Log").appendTo(loginfo)
-			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo)
+			var loginfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Filtered Log").appendTo(loginfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
 
 			$("<a href='#' class='module'>")
 			.text("Filtered Log")
 			.appendTo(modules)
-			.addCardClick(loginfo)
+			.addCardClick(loginfo);
 
-			return bombHTML
-		}
+			return bombHTML;
+		};
 		this.GetMod = function(name) {
 			if (!(name in this.Modules) && debugging) {
 				console.warn("Unable to find module: " + name);
@@ -759,31 +759,31 @@ $(function() {
 		};
 		this.FilterLines = function() {
 			if (!this.StartLine) {
-				return
+				return;
 			}
 
-			var log = ""
+			var log = "";
 			for (var i = this.StartLine; i < linen; i++) {
-				var line = lines[i]
+				var line = lines[i];
 
-				var blacklisted = false
+				var blacklisted = false;
 				blacklist.forEach(function(val) {
-					blacklisted = blacklisted || line.includes(val)
-				})
+					blacklisted = blacklisted || line.includes(val);
+				});
 
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
-					blacklisted = true
-					i += 3
+					blacklisted = true;
+					i += 3;
 				}
 
 				if (!blacklisted) {
-					log += line + "\n"
+					log += line + "\n";
 				}
 			}
 
-			this.StartLine = undefined
-			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n")
-		}
+			this.StartLine = undefined;
+			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n");
+		};
 	}
 
 	function parseLog(log) {
@@ -999,7 +999,7 @@ $(function() {
 						if (bombgroup) {
 							bombgroup.Bombs.push(bomb);
 						} else {
-							bomb.StartLine = linen
+							bomb.StartLine = linen;
 							parsed.push(bomb);
 						}
 					}
@@ -1030,9 +1030,9 @@ $(function() {
 				{
 					regex: /Instantiated CryptModule on face/,
 					value: function() {
-						var mod = bomb.GetModule("CryptModule")
-						mod.push("Phrase: " + lines[linen - 2])
-						mod.push("Answer: " + lines[linen - 1])
+						var mod = bomb.GetModule("CryptModule");
+						mod.push("Phrase: " + lines[linen - 2]);
+						mod.push("Answer: " + lines[linen - 1]);
 					}
 				}
 			],
@@ -1048,7 +1048,7 @@ $(function() {
 				{
 					regex: /Randomizing Battery Widget: (\d)/,
 					value: function(matches) {
-						bomb.Batteries.push(parseInt(matches[1]))
+						bomb.Batteries.push(parseInt(matches[1]));
 					}
 				}
 			],
@@ -1057,9 +1057,9 @@ $(function() {
 					regex: /Randomizing Port Widget: (.+)/,
 					value: function(matches) {
 						if (matches[1] != "0") {
-							bomb.PortPlates.push(matches[1].split(", "))
+							bomb.PortPlates.push(matches[1].split(", "));
 						} else {
-							bomb.PortPlates.push([])
+							bomb.PortPlates.push([]);
 						}
 					}
 				}
@@ -1098,7 +1098,7 @@ $(function() {
 				{
 					regex: /Boom/,
 					value: function(matches) {
-						GetBomb().FilterLines()
+						GetBomb().FilterLines();
 						if (GetBomb().State == "Unsolved") {
 							GetBomb().State = "Exploded";
 
@@ -1113,7 +1113,7 @@ $(function() {
 					regex: /A winner is you!!/,
 					value: function(matches) {
 						var currentBomb = GetBomb();
-						currentBomb.FilterLines()
+						currentBomb.FilterLines();
 						currentBomb.State = "Solved";
 						currentBomb.Solved = currentBomb.TotalModules;
 					}
@@ -1151,7 +1151,7 @@ $(function() {
 				{
 					regex: /ReturnToSetupRoom/,
 					value: function() {
-						GetBomb().FilterLines()
+						GetBomb().FilterLines();
 					}
 				}
 			],
@@ -1162,7 +1162,7 @@ $(function() {
 						if (matches[1] != "1") {
 							bombgroup = new BombGroup(parseInt(matches[1]));
 							bombgroup.Bombs.push(bomb);
-							bombgroup.StartLine = linen
+							bombgroup.StartLine = linen;
 							parsed.splice(parsed.length - 1, 1);
 							parsed.push(bombgroup);
 						}
@@ -1172,7 +1172,7 @@ $(function() {
 					regex: /All bombs solved, what a winner!/,
 					value: function() {
 						var currentBomb = GetBomb();
-						currentBomb.FilterLines()
+						currentBomb.FilterLines();
 						currentBomb.State = "Solved";
 						currentBomb.Solved = currentBomb.TotalModules;
 					}
@@ -1328,8 +1328,8 @@ $(function() {
 
 			// Module Reading
 			"Light Cycle": {
-			 	ID: "LightCycleModule",
-			 	Lines: [
+				ID: "LightCycleModule",
+				Lines: [
 					{
 						regex: /Start sequence: ([A-Z]{6})/,
 						value: function(matches, module) {
@@ -1358,7 +1358,7 @@ $(function() {
 					{
 						regex: /Field:/,
 						value: function(matches, module) {
-							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) })
+							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
 						}
 					},
 					{
@@ -1439,8 +1439,8 @@ $(function() {
 					{
 						regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
 						value: function(matches, module) {
-							module.push("Color: " + matches[1])
-							module.push("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"))
+							module.push("Color: " + matches[1]);
+							module.push("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"));
 							module.push("Initially: " + (matches[3] == "True" ? "On" : "Off"));
 						}
 					},
@@ -2333,7 +2333,7 @@ $(function() {
 					value: "LEDEnc"
 				}
 			]
-		}
+		};
 
 		var taglessRegex = [
 			// TwoBits
@@ -2357,16 +2357,16 @@ $(function() {
 			{
 				regex: /\\d{1,}[+-]\\d{1,}/,
 				value: function(matches) {
-					readDirectly(matches.input, "Emoji Math")
+					readDirectly(matches.input, "Emoji Math");
 				},
 			},
 			{
 				regex: /Enter button pressed/,
 				value: function() {
-					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math")
+					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math");
 				}
 			}
-		]
+		];
 
 		readwarning = false;
 		buildwarning = false;
@@ -2393,7 +2393,7 @@ $(function() {
 					if (obj) {
 						var regex = (obj.Lines || obj);
 						regex.some(function(handler) {
-							var value = handler.value
+							var value = handler.value;
 							var matches = handler.regex.exec(match[2]);
 							if (matches) {
 								try {
@@ -2404,7 +2404,7 @@ $(function() {
 												return true;
 											}
 										} else if (value(matches, id)) {
-											return true
+											return true;
 										}
 									} else {
 										readDirectly(match[2], obj.ID || value, id);
@@ -2422,12 +2422,12 @@ $(function() {
 					}
 				} else {
 					taglessRegex.some(function(handler) {
-						var value = handler.value
-						var matches = handler.regex.exec(line)
+						var value = handler.value;
+						var matches = handler.regex.exec(line);
 						if (matches) {
 							try {
 								if (value instanceof Function) {
-									value(matches)
+									value(matches);
 								} else {
 									readDirectly(match[2], value);
 								}
@@ -2440,19 +2440,19 @@ $(function() {
 								}
 							}
 						}
-					})
+					});
 				}
 			}
 
 			linen++;
 		}
 
-		$(".bomb, .bomb-info").remove()
+		$(".bomb, .bomb-info").remove();
 
 		parsed.forEach(function(obj, n) {
-			var bombHTML = obj.ToHTML(n)
+			var bombHTML = obj.ToHTML(n);
 			if (n == parsed.length - 1) {
-				bombHTML.click()
+				bombHTML.click();
 			}
 		});
 
