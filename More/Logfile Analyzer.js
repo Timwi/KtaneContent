@@ -1179,6 +1179,153 @@ $(function() {
 				}
 			],
 
+			// Vanilla parsing
+			"Rules": [ // Covers Button, Memory and Wires.
+				{
+					regex: /Getting solution index for component (.+)Component\(Clone\)/,
+					value: function(matches) {
+						while (!readLine().includes("All queries passed.")) {
+						}
+
+						var vanilla = {
+							Button: "BigButton",
+							WireSet: "Wires"
+						}
+
+						readDirectly(lines[linen].substring(20), vanilla[matches[1]] || matches[1])
+					}
+				}
+			],
+			"WhosOnFirstComponent": {
+				ID: "WhosOnFirst",
+				Lines: [
+					{
+						regex: /State randomized: Phase: (\d), Keypads: (.+)/,
+						value: function(matches, module) {
+							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].replace(/,/g, ", "))
+						}
+					},
+					{
+						regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
+						value: function(matches, module) {
+							module.push("Displayed word: " + matches[1])
+						}
+					},
+				],
+			},
+			"Rules\.WhosOnFirst": {
+				ID: "WhosOnFirst",
+				Lines: [
+					{
+						regex: /Precedence List is:/
+					},
+					{
+						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
+						value: function(matches, module) {
+							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]) 
+						}
+					}
+				],
+			},
+			"WireSetComponent": {
+				ID: "Wires",
+				Lines: [
+					{
+						regex: /Wires.Count is now (\d)/,
+						value: function(matches, module) {
+							module.push("There are " + matches[1] + " wires")
+						}
+					}
+				],
+			},
+			"InvisibleWallsComponent": [
+				{
+					regex: /.+/,
+					value: "Maze"
+				}
+			],
+			"MorseCodeComponent": [
+				{
+					regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
+					value: "Morse"
+				}
+			],
+			"KeypadComponent": [
+				{
+					regex: /.+/,
+					value: "Keypad"
+				}
+			],
+			"Assets.Scripts.Rules.KeypadRuleSet": {
+				ID: "Keypad",
+				Lines: [
+					{
+						regex: /Keypad button (\d) symbol (.+)/,
+						value: function(matches, module) {
+							module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2])
+						}
+					}
+				],
+			},
+			"PasswordRuleset": [
+				{
+					regex: /.+/,
+					value: "Password"
+				}
+			],
+			"WireSequencePage": {
+				ID: "WireSequence",
+				Lines: [
+					{
+						regex: /Snipped wire of color (\w+) of number (\d+)/,
+						value: function(matches, module) {
+							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1))
+						}
+					}
+				],
+			},
+			"Assets.Scripts.Rules.VennWireRuleSet": {
+				ID: "Venn",
+				Lines: [
+					{
+						regex: /Checking cut wire: index=(\d), color=.+\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/,
+						value: function(matches, _, mod) {
+							var index = parseInt(matches[1])
+							var id = mod.IDs.length
+
+							if (index == 0) {
+								id++
+								GetBomb().GetModuleID("Venn", id)
+							} 
+
+							if (mod.IDs.length > 0) {
+								matches.forEach(function(val, index) {
+									matches[index] = (val == "True")
+								})
+
+								var rule = {
+									DoNotCut: "Don't cut",
+									CutIfParallelPortPresent: "Cut if you have a parallel port"
+								}
+
+								var module = GetBomb().GetModuleID("Venn", id)
+								module[index] = ["Wire " + (index + 1),
+									[
+										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
+										"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
+										"Rule: " + rule[matches[6]] || matches[6],
+										"Should be cut: " + (matches[7] ? "Yes" : "No")
+									]
+								]
+							}
+						},
+					},
+					{
+						regex: /Wire snipped|All wires snipped correctly!/
+					}
+				],
+			},
+
 			// Module Reading
 			"Light Cycle": {
 			 	ID: "LightCycleModule",
@@ -2252,7 +2399,7 @@ $(function() {
 								try {
 									if (value instanceof Function) {
 										if (obj.Lines) {
-											var module = id ? bomb.GetModuleID(obj.ID, id) : bomb.GetModule(obj.ID)
+											var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID)
 											if (value(matches, module, bomb.GetMod(obj.ID))) {
 												return true;
 											}
