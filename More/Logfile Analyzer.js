@@ -1225,7 +1225,7 @@ $(function() {
 					{
 						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
 						value: function(matches, module) {
-							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]) 
+							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2])
 						}
 					}
 				],
@@ -1299,7 +1299,7 @@ $(function() {
 							if (index == 0) {
 								id++
 								GetBomb().GetModuleID("Venn", id)
-							} 
+							}
 
 							if (mod.IDs.length > 0) {
 								matches.forEach(function(val, index) {
@@ -1761,12 +1761,6 @@ $(function() {
 						regex: /.+/,
 						value: function(matches, module) {
 							module[module.length - 1][1].push(matches.input);
-						}
-					},
-					{
-						regex: /(?:Opponent:|Move Name)/,
-						value: function(matches, module) {
-							module[module.length - 1][1].push(readLine());
 						}
 					}
 				],
