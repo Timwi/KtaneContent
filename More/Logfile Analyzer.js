@@ -223,6 +223,9 @@ $(function() {
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
+
+		this.PacingEvents = []
+
 		this.ToHTML = function(id) {
 			// Build up the bomb.
 			var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"));
@@ -444,6 +447,15 @@ $(function() {
 			.appendTo(modules)
 			.addCardClick(loginfo);
 
+			var pacinginfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Pacing Info").appendTo(loginfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.PacingEvents.join("\n")).appendTo(pacinginfo);
+
+			$("<a href='#' class='module'>")
+			.text("Pacing Info")
+			.appendTo(modules)
+			.addCardClick(pacinginfo);
+
 			return bombHTML;
 		};
 		this.GetMod = function(name, id) {
@@ -519,6 +531,9 @@ $(function() {
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
+
+		this.PacingEvents = []
+
 		this.ToHTML = function(id) {
 			// Build up the bomb.
 			var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"));
@@ -714,6 +729,15 @@ $(function() {
 			.text("Filtered Log")
 			.appendTo(modules)
 			.addCardClick(loginfo);
+
+			var pacinginfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Pacing Info").appendTo(loginfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.PacingEvents.join("\n")).appendTo(pacinginfo);
+
+			$("<a href='#' class='module'>")
+			.text("Pacing Info")
+			.appendTo(modules)
+			.addCardClick(pacinginfo);
 
 			return bombHTML;
 		};
@@ -1134,6 +1158,7 @@ $(function() {
 				{
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
+						GetBomb().PacingEvents.push(matches.input)
 						if (!bombgroup) {
 							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
 
@@ -2335,6 +2360,15 @@ $(function() {
 					regex: /.+/,
 					value: "LEDEnc"
 				}
+			],
+			"PacingExtender": [
+				{
+					regex: /.+/,
+					value: function(matches) {
+						if (!GetBomb()) { return }
+						GetBomb().PacingEvents.push(matches.input)
+					}
+				}
 			]
 		};
 
@@ -2348,7 +2382,7 @@ $(function() {
 						id = GetBomb().GetMod("TwoBits").IDs.length + 1;
 					}
 
-					var mod = bomb.GetModuleID("TwoBits", id);
+					var mod = GetBomb().GetModuleID("TwoBits", id);
 					mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
 					if (matches[1] == "Responses") {
 						mod.push(readLine());
