@@ -266,6 +266,14 @@ $(function() {
 				if (bomb.Indicators.length > 0) {
 					group = $("<div class='widget-group'>").appendTo(edgework);
 
+					bomb.Indicators.sort(function(ind1, ind2) {
+						if (ind1[0] == ind2[0]) {
+							return (ind1[1] > ind2[1] ? 1 : -1);
+						} else {
+							return (ind1[0] < ind2[0] ? 1 : -1);
+						}
+					});
+
 					bomb.Indicators.forEach(function(val) {
 						$("<div class='widget indicator'>")
 							.addClass(val[0])
@@ -569,9 +577,9 @@ $(function() {
 
 				this.Indicators.sort(function(ind1, ind2) {
 					if (ind1[0] == ind2[0]) {
-						return (ind1[1] > ind2[1]);
+						return (ind1[1] > ind2[1] ? 1 : -1);
 					} else {
-						return (ind1[0] < ind2[0]);
+						return (ind1[0] < ind2[0] ? 1 : -1);
 					}
 				});
 
