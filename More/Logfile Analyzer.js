@@ -267,11 +267,11 @@ $(function() {
 					group = $("<div class='widget-group'>").appendTo(edgework);
 
 					bomb.Indicators.sort(function(ind1, ind2) {
-						if (ind1[0] == ind2[0]) {
-							return (ind1[1] > ind2[1] ? 1 : -1);
-						} else {
-							return (ind1[0] < ind2[0] ? 1 : -1);
-						}
+                        if (ind1[0] < ind2[0]) return -1;
+                        if (ind1[0] > ind2[0]) return 1;
+                        if (ind1[1] < ind2[1]) return -1;
+                        if (ind1[1] > ind2[1]) return 1;
+                        return 0;
 					});
 
 					bomb.Indicators.forEach(function(val) {
