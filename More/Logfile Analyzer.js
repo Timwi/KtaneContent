@@ -224,9 +224,9 @@ $(function() {
 		this.StartLine = 0;
 		this.FilteredLog = "";
 
-		this.PacingEvents = []
+		this.PacingEvents = [];
 
-		this.ToHTML = function(id) {
+		this.ToHTML = function() {
 			// Build up the bomb.
 			var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"));
 			var bombHTML = $("<a href='#bomb-" + this.Bombs[0].Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
@@ -371,7 +371,7 @@ $(function() {
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
-					var name = ModuleNames[m] || convertID(m);
+					var name = getModuleName(m);
 
 					if (mod.IDs.length === 0) {
 						if (mod.Info.length === 0) {
@@ -412,7 +412,7 @@ $(function() {
 			});
 
 			// Display modules
-			mods.forEach(function(minfo, n) {
+			mods.forEach(function(minfo) {
 				// Information
 				var modinfo = $("<div class='module-info'>").appendTo(info);
 				$("<h3>").text(minfo[0]).appendTo(modinfo);
@@ -512,7 +512,6 @@ $(function() {
 	}
 
 	function Bomb(seed) {
-		var current = this;
 		this.Seed = seed;
 		this.Time = 0;
 		this.TimeLeft = 0;
@@ -532,9 +531,9 @@ $(function() {
 		this.StartLine = 0;
 		this.FilteredLog = "";
 
-		this.PacingEvents = []
+		this.PacingEvents = [];
 
-		this.ToHTML = function(id) {
+		this.ToHTML = function() {
 			// Build up the bomb.
 			var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"));
 			var bombHTML = $("<a href='#bomb-" + this.Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
@@ -608,7 +607,7 @@ $(function() {
 			var portlist = [];
 			Object.keys(ports).forEach(function(port) {
 				var count = ports[port];
-				portlist.push((count > 1 ? count + " × " : "") + port);
+				portlist.push((count > 1 ? count + " × " : "") + PortNames[port]);
 			});
 
 			var batteries = 0;
@@ -621,8 +620,8 @@ $(function() {
 				"Serial: " + this.Serial,
 				"Batteries: " + batteries,
 				"Holders: " + this.Batteries.length,
-				"Ports: " + portlist.join(", "),
-				"Indicators: " + ind.join(", "),
+				"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
+				"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
 				"Port Plates: " + this.PortPlates.length,
 				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
 			], $("<ul>").appendTo(edgeinfo));
@@ -651,7 +650,7 @@ $(function() {
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
-					var name = ModuleNames[m] || convertID(m);
+					var name = getModuleName(m);
 
 					if (mod.IDs.length === 0) {
 						if (mod.Info.length === 0) {
@@ -682,8 +681,8 @@ $(function() {
 					b = b[0];
 				}
 
-				a = a.replace(/^The/, "")
-				b = b.replace(/^The/, "")
+				a = a.replace(/^The/, "");
+				b = b.replace(/^The/, "");
 
 				if (a < b) {
 					return -1;
@@ -695,7 +694,7 @@ $(function() {
 			});
 
 			// Display modules
-			mods.forEach(function(minfo, n) {
+			mods.forEach(function(minfo) {
 				// Information
 				var modinfo = $("<div class='module-info'>").appendTo(info);
 				$("<h3>").text(minfo[0]).appendTo(modinfo);
@@ -821,11 +820,9 @@ $(function() {
 			return false;
 		}
 
-		var tree = [];
 		var bombgroup;
 		var bomb;
 		var parsed = [];
-		var module;
 
 		function GetBomb() {
 			return bombgroup || bomb;
@@ -1124,7 +1121,7 @@ $(function() {
 				},
 				{
 					regex: /Boom/,
-					value: function(matches) {
+					value: function() {
 						GetBomb().FilterLines();
 						if (GetBomb().State == "Unsolved") {
 							GetBomb().State = "Exploded";
@@ -1138,7 +1135,7 @@ $(function() {
 				},
 				{
 					regex: /A winner is you!!/,
-					value: function(matches) {
+					value: function() {
 						var currentBomb = GetBomb();
 						currentBomb.FilterLines();
 						currentBomb.State = "Solved";
@@ -1149,7 +1146,7 @@ $(function() {
 			"BombComponent": [
 				{
 					regex: /Pass/,
-					value: function(matches) {
+					value: function() {
 						GetBomb().Solved++;
 					}
 				}
@@ -1158,7 +1155,7 @@ $(function() {
 				{
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
-						GetBomb().PacingEvents.push(matches.input)
+						GetBomb().PacingEvents.push(matches.input);
 						if (!bombgroup) {
 							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
 
@@ -1212,15 +1209,17 @@ $(function() {
 				{
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
 					value: function(matches) {
-						while (!readLine().includes("All queries passed.")) {
+						var line = readLine();
+						while (!line.includes("All queries passed.")) {
+							line = readLine();
 						}
 
 						var vanilla = {
 							Button: "BigButton",
 							WireSet: "Wires"
-						}
+						};
 
-						readDirectly(lines[linen].substring(20), vanilla[matches[1]] || matches[1])
+						readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
 					}
 				}
 			],
@@ -1230,13 +1229,13 @@ $(function() {
 					{
 						regex: /State randomized: Phase: (\d), Keypads: (.+)/,
 						value: function(matches, module) {
-							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "))
+							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "));
 						}
 					},
 					{
 						regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
 						value: function(matches, module) {
-							module.push("Displayed word: " + matches[1])
+							module.push("Displayed word: " + matches[1]);
 						}
 					},
 				],
@@ -1250,7 +1249,7 @@ $(function() {
 					{
 						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
 						value: function(matches, module) {
-							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]) 
+							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]); 
 						}
 					}
 				],
@@ -1261,7 +1260,7 @@ $(function() {
 					{
 						regex: /Wires.Count is now (\d)/,
 						value: function(matches, module) {
-							module.push("There are " + matches[1] + " wires")
+							module.push("There are " + matches[1] + " wires");
 						}
 					}
 				],
@@ -1290,7 +1289,7 @@ $(function() {
 					{
 						regex: /Keypad button (\d) symbol (.+)/,
 						value: function(matches, module) {
-							module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2])
+							module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2]);
 						}
 					}
 				],
@@ -1307,7 +1306,7 @@ $(function() {
 					{
 						regex: /Snipped wire of color (\w+) of number (\d+)/,
 						value: function(matches, module) {
-							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1))
+							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1));
 						}
 					}
 				],
@@ -1318,25 +1317,25 @@ $(function() {
 					{
 						regex: /Checking cut wire: index=(\d), color=.+\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/,
 						value: function(matches, _, mod) {
-							var index = parseInt(matches[1])
-							var id = mod.IDs.length
+							var index = parseInt(matches[1]);
+							var id = mod.IDs.length;
 
 							if (index == 0) {
-								id++
-								GetBomb().GetModuleID("Venn", id)
+								id++;
+								GetBomb().GetModuleID("Venn", id);
 							} 
 
 							if (mod.IDs.length > 0) {
 								matches.forEach(function(val, index) {
-									matches[index] = (val == "True")
-								})
+									matches[index] = (val == "True");
+								});
 
 								var rule = {
 									DoNotCut: "Don't cut",
 									CutIfParallelPortPresent: "Cut if you have a parallel port"
-								}
+								};
 
-								var module = GetBomb().GetModuleID("Venn", id)
+								var module = GetBomb().GetModuleID("Venn", id);
 								module[index] = ["Wire " + (index + 1),
 									[
 										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
@@ -1344,7 +1343,7 @@ $(function() {
 										"Rule: " + rule[matches[6]] || matches[6],
 										"Should be cut: " + (matches[7] ? "Yes" : "No")
 									]
-								]
+								];
 							}
 						},
 					},
@@ -1556,7 +1555,7 @@ $(function() {
 				Lines: [
 					{
 						regex: /Number of batteries/,
-						value: function(matches) {
+						value: function() {
 							var id = GetBomb().GetMod("murder").IDs.length + 1;
 							var mod = GetBomb().GetModuleID("murder", id);
 							mod.BombInfo = [];
@@ -1697,7 +1696,7 @@ $(function() {
 				ID: "FollowTheLeaderModule",
 				Lines: [
 					{
-						regex: /Starting at wire:/
+						regex: /Starting at wire:|Strike because you cut/
 					},
 					{
 						regex: /Wire state:/,
@@ -2020,9 +2019,9 @@ $(function() {
 						regex: /Modules:/,
 						value: function(matches, module) {
 							var lines = readMultiple(11);
-							while (/  \|/.test(lines) && !/[^ ] \|/.test(lines))
+							while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
 								lines = lines.replace(/ \|/g, '|');
-							while (/\|  /.test(lines) && !/\| [^ ]/.test(lines))
+							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
 								lines = lines.replace(/\| /g, '|');
 							module.push({ label: "Cards:", obj: pre(lines) });
 
@@ -2365,8 +2364,8 @@ $(function() {
 				{
 					regex: /.+/,
 					value: function(matches) {
-						if (!GetBomb()) { return }
-						GetBomb().PacingEvents.push(matches.input)
+						if (!GetBomb()) { return; }
+						GetBomb().PacingEvents.push(matches.input);
 					}
 				}
 			]
@@ -2436,7 +2435,7 @@ $(function() {
 								try {
 									if (value instanceof Function) {
 										if (obj.Lines) {
-											var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID)
+											var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID);
 											if (value(matches, module, bomb.GetMod(obj.ID))) {
 												return true;
 											}
@@ -2554,7 +2553,7 @@ $(function() {
 		$('#paste-box').hide();
 	});
 
-	$('#paste-box').on("blur", function(oEvent) {
+	$('#paste-box').on("blur", function() {
 		$('#paste').show();
 		$('#paste-box').hide();
 		return false;
