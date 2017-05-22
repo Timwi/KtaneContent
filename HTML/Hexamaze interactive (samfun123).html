@@ -24,7 +24,7 @@
 			},
 
 			clone: function() {
-				return new Vector2(this.x, this.y)
+				return new Vector2(this.x, this.y);
 			},
 
 			add: function(vector) {
@@ -46,8 +46,8 @@
 			rotateAround: function(point, angle) {
 				var radians = (Math.PI / 180) * angle,
 					cos = Math.cos(radians),
-					sin = Math.sin(radians)
-				return new Vector2((cos * (this.x - point.x)) + (sin * (this.y - point.y)) + point.x, (cos * (this.y - point.y)) - (sin * (this.x - point.x)) + point.y)
+					sin = Math.sin(radians);
+				return new Vector2((cos * (this.x - point.x)) + (sin * (this.y - point.y)) + point.x, (cos * (this.y - point.y)) - (sin * (this.x - point.x)) + point.y);
 			},
 
 			magnitude: function() {
@@ -67,9 +67,11 @@
 				var deltaY = this.y - vector.y;
 				return (deltaX * deltaX + deltaY * deltaY);
 			},
-		}
+		};
 	</script>
 	<script type="text/javascript">
+		/* global Vector2 */
+
 		// Useful debounce function from underscore.js
 		function debounce(func, wait, immediate) {
 			var timeout;
@@ -84,108 +86,108 @@
 				timeout = setTimeout(later, wait);
 				if (callNow) func.apply(context, args);
 			};
-		};
-
+		}
+		
 		// Code starts here
-		var deg = 0 // Used to store the overall rotation of the page.
-		var colors = ["red", "yellow", "green", "cyan", "blue", "rgb(255, 80, 170)"] // A list of all the pawn colors.
-		var colorindex = 0 // Used to cycle through the pawn colors.
-		var tool = 0 // Stores the index of the tool currently active. Needed to transform from tool markings to maze markings.
+		var deg = 0; // Used to store the overall rotation of the page.
+		var colors = ["red", "yellow", "green", "cyan", "blue", "rgb(255, 80, 170)"]; // A list of all the pawn colors.
+		var colorindex = 0; // Used to cycle through the pawn colors.
+		var tool = 0; // Stores the index of the tool currently active. Needed to transform from tool markings to maze markings.
 
 		$(function() {
-			var bsize = new Vector2($(".rotate-left").width(), $(".rotate-left").height() / 2) // Used with positioning buttons.
+			var bsize = new Vector2($(".rotate-left").width(), $(".rotate-left").height() / 2); // Used with positioning buttons.
 
 			// Stencil properties
-			var markers = {}
-			var stencilPos = new Vector2() // Stores the position of the stencil.
-			var stencilDeg = 0 // Same as deg but for the stencil.
-			var visible = true
-			var stencil = $(".hexamaze .stencil")
-			var size = new Vector2(stencil.width() / 3.75, stencil.height() / 2)
+			var markers = {};
+			var stencilPos = new Vector2(); // Stores the position of the stencil.
+			var stencilDeg = 0; // Same as deg but for the stencil.
+			var visible = true;
+			var stencil = $(".hexamaze .stencil");
+			var size = new Vector2(stencil.width() / 3.75, stencil.height() / 2);
 			
 			// Handle Firefox not scale the size of the stencil.
-			var userAgent = navigator.userAgent.toLowerCase()
+			var userAgent = navigator.userAgent.toLowerCase();
 			if (userAgent.indexOf("firefox") > -1) {
-				size = size.scale(73)
+				size = size.scale(73);
 			}
 
 			// The svgs for the stencil markings.
 			var mazeMarkings = [
-				`<circle class="marking circle" cx="0" cy="0" r="18"></circle>`,
-				`<polygon class="marking hexagon" points="23.4,0 11.7,20.2649944485559 -11.7,20.2649944485559 -23.4,2.86557886794436E-15 -11.7,-20.2649944485559 11.7,-20.2649944485559"></polygon>`,
-				`<polygon class="marking triangle-up" points="20.264999389648,11.700012207031 -20.264991760254,11.700012207031 0,-23.399993896484"></polygon>`,
-				`<polygon class="marking triangle-right" points="23.39999961853,0 -11.699996948242,20.265014648438 -11.699996948242,-20.264984130859"></polygon>`,
-				`<polygon class="marking triangle-down" points="0,23.399993896484 -20.264999389648,-11.700004577637 20.264984130859,-11.700004577637"></polygon>`,
-				`<polygon class="marking triangle-left" points="11.700004577637,20.264995574951 -23.400001525879,1.1444091796875e-005 11.700004577637,-20.265003204346"></polygon>`,
-				`<circle class="marking pawn" fill="red" cx="0" cy="0" r="12"></circle>`
-			]
+				'<circle class="marking circle" cx="0" cy="0" r="18"></circle>',
+				'<polygon class="marking hexagon" points="23.4,0 11.7,20.2649944485559 -11.7,20.2649944485559 -23.4,2.86557886794436E-15 -11.7,-20.2649944485559 11.7,-20.2649944485559"></polygon>',
+				'<polygon class="marking triangle-up" points="20.264999389648,11.700012207031 -20.264991760254,11.700012207031 0,-23.399993896484"></polygon>',
+				'<polygon class="marking triangle-right" points="23.39999961853,0 -11.699996948242,20.265014648438 -11.699996948242,-20.264984130859"></polygon>',
+				'<polygon class="marking triangle-down" points="0,23.399993896484 -20.264999389648,-11.700004577637 20.264984130859,-11.700004577637"></polygon>',
+				'<polygon class="marking triangle-left" points="11.700004577637,20.264995574951 -23.400001525879,1.1444091796875e-005 11.700004577637,-20.265003204346"></polygon>',
+				'<circle class="marking pawn" fill="red" cx="0" cy="0" r="12"></circle>'
+			];
 
 			// The svgs for tools in the template stencil.
 			var toolMarkings = [
 				mazeMarkings[0],
 				mazeMarkings[1],
-				`<polygon class="marking triangle-up" points="20.264995574951,17.550003051758 -20.264995574951,17.550003051758 -3.8146970382513e-006,-17.550003051758"></polygon>`,
-				`<polygon class="marking triangle-right" points="17.549999237061,-1.52587890625e-005 -17.549999237061,20.264999389648 -17.549999237061,-20.264999389648"></polygon>`,
-				`<polygon class="marking triangle-down" points="7.62939453125e-006,17.549999237061 -20.264991760254,-17.549999237061 20.264991760254,-17.549999237061"></polygon>`,
-				`<polygon class="marking triangle-left" points="17.550003051758,20.264999389648 -17.550003051758,1.52587890625e-005 17.550003051758,-20.264999389648"></polygon>`,
+				'<polygon class="marking triangle-up" points="20.264995574951,17.550003051758 -20.264995574951,17.550003051758 -3.8146970382513e-006,-17.550003051758"></polygon>',
+				'<polygon class="marking triangle-right" points="17.549999237061,-1.52587890625e-005 -17.549999237061,20.264999389648 -17.549999237061,-20.264999389648"></polygon>',
+				'<polygon class="marking triangle-down" points="7.62939453125e-006,17.549999237061 -20.264991760254,-17.549999237061 20.264991760254,-17.549999237061"></polygon>',
+				'<polygon class="marking triangle-left" points="17.550003051758,20.264999389648 -17.550003051758,1.52587890625e-005 17.550003051758,-20.264999389648"></polygon>',
 				mazeMarkings[6]
-			]
+			];
 
 
 			// Turns svg tags into an svg element.
 			function makeSVG(tag) {
-				return $("<svg>" + tag + "</svg>").children().eq(0).unwrap()
+				return $("<svg>" + tag + "</svg>").children().eq(0).unwrap();
 			}
 
 			// Used to create invisible hexagons for selection.
-			var hexagonTemplate = makeSVG(mazeMarkings[1]).removeClass("marking").addClass("selector")
+			var hexagonTemplate = makeSVG(mazeMarkings[1]).removeClass("marking").addClass("selector");
 			function createHexagon(marker) {
-				var parent = marker.parent()
-				return hexagonTemplate.clone().css("transform", "translate(" + marker.attr("cx") + "px, " + marker.attr("cy") + "px) scale(1.54, 1.54)").appendTo(parent)
+				var parent = marker.parent();
+				return hexagonTemplate.clone().css("transform", "translate(" + marker.attr("cx") + "px, " + marker.attr("cy") + "px) scale(1.54, 1.54)").appendTo(parent);
 			}
 
 			// A function called whenever the stencil or it's UI is needed to be updated.
-			var container = $(".hexamaze-container")
+			var container = $(".hexamaze-container");
 			function updateStencil() {
-				stencil.css("transform", "translate(" + stencilPos.x + "px, " + stencilPos.y + "px) rotateZ(" + stencilDeg + "deg) scale(73, 73)")
+				stencil.css("transform", "translate(" + stencilPos.x + "px, " + stencilPos.y + "px) rotateZ(" + stencilDeg + "deg) scale(73, 73)");
 
-				var vec = stencilPos.rotateAround(new Vector2(), -deg)
-				var top = container.position().top + container.height() * ((vec.y + 722.069034333515) / 1444.13807)
-				var left = container.position().left + container.width()  * ((vec.x + 635) / 1270)
-				$(".hexamaze, svg.legend").css("transform", "rotateZ(" + deg + "deg)")
+				var vec = stencilPos.rotateAround(new Vector2(), -deg);
+				var top = container.position().top + container.height() * ((vec.y + 722.069034333515) / 1444.13807);
+				var left = container.position().left + container.width()  * ((vec.x + 635) / 1270);
+				$(".hexamaze, svg.legend").css("transform", "rotateZ(" + deg + "deg)");
 
 				$(".rotate-left").css({
 					top: top - bsize.y - size.y,
 					left: left - bsize.x - size.x
-				})
+				});
 				$(".rotate-right").css({
 					top: top - bsize.y - size.y,
 					left: left - bsize.x + size.x
-				})
+				});
 
-				$(".north-star").css("transform", "translate(" + (left - bsize.y / 2) + "px, " + (top - size.x - bsize.x * 1.5) + "px) rotateZ(" + (deg + stencilDeg) + "deg) translate(0px, " + (-size.y - bsize.y) + "px)")
+				$(".north-star").css("transform", "translate(" + (left - bsize.y / 2) + "px, " + (top - size.x - bsize.x * 1.5) + "px) rotateZ(" + (deg + stencilDeg) + "deg) translate(0px, " + (-size.y - bsize.y) + "px)");
 
 				for (var key in markers) {
 					if (!markers.hasOwnProperty(key)) continue;
-					var mark = markers[key]
+					var mark = markers[key];
 
-					mark.marker.css("transform", "translate(" + stencilPos.x + "px, " + stencilPos.y + "px) rotateZ(" + stencilDeg + "deg) translate(" + mark.position.x + "px, " + mark.position.y + "px) scale(0.84, 0.84)")
+					mark.marker.css("transform", "translate(" + stencilPos.x + "px, " + stencilPos.y + "px) rotateZ(" + stencilDeg + "deg) translate(" + mark.position.x + "px, " + mark.position.y + "px) scale(0.84, 0.84)");
 				}
 			}
 
 			// Used for fixing the amount of degrees the maze is rotated.
-			var rotating // Elements that rotate on the maze.
+			var rotating; // Elements that rotate on the maze.
 			function _fixRotation() {
-				rotating = stencil.add(".legend, .hexamaze, .north-star, .ghosted")
-				rotating.addClass("disable-transitions")
-				deg = deg % 360, stencilDeg = stencilDeg % 360
-				updateStencil()
+				rotating = stencil.add(".legend, .hexamaze, .north-star, .ghosted");
+				rotating.addClass("disable-transitions");
+				deg = deg % 360, stencilDeg = stencilDeg % 360;
+				updateStencil();
 				rotating.each(function() {
-					this.offsetHeight // Trigger reflow.
-				})
-				rotating.removeClass("disable-transitions")
+					this.offsetHeight; // Trigger reflow.
+				});
+				rotating.removeClass("disable-transitions");
 			}
-			fixRotation = debounce(_fixRotation, 300)
+			var fixRotation = debounce(_fixRotation, 300);
 
 			// All of these functions and data are used to snap any cells on edge to the closest inner cell.
 			var innerMapEdgePoints = [
@@ -242,20 +244,20 @@
 				new Vector2(-162, -405.300),    //  9,  4
 				new Vector2(-108, -436.477),    // 10,  4
 				new Vector2( -54, -467.654)     // 11,  4
-			]
+			];
 
 
 			function insideInnerMap(v) {
 				// Constants:
-				var y0 = 561.184    // float
-				var x1 = 486        // float
-				var y1 = 282.592    // float
+				var y0 = 561.184;    // float
+				var x1 = 486;        // float
+				var y1 = 282.592;    // float
 
 				// coordinates:
 				//    1, 3 = translate(0px, -561.184px) scale(1.54, 1.54)
 				//    1, 4 = transform: translate(0px, -498.831px) scale(1.54, 1.54)
 				// based on this, i chose tolerance to be 10
-				var tol = 10
+				var tol = 10;
 
 				// Coordinates of hexagon are:
 				//   (  0,  y0) -- 12 o'clock
@@ -266,8 +268,8 @@
 				//   (-x1,  y1) -- 10 o'clock
 
 				// Slope and intercept
-				var m = (y1 - y0) / x1
-				var b = y0
+				var m = (y1 - y0) / x1;
+				var b = y0;
 
 				if ((v.y < ( m * v.x) + b - tol) &&   // 12 to  2
 					(v.x < x1) &&                     //  2 to  4
@@ -276,200 +278,199 @@
 					(v.y < (-m * v.x) + b - tol) &&   // 10 to 12
 					(v.x > -x1))                      //  8 to 10
 					{
-						return true
-					} else {
-						return false
-					}
+					return true;
+				} else {
+					return false;
+				}
 			}
 
 			function getSnapToCoordinates(v) {
-				var closest = null
-				var closestDist
-				var p
-				var pDist
+				var closest = null;
+				var closestDist;
+				var pDist;
 
 				if (insideInnerMap(v)) {
-					return v
+					return v;
 				} else {
 					innerMapEdgePoints.forEach(function(p) {
-						pDist = v.distance(p)
+						pDist = v.distance(p);
 						if ((closest == null) || (pDist < closestDist)) {
-							closest = p
-							closestDist = v.distance(p)
+							closest = p;
+							closestDist = v.distance(p);
 						}
-					})
-					return closest
+					});
+					return closest;
 				}
 			}
 
 			// Makes the whole maze rotate 60 deg when you click on the legend.
 			$("svg.legend").click(function(event) {
-				deg += 60
-				updateStencil()
-				fixRotation()
+				deg += 60;
+				updateStencil();
+				fixRotation();
 
-				event.stopPropagation()
-			})
+				event.stopPropagation();
+			});
 
-			var moving // The elements that will have transition disabled when moving the stencil
+			var moving; // The elements that will have transition disabled when moving the stencil
 			var disableTransform = debounce(function() { // Tries to limit the spam of adding/removing classes.
-				moving.removeClass("disable-transitions")
-			}, 100)
+				moving.removeClass("disable-transitions");
+			}, 100);
 			// Handles movement of stencil on the maze.
 			$(".hexamaze circle.marking").not(".circle").each(function(_, element) {
-				var circle = $(element)
-				circle.attr("r", 8)
-				var x = parseFloat(circle.attr("cx"))
-				var y = parseFloat(circle.attr("cy"))
+				var circle = $(element);
+				circle.attr("r", 8);
+				var x = parseFloat(circle.attr("cx"));
+				var y = parseFloat(circle.attr("cy"));
 
 				function clickElement(event) {
 					if (event.buttons == 1 && visible) { // Make sure the left button is held down and that the stencil is actually visible.
-						var vec = getSnapToCoordinates(new Vector2(x, y))
-						stencilPos.set(vec.x, vec.y)
-						updateStencil()
+						var vec = getSnapToCoordinates(new Vector2(x, y));
+						stencilPos.set(vec.x, vec.y);
+						updateStencil();
 
-						moving = stencil.add(".rotate-left, .rotate-right, .north-star, .ghosted")
-						moving.addClass("disable-transitions")
-						disableTransform()
+						moving = stencil.add(".rotate-left, .rotate-right, .north-star, .ghosted");
+						moving.addClass("disable-transitions");
+						disableTransform();
 
-						event.stopPropagation()
+						event.stopPropagation();
 					}
 				}
 
-				createHexagon(circle).mousedown(clickElement).mouseenter(clickElement)
-			})
+				createHexagon(circle).mousedown(clickElement).mouseenter(clickElement);
+			});
 
 			// Color the legend text with it's color name.
 			$(".legend text").each(function(_, element) {
-				$(element).attr("fill", $(element).text())
-			})
+				$(element).attr("fill", $(element).text());
+			});
 
 			// Handle interacting with the template stencil which is replicated to the actual stencil on the maze.
-			var tempStencil = $(".template-stencil")
+			var tempStencil = $(".template-stencil");
 			$(".template-stencil .marking").each(function(ind) {
-				var element = $(this)
-				var mark
+				var element = $(this);
+				var mark;
 
 				createHexagon(element).click(function(event) {
-					var markerInfo = markers[ind]
-					var pawntool = $(".tools .marking.selected").hasClass("pawn")
+					var markerInfo = markers[ind];
+					var pawntool = $(".tools .marking.selected").hasClass("pawn");
 
 					if (markerInfo) {
 						if (markerInfo.marker.hasClass("pawn") && pawntool) {
-							colorindex++
-							colorindex %= 6
+							colorindex++;
+							colorindex %= 6;
 
-							markerInfo.marker.css("fill", colors[colorindex])
-							markerInfo.template.css("fill", colors[colorindex])
+							markerInfo.marker.css("fill", colors[colorindex]);
+							markerInfo.template.css("fill", colors[colorindex]);
 						} else {
-							markerInfo.marker.remove()
-							delete markers[ind]
-							mark.remove()
-							mark = null
+							markerInfo.marker.remove();
+							delete markers[ind];
+							mark.remove();
+							mark = null;
 						}
 					} else {
 						if (pawntool) {
 							$(".template-stencil .marking").each(function(ind) {
-								var markerInfo = markers[ind]
+								var markerInfo = markers[ind];
 								if (markerInfo) {
 									if (markerInfo.template.hasClass("pawn")) {
-										markerInfo.marker.remove()
-										markerInfo.template.remove()
-										delete markers[ind]
+										markerInfo.marker.remove();
+										markerInfo.template.remove();
+										delete markers[ind];
 									}
 								}
-							})
+							});
 						}
 
-						mark = makeSVG(mazeMarkings[tool]).css("transform", "translate(" + element.attr("cx") + "px, " + element.attr("cy") + "px)").appendTo(tempStencil)
+						mark = makeSVG(mazeMarkings[tool]).css("transform", "translate(" + element.attr("cx") + "px, " + element.attr("cy") + "px)").appendTo(tempStencil);
 						if (mark.hasClass("pawn")) {
-							mark.css("fill", colors[colorindex])
+							mark.css("fill", colors[colorindex]);
 						}
 						markers[ind] = {
 							marker: mark.clone().addClass("ghosted").appendTo($("svg.hexamaze")),
 							position: new Vector2(parseFloat(element.attr("cx")), parseFloat(element.attr("cy")) + 498.830632579837),
 							template: mark
-						}
+						};
 
 					}
-					updateStencil()
+					updateStencil();
 
-					event.stopPropagation()
-				})
-			})
+					event.stopPropagation();
+				});
+			});
 
 			// Used to setup all the tool svgs and handling selection of them.
-			var x = 0
+			var x = 0;
 			toolMarkings.forEach(function(html, index) {
-				var elm = makeSVG(html).appendTo($(".tools"))
-				var bbox = elm[0].getBBox()
+				var elm = makeSVG(html).appendTo($(".tools"));
+				var bbox = elm[0].getBBox();
 				elm.css("transform", "translate(0px, " + (bbox.height / 2 + 1.5 + x) + "px)").click(function() {
-					tool = index
-					$(".tools .marking.selected").removeClass("selected")
-					elm.addClass("selected")
-				})
+					tool = index;
+					$(".tools .marking.selected").removeClass("selected");
+					elm.addClass("selected");
+				});
 
 				if (index == 0) {
-					elm.click()
+					elm.click();
 				}
 
-				x += bbox.height + 3 + 5
-			})
+				x += bbox.height + 3 + 5;
+			});
 
 			// Reset everything
 			$("button.reset").click(function() {
 				$(".template-stencil .marking").each(function(ind) {
-					var markerInfo = markers[ind]
+					var markerInfo = markers[ind];
 					if (markerInfo) {
-						markerInfo.marker.remove()
-						markerInfo.template.remove()
-						delete markers[ind]
+						markerInfo.marker.remove();
+						markerInfo.template.remove();
+						delete markers[ind];
 					}
-				})
+				});
 
-				_fixRotation()
+				_fixRotation();
 
-				deg = 0, stencilDeg = 0, colorindex = 0
-				stencilPos.set(0, 0)
-				updateStencil()
-			})
+				deg = 0, stencilDeg = 0, colorindex = 0;
+				stencilPos.set(0, 0);
+				updateStencil();
+			});
 
 			// Toggles the visibility of the stencil.
 			$("button.toggle").click(function() {
-				visible = !visible
+				visible = !visible;
 
-				stencil.add(".north-star, button.floating").toggle(visible)
+				stencil.add(".north-star, button.floating").toggle(visible);
 				for (var key in markers) {
 					if (!markers.hasOwnProperty(key)) continue;
-					markers[key].marker.toggle(visible)
+					markers[key].marker.toggle(visible);
 				}
-			})
+			});
 
 			// Stencil Rotation
 			$("button.rotate-left").click(function() {
-				stencilDeg -= 60
-				updateStencil()
-				fixRotation()
-			})
+				stencilDeg -= 60;
+				updateStencil();
+				fixRotation();
+			});
 
 			$("button.rotate-right").click(function() {
-				stencilDeg += 60
-				updateStencil()
-				fixRotation()
-			})
+				stencilDeg += 60;
+				updateStencil();
+				fixRotation();
+			});
 
 			// Reorients maze to point the stencil north.
 			$("button.northify").click(function() {
-				_fixRotation()
+				_fixRotation();
 
 				setTimeout(function() {
-					deg = -(stencilDeg % 360)
-					updateStencil()
-				}, 1)
-			})
+					deg = -(stencilDeg % 360);
+					updateStencil();
+				}, 1);
+			});
 
-			updateStencil()
-		})
+			updateStencil();
+		});
 	</script>
 	<style>
 		/* Nothing on this page should be selectable. */
