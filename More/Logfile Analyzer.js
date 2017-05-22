@@ -567,6 +567,14 @@ $(function() {
 			if (this.Indicators.length > 0) {
 				var iGroup = $("<div class='widget-group'>").appendTo(edgework);
 
+				this.Indicators.sort(function(ind1, ind2) {
+					if (ind1[0] == ind2[0]) {
+						return (ind1[1] > ind2[1]);
+					} else {
+						return (ind1[0] < ind2[0]);
+					}
+				});
+
 				this.Indicators.forEach(function(val) {
 					$("<div class='widget indicator'>").addClass(val[0]).appendTo(iGroup)
 					.append($("<span class='label'>").text(val[1]));
