@@ -689,8 +689,8 @@ $(function() {
 					b = b[0];
 				}
 
-				a = a.replace(/^The/, "");
-				b = b.replace(/^The/, "");
+				a = a.replace(/^The /, "");
+				b = b.replace(/^The /, "");
 
 				if (a < b) {
 					return -1;
