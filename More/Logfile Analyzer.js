@@ -4,7 +4,9 @@ var PortNames = {
 	RJ45: "RJ-45",
 	PS2: "PS/2",
 	StereoRCA: "Stereo RCA",
-	DVI: "DVI-D"
+	DVI: "DVI-D",
+	Parallel: "Parallel",
+	Serial: "Serial"
 };
 
 
@@ -252,19 +254,18 @@ $(function() {
 
 				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
 
-				var group;
 				if (bomb.Batteries.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework);
+                    edgework.append("<div class='widget separator'>");
 
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
 							.addClass(val == 1 ? "d" : "aa")
-							.appendTo(group);
+							.appendTo(edgework);
 					});
 				}
 
 				if (bomb.Indicators.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework);
+					edgework.append("<div class='widget separator'>");
 
 					bomb.Indicators.sort(function(ind1, ind2) {
                         if (ind1[0] < ind2[0]) return -1;
@@ -277,16 +278,16 @@ $(function() {
 					bomb.Indicators.forEach(function(val) {
 						$("<div class='widget indicator'>")
 							.addClass(val[0])
-							.appendTo(group)
+							.appendTo(edgework)
 							.append($("<span class='label'>").text(val[1]));
 					});
 				}
 
 				if (bomb.PortPlates.length > 0) {
-					group = $("<div class='widget-group'>").appendTo(edgework);
+					edgework.append("<div class='widget separator'>");
 
 					bomb.PortPlates.forEach(function(val) {
-						var plate = $("<div class='widget portplate'>").appendTo(group);
+						var plate = $("<div class='widget portplate'>").appendTo(edgework);
 						val.forEach(function(port) {
 							$("<span>").addClass(port.toLowerCase()).appendTo(plate);
 						});
@@ -324,7 +325,7 @@ $(function() {
 				var portlist = [];
 				Object.keys(ports).forEach(function(port) {
 					var count = ports[port];
-					portlist.push((count > 1 ? count + " × " : "") + port);
+					portlist.push((count > 1 ? count + " × " : "") + PortNames[port]);
 				});
 
 				var batteries = 0;
@@ -559,46 +560,50 @@ $(function() {
 				$("<div class='needy-count'>").text(this.Needies).appendTo(bombHTML);
 			}
 
-			// Build the edgework.
-			var edgework = $("<div class='edgework'>").appendTo(info);
+            // Build the edgework.
+            var edgework = $("<div class='edgework'>").appendTo(info);
 
-			$("<div class='widget serial'>").text(this.Serial).appendTo(edgework);
+            $("<div class='widget serial'>").text(this.Serial).appendTo(edgework);
 
-			if (this.Batteries.length > 0) {
-				var bGroup = $("<div class='widget-group'>").appendTo(edgework);
+            if (this.Batteries.length > 0) {
+                edgework.append("<div class='widget separator'>");
 
-				this.Batteries.forEach(function(val) {
-					$("<div class='widget battery'>").addClass(val == 1 ? "d" : "aa").appendTo(bGroup);
-				});
-			}
+                this.Batteries.forEach(function(val) {
+                    $("<div class='widget battery'>")
+                        .addClass(val == 1 ? "d" : "aa")
+                        .appendTo(edgework);
+                });
+            }
 
-			if (this.Indicators.length > 0) {
-				var iGroup = $("<div class='widget-group'>").appendTo(edgework);
+            if (this.Indicators.length > 0) {
+                edgework.append("<div class='widget separator'>");
 
-				this.Indicators.sort(function(ind1, ind2) {
-					if (ind1[0] == ind2[0]) {
-						return (ind1[1] > ind2[1] ? 1 : -1);
-					} else {
-						return (ind1[0] < ind2[0] ? 1 : -1);
-					}
-				});
+                this.Indicators.sort(function(ind1, ind2) {
+                    if (ind1[0] < ind2[0]) return -1;
+                    if (ind1[0] > ind2[0]) return 1;
+                    if (ind1[1] < ind2[1]) return -1;
+                    if (ind1[1] > ind2[1]) return 1;
+                    return 0;
+                });
 
-				this.Indicators.forEach(function(val) {
-					$("<div class='widget indicator'>").addClass(val[0]).appendTo(iGroup)
-					.append($("<span class='label'>").text(val[1]));
-				});
-			}
+                this.Indicators.forEach(function(val) {
+                    $("<div class='widget indicator'>")
+                        .addClass(val[0])
+                        .appendTo(edgework)
+                        .append($("<span class='label'>").text(val[1]));
+                });
+            }
 
-			if (this.PortPlates.length > 0) {
-				var pGroup = $("<div class='widget-group'>").appendTo(edgework);
+            if (this.PortPlates.length > 0) {
+                edgework.append("<div class='widget separator'>");
 
-				this.PortPlates.forEach(function(val) {
-					var plate = $("<div class='widget portplate'>").appendTo(pGroup);
-					val.forEach(function(port) {
-						$("<span>").addClass(port.toLowerCase()).appendTo(plate);
-					});
-				});
-			}
+                this.PortPlates.forEach(function(val) {
+                    var plate = $("<div class='widget portplate'>").appendTo(edgework);
+                    val.forEach(function(port) {
+                        $("<span>").addClass(port.toLowerCase()).appendTo(plate);
+                    });
+                });
+            }
 
 			// Modules
 			var modules = $("<div class='modules'>").appendTo(info);
@@ -1025,7 +1030,7 @@ $(function() {
 
 			*/
 
-		// A listed used for matching lines and executing a function if it matches the line.
+		// A list used for matching lines and executing a function if it matches the line.
 		var lineRegex = {
 			"BombGenerator": [
 				{
@@ -1265,7 +1270,7 @@ $(function() {
 					{
 						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
 						value: function(matches, module) {
-							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]); 
+							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]);
 						}
 					}
 				],
@@ -1339,7 +1344,7 @@ $(function() {
 							if (index == 0) {
 								id++;
 								GetBomb().GetModuleID("Venn", id);
-							} 
+							}
 
 							if (mod.IDs.length > 0) {
 								matches.forEach(function(val, index) {
