@@ -255,7 +255,7 @@ $(function() {
 				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
 
 				if (bomb.Batteries.length > 0) {
-                    edgework.append("<div class='widget separator'>");
+					edgework.append("<div class='widget separator'>");
 
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
@@ -268,11 +268,11 @@ $(function() {
 					edgework.append("<div class='widget separator'>");
 
 					bomb.Indicators.sort(function(ind1, ind2) {
-                        if (ind1[0] < ind2[0]) return -1;
-                        if (ind1[0] > ind2[0]) return 1;
-                        if (ind1[1] < ind2[1]) return -1;
-                        if (ind1[1] > ind2[1]) return 1;
-                        return 0;
+						if (ind1[0] < ind2[0]) return -1;
+						if (ind1[0] > ind2[0]) return 1;
+						if (ind1[1] < ind2[1]) return -1;
+						if (ind1[1] > ind2[1]) return 1;
+						return 0;
 					});
 
 					bomb.Indicators.forEach(function(val) {
@@ -560,50 +560,50 @@ $(function() {
 				$("<div class='needy-count'>").text(this.Needies).appendTo(bombHTML);
 			}
 
-            // Build the edgework.
-            var edgework = $("<div class='edgework'>").appendTo(info);
+			// Build the edgework.
+			var edgework = $("<div class='edgework'>").appendTo(info);
 
-            $("<div class='widget serial'>").text(this.Serial).appendTo(edgework);
+			$("<div class='widget serial'>").text(this.Serial).appendTo(edgework);
 
-            if (this.Batteries.length > 0) {
-                edgework.append("<div class='widget separator'>");
+			if (this.Batteries.length > 0) {
+				edgework.append("<div class='widget separator'>");
 
-                this.Batteries.forEach(function(val) {
-                    $("<div class='widget battery'>")
-                        .addClass(val == 1 ? "d" : "aa")
-                        .appendTo(edgework);
-                });
-            }
+				this.Batteries.forEach(function(val) {
+					$("<div class='widget battery'>")
+						.addClass(val == 1 ? "d" : "aa")
+						.appendTo(edgework);
+				});
+			}
 
-            if (this.Indicators.length > 0) {
-                edgework.append("<div class='widget separator'>");
+			if (this.Indicators.length > 0) {
+				edgework.append("<div class='widget separator'>");
 
-                this.Indicators.sort(function(ind1, ind2) {
-                    if (ind1[0] < ind2[0]) return -1;
-                    if (ind1[0] > ind2[0]) return 1;
-                    if (ind1[1] < ind2[1]) return -1;
-                    if (ind1[1] > ind2[1]) return 1;
-                    return 0;
-                });
+				this.Indicators.sort(function(ind1, ind2) {
+					if (ind1[0] < ind2[0]) return -1;
+					if (ind1[0] > ind2[0]) return 1;
+					if (ind1[1] < ind2[1]) return -1;
+					if (ind1[1] > ind2[1]) return 1;
+					return 0;
+				});
 
-                this.Indicators.forEach(function(val) {
-                    $("<div class='widget indicator'>")
-                        .addClass(val[0])
-                        .appendTo(edgework)
-                        .append($("<span class='label'>").text(val[1]));
-                });
-            }
+				this.Indicators.forEach(function(val) {
+					$("<div class='widget indicator'>")
+						.addClass(val[0])
+						.appendTo(edgework)
+						.append($("<span class='label'>").text(val[1]));
+				});
+			}
 
-            if (this.PortPlates.length > 0) {
-                edgework.append("<div class='widget separator'>");
+			if (this.PortPlates.length > 0) {
+				edgework.append("<div class='widget separator'>");
 
-                this.PortPlates.forEach(function(val) {
-                    var plate = $("<div class='widget portplate'>").appendTo(edgework);
-                    val.forEach(function(port) {
-                        $("<span>").addClass(port.toLowerCase()).appendTo(plate);
-                    });
-                });
-            }
+				this.PortPlates.forEach(function(val) {
+					var plate = $("<div class='widget portplate'>").appendTo(edgework);
+					val.forEach(function(port) {
+						$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+					});
+				});
+			}
 
 			// Modules
 			var modules = $("<div class='modules'>").appendTo(info);
