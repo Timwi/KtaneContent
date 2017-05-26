@@ -87,43 +87,33 @@ var blacklist = [
 // Search for 'var lineRegex' for the list of all the line matching regex & the reference.
 
 $(function() {
-	function readPaste(clipText) {
-
-		$('#full-screen-msg>span').text('Loading...');
-		$('#full-screen-msg').addClass("hovering");
-
-		window.setTimeout(function() {
-			if (/^https?:\/\//.exec(clipText)) { // Very basic regex to detect a URL being pasted.
-				$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
-					parseLog(data);
-				}).fail(function() {
-					toastr.error("Unable to get logfile from URL.", "Upload Error");
-				});
-			} else if (/^https?%3A%2F%2F/.exec(clipText)) { // URL-encoded URL...
-				$.get("https://cors-anywhere.herokuapp.com/" + decodeURIComponent(clipText), function(data) {
-					parseLog(data);
-				}).fail(function() {
-					toastr.error("Unable to get logfile from URL.", "Upload Error");
-				});
-			} else {
-				parseLog(clipText);
-			}
-
-			window.setTimeout(function() {
-				$('#full-screen-msg').removeClass("hovering");
-				window.setTimeout(function() {
-					$('#full-screen-msg>span').text('Drop here!');
-				}, 100);
-			}, 100);
-		}, 100);
-	}
-
 	// Read Logfile
 	var readwarning = false;
 	var buildwarning = false;
 	var debugging = true;
 	var linen = 0;
 	var lines = [];
+
+	function readPaste(clipText, bombSerial) {
+
+		if (/^https?:\/\//.exec(clipText)) { // Very basic regex to detect a URL being pasted.
+			$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
+				parseLog(data, clipText);
+				selectBomb(bombSerial);
+			}).fail(function() {
+				toastr.error("Unable to get logfile from URL.", "Upload Error");
+			});
+		} else if (/^https?%3A%2F%2F/.exec(clipText)) { // URL-encoded URL...
+			$.get("https://cors-anywhere.herokuapp.com/" + decodeURIComponent(clipText), function(data) {
+				parseLog(data, decodeURIComponent(clipText));
+				selectBomb(bombSerial);
+			}).fail(function() {
+				toastr.error("Unable to get logfile from URL.", "Upload Error");
+			});
+		} else {
+			parseLog(clipText);
+		}
+	}
 
 	function makeExpandable(parent, label) {
 		parent
@@ -174,6 +164,24 @@ $(function() {
 				toastr.warning("An error occurred while generating the page. Some information might be missing.", "Page Generation Warning");
 			}
 		}
+	}
+
+	function selectBomb(serial) {
+		var a = $(".bomb[data-serial='"+serial+"']");
+		var div = $("#bomb-" + serial);
+		if ((!a.length || !div.length) && $('a.bomb').length) {
+			serial = $('a.bomb').last().data('serial');
+			a = $(".bomb[data-serial='"+serial+"']");
+			div = $("#bomb-" + serial);
+		}
+		if (!a.length || !div.length)
+			return false;
+		$(".bomb.selected").removeClass("selected");
+		a.addClass("selected");
+		$(".bomb-info").hide();
+		div.show();
+		window.location.hash = '#bomb-' + serial;
+		return false;
 	}
 
 	function convertID(id) {
@@ -228,16 +236,15 @@ $(function() {
 
 		this.PacingEvents = [];
 
-		this.ToHTML = function() {
+		this.ToHTML = function(url) {
 			// Build up the bomb.
-			var info = $("<div class='bomb-info' id='bomb-" + this.Bombs[0].Serial + "'>").hide().appendTo($("#wrap"));
-			var bombHTML = $("<a href='#bomb-" + this.Bombs[0].Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
-				$(".bomb.selected").removeClass("selected");
-				$(this).addClass("selected");
-				$(".bomb-info").hide();
-				info.show();
-				return true;
-			}).mousedown(function() { return false; });
+			var serial = this.Bombs[0].Serial;
+			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>").hide().appendTo($("#wrap"));
+			var fragment = (url ? '#url=' + url + ';' : '#') + 'bomb-' + serial;
+			var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
+				.appendTo($("#bombs"))
+				.click(function() { selectBomb(serial); return false; })
+				.mousedown(function() { return false; });
 
 			var TotalModules = 0;
 			var Needies = 0;
@@ -542,16 +549,15 @@ $(function() {
 
 		this.PacingEvents = [];
 
-		this.ToHTML = function() {
+		this.ToHTML = function(url) {
 			// Build up the bomb.
-			var info = $("<div class='bomb-info' id='bomb-" + this.Serial + "'>").hide().appendTo($("#wrap"));
-			var bombHTML = $("<a href='#bomb-" + this.Serial + "' class='bomb'>").appendTo($("#bombs")).click(function() {
-				$(".bomb.selected").removeClass("selected");
-				$(this).addClass("selected");
-				$(".bomb-info").hide();
-				info.show();
-				return true;
-			}).mousedown(function() { return false; });
+			var serial = this.Serial;
+			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>").hide().appendTo($("#wrap"));
+			var fragment = (url ? '#url=' + url + ';' : '#') + 'bomb-' + serial;
+			var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
+				.appendTo($("#bombs"))
+				.click(function() { selectBomb(serial); return false; })
+				.mousedown(function() { return false; });
 
 			$("<div class='serial'>").text(this.Serial).appendTo(bombHTML);
 
@@ -833,7 +839,7 @@ $(function() {
 		};
 	}
 
-	function parseLog(log) {
+	function parseLog(log, url) {
 		log = log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
@@ -2506,12 +2512,7 @@ $(function() {
 
 		$(".bomb, .bomb-info").remove();
 
-		parsed.forEach(function(obj, n) {
-			var bombHTML = obj.ToHTML(n);
-			if (n == parsed.length - 1) {
-				bombHTML.click();
-			}
-		});
+		parsed.forEach(function(obj) { obj.ToHTML(url); });
 
 		$('#ui').addClass('has-bomb');
 		toastr.success("Log read successfully!");
@@ -2590,9 +2591,22 @@ $(function() {
 	});
 
 	window.onhashchange = function() {
-		if (window.location.hash.startsWith('#url=')) {
-			readPaste(window.location.hash.substr(5));
+		if (window.location.hash.length < 2)
+			return;
+		var pieces = window.location.hash.substr(1).split(';');
+		var readUrl = null;
+		var bombSerial = null;
+		for (var i = 0; i < pieces.length; i++) {
+			if (pieces[i].startsWith('url=')) {
+				readUrl = pieces[i].substr(4);
+			} else if (pieces[i].startsWith('bomb-')) {
+				bombSerial = pieces[i].substr(5);
+			}
 		}
+		if (readUrl)
+			readPaste(readUrl, bombSerial);
+		else if (bombSerial)
+			selectBomb(bombSerial);
 	};
 	window.onhashchange();
 });
