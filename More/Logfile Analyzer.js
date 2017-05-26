@@ -98,20 +98,18 @@ $(function() {
 
 		if (/^https?:\/\//.exec(clipText)) { // Very basic regex to detect a URL being pasted.
 			$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
-				parseLog(data, clipText);
-				selectBomb(bombSerial);
+				parseLog(data, clipText, bombSerial);
 			}).fail(function() {
 				toastr.error("Unable to get logfile from URL.", "Upload Error");
 			});
 		} else if (/^https?%3A%2F%2F/.exec(clipText)) { // URL-encoded URL...
 			$.get("https://cors-anywhere.herokuapp.com/" + decodeURIComponent(clipText), function(data) {
-				parseLog(data, decodeURIComponent(clipText));
-				selectBomb(bombSerial);
+				parseLog(data, decodeURIComponent(clipText), bombSerial);
 			}).fail(function() {
 				toastr.error("Unable to get logfile from URL.", "Upload Error");
 			});
 		} else {
-			parseLog(clipText);
+			parseLog(clipText, null, bombSerial);
 		}
 	}
 
@@ -839,7 +837,7 @@ $(function() {
 		};
 	}
 
-	function parseLog(log, url) {
+	function parseLog(log, url, bombSerial) {
 		log = log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
@@ -2511,12 +2509,11 @@ $(function() {
 		}
 
 		$(".bomb, .bomb-info").remove();
-
 		parsed.forEach(function(obj) { obj.ToHTML(url); });
-
 		$('#ui').addClass('has-bomb');
+        selectBomb(bombSerial);
 		toastr.success("Log read successfully!");
-	}
+    }
 
 	function uploadFiles(files) {
 		if (files.length === 1) {
