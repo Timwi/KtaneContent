@@ -262,6 +262,7 @@ $(function() {
 				if (bomb.Batteries.length > 0) {
 					edgework.append("<div class='widget separator'>");
 
+					bomb.Batteries.sort().reverse();
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
 							.addClass(val == 1 ? "d" : "aa")
@@ -462,7 +463,7 @@ $(function() {
 			.addCardClick(loginfo);
 
 			var pacinginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Pacing Info").appendTo(loginfo);
+			$("<h3>").text("Pacing Info").appendTo(pacinginfo);
 			$("<pre>").css("white-space", "pre-wrap").text(this.PacingEvents.join("\n")).appendTo(pacinginfo);
 
 			$("<a href='#' class='module'>")
@@ -572,6 +573,7 @@ $(function() {
 			if (this.Batteries.length > 0) {
 				edgework.append("<div class='widget separator'>");
 
+				this.Batteries.sort().reverse();
 				this.Batteries.forEach(function(val) {
 					$("<div class='widget battery'>")
 						.addClass(val == 1 ? "d" : "aa")
@@ -755,7 +757,7 @@ $(function() {
 			.addCardClick(loginfo);
 
 			var pacinginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Pacing Info").appendTo(loginfo);
+			$("<h3>").text("Pacing Info").appendTo(pacinginfo);
 			$("<pre>").css("white-space", "pre-wrap").text(this.PacingEvents.join("\n")).appendTo(pacinginfo);
 
 			$("<a href='#' class='module'>")
@@ -1062,7 +1064,7 @@ $(function() {
 					}
 				},
 				{
-					regex: /Selected ([A-z0-9 ]+) \(.+ \((.+)\)\)/,
+					regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
 					value: function(matches) {
 						bomb.Modules[matches[1]] = {
 							IDs: [],
