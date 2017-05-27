@@ -90,6 +90,16 @@ e.onload = function()
 			return ((ctrl && !shift) ? 'column' : (shift && !ctrl) ? 'row' : (shift && ctrl) ? 'element' : null);
 		}
 
+        function setPosition(highlight)
+        {
+            var a = highlight.data('obj-a'), b = highlight.data('obj-b');
+            highlight.outerWidth(a.outerWidth());
+            highlight.outerHeight(b.outerHeight());
+            highlight.css("left", a.offset().left + "px");
+            highlight.css("top", b.offset().top + "px");
+            highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
+        }
+
 		$("td, th, li, .highlightable").each(function()
 		{
 			var element = $(this);
@@ -144,17 +154,12 @@ e.onload = function()
 						var svg = element.is("svg *");
 						var fill;
 
-						var highlight = $("<div>").addClass("ktane-highlight");
-						highlight.outerWidth(a.outerWidth());
-						highlight.outerHeight(b.outerHeight());
-						highlight.css("left", a.offset().left + "px");
-						highlight.css("top", b.offset().top + "px");
-						highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
+						var highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b);
+                        setPosition(highlight);
 
 						if (svg)
 						{
 							fill = element.css("fill");
-
 							element.css("fill", "rgba(68, 130, 255, 0.4)");
 							highlight.css("background-color", "rgba(0, 0, 0, 0)");
 						}
@@ -198,6 +203,14 @@ e.onload = function()
 				}
 			});
 		});
+
+        $(window).resize(function() 
+        {
+            $('.ktane-highlight').each(function(_, e) 
+            {
+                setPosition($(e));
+            });
+        });
 	});
 };
 document.head.appendChild(e);
