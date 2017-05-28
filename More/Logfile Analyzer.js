@@ -1193,6 +1193,7 @@ $(function() {
 					}
 				},
 				{
+					regex: /Executing|Next idle action in/,
 					value: function(matches) {
 						GetBomb().PacingEvents.push(matches.input);
 					}
