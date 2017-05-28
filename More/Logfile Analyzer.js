@@ -1193,6 +1193,12 @@ $(function() {
 					}
 				},
 				{
+					regex: /Executing|Next idle action in/,
+					value: function(matches) {
+						GetBomb().PacingEvents.push(matches.input);
+					}
+				},
+				{
 					regex: /Round start! Mission: (.+) Pacing Enabled: /,
 					value: function(matches) {
 						GetBomb().MissionName = matches[1];
@@ -2513,9 +2519,9 @@ $(function() {
 		$(".bomb, .bomb-info").remove();
 		parsed.forEach(function(obj) { obj.ToHTML(url); });
 		$('#ui').addClass('has-bomb');
-        selectBomb(bombSerial);
+		selectBomb(bombSerial);
 		toastr.success("Log read successfully!");
-    }
+	}
 
 	function uploadFiles(files) {
 		if (files.length === 1) {
