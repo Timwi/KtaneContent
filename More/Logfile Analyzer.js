@@ -1505,7 +1505,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /(?:Pressing|Unscrewing|Screwing|Module solved.) .+/
+						regex: /(?:Pressing |Unscrewing:|Screwing:|Module solved.).+/
 					}
 				],
 			},
