@@ -1237,7 +1237,7 @@ $(function() {
 				}
 			],
 
-			// Vanilla parsing
+			// Vanilla modules
 			"Rules": [ // Covers Button, Memory and Wires.
 				{
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
@@ -1386,7 +1386,7 @@ $(function() {
 				],
 			},
 
-			// Module Reading
+			// Modded modules
 			"Light Cycle": {
 				ID: "LightCycleModule",
 				Lines: [
