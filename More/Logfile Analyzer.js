@@ -1386,46 +1386,52 @@ $(function() {
 				],
 			},
 
-			// Modded modules
-			"Light Cycle": {
-				ID: "LightCycleModule",
+		    // Modded modules
+			"3D Maze": {
+			    ID: "spwiz3DMaze",
+			    Lines: [
+					{
+					    regex: /You walked into a wrong wall:/,
+					    value: function(matches, module)
+					    {
+					        module.push({ label: matches.input, obj: pre(readMultiple(13)) });
+					        return true;
+					    }
+					},
+					{
+					    regex: /.+/
+					}
+			    ],
+			},
+			"AdjacentLetters": {
+				ID: "AdjacentLettersModule",
 				Lines: [
 					{
-						regex: /Start sequence: ([A-Z]{6})/,
-						value: function(matches, module) {
-							module.Presses = [];
-							module.push("Starting Seq: " + matches[1]);
-							module.push(["Buttons:", module.Presses]);
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push({label: "Solution:", obj: pre(readMultiple(3))});
 						}
 					},
 					{
-						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
-						value: function(matches, module) {
-							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
-						}
-					},
-					{
-						regex: /Pressed button/,
-						value: function(matches, module) {
-							module.Presses.push(matches.input);
+						regex: /You submitted:/,
+						value: function(_, module) {
+							module.push({label: "You submitted:", obj: pre(readMultiple(3))});
 						}
 					}
-				]
+				],
 			},
-			"Mystic Square": {
-				ID: "MysticSquareModule",
-				Lines: [
-					{
-						regex: /Field:/,
-						value: function(matches, module) {
-							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
-						}
-					},
-					{
-						regex: /Last serial digit|Skull path/,
-					}
-				]
-			},
+			"Adventure Game": [
+				{
+					regex: /.+/,
+					value: "spwizAdventureGame"
+				}
+			],
+			"Astrology": [
+				{
+					regex: /.+/,
+					value: "spwizAstrology"
+				}
+			],
 			"Battleship": {
 				ID: "BattleshipModule",
 				Lines:[
@@ -1440,17 +1446,49 @@ $(function() {
 					}
 				]
 			},
-			"ColoredSquares": {
-				ID: "ColoredSquaresModule",
+			"Bitmaps": {
+				ID: "BitmapsModule",
 				Lines: [
 					{
-						regex: /First stage color is (.+); count=(\d+)./,
+						regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
 						value: function(matches, module) {
-							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
+							module.push({
+								label: matches.input,
+								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+									.css('color', matches[1] === 'red'    ? '#800' :
+												  matches[1] === 'green'  ? '#080' :
+												  matches[1] === 'blue'   ? '#008' :
+												  matches[1] === 'yellow' ? '#880' :
+												  matches[1] === 'cyan'   ? '#088' : '#808')
+							});
+							return true;
 						}
 					},
 					{
-						regex: /\d+ lit:|Button #\d/
+						regex: /.+/
+					}
+				],
+			},
+			"Bitwise Operators": [
+				{
+					regex: /.+/,
+					value: "BitOps"
+				}
+			],
+			"Blind Alley": {
+				ID: "BlindAlleyModule",
+				Lines: [
+					{
+						regex: /Region condition counts:/,
+						value: function(_, module) {
+							module.push({
+								label: "Region counts:",
+								obj: pre(readMultiple(3))
+							});
+						}
+					},
+					{
+						regex: /Must press regions:|Region .+ is correct|You pressed region/
 					}
 				],
 			},
@@ -1509,52 +1547,112 @@ $(function() {
 					}
 				],
 			},
-			"AdjacentLetters": {
-				ID: "AdjacentLettersModule",
+			"CaesarCipher": [
+				{
+					regex: /.+/,
+					value: "CaesarCipherModule"
+				}
+			],
+			"Cheap Checkout": {
+				ID: "CheapCheckoutModule",
 				Lines: [
 					{
-						regex: /Solution:/,
-						value: function(_, module) {
-							module.push({label: "Solution:", obj: pre(readMultiple(3))});
+						regex: /Receipt/,
+						value: function(matches, module) {
+							module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
+							return true;
 						}
 					},
 					{
-						regex: /You submitted:/,
-						value: function(_, module) {
-							module.push({label: "You submitted:", obj: pre(readMultiple(3))});
-						}
+						regex: /.+/
 					}
 				],
 			},
-			"Skewed Slots": {
-				ID: "SkewedSlotsModule",
+			"Chess": {
+				ID: "ChessModule",
 				Lines: [
 					{
-						regex: /Rule Log/,
-						value: function(_, module) {
-							module.push(readLine()); // Initial
-
-							for (var i = 0; i < 3; i++) {
-								readLine();
-								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
-								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
-
-								var line = readLine();
-								while (!(/Final digit/).exec(line)) {
-									slot[1].push(line);
-									line = readLine();
-								}
-								slot[1].push(line);
-
-								module.push(slot);
-							}
-
+						regex: /Selected Solution: (.+)/,
+						value: function(matches, module) {
+							var locations = matches[1].split(", ");
+							var solution = locations[locations.length - 1];
+							locations.splice(locations.length - 1, 1);
+							module.push("Display: " + locations.join(", "));
+							module.push("Solution: " + solution);
 							readLine();
-							module.push(readLine()); // Final
+							module.push({ label: "Board:", obj: pre(readMultiple(13)) });
 						}
+					},
+					{
+						regex: /Entered answer/
 					}
-				]
+				],
 			},
+			"ChordQualities": [
+				{
+					regex: /.+/,
+					value: "ChordQualities"
+				}
+			],
+			"The Clock": [
+				{
+					regex: /.+/,
+					value: "TheClockModule"
+				}
+			],
+			"ColoredSquares": {
+				ID: "ColoredSquaresModule",
+				Lines: [
+					{
+						regex: /First stage color is (.+); count=(\d+)./,
+						value: function(matches, module) {
+							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
+						}
+					},
+					{
+						regex: /\d+ lit:|Button #\d/
+					}
+				],
+			},
+			"Colour Flash": {
+				ID: "ColourFlash",
+				Lines: [
+					{
+						regex: /Module generated/,
+						value: function(matches, module) {
+							module.push({
+								label: "Color Sequence:",
+								obj: pre(readMultiple(10))
+							});
+							readLine();
+							for (var i = 0; i < 3; i++) {
+								module.push(readLine());
+							}
+						}
+					},
+					{
+						regex: /.+ button was pressed|.+ answer!/
+					}
+				],
+			},
+			"Color Math": [
+				{
+					regex: /.+/,
+					value: "colormath"
+				}
+			],
+			"Complicated Buttons": [
+				{
+					regex: /.+/,
+					value: "complicatedButtonsModule"
+				}
+			],
+			"Connection Check": [
+				{
+					regex: /.+/,
+					value: "graphModule"
+				}
+			],
 			"Coordinates": {
 				ID: "CoordinatesModule",
 				Lines: [
@@ -1583,6 +1681,246 @@ $(function() {
 					}
 				],
 			},
+			"Creation": {
+				ID: "CreationModule",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							if (module.length === 0) {
+								module.push(["Initial State", []]);
+							}
+
+							module[module.length - 1][1].push(matches.input);
+						}
+					},
+					{
+						regex: /Restarting module.../,
+						value: function(matches, module) {
+							module.push(["Restart #" + module.length, []]);
+						}
+					}
+				],
+			},
+			"Double-Oh": [
+				{
+					regex: /.+/,
+					value: "DoubleOhModule"
+				}
+			],
+			"FollowTheLeader": {
+				ID: "FollowTheLeaderModule",
+				Lines: [
+					{
+						regex: /Starting at wire:|Strike because you cut/
+					},
+					{
+						regex: /Wire state:/,
+						value: function(_, module) {
+							var states = [];
+
+							var line = readLine();
+							while ((/^Wire \d+-to-\d+/).exec(line)) {
+								states.push(line);
+								line = readLine();
+							}
+							linen--;
+
+							module.push(["Wire states:", states]);
+						}
+					},
+					{
+						regex: /Expectation/,
+						value: function(matches, module) {
+							if (matches.input.match(/Expectation now is that you’re done./)) {
+								module.push(matches.input);
+							} else {
+								var states = [];
+
+								var line = readLine();
+								while ((/^Wire \d+-to-\d+/).exec(line)) {
+									states.push(line);
+									line = readLine();
+								}
+								linen--;
+								module.push([matches.input, states]);
+							}
+						}
+					}
+				],
+			},
+			"Forget Me Not": [
+				{
+					regex: /.+/,
+					value: "MemoryV2"
+				}
+			],
+			"FizzBuzz": [
+				{
+					regex: /.+/,
+					value: "fizzBuzzModule"
+				}
+			],
+			"Friendship": {
+				ID: "FriendshipModule",
+				Lines: [
+					{
+						regex: /Friendship symbol/,
+						value: function(matches, module) {
+							if (!module.Symbols) {
+								module.Symbols = [];
+								module.push(["Symbols", module.Symbols]);
+							}
+
+							module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"The Gamepad": [
+				{
+					regex: /.+/,
+					value: "TheGamepadModule"
+				}
+			],
+			"Hexamaze": {
+				ID: "HexamazeModule",
+				Lines: [
+					{
+						regex: /Moving from|Walking out|There’s an|However, we wanted/,
+						value: function(matches, module) {
+							if (!module.Moves) {
+								module.Moves = [];
+								module.push(["Moves", module.Moves]);
+							}
+
+							module.Moves.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Laundry": {
+				ID: "Laundry",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							for (var i = 0; i < 4; i++) {
+								module.push(readLine());
+							}
+						}
+					}
+				],
+			},
+			"LED Encryption": [
+				{
+					regex: /.+/,
+					value: "LEDEnc"
+				}
+			],
+			"Light Cycle": {
+				ID: "LightCycleModule",
+				Lines: [
+					{
+						regex: /Start sequence: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.Presses = [];
+							module.push("Starting Seq: " + matches[1]);
+							module.push(["Buttons:", module.Presses]);
+						}
+					},
+					{
+						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
+						}
+					},
+					{
+						regex: /Pressed button/,
+						value: function(matches, module) {
+							module.Presses.push(matches.input);
+						}
+					}
+				]
+			},
+			"Logic": [
+				{
+					regex: /.+/,
+					value: "Logic"
+				}
+			],
+			"Modules Against Humanity": {
+				ID: "ModuleAgainstHumanity",
+				Lines: [
+					{
+						regex: /Modules:/,
+						value: function(matches, module) {
+							var lines = readMultiple(11);
+							while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
+								lines = lines.replace(/ \|/g, '|');
+							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
+								lines = lines.replace(/\| /g, '|');
+							module.push({ label: "Cards:", obj: pre(lines) });
+
+							var line;
+							do {
+								line = readLine();
+								module.push(line.replace(/Black:/g, "Black: ").trim());
+							}
+							while (!/^Final cards/.test(line));
+						}
+					},
+					{
+						regex: /Submitted:/
+					}
+				],
+			},
+			"MonsplodeFight": {
+				ID: "monsplodeFight",
+				Lines: [
+					{
+						regex: /Opponent: (.+)/,
+						value: function(matches, module) {
+							module.push([matches[1],
+								[]
+							]);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(matches.input);
+						}
+					},
+					{
+						regex: /(?:Opponent:|Move Name)/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(readLine());
+						}
+					}
+				],
+			},
+			"Morsematics": [
+				{
+					regex: /.+/,
+					value: "MorseV2"
+				}
+			],
+			"Mouse in the Maze": [
+				{
+					regex: /.+/,
+					value: "MouseInTheMaze"
+				}
+			],
 			"Murder": {
 				ID: "murder",
 				Lines: [
@@ -1644,223 +1982,85 @@ $(function() {
 					}
 				],
 			},
-			"TicTacToe": {
-				ID: "TicTacToeModule",
+			"Mystic Square": {
+				ID: "MysticSquareModule",
 				Lines: [
-					{
-						regex: /Starting row/
-					},
-					{
-						regex: /Keypad is now/,
-						value: function(matches, module) {
-							var step = [];
-							module.Step = step;
-
-							module.push(["Step " + module.length + ":", step]);
-
-							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
-
-							step.push(readLine()); // up next
-							step.push(readLine()); // current row
-						}
-					},
-					{
-						regex: /Next expectation is|Clicked/,
-						value: function(matches, module) {
-							module.Step.push(matches.input);
-						}
-					}
-				],
-			},
-			"Word Search": {
-				ID: "WordSearchModule",
-				Lines: [
-					{
-						regex: /Correct word is (.+)/,
-						value: function(matches, module) {
-							module.push("Solution: " + matches[1]);
-						}
-					},
-					{
-						regex: /Wrong words are (.+)/,
-						value: function(matches, module) {
-							module.push("Wrong Words: " + matches[1]);
-						}
-					},
 					{
 						regex: /Field:/,
 						value: function(matches, module) {
-							module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
+							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
 						}
 					},
 					{
-						regex: /Coordinates clicked/
+						regex: /Last serial digit|Skull path/,
 					}
-				],
+				]
 			},
-			"Simon Screams": {
-				ID: "SimonScreamsModule",
+			"Neutralization": [
+				{
+					regex: /.+/,
+					value: "neutralization"
+				}
+			],
+			"Only Connect": {
+				ID: "OnlyConnectModule",
 				Lines: [
 					{
-						regex: /Colors in|Small table/,
-						value: function(matches, module) {
-							module.push(matches.input);
-							return true;
-						}
-					},
-					{
-						regex: /Stage (.) sequence/,
-						value: function(matches, module) {
-							module.Stage = ["Stage #" + matches[1],
-								[]
-							];
-							module.push(module.Stage);
-						}
-					},
-					{
-						regex: /.+/,
-						value: function(matches, module) {
-							module.Stage[1].push(matches.input);
-						}
-					}
-				],
-			},
-			"FollowTheLeader": {
-				ID: "FollowTheLeaderModule",
-				Lines: [
-					{
-						regex: /Starting at wire:|Strike because you cut/
-					},
-					{
-						regex: /Wire state:/,
-						value: function(_, module) {
-							var states = [];
-
-							var line = readLine();
-							while ((/^Wire \d+-to-\d+/).exec(line)) {
-								states.push(line);
-								line = readLine();
-							}
-							linen--;
-
-							module.push(["Wire states:", states]);
-						}
-					},
-					{
-						regex: /Expectation/,
-						value: function(matches, module) {
-							if (matches.input.match(/Expectation now is that you’re done./)) {
-								module.push(matches.input);
-							} else {
-								var states = [];
-
-								var line = readLine();
-								while ((/^Wire \d+-to-\d+/).exec(line)) {
-									states.push(line);
-									line = readLine();
-								}
-								linen--;
-								module.push([matches.input, states]);
-							}
-						}
-					}
-				],
-			},
-			"Chess": {
-				ID: "ChessModule",
-				Lines: [
-					{
-						regex: /Selected Solution: (.+)/,
-						value: function(matches, module) {
-							var locations = matches[1].split(", ");
-							var solution = locations[locations.length - 1];
-							locations.splice(locations.length - 1, 1);
-							module.push("Display: " + locations.join(", "));
-							module.push("Solution: " + solution);
-							readLine();
-							module.push({ label: "Board:", obj: pre(readMultiple(13)) });
-						}
-					},
-					{
-						regex: /Entered answer/
-					}
-				],
-			},
-			"Blind Alley": {
-				ID: "BlindAlleyModule",
-				Lines: [
-					{
-						regex: /Region condition counts:/,
-						value: function(_, module) {
-							module.push({
-								label: "Region counts:",
-								obj: pre(readMultiple(3))
-							});
-						}
-					},
-					{
-						regex: /Must press regions:|Region .+ is correct|You pressed region/
-					}
-				],
-			},
-			"MonsplodeFight": {
-				ID: "monsplodeFight",
-				Lines: [
-					{
-						regex: /Opponent: (.+)/,
-						value: function(matches, module) {
-							module.push([matches[1],
-								[]
-							]);
-						}
-					},
-					{
-						regex: /.+/,
-						value: function(matches, module) {
-							module[module.length - 1][1].push(matches.input);
-						}
-					},
-					{
-						regex: /(?:Opponent:|Move Name)/,
-						value: function(matches, module) {
-							module[module.length - 1][1].push(readLine());
-						}
-					}
-				],
-			},
-			"Colour Flash": {
-				ID: "ColourFlash",
-				Lines: [
-					{
-						regex: /Module generated/,
+						regex: /Hieroglyph +Position +Serial# +Ports +num/,
 						value: function(matches, module) {
 							module.push({
-								label: "Color Sequence:",
-								obj: pre(readMultiple(10))
+								label: 'Egyptian Hieroglyphs:',
+								obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
 							});
-							readLine();
-							for (var i = 0; i < 3; i++) {
-								module.push(readLine());
-							}
-						}
-					},
-					{
-						regex: /.+ button was pressed|.+ answer!/
-					}
-				],
-			},
-			"Cheap Checkout": {
-				ID: "CheapCheckoutModule",
-				Lines: [
-					{
-						regex: /Receipt/,
-						value: function(matches, module) {
-							module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
 							return true;
 						}
 					},
 					{
 						regex: /.+/
+					}
+				],
+			},
+			"Perspective Pegs": {
+				ID: "spwizPerspectivePegs",
+				Lines: [
+					{
+						regex: /Pegs:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				],
+			},
+			"Piano Keys": {
+				ID: "PianoKeys",
+				Lines: [
+					{
+						regex: /Module generated with the following symbols/
+					},
+					{
+						regex: /The correct rule is the following/,
+						value: function(matches, module) {
+							var input = [];
+							module.Input = input;
+							module.push(matches.input);
+							module.push(readLine().trim());
+							module.push(readLine().trim());
+							readLine();
+							module.push(readLine().replace(/[|]/g, ""));
+							module.push(["Key Presses", input]);
+
+							return true;
+						}
+					},
+					{
+						regex: /Input .+ was received|The current valid sequence/,
+						value: function(matches, module) {
+							module.Input.push(matches.input);
+						}
 					}
 				],
 			},
@@ -1919,57 +2119,6 @@ $(function() {
 					}
 				],
 			},
-			"Safety Safe": {
-				ID: "PasswordV2",
-				Lines: [
-					{
-						regex: /offset|Answer|Input|solved/,
-						value: function(matches, module) {
-							module.push(matches.input.replace(/,/g, ", "));
-						}
-					}
-				],
-			},
-			"Round Keypad": {
-				ID: "KeypadV2",
-				Lines: [
-					{
-						regex: /.+/,
-						value: function(matches, module) {
-							module.push(matches[0].replace(/,/g, " "));
-						}
-					}
-				],
-			},
-			"Piano Keys": {
-				ID: "PianoKeys",
-				Lines: [
-					{
-						regex: /Module generated with the following symbols/
-					},
-					{
-						regex: /The correct rule is the following/,
-						value: function(matches, module) {
-							var input = [];
-							module.Input = input;
-							module.push(matches.input);
-							module.push(readLine().trim());
-							module.push(readLine().trim());
-							readLine();
-							module.push(readLine().replace(/[|]/g, ""));
-							module.push(["Key Presses", input]);
-
-							return true;
-						}
-					},
-					{
-						regex: /Input .+ was received|The current valid sequence/,
-						value: function(matches, module) {
-							module.Input.push(matches.input);
-						}
-					}
-				],
-			},
 			"Resistors": {
 				ID: "resistors",
 				Lines: [
@@ -1999,75 +2148,43 @@ $(function() {
 					}
 				],
 			},
-			"Souvenir": {
-				ID: "SouvenirModule",
-				Lines: [
-					{
-						regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
-						value: function(matches, module) {
-							module.push("Question: " + matches[1]);
-							module.push("Answers: " + matches[2]);
-						}
-					}
-				],
-			},
-			"Hexamaze": {
-				ID: "HexamazeModule",
-				Lines: [
-					{
-						regex: /Moving from|Walking out|There’s an|However, we wanted/,
-						value: function(matches, module) {
-							if (!module.Moves) {
-								module.Moves = [];
-								module.push(["Moves", module.Moves]);
-							}
-
-							module.Moves.push(matches.input);
-							return true;
-						}
-					},
-					{
-						regex: /.+/
-					}
-				],
-			},
-			"Laundry": {
-				ID: "Laundry",
+			"Rhythms": [
+				{
+					regex: /.+/,
+					value: "MusicRhythms"
+				}
+			],
+			"Rock-Paper-Scissors-Lizard-Spock": [
+				{
+					regex: /.+/,
+					value: "RockPaperScissorsLizardSpockModule"
+				}
+			],
+			"Round Keypad": {
+				ID: "KeypadV2",
 				Lines: [
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module.push(matches.input);
-							for (var i = 0; i < 4; i++) {
-								module.push(readLine());
-							}
+							module.push(matches[0].replace(/,/g, " "));
 						}
 					}
 				],
 			},
-			"Modules Against Humanity": {
-				ID: "ModuleAgainstHumanity",
+			"Rubik’s Cube": [
+				{
+					regex: /.+/,
+					value: "RubiksCubeModule"
+				}
+			],
+			"Safety Safe": {
+				ID: "PasswordV2",
 				Lines: [
 					{
-						regex: /Modules:/,
+						regex: /offset|Answer|Input|solved/,
 						value: function(matches, module) {
-							var lines = readMultiple(11);
-							while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
-								lines = lines.replace(/ \|/g, '|');
-							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
-								lines = lines.replace(/\| /g, '|');
-							module.push({ label: "Cards:", obj: pre(lines) });
-
-							var line;
-							do {
-								line = readLine();
-								module.push(line.replace(/Black:/g, "Black: ").trim());
-							}
-							while (!/^Final cards/.test(line));
+							module.push(matches.input.replace(/,/g, ", "));
 						}
-					},
-					{
-						regex: /Submitted:/
 					}
 				],
 			},
@@ -2086,25 +2203,34 @@ $(function() {
 					}
 				],
 			},
-			"Friendship": {
-				ID: "FriendshipModule",
+			"Skewed Slots": {
+				ID: "SkewedSlotsModule",
 				Lines: [
 					{
-						regex: /Friendship symbol/,
-						value: function(matches, module) {
-							if (!module.Symbols) {
-								module.Symbols = [];
-								module.push(["Symbols", module.Symbols]);
+						regex: /Rule Log/,
+						value: function(_, module) {
+							module.push(readLine()); // Initial
+
+							for (var i = 0; i < 3; i++) {
+								readLine();
+								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
+								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
+
+								var line = readLine();
+								while (!(/Final digit/).exec(line)) {
+									slot[1].push(line);
+									line = readLine();
+								}
+								slot[1].push(line);
+
+								module.push(slot);
 							}
 
-							module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
-							return true;
+							readLine();
+							module.push(readLine()); // Final
 						}
-					},
-					{
-						regex: /.+/
 					}
-				],
+				]
 			},
 			"Silly Slots": {
 				ID: "SillySlots",
@@ -2118,6 +2244,123 @@ $(function() {
 					},
 					{
 						regex: /.+/
+					}
+				],
+			},
+			"Simon Screams": {
+				ID: "SimonScreamsModule",
+				Lines: [
+					{
+						regex: /Colors in|Small table/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /Stage (.) sequence/,
+						value: function(matches, module) {
+							module.Stage = ["Stage #" + matches[1],
+								[]
+							];
+							module.push(module.Stage);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Stage[1].push(matches.input);
+						}
+					}
+				],
+			},
+			"Simon States": [
+				{
+					regex: /.+/,
+					value: "SimonV2"
+				}
+			],
+			"Souvenir": {
+				ID: "SouvenirModule",
+				Lines: [
+					{
+						regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
+						value: function(matches, module) {
+							module.push("Question: " + matches[1]);
+							module.push("Answers: " + matches[2]);
+						}
+					}
+				],
+			},
+			"Square Button": [
+				{
+					regex: /.+/,
+					value: "ButtonV2"
+				}
+			],
+			"Symbolic Password": [
+				{
+					regex: /.+/,
+					value: "symbolicPasswordModule"
+				}
+			],
+			"Text Field": [
+				{
+					regex: /.+/,
+					value: "TextField"
+				}
+			],
+			"TicTacToe": {
+				ID: "TicTacToeModule",
+				Lines: [
+					{
+						regex: /Starting row/
+					},
+					{
+						regex: /Keypad is now/,
+						value: function(matches, module) {
+							var step = [];
+							module.Step = step;
+
+							module.push(["Step " + module.length + ":", step]);
+
+							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
+
+							step.push(readLine()); // up next
+							step.push(readLine()); // current row
+						}
+					},
+					{
+						regex: /Next expectation is|Clicked/,
+						value: function(matches, module) {
+							module.Step.push(matches.input);
+						}
+					}
+				],
+			},
+			"Word Search": {
+				ID: "WordSearchModule",
+				Lines: [
+					{
+						regex: /Correct word is (.+)/,
+						value: function(matches, module) {
+							module.push("Solution: " + matches[1]);
+						}
+					},
+					{
+						regex: /Wrong words are (.+)/,
+						value: function(matches, module) {
+							module.push("Wrong Words: " + matches[1]);
+						}
+					},
+					{
+						regex: /Field:/,
+						value: function(matches, module) {
+							module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
+						}
+					},
+					{
+						regex: /Coordinates clicked/
 					}
 				],
 			},
@@ -2145,254 +2388,15 @@ $(function() {
 					}
 				],
 			},
-			"Creation": {
-				ID: "CreationModule",
-				Lines: [
-					{
-						regex: /.+/,
-						value: function(matches, module) {
-							if (module.length === 0) {
-								module.push(["Initial State", []]);
-							}
-
-							module[module.length - 1][1].push(matches.input);
-						}
-					},
-					{
-						regex: /Restarting module.../,
-						value: function(matches, module) {
-							module.push(["Restart #" + module.length, []]);
-						}
-					}
-				],
-			},
-			"Only Connect": {
-				ID: "OnlyConnectModule",
-				Lines: [
-					{
-						regex: /Hieroglyph +Position +Serial# +Ports +num/,
-						value: function(matches, module) {
-							module.push({
-								label: 'Egyptian Hieroglyphs:',
-								obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
-							});
-							return true;
-						}
-					},
-					{
-						regex: /.+/
-					}
-				],
-			},
-			"Perspective Pegs": {
-				ID: "spwizPerspectivePegs",
-				Lines: [
-					{
-						regex: /Pegs:/,
-						value: function(matches, module) {
-							module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
-							return true;
-						}
-					},
-					{
-						regex: /.+/
-					}
-				],
-			},
-			"3D Maze": {
-				ID: "spwiz3DMaze",
-				Lines: [
-					{
-						regex: /You walked into a wrong wall:/,
-						value: function(matches, module) {
-							module.push({ label: matches.input, obj: pre(readMultiple(13)) });
-							return true;
-						}
-					},
-					{
-						regex: /.+/
-					}
-				],
-			},
-			"Bitmaps": {
-				ID: "BitmapsModule",
-				Lines: [
-					{
-						regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
-						value: function(matches, module) {
-							module.push({
-								label: matches.input,
-								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
-									.css('color', matches[1] === 'red'    ? '#800' :
-												  matches[1] === 'green'  ? '#080' :
-												  matches[1] === 'blue'   ? '#008' :
-												  matches[1] === 'yellow' ? '#880' :
-												  matches[1] === 'cyan'   ? '#088' : '#808')
-							});
-							return true;
-						}
-					},
-					{
-						regex: /.+/
-					}
-				],
-			},
 			"Wire Placement": [
 				{
 					regex: /.+/,
 					value: "WirePlacementModule"
 				}
 			],
-			"Text Field": [
-				{
-					regex: /.+/,
-					value: "TextField"
-				}
-			],
-			"The Gamepad": [
-				{
-					regex: /.+/,
-					value: "TheGamepadModule"
-				}
-			],
-			"Double-Oh": [
-				{
-					regex: /.+/,
-					value: "DoubleOhModule"
-				}
-			],
-			"Mouse in the Maze": [
-				{
-					regex: /.+/,
-					value: "MouseInTheMaze"
-				}
-			],
-			"CaesarCipher": [
-				{
-					regex: /.+/,
-					value: "CaesarCipherModule"
-				}
-			],
-			"Simon States": [
-				{
-					regex: /.+/,
-					value: "SimonV2"
-				}
-			],
-			"Square Button": [
-				{
-					regex: /.+/,
-					value: "ButtonV2"
-				}
-			],
-			"Morsematics": [
-				{
-					regex: /.+/,
-					value: "MorseV2"
-				}
-			],
-			"Forget Me Not": [
-				{
-					regex: /.+/,
-					value: "MemoryV2"
-				}
-			],
-			"Logic": [
-				{
-					regex: /.+/,
-					value: "Logic"
-				}
-			],
-			"Rock-Paper-Scissors-Lizard-Spock": [
-				{
-					regex: /.+/,
-					value: "RockPaperScissorsLizardSpockModule"
-				}
-			],
-			"Color Math": [
-				{
-					regex: /.+/,
-					value: "colormath"
-				}
-			],
-			"Rhythms": [
-				{
-					regex: /.+/,
-					value: "MusicRhythms"
-				}
-			],
-			"Neutralization": [
-				{
-					regex: /.+/,
-					value: "neutralization"
-				}
-			],
-			"Astrology": [
-				{
-					regex: /.+/,
-					value: "spwizAstrology"
-				}
-			],
-			"Adventure Game": [
-				{
-					regex: /.+/,
-					value: "spwizAdventureGame"
-				}
-			],
-			"ChordQualities": [
-				{
-					regex: /.+/,
-					value: "ChordQualities"
-				}
-			],
-			"Rubik’s Cube": [
-				{
-					regex: /.+/,
-					value: "RubiksCubeModule"
-				}
-			],
-			"FizzBuzz": [
-				{
-					regex: /.+/,
-					value: "fizzBuzzModule"
-				}
-			],
-			"Connection Check": [
-				{
-					regex: /.+/,
-					value: "graphModule"
-				}
-			],
-			"Complicated Buttons": [
-				{
-					regex: /.+/,
-					value: "complicatedButtonsModule"
-				}
-			],
-			"Symbolic Password": [
-				{
-					regex: /.+/,
-					value: "symbolicPasswordModule"
-				}
-			],
-			"The Clock": [
-				{
-					regex: /.+/,
-					value: "TheClockModule"
-				}
-			],
-			"Bitwise Operators": [
-				{
-					regex: /.+/,
-					value: "BitOps"
-				}
-			],
-			"LED Encryption": [
-				{
-					regex: /.+/,
-					value: "LEDEnc"
-				}
-			],
+			
+
+            // Pacing extender
 			"PacingExtender": [
 				{
 					regex: /.+/,
