@@ -1771,12 +1771,31 @@ $(function() {
 				    value: "MemoryV2"
 				}
 			],
-			"FizzBuzz": [
-				{
-				    regex: /.+/,
-				    value: "fizzBuzzModule"
-				}
-			],
+			"FizzBuzz": {
+                ID: "fizzBuzzModule",
+				Lines: [
+					{
+						regex: /^Button \d/,
+						value: function(matches, module) {
+							module.push([matches.input, []]);
+                            return true;
+						}
+					},
+                    {
+                        regex: /^— (.+)/,
+                        value: function(matches, module) {
+                            module[module.length - 1][1].push(matches[1]);
+                            if (matches[1].startsWith("solution is"))
+                                module[module.length - 1][0] += matches[1].substr("solution is".length);
+                            return true;
+                        }
+                    },
+					{
+						regex: /.+/,
+						value: "fizzBuzzModule"
+					}
+				]
+            },
 			"Friendship": {
 				ID: "FriendshipModule",
 				Lines: [
