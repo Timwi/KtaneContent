@@ -1240,20 +1240,24 @@ $(function() {
 			// Vanilla modules
 			"Rules": [ // Covers Button, Memory and Wires.
 				{
-				    regex: /Getting solution index for component (.+)Component\(Clone\)/,
-				    value: function(matches) {
-				        var line = readLine();
-				        while (!line.includes("All queries passed.")) {
-				            line = readLine();
-				        }
+					regex: /Getting solution index for component (.+)Component\(Clone\)/,
+					value: function(matches) {
+						var line = readLine();
+						var allLines = line;
+
+						while (!line.includes("All queries passed.")) {
+							line = readLine();
+							allLines += "\n" + line;
+						}
 
 				        var vanilla = {
 				            Button: "BigButton",
 				            WireSet: "Wires"
 				        };
 
-				        readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
-				    }
+						readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
+						readDirectly({label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false}, vanilla[matches[1]] || matches[1]);
+					}
 				}
 			],
 			"WhosOnFirstComponent": {
@@ -1370,12 +1374,12 @@ $(function() {
 
 					            var module = GetBomb().GetModuleID("Venn", id);
 					            module[index] = ["Wire " + (index + 1),
-									[
-										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
-										"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
-										"Rule: " + rule[matches[6]] || matches[6],
-										"Should be cut: " + (matches[7] ? "Yes" : "No")
-									]
+						[
+							"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
+							"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
+							"Rule: " + rule[matches[6]] || matches[6],
+							"Should be cut: " + (matches[7] ? "Yes" : "No")
+						]
 					            ];
 					        }
 					    },
