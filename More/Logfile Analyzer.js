@@ -1243,8 +1243,11 @@ $(function() {
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
 					value: function(matches) {
 						var line = readLine();
+						var allLines = line;
+
 						while (!line.includes("All queries passed.")) {
 							line = readLine();
+							allLines += "\n" + line;
 						}
 
 						var vanilla = {
@@ -1253,6 +1256,7 @@ $(function() {
 						};
 
 						readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
+						readDirectly({label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false}, vanilla[matches[1]] || matches[1]);
 					}
 				}
 			],
