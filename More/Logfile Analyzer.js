@@ -97,13 +97,13 @@ $(function() {
 	function readPaste(clipText, bombSerial) {
 
 		if (/^https?:\/\//.exec(clipText)) { // Very basic regex to detect a URL being pasted.
-			$.get("https://cors-anywhere.herokuapp.com/" + clipText, function(data) {
+			$.get("/proxy/" + clipText, function(data) {
 				parseLog(data, clipText, bombSerial);
 			}).fail(function() {
 				toastr.error("Unable to get logfile from URL.", "Upload Error");
 			});
 		} else if (/^https?%3A%2F%2F/.exec(clipText)) { // URL-encoded URL...
-			$.get("https://cors-anywhere.herokuapp.com/" + decodeURIComponent(clipText), function(data) {
+			$.get("/proxy/" + decodeURIComponent(clipText), function(data) {
 				parseLog(data, decodeURIComponent(clipText), bombSerial);
 			}).fail(function() {
 				toastr.error("Unable to get logfile from URL.", "Upload Error");
