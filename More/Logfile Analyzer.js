@@ -1374,12 +1374,12 @@ $(function() {
 
 					            var module = GetBomb().GetModuleID("Venn", id);
 					            module[index] = ["Wire " + (index + 1),
-						[
-							"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
-							"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
-							"Rule: " + rule[matches[6]] || matches[6],
-							"Should be cut: " + (matches[7] ? "Yes" : "No")
-						]
+									[
+										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
+										"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
+										"Rule: " + rule[matches[6]] || matches[6],
+										"Should be cut: " + (matches[7] ? "Yes" : "No")
+									]
 					            ];
 					        }
 					    },
@@ -1397,7 +1397,7 @@ $(function() {
 					{
 					    regex: /You walked into a wrong wall:/,
 					    value: function(matches, module) {
-					        module.push({ label: matches.input, obj: pre(readMultiple(13)) });
+					        module.push({ label: matches.input, obj: pre(readMultiple(18)) });
 					        return true;
 					    }
 					},
@@ -1776,30 +1776,30 @@ $(function() {
 				}
 			],
 			"FizzBuzz": {
-                ID: "fizzBuzzModule",
+				ID: "fizzBuzzModule",
 				Lines: [
 					{
 						regex: /^Button \d/,
 						value: function(matches, module) {
 							module.push([matches.input, []]);
-                            return true;
+							return true;
 						}
 					},
-                    {
-                        regex: /^— (.+)/,
-                        value: function(matches, module) {
-                            module[module.length - 1][1].push(matches[1]);
-                            if (matches[1].startsWith("solution is"))
-                                module[module.length - 1][0] += matches[1].substr("solution is".length);
-                            return true;
-                        }
-                    },
+					{
+						regex: /^— (.+)/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(matches[1]);
+							if (matches[1].startsWith("solution is"))
+								module[module.length - 1][0] += matches[1].substr("solution is".length);
+							return true;
+						}
+					},
 					{
 						regex: /.+/,
 						value: "fizzBuzzModule"
 					}
 				]
-            },
+			},
 			"Friendship": {
 				ID: "FriendshipModule",
 				Lines: [
