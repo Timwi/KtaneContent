@@ -210,12 +210,12 @@ $(function() {
 		var parent = infoCard.parent();
 		infoCard
 		.click(function() {
-		    parent.parent().children(".module-info").hide();
-		    info.show();
-		    parent.children(".selected").removeClass("selected");
-		    infoCard.addClass("selected");
+			parent.parent().children(".module-info").hide();
+			info.show();
+			parent.children(".selected").removeClass("selected");
+			infoCard.addClass("selected");
 
-		    return false;
+			return false;
 		}).mousedown(function() { return false; });
 
 		return infoCard;
@@ -444,7 +444,7 @@ $(function() {
 				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-				    $(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
 				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
 			});
 
@@ -738,7 +738,7 @@ $(function() {
 				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-				    $(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
 				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
 			});
 
@@ -1040,200 +1040,200 @@ $(function() {
 		var lineRegex = {
 			"BombGenerator": [
 				{
-				    regex: /Generating bomb with seed (\d+)/,
-				    value: function(matches) {
-				        bomb = new Bomb(parseInt(matches[1]));
-				        if (bombgroup && bombgroup.Bombs.length == bombgroup.TotalBombs) {
-				            bombgroup = undefined;
-				        }
+					regex: /Generating bomb with seed (\d+)/,
+					value: function(matches) {
+						bomb = new Bomb(parseInt(matches[1]));
+						if (bombgroup && bombgroup.Bombs.length == bombgroup.TotalBombs) {
+							bombgroup = undefined;
+						}
 
-				        if (bombgroup) {
-				            bombgroup.Bombs.push(bomb);
-				        } else {
-				            bomb.StartLine = linen;
-				            parsed.push(bomb);
-				        }
-				    }
+						if (bombgroup) {
+							bombgroup.Bombs.push(bomb);
+						} else {
+							bomb.StartLine = linen;
+							parsed.push(bomb);
+						}
+					}
 				},
 				{
-				    regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
-				    value: function(matches) {
-				        bomb.Time = parseInt(matches[1]);
-				        bomb.TimeLeft = bomb.Time;
-				        bomb.TotalStrikes = parseInt(matches[2]);
-				    }
+					regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
+					value: function(matches) {
+						bomb.Time = parseInt(matches[1]);
+						bomb.TimeLeft = bomb.Time;
+						bomb.TotalStrikes = parseInt(matches[2]);
+					}
 				},
 				{
-				    regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
-				    value: function(matches) {
-				        bomb.Modules[matches[1]] = {
-				            IDs: [],
-				            Info: []
-				        };
+					regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
+					value: function(matches) {
+						bomb.Modules[matches[1]] = {
+							IDs: [],
+							Info: []
+						};
 
-				        bomb.TotalModules++;
-				        if (matches[2].includes("Needy")) {
-				            bomb.Needies++;
-				        }
+						bomb.TotalModules++;
+						if (matches[2].includes("Needy")) {
+							bomb.Needies++;
+						}
 
-				    }
+					}
 				},
 				{
-				    regex: /Instantiated CryptModule on face/,
-				    value: function() {
-				        var mod = bomb.GetModule("CryptModule");
-				        mod.push("Phrase: " + lines[linen - 2]);
-				        mod.push("Answer: " + lines[linen - 1]);
-				    }
+					regex: /Instantiated CryptModule on face/,
+					value: function() {
+						var mod = bomb.GetModule("CryptModule");
+						mod.push("Phrase: " + lines[linen - 2]);
+						mod.push("Answer: " + lines[linen - 1]);
+					}
 				}
 			],
 			"IndicatorWidget": [
 				{
-				    regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
-				    value: function(matches) {
-				        bomb.Indicators.push([matches[1], matches[2]]);
-				    }
+					regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
+					value: function(matches) {
+						bomb.Indicators.push([matches[1], matches[2]]);
+					}
 				}
 			],
 			"BatteryWidget": [
 				{
-				    regex: /Randomizing Battery Widget: (\d)/,
-				    value: function(matches) {
-				        bomb.Batteries.push(parseInt(matches[1]));
-				    }
+					regex: /Randomizing Battery Widget: (\d)/,
+					value: function(matches) {
+						bomb.Batteries.push(parseInt(matches[1]));
+					}
 				}
 			],
 			"PortWidget": [
 				{
-				    regex: /Randomizing Port Widget: (.+)/,
-				    value: function(matches) {
-				        if (matches[1] != "0") {
-				            bomb.PortPlates.push(matches[1].split(", "));
-				        } else {
-				            bomb.PortPlates.push([]);
-				        }
-				    }
+					regex: /Randomizing Port Widget: (.+)/,
+					value: function(matches) {
+						if (matches[1] != "0") {
+							bomb.PortPlates.push(matches[1].split(", "));
+						} else {
+							bomb.PortPlates.push([]);
+						}
+					}
 				}
 			],
 			"SerialNumber": [
 				{
-				    regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
-				    value: function(matches) {
-				        bomb.Serial = matches[1];
-				    }
+					regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
+					value: function(matches) {
+						bomb.Serial = matches[1];
+					}
 				}
 			],
 			"WidgetGenerator": [
 				{
-				    regex: /Added widget: (.+) at/,
-				    value: function(matches) {
-				        if (matches[1] == "ModWidget") {
-				            bomb.ModdedWidgets++;
-				        }
-				    }
+					regex: /Added widget: (.+) at/,
+					value: function(matches) {
+						if (matches[1] == "ModWidget") {
+							bomb.ModdedWidgets++;
+						}
+					}
 				}
 			],
 			"Bomb": [
 				{
-				    regex: /Strike! (\d+) \/ \d+ strikes/,
-				    value: function(matches) {
-				        if (!bombgroup) {
-				            bomb.Strikes = parseInt(matches[1]);
+					regex: /Strike! (\d+) \/ \d+ strikes/,
+					value: function(matches) {
+						if (!bombgroup) {
+							bomb.Strikes = parseInt(matches[1]);
 
-				            if (bomb.Strikes == bomb.TotalStrikes) {
-				                bomb.State = "Exploded (Strikes)";
-				            }
-				        }
-				    }
+							if (bomb.Strikes == bomb.TotalStrikes) {
+								bomb.State = "Exploded (Strikes)";
+							}
+						}
+					}
 				},
 				{
-				    regex: /Boom/,
-				    value: function() {
-				        GetBomb().FilterLines();
-				        if (GetBomb().State == "Unsolved") {
-				            GetBomb().State = "Exploded";
+					regex: /Boom/,
+					value: function() {
+						GetBomb().FilterLines();
+						if (GetBomb().State == "Unsolved") {
+							GetBomb().State = "Exploded";
 
-				            if (!bombgroup && bomb.Strikes != bomb.TotalStrikes) {
-				                bomb.State = "Exploded (Time Ran Out)";
-				                bomb.TimeLeft = 0;
-				            }
-				        }
-				    }
+							if (!bombgroup && bomb.Strikes != bomb.TotalStrikes) {
+								bomb.State = "Exploded (Time Ran Out)";
+								bomb.TimeLeft = 0;
+							}
+						}
+					}
 				},
 				{
-				    regex: /A winner is you!!/,
-				    value: function() {
-				        var currentBomb = GetBomb();
-				        currentBomb.FilterLines();
-				        currentBomb.State = "Solved";
-				        currentBomb.Solved = currentBomb.TotalModules;
-				    }
+					regex: /A winner is you!!/,
+					value: function() {
+						var currentBomb = GetBomb();
+						currentBomb.FilterLines();
+						currentBomb.State = "Solved";
+						currentBomb.Solved = currentBomb.TotalModules;
+					}
 				}
 			],
 			"BombComponent": [
 				{
-				    regex: /Pass/,
-				    value: function() {
-				        GetBomb().Solved++;
-				    }
+					regex: /Pass/,
+					value: function() {
+						GetBomb().Solved++;
+					}
 				}
 			],
 			"Assets.Scripts.Pacing.PaceMaker": [
 				{
-				    regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
-				    value: function(matches) {
-				        GetBomb().PacingEvents.push(matches.input);
-				        if (!bombgroup) {
-				            bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
+					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
+					value: function(matches) {
+						GetBomb().PacingEvents.push(matches.input);
+						if (!bombgroup) {
+							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
 
-				            if (bomb.TimeLeft === 0) {
-				                bomb.State = "Exploded (Time Ran Out)";
-				            }
-				        }
-				    }
+							if (bomb.TimeLeft === 0) {
+								bomb.State = "Exploded (Time Ran Out)";
+							}
+						}
+					}
 				},
 				{
-				    regex: /Executing|Next idle action in/,
-				    value: function(matches) {
-				        GetBomb().PacingEvents.push(matches.input);
-				    }
+					regex: /Executing|Next idle action in/,
+					value: function(matches) {
+						GetBomb().PacingEvents.push(matches.input);
+					}
 				},
 				{
-				    regex: /Round start! Mission: (.+) Pacing Enabled: /,
-				    value: function(matches) {
-				        GetBomb().MissionName = matches[1];
-				    }
+					regex: /Round start! Mission: (.+) Pacing Enabled: /,
+					value: function(matches) {
+						GetBomb().MissionName = matches[1];
+					}
 				}
 			],
 			"Assets.Scripts.DossierMenu.MenuPage": [
 				{
-				    regex: /ReturnToSetupRoom/,
-				    value: function() {
-				        GetBomb().FilterLines();
-				    }
+					regex: /ReturnToSetupRoom/,
+					value: function() {
+						GetBomb().FilterLines();
+					}
 				}
 			],
 			"MultipleBombs": [
 				{
-				    regex: /Bombs to spawn: (\d+)/,
-				    value: function(matches) {
-				        if (matches[1] != "1") {
-				            bombgroup = new BombGroup(parseInt(matches[1]));
-				            bombgroup.Bombs.push(bomb);
-				            bombgroup.StartLine = linen;
-				            parsed.splice(parsed.length - 1, 1);
-				            parsed.push(bombgroup);
-				        }
-				    }
+					regex: /Bombs to spawn: (\d+)/,
+					value: function(matches) {
+						if (matches[1] != "1") {
+							bombgroup = new BombGroup(parseInt(matches[1]));
+							bombgroup.Bombs.push(bomb);
+							bombgroup.StartLine = linen;
+							parsed.splice(parsed.length - 1, 1);
+							parsed.push(bombgroup);
+						}
+					}
 				},
 				{
-				    regex: /All bombs solved, what a winner!/,
-				    value: function() {
-				        var currentBomb = GetBomb();
-				        currentBomb.FilterLines();
-				        currentBomb.State = "Solved";
-				        currentBomb.Solved = currentBomb.TotalModules;
-				    }
+					regex: /All bombs solved, what a winner!/,
+					value: function() {
+						var currentBomb = GetBomb();
+						currentBomb.FilterLines();
+						currentBomb.State = "Solved";
+						currentBomb.Solved = currentBomb.TotalModules;
+					}
 				}
 			],
 
@@ -1250,10 +1250,10 @@ $(function() {
 							allLines += "\n" + line;
 						}
 
-				        var vanilla = {
-				            Button: "BigButton",
-				            WireSet: "Wires"
-				        };
+						var vanilla = {
+							Button: "BigButton",
+							WireSet: "Wires"
+						};
 
 						readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
 						readDirectly({label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false}, vanilla[matches[1]] || matches[1]);
@@ -1264,16 +1264,16 @@ $(function() {
 				ID: "WhosOnFirst",
 				Lines: [
 					{
-					    regex: /State randomized: Phase: (\d), Keypads: (.+)/,
-					    value: function(matches, module) {
-					        module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "));
-					    }
+						regex: /State randomized: Phase: (\d), Keypads: (.+)/,
+						value: function(matches, module) {
+							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "));
+						}
 					},
 					{
-					    regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
-					    value: function(matches, module) {
-					        module.push("Displayed word: " + matches[1]);
-					    }
+						regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
+						value: function(matches, module) {
+							module.push("Displayed word: " + matches[1]);
+						}
 					},
 				],
 			},
@@ -1281,13 +1281,13 @@ $(function() {
 				ID: "WhosOnFirst",
 				Lines: [
 					{
-					    regex: /Precedence List is:/
+						regex: /Precedence List is:/
 					},
 					{
-					    regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
-					    value: function(matches, module) {
-					        module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]);
-					    }
+						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
+						value: function(matches, module) {
+							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]);
+						}
 					}
 				],
 			},
@@ -1295,56 +1295,56 @@ $(function() {
 				ID: "Wires",
 				Lines: [
 					{
-					    regex: /Wires.Count is now (\d)/,
-					    value: function(matches, module) {
-					        module.push("There are " + matches[1] + " wires");
-					    }
+						regex: /Wires.Count is now (\d)/,
+						value: function(matches, module) {
+							module.push("There are " + matches[1] + " wires");
+						}
 					}
 				],
 			},
 			"InvisibleWallsComponent": [
 				{
-				    regex: /.+/,
-				    value: "Maze"
+					regex: /.+/,
+					value: "Maze"
 				}
 			],
 			"MorseCodeComponent": [
 				{
-				    regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
-				    value: "Morse"
+					regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
+					value: "Morse"
 				}
 			],
 			"KeypadComponent": [
 				{
-				    regex: /.+/,
-				    value: "Keypad"
+					regex: /.+/,
+					value: "Keypad"
 				}
 			],
 			"Assets\.Scripts\.Rules\.KeypadRuleSet": {
 				ID: "Keypad",
 				Lines: [
 					{
-					    regex: /Keypad button (\d) symbol (.+)/,
-					    value: function(matches, module) {
-					        module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2]);
-					    }
+						regex: /Keypad button (\d) symbol (.+)/,
+						value: function(matches, module) {
+							module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2]);
+						}
 					}
 				],
 			},
 			"PasswordRuleset": [
 				{
-				    regex: /.+/,
-				    value: "Password"
+					regex: /.+/,
+					value: "Password"
 				}
 			],
 			"WireSequencePage": {
 				ID: "WireSequence",
 				Lines: [
 					{
-					    regex: /Snipped wire of color (\w+) of number (\d+)/,
-					    value: function(matches, module) {
-					        module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1));
-					    }
+						regex: /Snipped wire of color (\w+) of number (\d+)/,
+						value: function(matches, module) {
+							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1));
+						}
 					}
 				],
 			},
@@ -1352,40 +1352,40 @@ $(function() {
 				ID: "Venn",
 				Lines: [
 					{
-					    regex: /Checking cut wire: index=(\d), color=.+\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/,
-					    value: function(matches, _, mod) {
-					        var index = parseInt(matches[1]);
-					        var id = mod.IDs.length;
+						regex: /Checking cut wire: index=(\d), color=.+\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/,
+						value: function(matches, _, mod) {
+							var index = parseInt(matches[1]);
+							var id = mod.IDs.length;
 
-					        if (index == 0) {
-					            id++;
-					            GetBomb().GetModuleID("Venn", id);
-					        }
+							if (index == 0) {
+								id++;
+								GetBomb().GetModuleID("Venn", id);
+							}
 
-					        if (mod.IDs.length > 0) {
-					            matches.forEach(function(val, index) {
-					                matches[index] = (val == "True");
-					            });
+							if (mod.IDs.length > 0) {
+								matches.forEach(function(val, index) {
+									matches[index] = (val == "True");
+								});
 
-					            var rule = {
-					                DoNotCut: "Don't cut",
-					                CutIfParallelPortPresent: "Cut if you have a parallel port"
-					            };
+								var rule = {
+									DoNotCut: "Don't cut",
+									CutIfParallelPortPresent: "Cut if you have a parallel port"
+								};
 
-					            var module = GetBomb().GetModuleID("Venn", id);
-					            module[index] = ["Wire " + (index + 1),
+								var module = GetBomb().GetModuleID("Venn", id);
+								module[index] = ["Wire " + (index + 1),
 									[
 										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
 										"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
 										"Rule: " + rule[matches[6]] || matches[6],
 										"Should be cut: " + (matches[7] ? "Yes" : "No")
 									]
-					            ];
-					        }
-					    },
+								];
+							}
+						},
 					},
 					{
-					    regex: /Wire snipped|All wires snipped correctly!/
+						regex: /Wire snipped|All wires snipped correctly!/
 					}
 				],
 			},
@@ -1395,14 +1395,14 @@ $(function() {
 				ID: "spwiz3DMaze",
 				Lines: [
 					{
-					    regex: /You walked into a wrong wall:/,
-					    value: function(matches, module) {
-					        module.push({ label: matches.input, obj: pre(readMultiple(18)) });
-					        return true;
-					    }
+						regex: /You walked into a wrong wall:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(18)) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -1410,42 +1410,42 @@ $(function() {
 				ID: "AdjacentLettersModule",
 				Lines: [
 					{
-					    regex: /Solution:/,
-					    value: function(_, module) {
-					        module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
-					    }
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
+						}
 					},
 					{
-					    regex: /You submitted:/,
-					    value: function(_, module) {
-					        module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
-					    }
+						regex: /You submitted:/,
+						value: function(_, module) {
+							module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
+						}
 					}
 				],
 			},
 			"Adventure Game": [
 				{
-				    regex: /.+/,
-				    value: "spwizAdventureGame"
+					regex: /.+/,
+					value: "spwizAdventureGame"
 				}
 			],
 			"Astrology": [
 				{
-				    regex: /.+/,
-				    value: "spwizAstrology"
+					regex: /.+/,
+					value: "spwizAstrology"
 				}
 			],
 			"Battleship": {
 				ID: "BattleshipModule",
 				Lines: [
 					{
-					    regex: /.+/,
+						regex: /.+/,
 					},
 					{
-					    regex: /Ships: .+/,
-					    value: function(matches, module) {
-					        module.push({ label: "Solution:", obj: pre(readMultiple(6)) });
-					    }
+						regex: /Ships: .+/,
+						value: function(matches, module) {
+							module.push({ label: "Solution:", obj: pre(readMultiple(6)) });
+						}
 					}
 				]
 			},
@@ -1453,45 +1453,45 @@ $(function() {
 				ID: "BitmapsModule",
 				Lines: [
 					{
-					    regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
-					    value: function(matches, module) {
-					        module.push({
-					            label: matches.input,
-					            obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+						regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
+						value: function(matches, module) {
+							module.push({
+								label: matches.input,
+								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
 									.css('color', matches[1] === 'red' ? '#800' :
 												  matches[1] === 'green' ? '#080' :
 												  matches[1] === 'blue' ? '#008' :
 												  matches[1] === 'yellow' ? '#880' :
 												  matches[1] === 'cyan' ? '#088' : '#808')
-					        });
-					        return true;
-					    }
+							});
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
 			"Bitwise Operators": [
 				{
-				    regex: /.+/,
-				    value: "BitOps"
+					regex: /.+/,
+					value: "BitOps"
 				}
 			],
 			"Blind Alley": {
 				ID: "BlindAlleyModule",
 				Lines: [
 					{
-					    regex: /Region condition counts:/,
-					    value: function(_, module) {
-					        module.push({
-					            label: "Region counts:",
-					            obj: pre(readMultiple(3))
-					        });
-					    }
+						regex: /Region condition counts:/,
+						value: function(_, module) {
+							module.push({
+								label: "Region counts:",
+								obj: pre(readMultiple(3))
+							});
+						}
 					},
 					{
-					    regex: /Must press regions:|Region .+ is correct|You pressed region/
+						regex: /Must press regions:|Region .+ is correct|You pressed region/
 					}
 				],
 			},
@@ -1499,38 +1499,38 @@ $(function() {
 				ID: "BrokenButtonsModule",
 				Lines: [
 					{
-					    regex: /Buttons:/,
-					    value: function(_, module) {
-					        var step = module.Step || module;
+						regex: /Buttons:/,
+						value: function(_, module) {
+							var step = module.Step || module;
 
-					        step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
-					    }
+							step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
+						}
 					},
 					{
-					    regex: /Step: (.+)/,
-					    value: function(matches, module) {
-					        module.Steps = (module.Steps || 0) + 1;
-					        module.Step = [matches[1]];
-					        module.push(["Step #" + module.Steps, module.Step]);
-					    }
+						regex: /Step: (.+)/,
+						value: function(matches, module) {
+							module.Steps = (module.Steps || 0) + 1;
+							module.Step = [matches[1]];
+							module.push(["Step #" + module.Steps, module.Step]);
+						}
 					},
 					{
-					    regex: /Press: (.+)/,
-					    value: function(matches, module) {
-					        var step = module.Step;
-					        step.push("Press: " + matches[1]);
+						regex: /Press: (.+)/,
+						value: function(matches, module) {
+							var step = module.Step;
+							step.push("Press: " + matches[1]);
 
-					        var line = readLine();
-					        while ((/".+" at \d, \d/).exec(line)) {
-					            step.push(line);
-					            line = readLine();
-					        }
+							var line = readLine();
+							while ((/".+" at \d, \d/).exec(line)) {
+								step.push(line);
+								line = readLine();
+							}
 
-					        linen--;
-					    }
+							linen--;
+						}
 					},
 					{
-					    regex: /Solution:/
+						regex: /Solution:/
 					}
 				],
 			},
@@ -1538,36 +1538,36 @@ $(function() {
 				ID: "TheBulbModule",
 				Lines: [
 					{
-					    regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
-					    value: function(matches, module) {
-					        module.push("Color: " + matches[1]);
-					        module.push("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"));
-					        module.push("Initially: " + (matches[3] == "True" ? "On" : "Off"));
-					    }
+						regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
+						value: function(matches, module) {
+							module.push("Color: " + matches[1]);
+							module.push("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"));
+							module.push("Initially: " + (matches[3] == "True" ? "On" : "Off"));
+						}
 					},
 					{
-					    regex: /(?:Pressing |Unscrewing:|Screwing:|Module solved.).+/
+						regex: /(?:Pressing |Unscrewing:|Screwing:|Module solved.).+/
 					}
 				],
 			},
 			"CaesarCipher": [
 				{
-				    regex: /.+/,
-				    value: "CaesarCipherModule"
+					regex: /.+/,
+					value: "CaesarCipherModule"
 				}
 			],
 			"Cheap Checkout": {
 				ID: "CheapCheckoutModule",
 				Lines: [
 					{
-					    regex: /Receipt/,
-					    value: function(matches, module) {
-					        module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
-					        return true;
-					    }
+						regex: /Receipt/,
+						value: function(matches, module) {
+							module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -1575,45 +1575,45 @@ $(function() {
 				ID: "ChessModule",
 				Lines: [
 					{
-					    regex: /Selected Solution: (.+)/,
-					    value: function(matches, module) {
-					        var locations = matches[1].split(", ");
-					        var solution = locations[locations.length - 1];
-					        locations.splice(locations.length - 1, 1);
-					        module.push("Display: " + locations.join(", "));
-					        module.push("Solution: " + solution);
-					        readLine();
-					        module.push({ label: "Board:", obj: pre(readMultiple(13)) });
-					    }
+						regex: /Selected Solution: (.+)/,
+						value: function(matches, module) {
+							var locations = matches[1].split(", ");
+							var solution = locations[locations.length - 1];
+							locations.splice(locations.length - 1, 1);
+							module.push("Display: " + locations.join(", "));
+							module.push("Solution: " + solution);
+							readLine();
+							module.push({ label: "Board:", obj: pre(readMultiple(13)) });
+						}
 					},
 					{
-					    regex: /Entered answer/
+						regex: /Entered answer/
 					}
 				],
 			},
 			"ChordQualities": [
 				{
-				    regex: /.+/,
-				    value: "ChordQualities"
+					regex: /.+/,
+					value: "ChordQualities"
 				}
 			],
 			"The Clock": [
 				{
-				    regex: /.+/,
-				    value: "TheClockModule"
+					regex: /.+/,
+					value: "TheClockModule"
 				}
 			],
 			"ColoredSquares": {
 				ID: "ColoredSquaresModule",
 				Lines: [
 					{
-					    regex: /First stage color is (.+); count=(\d+)./,
-					    value: function(matches, module) {
-					        module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
-					    }
+						regex: /First stage color is (.+); count=(\d+)./,
+						value: function(matches, module) {
+							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
+						}
 					},
 					{
-					    regex: /\d+ lit:|Button #\d/
+						regex: /\d+ lit:|Button #\d/
 					}
 				],
 			},
@@ -1621,66 +1621,66 @@ $(function() {
 				ID: "ColourFlash",
 				Lines: [
 					{
-					    regex: /Module generated/,
-					    value: function(matches, module) {
-					        module.push({
-					            label: "Color Sequence:",
-					            obj: pre(readMultiple(10))
-					        });
-					        readLine();
-					        for (var i = 0; i < 3; i++) {
-					            module.push(readLine());
-					        }
-					    }
+						regex: /Module generated/,
+						value: function(matches, module) {
+							module.push({
+								label: "Color Sequence:",
+								obj: pre(readMultiple(10))
+							});
+							readLine();
+							for (var i = 0; i < 3; i++) {
+								module.push(readLine());
+							}
+						}
 					},
 					{
-					    regex: /.+ button was pressed|.+ answer!/
+						regex: /.+ button was pressed|.+ answer!/
 					}
 				],
 			},
 			"Color Math": [
 				{
-				    regex: /.+/,
-				    value: "colormath"
+					regex: /.+/,
+					value: "colormath"
 				}
 			],
 			"Complicated Buttons": [
 				{
-				    regex: /.+/,
-				    value: "complicatedButtonsModule"
+					regex: /.+/,
+					value: "complicatedButtonsModule"
 				}
 			],
 			"Connection Check": [
 				{
-				    regex: /.+/,
-				    value: "graphModule"
+					regex: /.+/,
+					value: "graphModule"
 				}
 			],
 			"Coordinates": {
 				ID: "CoordinatesModule",
 				Lines: [
 					{
-					    regex: /(\d)×(\d)/,
-					    value: function(matches, module) {
-					        module.Y = parseInt(matches[2]);
-					    }
+						regex: /(\d)×(\d)/,
+						value: function(matches, module) {
+							module.Y = parseInt(matches[2]);
+						}
 					},
 					{
-					    regex: /Grid:/,
-					    value: function(_, module) {
-					        var grid = "";
-					        var y = module.Y;
-					        while (y > 0) {
-					            grid += "\n" + readLine();
-					            y--;
-					        }
+						regex: /Grid:/,
+						value: function(_, module) {
+							var grid = "";
+							var y = module.Y;
+							while (y > 0) {
+								grid += "\n" + readLine();
+								y--;
+							}
 
-					        module.push({ label: "Grid:", obj: pre(grid) });
-					        return true;
-					    }
+							module.push({ label: "Grid:", obj: pre(grid) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -1688,43 +1688,43 @@ $(function() {
 				ID: "CreationModule",
 				Lines: [
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        if (module.length === 0) {
-					            module.push(["Initial State", []]);
-					        }
+						regex: /.+/,
+						value: function(matches, module) {
+							if (module.length === 0) {
+								module.push(["Initial State", []]);
+							}
 
-					        module[module.length - 1][1].push(matches.input);
-					    }
+							module[module.length - 1][1].push(matches.input);
+						}
 					},
 					{
-					    regex: /Restarting module.../,
-					    value: function(matches, module) {
-					        module.push(["Restart #" + module.length, []]);
-					    }
+						regex: /Restarting module.../,
+						value: function(matches, module) {
+							module.push(["Restart #" + module.length, []]);
+						}
 					}
 				],
 			},
 			"Double-Oh": [
 				{
-				    regex: /.+/,
-				    value: "DoubleOhModule"
+					regex: /.+/,
+					value: "DoubleOhModule"
 				}
 			],
 			"Fast Math": {
 				ID: "fastMath",
 				Lines: [
 					{
-					    regex: /(<Stage (\d+)> (.+)|Pressed GO! Let the madness begin!)/,
-					    value: function(matches, module) {
-					        if (module.length == 0 || !(module[module.length - 1] instanceof Array) || (matches[2] && module[module.length - 1][0] !== "Stage " + matches[2]))
-					            module.push(["Stage " + matches[2], []]);
-					        module[module.length - 1][1].push(matches[3] || matches.input);
-					        return true;
-					    }
+						regex: /(<Stage (\d+)> (.+)|Pressed GO! Let the madness begin!)/,
+						value: function(matches, module) {
+							if (module.length == 0 || !(module[module.length - 1] instanceof Array) || (matches[2] && module[module.length - 1][0] !== "Stage " + matches[2]))
+								module.push(["Stage " + matches[2], []]);
+							module[module.length - 1][1].push(matches[3] || matches.input);
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -1732,47 +1732,47 @@ $(function() {
 				ID: "FollowTheLeaderModule",
 				Lines: [
 					{
-					    regex: /Starting at wire:|Strike because you cut/
+						regex: /Starting at wire:|Strike because you cut/
 					},
 					{
-					    regex: /Wire state:/,
-					    value: function(_, module) {
-					        var states = [];
+						regex: /Wire state:/,
+						value: function(_, module) {
+							var states = [];
 
-					        var line = readLine();
-					        while ((/^Wire \d+-to-\d+/).exec(line)) {
-					            states.push(line);
-					            line = readLine();
-					        }
-					        linen--;
+							var line = readLine();
+							while ((/^Wire \d+-to-\d+/).exec(line)) {
+								states.push(line);
+								line = readLine();
+							}
+							linen--;
 
-					        module.push(["Wire states:", states]);
-					    }
+							module.push(["Wire states:", states]);
+						}
 					},
 					{
-					    regex: /Expectation/,
-					    value: function(matches, module) {
-					        if (matches.input.match(/Expectation now is that you’re done./)) {
-					            module.push(matches.input);
-					        } else {
-					            var states = [];
+						regex: /Expectation/,
+						value: function(matches, module) {
+							if (matches.input.match(/Expectation now is that you’re done./)) {
+								module.push(matches.input);
+							} else {
+								var states = [];
 
-					            var line = readLine();
-					            while ((/^Wire \d+-to-\d+/).exec(line)) {
-					                states.push(line);
-					                line = readLine();
-					            }
-					            linen--;
-					            module.push([matches.input, states]);
-					        }
-					    }
+								var line = readLine();
+								while ((/^Wire \d+-to-\d+/).exec(line)) {
+									states.push(line);
+									line = readLine();
+								}
+								linen--;
+								module.push([matches.input, states]);
+							}
+						}
 					}
 				],
 			},
 			"Forget Me Not": [
 				{
-				    regex: /.+/,
-				    value: "MemoryV2"
+					regex: /.+/,
+					value: "MemoryV2"
 				}
 			],
 			"FizzBuzz": {
@@ -1804,45 +1804,45 @@ $(function() {
 				ID: "FriendshipModule",
 				Lines: [
 					{
-					    regex: /Friendship symbol/,
-					    value: function(matches, module) {
-					        if (!module.Symbols) {
-					            module.Symbols = [];
-					            module.push(["Symbols", module.Symbols]);
-					        }
+						regex: /Friendship symbol/,
+						value: function(matches, module) {
+							if (!module.Symbols) {
+								module.Symbols = [];
+								module.push(["Symbols", module.Symbols]);
+							}
 
-					        module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
-					        return true;
-					    }
+							module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
 			"The Gamepad": [
 				{
-				    regex: /.+/,
-				    value: "TheGamepadModule"
+					regex: /.+/,
+					value: "TheGamepadModule"
 				}
 			],
 			"Hexamaze": {
 				ID: "HexamazeModule",
 				Lines: [
 					{
-					    regex: /Moving from|Walking out|There’s an|However, we wanted/,
-					    value: function(matches, module) {
-					        if (!module.Moves) {
-					            module.Moves = [];
-					            module.push(["Moves", module.Moves]);
-					        }
+						regex: /Moving from|Walking out|There’s an|However, we wanted/,
+						value: function(matches, module) {
+							if (!module.Moves) {
+								module.Moves = [];
+								module.push(["Moves", module.Moves]);
+							}
 
-					        module.Moves.push(matches.input);
-					        return true;
-					    }
+							module.Moves.push(matches.input);
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -1850,76 +1850,76 @@ $(function() {
 				ID: "Laundry",
 				Lines: [
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        module.push(matches.input);
-					        for (var i = 0; i < 4; i++) {
-					            module.push(readLine());
-					        }
-					    }
+						regex: /.+/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							for (var i = 0; i < 4; i++) {
+								module.push(readLine());
+							}
+						}
 					}
 				],
 			},
 			"LED Encryption": [
 				{
-				    regex: /.+/,
-				    value: "LEDEnc"
+					regex: /.+/,
+					value: "LEDEnc"
 				}
 			],
 			"Light Cycle": {
 				ID: "LightCycleModule",
 				Lines: [
 					{
-					    regex: /Start sequence: ([A-Z]{6})/,
-					    value: function(matches, module) {
-					        module.Presses = [];
-					        module.push("Starting Seq: " + matches[1]);
-					        module.push(["Buttons:", module.Presses]);
-					    }
+						regex: /Start sequence: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.Presses = [];
+							module.push("Starting Seq: " + matches[1]);
+							module.push(["Buttons:", module.Presses]);
+						}
 					},
 					{
-					    regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
-					    value: function(matches, module) {
-					        module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
-					    }
+						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
+						value: function(matches, module) {
+							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
+						}
 					},
 					{
-					    regex: /Pressed button/,
-					    value: function(matches, module) {
-					        module.Presses.push(matches.input);
-					    }
+						regex: /Pressed button/,
+						value: function(matches, module) {
+							module.Presses.push(matches.input);
+						}
 					}
 				]
 			},
 			"Logic": [
 				{
-				    regex: /.+/,
-				    value: "Logic"
+					regex: /.+/,
+					value: "Logic"
 				}
 			],
 			"Modules Against Humanity": {
 				ID: "ModuleAgainstHumanity",
 				Lines: [
 					{
-					    regex: /Modules:/,
-					    value: function(matches, module) {
-					        var lines = readMultiple(11);
-					        while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
-					            lines = lines.replace(/ \|/g, '|');
-					        while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
-					            lines = lines.replace(/\| /g, '|');
-					        module.push({ label: "Cards:", obj: pre(lines) });
+						regex: /Modules:/,
+						value: function(matches, module) {
+							var lines = readMultiple(11);
+							while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
+								lines = lines.replace(/ \|/g, '|');
+							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
+								lines = lines.replace(/\| /g, '|');
+							module.push({ label: "Cards:", obj: pre(lines) });
 
-					        var line;
-					        do {
-					            line = readLine();
-					            module.push(line.replace(/Black:/g, "Black: ").trim());
-					        }
-					        while (!/^Final cards/.test(line));
-					    }
+							var line;
+							do {
+								line = readLine();
+								module.push(line.replace(/Black:/g, "Black: ").trim());
+							}
+							while (!/^Final cards/.test(line));
+						}
 					},
 					{
-					    regex: /Submitted:/
+						regex: /Submitted:/
 					}
 				],
 			},
@@ -1927,97 +1927,97 @@ $(function() {
 				ID: "monsplodeFight",
 				Lines: [
 					{
-					    regex: /Opponent: (.+)/,
-					    value: function(matches, module) {
-					        module.push([matches[1],
+						regex: /Opponent: (.+)/,
+						value: function(matches, module) {
+							module.push([matches[1],
 								[]
-					        ]);
-					    }
+							]);
+						}
 					},
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        module[module.length - 1][1].push(matches.input);
-					    }
+						regex: /.+/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(matches.input);
+						}
 					},
 					{
-					    regex: /(?:Opponent:|Move Name)/,
-					    value: function(matches, module) {
-					        module[module.length - 1][1].push(readLine());
-					    }
+						regex: /(?:Opponent:|Move Name)/,
+						value: function(matches, module) {
+							module[module.length - 1][1].push(readLine());
+						}
 					}
 				],
 			},
 			"Morsematics": [
 				{
-				    regex: /.+/,
-				    value: "MorseV2"
+					regex: /.+/,
+					value: "MorseV2"
 				}
 			],
 			"Mouse in the Maze": [
 				{
-				    regex: /.+/,
-				    value: "MouseInTheMaze"
+					regex: /.+/,
+					value: "MouseInTheMaze"
 				}
 			],
 			"Murder": {
 				ID: "murder",
 				Lines: [
 					{
-					    regex: /Number of batteries/,
-					    value: function() {
-					        var id = GetBomb().GetMod("murder").IDs.length + 1;
-					        var mod = GetBomb().GetModuleID("murder", id);
-					        mod.BombInfo = [];
-					        mod.Rows = [];
-					        mod.push(["Bomb Info", mod.BombInfo]);
-					    }
+						regex: /Number of batteries/,
+						value: function() {
+							var id = GetBomb().GetMod("murder").IDs.length + 1;
+							var mod = GetBomb().GetModuleID("murder", id);
+							mod.BombInfo = [];
+							mod.Rows = [];
+							mod.push(["Bomb Info", mod.BombInfo]);
+						}
 					},
 					{
-					    regex: /Number of|Has/,
-					    value: function(matches) {
-					        GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
-					        return true;
-					    }
+						regex: /Number of|Has/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
+							return true;
+						}
 					},
 					{
-					    regex: /row/,
-					    value: function(matches) {
-					        GetBomb().GetModuleID("murder").Rows.push(matches.input);
-					    }
+						regex: /row/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").Rows.push(matches.input);
+						}
 					},
 					{
-					    regex: /Body found in/,
-					    value: function(matches) {
-					        GetBomb().GetModuleID("murder").Body = matches.input;
-					    }
+						regex: /Body found in/,
+						value: function(matches) {
+							GetBomb().GetModuleID("murder").Body = matches.input;
+						}
 					},
 					{
-					    regex: /Actual solution:/,
-					    value: function(matches) {
-					        var mod = GetBomb().GetModuleID("murder");
-					        mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
-					        mod.push(["Suspects", mod.Suspects]);
-					        mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Pipe", "Revolver"];
-					        mod.push(["Weapons", mod.Weapons]);
-					        mod.push(mod.Body);
-					        mod.Rows.forEach(function(row) {
-					            mod.push(row);
-					        });
-					        mod.push(matches.input);
-					    }
+						regex: /Actual solution:/,
+						value: function(matches) {
+							var mod = GetBomb().GetModuleID("murder");
+							mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
+							mod.push(["Suspects", mod.Suspects]);
+							mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Pipe", "Revolver"];
+							mod.push(["Weapons", mod.Weapons]);
+							mod.push(mod.Body);
+							mod.Rows.forEach(function(row) {
+								mod.push(row);
+							});
+							mod.push(matches.input);
+						}
 					},
 					{
-					    regex: /Eliminating (.+) to re/,
-					    value: function(matches) {
-					        var mod = GetBomb().GetModuleID("murder");
-					        var index = mod.Suspects.indexOf(matches[1]);
-					        if (index > -1) {
-					            mod.Suspects.splice(index, 1);
-					        } else {
-					            mod.Weapons.splice(mod.Weapons.indexOf(matches[1]), 1);
-					        }
-					    }
+						regex: /Eliminating (.+) to re/,
+						value: function(matches) {
+							var mod = GetBomb().GetModuleID("murder");
+							var index = mod.Suspects.indexOf(matches[1]);
+							if (index > -1) {
+								mod.Suspects.splice(index, 1);
+							} else {
+								mod.Weapons.splice(mod.Weapons.indexOf(matches[1]), 1);
+							}
+						}
 					}
 				],
 			},
@@ -2025,37 +2025,37 @@ $(function() {
 				ID: "MysticSquareModule",
 				Lines: [
 					{
-					    regex: /Field:/,
-					    value: function(matches, module) {
-					        module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
-					    }
+						regex: /Field:/,
+						value: function(matches, module) {
+							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
+						}
 					},
 					{
-					    regex: /Last serial digit|Skull path/,
+						regex: /Last serial digit|Skull path/,
 					}
 				]
 			},
 			"Neutralization": [
 				{
-				    regex: /.+/,
-				    value: "neutralization"
+					regex: /.+/,
+					value: "neutralization"
 				}
 			],
 			"Only Connect": {
 				ID: "OnlyConnectModule",
 				Lines: [
 					{
-					    regex: /Hieroglyph +Position +Serial# +Ports +num/,
-					    value: function(matches, module) {
-					        module.push({
-					            label: 'Egyptian Hieroglyphs:',
-					            obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
-					        });
-					        return true;
-					    }
+						regex: /Hieroglyph +Position +Serial# +Ports +num/,
+						value: function(matches, module) {
+							module.push({
+								label: 'Egyptian Hieroglyphs:',
+								obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+							});
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -2063,14 +2063,14 @@ $(function() {
 				ID: "spwizPerspectivePegs",
 				Lines: [
 					{
-					    regex: /Pegs:/,
-					    value: function(matches, module) {
-					        module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
-					        return true;
-					    }
+						regex: /Pegs:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -2078,28 +2078,28 @@ $(function() {
 				ID: "PianoKeys",
 				Lines: [
 					{
-					    regex: /Module generated with the following symbols/
+						regex: /Module generated with the following symbols/
 					},
 					{
-					    regex: /The correct rule is the following/,
-					    value: function(matches, module) {
-					        var input = [];
-					        module.Input = input;
-					        module.push(matches.input);
-					        module.push(readLine().trim());
-					        module.push(readLine().trim());
-					        readLine();
-					        module.push(readLine().replace(/[|]/g, ""));
-					        module.push(["Key Presses", input]);
+						regex: /The correct rule is the following/,
+						value: function(matches, module) {
+							var input = [];
+							module.Input = input;
+							module.push(matches.input);
+							module.push(readLine().trim());
+							module.push(readLine().trim());
+							readLine();
+							module.push(readLine().replace(/[|]/g, ""));
+							module.push(["Key Presses", input]);
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /Input .+ was received|The current valid sequence/,
-					    value: function(matches, module) {
-					        module.Input.push(matches.input);
-					    }
+						regex: /Input .+ was received|The current valid sequence/,
+						value: function(matches, module) {
+							module.Input.push(matches.input);
+						}
 					}
 				],
 			},
@@ -2107,54 +2107,54 @@ $(function() {
 				ID: "MazeV2",
 				Lines: [
 					{
-					    regex: /Module solved/,
-					    value: function() {
-					        return true;
-					    }
+						regex: /Module solved/,
+						value: function() {
+							return true;
+						}
 					},
 					{
-					    regex: /\[[A-Z]{3}[-+]\].*/,
-					    value: function(matches, module) {
-					        if (!module.Conditions) {
-					            module.Conditions = [];
-					        }
+						regex: /\[[A-Z]{3}[-+]\].*/,
+						value: function(matches, module) {
+							if (!module.Conditions) {
+								module.Conditions = [];
+							}
 
-					        module.Conditions.push(matches[0]);
+							module.Conditions.push(matches[0]);
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /^[A-Z]+ (?:IN|OUT)/,
-					    value: function(matches, module) {
-					        if (module.Conditions) {
-					            module.push([matches.input, module.Conditions]);
-					        } else {
-					            module.push(matches.input);
-					        }
-					        module.Conditions = null;
+						regex: /^[A-Z]+ (?:IN|OUT)/,
+						value: function(matches, module) {
+							if (module.Conditions) {
+								module.push([matches.input, module.Conditions]);
+							} else {
+								module.push(matches.input);
+							}
+							module.Conditions = null;
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /:/,
-					    value: function(matches, module) {
-					        module.Pipes = [];
-					        module.Title = matches.input;
+						regex: /:/,
+						value: function(matches, module) {
+							module.Pipes = [];
+							module.Title = matches.input;
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        module.Pipes.push(matches.input);
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Pipes.push(matches.input);
 
-					        if (module.Pipes.length == 6) {
-					            module.push({ label: module.Title, obj: pre(module.Pipes.join("\n")) });
-					        }
-					    }
+							if (module.Pipes.length == 6) {
+								module.push({ label: module.Title, obj: pre(module.Pipes.join("\n")) });
+							}
+						}
 					}
 				],
 			},
@@ -2162,68 +2162,68 @@ $(function() {
 				ID: "resistors",
 				Lines: [
 					{
-					    regex: /Serial number digits/,
-					    value: function(matches, module) {
-					        module.BombInfo = [];
-					        module.push(["Bomb Info", module.BombInfo]);
-					    }
+						regex: /Serial number digits/,
+						value: function(matches, module) {
+							module.BombInfo = [];
+							module.push(["Bomb Info", module.BombInfo]);
+						}
 					},
 					{
-					    regex: /Serial number digits|batteries|Lit FRK/,
-					    value: function(matches, module) {
-					        module.BombInfo.push(matches.input);
-					        return true;
-					    }
+						regex: /Serial number digits|batteries|Lit FRK/,
+						value: function(matches, module) {
+							module.BombInfo.push(matches.input);
+							return true;
+						}
 					},
 					{
-					    regex: /Already placed/,
-					    value: function() {
-					        return true;
-					    }
+						regex: /Already placed/,
+						value: function() {
+							return true;
+						}
 					},
 					{
-					    regex: /.+/,
-					    value: "resistors"
+						regex: /.+/,
+						value: "resistors"
 					}
 				],
 			},
 			"Rhythms": [
 				{
-				    regex: /.+/,
-				    value: "MusicRhythms"
+					regex: /.+/,
+					value: "MusicRhythms"
 				}
 			],
 			"Rock-Paper-Scissors-Lizard-Spock": [
 				{
-				    regex: /.+/,
-				    value: "RockPaperScissorsLizardSpockModule"
+					regex: /.+/,
+					value: "RockPaperScissorsLizardSpockModule"
 				}
 			],
 			"Round Keypad": {
 				ID: "KeypadV2",
 				Lines: [
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        module.push(matches[0].replace(/,/g, " "));
-					    }
+						regex: /.+/,
+						value: function(matches, module) {
+							module.push(matches[0].replace(/,/g, " "));
+						}
 					}
 				],
 			},
 			"Rubik’s Cube": [
 				{
-				    regex: /.+/,
-				    value: "RubiksCubeModule"
+					regex: /.+/,
+					value: "RubiksCubeModule"
 				}
 			],
 			"Safety Safe": {
 				ID: "PasswordV2",
 				Lines: [
 					{
-					    regex: /offset|Answer|Input|solved/,
-					    value: function(matches, module) {
-					        module.push(matches.input.replace(/,/g, ", "));
-					    }
+						regex: /offset|Answer|Input|solved/,
+						value: function(matches, module) {
+							module.push(matches.input.replace(/,/g, ", "));
+						}
 					}
 				],
 			},
@@ -2231,14 +2231,14 @@ $(function() {
 				ID: "Semaphore",
 				Lines: [
 					{
-					    regex: /Module generated/,
-					    value: function(matches, module) {
-					        module.push({ label: "Flags", obj: pre(readMultiple(8)) });
-					        return true;
-					    }
+						regex: /Module generated/,
+						value: function(matches, module) {
+							module.push({ label: "Flags", obj: pre(readMultiple(8)) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -2246,28 +2246,28 @@ $(function() {
 				ID: "SkewedSlotsModule",
 				Lines: [
 					{
-					    regex: /Rule Log/,
-					    value: function(_, module) {
-					        module.push(readLine()); // Initial
+						regex: /Rule Log/,
+						value: function(_, module) {
+							module.push(readLine()); // Initial
 
-					        for (var i = 0; i < 3; i++) {
-					            readLine();
-					            var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
-					            var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
+							for (var i = 0; i < 3; i++) {
+								readLine();
+								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
+								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
 
-					            var line = readLine();
-					            while (!(/Final digit/).exec(line)) {
-					                slot[1].push(line);
-					                line = readLine();
-					            }
-					            slot[1].push(line);
+								var line = readLine();
+								while (!(/Final digit/).exec(line)) {
+									slot[1].push(line);
+									line = readLine();
+								}
+								slot[1].push(line);
 
-					            module.push(slot);
-					        }
+								module.push(slot);
+							}
 
-					        readLine();
-					        module.push(readLine()); // Final
-					    }
+							readLine();
+							module.push(readLine()); // Final
+						}
 					}
 				]
 			},
@@ -2275,14 +2275,14 @@ $(function() {
 				ID: "SillySlots",
 				Lines: [
 					{
-					    regex: /Stage/,
-					    value: function(matches, module) {
-					        module.push({ label: matches.input, obj: pre(readMultiple(2)) });
-					        return true;
-					    }
+						regex: /Stage/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(2)) });
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
@@ -2290,90 +2290,90 @@ $(function() {
 				ID: "SimonScreamsModule",
 				Lines: [
 					{
-					    regex: /Colors in|Small table/,
-					    value: function(matches, module) {
-					        module.push(matches.input);
-					        return true;
-					    }
+						regex: /Colors in|Small table/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
 					},
 					{
-					    regex: /Stage (.) sequence/,
-					    value: function(matches, module) {
-					        module.Stage = ["Stage #" + matches[1],
+						regex: /Stage (.) sequence/,
+						value: function(matches, module) {
+							module.Stage = ["Stage #" + matches[1],
 								[]
-					        ];
-					        module.push(module.Stage);
-					    }
+							];
+							module.push(module.Stage);
+						}
 					},
 					{
-					    regex: /.+/,
-					    value: function(matches, module) {
-					        module.Stage[1].push(matches.input);
-					    }
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Stage[1].push(matches.input);
+						}
 					}
 				],
 			},
 			"Simon States": [
 				{
-				    regex: /.+/,
-				    value: "SimonV2"
+					regex: /.+/,
+					value: "SimonV2"
 				}
 			],
 			"Souvenir": {
 				ID: "SouvenirModule",
 				Lines: [
 					{
-					    regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
-					    value: function(matches, module) {
-					        module.push("Question: " + matches[1]);
-					        module.push("Answers: " + matches[2]);
-					    }
+						regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
+						value: function(matches, module) {
+							module.push("Question: " + matches[1]);
+							module.push("Answers: " + matches[2]);
+						}
 					}
 				],
 			},
 			"Square Button": [
 				{
-				    regex: /.+/,
-				    value: "ButtonV2"
+					regex: /.+/,
+					value: "ButtonV2"
 				}
 			],
 			"Symbolic Password": [
 				{
-				    regex: /.+/,
-				    value: "symbolicPasswordModule"
+					regex: /.+/,
+					value: "symbolicPasswordModule"
 				}
 			],
 			"Text Field": [
 				{
-				    regex: /.+/,
-				    value: "TextField"
+					regex: /.+/,
+					value: "TextField"
 				}
 			],
 			"TicTacToe": {
 				ID: "TicTacToeModule",
 				Lines: [
 					{
-					    regex: /Starting row/
+						regex: /Starting row/
 					},
 					{
-					    regex: /Keypad is now/,
-					    value: function(matches, module) {
-					        var step = [];
-					        module.Step = step;
+						regex: /Keypad is now/,
+						value: function(matches, module) {
+							var step = [];
+							module.Step = step;
 
-					        module.push(["Step " + module.length + ":", step]);
+							module.push(["Step " + module.length + ":", step]);
 
-					        step.push({ label: matches.input, obj: pre(readMultiple(3)) });
+							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
 
-					        step.push(readLine()); // up next
-					        step.push(readLine()); // current row
-					    }
+							step.push(readLine()); // up next
+							step.push(readLine()); // current row
+						}
 					},
 					{
-					    regex: /Next expectation is|Clicked/,
-					    value: function(matches, module) {
-					        module.Step.push(matches.input);
-					    }
+						regex: /Next expectation is|Clicked/,
+						value: function(matches, module) {
+							module.Step.push(matches.input);
+						}
 					}
 				],
 			},
@@ -2381,25 +2381,25 @@ $(function() {
 				ID: "WordSearchModule",
 				Lines: [
 					{
-					    regex: /Correct word is (.+)/,
-					    value: function(matches, module) {
-					        module.push("Solution: " + matches[1]);
-					    }
+						regex: /Correct word is (.+)/,
+						value: function(matches, module) {
+							module.push("Solution: " + matches[1]);
+						}
 					},
 					{
-					    regex: /Wrong words are (.+)/,
-					    value: function(matches, module) {
-					        module.push("Wrong Words: " + matches[1]);
-					    }
+						regex: /Wrong words are (.+)/,
+						value: function(matches, module) {
+							module.push("Wrong Words: " + matches[1]);
+						}
 					},
 					{
-					    regex: /Field:/,
-					    value: function(matches, module) {
-					        module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
-					    }
+						regex: /Field:/,
+						value: function(matches, module) {
+							module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
+						}
 					},
 					{
-					    regex: /Coordinates clicked/
+						regex: /Coordinates clicked/
 					}
 				],
 			},
@@ -2407,30 +2407,51 @@ $(function() {
 				ID: "webDesign",
 				Lines: [
 					{
-					    regex: /For reference purpose/,
-					    value: function(matches, module) {
-					        var lines = "";
-					        var line = readLine();
-					        while (!line.match("}") && line) {
-					            lines += line + "\n";
-					            line = readLine();
-					        }
-					        lines += "}";
+						regex: /For reference purpose/,
+						value: function(matches, module) {
+							var lines = "";
+							var line = readLine();
+							while (!line.match("}") && line) {
+								lines += line + "\n";
+								line = readLine();
+							}
+							lines += "}";
 
-					        module.push({ label: matches.input, obj: pre(lines) });
+							module.push({ label: matches.input, obj: pre(lines) });
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /.+/
+						regex: /.+/
 					}
 				],
 			},
 			"Wire Placement": [
 				{
-				    regex: /.+/,
-				    value: "WirePlacementModule"
+					regex: /.+/,
+					value: "WirePlacementModule"
+				}
+			],
+			"Minesweeper":{
+				ID: "MinesweeperModule",
+				Lines: [
+					{
+						regex: /Board:|Legend:/,
+						value: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 4)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			"Zoo": [
+				{
+					regex: /.+/,
+					value: "ZooModule"
 				}
 			],
 
@@ -2438,11 +2459,11 @@ $(function() {
 			// Pacing extender
 			"PacingExtender": [
 				{
-				    regex: /.+/,
-				    value: function(matches) {
-				        if (!GetBomb()) { return; }
-				        GetBomb().PacingEvents.push(matches.input);
-				    }
+					regex: /.+/,
+					value: function(matches) {
+						if (!GetBomb()) { return; }
+						GetBomb().PacingEvents.push(matches.input);
+					}
 				}
 			]
 		};
@@ -2450,33 +2471,33 @@ $(function() {
 		var taglessRegex = [
 			// TwoBits
 			{
-			    regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
-			    value: function(matches) {
-			        var id = GetBomb().GetMod("TwoBits").IDs.length;
-			        if (matches[1] == "Lookups") {
-			            id = GetBomb().GetMod("TwoBits").IDs.length + 1;
-			        }
+				regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
+				value: function(matches) {
+					var id = GetBomb().GetMod("TwoBits").IDs.length;
+					if (matches[1] == "Lookups") {
+						id = GetBomb().GetMod("TwoBits").IDs.length + 1;
+					}
 
-			        var mod = GetBomb().GetModuleID("TwoBits", id);
-			        mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
-			        if (matches[1] == "Responses") {
-			            mod.push(readLine());
-			        }
-			    },
+					var mod = GetBomb().GetModuleID("TwoBits", id);
+					mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
+					if (matches[1] == "Responses") {
+						mod.push(readLine());
+					}
+				},
 			},
 
 			// Emoji Math
 			{
-			    regex: /\\d{1,}[+-]\\d{1,}/,
-			    value: function(matches) {
-			        readDirectly(matches.input, "Emoji Math");
-			    },
+				regex: /\\d{1,}[+-]\\d{1,}/,
+				value: function(matches) {
+					readDirectly(matches.input, "Emoji Math");
+				},
 			},
 			{
-			    regex: /Enter button pressed/,
-			    value: function() {
-			        readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math");
-			    }
+				regex: /Enter button pressed/,
+				value: function() {
+					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math");
+				}
 			}
 		];
 
