@@ -1691,7 +1691,7 @@ $(function() {
 						regex: /.+/,
 						value: function(matches, module) {
 							if (module.length === 0) {
-								module.push(["Initial State", []]);
+								module.push(["Initial attempt", [], true]);
 							}
 
 							module[module.length - 1][1].push(matches.input);
