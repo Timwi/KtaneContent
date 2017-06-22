@@ -9,7 +9,6 @@ var PortNames = {
 	Serial: "Serial"
 };
 
-
 // A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
 var ModuleNames = {
 	// Vanilla
@@ -309,6 +308,20 @@ $(function() {
 			// Modules
 			var modules = $("<div class='modules'>").appendTo(info);
 
+			// Mission Information
+			var missioninfo = $("<div class='module-info'>").appendTo(info);
+			makeTree(["Mission: " + this.MissionName,
+				"State: " + this.State,
+				/*"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
+				"Total Time: " + formatTime(this.Time),
+				"Time Left: ~" + formatTime(this.TimeLeft),*/
+			], $("<ul>").appendTo(missioninfo));
+
+			$("<a href='#' class='module'>")
+			.text("Mission Information")
+			.appendTo(modules)
+			.addCardClick(missioninfo).click();
+
 			// Edgework Information
 			this.Bombs.forEach(function(bomb, n) {
 				var ind = [];
@@ -353,22 +366,8 @@ $(function() {
 				$("<a href='#' class='module'>")
 				.text("Edgework #" + (n + 1))
 				.appendTo(modules)
-				.addCardClick(edgeinfo).click();
+				.addCardClick(edgeinfo);
 			});
-
-			// Mission Information
-			var missioninfo = $("<div class='module-info'>").appendTo(info);
-			makeTree(["Mission: " + this.MissionName,
-				"State: " + this.State,
-				/*"Strikes: " + this.Strikes + "/" + this.TotalStrikes,
-				"Total Time: " + formatTime(this.Time),
-				"Time Left: ~" + formatTime(this.TimeLeft),*/
-			], $("<ul>").appendTo(missioninfo));
-
-			$("<a href='#' class='module'>")
-			.text("Mission Information")
-			.appendTo(modules)
-			.addCardClick(missioninfo);
 
 			// Convert modules
 			this.Bombs.forEach(function(bomb) {
