@@ -47,6 +47,7 @@ var ModuleNames = {
 	BitOps: "Bitwise Operators",
 	TurnTheKeyAdvanced: "Turn The Keys",
 	LEDEnc: "LED Encryption",
+	booleanVennModule: "Boolean Venn Diagram", 
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -443,7 +444,7 @@ $(function() {
 				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+					$(this).attr("src", "../Icons/blank.png");
 				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
 			});
 
@@ -737,7 +738,7 @@ $(function() {
 				.addCardClick(modinfo);
 				$("<img>")
 				.on("error", function() {
-					$(this).attr("src", "../Icons/Blind Alley.png").addClass("failed");
+					$(this).attr("src", "../Icons/blank.png");
 				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
 			});
 
@@ -2453,6 +2454,24 @@ $(function() {
 					value: "ZooModule"
 				}
 			],
+			"Boolean Venn Diagram": {
+				ID: "booleanVennModule",
+				Lines: [
+					{
+						regex: /Expression|button pressed|Module Solved!/,
+						value: function(matches, module) {
+							module.push(matches.input);
+						}
+					},
+					{
+						regex: /Expression/,
+						value: function(matches, module) {
+							readLine();
+							module.push({ label: "Diagram:", obj: pre(readMultiple(16)), expanded: true });
+						}
+					}
+				]
+			},
 
 
 			// Pacing extender
