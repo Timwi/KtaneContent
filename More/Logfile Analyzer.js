@@ -2162,17 +2162,9 @@ $(function() {
 				ID: "resistors",
 				Lines: [
 					{
-						regex: /Serial number digits/,
+						regex: /batteries/,
 						value: function(matches, module) {
-							module.BombInfo = [];
-							module.push(["Bomb Info", module.BombInfo]);
-						}
-					},
-					{
-						regex: /Serial number digits|batteries|Lit FRK/,
-						value: function(matches, module) {
-							module.BombInfo.push(matches.input);
-							return true;
+							module.push("Bomb Info: " + matches.input);
 						}
 					},
 					{
