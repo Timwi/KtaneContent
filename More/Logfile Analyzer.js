@@ -2440,6 +2440,12 @@ $(function() {
 					}
 				]
 			},
+			"Ice Cream": [
+				{
+					regex: /.+/,
+					value: "iceCreamModule"
+				}
+			],
 			"Zoo": [
 				{
 					regex: /.+/,
