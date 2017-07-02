@@ -2446,6 +2446,18 @@ $(function() {
 					value: "iceCreamModule"
 				}
 			],
+			"Binary LEDs": [
+				{
+					regex: /.+/,
+					value: "BinaryLeds"
+				}
+			],
+			"Point of Order": [
+				{
+					regex: /.+/,
+					value: "PointOfOrderModule"
+				}
+			],
 			"Screw": {
 				ID: "screw",
 				Lines: [
