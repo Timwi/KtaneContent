@@ -2452,12 +2452,19 @@ $(function() {
 					value: "BinaryLeds"
 				}
 			],
-			"Point of Order": [
-				{
-					regex: /.+/,
-					value: "PointOfOrderModule"
-				}
-			],
+			"Point of Order": {
+				ID: "PointOfOrderModule",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							var span = $("<span>").text(matches.input);
+							span.html(span.html().replace(/([♥♦])/g, "<span style='color: red'>$1</span>"));
+							module.push({label: "", obj: span});
+						}
+					}
+				]
+			},
 			"Screw": {
 				ID: "screw",
 				Lines: [
