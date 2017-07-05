@@ -1927,23 +1927,28 @@ $(function() {
 				ID: "monsplodeFight",
 				Lines: [
 					{
-						regex: /Opponent: (.+)/,
+						regex: /Opponent/,
 						value: function(matches, module) {
-							module.push([matches[1],
-								[]
-							]);
+							module.MoveInfo	= null;
+						}
+					},
+					{
+						regex: /Move name/,
+						value: function(matches, module) {
+							module.push([matches.input.replace(/\(\d\)/, ""), module.MoveInfo]);
+							module.MoveInfo = [];
+							return true;
 						}
 					},
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module[module.length - 1][1].push(matches.input);
-						}
-					},
-					{
-						regex: /(?:Opponent:|Move Name)/,
-						value: function(matches, module) {
-							module[module.length - 1][1].push(readLine());
+							if (module.MoveInfo) {
+								module.MoveInfo.push(matches.input);
+							} else {
+								module.MoveInfo = [];
+								module.push(matches.input.replace(/ \d/, ""));
+							}
 						}
 					}
 				],
@@ -2539,7 +2544,6 @@ $(function() {
 					}
 				]
 			},
-
 
 			// Pacing extender
 			"PacingExtender": [
