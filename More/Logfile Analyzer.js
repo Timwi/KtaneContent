@@ -47,7 +47,7 @@ var ModuleNames = {
 	BitOps: "Bitwise Operators",
 	TurnTheKeyAdvanced: "Turn The Keys",
 	LEDEnc: "LED Encryption",
-	booleanVennModule: "Boolean Venn Diagram", 
+	booleanVennModule: "Boolean Venn Diagram",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2265,6 +2265,9 @@ $(function() {
 							readLine();
 							module.push(readLine()); // Final
 						}
+					},
+					{
+						regex: /Submitted:/,
 					}
 				]
 			},
@@ -2531,10 +2534,10 @@ $(function() {
 								.css({
 									transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
 									"text-anchor": "middle",
-    								"dominant-baseline": "central",
+									"dominant-baseline": "central",
 									stroke: "none",
-    								fill: "black",
-    								"font-size": (35 - text.length * 5) + "px"
+									fill: "black",
+									"font-size": (35 - text.length * 5) + "px"
 								})
 								.appendTo(svg.children("g"));
 							});
