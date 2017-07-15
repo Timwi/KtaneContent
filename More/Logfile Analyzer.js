@@ -48,6 +48,7 @@ var ModuleNames = {
 	TurnTheKeyAdvanced: "Turn The Keys",
 	LEDEnc: "LED Encryption",
 	booleanVennModule: "Boolean Venn Diagram",
+	XRayModule: "X-Ray",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2343,6 +2344,7 @@ $(function() {
 				],
 			},
 			"Yahtzee": "YahtzeeModule",
+			"X-Ray": "XRayModule",
 			"Zoo": "ZooModule",
 			"Boolean Venn Diagram": {
 				ID: "booleanVennModule",
