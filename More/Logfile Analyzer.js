@@ -1302,24 +1302,14 @@ $(function() {
 					}
 				],
 			},
-			"InvisibleWallsComponent": [
-				{
-					regex: /.+/,
-					value: "Maze"
-				}
-			],
+			"InvisibleWallsComponent": "Maze",
 			"MorseCodeComponent": [
 				{
 					regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
 					value: "Morse"
 				}
 			],
-			"KeypadComponent": [
-				{
-					regex: /.+/,
-					value: "Keypad"
-				}
-			],
+			"KeypadComponent": "Keypad",
 			"Assets\.Scripts\.Rules\.KeypadRuleSet": {
 				ID: "Keypad",
 				Lines: [
@@ -1331,12 +1321,7 @@ $(function() {
 					}
 				],
 			},
-			"PasswordRuleset": [
-				{
-					regex: /.+/,
-					value: "Password"
-				}
-			],
+			"PasswordRuleset": "Password",
 			"WireSequencePage": {
 				ID: "WireSequence",
 				Lines: [
@@ -1423,18 +1408,8 @@ $(function() {
 					}
 				],
 			},
-			"Adventure Game": [
-				{
-					regex: /.+/,
-					value: "spwizAdventureGame"
-				}
-			],
-			"Astrology": [
-				{
-					regex: /.+/,
-					value: "spwizAstrology"
-				}
-			],
+			"Adventure Game": "spwizAdventureGame",
+			"Astrology": "spwizAstrology",
 			"Battleship": {
 				ID: "BattleshipModule",
 				Lines: [
@@ -1472,12 +1447,7 @@ $(function() {
 					}
 				],
 			},
-			"Bitwise Operators": [
-				{
-					regex: /.+/,
-					value: "BitOps"
-				}
-			],
+			"Bitwise Operators": "BitOps",
 			"Blind Alley": {
 				ID: "BlindAlleyModule",
 				Lines: [
@@ -1550,12 +1520,7 @@ $(function() {
 					}
 				],
 			},
-			"CaesarCipher": [
-				{
-					regex: /.+/,
-					value: "CaesarCipherModule"
-				}
-			],
+			"CaesarCipher": "CaesarCipherModule",
 			"Cheap Checkout": {
 				ID: "CheapCheckoutModule",
 				Lines: [
@@ -1591,18 +1556,8 @@ $(function() {
 					}
 				],
 			},
-			"ChordQualities": [
-				{
-					regex: /.+/,
-					value: "ChordQualities"
-				}
-			],
-			"The Clock": [
-				{
-					regex: /.+/,
-					value: "TheClockModule"
-				}
-			],
+			"ChordQualities": "ChordQualities",
+			"The Clock": "TheClockModule",
 			"ColoredSquares": {
 				ID: "ColoredSquaresModule",
 				Lines: [
@@ -1638,24 +1593,9 @@ $(function() {
 					}
 				],
 			},
-			"Color Math": [
-				{
-					regex: /.+/,
-					value: "colormath"
-				}
-			],
-			"Complicated Buttons": [
-				{
-					regex: /.+/,
-					value: "complicatedButtonsModule"
-				}
-			],
-			"Connection Check": [
-				{
-					regex: /.+/,
-					value: "graphModule"
-				}
-			],
+			"Color Math": "colormath",
+			"Complicated Buttons": "complicatedButtonsModule",
+			"Connection Check": "graphModule",
 			"Coordinates": {
 				ID: "CoordinatesModule",
 				Lines: [
@@ -1705,12 +1645,7 @@ $(function() {
 					}
 				],
 			},
-			"Double-Oh": [
-				{
-					regex: /.+/,
-					value: "DoubleOhModule"
-				}
-			],
+			"Double-Oh": "DoubleOhModule",
 			"Fast Math": {
 				ID: "fastMath",
 				Lines: [
@@ -1769,12 +1704,7 @@ $(function() {
 					}
 				],
 			},
-			"Forget Me Not": [
-				{
-					regex: /.+/,
-					value: "MemoryV2"
-				}
-			],
+			"Forget Me Not": "MemoryV2",
 			"FizzBuzz": {
 				ID: "fizzBuzzModule",
 				Lines: [
@@ -1820,12 +1750,7 @@ $(function() {
 					}
 				],
 			},
-			"The Gamepad": [
-				{
-					regex: /.+/,
-					value: "TheGamepadModule"
-				}
-			],
+			"The Gamepad": "TheGamepadModule",
 			"Hexamaze": {
 				ID: "HexamazeModule",
 				Lines: [
@@ -1860,12 +1785,7 @@ $(function() {
 					}
 				],
 			},
-			"LED Encryption": [
-				{
-					regex: /.+/,
-					value: "LEDEnc"
-				}
-			],
+			"LED Encryption": "LEDEnc",
 			"Light Cycle": {
 				ID: "LightCycleModule",
 				Lines: [
@@ -1891,12 +1811,7 @@ $(function() {
 					}
 				]
 			},
-			"Logic": [
-				{
-					regex: /.+/,
-					value: "Logic"
-				}
-			],
+			"Logic": "Logic",
 			"Modules Against Humanity": {
 				ID: "ModuleAgainstHumanity",
 				Lines: [
@@ -1953,18 +1868,8 @@ $(function() {
 					}
 				],
 			},
-			"Morsematics": [
-				{
-					regex: /.+/,
-					value: "MorseV2"
-				}
-			],
-			"Mouse in the Maze": [
-				{
-					regex: /.+/,
-					value: "MouseInTheMaze"
-				}
-			],
+			"Morsematics": "MorseV2",
+			"Mouse in the Maze": "MouseInTheMaze",
 			"Murder": {
 				ID: "murder",
 				Lines: [
@@ -2040,12 +1945,7 @@ $(function() {
 					}
 				]
 			},
-			"Neutralization": [
-				{
-					regex: /.+/,
-					value: "neutralization"
-				}
-			],
+			"Neutralization": "neutralization",
 			"Only Connect": {
 				ID: "OnlyConnectModule",
 				Lines: [
@@ -2184,18 +2084,8 @@ $(function() {
 					}
 				],
 			},
-			"Rhythms": [
-				{
-					regex: /.+/,
-					value: "MusicRhythms"
-				}
-			],
-			"Rock-Paper-Scissors-Lizard-Spock": [
-				{
-					regex: /.+/,
-					value: "RockPaperScissorsLizardSpockModule"
-				}
-			],
+			"Rhythms": "MusicRhythms",
+			"Rock-Paper-Scissors-Lizard-Spock": "RockPaperScissorsLizardSpockModule",
 			"Round Keypad": {
 				ID: "KeypadV2",
 				Lines: [
@@ -2207,12 +2097,7 @@ $(function() {
 					}
 				],
 			},
-			"Rubik’s Cube": [
-				{
-					regex: /.+/,
-					value: "RubiksCubeModule"
-				}
-			],
+			"Rubik’s Cube": "RubiksCubeModule",
 			"Safety Safe": {
 				ID: "PasswordV2",
 				Lines: [
@@ -2313,12 +2198,7 @@ $(function() {
 					}
 				],
 			},
-			"Simon States": [
-				{
-					regex: /.+/,
-					value: "SimonV2"
-				}
-			],
+			"Simon States": "SimonV2",
 			"Souvenir": {
 				ID: "SouvenirModule",
 				Lines: [
@@ -2331,24 +2211,9 @@ $(function() {
 					}
 				],
 			},
-			"Square Button": [
-				{
-					regex: /.+/,
-					value: "ButtonV2"
-				}
-			],
-			"Symbolic Password": [
-				{
-					regex: /.+/,
-					value: "symbolicPasswordModule"
-				}
-			],
-			"Text Field": [
-				{
-					regex: /.+/,
-					value: "TextField"
-				}
-			],
+			"Square Button": "ButtonV2",
+			"Symbolic Password": "symbolicPasswordModule",
+			"Text Field": "TextField",
 			"TicTacToe": {
 				ID: "TicTacToeModule",
 				Lines: [
@@ -2427,12 +2292,7 @@ $(function() {
 					}
 				],
 			},
-			"Wire Placement": [
-				{
-					regex: /.+/,
-					value: "WirePlacementModule"
-				}
-			],
+			"Wire Placement": "WirePlacementModule",
 			"Minesweeper": {
 				ID: "MinesweeperModule",
 				Lines: [
@@ -2448,18 +2308,8 @@ $(function() {
 					}
 				]
 			},
-			"Ice Cream": [
-				{
-					regex: /.+/,
-					value: "iceCreamModule"
-				}
-			],
-			"Binary LEDs": [
-				{
-					regex: /.+/,
-					value: "BinaryLeds"
-				}
-			],
+			"Ice Cream": "iceCreamModule",
+			"Binary LEDs": "BinaryLeds",
 			"Point of Order": {
 				ID: "PointOfOrderModule",
 				Lines: [
@@ -2492,12 +2342,8 @@ $(function() {
 					}
 				],
 			},
-			"Zoo": [
-				{
-					regex: /.+/,
-					value: "ZooModule"
-				}
-			],
+			"Yahtzee": "YahtzeeModule",
+			"Zoo": "ZooModule",
 			"Boolean Venn Diagram": {
 				ID: "booleanVennModule",
 				Lines: [
@@ -2551,7 +2397,6 @@ $(function() {
 			// Pacing extender
 			"PacingExtender": [
 				{
-					regex: /.+/,
 					value: function(matches) {
 						if (!GetBomb()) { return; }
 						GetBomb().PacingEvents.push(matches.input);
@@ -2616,34 +2461,38 @@ $(function() {
 					} else obj = lineRegex[match[1]];
 
 					if (obj) {
-						var regex = (obj.Lines || obj);
-						regex.some(function(handler) {
-							var value = handler.value;
-							var matches = handler.regex.exec(match[2]);
-							if (matches) {
-								try {
-									if (value instanceof Function) {
-										if (obj.Lines) {
-											var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID);
-											if (value(matches, module, bomb.GetMod(obj.ID))) {
+						if (typeof(obj) != "string") {
+							var regex = (obj.Lines || obj);
+							regex.some(function(handler) {
+								var value = handler.value;
+								var matches = (handler.regex || /.+/).exec(match[2]);
+								if (matches) {
+									try {
+										if (value instanceof Function) {
+											if (obj.Lines) {
+												var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID);
+												if (value(matches, module, bomb.GetMod(obj.ID))) {
+													return true;
+												}
+											} else if (value(matches, id)) {
 												return true;
 											}
-										} else if (value(matches, id)) {
-											return true;
+										} else {
+											readDirectly(match[2], obj.ID || value, id);
 										}
-									} else {
-										readDirectly(match[2], obj.ID || value, id);
-									}
-								} catch (e) {
-									console.log(e);
+									} catch (e) {
+										console.log(e);
 
-									if (!readwarning) {
-										readwarning = true;
-										toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+										if (!readwarning) {
+											readwarning = true;
+											toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+										}
 									}
 								}
-							}
-						});
+							});
+						} else {
+							readDirectly(match[2], obj, id);
+						}
 					}
 				} else {
 					taglessRegex.some(function(handler) {
