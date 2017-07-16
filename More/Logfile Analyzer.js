@@ -2408,7 +2408,40 @@ $(function() {
 					}
 				]
 			},
-			"X-Ray": "XRayModule",
+			"X-Ray": {
+                ID: "XRayModule",
+                Lines: [
+                    {
+                        regex: /^(\d+)( = .*\. Solution symbol is )(\d+)\.$/,
+                        value: function (matches, module) {
+                            var span = $('<span>');
+                            span.append($("<img src='../HTML/img/X-Ray/Icon C" + matches[1] + ".png' width='20' />"));
+                            span.append($('<span>').text(matches[2]));
+                            span.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12)|0] + (matches[3] % 12 + 1) + ".png' width='20' />"));
+                            span.append($('<span>').text("."));
+                            module.push(span);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Column (\d+), Row (\d+): symbol there is (\d+).$/,
+                        value: function (matches, module) {
+                            var span = $('<span>');
+                            span.append($("<img src='../HTML/img/X-Ray/Icon A" + matches[1] + ".png' width='20' />"));
+                            span.append($('<span>').text(" = Column " + matches[1] + ", "));
+                            span.append($("<img src='../HTML/img/X-Ray/Icon B" + matches[2] + ".png' width='20' />"));
+                            span.append($('<span>').text(" = Row " + matches[2] + ": symbol there is "));
+                            span.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12)|0] + (matches[3] % 12 + 1) + ".png' width='20' />"));
+                            span.append($('<span>').text("."));
+                            module.push(span);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			"Yahtzee": "YahtzeeModule",
 			"Zoo": "ZooModule"
 		};
