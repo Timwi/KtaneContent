@@ -1621,20 +1621,40 @@ $(function() {
 					{
 						regex: /(\d)×(\d)/,
 						value: function(matches, module) {
-							module.Y = parseInt(matches[2]);
+							module.Width = parseInt(matches[1]);
+							module.Height = parseInt(matches[2]);
+							module.Coordinates = {};
+						}
+					},
+					{
+						regex: /(illegal|correct) coordinate .=\[(\d+), (\d+)\] as (.+?)( \(.+\))?$/,
+						value: function(matches, module) {
+							var key = matches[2] + ',' + matches[3];
+							if (key in module.Coordinates)
+								module.Coordinates[key].Text += '\n' + matches[4];
+							else
+								module.Coordinates[key] = { Text: matches[4], Legal: matches[1] === 'correct' };
 						}
 					},
 					{
 						regex: /Grid:/,
 						value: function(_, module) {
-							var grid = "";
-							var y = module.Y;
-							while (y > 0) {
-								grid += "\n" + readLine();
-								y--;
+							var lines = readMultiple(module.Height).replace('\r', '').split('\n');
+
+							var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
+							for (var x = 0; x < module.Width; x++)
+								$('<col>').attr('width', (99 / module.Width) + '%').appendTo(table);
+							for (var y = 0; y < module.Height; y++) {
+								var tr = $('<tr>').css('height', '4em').appendTo(table);
+								for (var x = 0; x < module.Width; x++) {
+									var key = x + ',' + y;
+									var td = $('<td>').appendTo(tr).css({ border: '1px solid black', textAlign: 'center' });
+									if (key in module.Coordinates)
+										td.text(module.Coordinates[key].Text).css({ border: '3px solid ' + (module.Coordinates[key].Legal ? '#0c0' : '#f00'), fontSize: module.Coordinates[key].Text.length > 6 ? "80%" : "125%", whiteSpace: 'pre-line' });
+								}
 							}
 
-							module.push({ label: "Grid:", obj: pre(grid) });
+							module.push({ label: "Grid:", obj: table });
 							return true;
 						}
 					},
