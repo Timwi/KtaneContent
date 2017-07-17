@@ -1352,7 +1352,60 @@ $(function() {
 					{
 						regex: /Ships: .+/,
 						value: function(matches, module) {
-							module.push({ label: "Solution:", obj: pre(readMultiple(6)) });
+
+							var fieldStr = readMultiple(6);
+							var field = fieldStr.replace('\r', '').split('\n');
+
+							var stuff = [];
+							for (var r = 0; r < 6; r++) {
+								stuff[r] = [];
+								var tr = $('<tr>').appendTo(table);
+								for (var c = 0; c < 6; c++) {
+									var td = $('<td>').appendTo(tr);
+									var ch = field[r][2 * c + 2];
+									if (c > 0 && r > 0)
+										stuff[r][c] = { IsShip: ch === '#' || ch === '%', IsSafeLocation: ch === '•' || ch === '%' };
+									else
+										stuff[r][c] = ch;
+								}
+							}
+
+							var table = $('<table>').css('border-spacing', '0');
+							for (var r = 0; r < 6; r++) {
+								var tr = $('<tr>').appendTo(table);
+								for (var c = 0; c < 6; c++) {
+									var td = $('<td>').css('border', '3px solid transparent').css('text-align', 'center').css('padding', 0).appendTo(tr);
+									if (c === 0 || r === 0)
+										td.text(stuff[r][c]);
+									else {
+										var waterAbove = r == 1 || !stuff[r - 1][c].IsShip;
+										var waterBelow = r == 5 || !stuff[r + 1][c].IsShip;
+										var waterLeft = c == 1 || !stuff[r][c - 1].IsShip;
+										var waterRight = c == 5 || !stuff[r][c + 1].IsShip;
+
+										var shipAbove = r == 1 || stuff[r - 1][c].IsShip;
+										var shipBelow = r == 5 || stuff[r + 1][c].IsShip;
+										var shipLeft = c == 1 || stuff[r][c - 1].IsShip;
+										var shipRight = c == 5 || stuff[r][c + 1].IsShip;
+
+										var imgId =
+											!stuff[r][c].IsShip ? "SqWater" :
+											waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
+											waterAbove && waterLeft && waterBelow && shipRight ? "SqShipL" :
+											waterAbove && waterRight && waterBelow && shipLeft ? "SqShipR" :
+											waterLeft && waterAbove && waterRight && shipBelow ? "SqShipT" :
+											waterLeft && waterBelow && waterRight && shipAbove ? "SqShipB" :
+											waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
+											waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
+
+										var img = $('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
+										if (stuff[r][c].IsSafeLocation)
+											td.css('border', '3px solid red');
+									}
+								}
+							}
+
+							module.push({ label: "Solution:", obj: table });
 						}
 					}
 				]
