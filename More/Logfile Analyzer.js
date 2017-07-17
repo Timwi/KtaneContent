@@ -1700,15 +1700,117 @@ $(function() {
 				ID: "FriendshipModule",
 				Lines: [
 					{
-						regex: /Friendship symbol/,
-						value: function (matches, module) {
-							if (!module.Symbols) {
-								module.Symbols = [];
-								module.push(["Symbols", module.Symbols]);
+						regex: /^Friendship symbol/,
+						value: function(matches, module) {
+							if (!module.SymbolsText) {
+								module.SymbolsText = [];
+								module.push(["Symbols", module.SymbolsText]);
 							}
 
-							module.Symbols.push(matches.input.replace(/^Friendship symbol /, ""));
+							module.SymbolsText.push(matches.input.replace(/^Friendship symbol /, ""));
+
+							var m2 = /^Friendship symbol #\d: \(X=(\d+), Y=(\d+), Pony=(.*) \((row|col)\)\)$/.exec(matches.input);
+							if (m2 === null)
+								module.SkipSvg = true;
+							else {
+								if (!module.Symbols)
+									module.Symbols = [];
+								var x = m2[1] | 0;
+								var y = 8 - m2[2] | 0;
+								var isRow = m2[4] === 'row';
+								var isColTie = false;
+								var isRowTie = false;
+								for (var i = 0; i < module.Symbols.length; i++) {
+									if (module.Symbols[i].X === x && (!isRow || !module.Symbols[i].IsRow)) {
+										if (module.Symbols[i].Y < y)
+											module.Symbols[i].IsColTie = true;
+										else
+											isColTie = true;
+									}
+									if (module.Symbols[i].Y === y && (isRow || module.Symbols[i].IsRow)) {
+										if (module.Symbols[i].X < x)
+											module.Symbols[i].IsRowTie = true;
+										else
+											isRowTie = true;
+									}
+								}
+
+								module.Symbols.push({ X: x, Y: y, Pony: m2[3], IsRow: isRow, IsColTie: isColTie, IsRowTie: isRowTie, Disregard: false });
+							}
+
 							return true;
+						}
+					},
+					{
+						regex: /^Disregard (column|row) symbol (.*), leaving/,
+						value: function(matches, module) {
+							if (!module.Symbols || module.SkipSvg)
+								return false;
+
+							var ix = -1;
+							for (var i = 0; i < module.Symbols.length; i++)
+								if (module.Symbols[i].Pony === matches[2] && module.Symbols[i].IsRow === (matches[1] === 'row')) {
+									ix = i;
+									break;
+								}
+							if (ix === -1)
+								module.SkipSvg = true;
+							else {
+								module.Symbols[ix].Disregard = matches[1];
+								for (var i = 0; i < module.Symbols.length; i++) {
+									if (module.Symbols[ix].IsRow && module.Symbols[i].Y > module.Symbols[ix].Y)
+										module.Symbols[i].IsRowTie = false;
+									if (!module.Symbols[ix].IsRow && module.Symbols[i].X > module.Symbols[ix].X)
+										module.Symbols[i].IsColTie = false;
+								}
+							}
+						}
+					},
+					{
+						regex: /^The potential Elements of Harmony are/,
+						value: function(matches, module) {
+							if (module.SkipSvg)
+								return false;
+
+							var ponyNames = [
+								"Amethyst Star", "Apple Cinnamon", "Apple Fritter", "Babs Seed", "Berry Punch", "Big McIntosh", "Bulk Biceps",
+								"Cadance", "Carrot Top", "Celestia", "Cheerilee", "Cheese Sandwich", "Cherry Jubilee", "Coco Pommel",
+								"Coloratura", "Daisy", "Daring Do", "Derpy", "Diamond Tiara", "Double Diamond", "Filthy Rich",
+								"Granny Smith", "Hoity Toity", "Lightning Dust", "Lily", "Luna", "Lyra Heartstrings", "Maud Pie",
+								"Mayor Mare", "Moon Dancer", "Ms. Harshwhinny", "Night Light", "Nurse Redheart", "Octavia Melody", "Rose",
+								"Screwball", "Shining Armor", "Silver Shill", "Silver Spoon", "Silverstar", "Spoiled Rich", "Starlight Glimmer",
+								"Sunburst", "Sunset Shimmer", "Suri Polomare", "Sweetie Drops", "Thunderlane", "Time Turner", "Toe Tapper",
+								"Tree Hugger", "Trenderhoof", "Trixie", "Trouble Shoes", "Twilight Velvet", "Twist", "Vinyl Scratch"];
+
+							function imgHref(num) {
+								if (num < 10)
+									num = "0" + num;
+								return "../HTML/img/Friendship/Friendship Symbol " + num + ".png";
+							}
+
+							var cutieMarks = '';
+							var colDisregards = '';
+							var rowDisregards = '';
+							for (var i = 0; i < module.Symbols.length; i++) {
+								cutieMarks += "<img src='" + imgHref(ponyNames.indexOf(module.Symbols[i].Pony)) + "' style='position: absolute; left: " + (30 * module.Symbols[i].X + 23) + "px; top: " + (30 * module.Symbols[i].Y + 23) + "px; width: 84px; height: 84px;' />";
+
+								var x = 30 * module.Symbols[i].X + 23 + 42;
+								var y = 30 * module.Symbols[i].Y + 23 + 42;
+								if (module.Symbols[i].IsRowTie || module.Symbols[i].Disregard === 'row') {
+									var color = module.Symbols[i].IsRowTie ? '#27c' : '#c27';
+									rowDisregards += "<div style='position: absolute; left: " + x + "px; top: " + (y - 2) + "px; width: " + (510 - x) + "px; height: 4px; background: " + color + "'></div><div style='position: absolute; left: 515px; top: " + y + "px; color: " + color + "; transform: translateY(-50%)'>" + (module.Symbols[i].IsRowTie ? 'tie' : 'disregard') + "</div>";
+								}
+								if (module.Symbols[i].IsColTie || module.Symbols[i].Disregard === 'column') {
+									var color = module.Symbols[i].IsColTie ? '#27c' : '#c27';
+									colDisregards += "<div style='position: absolute; left: " + (x - 2) + "px; top: " + y + "px; width: 4px; height: " + (390 - y) + "px; background: " + color + "'></div><div style='position: absolute; left: " + x + "px; top: 395px; color: " + color + "; transform: translateX(-50%)'>" + (module.Symbols[i].IsColTie ? 'tie' : 'disregard') + "</div>";
+								}
+							}
+
+							var bkgSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 490 370'>" +
+								"<path fill='#C595EC' d='M 0,0 0,240 C 70,240 130,300 130,370 L 490,370 490,130 C 420,130 360,70 360,0 z'/>" +
+								"<path fill='#080814' d='M 20,20 340,20 C 350,90 400,140 470,150 L 470,350 150,350 C 140,280 90,230 20,220 z'/>" +
+								"</svg>";
+							module.push($("<div style='background: url(\"data:image/svg+xml," + escape(bkgSvg) + "\"); position: relative; width: 490px; height: 370px; margin-bottom: 50px;'>").append(colDisregards + rowDisregards + cutieMarks));
 						}
 					},
 					{
