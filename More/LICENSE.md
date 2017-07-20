@@ -1,19 +1,21 @@
 The licensing for the files in this folder are as follows:
 
-• `Logfile Analyzer.css`, `Logfile Analyzer.html` and `Logfile Analyzer.js`:
-    Copyright: _samfun123_ and _Timwi_
-    MIT License [1]
+* `Logfile Analyzer.css`, `Logfile Analyzer.html` and `Logfile Analyzer.js`:
+    * Copyright: _samfun123_ and _Timwi_
+    * MIT License [1]
 
-• `img` folder:
-    Copyright: _Steel Crate Games_
-    The Keep Talking and Nobody Explodes ModKit License [2]
+* `img` folder:
+    * Copyright: _Steel Crate Games_
+    * The Keep Talking and Nobody Explodes ModKit License [2]
 
-• `Template manual.zip`:
-    Copyright: _Steel Crate Games_ and _samfun123_
-    The Keep Talking and Nobody Explodes ModKit License [2]
+* `Template manual.zip`:
+    * Copyright: _Steel Crate Games_ and _samfun123_
+    * The Keep Talking and Nobody Explodes ModKit License [2]
 
 ═══════════════════════════════════════════════════════════════════════════════
+
 [1]
+
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -35,7 +37,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ═══════════════════════════════════════════════════════════════════════════════
+
 [2]
+
 The Keep Talking and Nobody Explodes ModKit License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
