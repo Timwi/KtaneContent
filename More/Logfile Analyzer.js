@@ -49,6 +49,7 @@ var ModuleNames = {
 	LEDEnc: "LED Encryption",
 	booleanVennModule: "Boolean Venn Diagram",
 	XRayModule: "X-Ray",
+	screw: "The Screw",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
