@@ -2450,22 +2450,7 @@ $(function() {
 			"Text Field": "TextField",
 			"The Clock": "TheClockModule",
 			"The Gamepad": "TheGamepadModule",
-			"TheBulb": {
-				ID: "TheBulbModule",
-				Lines: [
-					{
-						regex: /Initial state: Color=(.+), Opaque=(True|False), Initially on=(True|False)/,
-						value: function(matches, module) {
-							module.push("Color: " + matches[1]);
-							module.push("Visiblity: " + (matches[2] == "True" ? "Opaque" : "See-Through"));
-							module.push("Initially: " + (matches[3] == "True" ? "On" : "Off"));
-						}
-					},
-					{
-						regex: /(?:Pressing |Unscrewing:|Screwing:|Module solved.).+/
-					}
-				]
-			},
+			"TheBulb": "TheBulbModule",
 			"TicTacToe": {
 				ID: "TicTacToeModule",
 				Lines: [
