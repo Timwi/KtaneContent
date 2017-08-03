@@ -133,7 +133,7 @@
 		}
 	</style>
 	<script src="https://unpkg.com/vue@2.4.2/dist/vue.min.js"></script>
-	<script src="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.js"></script>
+	<script src="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.js"></script>
 	<link rel="stylesheet" href="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.css">
 	<script>
 		/// MOD DATA ///
@@ -354,7 +354,9 @@
 							"Operation": vueData.operation
 						});
 					},
-					onFileUploaded: uploadProfile,
+					onFileUploaded: function(event) {
+						uploadProfile(event.target.files)
+					},
 					startRenaming: function() {
 						vueData.isRenaming = true;
 						setTimeout((function() {
@@ -364,15 +366,15 @@
 					handleRenaming: function(event) {
 						if (event.key == "Enter") {
 							vueData.isRenaming = false;
-							event.srcElement.blur();
+							event.target.blur();
 						}
 					},
 					fallbackToBlank: function(event) {
-						if (event.srcElement.src == fallbackImage) {
+						if (event.target.src == fallbackImage) {
 							return;
 						}
 
-						event.srcElement.src = fallbackImage;
+						event.target.src = fallbackImage;
 					},
 					getMods: getMods,
 					toggleType: function(type) {
@@ -396,7 +398,7 @@
 </head>
 <body>
 	<div id="editor">
-		<input id="file-upload" type="file" v-on:change="onFileUploaded(event.srcElement.files)">
+		<input id="file-upload" type="file" v-on:change="onFileUploaded">
 		<div class="fullscreen-msg" :class="{ hovering: isHovering }" for="file-upload">
 			<span>Drop profile!</span>
 		</div>
@@ -404,7 +406,7 @@
 		<div class="title-container">
 			<div class="title">Profile Editor</div>
 			<div class="header">
-				<div v-if="!isRenaming" v-on:click="startRenaming"><a href="javascript:;">Rename {{ profileName }}</a></div>
+				<div v-if="!isRenaming" v-on:click="startRenaming"><a href="javascript:;">Rename {{ profileName }}.json</a></div>
 				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name"></input>
 				<div>Operation: <a href="javascript:;" v-on:click="operation = 1 - operation">{{ operation ? "Union" : "Intersect" }}</a></div>
 				<div><a :download="profileName + '.json'" :href="'data:text/json,' + getJSON()">Download</a></div>
