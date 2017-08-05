@@ -1927,7 +1927,21 @@ $(function() {
 					}
 				]
 			},
-			"Ice Cream": "iceCreamModule",
+			"Ice Cream": {
+				ID: "iceCreamModule",
+				Lines: [
+					{
+						regex: /Stage \d/,
+						value: function(matches, module) {
+							module.push([matches.input, readMultiple(3).split("\n")]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"InvisibleWallsComponent": "Maze",
 			"KeypadComponent": "Keypad",
 			"LED Encryption": "LEDEnc",
