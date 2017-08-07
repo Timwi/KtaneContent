@@ -1,0 +1,439 @@
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Mod Selector Profile Editor</title>
+	<link rel="stylesheet" type="text/css" href="../HTML/css/font.css">
+
+	<style>
+		body {
+			background: lightgray;
+			font-family: "Trebuchet MS";
+			margin: 0;
+		}
+
+		.fullscreen-msg {
+			display: flex;
+			justify-content: center;
+			position: fixed;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			top: 0;
+			transition: background 0.25s, color 0.25s;
+			pointer-events: none;
+			color: transparent;
+		}
+
+		.fullscreen-msg.hovering {
+			background: rgba(127, 127, 127, 0.5);
+			color: white;
+		}
+
+		.fullscreen-msg span {
+			align-self: center;
+			font-size: 500%;
+		}
+
+		label {
+			pointer-events: all;
+			cursor: pointer;
+		}
+
+		div.title-container {
+			background: white;
+			margin-bottom: 8px;
+			margin: 6px;
+			padding: 8px;
+			min-width: 317px;
+		}
+
+		div.title {
+			text-align: center;
+			font-size: 150%;
+			padding-bottom: 10px;
+			border-bottom: gray 1px dashed;
+		}
+
+		div.header {
+			display: flex;
+			justify-content: space-around;
+			font-size: 125%;
+			padding-top: 10px;
+		}
+
+		div.sections {
+			padding-left: 8px;
+		}
+
+		h3.section {
+			margin: 0;
+			margin-top: 9.36px;
+			padding-left: 2px;
+			color: rgb(100, 100, 100);
+		}
+
+		h3.section u {
+			cursor: pointer;
+		}
+
+		h3.section.visible {
+			padding-left: 0px;
+		}
+
+		div.toggleMods {
+			color: rgb(100, 100, 100);
+			font-size: 75%;
+			margin-left: 30px;
+		}
+
+		div.mods {
+			display: flex;
+			flex-wrap: wrap;
+			padding: 3px;
+			padding-left: 0px;
+		}
+
+		.mod {
+			display: flex;
+			background: white;
+			padding: 8px;
+			margin: 3px;
+			transition: background 0.4s;
+			user-select: none;
+			cursor: default;
+			flex-grow: 1;
+			align-content: center;
+			cursor: pointer;
+		}
+
+		.mod.disabled {
+			background: rgb(255, 200, 200);
+		}
+
+		.mod-id {
+			color: gray;
+			font-style: italic;
+			font-size: 60%;
+		}
+
+		img.mod-icon {
+			float: left;
+			margin-right: 10px;
+		}
+
+		div.mod-info {
+			float: right;
+		}
+
+		input[type="file"] {
+			display: none;
+		}
+
+		input {
+			font-family: inherit;
+		}
+	</style>
+	<script src="https://unpkg.com/vue@2.4.2/dist/vue.min.js"></script>
+	<script src="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.css">
+	<script>
+		/// MOD DATA ///
+		var mods=[{id:"spwiz3DMaze",name:"3D Maze",type:"solvable"},{id:"AdjacentLettersModule",name:"Adjacent Letters",type:"solvable"},{id:"spwizAdventureGame",name:"Adventure Game",type:"solvable"},{id:"alphabet",name:"Alphabet",type:"solvable"},{id:"AnagramsModule",name:"Anagrams",type:"solvable"},{id:"NeedyVentV2",name:"Answering Questions",type:"needy"},{id:"spwizAstrology",name:"Astrology",type:"solvable"},{id:"BattleshipModule",name:"Battleship",type:"solvable"},{id:"BinaryLeds",name:"Binary LEDs",type:"solvable"},{id:"BitmapsModule",name:"Bitmaps",type:"solvable"},{id:"BitOps",name:"Bitwise Operators",type:"solvable"},{id:"BlindAlleyModule",name:"Blind Alley",type:"solvable"},{id:"booleanVennModule",name:"Boolean Venn Diagram",type:"solvable"},{id:"BrokenButtonsModule",name:"Broken Buttons",type:"solvable"},{id:"TheBulbModule",name:"The Bulb",type:"solvable"},{id:"buttonMasherNeedy",name:"Button Masher",type:"needy"},{id:"BigButton",name:"The Button",type:"solvable"},{id:"CaesarCipherModule",name:"Caesar Cipher",type:"solvable"},{id:"NeedyCapacitor",name:"Capacitor Discharge",type:"needy"},{id:"CheapCheckoutModule",name:"Cheap Checkout",type:"solvable"},{id:"ChessModule",name:"Chess",type:"solvable"},{id:"ChordQualities",name:"Chord Qualities",type:"solvable"},{id:"TheClockModule",name:"The Clock",type:"solvable"},{id:"ColourFlash",name:"Color Flash",type:"solvable"},{id:"colormath",name:"Color Math",type:"solvable"},{id:"ColoredSquaresModule",name:"Colored Squares",type:"solvable"},{id:"combinationLock",name:"Combination Lock",type:"solvable"},{id:"complicatedButtonsModule",name:"Complicated Buttons",type:"solvable"},{id:"Venn",name:"Complicated Wires",type:"solvable"},{id:"graphModule",name:"Connection Check",type:"solvable"},{id:"CoordinatesModule",name:"Coordinates",type:"solvable"},{id:"CrazyTalk",name:"Crazy Talk",type:"solvable"},{id:"CreationModule",name:"Creation",type:"solvable"},{id:"CryptModule",name:"Cryptography",type:"solvable"},{id:"DoubleOhModule",name:"Double-Oh",type:"solvable"},{id:"EdgeworkModule",name:"Edgework",type:"needy"},{id:"Emoji Math",name:"Emoji Math",type:"solvable"},{id:"EnglishTest",name:"English Test",type:"solvable"},{id:"fastMath",name:"Fast Math",type:"solvable"},{id:"Filibuster",name:"Filibuster",type:"needy"},{id:"fizzBuzzModule",name:"FizzBuzz",type:"solvable"},{id:"FollowTheLeaderModule",name:"Follow the Leader",type:"solvable"},{id:"ForeignExchangeRates",name:"Foreign Exchange Rates",type:"solvable"},{id:"MemoryV2",name:"Forget Me Not",type:"solvable"},{id:"FriendshipModule",name:"Friendship",type:"solvable"},{id:"TheGamepadModule",name:"The Gamepad",type:"solvable"},{id:"EternitySDec",name:"Hex To Decimal",type:"needy"},{id:"HexamazeModule",name:"Hexamaze",type:"solvable"},{id:"http",name:"HTTP Response",type:"needy"},{id:"iceCreamModule",name:"Ice Cream",type:"solvable"},{id:"Keypad",name:"Keypads",type:"solvable"},{id:"NeedyKnob",name:"Knobs",type:"needy"},{id:"Laundry",name:"Laundry",type:"solvable"},{id:"LEDEnc",name:"LED Encryption",type:"solvable"},{id:"LetterKeys",name:"Lettered Keys",type:"solvable"},{id:"LightCycleModule",name:"Light Cycle",type:"solvable"},{id:"LightsOut",name:"Lights Out",type:"needy"},{id:"Listening",name:"Listening",type:"solvable"},{id:"Logic",name:"Logic",type:"solvable"},{id:"Needy Math",name:"Math",type:"needy"},{id:"Maze",name:"Mazes",type:"solvable"},{id:"Memory",name:"Memory",type:"solvable"},{id:"Microcontroller",name:"Microcontroller",type:"solvable"},{id:"MinesweeperModule",name:"Minesweeper",type:"solvable"},{id:"ModuleAgainstHumanity",name:"Modules Against Humanity",type:"solvable"},{id:"monsplodeFight",name:"Monsplode, Fight!",type:"solvable"},{id:"Morse",name:"Morse Code",type:"solvable"},{id:"MorseV2",name:"Morsematics",type:"solvable"},{id:"MotionSense",name:"Motion Sense",type:"needy"},{id:"MouseInTheMaze",name:"Mouse In The Maze",type:"solvable"},{id:"murder",name:"Murder",type:"solvable"},{id:"MysticSquareModule",name:"Mystic Square",type:"solvable"},{id:"neutralization",name:"Neutralization",type:"solvable"},{id:"NumberPad",name:"Number Pad",type:"solvable"},{id:"OnlyConnectModule",name:"Only Connect",type:"solvable"},{id:"OrientationCube",name:"Orientation Cube",type:"solvable"},{id:"Password",name:"Passwords",type:"solvable"},{id:"spwizPerspectivePegs",name:"Perspective Pegs",type:"solvable"},{id:"PianoKeys",name:"Piano Keys",type:"solvable"},{id:"MazeV2",name:"Plumbing",type:"solvable"},{id:"PointOfOrderModule",name:"Point of Order",type:"solvable"},{id:"Probing",name:"Probing",type:"solvable"},{id:"QRCode",name:"QR Code",type:"needy"},{id:"resistors",name:"Resistors",type:"solvable"},{id:"MusicRhythms",name:"Rhythms",type:"solvable"},{id:"RockPaperScissorsLizardSpockModule",name:"Rock-Paper-Scissors-Lizard-Spock",type:"solvable"},{id:"NeedyKnobV2",name:"Rotary Phone",type:"needy"},{id:"KeypadV2",name:"Round Keypad",type:"solvable"},{id:"RubiksCubeModule",name:"Rubik’s Cube",type:"solvable"},{id:"PasswordV2",name:"Safety Safe",type:"solvable"},{id:"screw",name:"The Screw",type:"solvable"},{id:"SeaShells",name:"Sea Shells",type:"solvable"},{id:"Semaphore",name:"Semaphore",type:"solvable"},{id:"shapeshift",name:"Shape Shift",type:"solvable"},{id:"SillySlots",name:"Silly Slots",type:"solvable"},{id:"Simon",name:"Simon Says",type:"solvable"},{id:"SimonScreamsModule",name:"Simon Screams",type:"solvable"},{id:"SimonV2",name:"Simon States",type:"solvable"},{id:"SkewedSlotsModule",name:"Skewed Slots",type:"solvable"},{id:"SouvenirModule",name:"Souvenir",type:"solvable"},{id:"ButtonV2",name:"Square Button",type:"solvable"},{id:"switchModule",name:"Switches",type:"solvable"},{id:"symbolicPasswordModule",name:"Symbolic Password",type:"solvable"},{id:"spwizTetris",name:"Tetris",type:"needy"},{id:"TextField",name:"Text Field",type:"solvable"},{id:"ThirdBase",name:"Third Base",type:"solvable"},{id:"TicTacToeModule",name:"Tic-Tac-Toe",type:"solvable"},{id:"TurnTheKey",name:"Turn The Key",type:"solvable"},{id:"TurnTheKeyAdvanced",name:"Turn The Keys",type:"solvable"},{id:"TwoBits",name:"Two Bits",type:"solvable"},{id:"NeedyVentGas",name:"Venting Gas",type:"needy"},{id:"webDesign",name:"Web Design",type:"solvable"},{id:"WhosOnFirst",name:"Who’s on First",type:"solvable"},{id:"monsplodeWho",name:"Who’s That Monsplode",type:"needy"},{id:"WirePlacementModule",name:"Wire Placement",type:"solvable"},{id:"WireSequence",name:"Wire Sequences",type:"solvable"},{id:"WireSet",name:"Wires",type:"solvable"},{id:"WordScrambleModule",name:"Word Scramble",type:"solvable"},{id:"WordSearchModule",name:"Word Search",type:"solvable"},{id:"XRayModule",name:"X-Ray",type:"solvable"},{id:"YahtzeeModule",name:"Yahtzee",type:"solvable"},{id:"ZooModule",name:"Zoo",type:"solvable"},{id:"TwoFactorWidget",name:"Two Factor",type:"widget"},{id:"EncryptedIndicator",name:"Encrypted Indicator",type:"widget"},{name:"Double Decker",id:"Double Decker Bomb",type:"case"},{name:"Black Case",id:"Black Case",type:"case"},{name:"Blue Case",id:"Blue Case",type:"case"},{name:"Cyan Case",id:"Cyan Case",type:"case"},{name:"Glass Case",id:"Glass Case",type:"case"},{name:"Gold Case",id:"Gold Case",type:"case"},{name:"Gold Shine",id:"Gold Shine",type:"case"},{name:"Gray Case",id:"Gray Case",type:"case"},{name:"Green Case",id:"Green Case",type:"case"},{name:"Orange Case",id:"Orange Case",type:"case"},{name:"Pink Case",id:"Pink Case",type:"case"},{name:"Red Case",id:"Red Case",type:"case"},{name:"White Case",id:"White Case",type:"case"},{name:"Wood Case",id:"Wood Case",type:"case"},{name:"Matrix Purple",id:"Matrix Purple",type:"case"},{name:"Matrix Orange",id:"Matrix Orange",type:"case"},{name:"Matrix Red",id:"Matrix Red",type:"case"},{name:"Matrix Teal",id:"Matrix Teal",type:"case"},{name:"Matrix Pink",id:"Matrix Pink",type:"case"},{name:"Matrix Blue",id:"Matrix Blue",type:"case"},{name:"Matrix Green",id:"Matrix Green",type:"case"},{name:"Matrix Yellow",id:"Matrix Yellow",type:"case"},{name:"7x7 Bomb Case",id:"7x7 Bomb Case",type:"case"},{name:"6x6 Bomb Case",id:"6x6 Bomb Case",type:"case"},{name:"Black Double Decker",id:"Black Double Decker",type:"case"},{name:"Blue Double Decker",id:"Blue Double Decker",type:"case"},{name:"Cyan Double Decker",id:"Cyan Double Decker",type:"case"},{name:"Glass Double Decker",id:"Glass Double Decker",type:"case"},{name:"Gold Double Decker",id:"Gold Double Decker",type:"case"},{name:"Gold Shine Double Decker",id:"Gold Shine Double Decker",type:"case"},{name:"Gray Double Decker",id:"Gray Double Decker",type:"case"},{name:"Green Double Decker",id:"Green Double Decker",type:"case"},{name:"Orange Double Decker",id:"Orange Double Decker",type:"case"},{name:"Pink Double Decker",id:"Pink Double Decker",type:"case"},{name:"Red Double Decker",id:"Red Double Decker",type:"case"},{name:"White Double Decker",id:"White Double Decker",type:"case"},{name:"Wood Double Decker",id:"Wood Double Decker",type:"case"},{name:"Wood Quadruple Decker",id:"Wood Quadruple Decker",type:"case"},{name:"Gold Quadruple Decker",id:"Gold Quadruple Decker",type:"case"},{name:"Glass Quadruple Decker",id:"Glass Quadruple Decker",type:"case"},{name:"White Quadruple Decker",id:"White Quadruple Decker",type:"case"},{name:"Red Quadruple Decker",id:"Red Quadruple Decker",type:"case"},{name:"Pink Quadruple Decker",id:"Pink Quadruple Decker",type:"case"},{name:"Orange Quadruple Decker",id:"Orange Quadruple Decker",type:"case"},{name:"Green Quadruple Decker",id:"Green Quadruple Decker",type:"case"},{name:"Gray  Quadruple Decker",id:"Gray  Quadruple Decker",type:"case"},{name:"Gold Shine  Quadruple Decker",id:"Gold Shine  Quadruple Decker",type:"case"},{name:"Cyan Quadruple Decker",id:"Cyan Quadruple Decker",type:"case"},{name:"Blue Quadruple Decker",id:"Blue Quadruple Decker",type:"case"},{name:"Black Quadruple Decker",id:"Black Quadruple Decker",type:"case"},{name:"Quadruple Decker",id:"Quadruple Decker",type:"case"},{name:"10x10 Casing (199 modules)",id:"10x10 Casing (199 modules)",type:"case"},{name:"13x13 Casing (337 modules)",id:"13x13 Casing (337 modules)",type:"case"},{name:"16x16 Casing (511 modules)",id:"16x16 Casing (511 modules)",type:"case"},{name:"19x19 Casing (721 modules)",id:"19x19 Casing (721 modules)",type:"case"},{name:"22x22 Casing (967 modules)",id:"22x22 Casing (967 modules)",type:"case"},{name:"4x4 Casing (31 modules)",id:"4x4 Casing (31 modules)",type:"case"},{name:"6x6 Casing (71 modules)",id:"6x6 Casing (71 modules)",type:"case"},{name:"8x8 Casing (127 modules)",id:"8x8 Casing (127 modules)",type:"case"},{name:"9x9 Casing (161 modules)",id:"9x9 Casing (161 modules)",type:"case"},{name:"5x5 Casing (49 modules)",id:"5x5 Casing (49 modules)",type:"case"},{name:"2x2 Casing (7 modules)",id:"2x2 Casing (7 modules)",type:"case"},{name:"20x20 Casing (799 modules)",id:"20x20 Casing (799 modules)",type:"case"},{name:"17x17 Casing (577 modules)",id:"17x17 Casing (577 modules)",type:"case"},{name:"14x14 Casing (391 modules)",id:"14x14 Casing (391 modules)",type:"case"},{name:"11x11 Casing (241 modules)",id:"11x11 Casing (241 modules)",type:"case"},{name:"12x12 Casing (287 modules)",id:"12x12 Casing (287 modules)",type:"case"},{name:"15x15 Casing (449 modules)",id:"15x15 Casing (449 modules)",type:"case"},{name:"18x18 Casing (647 modules)",id:"18x18 Casing (647 modules)",type:"case"},{name:"21x21 Casing (881 modules)",id:"21x21 Casing (881 modules)",type:"case"},{name:"3x3 Casing (17 modules)",id:"3x3 Casing (17 modules)",type:"case"},{name:"7x7 Casing (97 modules)",id:"7x7 Casing (97 modules)",type:"case"},{name:"Centurion",id:"Centurion",type:"case"},{name:"Pacing Extender",id:"PacingExtender(Clone)",type:"service"},{name:"Widget Expander",id:"WidgetExpandService(Clone)",type:"service"},{name:"Multiple Bombs",id:"MultipleBombs(Clone)",type:"service"},{name:"Camera Zoom",id:"CamZoom(Clone)",type:"service"},{name:"Free Play Helper",id:"FreePlayHelper(Clone)",type:"service"},{name:"Competitive Server",id:"CompetitiveServer(Clone)",type:"service"},{name:"Portal Room",id:"Portal Room",type:"room"},{name:"The Bus That Couldn't Slow Down",id:"BusGameplayRoom",type:"room"},{name:"SPAAAAAAAACE!!",id:"SpaceRoom",type:"room"}];
+		/// MOD DATA ///
+
+		var Vanilla = ["BigButton", "Venn", "Keypad", "NeedyKnob", "Maze", "Memory", "Morse", "Password", "NeedyVentGas", "WhosOnFirst", "WireSequence", "WireSet", "Simon", "NeedyCapacitor"];
+
+		var fallbackImage = "https://ktane.timwi.de/Icons/blank.png";
+
+		/* global Vue */
+		Vue.config.devtools = true;
+
+		window.onload = function() {
+			var toastr = this.toastr; // A Vue version of toastr.
+			var vueData = {
+				profile: [],
+				profileName: "Profile",
+				operation: 0,
+				mods: mods.filter(function(mod) {
+					return Vanilla.indexOf(mod.id) == -1;
+				}),
+
+				modTypes: {
+					solvable: "Solvable Modules",
+					needy: "Needy Modules",
+					service: "Services",
+					case: "Bomb Cases",
+					room: "Gameplay Rooms",
+					widget: "Widgets",
+				},
+				visibleTypes: {solvable: true, needy: true},
+
+				isHovering: false,
+				isRenaming: false
+			};
+
+			function getModuleCount(caseMod) {
+				if (!caseMod.moduleCount) {
+					var counts = {
+						Centurion: 101,
+						Quadruple: 47,
+						Double: 23
+					};
+
+					var found = false;
+
+					var name = caseMod.name;
+					for (var str in counts) {
+						if (name.includes(str)) {
+							caseMod.moduleCount = counts[str];
+							found = true;
+							break;
+						}
+					}
+
+					var matches = name.match(/(\d+)x(\d+)/);
+					if (matches) {
+						caseMod.moduleCount = parseInt(matches[1]) * parseInt(matches[2]);
+						found = true;
+					}
+
+					if (!found) {
+						caseMod.moduleCount = 11;
+					}
+				}
+
+				return caseMod.moduleCount;
+			}
+
+			function getMods(type) {
+				var mods = vueData.mods.filter(function(mod) {
+					return mod.type == type;
+				});
+
+				if (type == "case") {
+					mods.sort(function(mod1, mod2) {
+						var count1 = getModuleCount(mod1);
+						var count2 = getModuleCount(mod2);
+
+						if (count1 > count2) {
+							return 1;
+						} else if (count1 < count2) {
+							return -1;
+						} else {
+							return mod1.name > mod2.name ? 1 : - 1; // Sort alphabetically.
+						}
+					});
+				} else {
+					mods.sort(function(mod1, mod2) {
+						return mod1.name > mod2.name ? 1 : - 1;
+					});
+				}
+
+				return mods;
+			}
+
+			function parseJSON(str) {
+				try {
+					return JSON.parse(str);
+				} catch (e) {
+					return false;
+				}
+			}
+
+			function handleProfile(profileData, name) {
+				var profile = parseJSON(profileData);
+				if (!profile) {
+					toastr.error("Only valid JSON profiles are allowed", "Profile Error");
+					return false;
+				}
+
+				if (!Array.isArray(profile.DisabledList) || typeof(profile.Operation) != "number") {
+					toastr.error("Invalid profile detected", "Profile Error");
+					return false;
+				}
+
+				vueData.profileName = name.replace(/\.json$/, "");
+				vueData.profile = profile.DisabledList;
+				vueData.operation = profile.Operation;
+
+				// Check if we support all the IDs in the profile.
+				for (var index in vueData.profile) {
+					var modID = vueData.profile[index];
+					if (!(vueData.mods.some(function(mod) { return mod.id == modID; }))) {
+						console.log("Can't find mod for " + modID);
+					}
+				}
+			}
+
+			function makeRequest(url) {
+				return new Promise(function(resolve, reject) {
+					const xhr = new XMLHttpRequest();
+					xhr.open("GET", url);
+					xhr.onload = function() { resolve(xhr.responseText); };
+					xhr.onerror = function() { reject(xhr.status); };
+					xhr.send();
+				});
+			}
+
+			function downloadProfile(url) {
+				if (url.match(/^https?:\/\//)) {
+					var filename = url.match(/[^/]+\.json$/);
+					if (filename) {
+						makeRequest("/proxy/" + url).then(function(data) {
+							handleProfile(data, filename);
+						}).catch(function(status) {
+							toastr.error("Unable to load profile from URL", "HTTP Error");
+							console.error("HTTP Failure, status: " + status);
+						});
+
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			function uploadProfile(event) {
+				if (event.length == 1) {
+					var fr = new FileReader();
+					fr.onload = function() {
+						handleProfile(fr.result, event[0].name);
+					};
+					fr.readAsText(event[0]);
+				} else if (event.length > 1) {
+					toastr.error("You can only import 1 file at a time", "File Import Error");
+				} else {
+					toastr.error("Unable to find any imported files", "File Import Error");
+				}
+
+				vueData.isHovering = false;
+			}
+
+			window.addEventListener("dragover", function(e) {
+				vueData.isHovering = true;
+				e.preventDefault();
+			});
+
+			window.addEventListener("dragleave", function() {
+				vueData.isHovering = false;
+			});
+
+			window.addEventListener("drop", function(e) {
+				uploadProfile(e.dataTransfer.files);
+				e.preventDefault();
+			});
+
+			window.addEventListener("paste", function(e) {
+				var clipText = "";
+				if (window.clipboardData) {
+					clipText = window.clipboardData.getData("Text");
+				} else if (typeof e == "object" && e.clipboardData) {
+					clipText = e.clipboardData.getData("text/plain");
+				}
+
+				if (!downloadProfile(clipText)) {
+					toastr.warning("Unable to read URL from paste.");
+				}
+			});
+
+			new Vue({
+				el: "#editor",
+				data: vueData,
+				methods: {
+					toggleMod: function(mod) {
+						var profile = vueData.profile;
+						var index = profile.indexOf(mod.id);
+						if (index > -1) {
+							profile.splice(index, 1);
+						} else {
+							profile.push(mod.id);
+						}
+					},
+					getJSON: function() {
+						return JSON.stringify({
+							"DisabledList": vueData.profile,
+							"Operation": vueData.operation
+						});
+					},
+					onFileUploaded: function(event) {
+						uploadProfile(event.target.files)
+					},
+					startRenaming: function() {
+						vueData.isRenaming = true;
+						setTimeout((function() {
+							this.$refs.renameField.focus();
+						}).bind(this), 0);
+					},
+					handleRenaming: function(event) {
+						if (event.key == "Enter") {
+							vueData.isRenaming = false;
+							event.target.blur();
+						}
+					},
+					fallbackToBlank: function(event) {
+						if (event.target.src == fallbackImage) {
+							return;
+						}
+
+						event.target.src = fallbackImage;
+					},
+					getMods: getMods,
+					toggleType: function(type) {
+						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					},
+					setAllMods: function(type, state) {
+						getMods(type).forEach(function(mod) {
+							var id = mod.id;
+							var profileIndex = vueData.profile.indexOf(id);
+							if (!state && profileIndex == -1) {
+								vueData.profile.push(id);
+							} else if (state && profileIndex != -1) {
+								vueData.profile.splice(profileIndex, 1);
+							}
+						});
+					}
+				}
+			});
+		};
+	</script>
+</head>
+<body>
+	<div id="editor">
+		<input id="file-upload" type="file" v-on:change="onFileUploaded">
+		<div class="fullscreen-msg" :class="{ hovering: isHovering }" for="file-upload">
+			<span>Drop profile!</span>
+		</div>
+
+		<div class="title-container">
+			<div class="title">Profile Editor</div>
+			<div class="header">
+				<div v-if="!isRenaming" v-on:click="startRenaming"><a href="javascript:;">Rename {{ profileName }}.json</a></div>
+				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name"></input>
+				<div>Operation: <a href="javascript:;" v-on:click="operation = 1 - operation">{{ operation ? "Union" : "Intersect" }}</a></div>
+				<div><a :download="profileName + '.json'" :href="'data:text/json,' + getJSON()">Download</a></div>
+				<a href="javascript:;"><label for="file-upload">Import</label></a>
+			</div>
+		</div>
+		<div class="sections">
+			<template v-for="(name, type) in modTypes">
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<u v-on:click="toggleType(type)">{{ name }}</u></h3>
+				<div class="toggleMods" v-if="visibleTypes[type]">
+					<a v-on:click="setAllMods(type, true)" href="javascript:;">Enable</a>
+					/
+					<a v-on:click="setAllMods(type, false)" href="javascript:;">Disable</a>
+					All
+				</div>
+				<div class="mods" v-if="visibleTypes[type]">
+					<template v-for="mod in getMods(type)">
+						<div class="mod" :class="{ disabled: profile.indexOf(mod.id) != -1 }" v-on:click="toggleMod(mod)">
+							<img v-if="type == 'solvable' || type == 'needy'" class="mod-icon" v-on:error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.name + '.png'">
+							<div class="mod-info">
+								<div>{{ mod.name }}</div>
+								<div class="mod-id">{{ mod.id.replace(/\(Clone\)$/, "") }}</div>
+							</div>
+						</div>
+					</template>
+				</div>
+			</template>
+		</div>
+	</div>
+</body>
