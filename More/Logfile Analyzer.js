@@ -2102,7 +2102,7 @@ $(function() {
 							var mod = GetBomb().GetModuleID("murder");
 							mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
 							mod.push(["Suspects", mod.Suspects]);
-							mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Pipe", "Revolver"];
+							mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Lead Pipe", "Revolver"];
 							mod.push(["Weapons", mod.Weapons]);
 							mod.push(mod.Body);
 							mod.Rows.forEach(function(row) {
@@ -2655,6 +2655,8 @@ $(function() {
 			},
 
 			// Emoji Math
+			// This has been removed due to the fact that both Emoji Math and Needy Math use the same logging.
+			/*
 			{
 				regex: /\\d{1,}[+-]\\d{1,}/,
 				value: function(matches) {
@@ -2666,7 +2668,7 @@ $(function() {
 				value: function() {
 					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math");
 				}
-			}
+			}*/
 		];
 
 		readwarning = false;
