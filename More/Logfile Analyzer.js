@@ -140,8 +140,8 @@ $(function() {
 						makeExpandable(elem, node[0]);
 						if (node[2])
 							elem.addClass("expanded");
-						makeTree(node[1].length ? node[1] : [$('<em>').text("(none)")], $("<ul>").appendTo(elem));
-					} else if (typeof (node) === 'object' && 'label' in node && 'obj' in node) {
+						makeTree(node[1].length ? node[1] : [$("<em>").text("(none)")], $("<ul>").appendTo(elem));
+					} else if (typeof (node) === "object" && "label" in node && "obj" in node) {
 						if (node.expandable) {
 							makeExpandable(elem, node.label);
 							if (node.expanded)
@@ -150,8 +150,10 @@ $(function() {
 						} else {
 							elem.text(node.label).append(node.obj);
 						}
+					} else if (typeof(node) === "object" && "label" in node) {
+						elem.html(node.label);
 					} else {
-						console.log('Unrecognized node: ' + node);
+						console.log("Unrecognized node: " + node);
 						console.log(node);
 					}
 				}
@@ -1920,6 +1922,31 @@ $(function() {
 
 							module.Moves.push(matches.input);
 							return true;
+						}
+					},
+					{
+						regex: /Submaze center: \((\d+), (\d+)\), submaze rotation: (\d+)° clockwise, pawn: \((\d+), (\d+)\) \(global\), pawn color: (\w+)./,
+						value: function(matches, module) {
+							module.Link = { label: "" };
+							module.JSON = {
+								stencil: [parseInt(matches[1]), parseInt(matches[2])],
+								rotation: parseInt(matches[3]),
+								pawn: [parseInt(matches[4]), parseInt(matches[5])],
+								color: matches[6],
+								markings: []
+							};
+
+							module.push(module.Link);
+						}
+					},
+					{
+						regex: /Marking at \((\d), (\d)\) \(screen\)\/\(\d+, \d+\) \(maze\): \w+, after rotation: (\w+)/,
+						value: function(matches, module) {
+							module.JSON.markings.push({
+								pos: [parseInt(matches[1]), parseInt(matches[2])],
+								type: matches[3]
+							});
+							module.Link.label = "Click <a target='_blank' href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>here</a> to view the solution interactively.";
 						}
 					},
 					{
