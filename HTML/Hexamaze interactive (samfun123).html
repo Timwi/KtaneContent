@@ -13,8 +13,13 @@
 	<script>
 		// Vector2 implementation (https://gist.github.com/Dalimil/3daf2a0c531d7d030deb37a7bfeff454). Added some useful functions as well.
 		function Vector2(x, y) {
-			this.x = (x === undefined) ? 0 : x;
-			this.y = (y === undefined) ? 0 : y;
+			if (Array.isArray(x)) {
+				this.x = x[0];
+				this.y = x[1];
+			} else {
+				this.x = (x === undefined) ? 0 : x;
+				this.y = (y === undefined) ? 0 : y;
+			}
 		}
 
 		Vector2.prototype = {
@@ -90,7 +95,7 @@
 		
 		// Code starts here
 		var deg = 0; // Used to store the overall rotation of the page.
-		var colors = ["red", "yellow", "green", "cyan", "blue", "rgb(255, 80, 170)"]; // A list of all the pawn colors.
+		var colors = ["red", "yellow", "green", "cyan", "blue", "pink"]; // A list of all the pawn colors.
 		var colorindex = 0; // Used to cycle through the pawn colors.
 		var tool = 0; // Stores the index of the tool currently active. Needed to transform from tool markings to maze markings.
 
@@ -316,6 +321,9 @@
 			var disableTransform = debounce(function() { // Tries to limit the spam of adding/removing classes.
 				moving.removeClass("disable-transitions");
 			}, 100);
+
+			var gridColumns = []
+
 			// Handles movement of stencil on the maze.
 			$(".hexamaze circle.marking").not(".circle").each(function(_, element) {
 				var circle = $(element);
@@ -324,7 +332,7 @@
 				var y = parseFloat(circle.attr("cy"));
 
 				function clickElement(event) {
-					if (event.buttons == 1 && visible) { // Make sure the left button is held down and that the stencil is actually visible.
+					if (event.which == 1 && visible) { // Make sure the left button is held down and that the stencil is actually visible.
 						var vec = getSnapToCoordinates(new Vector2(x, y));
 						stencilPos.set(vec.x, vec.y);
 						updateStencil();
@@ -337,7 +345,15 @@
 					}
 				}
 
-				createHexagon(circle).mousedown(clickElement).mouseenter(clickElement);
+				var hexagon = createHexagon(circle).mousedown(clickElement).mouseenter(clickElement);
+
+				var gridX = (x + 594) / 54;
+				if (!gridColumns[gridX]) {
+					gridColumns[gridX] = []
+				}
+
+				gridColumns[gridX].push(hexagon);
+
 			});
 
 			// Color the legend text with it's color name.
@@ -345,13 +361,15 @@
 				$(element).attr("fill", $(element).text());
 			});
 
+			var stencilColumns = []
+
 			// Handle interacting with the template stencil which is replicated to the actual stencil on the maze.
 			var tempStencil = $(".template-stencil");
 			$(".template-stencil .marking").each(function(ind) {
 				var element = $(this);
 				var mark;
 
-				createHexagon(element).click(function(event) {
+				var hexagon = createHexagon(element).click(function(event) {
 					var markerInfo = markers[ind];
 					var pawntool = $(".tools .marking.selected").hasClass("pawn");
 
@@ -397,7 +415,24 @@
 
 					event.stopPropagation();
 				});
+
+				var stencilX = (parseFloat(element.attr("cx")) + 162) / 54;
+				if (!stencilColumns[stencilX]) {
+					stencilColumns[stencilX] = []
+				}
+
+				stencilColumns[stencilX].push(hexagon);
 			});
+
+			var toolNames = ["Circle", "Hexagon", "TriangleUp", "TriangleRight", "TriangleDown", "TriangleLeft", "Pawn"];
+
+			function placePiece(name, vec) {
+				$(".tools").children().eq(toolNames.indexOf(name)).click();
+				
+				if (vec) {
+					stencilColumns[vec.x][vec.y].click();
+				}
+			}
 
 			// Used to setup all the tool svgs and handling selection of them.
 			var x = 0;
@@ -466,10 +501,67 @@
 				setTimeout(function() {
 					deg = -(stencilDeg % 360);
 					updateStencil();
-				}, 1);
+				}, 0);
 			});
 
+			function convertJSON(string) {
+				try {
+					return JSON.parse(string);
+				} catch (e) {
+					return false;
+				}
+			}
+
+			function setupInteractive(json) {
+				var validation = {
+					stencil: "object",
+					rotation: "number",
+					pawn: "object",
+					color: "string",
+					markings: "object"
+				}
+
+				for (var key in validation) {
+					if (typeof(json[key]) != validation[key]) {
+						return;
+					}
+				}
+
+				// Convert some things to vectors.
+				json.stencil = new Vector2(json.stencil);
+				json.pawn = new Vector2(json.pawn);
+
+				// Move stencil in the maze.
+				gridColumns[json.stencil.x - 1][json.stencil.y - 1].trigger($.Event("mousedown", {which: 1}));
+
+				// Set the rotation.
+				stencilDeg = 360 - json.rotation;
+				deg = -(stencilDeg % 360);
+
+				// Setup pawn.
+				var colorCount = colors.indexOf(json.color) + 1;
+				var pawnPos = json.pawn.subtract(json.stencil).add(new Vector2(3, 3));
+				for (var i = 0; i < colorCount; i++) {
+					placePiece("Pawn", pawnPos);
+				}
+
+				// Setup markings.
+				json.markings.forEach(function(marking) {
+					placePiece(marking.type, new Vector2(marking.pos).subtract(new Vector2(1, 1)));
+				})
+			}
+
+			var json = convertJSON(window.location.hash.substr(1));
+			if (json) {
+				setupInteractive(json);
+			}
+
 			updateStencil();
+
+			// Remove any transitions after setupInteractive was called.
+			moving = stencil.add(".hexamaze, .legend, .rotate-left, .rotate-right, .north-star, .ghosted");
+			moving.addClass("disable-transitions");
+			disableTransform();
 		});
 	</script>
 	<style>
