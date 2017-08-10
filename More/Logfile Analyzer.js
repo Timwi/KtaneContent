@@ -844,6 +844,7 @@ $(function() {
 	}
 
 	function parseLog(log, url, bombSerial) {
+		//log = $("<div>").text(log).html(); // Escape any HTML.
 		log = log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
@@ -2276,10 +2277,58 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module.Pipes.push(matches.input);
+							module.Pipes.push(matches.input.replace(/┼/g, " "));
 
 							if (module.Pipes.length == 6) {
-								module.push({ label: module.Title, obj: pre(module.Pipes.join("\n")) });
+								var pipeSVG = {
+									end: 'M 0.25,0 0.75,0 0.75,0.5 C0.75,0.9 0.25,0.9 0.25,0.5',
+									straight: 'M 0.25,0 0.75,0 0.75,1 0.25,1',
+									corner: 'M 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0.5,0.75 C 0.35,0.75 0.25,0.65 0.25,0.5 L0.25,0',
+									threeway: 'M 0,0.25 0.25,0.25 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0,0.75',
+									fourway: 'M 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0.75,0.75 0.75,1 0.25,1 0.25,0.75 0,0.75 0,0.25 0.25,0.25'
+								};
+
+								var charMap = {
+									// [pipename, rotation * 90]
+									"╨": ["end", 0],
+									"╞": ["end", 1],
+									"╥": ["end", 2],
+									"╡": ["end", 3],
+									"║": ["straight", 0],
+									"═": ["straight", 1],
+									"╚": ["corner", 0],
+									"╔": ["corner", 1],
+									"╗": ["corner", 2],
+									"╝": ["corner", 3],
+									"╩": ["threeway", 0],
+									"╠": ["threeway", 1],
+									"╦": ["threeway", 2],
+									"╣": ["threeway", 3],
+									"╬": ["fourway", 0]
+								};
+
+								var svgGrid = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" width="200" height="200" style="display: block; border: red solid 4px; background: rgb(30, 30, 30)">');
+								for (var y in module.Pipes) {
+									for (var x in module.Pipes[y]) {
+										var char = module.Pipes[y][x];
+										if (char != " ") {
+											var data = charMap[char];
+											if (!data) {
+												console.warn("Unknown char: " + char);
+											} else {
+												$("<svg><path d='" + pipeSVG[data[0]] + "'></svg>")
+													.children()
+													.eq(0)
+													.unwrap()
+													.attr("transform", "translate(" + x + "," + y + ") rotate(" + data[1] * 90 + " 0.5 0.5)")
+													.attr("fill", (parseInt(x) + parseInt(y)) % 2 == 0 ? "white" : "gray")
+													.appendTo(svgGrid);
+											}
+										}
+									}
+								}
+
+								module.push({ label: module.Title, obj: svgGrid });
 							}
 						}
 					}
