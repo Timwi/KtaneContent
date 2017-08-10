@@ -1360,12 +1360,14 @@ $(function() {
 							var fieldStr = readMultiple(6);
 							var field = fieldStr.replace('\r', '').split('\n');
 
+							var r, tr, c, td;
+
 							var stuff = [];
-							for (var r = 0; r < 6; r++) {
+							for (r = 0; r < 6; r++) {
 								stuff[r] = [];
-								var tr = $('<tr>').appendTo(table);
-								for (var c = 0; c < 6; c++) {
-									var td = $('<td>').appendTo(tr);
+								tr = $('<tr>').appendTo(table);
+								for (c = 0; c < 6; c++) {
+									td = $('<td>').appendTo(tr);
 									var ch = field[r][2 * c + 2];
 									if (c > 0 && r > 0)
 										stuff[r][c] = { IsShip: ch === '#' || ch === '%', IsSafeLocation: ch === '•' || ch === '%' };
@@ -1375,10 +1377,10 @@ $(function() {
 							}
 
 							var table = $('<table>').css('border-spacing', '0');
-							for (var r = 0; r < 6; r++) {
-								var tr = $('<tr>').appendTo(table);
-								for (var c = 0; c < 6; c++) {
-									var td = $('<td>').css('border', '3px solid transparent').css('text-align', 'center').css('padding', 0).appendTo(tr);
+							for (r = 0; r < 6; r++) {
+								tr = $('<tr>').appendTo(table);
+								for (c = 0; c < 6; c++) {
+									td = $('<td>').css('border', '3px solid transparent').css('text-align', 'center').css('padding', 0).appendTo(tr);
 									if (c === 0 || r === 0)
 										td.text(stuff[r][c]);
 									else {
@@ -1402,7 +1404,7 @@ $(function() {
 											waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
 											waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
 
-										var img = $('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
+										$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
 										if (stuff[r][c].IsSafeLocation)
 											td.css('border', '3px solid red');
 									}
@@ -1461,7 +1463,7 @@ $(function() {
 									border: '1px solid black',
 									background: $(elem).text() == max ? '#dfd' : null,
 									fontWeight: $(elem).text() == max ? 'bold' : null
-								})
+								});
 							});
 							module.push({ label: "Region counts:", obj: table });
 						}
@@ -1658,14 +1660,14 @@ $(function() {
 					{
 						regex: /Grid:/,
 						value: function(_, module) {
-							var lines = readMultiple(module.Height).replace('\r', '').split('\n');
+							var x;
 
 							var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
-							for (var x = 0; x < module.Width; x++)
+							for (x = 0; x < module.Width; x++)
 								$('<col>').attr('width', (99 / module.Width) + '%').appendTo(table);
 							for (var y = 0; y < module.Height; y++) {
 								var tr = $('<tr>').css('height', '4em').appendTo(table);
-								for (var x = 0; x < module.Width; x++) {
+								for (x = 0; x < module.Width; x++) {
 									var key = x + ',' + y;
 									var td = $('<td>').appendTo(tr).css({ border: '1px solid black', textAlign: 'center' });
 									if (key in module.Coordinates)
@@ -1839,8 +1841,10 @@ $(function() {
 							if (!module.Symbols || module.SkipSvg)
 								return false;
 
+							var i;
+
 							var ix = -1;
-							for (var i = 0; i < module.Symbols.length; i++)
+							for (i = 0; i < module.Symbols.length; i++)
 								if (module.Symbols[i].Pony === matches[2] && module.Symbols[i].IsRow === (matches[1] === 'row')) {
 									ix = i;
 									break;
@@ -1849,7 +1853,7 @@ $(function() {
 								module.SkipSvg = true;
 							else {
 								module.Symbols[ix].Disregard = matches[1];
-								for (var i = 0; i < module.Symbols.length; i++) {
+								for (i = 0; i < module.Symbols.length; i++) {
 									if (module.Symbols[ix].IsRow && module.Symbols[i].Y > module.Symbols[ix].Y)
 										module.Symbols[i].IsRowTie = false;
 									if (!module.Symbols[ix].IsRow && module.Symbols[i].X > module.Symbols[ix].X)
@@ -1886,14 +1890,16 @@ $(function() {
 							for (var i = 0; i < module.Symbols.length; i++) {
 								cutieMarks += "<img src='" + imgHref(ponyNames.indexOf(module.Symbols[i].Pony)) + "' style='position: absolute; left: " + (30 * module.Symbols[i].X + 23) + "px; top: " + (30 * module.Symbols[i].Y + 23) + "px; width: 84px; height: 84px;' />";
 
+								var color;
+
 								var x = 30 * module.Symbols[i].X + 23 + 42;
 								var y = 30 * module.Symbols[i].Y + 23 + 42;
 								if (module.Symbols[i].IsRowTie || module.Symbols[i].Disregard === 'row') {
-									var color = module.Symbols[i].IsRowTie ? '#27c' : '#c27';
+									color = module.Symbols[i].IsRowTie ? '#27c' : '#c27';
 									rowDisregards += "<div style='position: absolute; left: " + x + "px; top: " + (y - 2) + "px; width: " + (510 - x) + "px; height: 4px; background: " + color + "'></div><div style='position: absolute; left: 515px; top: " + y + "px; color: " + color + "; transform: translateY(-50%)'>" + (module.Symbols[i].IsRowTie ? 'tie' : 'disregard') + "</div>";
 								}
 								if (module.Symbols[i].IsColTie || module.Symbols[i].Disregard === 'column') {
-									var color = module.Symbols[i].IsColTie ? '#27c' : '#c27';
+									color = module.Symbols[i].IsColTie ? '#27c' : '#c27';
 									colDisregards += "<div style='position: absolute; left: " + (x - 2) + "px; top: " + y + "px; width: 4px; height: " + (390 - y) + "px; background: " + color + "'></div><div style='position: absolute; left: " + x + "px; top: 395px; color: " + color + "; transform: translateX(-50%)'>" + (module.Symbols[i].IsColTie ? 'tie' : 'disregard') + "</div>";
 								}
 							}
