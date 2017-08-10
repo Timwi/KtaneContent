@@ -756,6 +756,7 @@ $(function() {
 					.text("No information could be parsed. Please check the ")
 					.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
 						filteredTab.click();
+                        return false;
 					}))
 					.append('.')
 					.appendTo(modinfo);
