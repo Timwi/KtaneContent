@@ -1850,7 +1850,7 @@ $(function() {
 								pos: [parseInt(matches[1]), parseInt(matches[2])],
 								type: matches[3]
 							});
-							module.Link.label = "Click <a target='_blank' href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>here</a> to view the solution interactively.";
+							module.Link.label = "Click <a href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>here</a> to view the solution interactively.";
 						}
 					},
 					{
