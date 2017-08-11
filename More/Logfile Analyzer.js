@@ -1829,7 +1829,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Submaze center: \((\d+), (\d+)\), submaze rotation: (\d+)° clockwise, pawn: \((\d+), (\d+)\) \(global\), pawn color: (\w+)./,
+						regex: /Submaze center: \((\d+), (\d+)\), submaze rotation: (\d+)° clockwise, pawn: \(\d+, \d+\) \(maze\)\/\((\d+), (\d+)\) \(screen\), pawn color: (\w+)\./,
 						value: function(matches, module) {
 							module.Link = { label: "" };
 							module.JSON = {
