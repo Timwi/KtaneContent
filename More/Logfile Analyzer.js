@@ -86,6 +86,26 @@ var blacklist = [
 	"Calculated FPS: "
 ];
 
+// A list of modules that don't log.
+var noLogging = [
+	"alphabet",
+	"AnagramsModule",
+	"CrazyTalk",
+	"EnglishTest",
+	"Listening",
+	"Microcontroller",
+	"SeaShells",
+	"TurnTheKeyAdvanced",
+	"TurnTheKey",
+	"WordScrambleModule",
+	"ForeignExchangeRates",
+	"Probing",
+	"NumberPad",
+	"OrientationCube",
+	"shapeshift",
+	"Simon"
+];
+
 // Search for 'var lineRegex' for the list of all the line matching regex & the reference.
 
 $(function() {
@@ -193,6 +213,10 @@ $(function() {
 	function getModuleName(name) {
 		return ModuleNames[name] || convertID(name);
 	}
+
+	// Convert noLogging to display names.
+	noLogging = noLogging.map(getModuleName);
+
 
 	// http://stackoverflow.com/a/1267338
 	function zeroFill(number, width) {
@@ -449,6 +473,8 @@ $(function() {
 				$("<h3>").text(minfo[0]).appendTo(modinfo);
 				if (minfo[1]) {
 					makeTree(minfo[1], $("<ul>").appendTo(modinfo));
+				} else if (noLogging.indexOf(minfo[0]) > -1) {
+					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
 					.text("No information could be parsed. Please check the ")
@@ -751,12 +777,14 @@ $(function() {
 				$("<h3>").text(minfo[0]).appendTo(modinfo);
 				if (minfo[1]) {
 					makeTree(minfo[1], $("<ul>").appendTo(modinfo));
+				} else if (noLogging.indexOf(minfo[0]) > -1) {
+					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
 					.text("No information could be parsed. Please check the ")
 					.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
 						filteredTab.click();
-                        return false;
+						return false;
 					}))
 					.append('.')
 					.appendTo(modinfo);
