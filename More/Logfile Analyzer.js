@@ -103,6 +103,7 @@ var noLogging = [
 	"NumberPad",
 	"OrientationCube",
 	"shapeshift",
+	"switchModule",
 	"Simon"
 ];
 
