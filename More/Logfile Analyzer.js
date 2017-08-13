@@ -970,7 +970,7 @@ $(function() {
 					}
 				]
 			},
-			"Adventure Game": "spwizAdventureGame",
+			//"Adventure Game": "spwizAdventureGame",
 			"Assets.Scripts.Rules.KeypadRuleSet": {
 				ID: "Keypad",
 				Lines: [
@@ -1302,7 +1302,7 @@ $(function() {
 				]
 			},
 			"ChordQualities": "ChordQualities",
-			"Color Math": "colormath",
+			//"Color Math": "colormath",
 			"ColoredSquares": {
 				ID: "ColoredSquaresModule",
 				Lines: [
@@ -1338,7 +1338,7 @@ $(function() {
 					}
 				]
 			},
-			"Complicated Buttons": "complicatedButtonsModule",
+			//"Complicated Buttons": "complicatedButtonsModule",
 			"Connection Check": "graphModule",
 			"Coordinates": {
 				ID: "CoordinatesModule",
@@ -1409,7 +1409,7 @@ $(function() {
 					}
 				]
 			},
-			"Double-Oh": "DoubleOhModule",
+			//"Double-Oh": "DoubleOhModule",
 			"Fast Math": {
 				ID: "fastMath",
 				Lines: [
@@ -1722,7 +1722,7 @@ $(function() {
 					}
 				]
 			},
-			"Logic": "Logic",
+			//"Logic": "Logic",
 			"Minesweeper": {
 				ID: "MinesweeperModule",
 				Lines: [
@@ -1877,7 +1877,7 @@ $(function() {
 					}
 				]
 			},
-			"Neutralization": "neutralization",
+			//"Neutralization": "neutralization",
 			"Only Connect": {
 				ID: "OnlyConnectModule",
 				Lines: [
@@ -2079,7 +2079,7 @@ $(function() {
 				]
 			},
 			"Rhythms": "MusicRhythms",
-			"Rock-Paper-Scissors-Lizard-Spock": "RockPaperScissorsLizardSpockModule",
+			//"Rock-Paper-Scissors-Lizard-Spock": "RockPaperScissorsLizardSpockModule",
 			"Round Keypad": {
 				ID: "KeypadV2",
 				Lines: [
@@ -2091,7 +2091,7 @@ $(function() {
 					}
 				]
 			},
-			"Rubik’s Cube": "RubiksCubeModule",
+			//"Rubik’s Cube": "RubiksCubeModule",
 			"Rules": [
 				{
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
@@ -2261,11 +2261,11 @@ $(function() {
 				]
 			},
 			"Square Button": "ButtonV2",
-			"Symbolic Password": "symbolicPasswordModule",
-			"Text Field": "TextField",
-			"The Clock": "TheClockModule",
-			"The Gamepad": "TheGamepadModule",
-			"TheBulb": "TheBulbModule",
+			//"Symbolic Password": "symbolicPasswordModule",
+			//"Text Field": "TextField",
+			//"The Clock": "TheClockModule",
+			//"The Gamepad": "TheGamepadModule",
+			//"TheBulb": "TheBulbModule",
 			"TicTacToe": {
 				ID: "TicTacToeModule",
 				Lines: [
@@ -2335,7 +2335,7 @@ $(function() {
 					}
 				]
 			},
-			"Wire Placement": "WirePlacementModule",
+			//"Wire Placement": "WirePlacementModule",
 			"WireSequencePage": {
 				ID: "WireSequence",
 				Lines: [
@@ -2418,8 +2418,8 @@ $(function() {
 					}
 				]
 			},
-			"Yahtzee": "YahtzeeModule",
-			"Zoo": "ZooModule"
+			//"Yahtzee": "YahtzeeModule",
+			//"Zoo": "ZooModule"
 		};
 
 		var taglessRegex = [
@@ -2512,6 +2512,17 @@ $(function() {
 						} else {
 							readDirectly(match[2], obj, id);
 						}
+					} else if (bombgroup) {
+						var modName = submatch ? submatch[1] : match[1];
+
+						bombgroup.Bombs.some(function(bomb) {
+							for (var modID in bomb.Modules) {
+								if (getModuleName(modID) == modName) {
+									readDirectly(match[2], modID, id);
+									return true;
+								}
+							}
+						});
 					}
 				} else {
 					taglessRegex.some(function(handler) {
