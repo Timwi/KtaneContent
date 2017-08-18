@@ -1411,7 +1411,35 @@ $(function() {
 					}
 				]
 			},
-			//"Double-Oh": "DoubleOhModule",
+			"Cruel Piano Keys": {
+			    ID: "CruelPianoKeys",
+			    Lines: [
+					{
+					    regex: /Module generated with the following symbols/
+					},
+					{
+					    regex: /The correct rule is the following/,
+					    value: function(matches, module) {
+					        var input = [];
+					        module.Input = input;
+					        module.push(matches.input);
+					        module.push(readLine().trim());
+					        module.push(readLine().trim());
+					        readLine();
+					        module.push(readLine().replace(/[|]/g, ""));
+					        module.push(["Key Presses", input]);
+
+					        return true;
+					    }
+					},
+					{
+					    regex: /Input .+ was received|The current valid sequence/,
+					    value: function(matches, module) {
+					        module.Input.push(matches.input);
+					    }
+					}
+			    ]
+			},
 			"Fast Math": {
 				ID: "fastMath",
 				Lines: [
