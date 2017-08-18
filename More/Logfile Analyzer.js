@@ -982,6 +982,7 @@ $(function() {
 					}
 				]
 			},
+			/*
 			"Assets.Scripts.Rules.VennWireRuleSet": {
 				ID: "Venn",
 				Lines: [
@@ -1023,6 +1024,7 @@ $(function() {
 					}
 				]
 			},
+			*/
 			"Astrology": "spwizAstrology",
 			"Battleship": {
 				ID: "BattleshipModule",
