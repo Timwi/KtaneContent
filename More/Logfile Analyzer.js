@@ -1120,6 +1120,29 @@ $(function() {
 				]
 			},
 			"Bitwise Operators": "BitOps",
+			"Big Circle": {
+				ID: "BigCircle",
+				Lines: [
+					{
+						regex: /(?:Getting|Updating) solution/,
+						value: function(matches, module) {
+							module.Group = [matches.input.replace(/(?:Getting|Updating) solution for /, ""), []];
+							module.push(module.Group);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							if (module.Group) {
+								module.Group[1].push(matches.input);
+							} else {
+								module.push(matches.input);
+							}
+						}
+					}
+				]
+			},
 			"Blind Alley": {
 				ID: "BlindAlleyModule",
 				Lines: [
