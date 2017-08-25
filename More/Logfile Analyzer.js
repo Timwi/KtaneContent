@@ -1436,33 +1436,33 @@ $(function() {
 				]
 			},
 			"Cruel Piano Keys": {
-			    ID: "CruelPianoKeys",
-			    Lines: [
+				ID: "CruelPianoKeys",
+				Lines: [
 					{
-					    regex: /Module generated with the following symbols/
+						regex: /Module generated with the following symbols/
 					},
 					{
-					    regex: /The correct rule is the following/,
-					    value: function(matches, module) {
-					        var input = [];
-					        module.Input = input;
-					        module.push(matches.input);
-					        module.push(readLine().trim());
-					        module.push(readLine().trim());
-					        readLine();
-					        module.push(readLine().replace(/[|]/g, ""));
-					        module.push(["Key Presses", input]);
+						regex: /The correct rule is the following/,
+						value: function(matches, module) {
+							var input = [];
+							module.Input = input;
+							module.push(matches.input);
+							module.push(readLine().trim());
+							module.push(readLine().trim());
+							readLine();
+							module.push(readLine().replace(/[|]/g, ""));
+							module.push(["Key Presses", input]);
 
-					        return true;
-					    }
+							return true;
+						}
 					},
 					{
-					    regex: /Input .+ was received|The current valid sequence/,
-					    value: function(matches, module) {
-					        module.Input.push(matches.input);
-					    }
+						regex: /Input .+ was received|The current valid sequence/,
+						value: function(matches, module) {
+							module.Input.push(matches.input);
+						}
 					}
-			    ]
+				]
 			},
 			"Fast Math": {
 				ID: "fastMath",
@@ -1859,13 +1859,56 @@ $(function() {
 				ID: "MorseAMaze",
 				Lines: [
 					{
-						regex: /Maze Solution from .{2} to .{2} in maze "(\d)/,
+						regex: /Solved - Turning off the Status light Kappa/,
+						value: function(_, module) {
+							module.push("Module Solved");
+							return true;
+						}
+					},
+					{
+						regex: /Moving from/,
 						value: function(matches, module) {
-							module.push({ label: $("<img>").css("width", "210px").attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[1] + ".svg") });
+							if (!module.Moves) {
+								module.push(module.Moves = ["Moves", []]);
+							}
+							module.Moves[1].push(matches.input);
+
+							return true;
 						}
 					},
 					{
 						regex: /.+/
+					},
+					{
+						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d)/,
+						value: function(matches, module) {
+							var container = $("<div>").css("position", "relative");
+							var maze = $("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
+							var marker = $("<div>").css({
+								width: "10px",
+								height: "10px",
+								position: "absolute",
+								"border-radius": "50%"
+							});
+
+							marker
+								.clone()
+								.css({
+									top: 12.5 + 35.5 * (matches[1].charCodeAt() - 65) + "px",
+									left: 12.5 + 35 * (parseInt(matches[2]) - 1) + "px",
+									background: "green"
+								}).appendTo(container);
+							
+							marker
+								.clone()
+								.css({
+									top: 12.5 + 35.5 * (matches[3].charCodeAt() - 65) + "px",
+									left: 12.5 + 35 * (parseInt(matches[4]) - 1) + "px",
+									background: "red"
+								}).appendTo(container);
+
+							module.push({ label: container });
+						}
 					}
 				]
 			},
