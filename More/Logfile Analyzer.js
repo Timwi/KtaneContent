@@ -50,6 +50,7 @@ var ModuleNames = {
 	booleanVennModule: "Boolean Venn Diagram",
 	XRayModule: "X-Ray",
 	screw: "The Screw",
+	MorseAMaze: "Morse-A-Maze",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -1854,6 +1855,20 @@ $(function() {
 				}
 			],
 			"Morsematics": "MorseV2",
+			"Morse-A-Maze": {
+				ID: "MorseAMaze",
+				Lines: [
+					{
+						regex: /Maze Solution from .{2} to .{2} in maze "(\d)/,
+						value: function(matches, module) {
+							module.push({ label: $("<img>").css("width", "210px").attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[1] + ".svg") });
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Mouse in the Maze": "MouseInTheMaze",
 			"Murder": {
 				ID: "murder",
