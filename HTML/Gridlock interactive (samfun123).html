@@ -44,6 +44,8 @@
 
 			table.interactions {
 				margin: auto 0;
+				font-size: 14px;
+				max-width: 55%;
 			}
 
 			.grid {
@@ -79,21 +81,22 @@
 				height: calc(var(--square-size) / 5);
 				border-bottom: 1px black solid;
 				border-right: 1px black solid;
+				border-bottom-right-radius: calc(var(--square-size) / 5 / 3);
 			}
 
-			td.blue {
+			.blue {
 				background: rgb(127, 127, 255);
 			}
 
-			td.green {
+			.green {
 				background: rgb(127, 255, 127);
 			}
 
-			td.yellow {
+			.yellow {
 				background: rgb(255, 255, 127);
 			}
 
-			td.red {
+			.red {
 				background: rgb(255, 127, 127);
 			}
 
@@ -117,13 +120,16 @@
 			}
 		</style>
 		<script>
+			Vue.config.devtools = (window.location.protocol == "file:")
+
 			var colors = ["blue", "green", "yellow", "red"];
 			var undoHistory = [];
 			var stateIndex = 0;
 			var previousSquare;
 			var gridState = {
 				gridSquares: [],
-				lastNumber: 1
+				lastNumber: 1,
+				globalColorIndex: 0
 			}
 
 			function saveState() {
@@ -142,7 +148,8 @@
 
 				undoHistory.unshift({
 					gridSquares: squareClone,
-					lastNumber: gridState.lastNumber
+					lastNumber: gridState.lastNumber,
+					globalColorIndex: gridState.globalColorIndex
 				});
 			}
 
@@ -151,6 +158,7 @@
 
 				var state = undoHistory[index];
 				gridState.lastNumber = state.lastNumber;
+				gridState.globalColorIndex = state.globalColorIndex;
 
 				state.gridSquares.forEach(function(sqr, index) {
 					Object.assign(gridState.gridSquares[index], sqr);
@@ -169,9 +177,8 @@
 					}
 				},
 				Reset: function() {
-					loadState(undoHistory.length - 1);
-
 					undoHistory = [undoHistory[undoHistory.length - 1]];
+					loadState(0);
 				}
 			};
 
@@ -187,11 +194,15 @@
 
 			window.onload = function() {
 				Vue.component("grid-square", {
-					template: '<td @click="handleClick" :class="colors[colorIndex]">{{ number }}</td>',
+					template: `<td @click.left="leftClick" @contextmenu.prevent="rightClick" :class="colors[colorIndex]">
+						{{ number }}
+						<div v-if="markerIndex > -1" class="reference" :style="'background: ' + colors[markerIndex]"></div>
+					</td>`,
 					data: function() {
 						var square = {
 							number: undefined,
-							colorIndex: -2
+							colorIndex: undefined,
+							markerIndex: -1
 						}
 
 						gridState.gridSquares.push(square);
@@ -202,23 +213,27 @@
 						return square;
 					},
 					methods: {
-						handleClick: function() {
+						leftClick: function() {
 							var square = this.$data;
 							if (square.number == undefined) {
 								square.number = gridState.lastNumber++;
+							} else {
+								gridState.globalColorIndex++
+								gridState.globalColorIndex %= colors.length;
 							}
 
-							square.colorIndex++;
-							if (square.colorIndex == colors.length) {
-								square.colorIndex = -1;
-							}
+							square.colorIndex = gridState.globalColorIndex;
+
+							saveState();
+						},
+						rightClick: function() {
+							var square = this.$data;
+							square.markerIndex = square.markerIndex > -1 ? -1 : gridState.globalColorIndex;
 
 							saveState();
 						}
 					}
 				})
-
-				Vue.config.devtools = (window.location.protocol == "file:")
 
 				new Vue({
 					el: ".grid-container"
@@ -258,11 +273,15 @@
 							</tr>
 							<tr>
 								<th>Click a cell</th>
-								<td>To mark it with a number</td>
+								<td>To mark it with a number<br>and the latest color</td>
 							</tr>
 							<tr>
-								<th>Click multiple<br>times</th>
+								<th>Click multiple times</th>
 								<td>To change the cell color</td>
+							</tr>
+							<tr>
+								<th>Right-click a cell</th>
+								<td>To mark it with the latest color</td>
 							</tr>
 							<tr>
 								<th>CTRL-Z</th>
