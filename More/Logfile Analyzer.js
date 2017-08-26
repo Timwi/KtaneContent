@@ -1894,16 +1894,16 @@ $(function() {
 							marker
 								.clone()
 								.css({
-									top: 12.5 + 35.5 * (matches[2].charCodeAt() - 65) + "px",
-									left: 12.5 + 35 * (parseInt(matches[1]) - 1) + "px",
+									top: 12.5 + 35.5 * (parseInt(matches[2]) - 1) + "px",
+									left: 12.5 + 35 * (matches[1].charCodeAt() - 65) + "px",
 									background: "green"
 								}).appendTo(container);
 
 							marker
 								.clone()
 								.css({
-									top: 12.5 + 35.5 * (matches[4].charCodeAt() - 65) + "px",
-									left: 12.5 + 35 * (parseInt(matches[3]) - 1) + "px",
+									top: 12.5 + 35.5 * (parseInt(matches[4]) - 1) + "px",
+									left: 12.5 + 35 * (matches[3].charCodeAt() - 65) + "px",
 									background: "red"
 								}).appendTo(container);
 
