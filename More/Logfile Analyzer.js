@@ -1866,18 +1866,35 @@ $(function() {
 						}
 					},
 					{
-						regex: /Moving from/,
+						regex: /Moving from|Tried to move from/,
 						value: function(matches, module) {
-							if (!module.Moves) {
-								module.push(module.Moves = ["Moves", []]);
+							if (!module.Group.Moves) {
+								module.GroupLines.push(["Moves", module.Group.Moves = []]);
 							}
-							module.Moves[1].push(matches.input);
+							module.Group.Moves.push(matches.input);
 
 							return true;
 						}
 					},
 					{
-						regex: /.+/
+						regex: /(Updating the maze for rule \w+|Starting Location: .+)/,
+						value: function(matches, module) {
+							module.push(module.Group = [matches[1] || matches[2], module.GroupLines = []]);
+							return true;
+						}
+					},
+					{
+						regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+)|(Rule used to Look up the Maze = \w+))/,
+						value: function(matches, module) {
+							module.Group[0] = matches[1] || matches[2];
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							(module.GroupLines || module).push(matches.input);
+						}
 					},
 					{
 						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d{1,2})/,
@@ -1907,7 +1924,7 @@ $(function() {
 									background: "red"
 								}).appendTo(container);
 
-							module.push({ label: container });
+							(module.GroupLines || module).push({ label: container });
 						}
 					}
 				]
