@@ -1880,7 +1880,7 @@ $(function() {
 						regex: /.+/
 					},
 					{
-						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d)/,
+						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d{1,2})/,
 						value: function(matches, module) {
 							var container = $("<div>").css("position", "relative");
 							var maze = $("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
