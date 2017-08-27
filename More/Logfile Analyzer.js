@@ -1877,16 +1877,23 @@ $(function() {
 						}
 					},
 					{
-						regex: /(Updating the maze for rule \w+|Starting Location: .+)/,
+						regex: /Playing Morse code word:/
+					},
+					{
+						regex: /(Updating the maze for rule \w+|Playing Morse code word: .+)/,
 						value: function(matches, module) {
-							module.push(module.Group = [matches[1] || matches[2], module.GroupLines = []]);
+							if (!module.Group) {
+								matches[1] = "Initial solution"
+							}
+							
+							module.push(module.Group = [matches[1], module.GroupLines = []]);
 							return true;
 						}
 					},
 					{
-						regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+)|(Rule used to Look up the Maze = \w+))/,
+						regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+))/,
 						value: function(matches, module) {
-							module.Group[0] = matches[1] || matches[2];
+							module.Group[0] = matches[1].replace(/Unsolved|Solved/, function(str) { return str.toLowerCase() });
 							return true;
 						}
 					},
@@ -1899,6 +1906,10 @@ $(function() {
 					{
 						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d{1,2})/,
 						value: function(matches, module) {
+							if (!module.GroupLines) {
+								module.push(module.Group = [matches[1], module.GroupLines = []]);
+							}
+
 							var container = $("<div>").css("position", "relative");
 							var maze = $("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
 							var marker = $("<div>").css({
