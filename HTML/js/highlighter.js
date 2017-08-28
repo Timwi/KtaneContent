@@ -17,6 +17,15 @@ e.onload = function()
 {
 	$(function()
 	{
+		/// Temporary fix for symbols being converted into emoji ///
+		$("*").contents().filter(function() { 
+			return (this.nodeType == 3); 
+		}).each(function() {
+			var elem = $(this);
+			elem.text(elem.text().replace(/[◀▶↘↙↗↖]/g, function(char) { return char + "&#xFE0E;" }));
+		});
+		/// Temporary fix for symbols being converted into emoji ///
+
 		var enabled = true;
 		$(document).keypress(function(event)
 		{
