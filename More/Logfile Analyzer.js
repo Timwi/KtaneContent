@@ -51,6 +51,7 @@ var ModuleNames = {
 	XRayModule: "X-Ray",
 	screw: "The Screw",
 	MorseAMaze: "Morse-A-Maze",
+	ColorMorseModule: "Color Morse",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -256,8 +257,6 @@ $(function() {
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
-
-		this.PacingEvents = [];
 
 		Object.defineProperty(this, "isSingleBomb", {
 			get: function() {
@@ -514,15 +513,6 @@ $(function() {
 			.appendTo(modules)
 			.addCardClick(loginfo);
 
-			var pacinginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Pacing Info").appendTo(pacinginfo);
-			$("<pre>").css("white-space", "pre-wrap").text(this.PacingEvents.join("\n")).appendTo(pacinginfo);
-
-			$("<a href='#' class='module'>")
-			.text("Pacing Info")
-			.appendTo(modules)
-			.addCardClick(pacinginfo);
-
 			return bombHTML;
 		};
 		this.GetMod = function(name, id) {
@@ -595,8 +585,6 @@ $(function() {
 		this.State = "Unsolved";
 		this.StartLine = 0;
 		this.FilteredLog = "";
-
-		this.PacingEvents = [];
 
 		this.GetMod = function(name) {
 			if (!(name in this.Modules) && debugging) {
@@ -891,20 +879,10 @@ $(function() {
 				}
 			],
 
-			// Pacing Extender
-			"PacingExtender": [
-				{
-					value: function(matches) {
-						if (!GetBomb()) { return; }
-						GetBomb().PacingEvents.push(matches.input);
-					}
-				}
-			],
 			"Assets.Scripts.Pacing.PaceMaker": [
 				{
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
-						GetBomb().PacingEvents.push(matches.input);
 						if (bombgroup.isSingleBomb) {
 							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
 
@@ -912,12 +890,6 @@ $(function() {
 								bomb.State = "Exploded (Time Ran Out)";
 							}
 						}
-					}
-				},
-				{
-					regex: /Executing|Next idle action in/,
-					value: function(matches) {
-						GetBomb().PacingEvents.push(matches.input);
 					}
 				},
 				{
@@ -1329,6 +1301,7 @@ $(function() {
 			},
 			"ChordQualities": "ChordQualities",
 			//"Color Math": "colormath",
+			"ColorMorse": "ColorMorseModule",
 			"ColoredSquares": {
 				ID: "ColoredSquaresModule",
 				Lines: [
@@ -2391,11 +2364,25 @@ $(function() {
 				ID: "SouvenirModule",
 				Lines: [
 					{
-						regex: /Unleashing question .+: (.+) — (.+) — unleashAt=.+/,
+						regex: /Asking question: (.+) — (.+)/,
 						value: function(matches, module) {
-							module.push("Question: " + matches[1]);
-							module.push("Answers: " + matches[2]);
+							console.log(matches);
+							var answers = $("<div>");
+							matches[2].split(", ").forEach(function(answer) {
+								var answerSpan = $("<span>");
+								if (answer.substr(0, 2) == "[_") {
+									answer = answer.substr(2, answer.length - 4);
+									answerSpan.css("color", "rgb(127, 255, 127)");
+								}
+
+								answerSpan.text(answer) .appendTo(answers);
+							});
+
+							module.push({ label: matches[1], obj: answers, expanded: true });
 						}
+					},
+					{
+						regex: /Clicked answer|Questions exhausted./
 					}
 				]
 			},
