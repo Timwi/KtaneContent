@@ -1351,13 +1351,14 @@ $(function() {
 						}
 					},
 					{
-						regex: /(illegal|correct) coordinate .=\[(\d+), (\d+)\] as (.+?)( \(.+\))?$/,
+						regex: /(illegal|correct) coordinate .=([A-Z]\d+) as (.+?)( \(.+\))?$/,
 						value: function(matches, module) {
-							var key = matches[2] + ',' + matches[3];
+							var key = matches[2];
 							if (key in module.Coordinates)
-								module.Coordinates[key].Text += '\n' + matches[4];
+								module.Coordinates[key].Text += '\n' + matches[3];
 							else
-								module.Coordinates[key] = { Text: matches[4], Legal: matches[1] === 'correct' };
+								module.Coordinates[key] = { Text: matches[3], Legal: matches[1] === 'correct' };
+							return true;
 						}
 					},
 					{
@@ -1371,7 +1372,7 @@ $(function() {
 							for (var y = 0; y < module.Height; y++) {
 								var tr = $('<tr>').css('height', '4em').appendTo(table);
 								for (x = 0; x < module.Width; x++) {
-									var key = x + ',' + y;
+									var key = String.fromCharCode(65 + x) + (y + 1);
 									var td = $('<td>').appendTo(tr).css({ border: '1px solid black', textAlign: 'center' });
 									if (key in module.Coordinates)
 										td.text(module.Coordinates[key].Text).css({ border: '3px solid ' + (module.Coordinates[key].Legal ? '#0c0' : '#f00'), fontSize: module.Coordinates[key].Text.length > 6 ? "80%" : "125%", whiteSpace: 'pre-line' });
@@ -1858,7 +1859,7 @@ $(function() {
 							if (!module.Group) {
 								matches[1] = "Initial solution"
 							}
-							
+
 							module.push(module.Group = [matches[1], module.GroupLines = []]);
 							return true;
 						}
