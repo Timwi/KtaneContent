@@ -2545,7 +2545,24 @@ $(function() {
 					}
 				]
 			},
-			//"Yahtzee": "YahtzeeModule",
+			"Yahtzee": {
+				ID: "YahtzeeModule",
+				Lines: [
+					{
+						regex: /rolling (?:all )?\d dice./i,
+						value: function(matches, module) {
+							module.push(module.Group = [matches.input, []]);
+							return true;
+						},
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.Group[1].push(matches.input);
+						}
+					}
+				]
+			}
 			//"Zoo": "ZooModule"
 		};
 
