@@ -236,14 +236,15 @@ $(function() {
 		var infoCard = $(this);
 		var parent = infoCard.parent();
 		infoCard
-		.click(function() {
-			parent.parent().children(".module-info").hide();
-			info.show();
-			parent.children(".selected").removeClass("selected");
-			infoCard.addClass("selected");
+			.click(function() {
+				parent.parent().children(".module-info").hide();
+				info.show();
+				parent.children(".selected").removeClass("selected");
+				infoCard.addClass("selected");
 
-			return false;
-		}).mousedown(function() { return false; });
+				return false;
+			})
+			.mousedown(function() { return false; });
 
 		return infoCard;
 	};
@@ -360,9 +361,9 @@ $(function() {
 			makeTree(missionInfoTree, $("<ul>").appendTo(missioninfo));
 
 			$("<a href='#' class='module'>")
-			.text("Mission Information")
-			.appendTo(modules)
-			.addCardClick(missioninfo).click();
+				.text("Mission Information")
+				.appendTo(modules)
+				.addCardClick(missioninfo).click();
 
 			// Edgework Information
 			this.Bombs.forEach(function(bomb, n) {
@@ -406,9 +407,9 @@ $(function() {
 				], $("<ul>").appendTo(edgeinfo));
 
 				$("<a href='#' class='module'>")
-				.text(!current.isSingleBomb ? "Edgework #" + (n + 1) : "Edgework")
-				.appendTo(modules)
-				.addCardClick(edgeinfo);
+					.text(!current.isSingleBomb ? "Edgework #" + (n + 1) : "Edgework")
+					.appendTo(modules)
+					.addCardClick(edgeinfo);
 			});
 
 			// Convert modules
@@ -476,8 +477,7 @@ $(function() {
 			$("<h3>").text("Filtered Log").appendTo(loginfo);
 			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
 
-			var filteredTab = $("<a href='#' class='module'>")
-			.text("Filtered Log");
+			var filteredTab = $("<a href='#' class='module'>").text("Filtered Log");
 
 			// Display modules
 			mods.forEach(function(minfo) {
@@ -490,28 +490,27 @@ $(function() {
 					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
-					.text("No information could be parsed. Please check the ")
-					.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
-						filteredTab.click();
-					}))
-					.append('.')
-					.appendTo(modinfo);
+						.text("No information could be parsed. Please check the ")
+						.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
+							filteredTab.click();
+						}))
+						.append('.')
+						.appendTo(modinfo);
 				}
 
 				// Listing
 				var mod = $("<a href='#' class='module'>")
-				.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
-				.appendTo(modules)
-				.addCardClick(modinfo);
+					.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
+					.appendTo(modules)
+					.addCardClick(modinfo);
+
 				$("<img>")
-				.on("error", function() {
-					$(this).attr("src", "../Icons/blank.png");
-				}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
+					.on("error", function() {
+						$(this).attr("src", "../Icons/blank.png");
+					}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
 			});
 
-			filteredTab
-			.appendTo(modules)
-			.addCardClick(loginfo);
+			filteredTab.appendTo(modules).addCardClick(loginfo);
 
 			return bombHTML;
 		};
@@ -1047,7 +1046,7 @@ $(function() {
 										var shipRight = c == 5 || stuff[r][c + 1].IsShip;
 
 										var imgId =
-											!stuff[r][c].IsShip ? "SqWater" :
+										!stuff[r][c].IsShip ? "SqWater" :
 											waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
 											waterAbove && waterLeft && waterBelow && shipRight ? "SqShipL" :
 											waterAbove && waterRight && waterBelow && shipLeft ? "SqShipR" :
@@ -1078,11 +1077,11 @@ $(function() {
 							module.push({
 								label: matches.input,
 								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
-											.css('color', matches[1] === 'red' ? '#800' :
-														  matches[1] === 'green' ? '#080' :
-														  matches[1] === 'blue' ? '#008' :
-														  matches[1] === 'yellow' ? '#880' :
-														  matches[1] === 'cyan' ? '#088' : '#808')
+									.css('color', matches[1] === 'red' ? '#800' :
+												  matches[1] === 'green' ? '#080' :
+												  matches[1] === 'blue' ? '#008' :
+												  matches[1] === 'yellow' ? '#880' :
+												  matches[1] === 'cyan' ? '#088' : '#808')
 							});
 							return true;
 						}
@@ -1163,7 +1162,7 @@ $(function() {
 							readLine();
 
 							var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
-									.appendTo("body");
+								.appendTo("body");
 
 							var sections = ["A", "NONE", "AB", "AC", "ABC", "B", "C", "BC"];
 							var positions = {
@@ -1180,16 +1179,16 @@ $(function() {
 								var bbox = elem[0].getBBox();
 								var text = sections[index];
 								$("<svg><text></svg>").children().eq(0).unwrap()
-										.text(text)
-										.css({
-											transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
-											"text-anchor": "middle",
-											"dominant-baseline": "central",
-											stroke: "none",
-											fill: "black",
-											"font-size": (35 - text.length * 5) + "px"
-										})
-										.appendTo(svg.children("g"));
+									.text(text)
+									.css({
+										transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
+										"text-anchor": "middle",
+										"dominant-baseline": "central",
+										stroke: "none",
+										fill: "black",
+										"font-size": (35 - text.length * 5) + "px"
+									})
+									.appendTo(svg.children("g"));
 							});
 
 							module.push({ label: "Diagram:", obj: $("<div style='width: 40%'>").append(svg), expanded: true });
@@ -1857,7 +1856,7 @@ $(function() {
 						regex: /(Updating the maze for rule \w+|Playing Morse code word: .+)/,
 						value: function(matches, module) {
 							if (!module.Group) {
-								matches[1] = "Initial solution"
+								matches[1] = "Initial solution";
 							}
 
 							module.push(module.Group = [matches[1], module.GroupLines = []]);
@@ -1867,7 +1866,7 @@ $(function() {
 					{
 						regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+))/,
 						value: function(matches, module) {
-							module.Group[0] = matches[1].replace(/Unsolved|Solved/, function(str) { return str.toLowerCase() });
+							module.Group[0] = matches[1].replace(/Unsolved|Solved/, function(str) { return str.toLowerCase(); });
 							return true;
 						}
 					},
@@ -1885,7 +1884,7 @@ $(function() {
 							}
 
 							var container = $("<div>").css("position", "relative");
-							var maze = $("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
+							$("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
 							var marker = $("<div>").css({
 								width: "10px",
 								height: "10px",
@@ -2314,9 +2313,7 @@ $(function() {
 					{
 						regex: /Stage (.) sequence/,
 						value: function(matches, module) {
-							module.Stage = ["Stage #" + matches[1],
-										[]
-							];
+							module.Stage = ["Stage #" + matches[1], []];
 							module.push(module.Stage);
 						}
 					},
