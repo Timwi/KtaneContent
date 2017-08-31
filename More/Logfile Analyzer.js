@@ -2365,15 +2365,14 @@ $(function() {
 						regex: /Asking question: (.+) — (.+)/,
 						value: function(matches, module) {
 							console.log(matches);
-							var answers = $("<div>");
-							matches[2].split(", ").forEach(function(answer) {
+							var answers = $("<div>").css({ margin: '.5em 0' });
+							matches[2].split(" | ").forEach(function(answer) {
 								var answerSpan = $("<span>");
 								if (answer.substr(0, 2) == "[_") {
 									answer = answer.substr(2, answer.length - 4);
-									answerSpan.css("color", "rgb(127, 255, 127)");
+									answerSpan.css({ background: '#dfd' });
 								}
-
-								answerSpan.text(answer) .appendTo(answers);
+								answerSpan.text(answer).css({ border: '1px solid #888', padding: '0 .5em', margin: '0 .3em' }).appendTo(answers);
 							});
 
 							module.push({ label: matches[1], obj: answers, expanded: true });
