@@ -389,7 +389,7 @@ $(function() {
 				var edgeinfo = $("<div class='module-info'>").appendTo(info);
 				makeTree([
 					"Serial: " + bomb.Serial,
-					"Batteries: " + bomb.Batteries.reduce(function(a, b) { return a + b; }),
+					"Batteries: " + bomb.Batteries.reduce(function(a, b) { return a + b; }, 0),
 					"Holders: " + bomb.Batteries.length,
 					"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
 					"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
