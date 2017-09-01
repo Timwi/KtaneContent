@@ -367,11 +367,7 @@ $(function() {
 
 			// Edgework Information
 			this.Bombs.forEach(function(bomb, n) {
-				var ind = [];
-
-				bomb.Indicators.forEach(function(val) {
-					ind.push(val[0] + " " + val[1]);
-				});
+				var ind = bomb.Indicators.map(function(val) { return val.join(" "); });
 
 				var ports = {};
 				bomb.PortPlates.forEach(function(plate) {
@@ -390,18 +386,13 @@ $(function() {
 					portlist.push((count > 1 ? count + " × " : "") + PortNames[port]);
 				});
 
-				var batteries = 0;
-				bomb.Batteries.forEach(function(val) {
-					batteries += val;
-				});
-
 				var edgeinfo = $("<div class='module-info'>").appendTo(info);
 				makeTree([
 					"Serial: " + bomb.Serial,
-					"Batteries: " + batteries,
+					"Batteries: " + bomb.Batteries.reduce(function(a, b) { return a + b; }),
 					"Holders: " + bomb.Batteries.length,
-					"Ports: " + portlist.join(", "),
-					"Indicators: " + ind.join(", "),
+					"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
+					"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
 					"Port Plates: " + bomb.PortPlates.length,
 					"Widgets: " + (bomb.Batteries.length + ind.length + bomb.PortPlates.length + bomb.ModdedWidgets),
 				], $("<ul>").appendTo(edgeinfo));
