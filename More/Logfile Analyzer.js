@@ -124,7 +124,7 @@ $(function() {
 		try { url = decodeURIComponent(clipText); } catch (e) {}
 
 		if (/^https?:\/\//.exec(url)) { // Very basic regex to detect a URL being pasted.
-			$.get("/proxy/" + url, function(data) {
+			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
 				parseLog(data, url, bombSerial);
 			}).fail(function() {
 				toastr.error("Unable to get logfile from URL.", "Upload Error");
@@ -1741,6 +1741,24 @@ $(function() {
 				]
 			},
 			//"Logic": "Logic",
+			"Mastermind Cruel": {
+				ID: "Mastermind Cruel",
+				Lines: [
+					{
+						regex: /Query:/,
+						value: function(matches, module) {
+							module.push([matches.input, module.GroupLines = []]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							(module.GroupLines || module).push(matches.input);
+						}
+					}
+				]
+			},
 			"Minesweeper": {
 				ID: "MinesweeperModule",
 				Lines: [
