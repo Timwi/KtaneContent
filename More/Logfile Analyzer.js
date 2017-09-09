@@ -1765,7 +1765,7 @@ $(function() {
 					{
 						regex: /Board:|Legend:/,
 						value: function(matches, module) {
-							module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 4)) });
+							module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 5)) });
 							return true;
 						}
 					},
