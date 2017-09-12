@@ -6,7 +6,9 @@ var PortNames = {
 	StereoRCA: "Stereo RCA",
 	DVI: "DVI-D",
 	Parallel: "Parallel",
-	Serial: "Serial"
+	Serial: "Serial",
+	ComponentVideo: "Component Video",
+	CompositeVideo: "Composite Video"
 };
 
 // A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
@@ -383,7 +385,7 @@ $(function() {
 				var portlist = [];
 				Object.keys(ports).forEach(function(port) {
 					var count = ports[port];
-					portlist.push((count > 1 ? count + " × " : "") + PortNames[port]);
+					portlist.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
 				});
 
 				var edgeinfo = $("<div class='module-info'>").appendTo(info);
