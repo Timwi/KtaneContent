@@ -1802,6 +1802,30 @@ $(function() {
 					}
 				]
 			},
+			"MonsplodeCards": {
+				ID: "monsplodeCards",
+				Lines: [
+					{
+						regex: /Generating the/,
+						value: function(matches, module) {
+							module.push([matches.input, module.CardGen = []]);
+						}
+					},
+					{
+						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.CardGen.push(matches.input);
+						}
+					}
+				]
+			},
 			"MonsplodeFight": {
 				ID: "monsplodeFight",
 				Lines: [
