@@ -1743,6 +1743,31 @@ $(function() {
 				]
 			},
 			//"Logic": "Logic",
+			"Mastermind Simple": {
+				ID: "Mastermind Simple",
+				Lines: [
+					{
+						regex: /Query:/,
+						value: function(matches, module) {
+							module.push([matches.input, module.GroupLines = []]);
+							return true;
+						}
+					},
+					{
+						regex: /Submit:/,
+						value: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							(module.GroupLines || module).push(matches.input);
+						}
+					}
+				]
+			},
 			"Mastermind Cruel": {
 				ID: "Mastermind Cruel",
 				Lines: [
@@ -1750,6 +1775,13 @@ $(function() {
 						regex: /Query:/,
 						value: function(matches, module) {
 							module.push([matches.input, module.GroupLines = []]);
+							return true;
+						}
+					},
+					{
+						regex: /Submit:/,
+						value: function(matches, module) {
+							module.push(matches.input);
 							return true;
 						}
 					},
