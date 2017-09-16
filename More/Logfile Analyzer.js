@@ -1812,7 +1812,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!/,
+						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!|Wrong! All of your cards|Value of deck card/,
 						value: function(matches, module) {
 							module.push(matches.input);
 							return true;
