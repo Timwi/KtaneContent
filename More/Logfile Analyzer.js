@@ -2024,7 +2024,31 @@ $(function() {
 					}
 				]
 			},
-			//"Neutralization": "neutralization",
+			"Neutralization": {
+				ID: "neutralization",
+				Lines: [
+					{
+						regex: /Begin detailed calculation report:/,
+						value: function(_, module) {
+							module.push(["Detailed Calculation Report", module.Report = []]);
+							return true;
+						}
+					},
+					{
+						regex: /End detailed calculation report\./,
+						value: function(_, module) {
+							module.Report = undefined;
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							(module.Report || module).push(matches.input);
+						}
+					}
+				]
+			},
 			"Only Connect": {
 				ID: "OnlyConnectModule",
 				Lines: [
