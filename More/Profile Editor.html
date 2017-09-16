@@ -170,7 +170,8 @@
 		var fallbackImage = "https://ktane.timwi.de/Icons/blank.png";
 
 		/* global Vue */
-		Vue.config.devtools = true;
+		var devMode = (window.location.protocol == "file:");
+		Vue.config.devtools = devMode;
 
 		window.onload = function() {
 			var toastr = this.toastr; // A Vue version of toastr.
@@ -301,11 +302,11 @@
 				if (url.match(/^https?:\/\//)) {
 					var filename = url.match(/[^/]+\.json$/);
 					if (filename) {
-						makeRequest("/proxy/" + url).then(function(data) {
-							handleProfile(data, filename);
-						}).catch(function(status) {
+						makeRequest((devMode ? "https://ktane.timwi.de" : "") + "/proxy/" + url).then(function(data) {
+							handleProfile(data, filename[0]);
+						}).catch(function(err) {
 							toastr.error("Unable to load profile from URL", "HTTP Error");
-							console.error("HTTP Failure, status: " + status);
+							console.error("HTTP Failure: " + err);
 						});
 
 						return true;
@@ -341,7 +342,16 @@
 			});
 
 			window.addEventListener("drop", function(e) {
-				uploadProfile(e.dataTransfer.files);
+				var text = e.dataTransfer.getData("Text");
+				if (!text) {
+					uploadProfile(e.dataTransfer.files);
+				} else {
+					vueData.isHovering = false;
+					if (!downloadProfile(text)) {
+						toastr.warning("Unable to read URL for profile.");
+					}
+				}
+
 				e.preventDefault();
 			});
 
