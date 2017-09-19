@@ -2346,7 +2346,7 @@ $(function() {
 				ID: "screw",
 				Lines: [
 					{
-						regex: /Stage \d of 5/,
+						regex: /Stage \d of \d/,
 						value: function(matches, module) {
 							module.Stage = [matches.input, []];
 							module.push(module.Stage);
