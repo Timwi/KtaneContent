@@ -173,6 +173,9 @@ $(function() {
 						}
 					} else if (typeof(node) === "object" && "label" in node) {
 						elem.html(node.label);
+					} else if (typeof(node) === "object" && "linebreak" in node) {
+						elem.remove();
+						$("<br>").appendTo(parent);
 					} else {
 						console.log("Unrecognized node: " + node);
 						console.log(node);
@@ -2636,17 +2639,13 @@ $(function() {
 				ID: "YahtzeeModule",
 				Lines: [
 					{
-						regex: /rolling (?:all )?\d dice./i,
+						regex: /rerolling \d./,
 						value: function(matches, module) {
-							module.push(module.Group = [matches.input, []]);
-							return true;
+							module.push({linebreak: true});
 						},
 					},
 					{
-						regex: /.+/,
-						value: function(matches, module) {
-							module.Group[1].push(matches.input);
-						}
+						regex: /.+/
 					}
 				]
 			}
