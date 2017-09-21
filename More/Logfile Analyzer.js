@@ -2084,21 +2084,24 @@ $(function() {
 					}
 				]
 			},
-            "Nonogram": {
-                ID: "NonogramModule",
-                Lines: [
-                    {
-                        regex: /^(Submitted incorrect answer:|Generated solution is:)/,
-                        value: function(matches, module) {
-                            module.push({
-                                label: matches[1],
-                                obj: pre(readMultiple(11))
-                            });
-                            return true;
-                        }
-                    }
-                ]
-            },
+			"Nonogram": {
+				ID: "NonogramModule",
+				Lines: [
+					{
+						regex: /^(Submitted incorrect answer:|Generated solution is:)/,
+						value: function(matches, module) {
+							module.push({
+								label: matches[1],
+								obj: pre(readMultiple(11))
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Only Connect": {
 				ID: "OnlyConnectModule",
 				Lines: [
