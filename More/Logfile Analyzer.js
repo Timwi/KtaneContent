@@ -2088,7 +2088,7 @@ $(function() {
                 ID: "NonogramModule",
                 Lines: [
                     {
-                        regex: /^(Submitted incorrect answer:|Generated solution was:)/,
+                        regex: /^(Submitted incorrect answer:|Generated solution is:)/,
                         value: function(matches, module) {
                             module.push({
                                 label: matches[1],
