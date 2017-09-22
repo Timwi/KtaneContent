@@ -2211,7 +2211,7 @@ $(function() {
 				ID: "NonogramModule",
 				Lines: [
 					{
-						regex: /^(Submitted incorrect answer:|Generated solution (?:is|was):)/,
+						regex: /^(Submitted (?:in)?correct answer:|Generated solution (?:is|was):)/,
 						value: function(matches, module) {
 							module.push({
 								label: matches[1],
