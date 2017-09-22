@@ -54,6 +54,7 @@ var ModuleNames = {
 	screw: "The Screw",
 	MorseAMaze: "Morse-A-Maze",
 	ColorMorseModule: "Color Morse",
+	EternitySDec: "Hex To Decimal",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
