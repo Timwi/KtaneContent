@@ -1587,8 +1587,8 @@ $(function() {
 						regex: /^— (.+)/,
 						value: function(matches, module) {
 							module[module.length - 1][1].push(matches[1]);
-							if (matches[1].startsWith("solution is"))
-								module[module.length - 1][0] += matches[1].substr("solution is".length);
+							if (matches[1].startsWith("final number is"))
+								module[module.length - 1][0] += matches[1].substr("final number is".length);
 							return true;
 						}
 					},
