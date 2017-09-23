@@ -1312,128 +1312,129 @@ $(function() {
 					}
 				]
 			},
-            "Colored Switches": {
+			"Colored Switches": {
 				ID: "ColoredSwitchesModule",
 				Lines: [
 					{
 						regex: /(Initial state of the switches:|Valid transition made. Switches now:|Three valid transitions made. LEDs show:) ([▲▼]{5})/,
 						value: function(matches, module) {
-                            if (!('SwitchInfo' in module)) {
-                                module.SwitchInfo = {
-                                    y: 0, svg: "", prevState: null,
-                                    dom: { label: 'Progression', obj: null },
-                                    lightColors: ['{L0}', '{L1}', '{L2}', '{L3}', '{L4}'],
-                                    darkColors: ['{D0}', '{D1}', '{D2}', '{D3}', '{D4}'],
-                                    set: function() {
-                                        module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50*module.SwitchInfo.y - 5) + "'>" + module.SwitchInfo.svg + "</svg>");
-                                    }
-                                };
-                                module.push(module.SwitchInfo.dom);
-                            }
+							if (!('SwitchInfo' in module)) {
+								module.SwitchInfo = {
+									y: 0, svg: "", prevState: null,
+									dom: { label: 'Progression', obj: null },
+									lightColors: ['{L0}', '{L1}', '{L2}', '{L3}', '{L4}'],
+									darkColors: ['{D0}', '{D1}', '{D2}', '{D3}', '{D4}'],
+									set: function() {
+										module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50*module.SwitchInfo.y - 5) + "'>" + module.SwitchInfo.svg + "</svg>");
+									}
+								};
+								module.push(module.SwitchInfo.dom);
+							}
 
-                            var state = matches[2];
-                            var svg = "";
-                            for (var i = 0; i < 5; i++)
-                                svg +=
-                                    "<g transform='translate(" + (11*i) + ",0)'>" +
-                                        "<ellipse fill='#bdc4d3' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
-                                        "<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
-                                        "<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
-                                    "</g>";
+							var state = matches[2];
+							var svg = "";
+							var i;
+							for (i = 0; i < 5; i++)
+								svg +=
+									"<g transform='translate(" + (11*i) + ",0)'>" +
+										"<ellipse fill='#bdc4d3' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
+										"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
+										"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
+									"</g>";
 
-                            var x = 0;
-                            switch (matches[1][0]) {
-                                case 'V':
-                                    // Valid transition: Find out which switch was toggled
-                                    var ix = 2;
-                                    for (var i = 4; i >= 0; i--)
-                                        if (state[i] !== module.SwitchInfo.prevState[i])
-                                            ix = i;
-                                    module.SwitchInfo.svg =
-                                        "<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' />"
-                                            .replace(/\{x\}/g, 11*ix + 5.5)
-                                            .replace(/\{y1\}/g, 50*(module.SwitchInfo.y-1) + 35)
-                                            .replace(/\{y2\}/g, 50*module.SwitchInfo.y)
-                                        + module.SwitchInfo.svg;
-                                    module.SwitchInfo.prevState = state;
-                                    break;
+							var x = 0;
+							switch (matches[1][0]) {
+								case 'V':
+									// Valid transition: Find out which switch was toggled
+									var ix = 2;
+									for (i = 4; i >= 0; i--)
+										if (state[i] !== module.SwitchInfo.prevState[i])
+											ix = i;
+									module.SwitchInfo.svg =
+										"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' />"
+											.replace(/\{x\}/g, 11*ix + 5.5)
+											.replace(/\{y1\}/g, 50*(module.SwitchInfo.y-1) + 35)
+											.replace(/\{y2\}/g, 50*module.SwitchInfo.y)
+										+ module.SwitchInfo.svg;
+									module.SwitchInfo.prevState = state;
+									break;
 
-                                case 'I':
-                                    // Initial state
-                                    module.SwitchInfo.prevState = state;
-                                    break;
+								case 'I':
+									// Initial state
+									module.SwitchInfo.prevState = state;
+									break;
 
-                                case 'T':
-                                    // Desired state
-                                    module.SwitchInfo.y--;
-                                    x = 70;
-                                    module.SwitchInfo.svg = "<text font-size='7' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
-                                    break;
-                            }
+								case 'T':
+									// Desired state
+									module.SwitchInfo.y--;
+									x = 70;
+									module.SwitchInfo.svg = "<text font-size='7' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
+									break;
+							}
 
-                            svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect fill='#d7dbe5' x='0' y='0' width='55' height='35' />" + svg + "</g>";
+							svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect fill='#d7dbe5' x='0' y='0' width='55' height='35' />" + svg + "</g>";
 
-                            module.SwitchInfo.y++;
-                            module.SwitchInfo.svg += svg;
-                            module.SwitchInfo.set();
+							module.SwitchInfo.y++;
+							module.SwitchInfo.svg += svg;
+							module.SwitchInfo.set();
 						}
 					},
-                    {
-                        regex: /Toggling switch #(\d) is invalid here/,
-                        value: function(matches, module) {
-                            if (!('SwitchInfo' in module))
-                                return;
+					{
+						regex: /Toggling switch #(\d) is invalid here/,
+						value: function(matches, module) {
+							if (!('SwitchInfo' in module))
+								return;
 
-                            module.SwitchInfo.svg =
-                                "<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' /><g transform='translate({x}, {y2})' stroke-width='3' stroke='red'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
-                                    .replace(/\{x\}/g, 11*(parseInt(matches[1])-1) + 5.5)
-                                    .replace(/\{y1\}/g, 50*(module.SwitchInfo.y-1) + 35)
-                                    .replace(/\{y2\}/g, 50*module.SwitchInfo.y - 7.5)
-                                + module.SwitchInfo.svg;
-                            module.SwitchInfo.set();
-                        }
-                    },
-                    {
-                        regex: /Colors of the switches: (.+)/,
-                        value: function(matches, module) {
-                            if (!('SwitchInfo' in module))
-                                return;
+							module.SwitchInfo.svg =
+								"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' /><g transform='translate({x}, {y2})' stroke-width='3' stroke='red'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
+									.replace(/\{x\}/g, 11*(parseInt(matches[1])-1) + 5.5)
+									.replace(/\{y1\}/g, 50*(module.SwitchInfo.y-1) + 35)
+									.replace(/\{y2\}/g, 50*module.SwitchInfo.y - 7.5)
+								+ module.SwitchInfo.svg;
+							module.SwitchInfo.set();
+						}
+					},
+					{
+						regex: /Colors of the switches: (.+)/,
+						value: function(matches, module) {
+							if (!('SwitchInfo' in module))
+								return;
 
-                            var cols = matches[1].split(',');
-                            if (cols.length != 5)
-                                return;
+							var cols = matches[1].split(',');
+							if (cols.length != 5)
+								return;
 
-                            var lightColors = {
-                                'Red': '#f65353',
-                                'Green': '#0fe325',
-                                'Blue': '#5155f4',
-                                'Purple': '#da6cf2',
-                                'Orange': '#ffad0b',
-                                'Turquoise': '#53d3ff'
-                            };
-                            var darkColors = {
-                                'Red': 'hsl(0, 62%, 54%)',
-                                'Green': 'hsl(126, 60%, 37%)',
-                                'Blue': 'hsl(240, 60%, 53%)',
-                                'Purple': 'hsl(289, 57%, 55%)',
-                                'Orange': 'hsl(39, 70%, 42%)',
-                                'Turquoise': 'hsl(195, 70%, 56%)'
-                            };
+							var lightColors = {
+								'Red': '#f65353',
+								'Green': '#0fe325',
+								'Blue': '#5155f4',
+								'Purple': '#da6cf2',
+								'Orange': '#ffad0b',
+								'Turquoise': '#53d3ff'
+							};
+							var darkColors = {
+								'Red': 'hsl(0, 62%, 54%)',
+								'Green': 'hsl(126, 60%, 37%)',
+								'Blue': 'hsl(240, 60%, 53%)',
+								'Purple': 'hsl(289, 57%, 55%)',
+								'Orange': 'hsl(39, 70%, 42%)',
+								'Turquoise': 'hsl(195, 70%, 56%)'
+							};
 
-                            for (var i = 0; i < 5; i++)
-                            {
-                                module.SwitchInfo.lightColors[i] = lightColors[cols[i].trim()];
-                                module.SwitchInfo.darkColors[i] = darkColors[cols[i].trim()];
-                            }
-                            module.SwitchInfo.svg = module.SwitchInfo.svg.replace(/\{[LD]\d\}/g, function(m) { return module.SwitchInfo[m[1] === 'L' ? 'lightColors' : 'darkColors'][parseInt(m[2])] });
-                            module.SwitchInfo.set();
-                        }
-                    },
+							for (var i = 0; i < 5; i++)
+							{
+								module.SwitchInfo.lightColors[i] = lightColors[cols[i].trim()];
+								module.SwitchInfo.darkColors[i] = darkColors[cols[i].trim()];
+							}
+							module.SwitchInfo.svg = module.SwitchInfo.svg.replace(/\{[LD]\d\}/g, function(m) { return module.SwitchInfo[m[1] === 'L' ? 'lightColors' : 'darkColors'][parseInt(m[2])]; });
+							module.SwitchInfo.set();
+						}
+					},
 					{
 						regex: /.+/
 					}
 				]
-            },
+			},
 			"Colour Flash": {
 				ID: "ColourFlash",
 				Lines: [
@@ -1766,6 +1767,35 @@ $(function() {
 					}
 				]
 			},
+			"Game of Life Simple": {
+				ID: "GameOfLifeSimple",
+				Lines: [
+					{
+						regex: /\(0 is black, 1 is white\):/,
+						value: function(_, module) {
+							var grid = $("<div>").css({display: "inline-block", "font-size": 0, border: "2px gray solid"});
+							readMultiple(8).split("\n").map(row => row.replace(" ", "").split("").map(cell => cell == "1")).forEach(row => {
+								var rowElem = $("<div>").appendTo(grid);
+								row.forEach(cell => {
+									$("<div>").css({
+										display: "inline-block",
+										width: "11px",
+										height: "11px",
+										background: cell ? "white" : "black"
+									}).appendTo(rowElem);
+								});
+							});
+
+							module.push(grid);
+
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+					}
+				]
+			},
 			"Hexamaze": {
 				ID: "HexamazeModule",
 				Lines: [
@@ -1966,7 +1996,7 @@ $(function() {
 					{
 						regex: /Generating the/,
 						value: function(matches, module) {
-							module.push([matches.input, module.CardGen = []]);
+							module.push(module.Bullet = [matches.input, module.CardGen = []]);
 						}
 					},
 					{
@@ -1979,6 +2009,11 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
+							var monsplode = matches.input.match(/^Monsplode: (.+) |/);
+							if (monsplode) {
+								module.Bullet[0] += ` (${monsplode[1]})`;
+							}
+
 							module.CardGen.push(matches.input);
 						}
 					}
