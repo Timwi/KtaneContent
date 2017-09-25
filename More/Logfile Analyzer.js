@@ -1781,7 +1781,8 @@ $(function() {
 										display: "inline-block",
 										width: "11px",
 										height: "11px",
-										background: cell ? "white" : "black"
+										background: cell ? "white" : "#444",
+                                        border: '1px solid black'
 									}).appendTo(rowElem);
 								});
 							});
