@@ -1261,13 +1261,22 @@ $(function() {
 							module.push("Solution: " + solution);
 							readLine();
 							var board = readMultiple(13);
-							var table = $('<table>').css({ borderCollapse: 'collapse', border: '3px solid black' });
+							var table = $('<table>').css({ borderCollapse: 'collapse' });
+                            $('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
 							for (var y = 0; y < 6; y++)
 							{
-								var tr = $('<tr>').appendTo(table);
+								var tr = $('<tr>').appendTo(table).append($('<td>'+(6-y)+'</td>').css({ verticalAlign: 'middle', paddingRight: '1em' }));
 								for (var x = 0; x < 6; x++)
 								{
 									var td = $('<td>').appendTo(tr).css({ width: '75px', height: '75px', border: '1px solid black' });
+                                    if (x == 0)
+                                        td.css({ borderLeft: '3px solid black' });
+                                    else if (x == 5)
+                                        td.css({ borderRight: '3px solid black' });
+                                    if (y == 0)
+                                        td.css({ borderTop: '3px solid black' });
+                                    else if (y == 5)
+                                        td.css({ borderBottom: '3px solid black' });
 									var svg = null;
 									var ch = board[26*(2*y+1) + (4*x+2)];
 									switch (ch)
@@ -1285,7 +1294,9 @@ $(function() {
 									else if ((x + y) % 2 !== 0)
 										td.css({ backgroundColor: '#eee' });
 								}
+								tr.append($('<td>'+(6-y)+'</td>').css({ verticalAlign: 'middle', paddingLeft: '1em' }));
 							}
+                            $('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
 
 							module.push({ label: "Board:", obj: table });
 						}
