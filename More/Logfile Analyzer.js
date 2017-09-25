@@ -1774,7 +1774,7 @@ $(function() {
 						regex: /\(0 is black, 1 is white\):/,
 						value: function(_, module) {
 							var grid = $("<div>").css({display: "inline-block", "font-size": 0, border: "2px gray solid"});
-							readMultiple(8).split("\n").map(row => row.replace(" ", "").split("").map(cell => cell == "1")).forEach(row => {
+							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("").map(cell => cell == "1")).forEach(row => {
 								var rowElem = $("<div>").appendTo(grid);
 								row.forEach(cell => {
 									$("<div>").css({
