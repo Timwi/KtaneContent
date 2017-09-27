@@ -1593,6 +1593,12 @@ $(function() {
 				ID: "fizzBuzzModule",
 				Lines: [
 					{
+						regex: /^Button 1 \(\w+\), < 2 strikes:/,
+						value: function(_, module) {
+							module.push({linebreak: true});
+						}
+					},
+					{
 						regex: /^Button \d/,
 						value: function(matches, module) {
 							module.push([matches.input, []]);
@@ -1609,8 +1615,13 @@ $(function() {
 						}
 					},
 					{
-						regex: /.+/,
-						value: "fizzBuzzModule"
+						regex: /.+/
+					},
+					{
+						regex: /Solution for /,
+						value: function(_, module) {
+							module.push({linebreak: true});
+						}
 					}
 				]
 			},
@@ -2025,7 +2036,7 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							var monsplode = matches.input.match(/^Monsplode: (.+) |/);
+							var monsplode = matches.input.match(/^Monsplode: ([^]+) \|/);
 							if (monsplode) {
 								module.Bullet[0] += ` (${monsplode[1]})`;
 							}
