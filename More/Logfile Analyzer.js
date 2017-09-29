@@ -2306,6 +2306,153 @@ $(function() {
 				]
 			},
 			"PasswordRuleset": "Password",
+			"Perplexing Wires": {
+				ID: "PerplexingWiresModule",
+				Lines: [
+					{
+						regex: /^Star #(\d) is (empty|filled)\./,
+						value: function(matches, module) {
+							if (!('PerplexingWires' in module))
+								module.PerplexingWires = {
+									Stars: [false, false, false, false],
+									Arrows: [null, null, null, null, null, null],
+									LEDs: [false, false, false],
+									Wires: [null, null, null, null, null, null]
+								};
+							module.PerplexingWires.Stars[parseInt(matches[1]) - 1] = (matches[2] === 'filled');
+							return true;
+						}
+					},
+					{
+						regex: /^Arrow #(\d) is (\w+) and pointing (\w+)\./,
+						value: function(matches, module) {
+							module.PerplexingWires.Arrows[parseInt(matches[1]) - 1] = {
+								Color:
+									matches[2] === 'Red' ? '#ed2121' :
+									matches[2] === 'Green' ? '#19da3a' :
+									matches[2] === 'Blue' ? '#2f89ef' :
+									matches[2] === 'Yellow' ? '#e4f20e' :
+									matches[2] === 'Purple' ? '#dc17dc' : 'black',
+								Rotation:
+									matches[3] === 'Up' ? 0 :
+									matches[3] === 'Left' ? 90 :
+									matches[3] === 'Down' ? 180 :
+									matches[3] === 'Right' ? 270 : 45
+							};
+							return true;
+						}
+					},
+					{
+						regex: /^LED #(\d) is (on|off)\./,
+						value: function(matches, module) {
+							module.PerplexingWires.LEDs[parseInt(matches[1]) - 1] = (matches[2] === 'on');
+							return true;
+						}
+					},
+					{
+						regex: /^Wire (\d) to (\d) is (\w+): (cut|don’t cut|cut first|cut last) \(Venn: ([\+\w]+) = (\w)\)/,
+						value: function(matches, module) {
+							module.PerplexingWires.Wires[parseInt(matches[2]) - 1] = {
+								From: parseInt(matches[1]) - 1,
+								Color:
+									matches[3] === 'Black' ? '#34322D' :
+									matches[3] === 'Blue' ? '#2B8DFF' :
+									matches[3] === 'Green' ? '#1EE41F' :
+									matches[3] === 'Orange' ? '#FFA600' :
+									matches[3] === 'Purple' ? '#BB3AFF' :
+									matches[3] === 'Red' ? '#FF3A3A' :
+									matches[3] === 'White' ? '#E1E1E1' :
+									matches[3] === 'Yellow' ? '#DADB35' : '#f8f',
+								Venn: matches[5].split('+'),
+								Condition: matches[6],
+								Cut:
+									matches[4] === 'cut' ? '✓' :
+									matches[4] === 'don’t cut' ? '✗' :
+									matches[4] === 'cut first' ? 'F' :
+									matches[4] === 'cut last' ? 'L' : null
+							};
+
+							if (matches[2] === '6') {
+								var svg = '';
+								var starsCoords = [[123.3 - 5, 36.2], [161 - 5, 50], [198.5 - 5, 63.6], [236 - 5, 77.2]];
+								var starsConnectorCoords = [[115.6 - 5, 69.8], [153.2 - 5, 83.5], [190.8 - 5, 97.2], [228.4 - 5, 111]];
+								var arrowsCoords = [];
+								for (var i = 0; i < 6; i++)
+									arrowsCoords.push([40 + 40*i, 250]);
+
+								// Wires
+								for (var i = 0; i < 6; i++) {
+									svg += (
+										"<path d='M{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/>" +
+										"<path d='M{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}' stroke='{color}' stroke-linecap='round' stroke-linejoin='round' stroke-width='13'/>" +
+										"<text x='{x1}' y='370' text-anchor='middle'>{cond}</text>" +
+										"<text x='{x1}' y='390' text-anchor='middle' stroke='none' fill='{textcolor}'>{cut}</text>"
+									)
+										.replace(/\{x1\}/g, arrowsCoords[i][0])
+										.replace(/\{y1\}/g, arrowsCoords[i][1])
+										.replace(/\{x2\}/g, arrowsCoords[i][0])
+										.replace(/\{y2\}/g, 200)
+										.replace(/\{x3\}/g, starsConnectorCoords [ module.PerplexingWires.Wires[i].From ][0])
+										.replace(/\{y3\}/g, starsConnectorCoords [ module.PerplexingWires.Wires[i].From ][1])
+										.replace(/\{x4\}/g, starsCoords [ module.PerplexingWires.Wires[i].From ][0])
+										.replace(/\{y4\}/g, starsCoords [ module.PerplexingWires.Wires[i].From ][1])
+										.replace(/\{color\}/g, module.PerplexingWires.Wires[i].Color)
+										.replace(/\{cond\}/g, module.PerplexingWires.Wires[i].Condition)
+										.replace(/\{textcolor\}/g, module.PerplexingWires.Wires[i].Cut === '✗' ? '#a00' : '#080')
+										.replace(/\{cut\}/g, module.PerplexingWires.Wires[i].Cut);
+								}
+
+								// Lettering at the bottom
+								var vennColors = ['#eb1414', '#ffb100', '#ee0', '#00be00', '#09f'];
+								var vennColorNames = ['Red', 'Orange', 'Yellow', 'Green', 'Blue'];
+								for (var i = 0; i < 6; i++) {
+									for (var cIx = 0; cIx < module.PerplexingWires.Wires[i].Venn.length; cIx++) {
+										var c = vennColorNames.indexOf(module.PerplexingWires.Wires[i].Venn[cIx]);
+										svg += "<rect x='{x}' y='{y}' width='20' height='10' stroke='none' fill='{c}'/>"
+											.replace(/\{x\}/g, 30 + 40*i)
+											.replace(/\{y\}/g, 275 + 15*c)
+											.replace(/\{c\}/g, vennColors[c]);
+									}
+								}
+
+								// Frames
+								svg +=
+									'<path d="M10 10h50v110H10z"/>' +                                       // LEDs frame
+									'<path d="M95.5 10l169.2 61.7-10.2 28.2L85.3 38.2z" fill="#fff"/>' +    // stars
+									'<path d="M10 230h260v40H10z" fill="#fff"/>';                           // arrows
+
+								// LEDs
+								svg += '<path d="M35 22  l8.7 4   2.2 9.6-6 7.6H30l-6-7.6 2-9.5z" fill="' + (module.PerplexingWires.LEDs[0] ? 'lime' : '#234') + '"/>';
+								svg += '<path d="M35 54.5l8.7 4   2.2 9.5-6 7.7H30L24 68l2-9.4z"  fill="' + (module.PerplexingWires.LEDs[1] ? 'lime' : '#234') + '"/>';
+								svg += '<path d="M35 86.8l8.7 4.3 2.2 9.5-6 7.5H30l-6-7.5 2-9.7z" fill="' + (module.PerplexingWires.LEDs[2] ? 'lime' : '#234') + '"/>';
+
+								// Stars
+								for (var i = 0; i < 4; i++) {
+									svg += "<path transform='translate({x}, {y}) rotate(20)' d='M0-10l2.2 7h7.3l-6 4.2 2.4 7-6-4.4-6 4.3 2.4-6.8-6-4.3H-2z' fill='{f}'/>"
+										.replace(/\{x\}/g, starsCoords[i][0])
+										.replace(/\{y\}/g, starsCoords[i][1])
+										.replace(/\{f\}/g, module.PerplexingWires.Stars[i] ? 'black' : 'white');
+								}
+
+								// Arrows
+								for (var i = 0; i < 6; i++) {
+									svg += "<path transform='translate({x}, {y}) rotate({r})' d='M0-15L11 0H5.7v15H-5.7v-15H-11z' fill='{f}'/>"
+										.replace(/\{x\}/g, arrowsCoords[i][0])
+										.replace(/\{y\}/g, arrowsCoords[i][1])
+										.replace(/\{f\}/g, module.PerplexingWires.Arrows[i].Color)
+										.replace(/\{r\}/g, module.PerplexingWires.Arrows[i].Rotation);
+								}
+
+								module.push({ label: 'Module:', obj: $('<svg viewBox="0 0 280 400" fill="none" stroke="#000" stroke-width="2" style="width: 10cm; display: block">' + svg + '</svg>') });
+							}
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Perspective Pegs": {
 				ID: "spwizPerspectivePegs",
 				Lines: [
@@ -2426,7 +2573,7 @@ $(function() {
 									"╬": ["fourway", 0]
 								};
 
-								var svgGrid = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" width="200" height="200" style="display: block; border: red solid 4px; background: rgb(30, 30, 30)">');
+								var svgGrid = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" width="200" height="200" style="display: block; border: #a00 solid 4px; background: rgb(30, 30, 30)">');
 								for (var y in module.Pipes) {
 									for (var x in module.Pipes[y]) {
 										var char = module.Pipes[y][x];
@@ -2435,7 +2582,7 @@ $(function() {
 											if (!data) {
 												console.warn("Unknown char: " + char);
 											} else {
-												$("<svg><path d='" + pipeSVG[data[0]] + "'></svg>")
+												$("<svg><path d='" + pipeSVG[data[0]] + "' /></svg>")
 													.children()
 													.eq(0)
 													.unwrap()
