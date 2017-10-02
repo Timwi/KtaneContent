@@ -201,13 +201,21 @@ $(function() {
 			a = $(".bomb[data-serial='" + serial + "']");
 			div = $("#bomb-" + serial);
 		}
-		if (!a.length || !div.length)
-			return false;
+
+		if (!a.length || !div.length) return false;
+
 		$(".bomb.selected").removeClass("selected");
 		a.addClass("selected");
 		$(".bomb-info").hide();
 		div.show();
-		window.location.hash = '#bomb-' + serial;
+
+		$("body").scrollTop(div.offset().top);
+
+		// Update hash
+		var state = readHash();
+		state.bomb = serial;
+		updateHash(state);
+
 		return false;
 	}
 
@@ -221,7 +229,6 @@ $(function() {
 
 	// Convert noLogging to display names.
 	noLogging = noLogging.map(getModuleName);
-
 
 	// http://stackoverflow.com/a/1267338
 	function zeroFill(number, width) {
@@ -275,7 +282,7 @@ $(function() {
 			// Build up the bomb.
 			var serial = this.Bombs[0].Serial;
 			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>").hide().appendTo($("#wrap"));
-			var fragment = (url ? '#url=' + url + ';' : '#') + 'bomb-' + serial;
+			var fragment = (url ? '#url=' + url + ';' : '#') + 'bomb=' + serial;
 			var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
 				.appendTo($("#bombs"))
 				.click(function() { selectBomb(serial); return false; })
@@ -3131,6 +3138,11 @@ $(function() {
 			linen++;
 		}
 
+		// Update hash
+		var state = readHash();
+		state.url = url;
+		updateHash(state);
+
 		$(".bomb, .bomb-info").remove();
 		parsed.forEach(function(obj) { obj.ToHTML(url); });
 		$('#ui').addClass('has-bomb');
@@ -3160,15 +3172,15 @@ $(function() {
 
 	// Handle uploading
 	var dropMsg = $("#full-screen-msg");
-	$(document).on("dragover", function(event) {
-		event.preventDefault();
-		event.stopPropagation();
-		dropMsg.addClass("hovering");
-	}).on("dragleave", function(event) {
-		event.preventDefault();
-		event.stopPropagation();
+	var pasteButton = $("#paste");
+	var pasteBox = $("#paste-box");
 
+	$(document).on("dragover", function() {
+		dropMsg.addClass("hovering");
+		return false;
+	}).on("dragleave", function() {
 		dropMsg.removeClass("hovering");
+		return false;
 	}).on("drop", function(event) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -3191,18 +3203,18 @@ $(function() {
 			clipText = oEvent.clipboardData.getData("text/plain");
 		}
 		readPaste(clipText);
-		$('#paste').show();
-		$('#paste-box').hide();
+		pasteButton.show();
+		pasteBox.hide();
 	});
 
-	$('#paste-box').on("blur", function() {
-		$('#paste').show();
-		$('#paste-box').hide();
+	pasteBox.on("blur", function() {
+		pasteButton.show();
+		pasteBox.hide();
 		return false;
 	});
-	$('#paste').click(function() {
-		$('#paste').hide();
-		$('#paste-box').show().focus();
+	pasteButton.click(function() {
+		pasteButton.hide();
+		pasteBox.show().focus();
 		return false;
 	});
 
@@ -3210,21 +3222,33 @@ $(function() {
 		uploadFiles(this.files);
 	});
 
+	function readHash() {
+		var state = {};
+		if (window.location.hash.length < 2) return state;
+
+		window.location.hash.substr(1).split(";").forEach(function(param) {
+			var parts = param.replace(/^bomb-/g, "bomb=").split("=");
+			if (parts.length != 2) return;
+
+			state[parts[0]] = parts[1];
+		});
+
+		return state;
+	}
+
+	function updateHash(state) {
+		var newUrl = new URL(window.location.href);
+		newUrl.hash = Object.entries(state).map(function(entry) { return entry.join("="); }).join(";");
+		history.replaceState(null, null, newUrl.toString());
+	}
+
 	window.onhashchange = function() {
-		if (window.location.hash.length < 2)
-			return;
-		var pieces = window.location.hash.substr(1).split(';');
-		var readUrl = null;
-		var bombSerial = null;
-		for (var i = 0; i < pieces.length; i++) {
-			if (pieces[i].startsWith('url=')) {
-				readUrl = pieces[i].substr(4);
-			} else if (pieces[i].startsWith('bomb-')) {
-				bombSerial = pieces[i].substr(5);
-			}
-		}
-		if (readUrl)
-			readPaste(readUrl, bombSerial);
+		var hashState = readHash();
+
+		var logUrl = hashState.url;
+		var bombSerial = hashState.bomb;
+		if (logUrl)
+			readPaste(logUrl, bombSerial);
 		else if (bombSerial)
 			selectBomb(bombSerial);
 	};
