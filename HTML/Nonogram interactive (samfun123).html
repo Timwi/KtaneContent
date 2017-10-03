@@ -26,11 +26,14 @@
 
 				var colorCells = [];
 				var numberCells = [];
+				var puzzleCells = [];
 
 				var selected;
 				var selectedType;
 				var previous;
 				var previousType;
+
+				var firstState;
 
 				function selectCell(element) {
 					if (selected) {
@@ -111,6 +114,8 @@
 							}
 						}
 					}
+				}).mouseup(function(event) {
+					firstState = undefined;
 				});
 
 				for (var y = 0; y < 10; y++) {
@@ -139,16 +144,49 @@
 								colorCells[y - 5 + 10 + (x == 3 ? 0 : 4) + (x - 3)] = cell;
 							}
 						} else {
-							let state = 0;
-							cell.click(function() {
-								state++;
-								state %= 3;
+							puzzleCells.push(cell);
 
-								cell.text(state == 2 ? "✕" : "").css("background-color", state == 1 ? "rgb(127, 127, 255)" : "");
+							let state = 0;
+							cell.mousedown(function(event) {
+								if (event.buttons == 1) {
+									state = firstState = (state == 0 ? 1 : 0);
+									cell.trigger("updateState", state);
+
+									return false;
+								} else if (event.buttons == 2) {
+									state = firstState = (state == 0 ? 2 : 0);
+									cell.trigger("updateState", state);
+
+									return false;
+								}
+							}).mouseenter(function(event) {
+								if (event.buttons <= 2 && firstState != undefined) {
+									cell.trigger("updateState", firstState);
+								}
+							}).contextmenu(function() {
+								return false; 
+							}).on("updateState", function(event, newState) {
+								state = newState;
+								cell.text(state == 2 ? "•" : "").css("background-color", state == 1 ? "rgb(127, 127, 127)" : "");
 							});
 						}
 					}
 				}
+
+				$("button.reset").click(function() {
+					colorCells[0].click();
+					colorCells.forEach(function(cell) {
+						cell.css("background-color", colors[0]);
+					});
+
+					numberCells.forEach(function(cell) {
+						cell.text("0");
+					});
+
+					puzzleCells.forEach(function(cell) {
+						cell.trigger("updateState", 0);
+					});
+				});
 			});
 		</script>
 		<style>
@@ -156,6 +194,9 @@
 				margin: 0 auto;
 				background: white;
 				user-select: none;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
 				margin-bottom: 15px;
 			}
 
@@ -178,6 +219,21 @@
 				background: black;
 				border-radius: 50%;
 			}
+
+			button {
+				pointer-events: all;
+				border: black 2px solid;
+				border-radius: 3px;
+				transition: color 1s, background-color 1s;
+				margin: 0 auto;
+				display: block;
+				margin-bottom: 15px;
+			}
+
+			button:hover {
+				color: white;
+				background-color: black;
+			}
 		</style>
 	</head>
 	<body>
@@ -196,6 +252,7 @@
 						<li>See the original manual page for the original instructions.</li>
 					</ul>
 					<table class="interactive"></table>
+					<button class="reset">Reset</button>
 					<table style="margin: 0 auto;margin-bottom: 15px;">
 						<tr>
 							<th>Interaction</th>
@@ -203,7 +260,11 @@
 						</tr>
 						<tr>
 							<th>Click a cell</th>
-							<td>Toggle between filled,<br>crossed out and empty</td>
+							<td>Toggle between filled and empty</td>
+						</tr>
+						<tr>
+							<th>Right-click a cell</th>
+							<td>Toggle between crossed out and empty</td>
 						</tr>
 						<tr>
 							<th>Click a color/number</th>
