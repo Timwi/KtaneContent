@@ -55,6 +55,7 @@ var ModuleNames = {
 	MorseAMaze: "Morse-A-Maze",
 	ColorMorseModule: "Color Morse",
 	EternitySDec: "Hex To Decimal",
+	SetModule: "S.E.T.",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2728,6 +2729,89 @@ $(function() {
 						regex: /Module generated/,
 						value: function(matches, module) {
 							module.push({ label: "Flags", obj: pre(readMultiple(8)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			"S.E.T.": {
+				ID: "SetModule",
+				Lines: [
+					{
+						regex: /^Icon at \(module\) ([ABC][123]) is \(manual\) ([ABC][123]), (filled|wavy|empty), (\d) dots\./,
+						value: function(matches, module) {
+							if (!('SetInfo' in module)) {
+								module.SetInfo = {
+									Symbols: [null, null, null, null, null, null, null, null, null],
+									WavyId: Math.floor(Math.random() * 2147483647),
+									Node: { label: 'Module:', obj: null },
+									XY: function(str) { return { X: str.charCodeAt(0) - "A".charCodeAt(0), Y: str.charCodeAt(1) - "1".charCodeAt(0) }; }
+								};
+								module.push(module.SetInfo.Node);
+							}
+
+							var moduleXY = module.SetInfo.XY(matches[1]);
+							var manualXY = module.SetInfo.XY(matches[2]);
+
+							var pathData =
+								// pacman
+								matches[2] === 'A1' ? "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z" :
+								// cross
+								matches[2] === 'B1' ? "M120 625a10 10 0 0 0-5.6 18.3L132 655l-17.6 11.7a10 10 0 1 0 11.2 16.6L150 667l24.4 16.3a10 10 0 1 0 11.2-16.6L168 655l17.6-11.7a10 10 0 0 0-5.8-18.4 10 10 0 0 0-5.4 1.7L150 643l-24.4-16.3a10 10 0 0 0-5-1.8z" :
+								// triangle
+								matches[2] === 'C1' ? "M210 685l40-60 40 60z" :
+								// tepee
+								matches[2] === 'A2' ? "M50 725l-40 60h28l12-18 12 18h28l-40-60z" :
+								// tshirt
+								matches[2] === 'B2' ? "M110 725v30h20v30h40v-30h20v-30h-30c0 5.5-4.5 10-10 10s-10-4.5-10-10z" :
+								// arrow
+								matches[2] === 'C2' ? "M250 725l40 35h-20v25h-40v-25h-20z" :
+								// diamond
+								matches[2] === 'A3' ? "M50 825l40 30-40 30-40-30z" :
+								// hotel
+								matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
+								// star
+								matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
+
+							var dot = "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z";
+							var doubledot = "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z";
+
+							var symbolSvg = "<path d='!data!' fill='!fill!' stroke='black' stroke-width='5' transform='translate(!x!, !y!)!transform!'/>"
+								.replace(/!data!/g, pathData)
+								.replace(/!x!/g, 100*moduleXY.X - 100*manualXY.X)
+								.replace(/!y!/g, 100*moduleXY.Y - 100*manualXY.Y - 600)
+								.replace(/!fill!/g, matches[3] === 'filled' ? 'black' : matches[3] === 'wavy' ? 'url(#Wavy'+module.SetInfo.WavyId+')' : 'none')
+								.replace(/!transform!/, matches[2] === 'C3' ? "matrix(1.25 0 0 1 -437.5 -2.77)" : '');
+
+							if (matches[4] !== '0')
+								symbolSvg += "<path d='!data!' fill='black' stroke='none' transform='translate(!x!, !y!)'/>"
+									.replace(/!x!/g, 100*moduleXY.X)
+									.replace(/!y!/g, 100*moduleXY.Y)
+									.replace(/!data!/g, matches[4] === '1'
+										? "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z"
+										: "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z");
+
+							module.SetInfo.Symbols[moduleXY.X + 3*moduleXY.Y] = symbolSvg;
+							return true;
+						}
+					},
+					{
+						regex: /^Solution: ([ABC][123]), ([ABC][123]), ([ABC][123])/,
+						value: function(matches, module) {
+
+							var framesSvg = '';
+							for (var i = 1; i <= 3; i++) {
+								var xy = module.SetInfo.XY(matches[i]);
+								framesSvg += "<rect x='!x!' y='!y!' width='100' height='100' stroke-width='3' stroke='#3c2' fill='none' />"
+									.replace(/!x!/g, 100*xy.X)
+									.replace(/!y!/g, 100*xy.Y);
+							}
+
+							module.SetInfo.Node.obj = $("<svg viewBox='-5 -5 310 310'><defs><pattern id='Wavy"+module.SetInfo.WavyId+"' height='5.2' width='30.1' patternUnits='userSpaceOnUse'><path d='M 7.597,0.061 C 5.079,-0.187 2.656,0.302 -0.01,1.788 L -0.01,3.061 C 2.773,1.431 5.173,1.052 7.472,1.280 C 9.770,1.508 11.969,2.361 14.253,3.218 C 18.820,4.931 23.804,6.676 30.066,3.061 L 30.062,1.788 C 23.622,5.497 19.246,3.770 14.691,2.061 C 12.413,1.207 10.115,0.311 7.597,0.061 z' /></pattern></defs>" + framesSvg + module.SetInfo.Symbols.join('') + "</svg>")
+								.css({ display: 'block', width: '12cm' });
 							return true;
 						}
 					},
