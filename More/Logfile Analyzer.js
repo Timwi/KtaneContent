@@ -3057,14 +3057,15 @@ $(function() {
 			if (line !== "") {
 				var match = /^[ \t]*\[(.+?)\] ?(.+)/.exec(line);
 				if (match) {
-					var obj = undefined;
-					var id = undefined;
+					var obj = null;
+					var id = null;
 
 					var submatch = /(.+?) #(\d+)/.exec(match[1]);
 					if (submatch) {
 						obj = lineRegex[submatch[1]];
 						id = submatch[2];
-					} else obj = lineRegex[match[1]];
+					} else
+						obj = lineRegex[match[1]];
 
 					if (obj) {
 						if (typeof (obj) != "string") {
