@@ -18,11 +18,30 @@ e.onload = function()
 	$(function()
 	{
 		var enabled = true;
-		$(document).keypress(function(event)
-		{
+		var colors = ["rgba(68, 130, 255, 0.4)", "rgba(255, 50, 50, 0.4)", "rgba(0, 255, 0, 0.4)", "rgba(255, 255, 0, 0.4)"];
+		var currentColor = colors[0];
+
+		var highlighterAlert = $('<div style="position: fixed;top: 0;left: 0;padding: 6px;color: black;">Highlighter Color</div>').appendTo("body").hide();
+		var alertTimeout;
+
+		$(document).keypress(function(event) {
 			if (event.shiftKey && event.key == "T")
 			{
 				enabled = !enabled;
+			}
+		}).keydown(function(event) {
+			if (event.altKey && event.keyCode >= 49 && event.keyCode <= 53)
+			{
+				currentColor = colors[event.keyCode - 49];
+
+				if (alertTimeout) {
+					clearTimeout(alertTimeout);
+				}
+
+				highlighterAlert.css("background-color", currentColor).fadeIn(500);
+				alertTimeout = setTimeout(function() {
+					highlighterAlert.fadeOut(500);
+				}, 2000);
 			}
 		});
 
@@ -154,13 +173,13 @@ e.onload = function()
 						var svg = element.is("svg *");
 						var fill;
 
-						var highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b);
+						var highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css("background-color", currentColor);
                         setPosition(highlight);
 
 						if (svg)
 						{
 							fill = element.css("fill");
-							element.css("fill", "rgba(68, 130, 255, 0.4)");
+							element.css("fill", currentColor);
 							highlight.css("background-color", "rgba(0, 0, 0, 0)");
 						}
 
