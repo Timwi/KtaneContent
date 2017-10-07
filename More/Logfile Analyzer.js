@@ -2035,7 +2035,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!|Wrong! All of your cards|Value of deck card/,
+						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!|Wrong! All of your cards|Value of (?:deck|offered) card/,
 						value: function(matches, module) {
 							module.push(matches.input);
 							return true;
