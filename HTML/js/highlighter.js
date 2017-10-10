@@ -18,7 +18,7 @@ e.onload = function()
 	$(function()
 	{
 		var enabled = true;
-		var colors = ["rgba(68, 130, 255, 0.4)", "rgba(255, 50, 50, 0.4)", "rgba(0, 255, 0, 0.4)", "rgba(255, 255, 0, 0.4)"];
+		var colors = ["rgba(68, 130, 255, 0.4)", "rgba(223, 32, 32, 0.4)", "rgba(34, 195, 34, 0.4)", "rgba(223, 223, 32, 0.4)"];
 		var currentColor = colors[0];
 
 		var highlighterAlert = $('<div style="position: fixed;top: 0;left: 0;padding: 6px;color: black;border-bottom:1px rgba(0, 0, 0, 0.5) solid;border-right:1px rgba(0, 0, 0, 0.5) solid;border-bottom-right-radius:5px;">Highlighter Color</div>').appendTo("body").hide();
