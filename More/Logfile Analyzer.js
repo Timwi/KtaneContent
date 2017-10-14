@@ -1135,7 +1135,7 @@ $(function() {
 								if (numbers[i] > max)
 									max = numbers[i];
 							var table = $('<table><tr><td>0<td>1</tr><tr><td>2<td>3<td>4</tr><tr><td>5<td>6<td>7</tr></table>'.replace(/\d/g, function(i) {
-								return numbers[i]; 
+								return numbers[i];
 							})).css({ borderCollapse: 'collapse' });
 							table.find('td').each(function(_, elem) {
 								$(elem).css({
@@ -2336,15 +2336,15 @@ $(function() {
 							module.PerplexingWires.Arrows[parseInt(matches[1]) - 1] = {
 								Color:
 									matches[2] === 'Red' ? '#ed2121' :
-								matches[2] === 'Green' ? '#19da3a' :
-								matches[2] === 'Blue' ? '#2f89ef' :
-								matches[2] === 'Yellow' ? '#e4f20e' :
-								matches[2] === 'Purple' ? '#dc17dc' : 'black',
+									matches[2] === 'Green' ? '#19da3a' :
+									matches[2] === 'Blue' ? '#2f89ef' :
+									matches[2] === 'Yellow' ? '#e4f20e' :
+									matches[2] === 'Purple' ? '#dc17dc' : 'black',
 								Rotation:
 									matches[3] === 'Up' ? 0 :
-								matches[3] === 'Left' ? 90 :
-								matches[3] === 'Down' ? 180 :
-								matches[3] === 'Right' ? 270 : 45
+									matches[3] === 'Left' ? 90 :
+									matches[3] === 'Down' ? 180 :
+									matches[3] === 'Right' ? 270 : 45
 							};
 							return true;
 						}
@@ -2363,20 +2363,20 @@ $(function() {
 								From: parseInt(matches[1]) - 1,
 								Color:
 									matches[3] === 'Black' ? '#34322D' :
-								matches[3] === 'Blue' ? '#2B8DFF' :
-								matches[3] === 'Green' ? '#1EE41F' :
-								matches[3] === 'Orange' ? '#FFA600' :
-								matches[3] === 'Purple' ? '#BB3AFF' :
-								matches[3] === 'Red' ? '#FF3A3A' :
-								matches[3] === 'White' ? '#E1E1E1' :
-								matches[3] === 'Yellow' ? '#DADB35' : '#f8f',
+									matches[3] === 'Blue' ? '#2B8DFF' :
+									matches[3] === 'Green' ? '#1EE41F' :
+									matches[3] === 'Orange' ? '#FFA600' :
+									matches[3] === 'Purple' ? '#BB3AFF' :
+									matches[3] === 'Red' ? '#FF3A3A' :
+									matches[3] === 'White' ? '#E1E1E1' :
+									matches[3] === 'Yellow' ? '#DADB35' : '#f8f',
 								Venn: matches[5].split('+'),
 								Condition: matches[6],
 								Cut:
 									matches[4] === 'cut' ? '✓' :
-								matches[4] === 'don’t cut' ? '✗' :
-								matches[4] === 'cut first' ? 'F' :
-								matches[4] === 'cut last' ? 'L' : null
+									matches[4] === 'don’t cut' ? '✗' :
+									matches[4] === 'cut first' ? 'F' :
+									matches[4] === 'cut last' ? 'L' : null
 							};
 
 							if (matches[2] === '6') {
