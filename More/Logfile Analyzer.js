@@ -2333,6 +2333,7 @@ $(function() {
 					{
 						regex: /^Arrow #(\d) is (\w+) and pointing (\w+)\./,
 						value: function(matches, module) {
+							/* eslint-disable indent */
 							module.PerplexingWires.Arrows[parseInt(matches[1]) - 1] = {
 								Color:
 									matches[2] === 'Red' ? '#ed2121' :
@@ -2345,6 +2346,7 @@ $(function() {
 									matches[3] === 'Left' ? 90 :
 									matches[3] === 'Down' ? 180 :
 									matches[3] === 'Right' ? 270 : 45
+								/* eslint-enable indent */
 							};
 							return true;
 						}
@@ -2361,6 +2363,7 @@ $(function() {
 						value: function(matches, module) {
 							module.PerplexingWires.Wires[parseInt(matches[2]) - 1] = {
 								From: parseInt(matches[1]) - 1,
+								/* eslint-disable indent */
 								Color:
 									matches[3] === 'Black' ? '#34322D' :
 									matches[3] === 'Blue' ? '#2B8DFF' :
@@ -2377,6 +2380,7 @@ $(function() {
 									matches[4] === 'don’t cut' ? '✗' :
 									matches[4] === 'cut first' ? 'F' :
 									matches[4] === 'cut last' ? 'L' : null
+								/* eslint-enable indent */
 							};
 
 							if (matches[2] === '6') {
