@@ -2394,7 +2394,7 @@ $(function() {
 								// Wires
 								for (i = 0; i < 6; i++) {
 									svg += (
-										"<path d='M{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/>" +
+										"<path d='M{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}' stroke='#543' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/>" +
 										"<path d='M{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}' stroke='{color}' stroke-linecap='round' stroke-linejoin='round' stroke-width='13'/>" +
 										"<text x='{x1}' y='370' text-anchor='middle'>{cond}</text>" +
 										"<text x='{x1}' y='390' text-anchor='middle' stroke='none' fill='{textcolor}'>{cut}</text>"
