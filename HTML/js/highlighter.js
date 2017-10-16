@@ -200,7 +200,7 @@ e.onload = function()
 						if (svg)
 						{
 							fill = element.css("fill");
-							element.css("fill", currentColor);
+							element.css("fill", colors[currentColor]);
 							highlight.css("background-color", "rgba(0, 0, 0, 0)");
 						}
 
