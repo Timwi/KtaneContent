@@ -2919,6 +2919,34 @@ $(function() {
 				]
 			},
 			"Square Button": "ButtonV2",
+			"Symbol Cycle": {
+				ID: "SymbolCycleModule",
+				Lines: [
+					{
+						regex: /^((Top|Bottom) (left|right) cycle|Solution:|Wrong solution entered:|Displayed symbols:).*/,
+						value: function(matches, module) {
+                            console.log('match found');
+                            console.log(matches);
+                            var span = $('<span>');
+                            var txt = matches[0];
+                            var data;
+                            while ((data = /^(.*?)(\d+)(.*)$/.exec(txt)) !== null) {
+                                span.append($('<span>').text(data[1]));
+                                span.append($('<img>')
+                                    .attr({ src: '../HTML/img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
+                                    .css({ verticalAlign: 'middle', margin: '0 5px', filter: 'invert(100%)' }));
+                                txt = data[3];
+                            }
+                            span.append($('<span>').text(txt));
+							module.push(span);
+                            return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+            },
 			//"Symbolic Password": "symbolicPasswordModule",
 			//"Text Field": "TextField",
 			//"The Clock": "TheClockModule",
