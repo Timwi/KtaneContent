@@ -1,18 +1,5 @@
-// A list of internal port names used to convert to their display name.
-var PortNames = {
-	0: "Empty Port Plate",
-	RJ45: "RJ-45",
-	PS2: "PS/2",
-	StereoRCA: "Stereo RCA",
-	DVI: "DVI-D",
-	Parallel: "Parallel",
-	Serial: "Serial",
-	ComponentVideo: "Component Video",
-	CompositeVideo: "Composite Video"
-};
-
 // A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
-var ModuleNames = {
+const ModuleNames = {
 	// Vanilla
 	Keypad: "Keypads",
 	BigButton: "The Button",
@@ -69,8 +56,22 @@ var ModuleNames = {
 	NeedyVentV2: "Answering Questions",
 };
 
+
+// A list of internal port names used to convert to their display name.
+const PortNames = {
+	0: "Empty Port Plate",
+	RJ45: "RJ-45",
+	PS2: "PS/2",
+	StereoRCA: "Stereo RCA",
+	DVI: "DVI-D",
+	Parallel: "Parallel",
+	Serial: "Serial",
+	ComponentVideo: "Component Video",
+	CompositeVideo: "Composite Video"
+};
+
 // A list of blacklisted strings for the filtered logs.
-var blacklist = [
+const blacklist = [
 	"[Assets.Scripts.Pacing.PaceMaker]",
 	"[Assets.Scripts.Services.Steam.ServicesSteam]",
 	"[BombGenerator] Instantiated EmptyComponent",
@@ -92,8 +93,36 @@ var blacklist = [
 	"Calculated FPS: "
 ];
 
+function convertID(id) {
+	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!\b)([A-Z])/g, " $1");
+}
+
+function getModuleName(name) {
+	return ModuleNames[name] || convertID(name);
+}
+
+function readHash() {
+	var state = {};
+	if (window.location.hash.length < 2) return state;
+
+	window.location.hash.substr(1).split(";").forEach(function(param) {
+		var parts = param.replace(/^bomb-/g, "bomb=").split("=");
+		if (parts.length != 2) return;
+
+		state[parts[0]] = parts[1];
+	});
+
+	return state;
+}
+
+function updateHash(state) {
+	var newUrl = new URL(window.location.href);
+	newUrl.hash = Object.entries(state).map(function(entry) { return entry.join("="); }).join(";");
+	history.replaceState(null, null, newUrl.toString());
+}
+
 // A list of modules that don't log.
-var noLogging = [
+const noLogging = [
 	"alphabet",
 	"AnagramsModule",
 	"CrazyTalk",
@@ -111,7 +140,7 @@ var noLogging = [
 	"shapeshift",
 	"switchModule",
 	"Simon"
-];
+].map(getModuleName);
 
 // Search for 'var lineRegex' for the list of all the line matching regex & the reference.
 
@@ -122,21 +151,6 @@ $(function() {
 	var debugging = (window.location.protocol == "file:");
 	var linen = 0;
 	var lines = [];
-
-	function readPaste(clipText, bombSerial) {
-		var url = clipText;
-		try { url = decodeURIComponent(clipText); } catch (e) {}
-
-		if (/^https?:\/\//.exec(url)) { // Very basic regex to detect a URL being pasted.
-			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
-				parseLog(data, url, bombSerial);
-			}).fail(function() {
-				toastr.error("Unable to get logfile from URL.", "Upload Error");
-			});
-		} else {
-			parseLog(clipText, null, bombSerial);
-		}
-	}
 
 	function makeExpandable(parent, label) {
 		parent
@@ -219,17 +233,6 @@ $(function() {
 
 		return false;
 	}
-
-	function convertID(id) {
-		return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!\b)([A-Z])/g, " $1");
-	}
-
-	function getModuleName(name) {
-		return ModuleNames[name] || convertID(name);
-	}
-
-	// Convert noLogging to display names.
-	noLogging = noLogging.map(getModuleName);
 
 	// http://stackoverflow.com/a/1267338
 	function zeroFill(number, width) {
@@ -464,6 +467,9 @@ $(function() {
 					b = b[0];
 				}
 
+				a = a.replace(/^The /, "");
+				b = b.replace(/^The /, "");
+
 				if (a < b) {
 					return -1;
 				} else if (a > b) {
@@ -618,6 +624,7 @@ $(function() {
 				id = this.GetMod(name).IDs.length;
 			}
 
+			var info;
 			module.forEach(function(mod) {
 				if (mod[0] == "#" + id) {
 					info = mod[1];
@@ -628,7 +635,7 @@ $(function() {
 				return info;
 			}
 
-			var info = ["#" + id, []];
+			info = ["#" + id, []];
 			module.push(info);
 
 			return info[1];
@@ -1021,9 +1028,7 @@ $(function() {
 							var stuff = [];
 							for (r = 0; r < 6; r++) {
 								stuff[r] = [];
-								tr = $('<tr>').appendTo(table);
 								for (c = 0; c < 6; c++) {
-									td = $('<td>').appendTo(tr);
 									var ch = field[r][2 * c + 2];
 									if (c > 0 && r > 0)
 										stuff[r][c] = { IsShip: ch === '#' || ch === '%', IsSafeLocation: ch === '•' || ch === '%' };
@@ -2899,7 +2904,6 @@ $(function() {
 					{
 						regex: /Asking question: (.+) — (.+)/,
 						value: function(matches, module) {
-							console.log(matches);
 							var answers = $("<div>").css({ margin: '.5em 0' });
 							matches[2].split(" | ").forEach(function(answer) {
 								var answerSpan = $("<span>");
@@ -2925,28 +2929,28 @@ $(function() {
 					{
 						regex: /^((Top|Bottom) (left|right) cycle|Solution:|Wrong solution entered:|Displayed symbols:).*/,
 						value: function(matches, module) {
-                            console.log('match found');
-                            console.log(matches);
-                            var span = $('<span>');
-                            var txt = matches[0];
-                            var data;
-                            while ((data = /^(.*?)(\d+)(.*)$/.exec(txt)) !== null) {
-                                span.append($('<span>').text(data[1]));
-                                span.append($('<img>')
-                                    .attr({ src: '../HTML/img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
-                                    .css({ verticalAlign: 'middle', margin: '0 5px', filter: 'invert(100%)' }));
-                                txt = data[3];
-                            }
-                            span.append($('<span>').text(txt));
+							console.log('match found');
+							console.log(matches);
+							var span = $('<span>');
+							var txt = matches[0];
+							var data;
+							while ((data = /^(.*?)(\d+)(.*)$/.exec(txt)) !== null) {
+								span.append($('<span>').text(data[1]));
+								span.append($('<img>')
+									.attr({ src: '../HTML/img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
+									.css({ verticalAlign: 'middle', margin: '0 5px', filter: 'invert(100%)' }));
+								txt = data[3];
+							}
+							span.append($('<span>').text(txt));
 							module.push(span);
-                            return true;
+							return true;
 						}
 					},
 					{
 						regex: /.+/
 					}
 				]
-            },
+			},
 			//"Symbolic Password": "symbolicPasswordModule",
 			//"Text Field": "TextField",
 			//"The Clock": "TheClockModule",
@@ -3076,11 +3080,11 @@ $(function() {
 					{
 						regex: /^(\d+)( = .*\. Solution symbol is )(\d+)\.$/,
 						value: function(matches, module) {
-							var span = $('<span>');
-							span.append($("<img src='../HTML/img/X-Ray/Icon C" + matches[1] + ".png' width='20' />"));
-							span.append($('<span>').text(matches[2]));
-							span.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"));
-							span.append($('<span>').text("."));
+							const span = $('<span>')
+								.append($("<img src='../HTML/img/X-Ray/Icon C" + matches[1] + ".png' width='20' />"))
+								.append($('<span>').text(matches[2]))
+								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
+								.append($('<span>').text("."));
 							module.push(span);
 							return true;
 						}
@@ -3088,13 +3092,13 @@ $(function() {
 					{
 						regex: /^Column (\d+), Row (\d+): symbol there is (\d+).$/,
 						value: function(matches, module) {
-							var span = $('<span>');
-							span.append($("<img src='../HTML/img/X-Ray/Icon A" + matches[1] + ".png' width='20' />"));
-							span.append($('<span>').text(" = Column " + matches[1] + ", "));
-							span.append($("<img src='../HTML/img/X-Ray/Icon B" + matches[2] + ".png' width='20' />"));
-							span.append($('<span>').text(" = Row " + matches[2] + ": symbol there is "));
-							span.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"));
-							span.append($('<span>').text("."));
+							const span = $('<span>')
+								.append($("<img src='../HTML/img/X-Ray/Icon A" + matches[1] + ".png' width='20' />"))
+								.append($('<span>').text(" = Column " + matches[1] + ", "))
+								.append($("<img src='../HTML/img/X-Ray/Icon B" + matches[2] + ".png' width='20' />"))
+								.append($('<span>').text(" = Row " + matches[2] + ": symbol there is "))
+								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
+								.append($('<span>').text("."));
 							module.push(span);
 							return true;
 						}
@@ -3263,6 +3267,26 @@ $(function() {
 		toastr.success("Log read successfully!");
 	}
 
+	// Handle uploading
+	const dropMsg = $("#full-screen-msg");
+	const pasteButton = $("#paste");
+	const pasteBox = $("#paste-box");
+
+	function readPaste(clipText, bombSerial) {
+		var url = clipText;
+		try { url = decodeURIComponent(clipText); } catch (e) {}
+
+		if (/^https?:\/\//.exec(url)) { // Very basic regex to detect a URL being pasted.
+			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
+				parseLog(data, url, bombSerial);
+			}).fail(function() {
+				toastr.error("Unable to get logfile from URL.", "Upload Error");
+			});
+		} else {
+			parseLog(clipText, null, bombSerial);
+		}
+	}
+
 	function uploadFiles(files) {
 		if (files.length === 1) {
 			var fr = new FileReader();
@@ -3280,14 +3304,7 @@ $(function() {
 		}
 	}
 
-
 	// EVENTS GO HERE
-
-	// Handle uploading
-	var dropMsg = $("#full-screen-msg");
-	var pasteButton = $("#paste");
-	var pasteBox = $("#paste-box");
-
 	$(document).on("dragover", function() {
 		dropMsg.addClass("hovering");
 		return false;
@@ -3334,26 +3351,6 @@ $(function() {
 	$("#upload").change(function() {
 		uploadFiles(this.files);
 	});
-
-	function readHash() {
-		var state = {};
-		if (window.location.hash.length < 2) return state;
-
-		window.location.hash.substr(1).split(";").forEach(function(param) {
-			var parts = param.replace(/^bomb-/g, "bomb=").split("=");
-			if (parts.length != 2) return;
-
-			state[parts[0]] = parts[1];
-		});
-
-		return state;
-	}
-
-	function updateHash(state) {
-		var newUrl = new URL(window.location.href);
-		newUrl.hash = Object.entries(state).map(function(entry) { return entry.join("="); }).join(";");
-		history.replaceState(null, null, newUrl.toString());
-	}
 
 	window.onhashchange = function() {
 		var hashState = readHash();
