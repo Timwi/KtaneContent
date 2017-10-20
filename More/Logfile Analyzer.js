@@ -2927,7 +2927,7 @@ $(function() {
 				ID: "SymbolCycleModule",
 				Lines: [
 					{
-						regex: /^((Top|Bottom) (left|right) cycle|Solution:|Wrong solution entered:|Displayed symbols:).*/,
+						regex: /^((Left|Right) cycle|Solution:|Wrong solution entered:|Displayed symbols:).*/,
 						value: function(matches, module) {
 							console.log('match found');
 							console.log(matches);
