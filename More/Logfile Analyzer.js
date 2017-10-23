@@ -412,6 +412,7 @@ $(function() {
 					"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
 					"Port Plates: " + bomb.PortPlates.length,
 					"Widgets: " + (bomb.Batteries.length + ind.length + bomb.PortPlates.length + bomb.ModdedWidgets),
+					bomb.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", bomb.ModdedWidgetInfo] : null
 				], $("<ul>").appendTo(edgeinfo));
 
 				$("<a href='#' class='module'>")
@@ -590,6 +591,7 @@ $(function() {
 		this.Indicators = [];
 		this.Batteries = [];
 		this.ModdedWidgets = 0;
+		this.ModdedWidgetInfo = [];
 		this.PortPlates = [];
 		this.Serial = "";
 		this.State = "Unsolved";
@@ -875,6 +877,15 @@ $(function() {
 					value: function(matches) {
 						// Workaround because the serial numbers for multiple bombs are all listed after the edgework for all of the bombs.
 						bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
+					}
+				}
+			],
+			// Modded Widgets
+			"EcryptedIndicatorWidget": [
+				{
+					regex: /Randomizing: ((?:un)?lit .{3}) acting as (?:un)?lit ([A-Z]{3})/,
+					value: function(matches) {
+						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} (${matches[2]})`);
 					}
 				}
 			],
