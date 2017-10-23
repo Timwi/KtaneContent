@@ -681,6 +681,7 @@ $(function() {
 		var bombgroup;
 		var bomb;
 		var parsed = [];
+		var bombSerialIndex = 0;
 
 		function GetBomb() {
 			return bombgroup || bomb;
@@ -872,7 +873,8 @@ $(function() {
 				{
 					regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
 					value: function(matches) {
-						bomb.Serial = matches[1];
+						// Workaround because the serial numbers for multiple bombs are all listed after the edgework for all of the bombs.
+						bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
 					}
 				}
 			],
