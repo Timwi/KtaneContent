@@ -1896,6 +1896,43 @@ $(function() {
 					}
 				]
 			},
+			"Hunting": {
+				ID: "hunting",
+				Lines: [
+					{
+					    regex: /^Stage (\d+), Clues: ([A-Za-z]) & ([A-Za-z]), Buttons:((?: [A-Za-z])+), Decoys:((?: [A-Za-z])+)/,
+					    value: function(matches, module) {
+							function addImg(span, str) {
+								span.append($('<img>')
+									.attr({ src: '../HTML/img/Hunting/' + str + (str.charCodeAt(0) >= 96 ? '_' : '') + '.png', width: 50 })
+									.css({ verticalAlign: 'middle', margin: '0 5px' }));
+							}
+
+							var cluesLi = $('<li>').text('Clues: ').addClass('no-bullet');
+							addImg(cluesLi, matches[2]);
+							addImg(cluesLi, matches[3]);
+
+							var buttonsLi = $('<li>').text('Buttons: ').addClass('no-bullet');
+							var arr = matches[4].trim().split(' ');
+							for (var j = 0; j < arr.length; j++) {
+								addImg(buttonsLi, arr[j]);
+							}
+
+							var decoysLi = $('<li>').text('Decoys: ').addClass('no-bullet');
+							var arr = matches[5].trim().split(' ');
+							for (j = 0; j < arr.length; j++) {
+								addImg(decoysLi, arr[j]);
+							}
+
+							module.push({ label: 'Stage ' + matches[1], obj: $('<ul>').append(cluesLi).append(buttonsLi).append(decoysLi), expandable: true });
+					        return true;
+					    }
+					},
+					{
+					    regex: /.+/
+					}
+				]
+			},
 			"Ice Cream": {
 				ID: "iceCreamModule",
 				Lines: [
