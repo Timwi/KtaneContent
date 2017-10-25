@@ -2528,9 +2528,91 @@ $(function() {
 					{
 					    regex: /Pegs:/,
 					    value: function(matches, module) {
-					        module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\n{2}/g, "\n")) });
+							var colors = {
+								R: '#E51537',
+								G: '#257A1C',
+								B: '#0077E0',
+								Y: '#E8E800',
+								P: '#A423A4'
+							};
+
+							// OK, now this is weird. Sometimes the lines are fine,
+							// sometimes they are double-spaced with blank lines.
+							// Read one line to find out whether it’s blank.
+							var tmpLine = readLine();
+							var ascii;
+							if (tmpLine.length > 0) {
+								ascii = readMultiple(10).split('\n');
+								ascii.splice(0, 0, tmpLine);
+							} else {
+								ascii = readMultiple(21).replace(/\n{2}/g, "\n").split('\n');
+							}
+							var pegCoords = [[9, 0], [17, 3], [13, 7], [4, 7], [1, 3]];
+							var sideCoords = [[3, 0], [5, 1], [4, 3], [1, 3], [0, 1]];
+							var svg1 = '', svg2 = '';
+							var startPeg = 0;
+							for (var peg = 0; peg < 5; peg++) {
+								for (var side = 0; side < 5; side++) {
+									function fmt(str) {
+										return str
+											.replace(/‹[01][io][xy]›/g, function(m) {
+												var angle1 = (72*(side + (+m[1])) - 126) / 180 * Math.PI;
+												var coord1 = (m[2] === 'i' ? .5 : 1) * (m[3] === 'x' ? Math.cos(angle1) : Math.sin(angle1));
+												var angle2 = (72*peg - 90) / 180 * Math.PI;
+												var coord2 = 3 * (m[3] === 'x' ? Math.cos(angle2) : Math.sin(angle2));
+												return coord1 + coord2;
+											})
+											.replace(/‹f›/g, function() {
+												return colors[ ascii[pegCoords[peg][1] + sideCoords[side][1]][pegCoords[peg][0] + sideCoords[side][0]] ];
+											});
+									}
+									svg1 += fmt("<path d='M‹0ix› ‹0iy› ‹1ix› ‹1iy› ‹1ox› ‹1oy› ‹0ox› ‹0oy›z' fill='‹f›' stroke='none' />");
+									svg2 += fmt("<path d='M‹0ix› ‹0iy› ‹0ox› ‹0oy›' fill='none' stroke='black' stroke-width='.05' />");
+									if (ascii[pegCoords[peg][1] + 1][pegCoords[peg][0] + 3] === '#')
+										startPeg = peg;
+								}
+							}
+							var tAngle = (72*startPeg - 90) / 180 * Math.PI;
+							svg2 += "<text x='‹x›' y='‹y›' font-size='.3' text-anchor='middle'>START</text>"
+								.replace('‹x›', 3 * Math.cos(tAngle))
+								.replace('‹y›', 3 * Math.sin(tAngle) + .1);
+							module.PegsSvg = svg1 + svg2;
 					        return true;
 					    }
+					},
+					{
+						regex: /^Sequence:.*/,
+						value: function(matches, module) {
+							module.SequenceLine = matches.input;
+							return true;
+						}
+					},
+					{
+						regex: /^Look from ((?:top|bottom)-(?:left|right)|top). Correct solution: ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top)/,
+						value: function(matches, module) {
+							var indexes = {
+								'top': 0,
+								'top-right': 1,
+								'bottom-right': 2,
+								'bottom-left': 3,
+								'top-left': 4
+							};
+							var svg = '';
+							for (var i = 2; i <= 4; i++) {
+								var pegAngle = (72*indexes[matches[i]] - 90) / 180 * Math.PI;
+								svg += "<g transform='translate(‹x› ‹y›) rotate(‹rot›)'><path d='M 0 -1.5 0 -100' fill='none' stroke-width='.1' stroke='#92a09a' /><path d='M -.3 -2 0 -1.1 .3 -2 z' fill='#92a09a' stroke='none' /></g>"
+									.replace(/‹x›/g, 3 * Math.cos(pegAngle))
+									.replace(/‹y›/g, 3 * Math.sin(pegAngle))
+									.replace(/‹rot›/g, 72 * indexes[matches[1]]);
+							}
+					        module.push({ label: 'Pegs:', obj: $("<svg viewBox='-5.5 -5.5 11 11'>" + module.PegsSvg + svg + '</svg>').css({
+								width: '25em',
+								display: 'block'
+							}) });
+							module.push(module.SequenceLine);
+							module.push(matches.input);
+							return true;
+						}
 					},
 					{
 					    regex: /.+/
