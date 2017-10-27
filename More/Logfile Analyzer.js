@@ -903,7 +903,7 @@ $(function() {
 				},
 				//Indicators
 				{
-					regex: /Encrypted Indicator ((?:Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) .{3}) acting as (?:Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
+					regex: /Encrypted Indicator ((?:Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) .{3}) acting as (?:Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
 					value : function(matches) {
 						bomb.ModdedWidgetInfo.push(`Colored Encrypted Indicator: ${matches[1]} (${matches[2]})`);
 					}
@@ -915,7 +915,7 @@ $(function() {
 					}
 				},
 				{
-					regex: /Indicator ((?:Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) [A-Z]{3})/,
+					regex: /Indicator ((?:Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) [A-Z]{3})/,
 					value : function(matches) {
 						bomb.ModdedWidgetInfo.push(`Colored Indicator: ${matches[1]}`);
 					}
@@ -928,9 +928,15 @@ $(function() {
 				},
 				//Batteries
 				{
-					regex: /Putting ([0-4]) batteries into a holder that fits ([0-4]) batteries./,
+					regex: /Putting ([1-4]) batter(?:ies|y) into a holder that fits [1-4] batter(?:ies|y)./,
 					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Batteries: ${matches[1]} in ${matches[2]}`);
+						bomb.ModdedWidgetInfo.push(`Batteries: ${matches[1]}`);
+					}
+				},
+				{
+					regex: /Putting 0 batteries into a holder that fits [1-4] batter(?:ies|y)/,
+					value: function(matches) {
+						bomb.ModdedWidgetInfo.push(`Batteries: Empty holder`);
 					}
 				},
 				//Ports
