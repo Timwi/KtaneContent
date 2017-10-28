@@ -307,18 +307,54 @@ $(function() {
 
 				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
 
+				var edgeworkSeperator = false;
 				if (bomb.Batteries.length > 0) {
+					edgeworkSeperator = true;
 					edgework.append("<div class='widget separator'>");
 
 					bomb.Batteries.sort().reverse();
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
-							.addClass(val == 4 ? "aaaa" : val == 3 ? "aaa" : val == 0 ? "empty" : val == 1 ? "d" : "aa")
+							.addClass(val == 1 ? "d" : "aa")
 							.appendTo(edgework);
 					});
 				}
+				
+				//Multiple Widget Batteries
+				if (bomb.ModdedBatteries.length > 0) {
+					if(!edgeworkSeperator) {
+						edgework.append("<div class='widget separator'>");
+					}
+					
+					bomb.ModdedBatteries.sort(function(batt1, batt2) {
+						if (batt1[0] < batt2[0]) return -1;
+						if (batt1[0] > batt2[0]) return 1;
+						if (batt1[1] < batt2[1]) return -1;
+						if (batt1[1] > batt2[1]) return 1;
+						if (batt1[2] < batt2[2]) return -1;
+						if (batt1[2] > batt2[2]) return 1;
+						return 0;
+					}).reverse();
+					
+					bomb.ModdedBatteries.forEach(function(val) {
+						if(val[0] == "MultipleWidgets:Batteries") {
+							if(val[1] > 0) {
+								$("<div class='widget multiplewidgets battery'>")
+									.addClass(val[1] == 4 ? "fouraa" : val[1] == 3 ? "threeaa" : val[1] == 2 ? "twoaa" : "ninevolt")
+									.appendTo(edgework)
+							}
+							else {
+								$("<div class='widget multiplewidgets battery'>")
+									.addClass(val[2] == 4 ? "emptyfouraa" : val[2] == 3 ? "emptythreeaa" : val[2] == 2 ? "emptytwoaa" : "emptyninevolt")
+									.appendTo(edgework)
+							}
+						}
+					});
+				}
 
+				edgeworkSeperator = false;
 				if (bomb.Indicators.length > 0) {
+					edgeworkSeperator = true;
 					edgework.append("<div class='widget separator'>");
 
 					bomb.Indicators.sort(function(ind1, ind2) {
@@ -336,10 +372,44 @@ $(function() {
 							.append($("<span class='label'>").text(val[1]));
 					});
 				}
+				//Multiple Widgets Indicator
+				//Encrypted Indicator
+				if (bomb.ModdedIndicators.length > 0) {
+					if(!edgeworkSeperator) {
+						edgework.append("<div class='widget separator'>");
+					}
+
+					bomb.ModdedIndicators.sort(function(ind1, ind2) {
+						if (ind1[0] < ind2[0]) return -1;
+						if (ind1[0] > ind2[0]) return 1;
+						if (ind1[1] < ind2[1]) return -1;
+						if (ind1[1] > ind2[1]) return 1;
+						if (ind1[2] < ind2[2]) return -1;
+						if (ind1[2] > ind2[2]) return 1;
+						return 0;
+					});
+
+					bomb.ModdedIndicators.forEach(function(val) {
+						if(val[0] == "MultipleWidgets:EncryptedIndicator" || val[0] == "MultipleWidgets:Indicator") {
+							$("<div class='widget multiplewidgets indicator'>")
+								.addClass(val[1])
+								.appendTo(edgework)
+								.append($("<span class='label'>").text(val[2]));
+						}
+						if(val[0] == "EcryptedIndicatorWidget") {
+							$("<div class='widget encryptedindicator'>")
+								.addClass(val[1])
+								.appendTo(edgework)
+								.append($("<span class='label'>").text(val[2]));
+						}
+					});
+				}
+				edgeworkSeperator = false;
 
 				if (bomb.PortPlates.length > 0) {
 					edgework.append("<div class='widget separator'>");
-
+					edgeworkSeperator = true;
+					
 					bomb.PortPlates.forEach(function(val) {
 						var plate = $("<div class='widget portplate'>").appendTo(edgework);
 						val.forEach(function(port) {
@@ -348,13 +418,44 @@ $(function() {
 					});
 				}
 				
-				if (bomb.ModdedWidgetInfo.length > 0) {
+				if (bomb.ModdedPortPlates.length > 0) {
+					if(!edgeworkSeperator) {
+						edgework.append("<div class='widget separator'>");
+					}
+					
+					bomb.ModdedPortPlates.sort(function(pp1, pp2) {
+						if (pp1[0] < pp2[0]) return -1;
+						if (pp1[0] > pp2[0]) return 1;
+						return 0;
+					});
+
+					bomb.ModdedPortPlates.forEach(function(val) {
+						if(val[0] == "MultipleWidgets:Ports") {
+							var plate = $("<div class='widget multiplewidgets portplate'>").appendTo(edgework);
+							val[1].forEach(function(port) {
+								$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+							});
+						}
+					});
+				}
+				
+				if (bomb.ModdedTwoFactor.length > 0) {
 					edgework.append("<div class='widget separator'>");
 					
-					bomb.ModdedWidgetInfo.forEach(function(val) {
-						if(val == "Two Factor")
+					bomb.ModdedTwoFactor.sort(function(tfa1, tfa2) {
+						if (tfa1[0] < tfa2[0]) return -1;
+						if (tfa1[0] > tfa2[0]) return 1;
+						return 0;
+					});
+					
+					bomb.ModdedTwoFactor.forEach(function(val) {
+						if(val == "TwoFactorWidget")
 						{
 							edgework.append("<div class='widget twofactor'>");
+						}
+						if(val == "MultipleWidgets:TwoFactor")
+						{
+							edgework.append("<div class='widget multiplewidgets twofactor'>");
 						}
 					});
 				}
@@ -604,6 +705,10 @@ $(function() {
 		this.ModdedWidgets = 0;
 		this.ModdedWidgetInfo = [];
 		this.PortPlates = [];
+		this.ModdedBatteries = [];
+		this.ModdedIndicators = [];
+		this.ModdedPortPlates = [];
+		this.ModdedTwoFactor = [];
 		this.Serial = "";
 		this.State = "Unsolved";
 		this.StartLine = 0;
@@ -898,70 +1003,55 @@ $(function() {
 			// Modded Widgets
 			"EcryptedIndicatorWidget": [
 				{
-					regex: /Randomizing: ((?:un)?lit .{3}) acting as (?:un)?lit ([A-Z]{3})/,
+					regex: /Randomizing: ((?:un)?lit) (.{3}) acting as (?:un)?lit ([A-Z]{3})/,
 					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} (${matches[2]})`);
-				    	}
+						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
+				    }
 				}
 			],
 			"MultipleWidgets": [
-				//Widget Count Correction
-				{
-					regex: /Widget #[12] = (?:Indicator|Ports|Batteries)/,
-					value: function(matches) {
-						bomb.ModdedWidgets--;
-					}
-				},
 				//Two Factor
 				{
 					regex: /Widget #[12] = TwoFactor/,
 					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Two Factor`);
+						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Two Factor`);
+						bomb.ModdedTwoFactor.push(`MultipleWidgets:TwoFactor`);
 					}
 				},
 				//Indicators
 				{
-					regex: /Encrypted Indicator ((?:Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) .{3}) acting as (?:Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
+					regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) (.{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
 					value : function(matches) {
-						bomb.ModdedWidgetInfo.push(`Colored Encrypted Indicator: ${matches[1]} (${matches[2]})`);
+						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+						bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator",matches[1],matches[2]]);
 					}
 				},
 				{
-					regex: /Encrypted Indicator ((?:un)?lit .{3}) acting as (?:un)?lit ([A-Z]{3})/,
+					regex: /Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
 					value : function(matches) {
-						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} (${matches[2]})`);
-					}
-				},
-				{
-					regex: /Indicator ((?:Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) [A-Z]{3})/,
-					value : function(matches) {
-						bomb.ModdedWidgetInfo.push(`Colored Indicator: ${matches[1]}`);
-					}
-				},
-				{
-					regex: /Indicator ((?:un)?lit [A-Z]{3})/,
-					value : function(matches) {
-						bomb.ModdedWidgetInfo.push(`Indicator: ${matches[1]}`);
+						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Indicator: ${matches[1]} ${matches[2]}`);
+						bomb.ModdedIndicators.push(["MultipleWidgets:Indicator",matches[1],matches[2]]);
 					}
 				},
 				//Batteries
 				{
-					regex: /Putting ([1-4]) batter(?:ies|y) into a holder that fits [1-4] batter(?:ies|y)./,
+					regex: /Putting ([0-4]) batter(?:ies|y) into a holder that fits ([1-4]) batter(?:ies|y)./,
 					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Batteries: ${matches[1]}`);
-					}
-				},
-				{
-					regex: /Putting 0 batteries into a holder that fits [1-4] batter(?:ies|y)/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Batteries: Empty holder`);
+						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Batteries: ${matches[1]} in ${matches[2]}`);
+						bomb.ModdedBatteries.push(["MultipleWidgets:Batteries",parseInt(matches[1]),parseInt(matches[2])]);
 					}
 				},
 				//Ports
 				{
 					regex: /Ports \((Vanilla 1|Vanilla 2|New Ports|TV\/Monitor Ports|Computer Ports|Everything)\): (.*)/,
 					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Ports (${matches[1]}): ${matches[2]}`);
+						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Ports (${matches[1]}): ${matches[2]}`);
+						if (matches[2] != "None") {
+				            bomb.ModdedPortPlates.push(["MultipleWidgets:Ports",matches[2].split(", ")]);
+				        } else {
+				            bomb.ModdedPortPlates.push(["MultipleWidgets:Ports",[]]);
+				        }
 					}
 				}
 			],
@@ -970,6 +1060,7 @@ $(function() {
 					regex: /Two Factor present/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Two Factor`);
+						bomb.ModdedTwoFactor.push(`TwoFactorWidget`);
 					}
 				}
 			],
