@@ -313,7 +313,7 @@ $(function() {
 					bomb.Batteries.sort().reverse();
 					bomb.Batteries.forEach(function(val) {
 						$("<div class='widget battery'>")
-							.addClass(val == 1 ? "d" : "aa")
+							.addClass(val == 4 ? "aaaa" : val == 3 ? "aaa" : val == 0 ? "empty" : val == 1 ? "d" : "aa")
 							.appendTo(edgework);
 					});
 				}
@@ -345,6 +345,17 @@ $(function() {
 						val.forEach(function(port) {
 							$("<span>").addClass(port.toLowerCase()).appendTo(plate);
 						});
+					});
+				}
+				
+				if (bomb.ModdedWidgetInfo.length > 0) {
+					edgework.append("<div class='widget separator'>");
+					
+					bomb.ModdedWidgetInfo.forEach(function(val) {
+						if(val == "Two Factor")
+						{
+							edgework.append("<div class='widget twofactor'>");
+						}
 					});
 				}
 			});
