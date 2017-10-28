@@ -894,6 +894,13 @@ $(function() {
 				}
 			],
 			"MultipleWidgets": [
+				//Widget Count Correction
+				{
+					regex: /Widget #[12] = (?:Indicator|Ports|Batteries)/,
+					value: function(matches) {
+						bomb.ModdedWidgets--;
+					}
+				},
 				//Two Factor
 				{
 					regex: /Widget #[12] = TwoFactor/,
