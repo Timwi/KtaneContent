@@ -528,7 +528,7 @@ $(function() {
 				], $("<ul>").appendTo(edgeinfo));
 
 				$("<a href='#' class='module'>")
-					.text(!current.isSingleBomb ? "Edgework #" + (n + 1) : "Edgework")
+					.text(!current.isSingleBomb ? "Edgework for #" + bomb.Serial : "Edgework")
 					.appendTo(modules)
 					.addCardClick(edgeinfo);
 			});
@@ -1003,9 +1003,16 @@ $(function() {
 			// Modded Widgets
 			"EcryptedIndicatorWidget": [
 				{
-					regex: /Randomizing: ((?:un)?lit) (.{3}) acting as (?:un)?lit ([A-Z]{3})/,
+					regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
+				    }
+				},
+				{
+					regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
+					value: function(matches) {
+						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
 						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
 				    }
 				}
@@ -1021,7 +1028,7 @@ $(function() {
 				},
 				//Indicators
 				{
-					regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) (.{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
+					regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
 					value : function(matches) {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
 						bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator",matches[1],matches[2]]);
