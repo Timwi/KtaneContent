@@ -528,7 +528,7 @@ $(function() {
 				], $("<ul>").appendTo(edgeinfo));
 
 				$("<a href='#' class='module'>")
-					.text(!current.isSingleBomb ? "Edgework #" + (n + 1) : "Edgework")
+					.text(!current.isSingleBomb ? "Edgework for #" + bomb.Serial : "Edgework")
 					.appendTo(modules)
 					.addCardClick(edgeinfo);
 			});
@@ -1006,6 +1006,13 @@ $(function() {
 					regex: /Randomizing: ((?:un)?lit) (.{3}) acting as (?:un)?lit ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
+				    }
+				},
+				{
+					regex: /Randomizing: ((?:un)?lit) (.{3})/,
+					value: function(matches) {
+						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
 						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
 				    }
 				}
