@@ -319,13 +319,13 @@ $(function() {
 							.appendTo(edgework);
 					});
 				}
-				
+
 				//Multiple Widget Batteries
 				if (bomb.ModdedBatteries.length > 0) {
 					if(!edgeworkSeperator) {
 						edgework.append("<div class='widget separator'>");
 					}
-					
+
 					bomb.ModdedBatteries.sort(function(batt1, batt2) {
 						if (batt1[0] < batt2[0]) return -1;
 						if (batt1[0] > batt2[0]) return 1;
@@ -335,7 +335,7 @@ $(function() {
 						if (batt1[2] > batt2[2]) return 1;
 						return 0;
 					}).reverse();
-					
+
 					bomb.ModdedBatteries.forEach(function(val) {
 						if(val[0] == "MultipleWidgets:Batteries") {
 							if(val[1] > 0) {
@@ -409,7 +409,7 @@ $(function() {
 				if (bomb.PortPlates.length > 0) {
 					edgework.append("<div class='widget separator'>");
 					edgeworkSeperator = true;
-					
+
 					bomb.PortPlates.forEach(function(val) {
 						var plate = $("<div class='widget portplate'>").appendTo(edgework);
 						val.forEach(function(port) {
@@ -417,12 +417,12 @@ $(function() {
 						});
 					});
 				}
-				
+
 				if (bomb.ModdedPortPlates.length > 0) {
 					if(!edgeworkSeperator) {
 						edgework.append("<div class='widget separator'>");
 					}
-					
+
 					bomb.ModdedPortPlates.sort(function(pp1, pp2) {
 						if (pp1[0] < pp2[0]) return -1;
 						if (pp1[0] > pp2[0]) return 1;
@@ -438,16 +438,16 @@ $(function() {
 						}
 					});
 				}
-				
+
 				if (bomb.ModdedTwoFactor.length > 0) {
 					edgework.append("<div class='widget separator'>");
-					
+
 					bomb.ModdedTwoFactor.sort(function(tfa1, tfa2) {
 						if (tfa1[0] < tfa2[0]) return -1;
 						if (tfa1[0] > tfa2[0]) return 1;
 						return 0;
 					});
-					
+
 					bomb.ModdedTwoFactor.forEach(function(val) {
 						if(val == "TwoFactorWidget")
 						{
@@ -3240,7 +3240,7 @@ $(function() {
 				ID: "SymbolCycleModule",
 				Lines: [
 					{
-					    regex: /^((Left|Right) cycle|Solution:|Wrong solution entered:|Displayed symbols:).*/,
+					    regex: /^((Left|Right) cycle|Solution:|Wrong solution entered:.*,|Displayed symbols:).*/,
 					    value: function(matches, module) {
 					        var span = $('<span>');
 					        var txt = matches[0];
