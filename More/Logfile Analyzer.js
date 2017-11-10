@@ -342,12 +342,12 @@ $(function() {
 							if(val[1] > 0) {
 								$("<div class='widget multiplewidgets battery'>")
 									.addClass(val[1] == 4 ? "fouraa" : val[1] == 3 ? "threeaa" : val[1] == 2 ? "twoaa" : "ninevolt")
-									.appendTo(edgework)
+									.appendTo(edgework);
 							}
 							else {
 								$("<div class='widget multiplewidgets battery'>")
 									.addClass(val[2] == 4 ? "emptyfouraa" : val[2] == 3 ? "emptythreeaa" : val[2] == 2 ? "emptytwoaa" : "emptyninevolt")
-									.appendTo(edgework)
+									.appendTo(edgework);
 							}
 						}
 					});
@@ -496,7 +496,7 @@ $(function() {
 				.addCardClick(missioninfo).click();
 
 			// Edgework Information
-			this.Bombs.forEach(function(bomb, n) {
+			this.Bombs.forEach(function(bomb) {
 				var ind = bomb.Indicators.map(function(val) { return val.join(" "); });
 
 				var ports = {};
@@ -1022,7 +1022,7 @@ $(function() {
 				//Two Factor
 				{
 					regex: /Widget #[12] = TwoFactor/,
-					value: function(matches) {
+					value: function() {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Two Factor`);
 						bomb.ModdedTwoFactor.push(`MultipleWidgets:TwoFactor`);
 					}
@@ -1066,7 +1066,7 @@ $(function() {
 			"TwoFactorWidget": [
 				{
 					regex: /Two Factor present/,
-					value: function(matches) {
+					value: function() {
 						bomb.ModdedWidgetInfo.push(`Two Factor`);
 						bomb.ModdedTwoFactor.push(`TwoFactorWidget`);
 					}
