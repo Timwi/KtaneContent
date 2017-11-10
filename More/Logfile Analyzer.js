@@ -43,6 +43,7 @@ const ModuleNames = {
 	ColorMorseModule: "Color Morse",
 	EternitySDec: "Hex To Decimal",
 	SetModule: "S.E.T.",
+	monsplodeCards: "Monsplode Trading Cards",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
