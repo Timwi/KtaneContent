@@ -1544,7 +1544,7 @@ $(function() {
 					                lightColors: ['{L0}', '{L1}', '{L2}', '{L3}', '{L4}'],
 					                darkColors: ['{D0}', '{D1}', '{D2}', '{D3}', '{D4}'],
 					                set: function() {
-					                    module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50 * module.SwitchInfo.y - 5) + "'>" + module.SwitchInfo.svg + "</svg>")
+					                    module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50 * module.SwitchInfo.y + 5) + "'>" + module.SwitchInfo.svg + "</svg>")
 											.css({ width: '300px', display: 'block' });
 					                }
 					            };
