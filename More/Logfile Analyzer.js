@@ -44,6 +44,8 @@ const ModuleNames = {
 	EternitySDec: "Hex To Decimal",
 	SetModule: "S.E.T.",
 	monsplodeCards: "Monsplode Trading Cards",
+	GameOfLifeSimple: "Game Of Life",
+	"Mastermind Simple": "Mastermind",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -73,14 +75,14 @@ const PortNames = {
 
 // A list of blacklisted strings for the filtered logs.
 const blacklist = [
-	"[Assets.Scripts.Pacing.PaceMaker]",
+	//"[PaceMaker]",
 	"[Assets.Scripts.Services.Steam.ServicesSteam]",
 	"[BombGenerator] Instantiated EmptyComponent",
 	"[BombGenerator] Filling remaining spaces with empty components.",
 	"[BombGenerator] BombTypeEnum: Default",
 	"[Assets.Scripts.Stats.StatsManager]",
 	"[Assets.Scripts.Platform.Common.IO.FileUtilityHelper]",
-	"[Assets.Scripts.DossierMenu.MenuPage]",
+	"[MenuPage]",
 	"[Assets.Scripts.Settings.PlayerSettingsManager]",
 	"[Assets.Scripts.Leaderboards.LeaderboardBulkSubmissionWorker]",
 	"[Assets.Scripts.Missions.MissionManager]",
@@ -856,7 +858,7 @@ $(function() {
 			// Bombs
 			"Bomb": [
 				{
-					regex: /Strike! (\d+) \/ \d+ strikes/,
+					regex: /Strike from (?:.+)! (\d+) \/ \d+ strikes/,
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
 							bomb.Strikes = parseInt(matches[1]);
@@ -1086,12 +1088,12 @@ $(function() {
 				}
 			],
 
-			"Assets.Scripts.Pacing.PaceMaker": [
+			"PaceMaker": [
 				{
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
-							bomb.TimeLeft = (parseFloat(matches[3]) / 0.2) * bomb.Time;
+							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
 
 							if (bomb.TimeLeft === 0) {
 								bomb.State = "Exploded (Time Ran Out)";
@@ -1108,7 +1110,7 @@ $(function() {
 			],
 
 			// Line filtering
-			"Assets.Scripts.DossierMenu.MenuPage": [
+			"MenuPage": [
 				{
 					regex: /ReturnToSetupRoom/,
 					value: function() {
@@ -1464,7 +1466,23 @@ $(function() {
 								});
 
 								if (matches[2] == "on module") {
-									module.braille[i] = braille;
+									if (module.flipped) {
+										module.flipped.forEach(function(pos, flipNumber) {
+											var char = Math.floor(pos / 6);
+											if (char != i) return;
+
+											var dotPos = pos - char * 6;
+											$('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(braille);
+											var text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(braille);
+											
+											var noDot = braille.children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
+											if (noDot) {
+												text.attr("fill", "black");
+											}
+										});
+									} else {
+										module.braille[i] = braille;
+									}
 								}
 							});
 
@@ -1476,12 +1494,15 @@ $(function() {
 					{
 						regex: /Flipped positions in order: (.+)/,
 						value: function(matches, module) {
-							matches[1].split(", ").forEach(function(posStr, i) {
+							module.flipped = [];
+							matches[1].split(", ").forEach(function(posStr, flipNumber) {
 								var pos = parseInt(posStr) - 1;
+								module.flipped.push(pos);
+
 								var char = Math.floor(pos / 6);
 								var dotPos = pos - char * 6;
 								$('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
-								var text = $('<svg><text fill="white" text-anchor="middle" alignment-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(i + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
+								var text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 								
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 								if (noDot) {
