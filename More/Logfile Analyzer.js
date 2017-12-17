@@ -1490,7 +1490,7 @@ $(function() {
 								}
 							});
 
-							module.push({ label: matches[1], obj: div, expanded: true });
+							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push({ label: matches[1], obj: div, expanded: true });
 
 							return true;
 						}
@@ -1516,8 +1516,25 @@ $(function() {
 						}
 					},
 					{
-						regex: /.+/
-					}
+						regex: /.+/,
+						value: function(matches, module) {
+							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push(matches.input);
+						}
+					},
+					{
+						regex: /Wrong letter pressed:/,
+						value: function(matches, module) {
+							if (!module.attempts) {
+								module.attempts = [];
+								module.attempts[0] = module.splice(0, module.length);
+								module.push(["Attempt #1", module.attempts[0]]);
+							}
+
+							var attempt = [];
+							module.attempts.push(attempt);
+							module.push(["Attempt #" + module.attempts.length, attempt]);
+						}
+					},
 				]
 			},
 			"CaesarCipher": "CaesarCipherModule",
