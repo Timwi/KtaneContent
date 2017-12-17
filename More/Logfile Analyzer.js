@@ -2142,7 +2142,7 @@ $(function() {
 										display: "inline-block",
 										width: "11px",
 										height: "11px",
-										background: cell == "1" ? "white" : (cell == "0" ? "#444" : "linear-gradient(to right, red, orange, yellow, green, blue, purple, brown)"),
+										background: cell == "1" ? "white" : (cell == "0" ? "#444" : "linear-gradient(to right, red, orange, yellow, green, blue, purple, saddlebrown)"),
 										border: '1px solid black'
 									}).appendTo(rowElem);
 								});
