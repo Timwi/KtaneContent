@@ -2128,6 +2128,36 @@ $(function() {
 					}
 				]
 			},
+			"Game of Life Cruel": {
+				ID: "GameOfLifeCruel",
+				Lines: [
+					{
+						regex: /\(0 is black, 1 is white and X is colored\):/,
+						value: function(_, module) {
+							var grid = $("<div>").css({ display: "inline-block", "font-size": 0, border: "2px gray solid" });
+							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("")).forEach(row => {
+								var rowElem = $("<div>").appendTo(grid);
+								row.forEach(cell => {
+									$("<div>").css({
+										display: "inline-block",
+										width: "11px",
+										height: "11px",
+										background: cell == "1" ? "white" : (cell == "0" ? "#444" : "linear-gradient(to right, red, orange, yellow, green, blue, purple)"),
+										border: '1px solid black'
+									}).appendTo(rowElem);
+								});
+							});
+
+							module.push(grid);
+
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+					}
+				]
+			},
 			"Game of Life Simple": {
 				ID: "GameOfLifeSimple",
 				Lines: [
