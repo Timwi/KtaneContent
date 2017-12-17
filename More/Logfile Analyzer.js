@@ -59,7 +59,6 @@ const ModuleNames = {
 	NeedyVentV2: "Answering Questions",
 };
 
-
 // A list of internal port names used to convert to their display name.
 const PortNames = {
 	0: "Empty Port Plate",
@@ -95,6 +94,20 @@ const blacklist = [
 	"Tick delay:",
 	"Calculated FPS: "
 ];
+
+class Attempts {
+	constructor() {
+		this.attempts = [[]];
+	}
+
+	addAttempt() {
+		this.attempts.push([]);
+	}
+
+	add(obj) {
+		this.attempts[this.attempts.length - 1].push(obj);
+	}
+}
 
 function convertID(id) {
 	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!\b)([A-Z])/g, " $1");
@@ -173,7 +186,6 @@ $(function() {
 			tree.forEach(function(node) {
 				if (node !== null) {
 					var elem = $("<li>").appendTo(parent);
-
 					if (typeof (node) === "function") {
 						node($("<span>").appendTo(elem));
 					} else if (node instanceof $) {
@@ -205,6 +217,19 @@ $(function() {
 					}
 				}
 			});
+
+			if (typeof (tree) === "object" && "attempts" in tree) {
+				var attempts = tree.attempts.attempts;
+				if (attempts.length == 1) {
+					makeTree(attempts[0], parent);
+				} else {
+					attempts.forEach(function(attempt, i) {
+						var elem = $("<li>").appendTo(parent);
+						makeExpandable(elem, "Attempt #" + (i + 1));
+						makeTree(attempt, $("<ul>").appendTo(elem));
+					});
+				}
+			}
 		} catch (e) {
 			console.log(e);
 
@@ -761,6 +786,7 @@ $(function() {
 			}
 
 			info = ["#" + id, []];
+			info[1].attempts = new Attempts();
 			module.push(info);
 
 			return info[1];
@@ -934,9 +960,11 @@ $(function() {
 				{
 					regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
 					value: function(matches) {
+						var info = [];
+						info.attempts = new Attempts();
 						bomb.Modules[matches[1]] = {
 							IDs: [],
-							Info: []
+							Info: info
 						};
 
 						bomb.TotalModules++;
@@ -1490,7 +1518,12 @@ $(function() {
 								}
 							});
 
-							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push({ label: matches[1], obj: div, expanded: true });
+							/*if (!module.attempts) {
+								module.attempts = [];
+								//module.push(module.attempts);
+							}*/
+
+							module.attempts.add({ label: matches[1], obj: div, expanded: true });
 
 							return true;
 						}
@@ -1518,13 +1551,14 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push(matches.input);
+							module.attempts.add(matches.input);
 						}
 					},
 					{
 						regex: /Wrong letter pressed:/,
 						value: function(matches, module) {
-							if (!module.attempts) {
+							module.attempts.addAttempt();
+							/*if (!module.attempts) {
 								module.attempts = [];
 								module.attempts[0] = module.splice(0, module.length);
 								module.push(["Attempt #1", module.attempts[0]]);
@@ -1532,7 +1566,7 @@ $(function() {
 
 							var attempt = [];
 							module.attempts.push(attempt);
-							module.push(["Attempt #" + module.attempts.length, attempt]);
+							module.push(["Attempt #" + module.attempts.length, attempt]);*/
 						}
 					},
 				]
@@ -2264,6 +2298,23 @@ $(function() {
 				]
 			},
 			//"Logic": "Logic",
+			"Mafia": {
+				ID: "MafiaModule",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.attempts.add(matches.input);
+						}
+					},
+					{
+						regex: /Clicked \w+: wrong./,
+						value: function(matches, module) {
+							module.attempts.addAttempt();
+						}
+					}
+				]
+			},
 			"Mastermind Simple": {
 				ID: "Mastermind Simple",
 				Lines: [
@@ -3391,7 +3442,7 @@ $(function() {
 								txt = data[3];
 							}
 							span.append($('<span>').text(txt));
-							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push(span);
+							module.attempts.add(span);
 							return !matches.input.includes("Wrong solution entered:");
 						}
 					},
@@ -3399,18 +3450,10 @@ $(function() {
 						regex: /Wrong solution entered:/,
 						value: function(matches, module) {
 							if (!matches.input.includes(",")) {
-								(module.attempts ? module.attempts[module.attempts.length - 1] : module).push(matches.input);
+								module.attempts.add(matches.input);
 							}
 
-							if (!module.attempts) {
-								module.attempts = [];
-								module.attempts[0] = module.splice(0, module.length);
-								module.push(["Attempt #1", module.attempts[0]]);
-							}
-
-							var attempt = [];
-							module.attempts.push(attempt);
-							module.push(["Attempt #" + module.attempts.length, attempt]);
+							module.attempts.addAttempt();
 
 							return true;
 						}
@@ -3418,7 +3461,7 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							(module.attempts ? module.attempts[module.attempts.length - 1] : module).push(matches.input);
+							module.attempts.add(matches.input);
 						}
 					},
 				]
