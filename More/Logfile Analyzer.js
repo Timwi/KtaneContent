@@ -646,11 +646,11 @@ $(function() {
 					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
-						.html("No information could be parsed.<br>Please check the ")
+						.html("Please check the ")
 						.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
 							filteredTab.click();
 						}))
-						.append('.')
+						.append(' as the information for this module cannot be automatically parsed.')
 						.appendTo(modinfo);
 				}
 
@@ -1506,7 +1506,7 @@ $(function() {
 											var dotPos = pos - char * 6;
 											$('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(braille);
 											var text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(braille);
-											
+
 											var noDot = braille.children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 											if (noDot) {
 												text.attr("fill", "black");
@@ -1540,7 +1540,7 @@ $(function() {
 								var dotPos = pos - char * 6;
 								$('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
 								var text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
-								
+
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 								if (noDot) {
 									text.attr("fill", "black");
@@ -2740,7 +2740,7 @@ $(function() {
 
 								module.push({label: "Button Colors:", obj: svg});
 							}
-							
+
 							return true;
 						}
 					},
