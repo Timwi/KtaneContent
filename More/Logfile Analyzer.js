@@ -2316,7 +2316,7 @@ $(function() {
 					{
 						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
 						value: function(matches, module) {
-							module.push("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]);
+							module.push($("<span>").css({ "font-family": "monospace", "font-size": "16px" }).text("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]));
 						}
 					},
 					{
