@@ -75,11 +75,11 @@ const PortNames = {
 // A list of blacklisted strings for the filtered logs.
 const blacklist = [
 	//"[PaceMaker]",
-	"[Assets.Scripts.Services.Steam.ServicesSteam]",
+	"[ServicesSteam]",
 	"[BombGenerator] Instantiated EmptyComponent",
 	"[BombGenerator] Filling remaining spaces with empty components.",
 	"[BombGenerator] BombTypeEnum: Default",
-	"[Assets.Scripts.Stats.StatsManager]",
+	"[StatsManager]",
 	"[Assets.Scripts.Platform.Common.IO.FileUtilityHelper]",
 	"[MenuPage]",
 	"[Assets.Scripts.Settings.PlayerSettingsManager]",
