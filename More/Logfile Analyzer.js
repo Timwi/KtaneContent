@@ -792,33 +792,6 @@ $(function() {
 
 			return info[1];
 		};
-		this.FilterLines = function() {
-			if (!this.StartLine) {
-				return;
-			}
-
-			var log = "";
-			for (var i = this.StartLine; i < linen; i++) {
-				var line = lines[i];
-
-				var blacklisted = false;
-				blacklist.forEach(function(val) {
-					blacklisted = blacklisted || line.includes(val);
-				});
-
-				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
-					blacklisted = true;
-					i += 3;
-				}
-
-				if (!blacklisted) {
-					log += line + "\n";
-				}
-			}
-
-			this.StartLine = undefined;
-			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n");
-		};
 	}
 
 	function parseLog(log, url, bombSerial) {
@@ -918,7 +891,7 @@ $(function() {
 					regex: /A winner is you!!/,
 					value: function() {
 						if (bombgroup.isSingleBomb) {
-							bomb.FilterLines();
+							bombgroup.FilterLines();
 							bomb.State = "Solved";
 							bomb.Solved = bomb.TotalModules;
 						}
