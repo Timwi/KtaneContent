@@ -43,6 +43,7 @@ const ModuleNames = {
 	ColorMorseModule: "Color Morse",
 	EternitySDec: "Hex To Decimal",
 	SetModule: "S.E.T.",
+	timezone: "Timezones",
 	monsplodeCards: "Monsplode Trading Cards",
 	GameOfLifeSimple: "Game Of Life",
 	"Mastermind Simple": "Mastermind",
