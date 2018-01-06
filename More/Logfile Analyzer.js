@@ -2751,6 +2751,58 @@ $(function() {
 				]
 			},
 			"PasswordRuleset": "Password",
+			"Painting": {
+				ID: "Painting",
+				Lines: [
+					{
+						regex: /Generating painting/,
+						value: function(_, module) {
+							module.push(["Initial State", module.Cells = []],
+								["Determining color-blind set", module.Rule = [], true],
+								["Answer", module.Swaps = []],
+								["Input", module.Input = []]);
+							return true;
+						}
+					},
+					{
+						regex: /Cell #(\d) => (\w+)/,
+						value: function(matches, module) {
+							module.Cells.push(`Cell ${matches[1]} is ${matches[2]}`);
+							return true;
+						}
+					},
+					{
+						regex: /Cell #\d must (swap|remain)/,
+						value: function(matches, module) {
+							module.Swaps.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /rule \w/i,
+						value: function(matches, module) {
+							module.Rule.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /paint(ing)? cell #\d with/i,
+						value: function(matches, module) {
+							module.Input.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /Determining active color-blind set/,
+						value: function() {
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Perplexing Wires": {
 				ID: "PerplexingWiresModule",
 				Lines: [
