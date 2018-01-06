@@ -876,7 +876,7 @@ $(function() {
 				{
 					regex: /Boom/,
 					value: function() {
-						GetBomb().FilterLines();
+						bombgroup.FilterLines();
 						if (GetBomb().State == "Unsolved") {
 							GetBomb().State = "Exploded";
 
@@ -1087,7 +1087,7 @@ $(function() {
 					regex: /All bombs solved, what a winner!/,
 					value: function() {
 						var currentBomb = GetBomb();
-						currentBomb.FilterLines();
+						bombgroup.FilterLines();
 						currentBomb.State = "Solved";
 						currentBomb.Solved = currentBomb.TotalModules;
 					}
@@ -1120,7 +1120,7 @@ $(function() {
 				{
 					regex: /ReturnToSetupRoom/,
 					value: function() {
-						GetBomb().FilterLines();
+						bombgroup.FilterLines();
 					}
 				}
 			],
