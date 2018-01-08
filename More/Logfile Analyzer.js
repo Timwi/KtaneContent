@@ -1511,9 +1511,10 @@ $(function() {
 								var dotPos = pos - char * 6;
 
 								var absPos = pos % 24;
+								var text;
 								if (!module.flippedSVG[absPos]) {
 									var highlight = $('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
-									var text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
+									text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 
 									module.flippedSVG[absPos] = [ highlight, text ];
 								}
@@ -1522,6 +1523,7 @@ $(function() {
 									var svg = module.flippedSVG[absPos];
 									svg[0].attr("fill", "rgba(255, 0, 0, 0.5)");
 									svg[1].text(`${svg[1].text()} ${flipNumber + 1}`).attr("font-size", parseFloat(svg[1].attr("font-size")) - 0.15);
+									text  = svg[1];
 								}
 
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
