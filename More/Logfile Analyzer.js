@@ -3750,6 +3750,7 @@ $(function() {
 			var pool = /(\d+) Pools:/.exec(line);
 			if (pool) {
 				linen += parseInt(pool[1]);
+				continue;
 			}
 
 			if (line !== "") {
@@ -3766,13 +3767,13 @@ $(function() {
 						obj = lineRegex[match[1]];
 
 					if (obj) {
-						if (typeof (obj) != "string") {
-							var regex = (obj.Lines || obj);
-							regex.some(function(handler) {
-								var value = handler.value;
-								var matches = (handler.regex || /.+/).exec(match[2]);
-								if (matches) {
-									try {
+						try {
+							if (typeof (obj) != "string") {
+								var regex = (obj.Lines || obj);
+								regex.some(function(handler) {
+									var value = handler.value;
+									var matches = (handler.regex || /.+/).exec(match[2]);
+									if (matches) {
 										if (value instanceof Function) {
 											if (obj.Lines) {
 												var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID);
@@ -3785,18 +3786,18 @@ $(function() {
 										} else {
 											readDirectly(match[2], obj.ID || value, id);
 										}
-									} catch (e) {
-										console.log(e);
-
-										if (!readwarning) {
-											readwarning = true;
-											toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
-										}
 									}
-								}
-							});
-						} else {
-							readDirectly(match[2], obj, id);
+								});
+							} else {
+								readDirectly(match[2], obj, id);
+							}
+						} catch (e) {
+							console.log(e);
+
+							if (!readwarning) {
+								readwarning = true;
+								toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+							}
 						}
 					} else if (bombgroup) {
 						var modName = submatch ? submatch[1] : match[1];
