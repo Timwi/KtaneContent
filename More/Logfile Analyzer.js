@@ -489,12 +489,10 @@ $(function () {
                     });
 
                     bomb.ModdedTwoFactor.forEach(function (val) {
-						if(val == "TwoFactorWidget")
-						{
+                        if (val == "TwoFactorWidget") {
                             edgework.append("<div class='widget twofactor'>");
                         }
-						if(val == "MultipleWidgets:TwoFactor")
-						{
+                        if (val == "MultipleWidgets:TwoFactor") {
                             edgework.append("<div class='widget multiplewidgets twofactor'>");
                         }
                     });
@@ -1525,8 +1523,7 @@ $(function () {
 
                                     module.flippedSVG[absPos] = [highlight, text];
                                 }
-								else 
-								{
+                                else {
                                     var svg = module.flippedSVG[absPos];
                                     svg[0].attr("fill", "rgba(255, 0, 0, 0.5)");
                                     svg[1].text(`${svg[1].text()} ${flipNumber + 1}`).attr("font-size", parseFloat(svg[1].attr("font-size")) - 0.15);
@@ -3046,10 +3043,13 @@ $(function () {
                                     .replace(/‹y›/g, 3 * Math.sin(pegAngle))
                                     .replace(/‹rot›/g, 72 * indexes[matches[1]]);
                             }
-							module.push({ label: 'Pegs:', obj: $("<svg viewBox='-5.5 -5.5 11 11'>" + module.PegsSvg + svg + '</svg>').css({
+                            module.push({
+                                label: 'Pegs:',
+                                obj: $("<svg viewBox='-5.5 -5.5 11 11'>" + module.PegsSvg + svg + '</svg>').css({
                                     width: '25em',
                                     display: 'block'
-							}) });
+                                })
+                            });
                             module.push(module.SequenceLine);
                             module.push(matches.input);
                             return true;
@@ -3775,7 +3775,7 @@ $(function () {
                     } else if (submatch) {
                         obj = lineRegex[submatch[1]];
                         id = submatch[2];
-					} else
+                    } else
                         obj = lineRegex[match[1]];
 
                     if (obj) {
