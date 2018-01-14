@@ -1565,9 +1565,9 @@ $(function () {
                 ID: "CheapCheckoutModule",
                 Lines: [
                     {
-                        regex: /Receipt/,
+                        regex: /(Receipt|Recibo)/,
                         value: function (matches, module) {
-                            module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
+                            module.push({ label: matches[1] + ':', obj: pre(readMultiple(10)) });
                             return true;
                         }
                     },
