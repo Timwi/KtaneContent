@@ -99,6 +99,8 @@ const blacklist = [
 	"[BombGenerator] Instantiating remaining components on any valid face.",
 	"[PrefabOverride]",
 	"[Rules]",
+	"[AlarmClockExtender]",
+	"[Alarm Clock Extender]",
 	"Tick delay:",
 	"Calculated FPS: "
 ];
@@ -709,19 +711,20 @@ $(function() {
 			for (var i = this.StartLine; i < linen; i++) {
 				var line = lines[i];
 
-				var blacklisted = false;
-				blacklist.forEach(function(val) {
-					blacklisted = blacklisted || line.includes(val);
-				});
+				if (line == "[AlarmClockExtender] Settings loaded. Settings = {") {
+					i += 15;
+					continue;
+				}
 
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
-					blacklisted = true;
 					i += 3;
+					continue;
 				}
 
-				if (!blacklisted) {
-					log += line + "\n";
-				}
+				var blacklisted = blacklist.some(val => line.includes(val));
+				if (blacklisted) continue;
+
+				log += line + "\n";
 			}
 
 			this.StartLine = undefined;
@@ -1558,6 +1561,30 @@ $(function() {
 							module.push(["Attempt #" + module.attempts.length, attempt]);*/
 						}
 					},
+				]
+			},
+			"Button Sequences": {
+				ID: "buttonSequencesModule",
+				Lines: [
+					{
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push(["Solution", module.Solution = [], true]);
+							module.push(["Actions", module.Actions = []]);
+						}
+					},
+					{
+						regex: /Panel \d Button \d \(/,
+						value: function(matches, module) {
+							module.Solution.push(matches.input);
+						}
+					},
+					{
+						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)/,
+						value: function(matches, module) {
+							module.Actions.push(matches.input);
+						}
+					}
 				]
 			},
 			"CaesarCipher": "CaesarCipherModule",
