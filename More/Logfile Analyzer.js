@@ -1563,6 +1563,30 @@ $(function() {
 					},
 				]
 			},
+			"Button Sequences": {
+				ID: "buttonSequencesModule",
+				Lines: [
+					{
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push(["Solution", module.Solution = [], true]);
+							module.push(["Actions", module.Actions = []]);
+						}
+					},
+					{
+						regex: /Panel \d Button \d \(/,
+						value: function(matches, module) {
+							module.Solution.push(matches.input);
+						}
+					},
+					{
+						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)/,
+						value: function(matches, module) {
+							module.Actions.push(matches.input);
+						}
+					}
+				]
+			},
 			"CaesarCipher": "CaesarCipherModule",
 			"Cheap Checkout": {
 				ID: "CheapCheckoutModule",
