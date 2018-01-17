@@ -1573,6 +1573,13 @@ $(function() {
 							module.push(["Actions", module.Actions = []]);
 						}
 					},
+
+					{
+						regex: /Panel [2-4] Button 1 \(/,
+						value: function(matches, module) {
+							module.Solution.push({ linebreak: true });
+						}
+					},
 					{
 						regex: /Panel \d Button \d \(/,
 						value: function(matches, module) {
@@ -1580,7 +1587,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)/,
+						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)|Module Solved\.|Strike: /,
 						value: function(matches, module) {
 							module.Actions.push(matches.input);
 						}
