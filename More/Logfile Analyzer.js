@@ -60,6 +60,13 @@ const ModuleNames = {
 	NeedyVentV2: "Answering Questions",
 };
 
+const TranslatedModuleNames = {
+	"Supermercado Salvaje": {
+		key: "Cheap Checkout",
+		name: "SupermercadoSalvajeModule"
+	}
+};
+
 // A list of internal port names used to convert to their display name.
 const PortNames = {
 	0: "Empty Port Plate",
@@ -92,6 +99,8 @@ const blacklist = [
 	"[BombGenerator] Instantiating remaining components on any valid face.",
 	"[PrefabOverride]",
 	"[Rules]",
+	"[AlarmClockExtender]",
+	"[Alarm Clock Extender]",
 	"Tick delay:",
 	"Calculated FPS: "
 ];
@@ -355,7 +364,7 @@ $(function() {
 
 				//Multiple Widget Batteries
 				if (bomb.ModdedBatteries.length > 0) {
-					if(!edgeworkSeperator) {
+					if (!edgeworkSeperator) {
 						edgework.append("<div class='widget separator'>");
 					}
 
@@ -370,8 +379,8 @@ $(function() {
 					}).reverse();
 
 					bomb.ModdedBatteries.forEach(function(val) {
-						if(val[0] == "MultipleWidgets:Batteries") {
-							if(val[1] > 0) {
+						if (val[0] == "MultipleWidgets:Batteries") {
+							if (val[1] > 0) {
 								$("<div class='widget multiplewidgets battery'>")
 									.addClass(val[1] == 4 ? "fouraa" : val[1] == 3 ? "threeaa" : val[1] == 2 ? "twoaa" : "ninevolt")
 									.appendTo(edgework);
@@ -408,7 +417,7 @@ $(function() {
 				//Multiple Widgets Indicator
 				//Encrypted Indicator
 				if (bomb.ModdedIndicators.length > 0) {
-					if(!edgeworkSeperator) {
+					if (!edgeworkSeperator) {
 						edgework.append("<div class='widget separator'>");
 					}
 
@@ -423,13 +432,13 @@ $(function() {
 					});
 
 					bomb.ModdedIndicators.forEach(function(val) {
-						if(val[0] == "MultipleWidgets:EncryptedIndicator" || val[0] == "MultipleWidgets:Indicator") {
+						if (val[0] == "MultipleWidgets:EncryptedIndicator" || val[0] == "MultipleWidgets:Indicator") {
 							$("<div class='widget multiplewidgets indicator'>")
 								.addClass(val[1])
 								.appendTo(edgework)
 								.append($("<span class='label'>").text(val[2]));
 						}
-						if(val[0] == "EcryptedIndicatorWidget") {
+						if (val[0] == "EcryptedIndicatorWidget") {
 							$("<div class='widget encryptedindicator'>")
 								.addClass(val[1])
 								.appendTo(edgework)
@@ -452,7 +461,7 @@ $(function() {
 				}
 
 				if (bomb.ModdedPortPlates.length > 0) {
-					if(!edgeworkSeperator) {
+					if (!edgeworkSeperator) {
 						edgework.append("<div class='widget separator'>");
 					}
 
@@ -463,7 +472,7 @@ $(function() {
 					});
 
 					bomb.ModdedPortPlates.forEach(function(val) {
-						if(val[0] == "MultipleWidgets:Ports") {
+						if (val[0] == "MultipleWidgets:Ports") {
 							var plate = $("<div class='widget multiplewidgets portplate'>").appendTo(edgework);
 							val[1].forEach(function(port) {
 								$("<span>").addClass(port.toLowerCase()).appendTo(plate);
@@ -482,12 +491,10 @@ $(function() {
 					});
 
 					bomb.ModdedTwoFactor.forEach(function(val) {
-						if(val == "TwoFactorWidget")
-						{
+						if (val == "TwoFactorWidget") {
 							edgework.append("<div class='widget twofactor'>");
 						}
-						if(val == "MultipleWidgets:TwoFactor")
-						{
+						if (val == "MultipleWidgets:TwoFactor") {
 							edgework.append("<div class='widget multiplewidgets twofactor'>");
 						}
 					});
@@ -704,19 +711,20 @@ $(function() {
 			for (var i = this.StartLine; i < linen; i++) {
 				var line = lines[i];
 
-				var blacklisted = false;
-				blacklist.forEach(function(val) {
-					blacklisted = blacklisted || line.includes(val);
-				});
+				if (line == "[AlarmClockExtender] Settings loaded. Settings = {") {
+					i += 15;
+					continue;
+				}
 
 				if (line.match(/\[BombGenerator\] Module type ".+" in component pool,/)) {
-					blacklisted = true;
 					i += 3;
+					continue;
 				}
 
-				if (!blacklisted) {
-					log += line + "\n";
-				}
+				var blacklisted = blacklist.some(val => line.includes(val));
+				if (blacklisted) continue;
+
+				log += line + "\n";
 			}
 
 			this.StartLine = undefined;
@@ -1015,14 +1023,14 @@ $(function() {
 					regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
-						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
+						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget", matches[1], matches[2]]);
 					}
 				},
 				{
 					regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
-						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget",matches[1],matches[2]]);
+						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget", matches[1], matches[2]]);
 					}
 				}
 			],
@@ -1038,16 +1046,16 @@ $(function() {
 				//Indicators
 				{
 					regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-					value : function(matches) {
+					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
-						bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator",matches[1],matches[2]]);
+						bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator", matches[1], matches[2]]);
 					}
 				},
 				{
 					regex: /Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-					value : function(matches) {
+					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Indicator: ${matches[1]} ${matches[2]}`);
-						bomb.ModdedIndicators.push(["MultipleWidgets:Indicator",matches[1],matches[2]]);
+						bomb.ModdedIndicators.push(["MultipleWidgets:Indicator", matches[1], matches[2]]);
 					}
 				},
 				//Batteries
@@ -1055,7 +1063,7 @@ $(function() {
 					regex: /Putting ([0-4]) batter(?:ies|y) into a holder that fits ([1-4]) batter(?:ies|y)./,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Batteries: ${matches[1]} in ${matches[2]}`);
-						bomb.ModdedBatteries.push(["MultipleWidgets:Batteries",parseInt(matches[1]),parseInt(matches[2])]);
+						bomb.ModdedBatteries.push(["MultipleWidgets:Batteries", parseInt(matches[1]), parseInt(matches[2])]);
 					}
 				},
 				//Ports
@@ -1064,9 +1072,9 @@ $(function() {
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Ports (${matches[1]}): ${matches[2]}`);
 						if (matches[2] != "None") {
-							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports",matches[2].split(", ")]);
+							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", matches[2].split(", ")]);
 						} else {
-							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports",[]]);
+							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", []]);
 						}
 					}
 				}
@@ -1260,14 +1268,14 @@ $(function() {
 										var shipRight = c == 5 || stuff[r][c + 1].IsShip;
 
 										var imgId =
-										!stuff[r][c].IsShip ? "SqWater" :
-											waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
-											waterAbove && waterLeft && waterBelow && shipRight ? "SqShipL" :
-											waterAbove && waterRight && waterBelow && shipLeft ? "SqShipR" :
-											waterLeft && waterAbove && waterRight && shipBelow ? "SqShipT" :
-											waterLeft && waterBelow && waterRight && shipAbove ? "SqShipB" :
-											waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
-											waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
+											!stuff[r][c].IsShip ? "SqWater" :
+												waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
+													waterAbove && waterLeft && waterBelow && shipRight ? "SqShipL" :
+														waterAbove && waterRight && waterBelow && shipLeft ? "SqShipR" :
+															waterLeft && waterAbove && waterRight && shipBelow ? "SqShipT" :
+																waterLeft && waterBelow && waterRight && shipAbove ? "SqShipB" :
+																	waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
+																		waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
 
 										$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
 										if (stuff[r][c].IsSafeLocation)
@@ -1292,10 +1300,10 @@ $(function() {
 								label: matches.input,
 								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
 									.css('color', matches[1] === 'red' ? '#800' :
-												  matches[1] === 'green' ? '#080' :
-												  matches[1] === 'blue' ? '#008' :
-												  matches[1] === 'yellow' ? '#880' :
-												  matches[1] === 'cyan' ? '#088' : '#808')
+										matches[1] === 'green' ? '#080' :
+											matches[1] === 'blue' ? '#008' :
+												matches[1] === 'yellow' ? '#880' :
+													matches[1] === 'cyan' ? '#088' : '#808')
 							});
 							return true;
 						}
@@ -1464,7 +1472,7 @@ $(function() {
 							}
 
 							matches[3].split("; ").forEach(function(spots, i) {
-								var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({width: "10%", border: "1px black solid"}).appendTo(div);
+								var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
 
 								spots.split("-").forEach(function(posStr) {
 									var pos = parseInt(posStr) - 1;
@@ -1516,14 +1524,13 @@ $(function() {
 									var highlight = $('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
 									text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 
-									module.flippedSVG[absPos] = [ highlight, text ];
+									module.flippedSVG[absPos] = [highlight, text];
 								}
-								else 
-								{
+								else {
 									var svg = module.flippedSVG[absPos];
 									svg[0].attr("fill", "rgba(255, 0, 0, 0.5)");
 									svg[1].text(`${svg[1].text()} ${flipNumber + 1}`).attr("font-size", parseFloat(svg[1].attr("font-size")) - 0.15);
-									text  = svg[1];
+									text = svg[1];
 								}
 
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
@@ -1556,14 +1563,45 @@ $(function() {
 					},
 				]
 			},
+			"Button Sequences": {
+				ID: "buttonSequencesModule",
+				Lines: [
+					{
+						regex: /Solution:/,
+						value: function(_, module) {
+							module.push(["Solution", module.Solution = [], true]);
+							module.push(["Actions", module.Actions = []]);
+						}
+					},
+
+					{
+						regex: /Panel [2-4] Button 1 \(/,
+						value: function(matches, module) {
+							module.Solution.push({ linebreak: true });
+						}
+					},
+					{
+						regex: /Panel \d Button \d \(/,
+						value: function(matches, module) {
+							module.Solution.push(matches.input);
+						}
+					},
+					{
+						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)|Module Solved\.|Strike: /,
+						value: function(matches, module) {
+							module.Actions.push(matches.input);
+						}
+					}
+				]
+			},
 			"CaesarCipher": "CaesarCipherModule",
 			"Cheap Checkout": {
 				ID: "CheapCheckoutModule",
 				Lines: [
 					{
-						regex: /Receipt/,
+						regex: /(Receipt|Recibo)/,
 						value: function(matches, module) {
-							module.push({ label: 'Receipt:', obj: pre(readMultiple(10)) });
+							module.push({ label: matches[1] + ':', obj: pre(readMultiple(10)) });
 							return true;
 						}
 					},
@@ -1670,9 +1708,9 @@ $(function() {
 							for (i = 0; i < 5; i++)
 								svg +=
 									"<g transform='translate(" + (11 * i) + ",0)'>" +
-										"<ellipse fill='#bdc4d3' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
-										"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
-										"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
+									"<ellipse fill='#bdc4d3' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
+									"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
+									"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
 									"</g>";
 
 							var x = 0;
@@ -1859,35 +1897,6 @@ $(function() {
 						regex: /Restarting module.../,
 						value: function(matches, module) {
 							module.push(["Restart #" + module.length, []]);
-						}
-					}
-				]
-			},
-			"Cruel Piano Keys": {
-				ID: "CruelPianoKeys",
-				Lines: [
-					{
-						regex: /Module generated with the following symbols/
-					},
-					{
-						regex: /The correct rule is the following/,
-						value: function(matches, module) {
-							var input = [];
-							module.Input = input;
-							module.push(matches.input);
-							module.push(readLine().trim());
-							module.push(readLine().trim());
-							readLine();
-							module.push(readLine().replace(/[|]/g, ""));
-							module.push(["Key Presses", input]);
-
-							return true;
-						}
-					},
-					{
-						regex: /Input .+ was received|The current valid sequence/,
-						value: function(matches, module) {
-							module.Input.push(matches.input);
 						}
 					}
 				]
@@ -2723,7 +2732,7 @@ $(function() {
 									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(i).appendTo(svg);
 								});
 
-								module.push({label: "Button Colors:", obj: svg});
+								module.push({ label: "Button Colors:", obj: svg });
 							}
 
 							return true;
@@ -2828,16 +2837,16 @@ $(function() {
 							/* eslint-disable indent */
 							module.PerplexingWires.Arrows[parseInt(matches[1]) - 1] = {
 								Color:
-									matches[2] === 'Red' ? '#ed2121' :
+								matches[2] === 'Red' ? '#ed2121' :
 									matches[2] === 'Green' ? '#19da3a' :
-									matches[2] === 'Blue' ? '#2f89ef' :
-									matches[2] === 'Yellow' ? '#e4f20e' :
-									matches[2] === 'Purple' ? '#dc17dc' : 'black',
+										matches[2] === 'Blue' ? '#2f89ef' :
+											matches[2] === 'Yellow' ? '#e4f20e' :
+												matches[2] === 'Purple' ? '#dc17dc' : 'black',
 								Rotation:
-									matches[3] === 'Up' ? 0 :
+								matches[3] === 'Up' ? 0 :
 									matches[3] === 'Left' ? 90 :
-									matches[3] === 'Down' ? 180 :
-									matches[3] === 'Right' ? 270 : 45
+										matches[3] === 'Down' ? 180 :
+											matches[3] === 'Right' ? 270 : 45
 								/* eslint-enable indent */
 							};
 							return true;
@@ -2857,21 +2866,21 @@ $(function() {
 								From: parseInt(matches[1]) - 1,
 								/* eslint-disable indent */
 								Color:
-									matches[3] === 'Black' ? '#34322D' :
+								matches[3] === 'Black' ? '#34322D' :
 									matches[3] === 'Blue' ? '#2B8DFF' :
-									matches[3] === 'Green' ? '#1EE41F' :
-									matches[3] === 'Orange' ? '#FFA600' :
-									matches[3] === 'Purple' ? '#BB3AFF' :
-									matches[3] === 'Red' ? '#FF3A3A' :
-									matches[3] === 'White' ? '#E1E1E1' :
-									matches[3] === 'Yellow' ? '#DADB35' : '#f8f',
+										matches[3] === 'Green' ? '#1EE41F' :
+											matches[3] === 'Orange' ? '#FFA600' :
+												matches[3] === 'Purple' ? '#BB3AFF' :
+													matches[3] === 'Red' ? '#FF3A3A' :
+														matches[3] === 'White' ? '#E1E1E1' :
+															matches[3] === 'Yellow' ? '#DADB35' : '#f8f',
 								Venn: matches[5].split('+'),
 								Condition: matches[6],
 								Cut:
-									matches[4] === 'cut' ? '✓' :
+								matches[4] === 'cut' ? '✓' :
 									matches[4] === 'don’t cut' ? '✗' :
-									matches[4] === 'cut first' ? 'F' :
-									matches[4] === 'cut last' ? 'L' : null
+										matches[4] === 'cut first' ? 'F' :
+											matches[4] === 'cut last' ? 'L' : null
 								/* eslint-enable indent */
 							};
 
@@ -2990,14 +2999,14 @@ $(function() {
 									function fmt(str) {
 										return str
 											.replace(/‹[01][io][xy]›/g, function(m) {
-												var angle1 = (72*(side + (+m[1])) - 126) / 180 * Math.PI;
+												var angle1 = (72 * (side + (+m[1])) - 126) / 180 * Math.PI;
 												var coord1 = (m[2] === 'i' ? .5 : 1) * (m[3] === 'x' ? Math.cos(angle1) : Math.sin(angle1));
-												var angle2 = (72*peg - 90) / 180 * Math.PI;
+												var angle2 = (72 * peg - 90) / 180 * Math.PI;
 												var coord2 = 3 * (m[3] === 'x' ? Math.cos(angle2) : Math.sin(angle2));
 												return coord1 + coord2;
 											})
 											.replace(/‹f›/g, function() {
-												return colors[ ascii[pegCoords[peg][1] + sideCoords[side][1]][pegCoords[peg][0] + sideCoords[side][0]] ];
+												return colors[ascii[pegCoords[peg][1] + sideCoords[side][1]][pegCoords[peg][0] + sideCoords[side][0]]];
 											});
 									}
 									svg1 += fmt("<path d='M‹0ix› ‹0iy› ‹1ix› ‹1iy› ‹1ox› ‹1oy› ‹0ox› ‹0oy›z' fill='‹f›' stroke='none' />");
@@ -3006,7 +3015,7 @@ $(function() {
 										startPeg = peg;
 								}
 							}
-							var tAngle = (72*startPeg - 90) / 180 * Math.PI;
+							var tAngle = (72 * startPeg - 90) / 180 * Math.PI;
 							svg2 += "<text x='‹x›' y='‹y›' font-size='.3' text-anchor='middle'>START</text>"
 								.replace('‹x›', 3 * Math.cos(tAngle))
 								.replace('‹y›', 3 * Math.sin(tAngle) + .1);
@@ -3033,16 +3042,19 @@ $(function() {
 							};
 							var svg = '';
 							for (var i = 2; i <= 4; i++) {
-								var pegAngle = (72*indexes[matches[i]] - 90) / 180 * Math.PI;
+								var pegAngle = (72 * indexes[matches[i]] - 90) / 180 * Math.PI;
 								svg += "<g transform='translate(‹x› ‹y›) rotate(‹rot›)'><path d='M 0 -1.5 0 -100' fill='none' stroke-width='.1' stroke='#92a09a' /><path d='M -.3 -2 0 -1.1 .3 -2 z' fill='#92a09a' stroke='none' /></g>"
 									.replace(/‹x›/g, 3 * Math.cos(pegAngle))
 									.replace(/‹y›/g, 3 * Math.sin(pegAngle))
 									.replace(/‹rot›/g, 72 * indexes[matches[1]]);
 							}
-							module.push({ label: 'Pegs:', obj: $("<svg viewBox='-5.5 -5.5 11 11'>" + module.PegsSvg + svg + '</svg>').css({
-								width: '25em',
-								display: 'block'
-							}) });
+							module.push({
+								label: 'Pegs:',
+								obj: $("<svg viewBox='-5.5 -5.5 11 11'>" + module.PegsSvg + svg + '</svg>').css({
+									width: '25em',
+									display: 'block'
+								})
+							});
 							module.push(module.SequenceLine);
 							module.push(matches.input);
 							return true;
@@ -3336,22 +3348,22 @@ $(function() {
 							var pathData =
 								// pacman
 								matches[2] === 'A1' ? "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z" :
-								// cross
-								matches[2] === 'B1' ? "M120 625a10 10 0 0 0-5.6 18.3L132 655l-17.6 11.7a10 10 0 1 0 11.2 16.6L150 667l24.4 16.3a10 10 0 1 0 11.2-16.6L168 655l17.6-11.7a10 10 0 0 0-5.8-18.4 10 10 0 0 0-5.4 1.7L150 643l-24.4-16.3a10 10 0 0 0-5-1.8z" :
-								// triangle
-								matches[2] === 'C1' ? "M210 685l40-60 40 60z" :
-								// tepee
-								matches[2] === 'A2' ? "M50 725l-40 60h28l12-18 12 18h28l-40-60z" :
-								// tshirt
-								matches[2] === 'B2' ? "M110 725v30h20v30h40v-30h20v-30h-30c0 5.5-4.5 10-10 10s-10-4.5-10-10z" :
-								// arrow
-								matches[2] === 'C2' ? "M250 725l40 35h-20v25h-40v-25h-20z" :
-								// diamond
-								matches[2] === 'A3' ? "M50 825l40 30-40 30-40-30z" :
-								// hotel
-								matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
-								// star
-								matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
+									// cross
+									matches[2] === 'B1' ? "M120 625a10 10 0 0 0-5.6 18.3L132 655l-17.6 11.7a10 10 0 1 0 11.2 16.6L150 667l24.4 16.3a10 10 0 1 0 11.2-16.6L168 655l17.6-11.7a10 10 0 0 0-5.8-18.4 10 10 0 0 0-5.4 1.7L150 643l-24.4-16.3a10 10 0 0 0-5-1.8z" :
+										// triangle
+										matches[2] === 'C1' ? "M210 685l40-60 40 60z" :
+											// tepee
+											matches[2] === 'A2' ? "M50 725l-40 60h28l12-18 12 18h28l-40-60z" :
+												// tshirt
+												matches[2] === 'B2' ? "M110 725v30h20v30h40v-30h20v-30h-30c0 5.5-4.5 10-10 10s-10-4.5-10-10z" :
+													// arrow
+													matches[2] === 'C2' ? "M250 725l40 35h-20v25h-40v-25h-20z" :
+														// diamond
+														matches[2] === 'A3' ? "M50 825l40 30-40 30-40-30z" :
+															// hotel
+															matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
+																// star
+																matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
 
 							var symbolSvg = "<path d='!data!' fill='!fill!' stroke='black' stroke-width='5' transform='translate(!x!, !y!)!transform!'/>"
 								.replace(/!data!/g, pathData)
@@ -3707,6 +3719,16 @@ $(function() {
 			//"Zoo": "ZooModule"
 		};
 
+		lineRegex["Cruel Piano Keys"] = {
+			ID: "CruelPianoKeys",
+			Lines: lineRegex["Piano Keys"].Lines
+		};
+
+		lineRegex["Festive Piano Keys"] = {
+			ID: "FestivePianoKeys",
+			Lines: lineRegex["Piano Keys"].Lines
+		};
+
 		var taglessRegex = [
 			// TwoBits
 			{
@@ -3757,10 +3779,15 @@ $(function() {
 				var match = /^[ \t]*\[(.+?)\] ?(.+)/.exec(line);
 				if (match) {
 					var obj = null;
+					var name = null;
 					var id = null;
 
 					var submatch = /(.+?) #(\d+)/.exec(match[1]);
-					if (submatch) {
+					if (submatch && submatch[1] in TranslatedModuleNames) {
+						obj = lineRegex[TranslatedModuleNames[submatch[1]].key];
+						id = submatch[2];
+						name = TranslatedModuleNames[submatch[1]].name;
+					} else if (submatch) {
 						obj = lineRegex[submatch[1]];
 						id = submatch[2];
 					} else
@@ -3776,15 +3803,15 @@ $(function() {
 									if (matches) {
 										if (value instanceof Function) {
 											if (obj.Lines) {
-												var module = id ? GetBomb().GetModuleID(obj.ID, id) : GetBomb().GetModule(obj.ID);
-												if (value(matches, module, bomb.GetMod(obj.ID))) {
+												var module = id ? GetBomb().GetModuleID(name || obj.ID, id) : GetBomb().GetModule(name || obj.ID);
+												if (value(matches, module, bomb.GetMod(name || obj.ID))) {
 													return true;
 												}
 											} else if (value(matches, id)) {
 												return true;
 											}
 										} else {
-											readDirectly(match[2], obj.ID || value, id);
+											readDirectly(match[2], name || obj.ID || value, id);
 										}
 									}
 								});
