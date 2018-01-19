@@ -2286,11 +2286,23 @@ $(function() {
 				ID: "Laundry",
 				Lines: [
 					{
-						regex: /.+/,
+						regex: /Solution values for (\d) solved modules/,
 						value: function(matches, module) {
-							module.push(matches.input);
+							var lines = [];
 							for (var i = 0; i < 4; i++) {
-								module.push(readLine());
+								var line = readLine();
+								if (line == "") break;
+
+								lines.push(line);
+							}
+
+							var verb = "Solution";
+							if (lines.length == 4) verb = lines.includes("Passed") ? "Solved" : "Striked";
+
+							module.push([`${verb} for ${matches[1]} module${parseInt(matches[1]) == 1 ? "" : "s"}`, lines]);
+
+							if (verb == "Solution" && matches[1] == "5") {
+								module.push({linebreak: true});
 							}
 						}
 					}
