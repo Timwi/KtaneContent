@@ -806,7 +806,7 @@ $(function() {
 		//log = $("<div>").text(log).html(); // Escape any HTML.
 		log = log.replace(/\r/g, "");
 
-		if (!(/^Initialize engine version: .+ (.+)/.exec(log))) {
+		if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz/.exec(log))) {
 			toastr.error("Invalid logfile.", "Reading Error");
 			return false;
 		}
