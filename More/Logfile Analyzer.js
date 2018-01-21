@@ -1166,6 +1166,20 @@ $(function() {
 					}
 				]
 			},
+			"Algebra": {
+				ID: "algebra",
+				Lines: [
+					{
+						regex: /.+/
+					},
+					{
+						regex: /(?:[CZ] value|Equation 3):/,
+						value: function(_, module) {
+							module.push({linebreak: true});
+						}
+					}
+				],
+			},
 			//"Adventure Game": "spwizAdventureGame",
 			"Assets.Scripts.Rules.KeypadRuleSet": {
 				ID: "Keypad",
