@@ -3542,7 +3542,7 @@ $(function() {
 							while ((data = /^(.*?)(\d+)(.*)$/.exec(txt)) !== null) {
 								span.append($('<span>').text(data[1]));
 								span.append($('<img>')
-									.attr({ src: '../HTML/img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
+									.attr({ src: 'img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
 									.css({ verticalAlign: 'middle', margin: '0 5px', filter: 'invert(100%)' }));
 								txt = data[3];
 							}
