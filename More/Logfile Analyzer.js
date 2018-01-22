@@ -47,6 +47,7 @@ const ModuleNames = {
 	monsplodeCards: "Monsplode Trading Cards",
 	GameOfLifeSimple: "Game Of Life",
 	"Mastermind Simple": "Mastermind",
+    visual_impairment: "Visual Impairment",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -655,8 +656,9 @@ $(function() {
 				} else {
 					$("<p>")
 						.html("Please check the ")
-						.append($('<a href="#' + serial + '">Filtered Log</a>').click(function() {
+						.append($('<a href="#bomb=' + serial + '">Filtered Log</a>').click(function() {
 							filteredTab.click();
+                            return false;
 						}))
 						.append(' as the information for this module cannot be automatically parsed.')
 						.appendTo(modinfo);
