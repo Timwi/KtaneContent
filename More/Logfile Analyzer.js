@@ -1169,14 +1169,28 @@ $(function() {
 			"Algebra": {
 				ID: "algebra",
 				Lines: [
-					{
-						regex: /.+/
-					},
+                    {
+                        regex: /^(Equation \d+) is (.*)\.$/,
+                        value: function(matches, module) {
+                            module.push({
+                                label: matches[1] + ':',
+                                obj: $('<div>').append(
+                                    $('<img>')
+                                        .attr('src', 'img/Algebra/' + matches[2].replace('+', '%2B') + '.png')
+                                        .css({ filter: 'invert(100%) grayscale(100%)', height: '3em' })
+                                )
+                            });
+                            return true;
+                        }
+                    },
 					{
 						regex: /(?:[CZ] value|Equation 3):/,
 						value: function(_, module) {
 							module.push({linebreak: true});
 						}
+					},
+					{
+						regex: /.+/
 					}
 				],
 			},
