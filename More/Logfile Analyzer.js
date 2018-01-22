@@ -47,7 +47,7 @@ const ModuleNames = {
 	monsplodeCards: "Monsplode Trading Cards",
 	GameOfLifeSimple: "Game Of Life",
 	"Mastermind Simple": "Mastermind",
-    visual_impairment: "Visual Impairment",
+	visual_impairment: "Visual Impairment",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -658,7 +658,7 @@ $(function() {
 						.html("Please check the ")
 						.append($('<a href="#bomb=' + serial + '">Filtered Log</a>').click(function() {
 							filteredTab.click();
-                            return false;
+							return false;
 						}))
 						.append(' as the information for this module cannot be automatically parsed.')
 						.appendTo(modinfo);
@@ -1171,28 +1171,28 @@ $(function() {
 			"Algebra": {
 				ID: "algebra",
 				Lines: [
-                    {
-                        regex: /^(Equation \d+) is (.*)\.$/,
-                        value: function(matches, module) {
-                            module.push({
-                                label: matches[1] + ':',
-                                obj: $('<div>').append(
-                                    $('<img>')
-                                        .attr('src', 'img/Algebra/' + matches[2].replace(/\+/g, '%2B') + '.png')
-                                        .css({ filter: 'invert(100%) grayscale(100%)', height: '3em' })
-                                )
-                            });
-                            return true;
-                        }
-                    },
 					{
-						regex: /(?:[CZ] value|Equation 3):/,
-						value: function(_, module) {
-							module.push({linebreak: true});
+						regex: /^(Equation \d+) is (.*)\.$/,
+						value: function(matches, module) {
+							module.push({
+								label: matches[1] + ':',
+								obj: $('<div>').append(
+									$('<img>')
+										.attr('src', 'img/Algebra/' + matches[2].replace(/\+/g, '%2B') + '.png')
+										.css({ filter: 'invert(100%) grayscale(100%)', height: '3em' })
+								)
+							});
+							return true;
 						}
 					},
 					{
 						regex: /.+/
+					},
+					{
+						regex: /The (?:true )?value of [CZ] is/,
+						value: function(_, module) {
+							module.push({linebreak: true});
+						}
 					}
 				],
 			},
