@@ -1861,8 +1861,8 @@ $(function() {
 			},
 			//"Complicated Buttons": "complicatedButtonsModule",
 			"Connection Check": "graphModule",
-			"Coordinates": {
-				ID: "CoordinatesModule",
+			"CoordinateSystems": {
+				ID: "CoordinateSystemsModule",
 				Lines: [
 					{
 						regex: /(\d)×(\d)/,
