@@ -48,6 +48,7 @@ const ModuleNames = {
 	GameOfLifeSimple: "Game Of Life",
 	"Mastermind Simple": "Mastermind",
 	visual_impairment: "Visual Impairment",
+    sonic: "Sonic the Hedgehog",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
