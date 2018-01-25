@@ -3240,6 +3240,35 @@ $(function() {
 					}
 				]
 			},
+			"Poetry": {
+				ID: "poetry",
+				Lines: [
+					{
+						regex: /Picked girl/,
+						value: function(matches, module) {
+							module.stageNumber = 1;
+							module.correctSolves = 1;
+							module.push(["Stage 1", module.stage = []]);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.stage.push(matches.input);
+						}
+					},
+					{
+						regex: /(Correct|Wrong) Word!/,
+						value: function(matches, module) {
+							if (module.correctSolves == 3) return;
+							if (matches[1] == "Correct") module.correctSolves++;
+
+							module.stageNumber++;
+							module.push([`Stage ${module.stageNumber}`, module.stage = []]);
+						}
+					}
+				]
+			},
 			"Point of Order": {
 				ID: "PointOfOrderModule",
 				Lines: [
