@@ -48,7 +48,7 @@ const ModuleNames = {
 	GameOfLifeSimple: "Game Of Life",
 	"Mastermind Simple": "Mastermind",
 	visual_impairment: "Visual Impairment",
-    sonic: "Sonic the Hedgehog",
+	sonic: "Sonic the Hedgehog",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -440,7 +440,7 @@ $(function() {
 								.appendTo(edgework)
 								.append($("<span class='label'>").text(val[2]));
 						}
-						if (val[0] == "EcryptedIndicatorWidget") {
+						if (val[0] == "EncryptedIndicatorWidget") {
 							$("<div class='widget encryptedindicator'>")
 								.addClass(val[1])
 								.appendTo(edgework)
@@ -1021,19 +1021,19 @@ $(function() {
 				}
 			],
 			// Modded Widgets
-			"EcryptedIndicatorWidget": [
+			"EncryptedIndicatorWidget": [
 				{
 					regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
-						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget", matches[1], matches[2]]);
+						bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
 					}
 				},
 				{
 					regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
 					value: function(matches) {
 						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
-						bomb.ModdedIndicators.push(["EcryptedIndicatorWidget", matches[1], matches[2]]);
+						bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
 					}
 				}
 			],
