@@ -3545,7 +3545,6 @@ $(function() {
 					{
 						regex: /boots sound/,
 						value: function(_, module) {
-							module.groups.prefix = "Stage #";
 							module.groups.addGroup(true);
 						}
 					},
