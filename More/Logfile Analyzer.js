@@ -107,17 +107,19 @@ const blacklist = [
 	"Calculated FPS: "
 ];
 
-class Attempts {
+class Groups {
 	constructor() {
-		this.attempts = [[]];
+		this.groups = [this.latest = []];
+		this.prefix = "Attempt #";
 	}
 
-	addAttempt() {
-		this.attempts.push([]);
+	addGroup(avoidEmpty = false) {
+		if (avoidEmpty && this.latest.length == 0) return;
+		this.groups.push(this.latest = []);
 	}
 
 	add(obj) {
-		this.attempts[this.attempts.length - 1].push(obj);
+		this.latest.push(obj);
 	}
 }
 
@@ -230,15 +232,15 @@ $(function() {
 				}
 			});
 
-			if (typeof (tree) === "object" && "attempts" in tree) {
-				var attempts = tree.attempts.attempts;
-				if (attempts.length == 1) {
-					makeTree(attempts[0], parent);
+			if (typeof (tree) === "object" && "groups" in tree) {
+				var groups = tree.groups.groups;
+				if (groups.length == 1) {
+					makeTree(groups[0], parent);
 				} else {
-					attempts.forEach(function(attempt, i) {
+					groups.forEach(function(group, i) {
 						var elem = $("<li>").appendTo(parent);
-						makeExpandable(elem, "Attempt #" + (i + 1));
-						makeTree(attempt, $("<ul>").appendTo(elem));
+						makeExpandable(elem, tree.groups.prefix + (i + 1));
+						makeTree(group, $("<ul>").appendTo(elem));
 					});
 				}
 			}
@@ -798,7 +800,7 @@ $(function() {
 			}
 
 			info = ["#" + id, []];
-			info[1].attempts = new Attempts();
+			info[1].groups = new Groups();
 			module.push(info);
 
 			return info[1];
@@ -946,7 +948,7 @@ $(function() {
 					regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
 					value: function(matches) {
 						var info = [];
-						info.attempts = new Attempts();
+						info.groups = new Groups();
 						bomb.Modules[matches[1]] = {
 							IDs: [],
 							Info: info
@@ -1527,12 +1529,7 @@ $(function() {
 								}
 							});
 
-							/*if (!module.attempts) {
-								module.attempts = [];
-								//module.push(module.attempts);
-							}*/
-
-							module.attempts.add({ label: matches[1], obj: div, expanded: true });
+							module.groups.add({ label: matches[1], obj: div, expanded: true });
 
 							return true;
 						}
@@ -1574,22 +1571,13 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module.attempts.add(matches.input);
+							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /Wrong letter pressed:/,
 						value: function(matches, module) {
-							module.attempts.addAttempt();
-							/*if (!module.attempts) {
-								module.attempts = [];
-								module.attempts[0] = module.splice(0, module.length);
-								module.push(["Attempt #1", module.attempts[0]]);
-							}
-
-							var attempt = [];
-							module.attempts.push(attempt);
-							module.push(["Attempt #" + module.attempts.length, attempt]);*/
+							module.groups.addGroup();
 						}
 					},
 				]
@@ -2371,13 +2359,13 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module.attempts.add(matches.input);
+							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /Clicked \w+: wrong./,
 						value: function(matches, module) {
-							module.attempts.addAttempt();
+							module.groups.addGroup();
 						}
 					}
 				]
@@ -3551,6 +3539,24 @@ $(function() {
 					}
 				]
 			},
+			"Sonic the Hedgehog": {
+				ID: "sonic",
+				Lines: [
+					{
+						regex: /boots sound/,
+						value: function(_, module) {
+							module.groups.prefix = "Stage #";
+							module.groups.addGroup(true);
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.groups.add(matches.input);
+						}
+					}
+				]
+			},
 			"Souvenir": {
 				ID: "SouvenirModule",
 				Lines: [
@@ -3593,7 +3599,7 @@ $(function() {
 								txt = data[3];
 							}
 							span.append($('<span>').text(txt));
-							module.attempts.add(span);
+							module.groups.add(span);
 							return !matches.input.includes("Wrong solution entered:");
 						}
 					},
@@ -3601,10 +3607,10 @@ $(function() {
 						regex: /Wrong solution entered:/,
 						value: function(matches, module) {
 							if (!matches.input.includes(",")) {
-								module.attempts.add(matches.input);
+								module.groups.add(matches.input);
 							}
 
-							module.attempts.addAttempt();
+							module.groups.addGroup();
 
 							return true;
 						}
@@ -3612,7 +3618,7 @@ $(function() {
 					{
 						regex: /.+/,
 						value: function(matches, module) {
-							module.attempts.add(matches.input);
+							module.groups.add(matches.input);
 						}
 					},
 				]
