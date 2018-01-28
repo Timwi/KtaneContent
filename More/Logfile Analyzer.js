@@ -1435,7 +1435,7 @@ $(function() {
 
 								var bbox = elem[0].getBBox();
 								var text = sections[index];
-								$("<svg><text></svg>").children().eq(0).unwrap()
+								$SVG("<text>")
 									.text(text)
 									.css({
 										transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
@@ -1509,7 +1509,7 @@ $(function() {
 
 								spots.split("-").forEach(function(posStr) {
 									var pos = parseInt(posStr) - 1;
-									$('<svg><circle r="0.4"></circle></svg>').children().eq(0).unwrap().attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
+									$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 								});
 
 								if (matches[2] == "on module") {
@@ -1549,8 +1549,8 @@ $(function() {
 								var absPos = pos % 24;
 								var text;
 								if (!module.flippedSVG[absPos]) {
-									var highlight = $('<svg><rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect></svg>').children().eq(0).unwrap().attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
-									text = $('<svg><text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text></svg>').children().eq(0).unwrap().text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
+									var highlight = $SVG('<rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
+									text = $SVG('<text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 
 									module.flippedSVG[absPos] = [highlight, text];
 								}
