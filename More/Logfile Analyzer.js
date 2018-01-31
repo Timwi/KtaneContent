@@ -49,6 +49,7 @@ const ModuleNames = {
 	"Mastermind Simple": "Mastermind",
 	visual_impairment: "Visual Impairment",
 	sonic: "Sonic the Hedgehog",
+	jukebox: "The Jukebox",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -1850,7 +1851,7 @@ $(function() {
 			},
 			//"Complicated Buttons": "complicatedButtonsModule",
 			"Connection Check": "graphModule",
-			"CoordinateSystems": {
+			"Coordinate Systems": {
 				ID: "CoordinateSystemsModule",
 				Lines: [
 					{
