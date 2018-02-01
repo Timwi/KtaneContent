@@ -13,21 +13,62 @@
 		<script>
 			$(function() {
 				const interactive = $("table.interactive");
+				const saveStates = [];
+				let currentState = 0;
 
-				for (let y = 0; y < 8; y++) {
-					const row = $("<tr>").appendTo(interactive);
-					for (let x = 0; x < 6; x++) {
-						$("<td>").click(function() {
-							$(this).toggleClass("white");
-						}).contextmenu(function() {
-							$(this).toggleClass("dot");
-							return false;
-						}).appendTo(row);
+				function removeFutureSaves() {
+					if (currentState < saveStates.length - 1) {
+						for (let i = currentState + 1; i < saveStates.length; i++) {
+							saveStates[i].remove();
+						}
+
+						saveStates.splice(currentState + 1, saveStates.length - currentState);
 					}
 				}
 
-				$("button").click(function() {
+				for (let y = 0; y < 9; y++) {
+					const row = $("<tr>").appendTo(interactive);
+					for (let x = 0; x < 7; x++) {
+						if (y == 0 && x > 0) {
+							$("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+						} else if (y > 0 && x == 0) {
+							$("<th>").text(y).appendTo(row);
+						} else {
+							$("<td>").click(function() {
+								$(this).toggleClass("white");
+								removeFutureSaves();
+							}).contextmenu(function() {
+								$(this).toggleClass("dot");
+								removeFutureSaves();
+								return false;
+							}).appendTo(row);
+						}
+					}
+				}
+
+				$("button.reset").click(function() {
 					$("table.interactive td").removeClass("white dot");
+					saveStates.forEach(x => x.remove());
+					saveStates = [];
+				});
+
+				$("button.reset-grid").click(function() {
+					$("table.interactive td").removeClass("white dot");
+				});
+
+				$("button.save").click(function() {
+					removeFutureSaves();
+
+					let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
+					let stateNumber = saveStates.length;
+					currentState = stateNumber;
+
+					let button = $("<button>").text(stateNumber + 1).click(function() {
+						$("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
+						currentState = stateNumber;
+					}).appendTo(".buttons");
+
+					saveStates.push(button);
 				});
 			});
         </script>
@@ -36,6 +77,11 @@
 				display: flex;
 				flex-direction: column;
 				align-items: center;
+			}
+
+			table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+				border: none;
+				background: none;
 			}
 
 			table.interactive td {
@@ -80,7 +126,7 @@
 			}
 
 			button {
-				margin-top: 10px;
+				margin: 5px;
 				border: black 2px solid;
 				border-radius: 3px;
 				transition: color 1s, background-color 1s;
@@ -90,6 +136,11 @@
 			button:hover {
 				color: white;
 				background-color: black;
+			}
+
+			.buttons {
+				display: flex;
+				flex-direction: row;
 			}
 		</style>
     </head>
@@ -110,7 +161,11 @@
 
 						<div class="interactive-container">
 							<table class="interactive"></table>
-							<button>Reset</button>
+							<div class="buttons">
+								<button class="reset">Reset</button>
+								<button class="reset-grid">Reset Grid</button>
+								<button class="save">Save</button>
+							</div>
 						</div>
 						<br>
 						<table>
