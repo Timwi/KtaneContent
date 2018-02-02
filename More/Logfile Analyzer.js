@@ -50,6 +50,9 @@ const ModuleNames = {
 	visual_impairment: "Visual Impairment",
 	sonic: "Sonic the Hedgehog",
 	jukebox: "The Jukebox",
+	buttonMasherNeedy: "Button Masher",
+	NeedyBeer: "Refill that Beer!",
+	rng: "Random Number Generator",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -61,6 +64,13 @@ const ModuleNames = {
 	SimonV2: "Simon States",
 	NeedyKnobV2: "Rotary Phone",
 	NeedyVentV2: "Answering Questions",
+
+	// Translated
+	BigButtonTranslated: "The Button (Translated)",
+	WhosOnFirstTranslated: "Who’s On First (Translated)",
+	MorseCodeTranslated: "Morse Code (Translated)",
+	PasswordsTranslated: "Passwords (Translated)",
+	VentGasTranslated: "Venting Gas (Translated)",
 };
 
 const TranslatedModuleNames = {
@@ -69,6 +79,17 @@ const TranslatedModuleNames = {
 		name: "SupermercadoSalvajeModule"
 	}
 };
+
+const IconNames = {
+	monsplodeWho: "Who’s that Monsplode",
+
+	// Translated
+	BigButtonTranslated: "The Button",
+	WhosOnFirstTranslated: "Who’s On First",
+	MorseCodeTranslated: "Morse code",
+	PasswordsTranslated: "Passwords",
+	VentGasTranslated: "Venting Gas",
+}
 
 // A list of internal port names used to convert to their display name.
 const PortNames = {
@@ -121,6 +142,15 @@ class Groups {
 
 	add(obj) {
 		this.latest.push(obj);
+	}
+}
+
+class ParsedMod {
+	constructor(moduleName, iconName) {
+		this.moduleName = moduleName;
+		this.iconName = iconName;
+		this.info = undefined;
+		this.ID = undefined;
 	}
 }
 
@@ -596,33 +626,38 @@ $(function() {
 					var mod = this.Modules[m];
 					var name = getModuleName(m);
 
+					let parsedMod = new ParsedMod(name, IconNames[m] || name);
+
 					if (mod.IDs.length === 0) {
-						if (mod.Info.length === 0) {
-							mods.push([name]);
-						} else {
-							mods.push([name, mod.Info]);
+						if (mod.Info.length !== 0) {
+							parsedMod.info = mod.Info;
 						}
 					} else if (mod.IDs.length == 1) {
-						mods.push([name, mod.IDs[0][1]]);
+						parsedMod.info = mod.IDs[0][1];
 					} else {
 						mod.IDs.forEach(function(info) {
-							mods.push([name, info[1], info[0]]);
+							let modClone = Object.assign({}, parsedMod);
+							modClone.info = info[1];
+							modClone.ID = info[0];
+							mods.push(modClone);
 						});
 					}
+
+					mods.push(parsedMod);
 				}
 			}
 
-			mods = mods.sort(function(a, b) {
-				if (a[2]) {
-					a = a[0] + a[2];
+			mods.sort(function(a, b) {
+				if (a.ID) {
+					a = a.moduleName + a.ID;
 				} else {
-					a = a[0];
+					a = a.moduleName;
 				}
 
-				if (b[2]) {
-					b = b[0] + b[2];
+				if (b.moduleName) {
+					b = b.moduleName + b.ID;
 				} else {
-					b = b[0];
+					b = b.moduleName;
 				}
 
 				a = a.replace(/^The /, "");
@@ -652,10 +687,10 @@ $(function() {
 			mods.forEach(function(minfo) {
 				// Information
 				var modinfo = $("<div class='module-info'>").appendTo(info);
-				$("<h3>").text(minfo[0]).appendTo(modinfo);
-				if (minfo[1]) {
-					makeTree(minfo[1], $("<ul>").appendTo(modinfo));
-				} else if (noLogging.indexOf(minfo[0]) > -1) {
+				$("<h3>").text(minfo.moduleName).appendTo(modinfo);
+				if (minfo.info) {
+					makeTree(minfo.info, $("<ul>").appendTo(modinfo));
+				} else if (noLogging.indexOf(minfo.moduleName) > -1) {
 					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
@@ -670,14 +705,15 @@ $(function() {
 
 				// Listing
 				var mod = $("<a href='#' class='module'>")
-					.text(minfo[0] + (minfo[2] ? " " + minfo[2] : ""))
+					.text(minfo.moduleName + (minfo.ID ? " " + minfo.ID : ""))
 					.appendTo(modules)
 					.addCardClick(modinfo);
 
 				$("<img>")
 					.on("error", function() {
+						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleName, minfo);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + minfo[0] + ".png").appendTo(mod);
+					}).attr("src", "../Icons/" + minfo.iconName + ".png").appendTo(mod);
 			});
 
 			filteredTab.appendTo(modules).addCardClick(loginfo);
