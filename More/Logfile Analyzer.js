@@ -641,6 +641,8 @@ $(function() {
 							modClone.ID = info[0];
 							mods.push(modClone);
 						});
+						
+						continue;
 					}
 
 					mods.push(parsedMod);
