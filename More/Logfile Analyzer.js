@@ -2340,7 +2340,6 @@ $(function() {
 			},
 			"InvisibleWallsComponent": "Maze",
 			"KeypadComponent": "Keypad",
-			"LED Encryption": "LEDEnc",
 			"Laundry": {
 				ID: "Laundry",
 				Lines: [
@@ -2367,6 +2366,39 @@ $(function() {
 					}
 				]
 			},
+			"LED Encryption": "LEDEnc",
+            "LED Grid": {
+                ID: 'ledGrid',
+                Lines: [
+                    {
+                        regex: /The chosen LED colours are (.*)\./,
+                        value: function(matches, module) {
+                            var colorCodes = {
+                                black:  [ "#000000", 'white' ],
+                                blue:   [ "#0000FF", 'white' ],
+                                green:  [ "#00A651", 'black' ],
+                                orange: [ "#F26522", 'black' ],
+                                pink:   [ "#F06EAA", 'black' ],
+                                purple: [ "#662D91", 'white' ],
+                                red:    [ "#FF0000", 'black' ],
+                                white:  [ "#FFFFFF", 'black' ],
+                                yellow: [ "#FFF200", 'black' ],
+                            };
+                            var colors = matches[1].split(', ');
+                            var table = `<table style='border-spacing: 1cm; border: 3px solid black;'>${[0, 1, 2].map(row =>
+                                `<tr>${[0, 1, 2].map(col =>
+                                    `<td><div style='background-color: ${colorCodes[colors[3*row + col]][0]}; color: ${colorCodes[colors[3*row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3*row + col]}</span></div></td>`
+                                ).join('')}</tr>`
+                            ).join('')}</table>`;
+                            module.push({ label: 'LED colors:', obj: $(table) });
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			"Light Cycle": {
 				ID: "LightCycleModule",
 				Lines: [
