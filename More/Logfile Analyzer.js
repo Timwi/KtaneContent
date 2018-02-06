@@ -53,6 +53,7 @@ const ModuleNames = {
 	buttonMasherNeedy: "Button Masher",
 	NeedyBeer: "Refill that Beer!",
 	rng: "Random Number Generator",
+    ledGrid: "LED Grid",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -641,7 +642,7 @@ $(function() {
 							modClone.ID = info[0];
 							mods.push(modClone);
 						});
-						
+
 						continue;
 					}
 
