@@ -3695,6 +3695,43 @@ $(function() {
 					},
 				]
 			},
+            "Symbolic Coordinates": {
+                ID: "symbolicCoordinates",
+                Lines: [
+                    {
+                        regex: /(The .+ display is) ([PLACE ]+)\. The LEDs are (.+), (.+) & (.+)\./,
+                        value: function(matches, module) {
+                            var conversion = {
+                                P: 'Stain',
+                                L: 'Vortex',
+                                A: 'Tunnel',
+                                C: 'Pluto',
+                                E: 'Flag'
+                            };
+                            var colors = {
+                                purple: '#808',
+                                aqua:   '#0ff',
+                                yellow: '#ff0',
+                                green:  '#080'
+                            };
+                            function color(name) {
+                                return `<span style='display: inline-block; width: 1em; height: 1em; border-radius: 50%; background: ${colors[name]}'></span> ${name}`;
+                            }
+                            module.groups.prefix = "Stage #";
+                            module.groups.addGroup(true);
+                            module.groups.add({ label: `${matches[1]}:`, obj: `<div>${matches[2].split(' ').map(x => `<img src='../HTML/img/Symbolic Coordinates/${conversion[x]}.png' />`).join(' ')}</div>` });
+                            module.groups.add($(`<span>The LEDs are ${color(matches[3])}, ${color(matches[4])} and ${color(matches[5])}.</span>`));
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/,
+                        value: function(matches, module) {
+                            module.groups.add(matches.input);
+                        }
+                    }
+                ]
+            },
 			//"Symbolic Password": "symbolicPasswordModule",
 			//"Text Field": "TextField",
 			//"The Clock": "TheClockModule",
