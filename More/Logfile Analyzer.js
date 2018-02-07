@@ -53,7 +53,7 @@ const ModuleNames = {
 	buttonMasherNeedy: "Button Masher",
 	NeedyBeer: "Refill that Beer!",
 	rng: "Random Number Generator",
-    ledGrid: "LED Grid",
+	ledGrid: "LED Grid",
 	radiatorInova: "Radiator",
 
 	// Hexicube's Modules
@@ -2368,38 +2368,38 @@ $(function() {
 				]
 			},
 			"LED Encryption": "LEDEnc",
-            "LED Grid": {
-                ID: 'ledGrid',
-                Lines: [
-                    {
-                        regex: /The chosen LED colours are (.*)\./,
-                        value: function(matches, module) {
-                            var colorCodes = {
-                                black:  [ "#000000", 'white' ],
-                                blue:   [ "#0000FF", 'white' ],
-                                green:  [ "#00A651", 'black' ],
-                                orange: [ "#F26522", 'black' ],
-                                pink:   [ "#F06EAA", 'black' ],
-                                purple: [ "#662D91", 'white' ],
-                                red:    [ "#FF0000", 'black' ],
-                                white:  [ "#FFFFFF", 'black' ],
-                                yellow: [ "#FFF200", 'black' ],
-                            };
-                            var colors = matches[1].split(', ');
-                            var table = `<table style='border-spacing: 1cm; border: 3px solid black;'>${[0, 1, 2].map(row =>
-                                `<tr>${[0, 1, 2].map(col =>
-                                    `<td><div style='background-color: ${colorCodes[colors[3*row + col]][0]}; color: ${colorCodes[colors[3*row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3*row + col]}</span></div></td>`
-                                ).join('')}</tr>`
-                            ).join('')}</table>`;
-                            module.push({ label: 'LED colors:', obj: $(table) });
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /.+/
-                    }
-                ]
-            },
+			"LED Grid": {
+				ID: 'ledGrid',
+				Lines: [
+					{
+						regex: /The chosen LED colours are (.*)\./,
+						value: function(matches, module) {
+							var colorCodes = {
+								black:  [ "#000000", 'white' ],
+								blue:   [ "#0000FF", 'white' ],
+								green:  [ "#00A651", 'black' ],
+								orange: [ "#F26522", 'black' ],
+								pink:   [ "#F06EAA", 'black' ],
+								purple: [ "#662D91", 'white' ],
+								red:    [ "#FF0000", 'black' ],
+								white:  [ "#FFFFFF", 'black' ],
+								yellow: [ "#FFF200", 'black' ],
+							};
+							var colors = matches[1].split(', ');
+							var table = `<table style='border-spacing: 1cm; border: 3px solid black;'>${[0, 1, 2].map(row =>
+								`<tr>${[0, 1, 2].map(col =>
+									`<td><div style='background-color: ${colorCodes[colors[3*row + col]][0]}; color: ${colorCodes[colors[3*row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3*row + col]}</span></div></td>`
+								).join('')}</tr>`
+							).join('')}</table>`;
+							module.push({ label: 'LED colors:', obj: $(table) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Light Cycle": {
 				ID: "LightCycleModule",
 				Lines: [
@@ -3695,43 +3695,43 @@ $(function() {
 					},
 				]
 			},
-            "Symbolic Coordinates": {
-                ID: "symbolicCoordinates",
-                Lines: [
-                    {
-                        regex: /(The .+ display is) ([PLACE ]+)\. The LEDs are (.+), (.+) & (.+)\./,
-                        value: function(matches, module) {
-                            var conversion = {
-                                P: 'Stain',
-                                L: 'Vortex',
-                                A: 'Tunnel',
-                                C: 'Pluto',
-                                E: 'Flag'
-                            };
-                            var colors = {
-                                purple: '#808',
-                                aqua:   '#0ff',
-                                yellow: '#ff0',
-                                green:  '#080'
-                            };
-                            function color(name) {
-                                return `<span style='display: inline-block; width: 1em; height: 1em; border-radius: 50%; background: ${colors[name]}'></span> ${name}`;
-                            }
-                            module.groups.prefix = "Stage #";
-                            module.groups.addGroup(true);
-                            module.groups.add({ label: `${matches[1]}:`, obj: `<div>${matches[2].split(' ').map(x => `<img src='../HTML/img/Symbolic Coordinates/${conversion[x]}.png' />`).join(' ')}</div>` });
-                            module.groups.add($(`<span>The LEDs are ${color(matches[3])}, ${color(matches[4])} and ${color(matches[5])}.</span>`));
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /.+/,
-                        value: function(matches, module) {
-                            module.groups.add(matches.input);
-                        }
-                    }
-                ]
-            },
+			"Symbolic Coordinates": {
+				ID: "symbolicCoordinates",
+				Lines: [
+					{
+						regex: /(The .+ display is) ([PLACE ]+)\. The LEDs are (.+), (.+) & (.+)\./,
+						value: function(matches, module) {
+							var conversion = {
+								P: 'Stain',
+								L: 'Vortex',
+								A: 'Tunnel',
+								C: 'Pluto',
+								E: 'Flag'
+							};
+							var colors = {
+								purple: '#808',
+								aqua:   '#0ff',
+								yellow: '#ff0',
+								green:  '#080'
+							};
+							function color(name) {
+								return `<span style='display: inline-block; width: 1em; height: 1em; border-radius: 50%; background: ${colors[name]}'></span> ${name}`;
+							}
+							module.groups.prefix = "Stage #";
+							module.groups.addGroup(true);
+							module.groups.add({ label: `${matches[1]}:`, obj: `<div>${matches[2].split(' ').map(x => `<img src='../HTML/img/Symbolic Coordinates/${conversion[x]}.png' />`).join(' ')}</div>` });
+							module.groups.add($(`<span>The LEDs are ${color(matches[3])}, ${color(matches[4])} and ${color(matches[5])}.</span>`));
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.groups.add(matches.input);
+						}
+					}
+				]
+			},
 			//"Symbolic Password": "symbolicPasswordModule",
 			//"Text Field": "TextField",
 			//"The Clock": "TheClockModule",
