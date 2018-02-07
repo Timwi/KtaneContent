@@ -54,6 +54,7 @@ const ModuleNames = {
 	NeedyBeer: "Refill that Beer!",
 	rng: "Random Number Generator",
     ledGrid: "LED Grid",
+	radiatorInova: "Radiator",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
