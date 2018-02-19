@@ -22,14 +22,15 @@
         var firstPage = document.querySelector('div.page:first-child');
         firstPage.parentElement.insertBefore(div, firstPage);
 
+        var style = document.createElement('style');
+        style.innerText = '.translatable{background-color:hsl(60,80%,80%)}.translatable-mod{background-color:hsl(0,80%,80%)}';
+        document.head.appendChild(style);
+
         var elements = document.querySelectorAll('.translatable,.translatable-mod');
         if (elements.length === 0)
             div.innerHTML = '<p>Unfortunately, this manual has not been made ready for translation yet. Let <em>Timwi#0551</em> on Discord know that you want to translate this and we’ll get right to it!</p>';
         else
         {
-            var style = document.createElement('style');
-            style.innerText = '.translatable{background-color:hsl(60,80%,80%)}.translatable-mod{background-color:hsl(0,80%,80%)}';
-            document.head.appendChild(style);
             div.innerHTML = '<p><strong><em>Thank you for volunteering to translate this manual!</em></strong><p><ul><li>Click on any highlighted text to change it.</li><li>Text highlighted in red must match exactly the translated text in the module if the module is getting translated as well, or left in English otherwise.</li><li>You MUST save this page when you’re done; closing the tab will lose all of your work if you don’t.</li></ul>';
             for (var i = 0; i < elements.length; i++)
             {
