@@ -40,13 +40,13 @@
                         var old = elem.getAttribute('data-old');
                         if (old === null)
                         {
-                            old = elem.innerText;
+                            old = elem.innerHTML.trim();
                             elem.setAttribute('data-old', old);
                         }
-                        var newText = prompt(old, elem.innerText);
+                        var newText = prompt(old, elem.innerHTML.trim());
                         if (newText !== null)
                         {
-                            elem.innerText = newText;
+                            elem.innerHTML = newText.trim();
                             if (!hasOnUnloadEvent)
                             {
                                 window.addEventListener("beforeunload", function(event)
