@@ -66,9 +66,9 @@
         hasTranslator = true;
     }
 
-    document.addEventListener('keypress', function(event)
+    document.addEventListener('keydown', function(event)
     {
-        if (event.altKey && event.charCode === 48 && !hasTranslator)
+        if (event.altKey && event.keyCode === 48 && !hasTranslator)
         {
             setTranslator();
             event.preventDefault();
