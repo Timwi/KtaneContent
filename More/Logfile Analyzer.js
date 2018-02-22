@@ -55,6 +55,7 @@ const ModuleNames = {
 	rng: "Random Number Generator",
 	ledGrid: "LED Grid",
 	radiatorInova: "Radiator",
+    iPhone: "iPhone",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2340,6 +2341,26 @@ $(function() {
 				]
 			},
 			"InvisibleWallsComponent": "Maze",
+            "iPhone": {
+                ID: "iPhone",
+				Lines: [
+                    {
+                        regex: /^(Angry Birds: The chosen Angry Birds images are|Angry Birds: The correct image is|Photos: The chosen photos are|Photos: The correct image is) (.*?)(| \((Top|Bottom) (Left|Right)\))\.$/,
+                        value: function(matches, module) {
+                            module.push(`${matches[1]}${matches[3]}:`);
+                            var div = $('<div>');
+                            var photos = matches[2].split(', ');
+                            for (var i = 0; i < photos.length; i++)
+                                div.append(`<img src='img/The iPhone/${photos[i]}.*' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                            module.push(div);
+                            return true;
+                        }
+                    },
+					{
+						regex: /.+/
+					}
+				]
+            },
 			"KeypadComponent": "Keypad",
 			"Laundry": {
 				ID: "Laundry",
