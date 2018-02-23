@@ -819,7 +819,7 @@ $(function() {
 				return undefined;
 			}
 
-			var module = this.GetMod(name).IDs;
+			var module = mod.IDs;
 
 			if (parseInt(id) > 2147483646) {
 				console.error("ID is larger than a 32 bit int, make sure your module counts from 1.");
@@ -827,7 +827,7 @@ $(function() {
 			}
 
 			if (id === undefined) {
-				id = this.GetMod(name).IDs.length;
+				id = mod.IDs.length;
 			}
 
 			var info;
