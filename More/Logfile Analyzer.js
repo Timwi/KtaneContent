@@ -55,7 +55,7 @@ const ModuleNames = {
 	rng: "Random Number Generator",
 	ledGrid: "LED Grid",
 	radiatorInova: "Radiator",
-    iPhone: "iPhone",
+    iPhone: "The iPhone",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -3979,7 +3979,7 @@ $(function() {
 
 			var pool = /(\d+) Pools:/.exec(line);
 			if (pool) {
-				linen += parseInt(pool[1]);
+				linen += parseInt(pool[1]) + 1;
 				continue;
 			}
 
