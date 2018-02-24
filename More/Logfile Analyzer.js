@@ -3,13 +3,12 @@ const ModuleNames = {
 	// Vanilla
 	BigButton: "The Button",
 	Venn: "Complicated Wires",
-	Maze: "Mazes",
 	Morse: "Morse Code",
 	Simon: "Simon Says",
 	WhosOnFirst: "Who’s on First",
 	NeedyVentGas: "Venting Gas",
 	NeedyCapacitor: "Capacitor Discharge",
-	NeedyKnob: "Knobs",
+	NeedyKnob: "Knob",
 
 	// Modded
 	switchModule: "Switches",
