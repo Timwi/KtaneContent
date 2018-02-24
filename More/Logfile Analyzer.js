@@ -52,6 +52,7 @@ const ModuleNames = {
 	ledGrid: "LED Grid",
 	radiatorInova: "Radiator",
     iPhone: "The iPhone",
+	caesarCipher: "Modern Cipher",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2525,6 +2526,32 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			// Actually Modern Cipher
+			"Caesar Cipher": {
+				ID: "caesarCipher",
+				Lines: [
+					{
+						regex: /<(Stage \d)> START/,
+						value: function(matches, module) {
+							if (!module.Stages) module.Stages = [];
+							module.push([matches[1], module.Stage = []]);
+							
+							return true;
+						}
+					},
+					{
+						regex: /<Stage ?\d> /,
+						value: function(matches, module) {
+							module.Stage.push(matches.input);
+							
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]	
 			},
 			"Modules Against Humanity": {
 				ID: "ModuleAgainstHumanity",
