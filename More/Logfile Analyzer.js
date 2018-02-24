@@ -3887,7 +3887,7 @@ $(function() {
 								.append($('<span>').text(matches[2]))
 								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
 								.append($('<span>').text("."));
-							module.push(span);
+							module.groups.add(span);
 							return true;
 						}
 					},
@@ -3901,12 +3901,21 @@ $(function() {
 								.append($('<span>').text(" = Row " + matches[2] + ": symbol there is "))
 								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
 								.append($('<span>').text("."));
-							module.push(span);
+							module.groups.add(span);
 							return true;
 						}
 					},
 					{
-						regex: /.+/
+						regex: /.+/,
+						value: function(matches, module) {
+							module.groups.add(matches.input);
+						}
+					},
+					{
+						regex: /You pressed button #\d, which is wrong\. Resetting module\./,
+						value: function(_, module) {
+							module.groups.addGroup();
+						}
 					}
 				]
 			},
