@@ -2704,6 +2704,23 @@ $(function() {
 					}
 				]
 			},
+			"Mortal Kombat": {
+				ID: "mortalKombat",
+				Lines: [
+					{
+						regex: /.+/,
+						value: function(matches, module) {
+							module.groups.add(matches.input);
+						}
+					},
+					{
+						regex: /^Strike!/,
+						value: function(matches, module) {
+							module.groups.addGroup(true);
+						}
+					}
+				]
+			},
 			"Mouse in the Maze": "MouseInTheMaze",
 			"Murder": {
 				ID: "murder",
