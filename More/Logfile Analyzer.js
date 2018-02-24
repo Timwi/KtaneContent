@@ -1,14 +1,11 @@
 // A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
 const ModuleNames = {
 	// Vanilla
-	Keypad: "Keypads",
 	BigButton: "The Button",
 	Venn: "Complicated Wires",
 	Maze: "Mazes",
 	Morse: "Morse Code",
-	Password: "Passwords",
 	Simon: "Simon Says",
-	WireSequence: "Wire Sequences",
 	WhosOnFirst: "Who’s on First",
 	NeedyVentGas: "Venting Gas",
 	NeedyCapacitor: "Capacitor Discharge",
@@ -85,6 +82,7 @@ const TranslatedModuleNames = {
 
 const IconNames = {
 	monsplodeWho: "Who’s that Monsplode",
+	SupermercadoSalvajeModule: "Cheap Checkout",
 
 	// Translated
 	BigButtonTranslated: "The Button",
