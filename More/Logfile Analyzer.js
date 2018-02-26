@@ -87,8 +87,8 @@ const IconNames = {
 	// Translated
 	BigButtonTranslated: "The Button",
 	WhosOnFirstTranslated: "Who’s On First",
-	MorseCodeTranslated: "Morse code",
-	PasswordsTranslated: "Passwords",
+	MorseCodeTranslated: "Morse Code",
+	PasswordsTranslated: "Password",
 	VentGasTranslated: "Venting Gas",
 }
 
