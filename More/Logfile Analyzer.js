@@ -1725,7 +1725,6 @@ $(function() {
 				]
 			},
 			"ChordQualities": "ChordQualities",
-			//"Color Math": "colormath",
 			"ColorMorse": "ColorMorseModule",
 			"ColoredSquares": {
 				ID: "ColoredSquaresModule",
@@ -1888,7 +1887,6 @@ $(function() {
 					}
 				]
 			},
-			//"Complicated Buttons": "complicatedButtonsModule",
 			"Connection Check": "graphModule",
 			"Coordinates": {
 				ID: "CoordinatesModule",
@@ -2444,7 +2442,6 @@ $(function() {
 					}
 				]
 			},
-			//"Logic": "Logic",
 			"Mafia": {
 				ID: "MafiaModule",
 				Lines: [
@@ -3794,11 +3791,6 @@ $(function() {
 					}
 				]
 			},
-			//"Symbolic Password": "symbolicPasswordModule",
-			//"Text Field": "TextField",
-			//"The Clock": "TheClockModule",
-			//"The Gamepad": "TheGamepadModule",
-			//"TheBulb": "TheBulbModule",
 			"TicTacToe": {
 				ID: "TicTacToeModule",
 				Lines: [
@@ -3868,7 +3860,6 @@ $(function() {
 					}
 				]
 			},
-			//"Wire Placement": "WirePlacementModule",
 			"WireSequencePage": {
 				ID: "WireSequence",
 				Lines: [
@@ -3974,7 +3965,6 @@ $(function() {
 					}
 				]
 			}
-			//"Zoo": "ZooModule"
 		};
 
 		lineRegex["Cruel Piano Keys"] = {
