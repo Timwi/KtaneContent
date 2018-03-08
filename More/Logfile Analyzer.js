@@ -2533,7 +2533,7 @@ $(function() {
 						value: function(matches, module) {
 							if (!module.Stages) module.Stages = [];
 							module.push([matches[1], module.Stage = []]);
-							
+
 							return true;
 						}
 					},
@@ -2541,14 +2541,14 @@ $(function() {
 						regex: /<Stage ?\d> /,
 						value: function(matches, module) {
 							module.Stage.push(matches.input);
-							
+
 							return true;
 						}
 					},
 					{
 						regex: /.+/
 					}
-				]	
+				]
 			},
 			"Modules Against Humanity": {
 				ID: "ModuleAgainstHumanity",
@@ -3671,6 +3671,38 @@ $(function() {
 					}
 				]
 			},
+            "Skyrim": {
+                ID: "skyrim",
+                Lines: [
+                    {
+                        regex: /^The chosen shouts are (.*?), (.*?), (.*?)\.$/,
+                        value: function(matches, module) {
+                            var div = $('<div>')
+                            div.append($('<span>').text('The chosen shouts are:'));
+                            div.append($('<ul>')
+                                .append($('<li style="font-family:DragonAlphabet">').text(matches[1].replace(/-/g, '\u2003')))
+                                .append($('<li style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')))
+                                .append($('<li style="font-family:DragonAlphabet">').text(matches[3].replace(/-/g, '\u2003'))));
+                            module.push(div);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^(The correct shout is |Strike! You selected .*? & )(.*?)( \(.*?\)\.|\.)$/,
+                        value: function(matches, module) {
+                            var span = $('<span>');
+                            span.text(matches[1]);
+                            span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
+                            span.append($('<span>').text(matches[3]));
+                            module.push(span);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			"Sonic the Hedgehog": {
 				ID: "sonic",
 				Lines: [
