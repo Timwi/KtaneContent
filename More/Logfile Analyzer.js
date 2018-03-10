@@ -53,6 +53,7 @@ const ModuleNames = {
 	radiatorInova: "Radiator",
     iPhone: "The iPhone",
 	caesarCipher: "Modern Cipher",
+	wastemanagement: "Waste Management",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
