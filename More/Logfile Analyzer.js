@@ -3676,14 +3676,21 @@ $(function() {
                 ID: "skyrim",
                 Lines: [
                     {
-                        regex: /^The chosen shouts are (.*?), (.*?), (.*?)\.$/,
+                        regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
                         value: function(matches, module) {
                             var div = $('<div>')
                             div.append($('<span>').text('The chosen shouts are:'));
                             div.append($('<ul>')
-                                .append($('<li style="font-family:DragonAlphabet">').text(matches[1].replace(/-/g, '\u2003')))
-                                .append($('<li style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')))
-                                .append($('<li style="font-family:DragonAlphabet">').text(matches[3].replace(/-/g, '\u2003'))));
+                                .append($('<li>')
+                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[1].replace(/-/g, '\u2003')))
+                                    .append($('<span>').text(matches[2])))
+                                .append($('<li>')
+                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[3].replace(/-/g, '\u2003')))
+                                    .append($('<span>').text(matches[4])))
+                                .append($('<li>')
+                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[5].replace(/-/g, '\u2003')))
+                                    .append($('<span>').text(matches[6])))
+                            );
                             module.push(div);
                             return true;
                         }
