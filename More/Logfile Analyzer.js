@@ -2868,18 +2868,13 @@ $(function() {
 				ID: "NumberPad",
 				Lines: [
 					{
-						regex: /Button (\d) is (\w+)./,
+						regex: /Button colors are: (.+)/,
 						value: function(matches, module) {
-							var button = parseInt(matches[1]);
-							if (button == 0) {
-								module.buttonColors = [];
-							}
-
-							module.buttonColors[button] = matches[2].toLowerCase();
-
-							if (button == 9) {
-								var buttonToIndex = [10, 6, 7, 8, 3, 4, 5, 0, 1, 2];
-								var colors = {
+							var colors = matches[1].split(', ');
+							if (colors.length === 10)
+							{
+								var buttonToIndex = [6, 7, 8, 3, 4, 5, 0, 1, 2, 10];
+								var colorMapping = {
 									white: "rgb(255, 255, 255)",
 									green: "rgb(76, 255, 76)",
 									yellow: "rgb(255, 255, 76)",
@@ -2888,18 +2883,20 @@ $(function() {
 								};
 
 								var svg = $('<svg viewBox="-0.1 -0.1 3 4" height="30%" style="display: block;"><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" y="3" fill="rgb(0, 255, 0)"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="0.4" y="3.4">ENT</text><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" x="2" y="3" fill="red"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="2.4" y="3.4">CLR</text></svg>');
-								module.buttonColors.forEach(function(color, i) {
+								for (var i = 0; i < 10; i++)
+								{
+									var color = colors[i];
 									var index = buttonToIndex[i];
 									var x = index % 3;
 									var y = Math.floor(index / 3);
-									$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colors[color]).appendTo(svg);
+									$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colorMapping[color]).appendTo(svg);
 									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(i).appendTo(svg);
-								});
+								}
 
 								module.push({ label: "Button Colors:", obj: svg });
-							}
 
-							return true;
+								return true;
+							}
 						}
 					},
 					{
