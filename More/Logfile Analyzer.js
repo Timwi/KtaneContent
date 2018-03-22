@@ -4175,7 +4175,11 @@ $(function() {
 			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
 				parseLog(data, url, bombSerial);
 			}).fail(function() {
-				toastr.error("Unable to get logfile from URL.", "Upload Error");
+				$.get(url, function(data) {
+					parseLog(data, url, bombSerial);
+				}).fail(function() {
+					toastr.error("Unable to get logfile from URL.", "Upload Error");
+				});
 			});
 		} else {
 			parseLog(clipText, null, bombSerial);
