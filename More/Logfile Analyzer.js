@@ -51,9 +51,10 @@ const ModuleNames = {
 	rng: "Random Number Generator",
 	ledGrid: "LED Grid",
 	radiatorInova: "Radiator",
-    iPhone: "The iPhone",
+	iPhone: "The iPhone",
 	caesarCipher: "Modern Cipher",
 	wastemanagement: "Waste Management",
+	rubiksClock: "Rubik’s Clock",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2338,26 +2339,26 @@ $(function() {
 				]
 			},
 			"InvisibleWallsComponent": "Maze",
-            "iPhone": {
-                ID: "iPhone",
+			"iPhone": {
+				ID: "iPhone",
 				Lines: [
-                    {
-                        regex: /^(Angry Birds: The chosen Angry Birds images are|Angry Birds: The correct image is|Photos: The chosen photos are|Photos: The correct image is) (.*?)(| \((Top|Bottom) (Left|Right)\))\.$/,
-                        value: function(matches, module) {
-                            module.push(`${matches[1]}${matches[3]}:`);
-                            var div = $('<div>');
-                            var photos = matches[2].split(', ');
-                            for (var i = 0; i < photos.length; i++)
-                                div.append(`<img src='img/The iPhone/${photos[i]}.*' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
-                            module.push(div);
-                            return true;
-                        }
-                    },
+					{
+						regex: /^(Angry Birds: The chosen Angry Birds images are|Angry Birds: The correct image is|Photos: The chosen photos are|Photos: The correct image is) (.*?)(| \((Top|Bottom) (Left|Right)\))\.$/,
+						value: function(matches, module) {
+							module.push(`${matches[1]}${matches[3]}:`);
+							var div = $('<div>');
+							var photos = matches[2].split(', ');
+							for (var i = 0; i < photos.length; i++)
+								div.append(`<img src='img/The iPhone/${photos[i]}.*' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+							module.push(div);
+							return true;
+						}
+					},
 					{
 						regex: /.+/
 					}
 				]
-            },
+			},
 			"KeypadComponent": "Keypad",
 			"Laundry": {
 				ID: "Laundry",
@@ -3435,6 +3436,7 @@ $(function() {
 				]
 			},
 			//"Rubik’s Cube": "RubiksCubeModule",
+			"Rubik's Clock": "rubiksClock",
 			"Rules": [
 				{
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
@@ -3669,45 +3671,45 @@ $(function() {
 					}
 				]
 			},
-            "Skyrim": {
-                ID: "skyrim",
-                Lines: [
-                    {
-                        regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
-                        value: function(matches, module) {
-                            var div = $('<div>')
-                            div.append($('<span>').text('The chosen shouts are:'));
-                            div.append($('<ul>')
-                                .append($('<li>')
-                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[1].replace(/-/g, '\u2003')))
-                                    .append($('<span>').text(matches[2])))
-                                .append($('<li>')
-                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[3].replace(/-/g, '\u2003')))
-                                    .append($('<span>').text(matches[4])))
-                                .append($('<li>')
-                                    .append($('<span style="font-family:DragonAlphabet">').text(matches[5].replace(/-/g, '\u2003')))
-                                    .append($('<span>').text(matches[6])))
-                            );
-                            module.push(div);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^(The correct shout is |Strike! You selected .*? & )(.*?)( \(.*?\)\.|\.)$/,
-                        value: function(matches, module) {
-                            var span = $('<span>');
-                            span.text(matches[1]);
-                            span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
-                            span.append($('<span>').text(matches[3]));
-                            module.push(span);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /.+/
-                    }
-                ]
-            },
+			"Skyrim": {
+				ID: "skyrim",
+				Lines: [
+					{
+						regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
+						value: function(matches, module) {
+							var div = $('<div>')
+							div.append($('<span>').text('The chosen shouts are:'));
+							div.append($('<ul>')
+								.append($('<li>')
+									.append($('<span style="font-family:DragonAlphabet">').text(matches[1].replace(/-/g, '\u2003')))
+									.append($('<span>').text(matches[2])))
+								.append($('<li>')
+									.append($('<span style="font-family:DragonAlphabet">').text(matches[3].replace(/-/g, '\u2003')))
+									.append($('<span>').text(matches[4])))
+								.append($('<li>')
+									.append($('<span style="font-family:DragonAlphabet">').text(matches[5].replace(/-/g, '\u2003')))
+									.append($('<span>').text(matches[6])))
+							);
+							module.push(div);
+							return true;
+						}
+					},
+					{
+						regex: /^(The correct shout is |Strike! You selected .*? & )(.*?)( \(.*?\)\.|\.)$/,
+						value: function(matches, module) {
+							var span = $('<span>');
+							span.text(matches[1]);
+							span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
+							span.append($('<span>').text(matches[3]));
+							module.push(span);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Sonic the Hedgehog": {
 				ID: "sonic",
 				Lines: [
