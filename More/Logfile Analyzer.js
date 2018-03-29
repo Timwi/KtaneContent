@@ -55,6 +55,7 @@ const ModuleNames = {
 	caesarCipher: "Modern Cipher",
 	wastemanagement: "Waste Management",
 	rubiksClock: "Rubik’s Clock",
+    stopwatch: "The Stopwatch",
     wire: "The Wire",
 
 	// Hexicube's Modules
