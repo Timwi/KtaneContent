@@ -92,7 +92,7 @@ const IconNames = {
 	MorseCodeTranslated: "Morse Code",
 	PasswordsTranslated: "Password",
 	VentGasTranslated: "Venting Gas",
-}
+};
 
 // A list of internal port names used to convert to their display name.
 const PortNames = {
@@ -629,7 +629,7 @@ $(function() {
 					var mod = this.Modules[m];
 					var name = getModuleName(m);
 
-					let parsedMod = new ParsedMod(name, IconNames[m] || name);
+					const parsedMod = new ParsedMod(name, IconNames[m] || name);
 
 					if (mod.IDs.length === 0) {
 						if (mod.Info.length !== 0) {
@@ -639,7 +639,7 @@ $(function() {
 						parsedMod.info = mod.IDs[0][1];
 					} else {
 						mod.IDs.forEach(function(info) {
-							let modClone = Object.assign({}, parsedMod);
+							const modClone = Object.assign({}, parsedMod);
 							modClone.info = info[1];
 							modClone.ID = info[0];
 							mods.push(modClone);
@@ -3677,7 +3677,7 @@ $(function() {
 					{
 						regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
 						value: function(matches, module) {
-							var div = $('<div>')
+							var div = $('<div>');
 							div.append($('<span>').text('The chosen shouts are:'));
 							div.append($('<ul>')
 								.append($('<li>')
