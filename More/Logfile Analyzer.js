@@ -4016,6 +4016,15 @@ $(function() {
 			Lines: lineRegex["Piano Keys"].Lines
 		};
 
+		const orientationCubeRules = [
+			"If the serial number on the bomb contains the letter R",
+			"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
+			"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
+			"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
+			"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
+			"Otherwise",
+		];
+
 		var taglessRegex = [
 			// TwoBits
 			{
@@ -4032,6 +4041,14 @@ $(function() {
 						mod.push(readLine());
 					}
 				},
+			},
+
+			// Orientation Cube
+			{
+				regex: /^rule([1-6])$/,
+				value: function(matches) {
+					GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1])]}`);
+				}
 			},
 
 			// Emoji Math
