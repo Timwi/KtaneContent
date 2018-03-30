@@ -4049,7 +4049,7 @@ $(function() {
 			{
 				regex: /^rule([1-6])$/,
 				value: function(matches) {
-					GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1])]}`);
+					GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
 				}
 			},
 
