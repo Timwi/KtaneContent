@@ -3438,7 +3438,35 @@ $(function() {
 				]
 			},
 			//"Rubik’s Cube": "RubiksCubeModule",
-			"Rubik's Clock": "rubiksClock",
+			"Rubik’s Clock": {
+				ID: "rubiksClock",
+				Lines: [
+					{
+						regex: /Moves to solve, move (\d):/,
+						value: function(matches, module) {
+							module.push([`Move #${matches[1]}:`, readMultiple(4).replace(/^\[.+\] /gm, "").split("\n")]);
+							return true;
+						}
+					},
+					{
+						regex: /Actions performed before reset: (.+)/,
+						value: function(matches, module) {
+							const actions = [matches[1]];
+							while (linen < lines.length) {
+								const line = readLine();
+								if (line.match(/^(?:Change pin|Rotate gear|Turn over to the)/) != null) actions.push(line);
+								else break;
+							}
+
+							module.push(["Actions performed before reset", actions]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Rules": [
 				{
 					regex: /Getting solution index for component (.+)Component\(Clone\)/,
