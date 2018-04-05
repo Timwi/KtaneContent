@@ -68,6 +68,7 @@ const ModuleNames = {
 	SimonV2: "Simon States",
 	NeedyKnobV2: "Rotary Phone",
 	NeedyVentV2: "Answering Questions",
+	HexiEvilFMN: "Forget Everything",
 
 	// Translated
 	BigButtonTranslated: "The Button (Translated)",
@@ -2053,6 +2054,21 @@ $(function() {
 								module.push([matches.input, states]);
 							}
 						}
+					}
+				]
+			},
+			"Forget Everything": {
+				ID: "HexiEvilFMN",
+				Lines: [
+					{
+						regex: /(Stage \d{1,}) is an important stage\. (.+), (.+), (.+)/,
+						value: function(matches, module) {
+							module.push([matches[1], [matches[2], matches[3], matches[4]]]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
 					}
 				]
 			},
