@@ -24,98 +24,175 @@
 				];
 				var colorKeys = ["r", "o", "y", "g", "b", "p"];
 
+				class Cell {
+					constructor(element, type, x, y) {
+						this.element = element;
+						this.type = type;
+						this.x = x;
+						this.y = y;
+						this._selected = false;
+
+						this.element.mouseup(() => {
+							this.selected = true;
+							firstState = undefined;
+
+							return false;
+						});
+					}
+
+					set selected(state) {
+						if (this._selected == state) return;
+
+						this._selected = state;
+						this.element.toggleClass("selected", state);
+
+						if (state) {
+							if (selectedCell) selectedCell.selected = false;
+
+							selectedCell = this;
+							currentX = selectedCell.x;
+							currentY = selectedCell.y;
+						} else {
+							selectedCell = null;
+							currentX = currentY = undefined;
+						}
+					}
+				}
+
+				class PuzzleCell extends Cell {
+					constructor(element, x, y) {
+						super(element, "puzzle", x, y)
+
+						this.state = 0;
+
+						this.element.mousedown(event => {
+							this.element.trigger("updateState", firstState = (this.state == 0 ? event.which : 0));
+
+							return false;
+						}).contextmenu(() => false)
+						.mouseenter(event => {
+							if (event.buttons <= 2 && firstState != undefined) {
+								this.element.trigger("updateState", firstState);
+							}
+						}).on("updateState", (event, newState) => {
+							this.state = newState;
+							this.element.text(this.state == 2 ? "•" : "").css("background-color", this.state == 1 ? "rgb(127, 127, 127)" : "");
+						});
+					}
+				}
+
 				var colorCells = [];
 				var numberCells = [];
 				var puzzleCells = [];
+				var grid = [];
 
-				var selected;
-				var selectedType;
-				var previous;
-				var previousType;
+				var selectedCell;
+
+				var currentX;
+				var currentY;
+				const directions = {
+					Left: [-1, 0],
+					Right: [1, 0],
+					Up: [0, -1],
+					Down: [0, 1]
+				};
 
 				var firstState;
 
-				function selectCell(element) {
-					if (selected) {
-						previous = selected;
-						previousType = selectedType;
-
-						selectedType = undefined;
-						selected.removeClass("selected");
-						selected = undefined;
-					}
-
-					if (element) selected = element.addClass("selected");
-				}
-
-				function selectNextCell() {
+				function selectNextCell(forward = true) {
 					var cellArray;
 					var otherArray;
-					if (selectedType == "color") {
+					if (selectedCell.type == "color") {
 						cellArray = colorCells;
 						otherArray = numberCells;
-					} else if (selectedType == "number") {
+					} else if (selectedCell.type == "number") {
 						cellArray = numberCells;
 						otherArray = colorCells;
 					}
 
 					if (cellArray) {
-						var index = (cellArray.indexOf(selected) + 1);
-						if (index >= cellArray.length) {
-							otherArray[0].click();
+						let index = cellArray.indexOf(selectedCell);
+						let offset;
+						if (selectedCell.type == "color") {
+							offset = forward ? 1 : -1;
+							if (index + offset < 0) offset = -index % 3 - 3;
+						} else if (selectedCell.type == "number") {
+							offset = forward ? 3 - index % 3 : -index % 3 - 3;
+							if (index + offset < 0) offset = -1;
+						}
+
+						let newIndex = (cellArray.indexOf(selectedCell) + offset);
+						if (newIndex >= cellArray.length) {
+							otherArray[newIndex - cellArray.length].selected = true;
+						} else if (newIndex < 0) {
+							otherArray[newIndex + otherArray.length].selected = true;
 						} else {
-							cellArray[index].click();
+							cellArray[newIndex].selected = true;
 						}
 					}
 				}
 
-				function addSelection(cell, type) {
-					cell.click(function() {
-						selectCell(cell);
-						selectedType = type;
-
-						return false;
-					});
-				}
-
-				$(document).click(function() {
-					selectCell();
+				$(document).mouseup(function() {
+					if (selectedCell) selectedCell.selected = false;
 				}).keydown(function(event) {
-					if (event.key == "Backspace" && previous) {
-						selectCell(previous);
-						selectedType = previousType;
-
-						previous = undefined;
-						previousType = undefined;
-					} else if (selected) {
+					if (selectedCell) {
 						var index;
-						if (selectedType == "color") {
-							index = colorKeys.indexOf(event.key);
-							if (index == -1) return;
+						if (event.key.startsWith("Arrow")) {
+							let direction = directions[event.key.substring(5)];
+							if (direction) {
+								let previousX = currentX;
+								currentX += direction[0];
+								currentY += direction[1];
+								if (previousX == 5 && currentX == 4 && currentY < 5) { // Left to top wrap
+									currentX = currentY;
+									currentY = 5;
+								} else if (previousX != 5 && currentX < 5 && currentY == 4) { // Top to left wrap
+									currentY = currentX;
+									currentX = 5;
+								}
 
-							selected.css("background-color", colors[index]);
-							selectNextCell();
-						} else if (selectedType == "number") {
-							if (event.key == " ") {
-								index = numberCells.indexOf(selected);
-								var add = 3 - index % 3;
-								if (index + add >= numberCells.length) {
-									colorCells[0].click();
+								let cell = grid[currentX + currentY * 10];
+								if (cell) {
+									cell.selected = true;
 								} else {
-									numberCells[index + add].click();
+									currentX -= direction[0];
+									currentY -= direction[1];
 								}
 
 								return false;
+							}
+						} else if (selectedCell.type == "color") {
+							if (event.key == " ") {
+								selectNextCell();
+								return false;
+							} else if (event.key == "Backspace") {
+								selectNextCell(false);
+								return false;
 							} else {
-								var number = parseInt(event.key);
+								index = colorKeys.indexOf(event.key);
+								if (index == -1) return;
+
+								selectedCell.element.css("background-color", colors[index]);
+								selectNextCell();
+							}
+						} else if (selectedCell.type == "number") {
+							let index = numberCells.indexOf(selectedCell);
+							if (event.key == " ") {
+								selectNextCell();
+								return false;
+							} else if (event.key == "Backspace") {
+								selectNextCell(false);
+								return false;
+							} else {
+								var number = event.key == "`" ? 0 : parseInt(event.key);
 								if (!isNaN(number) && number < 6) {
-									selected.text(number);
+									selectedCell.element.text(number);
 									selectNextCell();
 								}
 							}
 						}
 					}
-				}).mouseup(function() {
+				}).mouseup(function(event) {
 					firstState = undefined;
 				});
 
@@ -124,52 +201,35 @@
 					for (var x = 0; x < 10; x++) {
 						if (y < 5 && x < 5 && (x != 0 || y != 0)) continue;
 
-						let cell = $("<td>").appendTo(row);
+						let element = $("<td>").appendTo(row);
 
 						if (y == 0 && x == 0) {
-							cell.attr("colspan", "5").attr("rowspan", "5");
-						} else if (y < 3 || x < 3) {
-							addSelection(cell.text("0"), "number");
-
-							if (x < 3) {
-								numberCells.push(cell);
-							} else {
-								numberCells[(x - 5) * 3 + y] = cell;
-							}
-						} else if (y < 5 || x < 5) {
-							addSelection(cell.css("background-color", colors[0]), "color");
-
-							if (y < 5) {
-								colorCells.push(cell);
-							} else {
-								colorCells[y - 5 + 10 + (x == 3 ? 0 : 4) + (x - 3)] = cell;
-							}
+							element.attr("colspan", "5").attr("rowspan", "5");
 						} else {
-							puzzleCells.push(cell);
+							let cell;
+							if (y < 3 || x < 3) {
+								cell = new Cell(element.text("0"), "number", x, y);
 
-							let state = 0;
-							cell.mousedown(function(event) {
-								if (event.buttons == 1) {
-									state = firstState = (state == 0 ? 1 : 0);
-									cell.trigger("updateState", state);
-
-									return false;
-								} else if (event.buttons == 2) {
-									state = firstState = (state == 0 ? 2 : 0);
-									cell.trigger("updateState", state);
-
-									return false;
+								if (x < 3) {
+									numberCells.push(cell);
+								} else {
+									numberCells[(x - 5) * 3 + y] = cell;
 								}
-							}).mouseenter(function(event) {
-								if (event.buttons <= 2 && firstState != undefined) {
-									cell.trigger("updateState", firstState);
+							} else if (y < 5 || x < 5) {
+								cell = new Cell(element.css("background-color", colors[0]), "color", x, y);
+
+								if (y < 5) {
+									colorCells.push(cell);
+								} else {
+									colorCells[y - 5 + 10 + (x == 3 ? 0 : 4) + (x - 3)] = cell;
 								}
-							}).contextmenu(function() {
-								return false;
-							}).on("updateState", function(event, newState) {
-								state = newState;
-								cell.text(state == 2 ? "•" : "").css("background-color", state == 1 ? "rgb(127, 127, 127)" : "");
-							});
+							} else {
+								cell = new PuzzleCell(element, x, y);
+
+								puzzleCells.push(cell);
+							}
+
+							grid[x + y * 10] = cell;
 						}
 					}
 				}
@@ -177,18 +237,20 @@
 				colorCells.splice(10, 0, ...colorCells.splice(5, 5));
 
 				$("button.reset").click(function() {
-					colorCells[0].click();
+					colorCells[0].selected = true;
 					colorCells.forEach(function(cell) {
-						cell.css("background-color", colors[0]);
+						cell.element.css("background-color", colors[0]);
 					});
 
 					numberCells.forEach(function(cell) {
-						cell.text("0");
+						cell.element.text("0");
 					});
 
 					puzzleCells.forEach(function(cell) {
-						cell.trigger("updateState", 0);
+						cell.element.trigger("updateState", 0);
 					});
+
+					return false;
 				}).click();
 
 				$(".cheatsheet-setting input").on("change", function() {
@@ -275,7 +337,7 @@
 	</head>
 	<body>
 		<div class="section">
-			<div class="page page-bg-03">
+			<div class="page">
 				<div class="page-header">
 					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
 					<span class="page-header-section-title">Nonogram</span>
@@ -459,11 +521,11 @@
 						</tr>
 						<tr>
 							<th>Press space</th>
-							<td>Go to the next set of numbers</td>
+							<td>Selects the next set of numbers or next colored square</td>
 						</tr>
 						<tr>
 							<th>Press backspace</th>
-							<td>Go back to the previously selected cell</td>
+							<td>Does the reverse of the space key</td>
 						</tr>
 					</table>
 				</div>
