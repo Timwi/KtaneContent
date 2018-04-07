@@ -32,11 +32,11 @@
 						this.y = y;
 						this._selected = false;
 
-						this.element.mouseup(() => {
-							this.selected = true;
-							firstState = undefined;
-
-							return false;
+						this.element.mouseup(event => {
+							if (event.which == 1 || event.which == 3) {
+								this.selected = true;
+								return false;
+							}
 						});
 					}
 
@@ -66,17 +66,21 @@
 						this.state = 0;
 
 						this.element.mousedown(event => {
-							this.element.trigger("updateState", firstState = (this.state == 0 ? event.which : 0));
+							if (event.which == 1 || event.which == 3) {
+								this.selected = true;
+								this.element.trigger("updateState", firstState = (this.state == 0 ? event.which : 0));
 
-							return false;
+								return false;
+							}
 						}).contextmenu(() => false)
 						.mouseenter(event => {
-							if (event.buttons <= 2 && firstState != undefined) {
+							if ((event.which == 1 || event.which == 3) && firstState != undefined) {
+								this.selected = true;
 								this.element.trigger("updateState", firstState);
 							}
 						}).on("updateState", (event, newState) => {
 							this.state = newState;
-							this.element.text(this.state == 2 ? "•" : "").css("background-color", this.state == 1 ? "rgb(127, 127, 127)" : "");
+							this.element.text(this.state == 3 ? "•" : "").css("background-color", this.state == 1 ? "rgb(127, 127, 127)" : "");
 						});
 					}
 				}
@@ -99,7 +103,7 @@
 
 				var firstState;
 
-				function selectNextCell(forward = true) {
+				function selectNextCell(forward = true, offsetOverride) {
 					var cellArray;
 					var otherArray;
 					if (selectedCell.type == "color") {
@@ -112,13 +116,15 @@
 
 					if (cellArray) {
 						let index = cellArray.indexOf(selectedCell);
-						let offset;
-						if (selectedCell.type == "color") {
-							offset = forward ? 1 : -1;
-							if (index + offset < 0) offset = -index % 3 - 3;
-						} else if (selectedCell.type == "number") {
-							offset = forward ? 3 - index % 3 : -index % 3 - 3;
-							if (index + offset < 0) offset = -1;
+						let offset = offsetOverride;
+						if (offsetOverride == undefined) {
+							if (selectedCell.type == "color") {
+								offset = forward ? 1 : -1;
+								if (index + offset < 0) offset = -index % 3 - 3;
+							} else if (selectedCell.type == "number") {
+								offset = forward ? 3 - index % 3 : -index % 3 - 3;
+								if (index + offset < 0) offset = -1;
+							}
 						}
 
 						let newIndex = (cellArray.indexOf(selectedCell) + offset);
@@ -133,7 +139,7 @@
 				}
 
 				$(document).mouseup(function() {
-					if (selectedCell) selectedCell.selected = false;
+					if (selectedCell && (event.which == 1 || event.which == 3)) selectedCell.selected = false;
 				}).keydown(function(event) {
 					if (selectedCell) {
 						var index;
@@ -187,13 +193,13 @@
 								var number = event.key == "`" ? 0 : parseInt(event.key);
 								if (!isNaN(number) && number < 6) {
 									selectedCell.element.text(number);
-									selectNextCell();
+									selectNextCell(true, 1);
 								}
 							}
 						}
 					}
 				}).mouseup(function(event) {
-					firstState = undefined;
+					if (event.which == 1 || event.which == 3) firstState = undefined;
 				});
 
 				for (var y = 0; y < 10; y++) {
