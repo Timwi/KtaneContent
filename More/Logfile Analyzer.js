@@ -57,6 +57,7 @@ const ModuleNames = {
 	rubiksClock: "Rubik’s Clock",
     stopwatch: "The Stopwatch",
     wire: "The Wire",
+    londonUnderground: "The London Underground",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
