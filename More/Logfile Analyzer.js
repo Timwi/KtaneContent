@@ -55,9 +55,9 @@ const ModuleNames = {
 	caesarCipher: "Modern Cipher",
 	wastemanagement: "Waste Management",
 	rubiksClock: "Rubik’s Clock",
-    stopwatch: "The Stopwatch",
-    wire: "The Wire",
-    londonUnderground: "The London Underground",
+	stopwatch: "The Stopwatch",
+	wire: "The Wire",
+	londonUnderground: "The London Underground",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2893,7 +2893,8 @@ $(function() {
 							var colors = matches[1].split(', ');
 							if (colors.length === 10)
 							{
-								var buttonToIndex = [6, 7, 8, 3, 4, 5, 0, 1, 2, 10];
+								var buttonToIndex = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
+								var buttonToLabel = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 								var colorMapping = {
 									white: "rgb(255, 255, 255)",
 									green: "rgb(76, 255, 76)",
@@ -2910,7 +2911,7 @@ $(function() {
 									var x = index % 3;
 									var y = Math.floor(index / 3);
 									$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colorMapping[color]).appendTo(svg);
-									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(i).appendTo(svg);
+									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(buttonToLabel[i]).appendTo(svg);
 								}
 
 								module.push({ label: "Button Colors:", obj: svg });
