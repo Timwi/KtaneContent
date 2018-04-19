@@ -12,7 +12,7 @@
 
 var protocol = location.protocol;
 var e = document.createElement("script");
-e.src = (protocol != "file:" ? protocol : "https:") + "//code.jquery.com/jquery-3.1.1.min.js";
+e.src = "js/jquery.3.1.1.min.js";
 e.onload = function()
 {
 	$(function()
