@@ -29,7 +29,7 @@ const ModuleNames = {
 	RockPaperScissorsLizardSpockModule: "Rock-Paper-Scissors-Lizard-Spock",
 	fizzBuzzModule: "FizzBuzz",
 	ModuleAgainstHumanity: "Modules Against Humanity",
-	BitOps: "Bitwise Operators",
+	BitOps: "Bitwise Operations",
 	TurnTheKeyAdvanced: "Turn The Keys",
 	LEDEnc: "LED Encryption",
 	booleanVennModule: "Boolean Venn Diagram",
@@ -58,6 +58,7 @@ const ModuleNames = {
 	stopwatch: "The Stopwatch",
 	wire: "The Wire",
 	londonUnderground: "The London Underground",
+	LEGOModule: "LEGO",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -249,9 +250,9 @@ $(function() {
 						if (node[2])
 							elem.addClass("expanded");
 						makeTree(node[1].length ? node[1] : [$("<em>").text("(none)")], $("<ul>").appendTo(elem));
-					} else if (typeof (node) === "object" && "label" in node && "obj" in node) {
+					} else if (typeof (node) === "object" && "obj" in node) {
 						if (node.expandable) {
-							makeExpandable(elem, node.label);
+							makeExpandable(elem, node.label === undefined ? node.label : "");
 							if (node.expanded)
 								elem.addClass("expanded");
 							elem.append(node.obj);
@@ -267,6 +268,8 @@ $(function() {
 						console.log("Unrecognized node: " + node);
 						console.log(node);
 					}
+
+					if (typeof (node) === "object" && "nobullet" in node) elem.addClass("no-bullet");
 				}
 			});
 
@@ -355,7 +358,6 @@ $(function() {
 		this.Bombs = [];
 		this.Modules = {};
 		this.State = "Unsolved";
-		this.Solved = 0;
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
@@ -562,6 +564,7 @@ $(function() {
 				var singleBomb = this.Bombs[0];
 				missionInfoTree.push(
 					"State: " + singleBomb.State,
+					`Solved: ${singleBomb.Solved}/${singleBomb.TotalModules}`,
 					"Strikes: " + singleBomb.Strikes + "/" + singleBomb.TotalStrikes,
 					"Total Time: " + formatTime(singleBomb.Time),
 					"Time Left: ~" + formatTime(singleBomb.TimeLeft)
@@ -790,6 +793,7 @@ $(function() {
 		this.Strikes = 0;
 		this.TotalStrikes = 0;
 		this.Modules = {};
+		this.Solved = 0;
 		this.TotalModules = 0;
 		this.Needies = 0;
 		this.Indicators = [];
@@ -954,14 +958,6 @@ $(function() {
 							bomb.State = "Solved";
 							bomb.Solved = bomb.TotalModules;
 						}
-					}
-				}
-			],
-			"BombComponent": [
-				{
-					regex: /Pass/,
-					value: function() {
-						GetBomb().Solved++;
 					}
 				}
 			],
@@ -1158,6 +1154,7 @@ $(function() {
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
+							bomb.Solved = Math.round(parseFloat(matches[1]) * 2 * (bomb.TotalModules - 1));
 							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
 
 							if (bomb.TimeLeft === 0) {
@@ -2435,6 +2432,53 @@ $(function() {
 					},
 					{
 						regex: /.+/
+					}
+				]
+			},
+			"LEGO": {
+				ID: "LEGOModule",
+				Lines: [
+					{
+						regex: /Piece #\d: (.+)/,
+						value: function(matches, module) {
+							if (!module.Pieces) module.push(["Pieces", module.Pieces = []]);
+							module.Pieces.push(matches[1]);
+							return true;
+						}
+					},
+					{
+						regex: /Manual Page|Solution:/,
+						value: function(matches, module) {
+							let svg = $(`<svg viewBox="0 0 8 8">`);
+							let board = readMultiple(8).split("\n");
+							const colors = {
+								R: "red",
+								G: "green",
+								B: "blue",
+								C: "cyan",
+								M: "magenta",
+								Y: "yellow",
+								O: "orange",
+								P: "purple",
+								A: "gray",
+								K: "black"
+							}
+
+							for (let y = 0; y < 8; y++) {
+								for (let x = 0; x < 8; x++) {
+									let char = board[y][x];
+									if (char == ".") continue;
+									if (colors[char] == undefined) console.log(char);
+									$SVG(`<rect x=${x} y=${y} width=1 height=1 fill=${colors[char]}>`).appendTo(svg);
+								}
+							}
+
+							module.push({ label: matches.input, obj: svg, expandable: true });
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
 					}
 				]
 			},
@@ -3927,6 +3971,59 @@ $(function() {
 					},
 					{
 						regex: /.+/
+					}
+				]
+			},
+			"VennWireComponent": {
+				ID: "Venn",
+				Lines: [
+					{
+						regex: /Wire (\d) (should(?: not)?) be snipped\./,
+						value: function(matches, module) {
+							const rules = {
+								Cut: 							"Cut",
+								DoNotCut: 						"Don't\nCut",
+								CutIfSerialEven: 				"SN\nEven",
+								CutIfParallelPortPresent: 		"Para.\nPort",
+								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
+							};
+							
+							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
+							if (wireData) {
+								if (module.diagram == undefined) {
+									module.diagram = $SVG(`<svg width="300px">`);
+									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
+								}
+
+								const wireIndex = parseInt(wireData[1]);
+								if (module.parsedWires == undefined) module.parsedWires = [];
+								if (module.parsedWires[wireIndex] == true) return;
+								module.parsedWires[wireIndex] = true;
+
+								const x = wireIndex * 0.6;
+								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
+								
+								// LED
+								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+
+								// Wire
+								const wireColors = wireData[2].split(", ");
+								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1/3)} width=0.475 height=${1/3} fill=${wireColors[1]}>`).appendTo(module.diagram);
+							
+								// Star
+								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
+							
+								// Rule/Should cut
+								$SVG(`<text x=${x+0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x+0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
+							}
+						}
+					},
+					{
+						regex: /Wire snipped ((?:in)?correctly): (\d)!/i,
+						value: function(matches, module) {
+							module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`)
+						}
 					}
 				]
 			},
