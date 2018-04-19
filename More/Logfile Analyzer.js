@@ -355,7 +355,6 @@ $(function() {
 		this.Bombs = [];
 		this.Modules = {};
 		this.State = "Unsolved";
-		this.Solved = 0;
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
@@ -562,6 +561,7 @@ $(function() {
 				var singleBomb = this.Bombs[0];
 				missionInfoTree.push(
 					"State: " + singleBomb.State,
+					`Solved: ${singleBomb.Solved}/${singleBomb.TotalModules}`,
 					"Strikes: " + singleBomb.Strikes + "/" + singleBomb.TotalStrikes,
 					"Total Time: " + formatTime(singleBomb.Time),
 					"Time Left: ~" + formatTime(singleBomb.TimeLeft)
@@ -790,6 +790,7 @@ $(function() {
 		this.Strikes = 0;
 		this.TotalStrikes = 0;
 		this.Modules = {};
+		this.Solved = 0;
 		this.TotalModules = 0;
 		this.Needies = 0;
 		this.Indicators = [];
@@ -954,14 +955,6 @@ $(function() {
 							bomb.State = "Solved";
 							bomb.Solved = bomb.TotalModules;
 						}
-					}
-				}
-			],
-			"BombComponent": [
-				{
-					regex: /Pass/,
-					value: function() {
-						GetBomb().Solved++;
 					}
 				}
 			],
@@ -1158,6 +1151,7 @@ $(function() {
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
+							bomb.Solved = Math.round(parseFloat(matches[1]) * 2 * (bomb.TotalModules - 1));
 							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
 
 							if (bomb.TimeLeft === 0) {
