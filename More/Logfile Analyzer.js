@@ -1254,49 +1254,6 @@ $(function() {
 					}
 				]
 			},
-			/*
-			"Assets.Scripts.Rules.VennWireRuleSet": {
-				ID: "Venn",
-				Lines: [
-					{
-						regex: /Checking cut wire: index=(\d), color=.+\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/,
-						value: function(matches, _, mod) {
-							var index = parseInt(matches[1]);
-							var id = mod.IDs.length;
-
-							if (index == 0) {
-								id++;
-								GetBomb().GetModuleID("Venn", id);
-							}
-
-							if (mod.IDs.length > 0) {
-								matches.forEach(function(val, index) {
-									matches[index] = (val == "True");
-								});
-
-								var rule = {
-									DoNotCut: "Don't cut",
-									CutIfParallelPortPresent: "Cut if you have a parallel port"
-								};
-
-								var module = GetBomb().GetModuleID("Venn", id);
-								module[index] = ["Wire " + (index + 1),
-									[
-										"Colors: " + (matches[2] ? (matches[3] ? "Red and Blue" : "Red") : (matches[3] ? "Blue" : "White")),
-										"Features: " + (matches[4] ? (matches[5] ? "Star and Light" : "Star") : (matches[5] ? "Light" : "None")),
-										"Rule: " + rule[matches[6]] || matches[6],
-										"Should be cut: " + (matches[7] ? "Yes" : "No")
-									]
-								];
-							}
-						}
-					},
-					{
-						regex: /Wire snipped|All wires snipped correctly!/
-					}
-				]
-			},
-			*/
 			"Astrology": "spwizAstrology",
 			"Battleship": {
 				ID: "BattleshipModule",
@@ -3987,10 +3944,10 @@ $(function() {
 								CutIfParallelPortPresent: 		"Para.\nPort",
 								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
 							};
-							
+
 							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
 							if (wireData) {
-								if (module.diagram == undefined) {
+								if (!('diagram' in module)) {
 									module.diagram = $SVG(`<svg width="300px">`);
 									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
 								}
@@ -4002,7 +3959,7 @@ $(function() {
 
 								const x = wireIndex * 0.6;
 								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
-								
+
 								// LED
 								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
 
@@ -4010,10 +3967,10 @@ $(function() {
 								const wireColors = wireData[2].split(", ");
 								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
 								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1/3)} width=0.475 height=${1/3} fill=${wireColors[1]}>`).appendTo(module.diagram);
-							
+
 								// Star
 								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
-							
+
 								// Rule/Should cut
 								$SVG(`<text x=${x+0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x+0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
 							}
