@@ -252,7 +252,7 @@ $(function() {
 						makeTree(node[1].length ? node[1] : [$("<em>").text("(none)")], $("<ul>").appendTo(elem));
 					} else if (typeof (node) === "object" && "obj" in node) {
 						if (node.expandable) {
-							makeExpandable(elem, node.label === undefined ? node.label : "");
+							makeExpandable(elem, node.label === undefined ? "" : node.label);
 							if (node.expanded)
 								elem.addClass("expanded");
 							elem.append(node.obj);
@@ -1154,7 +1154,9 @@ $(function() {
 					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
-							bomb.Solved = Math.round(parseFloat(matches[1]) * 2 * (bomb.TotalModules - 1));
+							const num2 = parseFloat(matches[1]);
+							if (num2 <= 0.5) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
+							else bomb.Solved = bomb.TotalModules;
 							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
 
 							if (bomb.TimeLeft === 0) {
@@ -2419,13 +2421,12 @@ $(function() {
 								P: "purple",
 								A: "gray",
 								K: "black"
-							}
+							}; 
 
 							for (let y = 0; y < 8; y++) {
 								for (let x = 0; x < 8; x++) {
 									let char = board[y][x];
 									if (char == ".") continue;
-									if (colors[char] == undefined) console.log(char);
 									$SVG(`<rect x=${x} y=${y} width=1 height=1 fill=${colors[char]}>`).appendTo(svg);
 								}
 							}
