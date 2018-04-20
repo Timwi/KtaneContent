@@ -1155,7 +1155,7 @@ $(function() {
 					value: function(matches) {
 						if (bombgroup.isSingleBomb) {
 							const num2 = parseFloat(matches[1]);
-							if (num2 <= 0.5) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
+							if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
 							else bomb.Solved = bomb.TotalModules;
 							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
 
@@ -2408,8 +2408,8 @@ $(function() {
 					{
 						regex: /Manual Page|Solution:/,
 						value: function(matches, module) {
-							let svg = $(`<svg viewBox="0 0 8 8">`);
-							let board = readMultiple(8).split("\n");
+							const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
+							const board = readMultiple(8).split("\n");
 							const colors = {
 								R: "red",
 								G: "green",
@@ -2421,11 +2421,20 @@ $(function() {
 								P: "purple",
 								A: "gray",
 								K: "black"
-							}; 
+							};
+
+							
+							for (let y = 1; y < 8; y++) {
+								$SVG(`<line x1=0 y1=${y} x2=8 y2=${y} stroke-width="0.05" stroke="black">`).appendTo(svg);
+							}
+							
+							for (let x = 1; x < 8; x++) {
+								$SVG(`<line x1=${x} y1=0 x2=${x} y2=8 stroke-width="0.05" stroke="black">`).appendTo(svg);
+							}
 
 							for (let y = 0; y < 8; y++) {
 								for (let x = 0; x < 8; x++) {
-									let char = board[y][x];
+									const char = board[y][x];
 									if (char == ".") continue;
 									$SVG(`<rect x=${x} y=${y} width=1 height=1 fill=${colors[char]}>`).appendTo(svg);
 								}
