@@ -59,6 +59,8 @@ const ModuleNames = {
 	wire: "The Wire",
 	londonUnderground: "The London Underground",
 	LEGOModule: "LEGO",
+    sun: "The Sun",
+    moon: "The Moon",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -661,15 +663,15 @@ $(function() {
 
 			mods.sort(function(a, b) {
 				if (a.ID) {
-					a = a.moduleName + a.ID;
+					a = a.moduleName.toLowerCase() + a.ID;
 				} else {
-					a = a.moduleName;
+					a = a.moduleName.toLowerCase();
 				}
 
 				if (b.moduleName) {
-					b = b.moduleName + b.ID;
+					b = b.moduleName.toLowerCase() + b.ID;
 				} else {
-					b = b.moduleName;
+					b = b.moduleName.toLowerCase();
 				}
 
 				a = a.replace(/^The /, "");
@@ -2423,11 +2425,11 @@ $(function() {
 								K: "black"
 							};
 
-							
+
 							for (let y = 1; y < 8; y++) {
 								$SVG(`<line x1=0 y1=${y} x2=8 y2=${y} stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
-							
+
 							for (let x = 1; x < 8; x++) {
 								$SVG(`<line x1=${x} y1=0 x2=${x} y2=8 stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
