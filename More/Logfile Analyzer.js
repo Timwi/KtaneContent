@@ -2406,7 +2406,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Manual Page|Solution:/,
+						regex: /Manual Page|Solution:|Submitting:/,
 						value: function(matches, module) {
 							const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
 							const board = readMultiple(8).split("\n");
