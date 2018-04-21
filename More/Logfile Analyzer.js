@@ -135,6 +135,7 @@ const blacklist = [
 	"[Rules]",
 	"[AlarmClockExtender]",
 	"[Alarm Clock Extender]",
+	"[LogfileHotkey]",
 	"Tick delay:",
 	"Calculated FPS: "
 ];
@@ -765,7 +766,7 @@ $(function() {
 
 			var log = "";
 			for (var i = this.StartLine; i < linen; i++) {
-				var line = lines[i];
+				const line = lines[i].replace(/^([ \t]*)\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\]( ?(.+))/, "$1[$2]$3");
 
 				if (line == "[AlarmClockExtender] Settings loaded. Settings = {") {
 					i += 15;
@@ -780,7 +781,7 @@ $(function() {
 				var blacklisted = blacklist.some(val => line.includes(val));
 				if (blacklisted) continue;
 
-				log += line + "\n";
+				log += lines[i] + "\n";
 			}
 
 			this.StartLine = undefined;
@@ -2408,7 +2409,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Manual Page|Solution:/,
+						regex: /Manual Page|Solution:|Submitting:/,
 						value: function(matches, module) {
 							const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
 							const board = readMultiple(8).split("\n");
@@ -4194,7 +4195,7 @@ $(function() {
 			}
 
 			if (line !== "") {
-				var match = /^[ \t]*\[(.+?)\] ?(.+)/.exec(line);
+				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\] ?(.+)/.exec(line);
 				if (match) {
 					var obj = null;
 					var name = null;
