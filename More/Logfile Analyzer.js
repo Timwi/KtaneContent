@@ -133,6 +133,7 @@ const blacklist = [
 	"[Rules]",
 	"[AlarmClockExtender]",
 	"[Alarm Clock Extender]",
+	"[LogfileHotkey]",
 	"Tick delay:",
 	"Calculated FPS: "
 ];
@@ -763,7 +764,7 @@ $(function() {
 
 			var log = "";
 			for (var i = this.StartLine; i < linen; i++) {
-				var line = lines[i];
+				const line = lines[i].replace(/^([ \t]*)\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\]( ?(.+))/, "$1[$2]$3");
 
 				if (line == "[AlarmClockExtender] Settings loaded. Settings = {") {
 					i += 15;
@@ -778,7 +779,7 @@ $(function() {
 				var blacklisted = blacklist.some(val => line.includes(val));
 				if (blacklisted) continue;
 
-				log += line + "\n";
+				log += lines[i] + "\n";
 			}
 
 			this.StartLine = undefined;
@@ -4192,7 +4193,7 @@ $(function() {
 			}
 
 			if (line !== "") {
-				var match = /^[ \t]*\[(.+?)\] ?(.+)/.exec(line);
+				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\] ?(.+)/.exec(line);
 				if (match) {
 					var obj = null;
 					var name = null;
