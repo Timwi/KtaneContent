@@ -675,8 +675,8 @@ $(function() {
 					b = b.moduleName.toLowerCase();
 				}
 
-				a = a.replace(/^The /, "");
-				b = b.replace(/^The /, "");
+				a = a.replace(/^the /i, "");
+				b = b.replace(/^the /i, "");
 
 				if (a < b) {
 					return -1;
