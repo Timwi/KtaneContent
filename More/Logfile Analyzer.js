@@ -61,6 +61,7 @@ const ModuleNames = {
 	LEGOModule: "LEGO",
     sun: "The Sun",
     moon: "The Moon",
+    DrDoctorModule: "Dr. Doctor",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
