@@ -3157,6 +3157,13 @@ $(function() {
 						}
 					},
 					{
+						regex: /Cutting wire \d to (\d) was (.+)./,
+						value: function(matches, module) {
+							module.push(`Cutting bottom wire #${matches[1]} was ${matches[2]}.`);
+							return true;
+						}
+					},
+					{
 						regex: /.+/
 					}
 				]
