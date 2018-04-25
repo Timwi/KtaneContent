@@ -2728,6 +2728,12 @@ $(function() {
 						}
 					},
 					{
+						regex: /^(Pressed OK|totalWords = 0)$/,
+						value: function(matches, module) {
+							return true;
+						}
+					},
+					{
 						regex: /.+/
 					}
 				]
