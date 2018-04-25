@@ -1989,7 +1989,6 @@ $(function() {
                         value: function(matches, module) {
                             module['Cipher' + (matches[2] || matches[3])] = matches[4];
                             if (matches[2]) {
-                                console.log(module);
                                 function many(num, fnc) {
                                     var str = '';
                                     for (var i = 0; i < num; i++)
@@ -2057,7 +2056,10 @@ $(function() {
                             function key(ix) {
                                 return `<td style='color: ${matches[ix+3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix+3] === 'True' ? '✓' : '✗'}</td>`;
                             }
-                            module.push({ label: matches[2] ? matches[2] + ' solution:' : matches[1], obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`) });
+                            module.push({
+                                label: matches[2] ? matches[2] + ' solution:' : matches[1],
+                                obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`)
+                            });
                             if (matches[11].length > 0)
                                 module.push(matches[11].trim());
                             return true;
