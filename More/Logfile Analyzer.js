@@ -56,11 +56,12 @@ const ModuleNames = {
 	wastemanagement: "Waste Management",
 	rubiksClock: "Rubik’s Clock",
 	stopwatch: "The Stopwatch",
-	wire: "The Wire",
 	londonUnderground: "The London Underground",
 	LEGOModule: "LEGO",
+	wire: "The Wire",
     sun: "The Sun",
     moon: "The Moon",
+    cube: "The Cube",
     DrDoctorModule: "Dr. Doctor",
 
 	// Hexicube's Modules
@@ -1924,6 +1925,149 @@ $(function() {
 					}
 				]
 			},
+            "The Cube": {
+                ID: "cube",
+                Lines: [
+                    {
+                        regex: /Cube movements: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
+                        value: function(matches, module) {
+                            module.Rotations = matches.slice(1, 7);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /Cube faces: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
+                        value: function(matches, module) {
+                            module.Faces = matches.slice(1, 7);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /Buttons: (.+)/,
+                        value: function(matches, module) {
+                            var result = new RegExp(`The execute button is (\\w+?) and says (.)\\.`).exec(matches[1]);
+                            module.SubmitButton = { color: result[1], label: result[2] };
+                            module.Buttons = new Array(8);
+                            for (var i = 0; i < 8; i++)
+                            {
+                                var result = new RegExp(`#${i+1} is (\\w+?) and says (.)\\.`).exec(matches[1]);
+                                module.Buttons[i] = { color: result[1], label: result[2] };
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /Wires: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\./,
+                        value: function(matches, module) {
+                            module.Wires = matches.slice(1, 5);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /Screens: #1 says (.{8})\. #2 says (.{8})\./,
+                        value: function(matches, module) {
+                            module.Screens = matches.slice(1, 3);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /The rotation codes are (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
+                        value: function(matches, module) {
+                            module.RotationCodes = matches.slice(1, 7);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /The wire codes are (\d+), (\d+), (\d+), (\d+)\./,
+                        value: function(matches, module) {
+                            module.WireCodes = matches.slice(1, 5);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /(The (final) cipher|Cipher ([123])) is (\d+)\./,
+                        value: function(matches, module) {
+                            module['Cipher' + (matches[2] || matches[3])] = matches[4];
+                            if (matches[2]) {
+                                console.log(module);
+                                function many(num, fnc) {
+                                    var str = '';
+                                    for (var i = 0; i < num; i++)
+                                        str += fnc(i);
+                                    return str;
+                                }
+                                var wireMap = [2, 3, 0, 1];
+                                var wireOrd = ['rd', 'th', 'st', 'nd'];
+                                var colors = {
+                                    'blue': '#29f',
+                                    'green': '#4c4',
+                                    'orange': '#e82',
+                                    'purple': '#c4b',
+                                    'red': '#c22',
+                                    'white': '#eee'
+                                };
+                                var calcTable = $(`
+                                    <table style='border-collapse: collapse; border: 2px solid black; margin: 8pt 0 24pt;'>
+                                        <tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
+                                        <tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x*50}px -50px'></div><div>${module.Faces[5-x]}</div></td>`)}</tr>
+                                        <tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x]+1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
+                                        <tr><th>After modulo</th>${many(6, x => `<td>${module.Cipher1.substr(x, 1)}</td>`)}</tr>
+                                        <tr><th>Display 1</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[0].substr(x, 1)}</div><div>${module.Cipher2.substr(x, 1)}</div></td>`)}</tr>
+                                        <tr><th>Display 2</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[1].substr(x, 1)}</div><div>${module.Cipher3.substr(x, 1)}</div></td>`)}</tr>
+                                        <tr class='final'><th>FINAL CIPHER</th>${many(8, x => `<td>${module.Cipherfinal.substr(x, 1)}</td>`)}</tr>
+                                    </table>
+                                `);
+                                calcTable.find('td').css({ textAlign: 'center', border: '1px solid #888', padding: '.2em .3em' });
+                                calcTable.find('th').css({ textAlign: 'left', border: '1px solid #888', padding: '.2em .4em' });
+                                calcTable.find('.icon').css({ backgroundImage: "url('img/The Cube/Rotations.png')", backgroundSize: '300px 100px', backgroundRepeat: 'no-repeat', width: '50px', height: '50px' });
+                                calcTable.find('.rotation-tipbackwards').css({ backgroundPosition: '0 0' });
+                                calcTable.find('.rotation-tipforwards').css({ backgroundPosition: '-50px 0' });
+                                calcTable.find('.rotation-tipright').css({ backgroundPosition: '-100px 0' });
+                                calcTable.find('.rotation-tipleft').css({ backgroundPosition: '-150px 0' });
+                                calcTable.find('.rotation-rotateright').css({ backgroundPosition: '-200px 0' });
+                                calcTable.find('.rotation-rotateleft').css({ backgroundPosition: '-250px 0' });
+                                calcTable.find('.wire').css({ width: '50px', height: '20px', border: '1px solid black', boxSizing: 'border-box', position: 'relative', display: 'inline-block' });
+                                calcTable.find('.wire>div').css({ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontSize: '10pt' });
+                                calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
+                                calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
+                                module.push({ label: 'Calculations:', obj: calcTable });
+
+                                function key(ix) {
+                                    return `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
+                                }
+                                var keypad = $(`
+                                    <table style="background: #cdf; border-spacing: 5px; border: 2px solid black; font-family: 'KRA'; font-size: 28pt; margin: 8pt 0 24pt;">
+                                        ${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}
+                                    </table>
+                                `);
+                                module.push({ label: 'Keys:', obj: keypad });
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /((Stage \d+) button presses:|Strike! At stage 3, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
+                        value: function(matches, module) {
+                            function many(num, fnc) {
+                                var str = '';
+                                for (var i = 0; i < num; i++)
+                                    str += fnc(i);
+                                return str;
+                            }
+                            function key(ix) {
+                                return `<td style='color: ${matches[ix+3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix+3] === 'True' ? '✓' : '✗'}</td>`;
+                            }
+                            module.push({ label: matches[2] ? matches[2] + ' solution:' : matches[1], obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`) });
+                            if (matches[11].length > 0)
+                                module.push(matches[11].trim());
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			"Fast Math": {
 				ID: "fastMath",
 				Lines: [
@@ -2561,8 +2705,8 @@ $(function() {
 				]
 			},
 			// Actually Modern Cipher
-			"Caesar Cipher": {
-				ID: "caesarCipher",
+			"Modern Cipher": {
+				ID: "modernCipher",
 				Lines: [
 					{
 						regex: /<(Stage \d)> START/,
@@ -4172,23 +4316,7 @@ $(function() {
 				value: function(matches) {
 					GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
 				}
-			},
-
-			// Emoji Math
-			// This has been removed due to the fact that both Emoji Math and Needy Math use the same logging.
-			/*
-			{
-				regex: /\\d{1,}[+-]\\d{1,}/,
-				value: function(matches) {
-					readDirectly(matches.input, "Emoji Math");
-				},
-			},
-			{
-				regex: /Enter button pressed/,
-				value: function() {
-					readDirectly(readMultiple(2).replace(/^Answer:/, "Submitted:"), "Emoji Math");
-				}
-			}*/
+			}
 		];
 
 		readwarning = false;
