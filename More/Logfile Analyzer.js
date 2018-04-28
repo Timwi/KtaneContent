@@ -1232,7 +1232,7 @@ $(function() {
 								obj: $('<div>').append(
 									$('<img>')
 										.attr('src', 'img/Algebra/' + matches[2].replace(/\+/g, '%2B') + '.png')
-										.css({ filter: 'invert(100%) grayscale(100%)', height: '3em' })
+										.css({ height: '3em' })
 								)
 							});
 							return true;
