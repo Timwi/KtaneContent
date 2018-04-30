@@ -1855,6 +1855,29 @@ $(function() {
 				]
 			},
 			"Connection Check": "graphModule",
+			"Cooking": {
+				ID: "cooking",
+				Lines: [
+					{
+						regex: /(Solution|Submitted):/,
+						value: function(matches, module) {
+							module.push([matches[1], module.items = []]);
+
+							return true;
+						}
+					},
+					{
+						regex: /- (.+)/,
+						value: function(matches, module) {
+							module.items.push(matches[1]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Coordinates": {
 				ID: "CoordinatesModule",
 				Lines: [
