@@ -24,4 +24,4 @@ This folder does _not_ contain other UI icons used on the website. Those are in 
 
 ## `More`
 
-Contains the Log Reader.
+Contains the Logfile Analyzer, Profile Editor, Template Manual and a few other files.
