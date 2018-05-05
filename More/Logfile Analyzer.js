@@ -63,6 +63,7 @@ const ModuleNames = {
     moon: "The Moon",
     cube: "The Cube",
     DrDoctorModule: "Dr. Doctor",
+    Playfair: "Playfair Cipher",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -3473,6 +3474,18 @@ $(function() {
 					}
 				]
 			},
+            "playFair": {
+                ID: "Playfair",
+                Lines: [
+                    {
+                        regex: /^:\s*(.+)/,
+                        value: function(matches, module) {
+                            module.push(matches[1]);
+                            return true;
+                        }
+                    }
+                ]
+            },
 			"Plumbing": {
 				ID: "MazeV2",
 				Lines: [
