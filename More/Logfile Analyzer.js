@@ -4512,6 +4512,9 @@ $(function() {
 		$(".bomb, .bomb-info").remove();
 		parsed.forEach(function(obj) { obj.ToHTML(url); });
 		$('#ui').addClass('has-bomb');
+        $('#wrap').removeClass('has-empty-log');
+        if (parsed.length < 1)
+            $('#wrap').addClass('has-empty-log');
 		selectBomb(bombSerial);
 		toastr.success("Log read successfully!");
 	}
