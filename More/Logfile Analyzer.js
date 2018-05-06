@@ -59,11 +59,13 @@ const ModuleNames = {
 	londonUnderground: "The London Underground",
 	LEGOModule: "LEGO",
 	wire: "The Wire",
-    sun: "The Sun",
-    moon: "The Moon",
-    cube: "The Cube",
-    DrDoctorModule: "Dr. Doctor",
-    Playfair: "Playfair Cipher",
+	sun: "The Sun",
+	moon: "The Moon",
+	cube: "The Cube",
+	DrDoctorModule: "Dr. Doctor",
+	Playfair: "Playfair Cipher",
+	QRCode: "QR Code",
+	jewelVault: "The Jewel Vault",
 
 	// Hexicube's Modules
 	ButtonV2: "Square Button",
@@ -2435,6 +2437,14 @@ $(function() {
 					}
 				]
 			},
+			"NeedyHTTP": {
+				ID: "http",
+				Lines: [
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Hunting": {
 				ID: "hunting",
 				Lines: [
@@ -2503,6 +2513,14 @@ $(function() {
 							return true;
 						}
 					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			"Jewel Wheels": {
+				ID: "jewelVault",
+				Lines: [
 					{
 						regex: /.+/
 					}
@@ -3631,6 +3649,14 @@ $(function() {
 					}
 				]
 			},
+			"NeedyQRCode": {
+				ID: "QRCode",
+				Lines: [
+					{
+						regex: /.+/
+					}
+				]
+			},
 			"Resistors": {
 				ID: "resistors",
 				Lines: [
@@ -4235,6 +4261,14 @@ $(function() {
 						value: function(matches, module) {
 							module.push("There are " + matches[1] + " wires");
 						}
+					}
+				]
+			},
+			"Who's that Monsplode?": {
+				ID: "monsplodeWho",
+				Lines: [
+					{
+						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
 			},
