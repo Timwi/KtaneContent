@@ -3666,27 +3666,33 @@ $(function() {
 				]
 			},
 			//"Rubik’s Cube": "RubiksCubeModule",
-			"Rubik’s Clock": {
+			"Rubik's Clock": {
 				ID: "rubiksClock",
 				Lines: [
-					{
+					/*{
 						regex: /Moves to solve, move (\d):/,
 						value: function(matches, module) {
 							module.push([`Move #${matches[1]}:`, readMultiple(4).replace(/^\[.+\] /gm, "").split("\n")]);
 							return true;
 						}
+					},*/
+					{
+						regex: /^Serial=/,
+						value: function() {
+							return true;
+						}
 					},
 					{
-						regex: /Actions performed before reset: (.+)/,
+						regex: /(Lit clock: [TBRLM]{1,2}. Lit pin: [TBRL]{2}.) (.+)/,
 						value: function(matches, module) {
-							const actions = [matches[1]];
-							while (linen < lines.length) {
-								const line = readLine();
-								if (line.match(/^(?:Change pin|Rotate gear|Turn over to the)/) != null) actions.push(line);
-								else break;
-							}
-
-							module.push(["Actions performed before reset", actions]);
+							module.push([matches[1], matches[2].split(". ")]);
+							return true;
+						}
+					},
+					{
+						regex: /(Actions performed (?:before reset|to solve)): (.+)/,
+						value: function(matches, module) {
+							module.push([matches[1], matches[2].split(". ")]);
 							return true;
 						}
 					},
