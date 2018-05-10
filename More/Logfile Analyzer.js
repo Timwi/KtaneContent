@@ -4225,6 +4225,26 @@ $(function() {
 					}
 				]
 			},
+            "Visual Impairment": {
+                ID: "visual_impairment",
+                Lines: [
+                    {
+                        regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
+                        value: function(matches, module) {
+                            module.push({
+                                obj: $(`<table>
+                                    <tr><th>Original</th><th>On the module</th></tr>
+                                    <tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
+                                        <td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
+                                </table>`)
+                            });
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			"WhosOnFirstComponent": {
 				ID: "WhosOnFirst",
 				Lines: [
