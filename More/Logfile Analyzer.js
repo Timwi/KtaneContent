@@ -320,6 +320,7 @@ $(function() {
 		div.show();
 
 		$("body").scrollTop(div.offset().top);
+        div.find('.autopress').click();
 
 		// Update hash
 		var state = readHash();
@@ -731,7 +732,7 @@ $(function() {
 
 				$("<img>")
 					.on("error", function() {
-						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleName, minfo);
+						console.warn("Couldn’t find a module icon for %s. More information: %o", minfo.moduleName, minfo);
 						$(this).attr("src", "../Icons/blank.png");
 					}).attr("src", "../Icons/" + minfo.iconName + ".png").appendTo(mod);
 			});
@@ -2683,6 +2684,173 @@ $(function() {
 					}
 				]
 			},
+            "Marble Tumble": {
+                ID: "MarbleTumbleModule",
+                Lines: [
+                    {
+                        regex: /^Colors: (.*)$/,
+                        value: function(matches, module) {
+                            module.data = { colors: matches[1].split(', ') };
+                            module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function() {
+                                var data = $(this).data('data'), div = $(this).parent(), i, sel;
+
+                                var imgDiv = $(`<div style='position: relative; width: 420px; height: 420px'>`).appendTo(div);
+                                var imgs = [];
+                                for (i = 0; i < 5; i++)
+                                    imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' style='position: absolute; left: 0; top: 0; right: 0; bottom: 0' />`).appendTo(imgDiv));
+                                function setRotations(rot) {
+                                    for (var i = 0; i < 5; i++)
+                                        imgs[i].css('transform', `rotate(${rot[i]*36-90}deg)`);
+                                }
+
+                                var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`)
+                                    .appendTo(imgDiv);
+                                var marbleInner = $(`<div style='position: absolute; width: 20px; height: 20px; border: 2px solid black; border-radius: 100%; background: #def; left: 210px; transform: translate(-50%, -50%)'>`)
+                                    .appendTo(marbleOuter);
+                                function setMarble(rot, marble) {
+                                    marbleInner.css('top', marble === 0 ? '217px' : `${210-((marble+.5)*420/12)-10}px`);
+                                    marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble]*36}deg)`);
+                                }
+
+                                var controlsDiv = $(`<div style='margin-top: 30px'>`).appendTo(div);
+                                var bgNoHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23fff" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
+                                var bgOnHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23bef" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
+
+                                var nextDivs = [];
+                                function setBackgrounds() {
+                                    for (var i = 0; i < nextDivs.length; i++)
+                                        nextDivs[i].css('background', sel === i ? '#feb' : '#fff');
+                                }
+
+                                var curMarble = 5;
+                                for (i = 0; i < data.states.length; i++)
+                                {
+                                    var prevMarble = curMarble;
+                                    if ('gap' in data.states[i])
+                                        curMarble = +data.states[i].gap;
+                                    else if ('trap' in data.states[i])
+                                        curMarble = 5;
+
+                                    if ('clicked' in data.states[i])
+                                    {
+                                        $(`
+                                            <div style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; margin: .5em 0'>
+                                                <div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${data.states[i].clicked}</div>
+                                            </div>
+                                        `)
+                                            .appendTo(controlsDiv)
+                                            .css('background', bgNoHover)
+                                            .mouseover(function() { $(this).css('background', bgOnHover); })
+                                            .mouseout(function() { $(this).css('background', bgNoHover); })
+                                            .click(function(ix, rotBefore, rotAfter, marbleBefore, marbleAfter) { return function() {
+                                                for (var i = 0; i < 5; i++)
+                                                    imgs[i].css('transition', '');
+                                                setRotations(rotBefore);
+                                                setMarble(rotBefore, marbleBefore);
+                                                window.setTimeout(function() {
+                                                    for (var i = 0; i < 5; i++)
+                                                        imgs[i].css('transition', 'transform linear 1s');
+                                                    marbleOuter.css('transition', 'transform linear 1s');
+                                                    window.setTimeout(function() {
+                                                        setRotations(rotAfter);
+                                                        setMarble(rotAfter, marbleBefore);
+                                                        window.setTimeout(function() {
+                                                            for (var i = 0; i < 5; i++)
+                                                                imgs[i].css('transition', '');
+                                                            marbleOuter.css('transition', '');
+                                                            setMarble(rotAfter, marbleAfter);
+                                                        }, 1100);
+                                                    }, 100);
+                                                }, 100);
+                                                sel = ix;
+                                                setBackgrounds();
+                                            }; }(i, data.states[i-1].rotations, data.states[i].rotations, prevMarble, curMarble));
+                                    }
+
+                                    data.states[i].marble = curMarble;
+
+                                    var nextDiv = $(`<div class='nx' style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; border: 1px solid black; margin: .5em .25em'></div>`)
+                                        .appendTo(controlsDiv)
+                                        .mouseover(function(ix) { return function() { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
+                                        .mouseout(function(ix) { return function() { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
+                                        .click(function(ix, rot, marble) { return function() {
+                                            setRotations(rot);
+                                            setMarble(rot, marble);
+                                            sel = ix;
+                                            setBackgrounds();
+                                            $(this).css('background', '#fef');
+                                            return false;
+                                        }; }(i, data.states[i].rotations, curMarble));
+                                    nextDivs.push(nextDiv);
+                                    if (data.states[i].solved || 'trap' in data.states[i])
+                                        nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #${data.states[i].solved ? '080' : '800'}; font-size: 24pt; font-weight: bold'>${data.states[i].solved ? '✓' : '✗'}</div>`));
+                                    else if ('gap' in data.states[i])
+                                        nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #48f; font-size: 24pt'>⮋</div>`));
+                                    if (data.states[i].solved)
+                                        break;
+                                }
+
+                                $(this).remove();
+                                nextDivs[0].click();
+                                $(`<p>Click on the boxes and arrows to see the states and transitions.</p>`).appendTo(div);
+                                $(`<ul>
+                                    <li>A numbered arrow indicates the last digit on the timer when the module was clicked.</li>
+                                    <li><span style='color: #48f; font-size: 24pt'>⮋</span> means the marble rolled into a lower level.</li>
+                                    <li><span style='color: #800; font-size: 24pt; font-weight: bold'>✗</span> in a box means the marble fell into a trap and there was a strike.</li>
+                                    <li><span style='color: #000; font-size: 14pt'>✗</span> in an arrow means that the outer cylinder’s rotation was adjusted after a strike.</li>
+                                    <li><span style='color: #080; font-size: 24pt; font-weight: bold'>✓</span> in a box means the module was solved at this point.</li>
+                                </ul>`).appendTo(div);
+                                return false;
+                            }));
+                            module.push({ obj: module.obj, nobullet: true });
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Traps: (.*)$/,
+                        value: function(matches, module) {
+                            module.data.traps = matches[1].split(', ');
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Rotations: (.*)$/,
+                        value: function(matches, module) {
+                            if (!('states' in module.data))
+                                module.data.states = [{ rotations: matches[1].split(', ') }];
+                            else
+                                module.data.states[module.data.states.length - 1].rotations = matches[1].split(', ');
+                            module.obj.find('button').data('data', module.data);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Rotations after strike: (.*)$/,
+                        value: function(matches, module) {
+                            module.data.states.push({ rotations: matches[1].split(', '), clicked: '✗' });
+                            module.obj.find('button').data('data', module.data);
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Clicked when last seconds digit was: (\d)$/,
+                        value: function(matches, module) {
+                            module.data.states.push({ clicked: matches[1] });
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /^Marble falls into (gap|trap) at level (\d)\.( Module solved\.| Strike!)?$/,
+                        value: function(matches, module) {
+                            module.data.states[module.data.states.length - 1][matches[1]] = matches[2];
+                            if (matches[3] && matches[3] !== ' Strike!')
+                                module.data.states[module.data.states.length - 1].solved = true;
+                            module.obj.find('button').data('data', module.data);
+                            return true;
+                        }
+                    }
+                ]
+            },
 			"Mastermind Simple": {
 				ID: "Mastermind Simple",
 				Lines: [
