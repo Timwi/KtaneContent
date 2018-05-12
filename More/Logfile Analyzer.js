@@ -1,109 +1,16 @@
-// A list of module ID's used to convert to their display name. If not put in this list convertID() will be used.
-const ModuleNames = {
-	// Vanilla
-	BigButton: "The Button",
-	Venn: "Complicated Wires",
-	Morse: "Morse Code",
-	Simon: "Simon Says",
-	WhosOnFirst: "Who’s on First",
-	NeedyVentGas: "Venting Gas",
-	NeedyCapacitor: "Capacitor Discharge",
-	NeedyKnob: "Knob",
-
-	// Modded
-	switchModule: "Switches",
-	monsplodeFight: "Monsplode, Fight!",
-	monsplodeWho: "Who's That Monsplode?",
-	graphModule: "Connection Check",
-	CryptModule: "Cryptography",
-	MusicRhythms: "Rhythms",
-	shapeshift: "Shape Shift",
-	http: "HTTP Response",
-	spwiz3DMaze: "3D Maze",
-	DoubleOhModule: "Double-Oh",
-	TicTacToeModule: "Tic-Tac-Toe",
-	LetterKeys: "Lettered Keys",
-	colormath: "Color Math",
-	ColourFlash: "Color Flash",
-	RubiksCubeModule: "Rubik’s Cube",
-	RockPaperScissorsLizardSpockModule: "Rock-Paper-Scissors-Lizard-Spock",
-	fizzBuzzModule: "FizzBuzz",
-	ModuleAgainstHumanity: "Modules Against Humanity",
-	BitOps: "Bitwise Operations",
-	TurnTheKeyAdvanced: "Turn The Keys",
-	LEDEnc: "LED Encryption",
-	booleanVennModule: "Boolean Venn Diagram",
-	XRayModule: "X-Ray",
-	screw: "The Screw",
-	MorseAMaze: "Morse-A-Maze",
-	ColorMorseModule: "Color Morse",
-	EternitySDec: "Hex To Decimal",
-	SetModule: "S.E.T.",
-	timezone: "Timezones",
-	monsplodeCards: "Monsplode Trading Cards",
-	GameOfLifeSimple: "Game Of Life",
-	"Mastermind Simple": "Mastermind",
-	visual_impairment: "Visual Impairment",
-	sonic: "Sonic the Hedgehog",
-	jukebox: "The Jukebox",
-	buttonMasherNeedy: "Button Masher",
-	NeedyBeer: "Refill that Beer!",
-	rng: "Random Number Generator",
-	ledGrid: "LED Grid",
-	radiatorInova: "Radiator",
-	iPhone: "The iPhone",
-	caesarCipher: "Modern Cipher",
-	wastemanagement: "Waste Management",
-	rubiksClock: "Rubik’s Clock",
-	stopwatch: "The Stopwatch",
-	londonUnderground: "The London Underground",
-	LEGOModule: "LEGO",
-	wire: "The Wire",
-	sun: "The Sun",
-	moon: "The Moon",
-	cube: "The Cube",
-	DrDoctorModule: "Dr. Doctor",
-	Playfair: "Playfair Cipher",
-	QRCode: "QR Code",
-	jewelVault: "The Jewel Vault",
-
-	// Hexicube's Modules
-	ButtonV2: "Square Button",
-	PasswordV2: "Safety Safe",
-	MemoryV2: "Forget Me Not",
-	MazeV2: "Plumbing",
-	KeypadV2: "Round Keypad",
-	MorseV2: "Morsematics",
-	SimonV2: "Simon States",
-	NeedyKnobV2: "Rotary Phone",
-	NeedyVentV2: "Answering Questions",
-	HexiEvilFMN: "Forget Everything",
-
-	// Translated
-	BigButtonTranslated: "The Button (Translated)",
-	WhosOnFirstTranslated: "Who’s On First (Translated)",
-	MorseCodeTranslated: "Morse Code (Translated)",
-	PasswordsTranslated: "Passwords (Translated)",
-	VentGasTranslated: "Venting Gas (Translated)",
-};
-
-const TranslatedModuleNames = {
+const DuplicateLogging = { // Used for modules that have a different logging tag but the same parsing.
 	"Supermercado Salvaje": {
 		key: "Cheap Checkout",
 		name: "SupermercadoSalvajeModule"
-	}
-};
-
-const IconNames = {
-	monsplodeWho: "Who’s that Monsplode",
-	SupermercadoSalvajeModule: "Cheap Checkout",
-
-	// Translated
-	BigButtonTranslated: "The Button",
-	WhosOnFirstTranslated: "Who’s On First",
-	MorseCodeTranslated: "Morse Code",
-	PasswordsTranslated: "Password",
-	VentGasTranslated: "Venting Gas",
+	},
+	"Cruel Piano Keys": {
+		key: "Piano Keys",
+		name: "CruelPianoKeys"
+	},
+	"Festive Piano Keys": {
+		key: "Piano Keys",
+		name: "FestivePianoKeys"
+	},
 };
 
 // A list of internal port names used to convert to their display name.
@@ -121,26 +28,27 @@ const PortNames = {
 
 // A list of blacklisted strings for the filtered logs.
 const blacklist = [
-	"[PaceMaker]",
-	"[ServicesSteam]",
+	"[BombGenerator] BombTypeEnum: Default",
+	"[BombGenerator] Instantiated TimerComponent",
 	"[BombGenerator] Instantiated EmptyComponent",
 	"[BombGenerator] Filling remaining spaces with empty components.",
-	"[BombGenerator] BombTypeEnum: Default",
-	"[StatsManager]",
-	"[FileUtilityHelper]",
-	"[MenuPage]",
-	"[PlayerSettingsManager]",
-	"[LeaderboardBulkSubmissionWorker]",
-	"[MissionManager]",
-	"[AlarmClock]",
-	"[BombGenerator] Instantiated TimerComponent",
 	"[BombGenerator] Instantiating RequiresTimerVisibility components on",
 	"[BombGenerator] Instantiating remaining components on any valid face.",
-	"[PrefabOverride]",
 	"[Rules]",
+	"[Factory]",
+	"[MenuPage]",
+	"[PaceMaker]",
+	"[AlarmClock]",
+	"[StatsManager]",
+	"[LogfileHotkey]",
+	"[ServicesSteam]",
+	"[MissionManager]",
+	"[PrefabOverride]",
+	"[FileUtilityHelper]",
 	"[AlarmClockExtender]",
 	"[Alarm Clock Extender]",
-	"[LogfileHotkey]",
+	"[PlayerSettingsManager]",
+	"[LeaderboardBulkSubmissionWorker]",
 	"Tick delay:",
 	"Calculated FPS: "
 ];
@@ -162,20 +70,15 @@ class Groups {
 }
 
 class ParsedMod {
-	constructor(moduleName, iconName) {
-		this.moduleName = moduleName;
-		this.iconName = iconName;
-		this.info = undefined;
-		this.ID = undefined;
+	constructor(moduleData) {
+		this.moduleData = moduleData;
+		this.tree = undefined;
+		this.counter = undefined;
 	}
 }
 
 function convertID(id) {
 	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!\b)([A-Z])/g, " $1");
-}
-
-function getModuleName(name) {
-	return ModuleNames[name] || convertID(name);
 }
 
 function $SVG(elem) {
@@ -201,29 +104,6 @@ function updateHash(state) {
 	newUrl.hash = Object.entries(state).map(function(entry) { return entry.join("="); }).join(";");
 	history.replaceState(null, null, newUrl.toString());
 }
-
-// A list of modules that don't log.
-const noLogging = [
-	"alphabet",
-	"AnagramsModule",
-	"CrazyTalk",
-	"EnglishTest",
-	"Listening",
-	"Microcontroller",
-	"SeaShells",
-	"TurnTheKeyAdvanced",
-	"TurnTheKey",
-	"WordScrambleModule",
-	"ForeignExchangeRates",
-	"Probing",
-	"NumberPad",
-	"OrientationCube",
-	"shapeshift",
-	"switchModule",
-	"Simon"
-].map(getModuleName);
-
-// Search for 'var lineRegex' for the list of all the line matching regex & the reference.
 
 $(function() {
 	// Read Logfile
@@ -320,7 +200,7 @@ $(function() {
 		div.show();
 
 		$("body").scrollTop(div.offset().top);
-        div.find('.autopress').click();
+		div.find('.autopress').click();
 
 		// Update hash
 		var state = readHash();
@@ -632,7 +512,7 @@ $(function() {
 				for (var m in bomb.Modules) {
 					if (bomb.Modules.hasOwnProperty(m)) {
 						var mod = bomb.Modules[m];
-						if (mod.IDs.length > 0 || mod.Info.length > 0 || !current.Modules[m]) {
+						if (mod.IDs.length > 0 || mod.Tree.length > 0 || !current.Modules[m]) {
 							current.Modules[m] = mod;
 						}
 					}
@@ -643,21 +523,20 @@ $(function() {
 			for (var m in this.Modules) {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
-					var name = getModuleName(m);
 
-					const parsedMod = new ParsedMod(name, IconNames[m] || name);
+					const parsedMod = new ParsedMod(mod.moduleData);
 
 					if (mod.IDs.length === 0) {
-						if (mod.Info.length !== 0) {
-							parsedMod.info = mod.Info;
+						if (mod.Tree.length !== 0) {
+							parsedMod.tree = mod.Tree;
 						}
 					} else if (mod.IDs.length == 1) {
-						parsedMod.info = mod.IDs[0][1];
+						parsedMod.tree = mod.IDs[0][1];
 					} else {
 						mod.IDs.forEach(function(info) {
 							const modClone = Object.assign({}, parsedMod);
-							modClone.info = info[1];
-							modClone.ID = info[0];
+							modClone.tree = info[1];
+							modClone.counter = info[0];
 							mods.push(modClone);
 						});
 
@@ -669,24 +548,22 @@ $(function() {
 			}
 
 			mods.sort(function(a, b) {
-				if (a.ID) {
-					a = a.moduleName.toLowerCase() + a.ID;
-				} else {
-					a = a.moduleName.toLowerCase();
+				let sortKeyA =  a.moduleData.displayName.toLowerCase();
+				if (a.counter) {
+					sortKeyA += a.counter;
 				}
 
-				if (b.moduleName) {
-					b = b.moduleName.toLowerCase() + b.ID;
-				} else {
-					b = b.moduleName.toLowerCase();
+				let sortKeyB = b.moduleData.displayName.toLowerCase();
+				if (b.counter) {
+					sortKeyB += b.counter;
 				}
 
-				a = a.replace(/^the /i, "");
-				b = b.replace(/^the /i, "");
+				sortKeyA = sortKeyA.replace(/^the /i, "");
+				sortKeyB = sortKeyB.replace(/^the /i, "");
 
-				if (a < b) {
+				if (sortKeyA < sortKeyB) {
 					return -1;
-				} else if (a > b) {
+				} else if (sortKeyA > sortKeyB) {
 					return 1;
 				}
 
@@ -708,10 +585,10 @@ $(function() {
 			mods.forEach(function(minfo) {
 				// Information
 				var modinfo = $("<div class='module-info'>").appendTo(info);
-				$("<h3>").text(minfo.moduleName).appendTo(modinfo);
-				if (minfo.info) {
-					makeTree(minfo.info, $("<ul>").appendTo(modinfo));
-				} else if (noLogging.indexOf(minfo.moduleName) > -1) {
+				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
+				if (minfo.tree) {
+					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
+				} else if (minfo.moduleData.hasLogging === false) {
 					$("<p>").text("No information logged.").appendTo(modinfo);
 				} else {
 					$("<p>")
@@ -726,15 +603,15 @@ $(function() {
 
 				// Listing
 				var mod = $("<a href='#' class='module'>")
-					.text(minfo.moduleName + (minfo.ID ? " " + minfo.ID : ""))
+					.text(minfo.moduleData.displayName + (minfo.counter ? " " + minfo.counter : ""))
 					.appendTo(modules)
 					.addCardClick(modinfo);
 
 				$("<img>")
 					.on("error", function() {
-						console.warn("Couldn’t find a module icon for %s. More information: %o", minfo.moduleName, minfo);
+						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleData.displayName, minfo);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + minfo.iconName + ".png").appendTo(mod);
+					}).attr("src", "../Icons/" + minfo.moduleData.icon + ".png").appendTo(mod);
 			});
 
 			filteredTab.appendTo(modules).addCardClick(loginfo);
@@ -746,6 +623,10 @@ $(function() {
 			this.Bombs.forEach(function(bomb) {
 				mod = (mod || bomb.GetMod(name, id));
 			});
+
+			if (!mod && debugging) {
+				console.warn("Unable to find module: " + name);
+			}
 
 			return mod;
 		};
@@ -820,15 +701,11 @@ $(function() {
 		this.FilteredLog = "";
 
 		this.GetMod = function(name) {
-			if (!(name in this.Modules) && debugging) {
-				console.warn("Unable to find module: " + name);
-			}
-
 			return this.Modules[name];
 		};
 		this.GetModule = function(name) {
 			var mod = this.GetMod(name);
-			return mod ? mod.Info : undefined;
+			return mod ? mod.Tree : undefined;
 		};
 		this.GetModuleID = function(name, id) {
 			var mod = this.GetMod(name);
@@ -919,286 +796,330 @@ $(function() {
 			return lines;
 		}
 
-		// A list used for matching lines and executing a function if it matches the line.
-		var lineRegex = {
-			// Reset Bomb Group
-			"State": [
-				{
-					regex: /Enter GameplayState/,
-					value: function() {
-						bombgroup = undefined;
-					}
-				}
-			],
+		function getModuleName(moduleID) {
+			const moduleData = parseData.find(data => data.moduleID == moduleID);
+			return moduleData ? moduleData.displayName : convertID(moduleID);
+		}
 
-			// Bombs
-			"Bomb": [
-				{
-					regex: /Strike from (?:.+)! (\d+) \/ \d+ strikes/,
-					value: function(matches) {
-						if (bombgroup.isSingleBomb) {
-							bomb.Strikes = parseInt(matches[1]);
-
-							if (bomb.Strikes == bomb.TotalStrikes) {
-								bomb.State = "Exploded (Strikes)";
-							}
+		// All of the data used for parsing
+		const parseData = [
+			{
+				loggingTag: "State",
+				matches: [
+					{
+						regex: /Enter GameplayState/,
+						handler: function() {
+							bombgroup = undefined;
 						}
 					}
-				},
-				{
-					regex: /Boom/,
-					value: function() {
-						bombgroup.FilterLines();
-						if (GetBomb().State == "Unsolved") {
-							GetBomb().State = "Exploded";
-
-							if (bombgroup.isSingleBomb && bomb.Strikes != bomb.TotalStrikes) {
-								bomb.State = "Exploded (Time Ran Out)";
-								bomb.TimeLeft = 0;
+				]
+			},
+			{
+				loggingTag: "Bomb",
+				matches: [
+					{
+						regex: /Strike from (?:.+)! (\d+) \/ \d+ strikes/,
+						handler: function(matches) {
+							if (bombgroup.isSingleBomb) {
+								bomb.Strikes = parseInt(matches[1]);
+						
+								if (bomb.Strikes == bomb.TotalStrikes) {
+									bomb.State = "Exploded (Strikes)";
+								}
 							}
 						}
-					}
-				},
-				{
-					regex: /A winner is you!!/,
-					value: function() {
-						if (bombgroup.isSingleBomb) {
+					},
+					{
+						regex: /Boom/,
+						handler: function() {
 							bombgroup.FilterLines();
-							bomb.State = "Solved";
-							bomb.Solved = bomb.TotalModules;
+							if (GetBomb().State == "Unsolved") {
+								GetBomb().State = "Exploded";
+						
+								if (bombgroup.isSingleBomb && bomb.Strikes != bomb.TotalStrikes) {
+									bomb.State = "Exploded (Time Ran Out)";
+									bomb.TimeLeft = 0;
+								}
+							}
 						}
-					}
-				}
-			],
-			"BombGenerator": [
-				{
-					regex: /Generating bomb with seed (\d+)/,
-					value: function(matches) {
-						bomb = new Bomb(parseInt(matches[1]));
-
-						if (!bombgroup) {
-							bombgroup = new BombGroup();
-							bombSerialIndex = 0;
-							bombgroup.StartLine = linen;
-
-							parsed.push(bombgroup);
-						}
-
-						bombgroup.Bombs.push(bomb);
-					}
-				},
-				{
-					regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
-					value: function(matches) {
-						bomb.Time = parseInt(matches[1]);
-						bomb.TimeLeft = bomb.Time;
-						bomb.TotalStrikes = parseInt(matches[2]);
-					}
-				},
-				{
-					regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
-					value: function(matches) {
-						var info = [];
-						info.groups = new Groups();
-						bomb.Modules[matches[1]] = {
-							IDs: [],
-							Info: info
-						};
-
-						bomb.TotalModules++;
-						if (matches[2].includes("Needy")) {
-							bomb.Needies++;
-						}
-
-					}
-				},
-				{
-					regex: /Instantiated CryptModule on face/,
-					value: function() {
-						var mod = bomb.GetModule("CryptModule");
-						mod.push("Phrase: " + lines[linen - 2]);
-						mod.push("Answer: " + lines[linen - 1]);
-					}
-				}
-			],
-
-			// Widgets
-			"WidgetGenerator": [
-				{
-					regex: /Added widget: (.+) at/,
-					value: function(matches) {
-						if (matches[1] == "ModWidget") {
-							bomb.ModdedWidgets++;
-						}
-					}
-				}
-			],
-			"BatteryWidget": [
-				{
-					regex: /Randomizing Battery Widget: (\d)/,
-					value: function(matches) {
-						bomb.Batteries.push(parseInt(matches[1]));
-					}
-				}
-			],
-			"PortWidget": [
-				{
-					regex: /Randomizing Port Widget: (.+)/,
-					value: function(matches) {
-						if (matches[1] != "0") {
-							bomb.PortPlates.push(matches[1].split(", "));
-						} else {
-							bomb.PortPlates.push([]);
-						}
-					}
-				}
-			],
-			"IndicatorWidget": [
-				{
-					regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
-					value: function(matches) {
-						bomb.Indicators.push([matches[1], matches[2]]);
-					}
-				}
-			],
-			"SerialNumber": [
-				{
-					regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
-					value: function(matches) {
-						// Workaround because the serial numbers for multiple bombs are all listed after the edgework for all of the bombs.
-						if (bombgroup)
-							bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
-						else
-							bomb.Serial = matches[1];
-					}
-				}
-			],
-			// Modded Widgets
-			"EncryptedIndicatorWidget": [
-				{
-					regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
-						bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
-					}
-				},
-				{
-					regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
-						bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
-					}
-				}
-			],
-			"MultipleWidgets": [
-				//Two Factor
-				{
-					regex: /Widget #[12] = TwoFactor/,
-					value: function() {
-						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Two Factor`);
-						bomb.ModdedTwoFactor.push(`MultipleWidgets:TwoFactor`);
-					}
-				},
-				//Indicators
-				{
-					regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
-						bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator", matches[1], matches[2]]);
-					}
-				},
-				{
-					regex: /Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Indicator: ${matches[1]} ${matches[2]}`);
-						bomb.ModdedIndicators.push(["MultipleWidgets:Indicator", matches[1], matches[2]]);
-					}
-				},
-				//Batteries
-				{
-					regex: /Putting ([0-4]) batter(?:ies|y) into a holder that fits ([1-4]) batter(?:ies|y)./,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Batteries: ${matches[1]} in ${matches[2]}`);
-						bomb.ModdedBatteries.push(["MultipleWidgets:Batteries", parseInt(matches[1]), parseInt(matches[2])]);
-					}
-				},
-				//Ports
-				{
-					regex: /Ports \((Vanilla 1|Vanilla 2|New Ports|TV\/Monitor Ports|Computer Ports|Everything)\): (.*)/,
-					value: function(matches) {
-						bomb.ModdedWidgetInfo.push(`MultipleWidgets: Ports (${matches[1]}): ${matches[2]}`);
-						if (matches[2] != "None") {
-							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", matches[2].split(", ")]);
-						} else {
-							bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", []]);
-						}
-					}
-				}
-			],
-			"TwoFactorWidget": [
-				{
-					regex: /Two Factor present/,
-					value: function() {
-						bomb.ModdedWidgetInfo.push(`Two Factor`);
-						bomb.ModdedTwoFactor.push(`TwoFactorWidget`);
-					}
-				}
-			],
-
-			// Multiple Bombs
-			"MultipleBombs": [
-				{
-					regex: /All bombs solved, what a winner!/,
-					value: function() {
-						var currentBomb = GetBomb();
-						bombgroup.FilterLines();
-						currentBomb.State = "Solved";
-						currentBomb.Solved = currentBomb.TotalModules;
-					}
-				}
-			],
-
-			"PaceMaker": [
-				{
-					regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
-					value: function(matches) {
-						if (bombgroup.isSingleBomb) {
-							const num2 = parseFloat(matches[1]);
-							if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
-							else bomb.Solved = bomb.TotalModules;
-							bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
-
-							if (bomb.TimeLeft === 0) {
-								bomb.State = "Exploded (Time Ran Out)";
+					},
+					{
+						regex: /A winner is you!!/,
+						handler: function() {
+							if (bombgroup.isSingleBomb) {
+								bombgroup.FilterLines();
+								bomb.State = "Solved";
+								bomb.Solved = bomb.TotalModules;
 							}
 						}
 					}
-				},
-				{
-					regex: /Round start! Mission: (.+) Pacing Enabled: /,
-					value: function(matches) {
-						GetBomb().MissionName = matches[1];
-					}
-				}
-			],
+				]
+			},
+			{
+				loggingTag: "BombGenerator",
+				matches: [
+					{
+						regex: /Generating bomb with seed (\d+)/,
+						handler: function(matches) {
+							bomb = new Bomb(parseInt(matches[1]));
+						
+							if (!bombgroup) {
+								bombgroup = new BombGroup();
+								bombSerialIndex = 0;
+								bombgroup.StartLine = linen;
+						
+								parsed.push(bombgroup);
+							}
+						
+							bombgroup.Bombs.push(bomb);
+						}
+					},
+					{
+						regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
+						handler: function(matches) {
+							bomb.Time = parseInt(matches[1]);
+							bomb.TimeLeft = bomb.Time;
+							bomb.TotalStrikes = parseInt(matches[2]);
+						}
+					},
+					{
+						regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
+						handler: function(matches) {
+							var tree = [];
+							tree.groups = new Groups();
+							bomb.Modules[matches[1]] = {
+								IDs: [],
+								Tree: tree
+							};
 
-			// Line filtering
-			"MenuPage": [
-				{
-					regex: /ReturnToSetupRoom/,
-					value: function() {
-						bombgroup.FilterLines();
-					}
-				}
-			],
+							let moduleData = parseData.find(data => data.moduleID == matches[1]);
+							if (!moduleData) {
+								moduleData = {
+									moduleID: matches[1],
+								};
+							}
+							
+							if (moduleData.displayName == undefined) moduleData.displayName = convertID(moduleData.moduleID);
+							if (moduleData.icon == undefined) moduleData.icon = moduleData.displayName;
 
-			// Modules
-			"3D Maze": {
-				ID: "spwiz3DMaze",
-				Lines: [
+							bomb.Modules[matches[1]].moduleData = moduleData;
+						
+							bomb.TotalModules++;
+							if (matches[2].includes("Needy")) {
+								bomb.Needies++;
+							}
+						
+						}
+					},
+					{
+						regex: /Instantiated CryptModule on face/,
+						handler: function() {
+							var mod = bomb.GetModule("CryptModule");
+							mod.push("Phrase: " + lines[linen - 2]);
+							mod.push("Answer: " + lines[linen - 1]);
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "WidgetGenerator",
+				matches: [
+					{
+						regex: /Added widget: (.+) at/,
+						handler: function(matches) {
+							if (matches[1] == "ModWidget") {
+								bomb.ModdedWidgets++;
+							}
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "BatteryWidget",
+				matches: [
+					{
+						regex: /Randomizing Battery Widget: (\d)/,
+						handler: function(matches) {
+							bomb.Batteries.push(parseInt(matches[1]));
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "PortWidget",
+				matches: [
+					{
+						regex: /Randomizing Port Widget: (.+)/,
+						handler: function(matches) {
+							if (matches[1] != "0") {
+								bomb.PortPlates.push(matches[1].split(", "));
+							} else {
+								bomb.PortPlates.push([]);
+							}
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "IndicatorWidget",
+				matches: [
+					{
+						regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
+						handler: function(matches) {
+							bomb.Indicators.push([matches[1], matches[2]]);
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "SerialNumber",
+				matches: [
+					{
+						regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
+						handler: function(matches) {
+							// Workaround because the serial numbers for multiple bombs are all listed after the edgework for all of the bombs.
+							if (bombgroup)
+								bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
+							else
+								bomb.Serial = matches[1];
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "EncryptedIndicatorWidget",
+				matches: [
+					{
+						regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+							bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
+						}
+					},
+					{
+						regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
+							bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "MultipleWidgets",
+				matches: [
+					{
+						regex: /Widget #[12] = TwoFactor/,
+						handler: function() {
+							bomb.ModdedWidgetInfo.push(`MultipleWidgets: Two Factor`);
+							bomb.ModdedTwoFactor.push(`MultipleWidgets:TwoFactor`);
+						}
+					},
+					{
+						regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
+							bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator", matches[1], matches[2]]);
+						}
+					},
+					{
+						regex: /Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`MultipleWidgets: Indicator: ${matches[1]} ${matches[2]}`);
+							bomb.ModdedIndicators.push(["MultipleWidgets:Indicator", matches[1], matches[2]]);
+						}
+					},
+					{
+						regex: /Putting ([0-4]) batter(?:ies|y) into a holder that fits ([1-4]) batter(?:ies|y)./,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`MultipleWidgets: Batteries: ${matches[1]} in ${matches[2]}`);
+							bomb.ModdedBatteries.push(["MultipleWidgets:Batteries", parseInt(matches[1]), parseInt(matches[2])]);
+						}
+					},
+					{
+						regex: /Ports \((Vanilla 1|Vanilla 2|New Ports|TV\/Monitor Ports|Computer Ports|Everything)\): (.*)/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`MultipleWidgets: Ports (${matches[1]}): ${matches[2]}`);
+							if (matches[2] != "None") {
+								bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", matches[2].split(", ")]);
+							} else {
+								bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", []]);
+							}
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "TwoFactorWidget",
+				matches: [
+					{
+						regex: /Two Factor present/,
+						handler: function() {
+							bomb.ModdedWidgetInfo.push(`Two Factor`);
+							bomb.ModdedTwoFactor.push(`TwoFactorWidget`);
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "MultipleBombs",
+				matches: [
+					{
+						regex: /All bombs solved, what a winner!/,
+						handler: function() {
+							var currentBomb = GetBomb();
+							bombgroup.FilterLines();
+							currentBomb.State = "Solved";
+							currentBomb.Solved = currentBomb.TotalModules;
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "PaceMaker",
+				matches: [
+					{
+						regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
+						handler: function(matches) {
+							if (bombgroup.isSingleBomb) {
+								const num2 = parseFloat(matches[1]);
+								if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
+								else bomb.Solved = bomb.TotalModules;
+								bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
+						
+								if (bomb.TimeLeft === 0) {
+									bomb.State = "Exploded (Time Ran Out)";
+								}
+							}
+						}
+					},
+					{
+						regex: /Round start! Mission: (.+) Pacing Enabled: /,
+						handler: function(matches) {
+							GetBomb().MissionName = matches[1];
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "MenuPage",
+				matches: [
+					{
+						regex: /ReturnToSetupRoom/,
+						handler: function() {
+							bombgroup.FilterLines();
+						}
+					}
+				]
+			},
+			{
+				displayName: "3D Maze",
+				moduleID: "spwiz3DMaze",
+				loggingTag: "3D Maze",
+				matches: [
 					{
 						regex: /You walked into a wrong wall:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: matches.input, obj: pre(readMultiple(18)) });
 							return true;
 						}
@@ -1208,29 +1129,31 @@ $(function() {
 					}
 				]
 			},
-			"AdjacentLetters": {
-				ID: "AdjacentLettersModule",
-				Lines: [
+			{
+				moduleID: "AdjacentLettersModule",
+				loggingTag: "AdjacentLetters",
+				matches: [
 					{
 						regex: /Solution:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
 						}
 					},
 					{
 						regex: /You submitted:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
 						}
 					}
 				]
 			},
-			"Algebra": {
-				ID: "algebra",
-				Lines: [
+			{
+				moduleID: "algebra",
+				loggingTag: "Algebra",
+				matches: [
 					{
 						regex: /^(Equation \d+) is (.*)\.$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({
 								label: matches[1] + ':',
 								obj: $('<div>').append(
@@ -1247,40 +1170,44 @@ $(function() {
 					},
 					{
 						regex: /The (?:true )?value of [CZ] is/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push({linebreak: true});
 						}
 					}
-				],
+				]
 			},
-			//"Adventure Game": "spwizAdventureGame",
-			"Assets.Scripts.Rules.KeypadRuleSet": {
-				ID: "Keypad",
-				Lines: [
+			{
+				moduleID: "Keypad",
+				loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
+				matches: [
 					{
 						regex: /Keypad button (\d) symbol (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2]);
 						}
 					}
 				]
 			},
-			"Astrology": "spwizAstrology",
-			"Battleship": {
-				ID: "BattleshipModule",
-				Lines: [
+			{
+				moduleID: "spwizAstrology",
+				loggingTag: "Astrology"
+			},
+			{
+				moduleID: "BattleshipModule",
+				loggingTag: "Battleship",
+				matches: [
 					{
 						regex: /.+/
 					},
 					{
 						regex: /Ships: .+/,
-						value: function(matches, module) {
-
+						handler: function(matches, module) {
+						
 							var fieldStr = readMultiple(6);
 							var field = fieldStr.replace('\r', '').split('\n');
-
+						
 							var r, tr, c, td;
-
+						
 							var stuff = [];
 							for (r = 0; r < 6; r++) {
 								stuff[r] = [];
@@ -1292,7 +1219,7 @@ $(function() {
 										stuff[r][c] = ch;
 								}
 							}
-
+						
 							var table = $('<table>').css('border-spacing', '0');
 							for (r = 0; r < 6; r++) {
 								tr = $('<tr>').appendTo(table);
@@ -1305,12 +1232,12 @@ $(function() {
 										var waterBelow = r == 5 || !stuff[r + 1][c].IsShip;
 										var waterLeft = c == 1 || !stuff[r][c - 1].IsShip;
 										var waterRight = c == 5 || !stuff[r][c + 1].IsShip;
-
+						
 										var shipAbove = r == 1 || stuff[r - 1][c].IsShip;
 										var shipBelow = r == 5 || stuff[r + 1][c].IsShip;
 										var shipLeft = c == 1 || stuff[r][c - 1].IsShip;
 										var shipRight = c == 5 || stuff[r][c + 1].IsShip;
-
+						
 										var imgId =
 											!stuff[r][c].IsShip ? "SqWater" :
 												waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
@@ -1320,26 +1247,30 @@ $(function() {
 																waterLeft && waterBelow && waterRight && shipAbove ? "SqShipB" :
 																	waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
 																		waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
-
+						
 										$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
 										if (stuff[r][c].IsSafeLocation)
 											td.css('border', '3px solid red');
 									}
 								}
 							}
-
+						
 							module.push({ label: "Solution:", obj: table });
 						}
 					}
 				]
 			},
-			"Binary LEDs": "BinaryLeds",
-			"Bitmaps": {
-				ID: "BitmapsModule",
-				Lines: [
+			{
+				moduleID: "BinaryLeds",
+				loggingTag: "Binary LEDs"
+			},
+			{
+				moduleID: "BitmapsModule",
+				loggingTag: "Bitmaps",
+				matches: [
 					{
 						regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({
 								label: matches.input,
 								obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
@@ -1357,13 +1288,18 @@ $(function() {
 					}
 				]
 			},
-			"Bitwise Operators": "BitOps",
-			"Big Circle": {
-				ID: "BigCircle",
-				Lines: [
+			{
+				displayName: "Bitwise Operations",
+				moduleID: "BitOps",
+				loggingTag: "Bitwise Operators"
+			},
+			{
+				moduleID: "BigCircle",
+				loggingTag: "Big Circle",
+				matches: [
 					{
 						regex: /(?:Getting|Updating) solution/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Group = [matches.input.replace(/(?:Getting|Updating) solution for /, ""), []];
 							module.push(module.Group);
 							return true;
@@ -1371,7 +1307,7 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.Group) {
 								module.Group[1].push(matches.input);
 							} else {
@@ -1381,12 +1317,13 @@ $(function() {
 					}
 				]
 			},
-			"Blind Alley": {
-				ID: "BlindAlleyModule",
-				Lines: [
+			{
+				moduleID: "BlindAlleyModule",
+				loggingTag: "Blind Alley",
+				matches: [
 					{
 						regex: /Region condition counts:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var line1 = readLine();
 							var line2 = readLine();
 							var line3 = readLine();
@@ -1415,23 +1352,25 @@ $(function() {
 					}
 				]
 			},
-			"Boolean Venn Diagram": {
-				ID: "booleanVennModule",
-				Lines: [
+			{
+				displayName: "Boolean Venn Diagram",
+				moduleID: "booleanVennModule",
+				loggingTag: "Boolean Venn Diagram",
+				matches: [
 					{
 						regex: /Expression|button pressed|Module Solved!/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input);
 						}
 					},
 					{
 						regex: /Expression/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							readLine();
-
+						
 							var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
 								.appendTo("body");
-
+						
 							var sections = ["A", "NONE", "AB", "AC", "ABC", "B", "C", "BC"];
 							var positions = {
 								"AB": "translate(125px, 200px)",
@@ -1439,11 +1378,11 @@ $(function() {
 								"B": "translate(93px, 275px)",
 								"C": "translate(254px, 275px)"
 							};
-
+						
 							readMultiple(16).match(/[UL]/g).forEach(function(letter, index) {
 								var elem = svg.find("path, circle").eq(index);
 								elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
-
+						
 								var bbox = elem[0].getBBox();
 								var text = sections[index];
 								$SVG("<text>")
@@ -1458,26 +1397,27 @@ $(function() {
 									})
 									.appendTo(svg.children("g"));
 							});
-
+						
 							module.push({ label: "Diagram:", obj: $("<div style='width: 40%'>").append(svg), expanded: true });
 						}
 					}
 				]
 			},
-			"Broken Buttons": {
-				ID: "BrokenButtonsModule",
-				Lines: [
+			{
+				moduleID: "BrokenButtonsModule",
+				loggingTag: "Broken Buttons",
+				matches: [
 					{
 						regex: /Buttons:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var step = module.Step || module;
-
+						
 							step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
 						}
 					},
 					{
 						regex: /Step: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Steps = (module.Steps || 0) + 1;
 							module.Step = [matches[1]];
 							module.push(["Step #" + module.Steps, module.Step]);
@@ -1485,16 +1425,16 @@ $(function() {
 					},
 					{
 						regex: /Press: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var step = module.Step;
 							step.push("Press: " + matches[1]);
-
+						
 							var line = readLine();
 							while ((/".+" at \d, \d/).exec(line)) {
 								step.push(line);
 								line = readLine();
 							}
-
+						
 							linen--;
 						}
 					},
@@ -1503,32 +1443,33 @@ $(function() {
 					}
 				]
 			},
-			"Braille": {
-				ID: "BrailleModule",
-				Lines: [
+			{
+				moduleID: "BrailleModule",
+				loggingTag: "Braille",
+				matches: [
 					{
 						regex: /(Braille patterns (on module|after flips):) (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var div = $("<div>");
-
+						
 							if (matches[2] == "on module") {
 								module.braille = [];
 							}
-
+						
 							matches[3].split("; ").forEach(function(spots, i) {
 								var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
-
+						
 								spots.split("-").forEach(function(posStr) {
 									var pos = parseInt(posStr) - 1;
 									$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 								});
-
+						
 								if (matches[2] == "on module") {
 									if (module.flipped) {
 										module.flipped.forEach(function(pos) {
 											var char = Math.floor(pos / 6);
 											if (char != i) return;
-
+						
 											var absPos = pos % 24;
 											var svg = module.flippedSVG[absPos];
 											svg[0].clone().prependTo(braille);
@@ -1539,30 +1480,30 @@ $(function() {
 									}
 								}
 							});
-
+						
 							module.groups.add({ label: matches[1], obj: div, expanded: true });
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /Flipped positions in order: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.flipped = [];
 							module.flippedSVG = [];
 							matches[1].split(", ").forEach(function(posStr, flipNumber) {
 								var pos = parseInt(posStr) - 1;
 								module.flipped.push(pos);
-
+						
 								var char = Math.floor(pos / 6);
 								var dotPos = pos - char * 6;
-
+						
 								var absPos = pos % 24;
 								var text;
 								if (!module.flippedSVG[absPos]) {
 									var highlight = $SVG('<rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
 									text = $SVG('<text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
-
+						
 									module.flippedSVG[absPos] = [highlight, text];
 								}
 								else {
@@ -1571,7 +1512,7 @@ $(function() {
 									svg[1].text(`${svg[1].text()} ${flipNumber + 1}`).attr("font-size", parseFloat(svg[1].attr("font-size")) - 0.15);
 									text = svg[1];
 								}
-
+						
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 								if (noDot) {
 									text.attr("fill", "black");
@@ -1581,56 +1522,60 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /Wrong letter pressed:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.addGroup();
 						}
-					},
+					}
 				]
 			},
-			"Button Sequences": {
-				ID: "buttonSequencesModule",
-				Lines: [
+			{
+				moduleID: "buttonSequencesModule",
+				loggingTag: "Button Sequences",
+				matches: [
 					{
 						regex: /Solution:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push(["Solution", module.Solution = [], true]);
 							module.push(["Actions", module.Actions = []]);
 						}
 					},
-
 					{
 						regex: /Panel [2-4] Button 1 \(/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Solution.push({ linebreak: true });
 						}
 					},
 					{
 						regex: /Panel \d Button \d \(/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Solution.push(matches.input);
 						}
 					},
 					{
 						regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)|Module Solved\.|Strike: /,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Actions.push(matches.input);
 						}
 					}
 				]
 			},
-			"CaesarCipher": "CaesarCipherModule",
-			"Cheap Checkout": {
-				ID: "CheapCheckoutModule",
-				Lines: [
+			{
+				moduleID: "CaesarCipherModule",
+				loggingTag: "CaesarCipher"
+			},
+			{
+				moduleID: "CheapCheckoutModule",
+				loggingTag: "Cheap Checkout",
+				matches: [
 					{
 						regex: /(Receipt|Recibo)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: matches[1] + ':', obj: pre(readMultiple(10)) });
 							return true;
 						}
@@ -1640,12 +1585,13 @@ $(function() {
 					}
 				]
 			},
-			"Chess": {
-				ID: "ChessModule",
-				Lines: [
+			{
+				moduleID: "ChessModule",
+				loggingTag: "Chess",
+				matches: [
 					{
 						regex: /Selected Solution: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var locations = matches[1].split(", ");
 							var solution = locations[locations.length - 1];
 							locations.splice(locations.length - 1, 1);
@@ -1686,7 +1632,7 @@ $(function() {
 								tr.append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingLeft: '1em' }));
 							}
 							$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
-
+						
 							module.push({ label: "Board:", obj: table });
 						}
 					},
@@ -1695,14 +1641,22 @@ $(function() {
 					}
 				]
 			},
-			"ChordQualities": "ChordQualities",
-			"ColorMorse": "ColorMorseModule",
-			"ColoredSquares": {
-				ID: "ColoredSquaresModule",
-				Lines: [
+			{
+				moduleID: "ChordQualities",
+				loggingTag: "ChordQualities"
+			},
+			{
+				displayName: "Color Morse",
+				moduleID: "ColorMorseModule",
+				loggingTag: "ColorMorse"
+			},
+			{
+				moduleID: "ColoredSquaresModule",
+				loggingTag: "ColoredSquares",
+				matches: [
 					{
 						regex: /First stage color is (.+); count=(\d+)./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
 						}
 					},
@@ -1711,12 +1665,13 @@ $(function() {
 					}
 				]
 			},
-			"Colored Switches": {
-				ID: "ColoredSwitchesModule",
-				Lines: [
+			{
+				moduleID: "ColoredSwitchesModule",
+				loggingTag: "Colored Switches",
+				matches: [
 					{
 						regex: /(Initial state of the switches:|Valid transition made. Switches now:|Three valid transitions made. LEDs show:) ([▲▼]{5})/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('SwitchInfo' in module)) {
 								module.SwitchInfo = {
 									y: 0, svg: "", prevState: null,
@@ -1730,7 +1685,7 @@ $(function() {
 								};
 								module.push(module.SwitchInfo.dom);
 							}
-
+						
 							var state = matches[2];
 							var svg = "";
 							var i;
@@ -1741,7 +1696,7 @@ $(function() {
 									"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
 									"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
 									"</g>";
-
+						
 							var x = 0;
 							switch (matches[1][0]) {
 								case 'V':
@@ -1758,12 +1713,12 @@ $(function() {
 										+ module.SwitchInfo.svg;
 									module.SwitchInfo.prevState = state;
 									break;
-
+						
 								case 'I':
 									// Initial state
 									module.SwitchInfo.prevState = state;
 									break;
-
+						
 								case 'T':
 									// Desired state
 									module.SwitchInfo.y--;
@@ -1771,9 +1726,9 @@ $(function() {
 									module.SwitchInfo.svg = "<text font-size='7' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
 									break;
 							}
-
+						
 							svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect fill='#d7dbe5' x='0' y='0' width='55' height='35' />" + svg + "</g>";
-
+						
 							module.SwitchInfo.y++;
 							module.SwitchInfo.svg += svg;
 							module.SwitchInfo.set();
@@ -1782,10 +1737,10 @@ $(function() {
 					},
 					{
 						regex: /Toggling switch #(\d) is invalid here/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('SwitchInfo' in module))
 								return;
-
+						
 							module.SwitchInfo.svg =
 								"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' /><g transform='translate({x}, {y2})' stroke-width='3' stroke='red'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
 									.replace(/\{x\}/g, 11 * (parseInt(matches[1]) - 1) + 5.5)
@@ -1798,14 +1753,14 @@ $(function() {
 					},
 					{
 						regex: /Colors of the switches: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('SwitchInfo' in module))
 								return;
-
+						
 							var cols = matches[1].split(',');
 							if (cols.length != 5)
 								return;
-
+						
 							var lightColors = {
 								'Red': '#f65353',
 								'Green': '#0fe325',
@@ -1822,7 +1777,7 @@ $(function() {
 								'Orange': 'hsl(39, 70%, 42%)',
 								'Turquoise': 'hsl(195, 70%, 56%)'
 							};
-
+						
 							for (var i = 0; i < 5; i++) {
 								module.SwitchInfo.lightColors[i] = lightColors[cols[i].trim()];
 								module.SwitchInfo.darkColors[i] = darkColors[cols[i].trim()];
@@ -1837,12 +1792,14 @@ $(function() {
 					}
 				]
 			},
-			"Colour Flash": {
-				ID: "ColourFlash",
-				Lines: [
+			{
+				displayName: "Color Flash",
+				moduleID: "ColourFlash",
+				loggingTag: "Colour Flash",
+				matches: [
 					{
 						regex: /Module generated/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({
 								label: "Color Sequence:",
 								obj: pre(readMultiple(10))
@@ -1858,21 +1815,26 @@ $(function() {
 					}
 				]
 			},
-			"Connection Check": "graphModule",
-			"Cooking": {
-				ID: "cooking",
-				Lines: [
+			{
+				displayName: "Connection Check",
+				moduleID: "graphModule",
+				loggingTag: "Connection Check"
+			},
+			{
+				moduleID: "cooking",
+				loggingTag: "Cooking",
+				matches: [
 					{
 						regex: /(Solution|Submitted):/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches[1], module.items = []]);
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /- (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.items.push(matches[1]);
 							return true;
 						}
@@ -1882,12 +1844,13 @@ $(function() {
 					}
 				]
 			},
-			"Coordinates": {
-				ID: "CoordinatesModule",
-				Lines: [
+			{
+				moduleID: "CoordinatesModule",
+				loggingTag: "Coordinates",
+				matches: [
 					{
 						regex: /(\d)×(\d)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Width = parseInt(matches[1]);
 							module.Height = parseInt(matches[2]);
 							module.Coordinates = {};
@@ -1895,7 +1858,7 @@ $(function() {
 					},
 					{
 						regex: /(illegal|correct) coordinate .=([A-Z]\d+) as (.+?)( \(.+\))?$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var key = matches[2];
 							if (key in module.Coordinates)
 								module.Coordinates[key].Text += '\n' + matches[3];
@@ -1906,9 +1869,9 @@ $(function() {
 					},
 					{
 						regex: /Grid:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var x;
-
+						
 							var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
 							for (x = 0; x < module.Width; x++)
 								$('<col>').attr('width', (99 / module.Width) + '%').appendTo(table);
@@ -1921,7 +1884,7 @@ $(function() {
 										td.text(module.Coordinates[key].Text).css({ border: '3px solid ' + (module.Coordinates[key].Legal ? '#0c0' : '#f00'), fontSize: module.Coordinates[key].Text.length > 6 ? "80%" : "125%", whiteSpace: 'pre-line' });
 								}
 							}
-
+						
 							module.push({ label: "Grid:", obj: table });
 							return true;
 						}
@@ -1931,178 +1894,182 @@ $(function() {
 					}
 				]
 			},
-			"Creation": {
-				ID: "CreationModule",
-				Lines: [
+			{
+				moduleID: "CreationModule",
+				loggingTag: "Creation",
+				matches: [
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.length === 0) {
 								module.push(["Initial attempt", [], true]);
 							}
-
+						
 							module[module.length - 1][1].push(matches.input);
 						}
 					},
 					{
 						regex: /Restarting module.../,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(["Restart #" + module.length, []]);
 						}
 					}
 				]
 			},
-            "The Cube": {
-                ID: "cube",
-                Lines: [
-                    {
-                        regex: /Cube movements: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
-                        value: function(matches, module) {
-                            module.Rotations = matches.slice(1, 7);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /Cube faces: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
-                        value: function(matches, module) {
-                            module.Faces = matches.slice(1, 7);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /Buttons: (.+)/,
-                        value: function(matches, module) {
-                            var result = new RegExp(`The execute button is (\\w+?) and says (.)\\.`).exec(matches[1]);
-                            module.SubmitButton = { color: result[1], label: result[2] };
-                            module.Buttons = new Array(8);
-                            for (var i = 0; i < 8; i++)
-                            {
-                                var result = new RegExp(`#${i+1} is (\\w+?) and says (.)\\.`).exec(matches[1]);
-                                module.Buttons[i] = { color: result[1], label: result[2] };
-                            }
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /Wires: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\./,
-                        value: function(matches, module) {
-                            module.Wires = matches.slice(1, 5);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /Screens: #1 says (.{8})\. #2 says (.{8})\./,
-                        value: function(matches, module) {
-                            module.Screens = matches.slice(1, 3);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /The rotation codes are (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
-                        value: function(matches, module) {
-                            module.RotationCodes = matches.slice(1, 7);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /The wire codes are (\d+), (\d+), (\d+), (\d+)\./,
-                        value: function(matches, module) {
-                            module.WireCodes = matches.slice(1, 5);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /(The (final) cipher|Cipher ([123])) is (\d+)\./,
-                        value: function(matches, module) {
-                            module['Cipher' + (matches[2] || matches[3])] = matches[4];
-                            if (matches[2]) {
-                                function many(num, fnc) {
-                                    var str = '';
-                                    for (var i = 0; i < num; i++)
-                                        str += fnc(i);
-                                    return str;
-                                }
-                                var wireMap = [2, 3, 0, 1];
-                                var wireOrd = ['rd', 'th', 'st', 'nd'];
-                                var colors = {
-                                    'blue': '#29f',
-                                    'green': '#4c4',
-                                    'orange': '#e82',
-                                    'purple': '#c4b',
-                                    'red': '#c22',
-                                    'white': '#eee'
-                                };
-                                var calcTable = $(`
-                                    <table style='border-collapse: collapse; border: 2px solid black; margin: 8pt 0 24pt;'>
-                                        <tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
-                                        <tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x*50}px -50px'></div><div>${module.Faces[5-x]}</div></td>`)}</tr>
-                                        <tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x]+1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
-                                        <tr><th>After modulo</th>${many(6, x => `<td>${module.Cipher1.substr(x, 1)}</td>`)}</tr>
-                                        <tr><th>Display 1</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[0].substr(x, 1)}</div><div>${module.Cipher2.substr(x, 1)}</div></td>`)}</tr>
-                                        <tr><th>Display 2</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[1].substr(x, 1)}</div><div>${module.Cipher3.substr(x, 1)}</div></td>`)}</tr>
-                                        <tr class='final'><th>FINAL CIPHER</th>${many(8, x => `<td>${module.Cipherfinal.substr(x, 1)}</td>`)}</tr>
-                                    </table>
-                                `);
-                                calcTable.find('td').css({ textAlign: 'center', border: '1px solid #888', padding: '.2em .3em' });
-                                calcTable.find('th').css({ textAlign: 'left', border: '1px solid #888', padding: '.2em .4em' });
-                                calcTable.find('.icon').css({ backgroundImage: "url('img/The Cube/Rotations.png')", backgroundSize: '300px 100px', backgroundRepeat: 'no-repeat', width: '50px', height: '50px' });
-                                calcTable.find('.rotation-tipbackwards').css({ backgroundPosition: '0 0' });
-                                calcTable.find('.rotation-tipforwards').css({ backgroundPosition: '-50px 0' });
-                                calcTable.find('.rotation-tipright').css({ backgroundPosition: '-100px 0' });
-                                calcTable.find('.rotation-tipleft').css({ backgroundPosition: '-150px 0' });
-                                calcTable.find('.rotation-rotateright').css({ backgroundPosition: '-200px 0' });
-                                calcTable.find('.rotation-rotateleft').css({ backgroundPosition: '-250px 0' });
-                                calcTable.find('.wire').css({ width: '50px', height: '20px', border: '1px solid black', boxSizing: 'border-box', position: 'relative', display: 'inline-block' });
-                                calcTable.find('.wire>div').css({ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontSize: '10pt' });
-                                calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
-                                calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
-                                module.push({ label: 'Calculations:', obj: calcTable });
-
-                                function key(ix) {
-                                    return `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
-                                }
-                                var keypad = $(`
-                                    <table style="background: #cdf; border-spacing: 5px; border: 2px solid black; font-family: 'KRA'; font-size: 28pt; margin: 8pt 0 24pt;">
-                                        ${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}
-                                    </table>
-                                `);
-                                module.push({ label: 'Keys:', obj: keypad });
-                            }
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /((Stage \d+) button presses:|Strike! At stage 3, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
-                        value: function(matches, module) {
-                            function many(num, fnc) {
-                                var str = '';
-                                for (var i = 0; i < num; i++)
-                                    str += fnc(i);
-                                return str;
-                            }
-                            function key(ix) {
-                                return `<td style='color: ${matches[ix+3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix+3] === 'True' ? '✓' : '✗'}</td>`;
-                            }
-                            module.push({
-                                label: matches[2] ? matches[2] + ' solution:' : matches[1],
-                                obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`)
-                            });
-                            if (matches[11].length > 0)
-                                module.push(matches[11].trim());
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /.+/
-                    }
-                ]
-            },
-			"Fast Math": {
-				ID: "fastMath",
-				Lines: [
+			{
+				displayName: "The Cube",
+				moduleID: "cube",
+				loggingTag: "The Cube",
+				matches: [
+					{
+						regex: /Cube movements: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
+						handler: function(matches, module) {
+							module.Rotations = matches.slice(1, 7);
+							return true;
+						}
+					},
+					{
+						regex: /Cube faces: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
+						handler: function(matches, module) {
+							module.Faces = matches.slice(1, 7);
+							return true;
+						}
+					},
+					{
+						regex: /Buttons: (.+)/,
+						handler: function(matches, module) {
+							var result = new RegExp(`The execute button is (\\w+?) and says (.)\\.`).exec(matches[1]);
+							module.SubmitButton = { color: result[1], label: result[2] };
+							module.Buttons = new Array(8);
+							for (var i = 0; i < 8; i++)
+							{
+								var result = new RegExp(`#${i+1} is (\\w+?) and says (.)\\.`).exec(matches[1]);
+								module.Buttons[i] = { color: result[1], label: result[2] };
+							}
+							return true;
+						}
+					},
+					{
+						regex: /Wires: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\./,
+						handler: function(matches, module) {
+							module.Wires = matches.slice(1, 5);
+							return true;
+						}
+					},
+					{
+						regex: /Screens: #1 says (.{8})\. #2 says (.{8})\./,
+						handler: function(matches, module) {
+							module.Screens = matches.slice(1, 3);
+							return true;
+						}
+					},
+					{
+						regex: /The rotation codes are (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
+						handler: function(matches, module) {
+							module.RotationCodes = matches.slice(1, 7);
+							return true;
+						}
+					},
+					{
+						regex: /The wire codes are (\d+), (\d+), (\d+), (\d+)\./,
+						handler: function(matches, module) {
+							module.WireCodes = matches.slice(1, 5);
+							return true;
+						}
+					},
+					{
+						regex: /(The (final) cipher|Cipher ([123])) is (\d+)\./,
+						handler: function(matches, module) {
+							module['Cipher' + (matches[2] || matches[3])] = matches[4];
+							if (matches[2]) {
+								function many(num, fnc) {
+									var str = '';
+									for (var i = 0; i < num; i++)
+										str += fnc(i);
+									return str;
+								}
+								var wireMap = [2, 3, 0, 1];
+								var wireOrd = ['rd', 'th', 'st', 'nd'];
+								var colors = {
+									'blue': '#29f',
+									'green': '#4c4',
+									'orange': '#e82',
+									'purple': '#c4b',
+									'red': '#c22',
+									'white': '#eee'
+								};
+								var calcTable = $(`
+									<table style='border-collapse: collapse; border: 2px solid black; margin: 8pt 0 24pt;'>
+										<tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
+										<tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x*50}px -50px'></div><div>${module.Faces[5-x]}</div></td>`)}</tr>
+										<tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x]+1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
+										<tr><th>After modulo</th>${many(6, x => `<td>${module.Cipher1.substr(x, 1)}</td>`)}</tr>
+										<tr><th>Display 1</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[0].substr(x, 1)}</div><div>${module.Cipher2.substr(x, 1)}</div></td>`)}</tr>
+										<tr><th>Display 2</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[1].substr(x, 1)}</div><div>${module.Cipher3.substr(x, 1)}</div></td>`)}</tr>
+										<tr class='final'><th>FINAL CIPHER</th>${many(8, x => `<td>${module.Cipherfinal.substr(x, 1)}</td>`)}</tr>
+									</table>
+								`);
+								calcTable.find('td').css({ textAlign: 'center', border: '1px solid #888', padding: '.2em .3em' });
+								calcTable.find('th').css({ textAlign: 'left', border: '1px solid #888', padding: '.2em .4em' });
+								calcTable.find('.icon').css({ backgroundImage: "url('img/The Cube/Rotations.png')", backgroundSize: '300px 100px', backgroundRepeat: 'no-repeat', width: '50px', height: '50px' });
+								calcTable.find('.rotation-tipbackwards').css({ backgroundPosition: '0 0' });
+								calcTable.find('.rotation-tipforwards').css({ backgroundPosition: '-50px 0' });
+								calcTable.find('.rotation-tipright').css({ backgroundPosition: '-100px 0' });
+								calcTable.find('.rotation-tipleft').css({ backgroundPosition: '-150px 0' });
+								calcTable.find('.rotation-rotateright').css({ backgroundPosition: '-200px 0' });
+								calcTable.find('.rotation-rotateleft').css({ backgroundPosition: '-250px 0' });
+								calcTable.find('.wire').css({ width: '50px', height: '20px', border: '1px solid black', boxSizing: 'border-box', position: 'relative', display: 'inline-block' });
+								calcTable.find('.wire>div').css({ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontSize: '10pt' });
+								calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
+								calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
+								module.push({ label: 'Calculations:', obj: calcTable });
+						
+								function key(ix) {
+									return `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
+								}
+								var keypad = $(`
+									<table style="background: #cdf; border-spacing: 5px; border: 2px solid black; font-family: 'KRA'; font-size: 28pt; margin: 8pt 0 24pt;">
+										${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}
+									</table>
+								`);
+								module.push({ label: 'Keys:', obj: keypad });
+							}
+							return true;
+						}
+					},
+					{
+						regex: /((Stage \d+) button presses:|Strike! At stage 3, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
+						handler: function(matches, module) {
+							function many(num, fnc) {
+								var str = '';
+								for (var i = 0; i < num; i++)
+									str += fnc(i);
+								return str;
+							}
+							function key(ix) {
+								return `<td style='color: ${matches[ix+3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix+3] === 'True' ? '✓' : '✗'}</td>`;
+							}
+							module.push({
+								label: matches[2] ? matches[2] + ' solution:' : matches[1],
+								obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`)
+							});
+							if (matches[11].length > 0)
+								module.push(matches[11].trim());
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
+				moduleID: "fastMath",
+				loggingTag: "Fast Math",
+				matches: [
 					{
 						regex: /(<Stage (\d+)> (.+)|Pressed GO! Let the madness begin!)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.length == 0 || !(module[module.length - 1] instanceof Array) || (matches[2] && module[module.length - 1][0] !== "Stage " + matches[2]))
 								module.push(["Stage " + matches[2], []]);
 							module[module.length - 1][1].push(matches[3] || matches.input);
@@ -2114,25 +2081,27 @@ $(function() {
 					}
 				]
 			},
-			"FizzBuzz": {
-				ID: "fizzBuzzModule",
-				Lines: [
+			{
+				displayName: "FizzBuzz",
+				moduleID: "fizzBuzzModule",
+				loggingTag: "FizzBuzz",
+				matches: [
 					{
 						regex: /^Button 1 \(\w+\), < 2 strikes:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push({ linebreak: true });
 						}
 					},
 					{
 						regex: /^Button \d/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches.input, []]);
 							return true;
 						}
 					},
 					{
 						regex: /^— (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module[module.length - 1][1].push(matches[1]);
 							if (matches[1].startsWith("original number is"))
 								module[module.length - 1][0] += matches[1].substr("original number is".length);
@@ -2144,41 +2113,42 @@ $(function() {
 					},
 					{
 						regex: /Solution for /,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push({ linebreak: true });
 						}
 					}
 				]
 			},
-			"FollowTheLeader": {
-				ID: "FollowTheLeaderModule",
-				Lines: [
+			{
+				moduleID: "FollowTheLeaderModule",
+				loggingTag: "FollowTheLeader",
+				matches: [
 					{
 						regex: /Starting at wire:|Strike because you cut/
 					},
 					{
 						regex: /Wire state:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var states = [];
-
+						
 							var line = readLine();
 							while ((/^Wire \d+-to-\d+/).exec(line)) {
 								states.push(line);
 								line = readLine();
 							}
 							linen--;
-
+						
 							module.push(["Wire states:", states]);
 						}
 					},
 					{
 						regex: /Expectation/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (matches.input.match(/Expectation now is that you’re done./)) {
 								module.push(matches.input);
 							} else {
 								var states = [];
-
+						
 								var line = readLine();
 								while ((/^Wire \d+-to-\d+/).exec(line)) {
 									states.push(line);
@@ -2191,12 +2161,14 @@ $(function() {
 					}
 				]
 			},
-			"Forget Everything": {
-				ID: "HexiEvilFMN",
-				Lines: [
+			{
+				displayName: "Forget Everything",
+				moduleID: "HexiEvilFMN",
+				loggingTag: "Forget Everything",
+				matches: [
 					{
 						regex: /(Stage \d{1,}) is an important stage\. (.+), (.+), (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches[1], [matches[2], matches[3], matches[4]]]);
 							return true;
 						}
@@ -2206,20 +2178,25 @@ $(function() {
 					}
 				]
 			},
-			"Forget Me Not": "MemoryV2",
-			"Friendship": {
-				ID: "FriendshipModule",
-				Lines: [
+			{
+				displayName: "Forget Me Not",
+				moduleID: "MemoryV2",
+				loggingTag: "Forget Me Not"
+			},
+			{
+				moduleID: "FriendshipModule",
+				loggingTag: "Friendship",
+				matches: [
 					{
 						regex: /^Friendship symbol/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.SymbolsText) {
 								module.SymbolsText = [];
 								module.push(["Symbols", module.SymbolsText]);
 							}
-
+						
 							module.SymbolsText.push(matches.input.replace(/^Friendship symbol /, ""));
-
+						
 							var m2 = /^Friendship symbol #\d: \(X=(\d+), Y=(\d+), Pony=(.*) \((row|col)\)\)$/.exec(matches.input);
 							if (m2 === null)
 								module.SkipSvg = true;
@@ -2245,21 +2222,21 @@ $(function() {
 											isRowTie = true;
 									}
 								}
-
+						
 								module.Symbols.push({ X: x, Y: y, Pony: m2[3], IsRow: isRow, IsColTie: isColTie, IsRowTie: isRowTie, Disregard: false });
 							}
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /^Disregard (column|row) symbol (.*), leaving/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Symbols || module.SkipSvg)
 								return false;
-
+						
 							var i;
-
+						
 							var ix = -1;
 							for (i = 0; i < module.Symbols.length; i++)
 								if (module.Symbols[i].Pony === matches[2] && module.Symbols[i].IsRow === (matches[1] === 'row')) {
@@ -2281,10 +2258,10 @@ $(function() {
 					},
 					{
 						regex: /^The potential Elements of Harmony are/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.SkipSvg)
 								return false;
-
+						
 							var ponyNames = [
 								"Amethyst Star", "Apple Cinnamon", "Apple Fritter", "Babs Seed", "Berry Punch", "Big McIntosh", "Bulk Biceps",
 								"Cadance", "Carrot Top", "Celestia", "Cheerilee", "Cheese Sandwich", "Cherry Jubilee", "Coco Pommel",
@@ -2294,21 +2271,21 @@ $(function() {
 								"Screwball", "Shining Armor", "Silver Shill", "Silver Spoon", "Silverstar", "Spoiled Rich", "Starlight Glimmer",
 								"Sunburst", "Sunset Shimmer", "Suri Polomare", "Sweetie Drops", "Thunderlane", "Time Turner", "Toe Tapper",
 								"Tree Hugger", "Trenderhoof", "Trixie", "Trouble Shoes", "Twilight Velvet", "Twist", "Vinyl Scratch"];
-
+						
 							function imgHref(num) {
 								if (num < 10)
 									num = "0" + num;
 								return "../HTML/img/Friendship/Friendship Symbol " + num + ".png";
 							}
-
+						
 							var cutieMarks = '';
 							var colDisregards = '';
 							var rowDisregards = '';
 							for (var i = 0; i < module.Symbols.length; i++) {
 								cutieMarks += "<img src='" + imgHref(ponyNames.indexOf(module.Symbols[i].Pony)) + "' style='position: absolute; left: " + (30 * module.Symbols[i].X + 23) + "px; top: " + (30 * module.Symbols[i].Y + 23) + "px; width: 84px; height: 84px;' />";
-
+						
 								var color;
-
+						
 								var x = 30 * module.Symbols[i].X + 23 + 42;
 								var y = 30 * module.Symbols[i].Y + 23 + 42;
 								if (module.Symbols[i].IsRowTie || module.Symbols[i].Disregard === 'row') {
@@ -2320,7 +2297,7 @@ $(function() {
 									colDisregards += "<div style='position: absolute; left: " + (x - 2) + "px; top: " + y + "px; width: 4px; height: " + (390 - y) + "px; background: " + color + "'></div><div style='position: absolute; left: " + x + "px; top: 395px; color: " + color + "; transform: translateX(-50%)'>" + (module.Symbols[i].IsColTie ? 'tie' : 'disregard') + "</div>";
 								}
 							}
-
+						
 							var bkgSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 490 370'>" +
 								"<path fill='#C595EC' d='M 0,0 0,240 C 70,240 130,300 130,370 L 490,370 490,130 C 420,130 360,70 360,0 z'/>" +
 								"<path fill='#080814' d='M 20,20 340,20 C 350,90 400,140 470,150 L 470,350 150,350 C 140,280 90,230 20,220 z'/>" +
@@ -2333,12 +2310,13 @@ $(function() {
 					}
 				]
 			},
-			"Game of Life Cruel": {
-				ID: "GameOfLifeCruel",
-				Lines: [
+			{
+				moduleID: "GameOfLifeCruel",
+				loggingTag: "Game of Life Cruel",
+				matches: [
 					{
 						regex: /\(0 is black, 1 is white and X is colored\):/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var grid = $("<div>").css({ display: "inline-block", "font-size": 0, border: "2px gray solid" });
 							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("")).forEach(row => {
 								var rowElem = $("<div>").appendTo(grid);
@@ -2352,23 +2330,25 @@ $(function() {
 									}).appendTo(rowElem);
 								});
 							});
-
+						
 							module.push(grid);
-
+						
 							return true;
 						}
 					},
 					{
-						regex: /.+/,
+						regex: /.+/
 					}
 				]
 			},
-			"Game of Life Simple": {
-				ID: "GameOfLifeSimple",
-				Lines: [
+			{
+				displayName: "Game Of Life",
+				moduleID: "GameOfLifeSimple",
+				loggingTag: "Game of Life Simple",
+				matches: [
 					{
 						regex: /\(0 is black, 1 is white\):/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							var grid = $("<div>").css({ display: "inline-block", "font-size": 0, border: "2px gray solid" });
 							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("").map(cell => cell == "1")).forEach(row => {
 								var rowElem = $("<div>").appendTo(grid);
@@ -2382,35 +2362,36 @@ $(function() {
 									}).appendTo(rowElem);
 								});
 							});
-
+						
 							module.push(grid);
-
+						
 							return true;
 						}
 					},
 					{
-						regex: /.+/,
+						regex: /.+/
 					}
 				]
 			},
-			"Hexamaze": {
-				ID: "HexamazeModule",
-				Lines: [
+			{
+				moduleID: "HexamazeModule",
+				loggingTag: "Hexamaze",
+				matches: [
 					{
 						regex: /Moving from|Walking out|There’s an|However, we wanted/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Moves) {
 								module.Moves = [];
 								module.push(["Moves", module.Moves]);
 							}
-
+						
 							module.Moves.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /Submaze center: \((\d+), (\d+)\), submaze rotation: (\d+)° clockwise, pawn: \(\d+, \d+\) \(maze\)\/\((\d+), (\d+)\) \(screen\), pawn color: (\w+)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Link = { label: "" };
 							module.JSON = {
 								stencil: [parseInt(matches[1]), parseInt(matches[2])],
@@ -2419,13 +2400,13 @@ $(function() {
 								color: matches[6],
 								markings: []
 							};
-
+						
 							module.push(module.Link);
 						}
 					},
 					{
 						regex: /Marking at \((\d), (\d)\) \(screen\)\/\(\d+, \d+\) \(maze\): \w+, after rotation: (\w+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.JSON.markings.push({
 								pos: [parseInt(matches[1]), parseInt(matches[2])],
 								type: matches[3]
@@ -2438,42 +2419,45 @@ $(function() {
 					}
 				]
 			},
-			"NeedyHTTP": {
-				ID: "http",
-				Lines: [
+			{
+				displayName: "HTTP Response",
+				moduleID: "http",
+				loggingTag: "NeedyHTTP",
+				matches: [
 					{
 						regex: /.+/
 					}
 				]
 			},
-			"Hunting": {
-				ID: "hunting",
-				Lines: [
+			{
+				moduleID: "hunting",
+				loggingTag: "Hunting",
+				matches: [
 					{
 						regex: /^Stage (\d+), Clues: ([A-Za-z]) & ([A-Za-z]), Buttons:((?: [A-Za-z])+), Decoys:((?: [A-Za-z])+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							function addImg(span, str) {
 								span.append($('<img>')
 									.attr({ src: '../HTML/img/Hunting/' + str + (str.charCodeAt(0) >= 96 ? '_' : '') + '.png', width: 50 })
 									.css({ verticalAlign: 'middle', margin: '0 5px' }));
 							}
-
+						
 							var cluesLi = $('<li>').text('Clues: ').addClass('no-bullet');
 							addImg(cluesLi, matches[2]);
 							addImg(cluesLi, matches[3]);
-
+						
 							var buttonsLi = $('<li>').text('Buttons: ').addClass('no-bullet');
 							var arr = matches[4].trim().split(' ');
 							for (var j = 0; j < arr.length; j++) {
 								addImg(buttonsLi, arr[j]);
 							}
-
+						
 							var decoysLi = $('<li>').text('Decoys: ').addClass('no-bullet');
 							var arr = matches[5].trim().split(' ');
 							for (j = 0; j < arr.length; j++) {
 								addImg(decoysLi, arr[j]);
 							}
-
+						
 							module.push({ label: 'Stage ' + matches[1], obj: $('<ul>').append(cluesLi).append(buttonsLi).append(decoysLi), expandable: true });
 							return true;
 						}
@@ -2483,12 +2467,13 @@ $(function() {
 					}
 				]
 			},
-			"Ice Cream": {
-				ID: "iceCreamModule",
-				Lines: [
+			{
+				moduleID: "iceCreamModule",
+				loggingTag: "Ice Cream",
+				matches: [
 					{
 						regex: /Stage \d/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches.input, readMultiple(3).split("\n")]);
 							return true;
 						}
@@ -2498,13 +2483,18 @@ $(function() {
 					}
 				]
 			},
-			"InvisibleWallsComponent": "Maze",
-			"iPhone": {
-				ID: "iPhone",
-				Lines: [
+			{
+				moduleID: "Maze",
+				loggingTag: "InvisibleWallsComponent"
+			},
+			{
+				displayName: "The iPhone",
+				moduleID: "iPhone",
+				loggingTag: "iPhone",
+				matches: [
 					{
 						regex: /^(Angry Birds: The chosen Angry Birds images are|Angry Birds: The correct image is|Photos: The chosen photos are|Photos: The correct image is) (.*?)(| \((Top|Bottom) (Left|Right)\))\.$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(`${matches[1]}${matches[3]}:`);
 							var div = $('<div>');
 							var photos = matches[2].split(', ');
@@ -2519,34 +2509,40 @@ $(function() {
 					}
 				]
 			},
-			"Jewel Wheels": {
-				ID: "jewelVault",
-				Lines: [
+			{
+				displayName: "The Jewel Vault",
+				moduleID: "jewelVault",
+				loggingTag: "Jewel Wheels",
+				matches: [
 					{
 						regex: /.+/
 					}
 				]
 			},
-			"KeypadComponent": "Keypad",
-			"Laundry": {
-				ID: "Laundry",
-				Lines: [
+			{
+				moduleID: "Keypad",
+				loggingTag: "KeypadComponent"
+			},
+			{
+				moduleID: "Laundry",
+				loggingTag: "Laundry",
+				matches: [
 					{
 						regex: /Solution values for (\d) solved modules/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var lines = [];
 							for (var i = 0; i < 4; i++) {
 								var line = readLine();
 								if (line == "") break;
-
+						
 								lines.push(line);
 							}
-
+						
 							var verb = "Solution";
 							if (lines.length == 4) verb = lines.includes("Passed") ? "Solved" : "Striked";
-
+						
 							module.push([`${verb} for ${matches[1]} module${parseInt(matches[1]) == 1 ? "" : "s"}`, lines]);
-
+						
 							if (verb == "Solution" && matches[1] == "5") {
 								module.push({linebreak: true});
 							}
@@ -2554,13 +2550,19 @@ $(function() {
 					}
 				]
 			},
-			"LED Encryption": "LEDEnc",
-			"LED Grid": {
-				ID: 'ledGrid',
-				Lines: [
+			{
+				displayName: "LED Encryption",
+				moduleID: "LEDEnc",
+				loggingTag: "LED Encryption"
+			},
+			{
+				displayName: "LED Grid",
+				moduleID: "ledGrid",
+				loggingTag: "LED Grid",
+				matches: [
 					{
 						regex: /The chosen LED colours are (.*)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var colorCodes = {
 								black:  [ "#000000", 'white' ],
 								blue:   [ "#0000FF", 'white' ],
@@ -2587,12 +2589,14 @@ $(function() {
 					}
 				]
 			},
-			"LEGO": {
-				ID: "LEGOModule",
-				Lines: [
+			{
+				displayName: "LEGO",
+				moduleID: "LEGOModule",
+				loggingTag: "LEGO",
+				matches: [
 					{
 						regex: /Piece #\d: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Pieces) module.push(["Pieces", module.Pieces = []]);
 							module.Pieces.push(matches[1]);
 							return true;
@@ -2600,7 +2604,7 @@ $(function() {
 					},
 					{
 						regex: /Manual Page|Solution:|Submitting:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
 							const board = readMultiple(8).split("\n");
 							const colors = {
@@ -2615,16 +2619,16 @@ $(function() {
 								A: "gray",
 								K: "black"
 							};
-
-
+						
+						
 							for (let y = 1; y < 8; y++) {
 								$SVG(`<line x1=0 y1=${y} x2=8 y2=${y} stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
-
+						
 							for (let x = 1; x < 8; x++) {
 								$SVG(`<line x1=${x} y1=0 x2=${x} y2=8 stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
-
+						
 							for (let y = 0; y < 8; y++) {
 								for (let x = 0; x < 8; x++) {
 									const char = board[y][x];
@@ -2632,22 +2636,23 @@ $(function() {
 									$SVG(`<rect x=${x} y=${y} width=1 height=1 fill=${colors[char]}>`).appendTo(svg);
 								}
 							}
-
+						
 							module.push({ label: matches.input, obj: svg, expandable: true });
 							return true;
 						}
 					},
 					{
-						regex: /.+/,
+						regex: /.+/
 					}
 				]
 			},
-			"Light Cycle": {
-				ID: "LightCycleModule",
-				Lines: [
+			{
+				moduleID: "LightCycleModule",
+				loggingTag: "Light Cycle",
+				matches: [
 					{
 						regex: /Start sequence: ([A-Z]{6})/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Presses = [];
 							module.push("Starting Seq: " + matches[1]);
 							module.push(["Buttons:", module.Presses]);
@@ -2655,258 +2660,264 @@ $(function() {
 					},
 					{
 						regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push($("<span>").css({ "font-family": "monospace", "font-size": "16px" }).text("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]));
 						}
 					},
 					{
 						regex: /Pressed button/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Presses.push(matches.input);
 						}
 					}
 				]
 			},
-			"Mafia": {
-				ID: "MafiaModule",
-				Lines: [
+			{
+				moduleID: "MafiaModule",
+				loggingTag: "Mafia",
+				matches: [
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /Clicked \w+: wrong./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.addGroup();
 						}
 					}
 				]
 			},
-            "Marble Tumble": {
-                ID: "MarbleTumbleModule",
-                Lines: [
-                    {
-                        regex: /^Colors: (.*)$/,
-                        value: function(matches, module) {
-                            module.data = { colors: matches[1].split(', ') };
-                            module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function() {
-                                var data = $(this).data('data'), div = $(this).parent(), i, sel;
+			{
+				moduleID: "MarbleTumbleModule",
+				loggingTag: "Marble Tumble",
+				matches: [
+					{
+						regex: /^Colors: (.*)$/,
+						value: function(matches, module) {
+							module.data = { colors: matches[1].split(', ') };
+							module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function() {
+								var data = $(this).data('data'), div = $(this).parent(), i, sel;
 
-                                var imgDiv = $(`<div style='position: relative; width: 420px; height: 420px'>`).appendTo(div);
-                                var imgs = [];
-                                for (i = 0; i < 5; i++)
-                                    imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' style='position: absolute; left: 0; top: 0; right: 0; bottom: 0' />`).appendTo(imgDiv));
-                                function setRotations(rot) {
-                                    for (var i = 0; i < 5; i++)
-                                        imgs[i].css('transform', `rotate(${rot[i]*36-90}deg)`);
-                                }
+								var imgDiv = $(`<div style='position: relative; width: 420px; height: 420px'>`).appendTo(div);
+								var imgs = [];
+								for (i = 0; i < 5; i++)
+									imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' style='position: absolute; left: 0; top: 0; right: 0; bottom: 0' />`).appendTo(imgDiv));
+								function setRotations(rot) {
+									for (var i = 0; i < 5; i++)
+										imgs[i].css('transform', `rotate(${rot[i]*36-90}deg)`);
+								}
 
-                                var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`)
-                                    .appendTo(imgDiv);
-                                var marbleInner = $(`<div style='position: absolute; width: 20px; height: 20px; border: 2px solid black; border-radius: 100%; background: #def; left: 210px; transform: translate(-50%, -50%)'>`)
-                                    .appendTo(marbleOuter);
-                                function setMarble(rot, marble) {
-                                    marbleInner.css('top', marble === 0 ? '217px' : `${210-((marble+.5)*420/12)-10}px`);
-                                    marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble]*36}deg)`);
-                                }
+								var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`)
+									.appendTo(imgDiv);
+								var marbleInner = $(`<div style='position: absolute; width: 20px; height: 20px; border: 2px solid black; border-radius: 100%; background: #def; left: 210px; transform: translate(-50%, -50%)'>`)
+									.appendTo(marbleOuter);
+								function setMarble(rot, marble) {
+									marbleInner.css('top', marble === 0 ? '217px' : `${210-((marble+.5)*420/12)-10}px`);
+									marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble]*36}deg)`);
+								}
 
-                                var controlsDiv = $(`<div style='margin-top: 30px'>`).appendTo(div);
-                                var bgNoHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23fff" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
-                                var bgOnHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23bef" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
+								var controlsDiv = $(`<div style='margin-top: 30px'>`).appendTo(div);
+								var bgNoHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23fff" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
+								var bgOnHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23bef" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
 
-                                var nextDivs = [];
-                                function setBackgrounds() {
-                                    for (var i = 0; i < nextDivs.length; i++)
-                                        nextDivs[i].css('background', sel === i ? '#feb' : '#fff');
-                                }
+								var nextDivs = [];
+								function setBackgrounds() {
+									for (var i = 0; i < nextDivs.length; i++)
+										nextDivs[i].css('background', sel === i ? '#feb' : '#fff');
+								}
 
-                                var curMarble = 5;
-                                for (i = 0; i < data.states.length; i++)
-                                {
-                                    var prevMarble = curMarble;
-                                    if ('gap' in data.states[i])
-                                        curMarble = +data.states[i].gap;
-                                    else if ('trap' in data.states[i])
-                                        curMarble = 5;
+								var curMarble = 5;
+								for (i = 0; i < data.states.length; i++)
+								{
+									var prevMarble = curMarble;
+									if ('gap' in data.states[i])
+										curMarble = +data.states[i].gap;
+									else if ('trap' in data.states[i])
+										curMarble = 5;
 
-                                    if ('clicked' in data.states[i])
-                                    {
-                                        $(`
-                                            <div style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; margin: .5em 0'>
-                                                <div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${data.states[i].clicked}</div>
-                                            </div>
-                                        `)
-                                            .appendTo(controlsDiv)
-                                            .css('background', bgNoHover)
-                                            .mouseover(function() { $(this).css('background', bgOnHover); })
-                                            .mouseout(function() { $(this).css('background', bgNoHover); })
-                                            .click(function(ix, rotBefore, rotAfter, marbleBefore, marbleAfter) { return function() {
-                                                for (var i = 0; i < 5; i++)
-                                                    imgs[i].css('transition', '');
-                                                setRotations(rotBefore);
-                                                setMarble(rotBefore, marbleBefore);
-                                                window.setTimeout(function() {
-                                                    for (var i = 0; i < 5; i++)
-                                                        imgs[i].css('transition', 'transform linear 1s');
-                                                    marbleOuter.css('transition', 'transform linear 1s');
-                                                    window.setTimeout(function() {
-                                                        setRotations(rotAfter);
-                                                        setMarble(rotAfter, marbleBefore);
-                                                        window.setTimeout(function() {
-                                                            for (var i = 0; i < 5; i++)
-                                                                imgs[i].css('transition', '');
-                                                            marbleOuter.css('transition', '');
-                                                            setMarble(rotAfter, marbleAfter);
-                                                        }, 1100);
-                                                    }, 100);
-                                                }, 100);
-                                                sel = ix;
-                                                setBackgrounds();
-                                            }; }(i, data.states[i-1].rotations, data.states[i].rotations, prevMarble, curMarble));
-                                    }
+									if ('clicked' in data.states[i])
+									{
+										$(`
+											<div style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; margin: .5em 0'>
+												<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${data.states[i].clicked}</div>
+											</div>
+										`)
+											.appendTo(controlsDiv)
+											.css('background', bgNoHover)
+											.mouseover(function() { $(this).css('background', bgOnHover); })
+											.mouseout(function() { $(this).css('background', bgNoHover); })
+											.click(function(ix, rotBefore, rotAfter, marbleBefore, marbleAfter) { return function() {
+												for (var i = 0; i < 5; i++)
+													imgs[i].css('transition', '');
+												setRotations(rotBefore);
+												setMarble(rotBefore, marbleBefore);
+												window.setTimeout(function() {
+													for (var i = 0; i < 5; i++)
+														imgs[i].css('transition', 'transform linear 1s');
+													marbleOuter.css('transition', 'transform linear 1s');
+													window.setTimeout(function() {
+														setRotations(rotAfter);
+														setMarble(rotAfter, marbleBefore);
+														window.setTimeout(function() {
+															for (var i = 0; i < 5; i++)
+																imgs[i].css('transition', '');
+															marbleOuter.css('transition', '');
+															setMarble(rotAfter, marbleAfter);
+														}, 1100);
+													}, 100);
+												}, 100);
+												sel = ix;
+												setBackgrounds();
+											}; }(i, data.states[i-1].rotations, data.states[i].rotations, prevMarble, curMarble));
+									}
 
-                                    data.states[i].marble = curMarble;
+									data.states[i].marble = curMarble;
 
-                                    var nextDiv = $(`<div class='nx' style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; border: 1px solid black; margin: .5em .25em'></div>`)
-                                        .appendTo(controlsDiv)
-                                        .mouseover(function(ix) { return function() { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
-                                        .mouseout(function(ix) { return function() { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
-                                        .click(function(ix, rot, marble) { return function() {
-                                            setRotations(rot);
-                                            setMarble(rot, marble);
-                                            sel = ix;
-                                            setBackgrounds();
-                                            $(this).css('background', '#fef');
-                                            return false;
-                                        }; }(i, data.states[i].rotations, curMarble));
-                                    nextDivs.push(nextDiv);
-                                    if (data.states[i].solved || 'trap' in data.states[i])
-                                        nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #${data.states[i].solved ? '080' : '800'}; font-size: 24pt; font-weight: bold'>${data.states[i].solved ? '✓' : '✗'}</div>`));
-                                    else if ('gap' in data.states[i])
-                                        nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #48f; font-size: 24pt'>⮋</div>`));
-                                    if (data.states[i].solved)
-                                        break;
-                                }
+									var nextDiv = $(`<div class='nx' style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; border: 1px solid black; margin: .5em .25em'></div>`)
+										.appendTo(controlsDiv)
+										.mouseover(function(ix) { return function() { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
+										.mouseout(function(ix) { return function() { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
+										.click(function(ix, rot, marble) { return function() {
+											setRotations(rot);
+											setMarble(rot, marble);
+											sel = ix;
+											setBackgrounds();
+											$(this).css('background', '#fef');
+											return false;
+										}; }(i, data.states[i].rotations, curMarble));
+									nextDivs.push(nextDiv);
+									if (data.states[i].solved || 'trap' in data.states[i])
+										nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #${data.states[i].solved ? '080' : '800'}; font-size: 24pt; font-weight: bold'>${data.states[i].solved ? '✓' : '✗'}</div>`));
+									else if ('gap' in data.states[i])
+										nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #48f; font-size: 24pt'>⮋</div>`));
+									if (data.states[i].solved)
+										break;
+								}
 
-                                $(this).remove();
-                                nextDivs[0].click();
-                                $(`<p>Click on the boxes and arrows to see the states and transitions.</p>`).appendTo(div);
-                                $(`<ul>
-                                    <li>A numbered arrow indicates the last digit on the timer when the module was clicked.</li>
-                                    <li><span style='color: #48f; font-size: 24pt'>⮋</span> means the marble rolled into a lower level.</li>
-                                    <li><span style='color: #800; font-size: 24pt; font-weight: bold'>✗</span> in a box means the marble fell into a trap and there was a strike.</li>
-                                    <li><span style='color: #000; font-size: 14pt'>✗</span> in an arrow means that the outer cylinder’s rotation was adjusted after a strike.</li>
-                                    <li><span style='color: #080; font-size: 24pt; font-weight: bold'>✓</span> in a box means the module was solved at this point.</li>
-                                </ul>`).appendTo(div);
-                                return false;
-                            }));
-                            module.push({ obj: module.obj, nobullet: true });
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^Traps: (.*)$/,
-                        value: function(matches, module) {
-                            module.data.traps = matches[1].split(', ');
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^Rotations: (.*)$/,
-                        value: function(matches, module) {
-                            if (!('states' in module.data))
-                                module.data.states = [{ rotations: matches[1].split(', ') }];
-                            else
-                                module.data.states[module.data.states.length - 1].rotations = matches[1].split(', ');
-                            module.obj.find('button').data('data', module.data);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^Rotations after strike: (.*)$/,
-                        value: function(matches, module) {
-                            module.data.states.push({ rotations: matches[1].split(', '), clicked: '✗' });
-                            module.obj.find('button').data('data', module.data);
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^Clicked when last seconds digit was: (\d)$/,
-                        value: function(matches, module) {
-                            module.data.states.push({ clicked: matches[1] });
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /^Marble falls into (gap|trap) at level (\d)\.( Module solved\.| Strike!)?$/,
-                        value: function(matches, module) {
-                            module.data.states[module.data.states.length - 1][matches[1]] = matches[2];
-                            if (matches[3] && matches[3] !== ' Strike!')
-                                module.data.states[module.data.states.length - 1].solved = true;
-                            module.obj.find('button').data('data', module.data);
-                            return true;
-                        }
-                    }
-                ]
-            },
-			"Mastermind Simple": {
-				ID: "Mastermind Simple",
-				Lines: [
+								$(this).remove();
+								nextDivs[0].click();
+								$(`<p>Click on the boxes and arrows to see the states and transitions.</p>`).appendTo(div);
+								$(`<ul>
+									<li>A numbered arrow indicates the last digit on the timer when the module was clicked.</li>
+									<li><span style='color: #48f; font-size: 24pt'>⮋</span> means the marble rolled into a lower level.</li>
+									<li><span style='color: #800; font-size: 24pt; font-weight: bold'>✗</span> in a box means the marble fell into a trap and there was a strike.</li>
+									<li><span style='color: #000; font-size: 14pt'>✗</span> in an arrow means that the outer cylinder’s rotation was adjusted after a strike.</li>
+									<li><span style='color: #080; font-size: 24pt; font-weight: bold'>✓</span> in a box means the module was solved at this point.</li>
+								</ul>`).appendTo(div);
+								return false;
+							}));
+							module.push({ obj: module.obj, nobullet: true });
+							return true;
+						}
+					},
+					{
+						regex: /^Traps: (.*)$/,
+						value: function(matches, module) {
+							module.data.traps = matches[1].split(', ');
+							return true;
+						}
+					},
+					{
+						regex: /^Rotations: (.*)$/,
+						value: function(matches, module) {
+							if (!('states' in module.data))
+								module.data.states = [{ rotations: matches[1].split(', ') }];
+							else
+								module.data.states[module.data.states.length - 1].rotations = matches[1].split(', ');
+							module.obj.find('button').data('data', module.data);
+							return true;
+						}
+					},
+					{
+						regex: /^Rotations after strike: (.*)$/,
+						value: function(matches, module) {
+							module.data.states.push({ rotations: matches[1].split(', '), clicked: '✗' });
+							module.obj.find('button').data('data', module.data);
+							return true;
+						}
+					},
+					{
+						regex: /^Clicked when last seconds digit was: (\d)$/,
+						value: function(matches, module) {
+							module.data.states.push({ clicked: matches[1] });
+							return true;
+						}
+					},
+					{
+						regex: /^Marble falls into (gap|trap) at level (\d)\.( Module solved\.| Strike!)?$/,
+						value: function(matches, module) {
+							module.data.states[module.data.states.length - 1][matches[1]] = matches[2];
+							if (matches[3] && matches[3] !== ' Strike!')
+								module.data.states[module.data.states.length - 1].solved = true;
+							module.obj.find('button').data('data', module.data);
+							return true;
+						}
+					}
+				]
+			},
+			{
+				displayName: "Mastermind",
+				moduleID: "Mastermind Simple",
+				loggingTag: "Mastermind Simple",
+				matches: [
 					{
 						regex: /Query:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches.input, module.GroupLines = []]);
 							return true;
 						}
 					},
 					{
 						regex: /Submit:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							(module.GroupLines || module).push(matches.input);
 						}
 					}
 				]
 			},
-			"Mastermind Cruel": {
-				ID: "Mastermind Cruel",
-				Lines: [
+			{
+				moduleID: "Mastermind Cruel",
+				loggingTag: "Mastermind Cruel",
+				matches: [
 					{
 						regex: /Query:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches.input, module.GroupLines = []]);
 							return true;
 						}
 					},
 					{
 						regex: /Submit:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							(module.GroupLines || module).push(matches.input);
 						}
 					}
 				]
 			},
-			"Minesweeper": {
-				ID: "MinesweeperModule",
-				Lines: [
+			{
+				moduleID: "MinesweeperModule",
+				loggingTag: "Minesweeper",
+				matches: [
 					{
 						regex: /Board:|Legend:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 5)) });
 							return true;
 						}
@@ -2916,30 +2927,30 @@ $(function() {
 					}
 				]
 			},
-			// Actually Modern Cipher
-			"Modern Cipher": {
-				ID: "modernCipher",
-				Lines: [
+			{
+				moduleID: "modernCipher",
+				loggingTag: "Modern Cipher",
+				matches: [
 					{
 						regex: /<(Stage \d)> START/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Stages) module.Stages = [];
 							module.push([matches[1], module.Stage = []]);
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /<Stage ?\d> /,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Stage.push(matches.input);
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /^(Pressed OK|totalWords = 0)$/,
-						value: function(matches, module) {
+						handler: function() {
 							return true;
 						}
 					},
@@ -2948,19 +2959,21 @@ $(function() {
 					}
 				]
 			},
-			"Modules Against Humanity": {
-				ID: "ModuleAgainstHumanity",
-				Lines: [
+			{
+				displayName: "Modules Against Humanity",
+				moduleID: "ModuleAgainstHumanity",
+				loggingTag: "Modules Against Humanity",
+				matches: [
 					{
 						regex: /Modules:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var lines = readMultiple(11);
 							while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
 								lines = lines.replace(/ \|/g, '|');
 							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
 								lines = lines.replace(/\| /g, '|');
 							module.push({ label: "Cards:", obj: pre(lines) });
-
+						
 							var line;
 							do {
 								line = readLine();
@@ -2974,47 +2987,51 @@ $(function() {
 					}
 				]
 			},
-			"MonsplodeCards": {
-				ID: "monsplodeCards",
-				Lines: [
+			{
+				displayName: "Monsplode Trading Cards",
+				moduleID: "monsplodeCards",
+				loggingTag: "MonsplodeCards",
+				matches: [
 					{
 						regex: /Generating the/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(module.Bullet = [matches.input, module.CardGen = []]);
 						}
 					},
 					{
 						regex: /Wrong! Deck card|Keeping your cards|You did the right trade!|Wrong! All of your cards|Value of (?:deck|offered) card/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var monsplode = matches.input.match(/^Monsplode: ([^]+) \|/);
 							if (monsplode) {
 								module.Bullet[0] += ` (${monsplode[1]})`;
 							}
-
+						
 							module.CardGen.push(matches.input);
 						}
 					}
 				]
 			},
-			"MonsplodeFight": {
-				ID: "monsplodeFight",
-				Lines: [
+			{
+				displayName: "Monsplode, Fight!",
+				moduleID: "monsplodeFight",
+				loggingTag: "MonsplodeFight",
+				matches: [
 					{
 						regex: /Opponent/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.MoveInfo = null;
 						}
 					},
 					{
 						regex: /Move name/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches.input.replace(/\(\d\)/, ""), module.MoveInfo]);
 							module.MoveInfo = [];
 							return true;
@@ -3022,7 +3039,7 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.MoveInfo) {
 								module.MoveInfo.push(matches.input);
 							} else {
@@ -3033,31 +3050,40 @@ $(function() {
 					}
 				]
 			},
-			"MorseCodeComponent": [
-				{
-					regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
-					value: "Morse"
-				}
-			],
-			"Morsematics": "MorseV2",
-			"Morse-A-Maze": {
-				ID: "MorseAMaze",
-				Lines: [
+			{
+				loggingTag: "MorseCodeComponent",
+				matches: [
+					{
+						regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
+						handler: "Morse"
+					}
+				]
+			},
+			{
+				displayName: "Morsematics",
+				moduleID: "MorseV2",
+				loggingTag: "Morsematics"
+			},
+			{
+				displayName: "Morse-A-Maze",
+				moduleID: "MorseAMaze",
+				loggingTag: "Morse-A-Maze",
+				matches: [
 					{
 						regex: /Solved - Turning off the Status light Kappa/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push("Module Solved");
 							return true;
 						}
 					},
 					{
 						regex: /Moving from|Tried to move from/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Group.Moves) {
 								module.GroupLines.push(["Moves", module.Group.Moves = []]);
 							}
 							module.Group.Moves.push(matches.input);
-
+						
 							return true;
 						}
 					},
@@ -3066,35 +3092,35 @@ $(function() {
 					},
 					{
 						regex: /(Updating the maze for rule \w+|Playing Morse code word: .+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Group) {
 								matches[1] = "Initial solution";
 							}
-
+						
 							module.push(module.Group = [matches[1], module.GroupLines = []]);
 							return true;
 						}
 					},
 					{
 						regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+))/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Group[0] = matches[1].replace(/Unsolved|Solved/, function(str) { return str.toLowerCase(); });
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							(module.GroupLines || module).push(matches.input);
 						}
 					},
 					{
 						regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d{1,2})/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.GroupLines) {
 								module.push(module.Group = [matches[1], module.GroupLines = []]);
 							}
-
+						
 							var container = $("<div>").css("position", "relative");
 							$("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
 							var marker = $("<div>").css({
@@ -3103,7 +3129,7 @@ $(function() {
 								position: "absolute",
 								"border-radius": "50%"
 							});
-
+						
 							marker
 								.clone()
 								.css({
@@ -3111,7 +3137,7 @@ $(function() {
 									left: 12.5 + 35 * (matches[1].charCodeAt() - 65) + "px",
 									background: "green"
 								}).appendTo(container);
-
+						
 							marker
 								.clone()
 								.css({
@@ -3119,36 +3145,41 @@ $(function() {
 									left: 12.5 + 35 * (matches[3].charCodeAt() - 65) + "px",
 									background: "red"
 								}).appendTo(container);
-
+						
 							(module.GroupLines || module).push({ label: container });
 						}
 					}
 				]
 			},
-			"Mortal Kombat": {
-				ID: "mortalKombat",
-				Lines: [
+			{
+				moduleID: "mortalKombat",
+				loggingTag: "Mortal Kombat",
+				matches: [
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /^Strike!/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.addGroup(true);
 						}
 					}
 				]
 			},
-			"Mouse in the Maze": "MouseInTheMaze",
-			"Murder": {
-				ID: "murder",
-				Lines: [
+			{
+				moduleID: "MouseInTheMaze",
+				loggingTag: "Mouse in the Maze"
+			},
+			{
+				moduleID: "murder",
+				loggingTag: "Murder",
+				matches: [
 					{
 						regex: /Number of batteries/,
-						value: function() {
+						handler: function() {
 							var id = GetBomb().GetMod("murder").IDs.length + 1;
 							var mod = GetBomb().GetModuleID("murder", id);
 							mod.BombInfo = [];
@@ -3158,26 +3189,26 @@ $(function() {
 					},
 					{
 						regex: /Number of|Has/,
-						value: function(matches) {
+						handler: function(matches) {
 							GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /row/,
-						value: function(matches) {
+						handler: function(matches) {
 							GetBomb().GetModuleID("murder").Rows.push(matches.input);
 						}
 					},
 					{
 						regex: /Body found in/,
-						value: function(matches) {
+						handler: function(matches) {
 							GetBomb().GetModuleID("murder").Body = matches.input;
 						}
 					},
 					{
 						regex: /Actual solution:/,
-						value: function(matches) {
+						handler: function(matches) {
 							var mod = GetBomb().GetModuleID("murder");
 							mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
 							mod.push(["Suspects", mod.Suspects]);
@@ -3192,7 +3223,7 @@ $(function() {
 					},
 					{
 						regex: /Eliminating (.+) to re/,
-						value: function(matches) {
+						handler: function(matches) {
 							var mod = GetBomb().GetModuleID("murder");
 							var index = mod.Suspects.indexOf(matches[1]);
 							if (index > -1) {
@@ -3204,12 +3235,13 @@ $(function() {
 					}
 				]
 			},
-			"Mystic Square": {
-				ID: "MysticSquareModule",
-				Lines: [
+			{
+				moduleID: "MysticSquareModule",
+				loggingTag: "Mystic Square",
+				matches: [
 					{
 						regex: /Field:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
 						}
 					},
@@ -3218,37 +3250,39 @@ $(function() {
 					}
 				]
 			},
-			"Neutralization": {
-				ID: "neutralization",
-				Lines: [
+			{
+				moduleID: "neutralization",
+				loggingTag: "Neutralization",
+				matches: [
 					{
 						regex: /Begin detailed calculation report:/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push(["Detailed Calculation Report", module.Report = []]);
 							return true;
 						}
 					},
 					{
 						regex: /End detailed calculation report\./,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.Report = undefined;
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							(module.Report || module).push(matches.input);
 						}
 					}
 				]
 			},
-			"Nonogram": {
-				ID: "NonogramModule",
-				Lines: [
+			{
+				moduleID: "NonogramModule",
+				loggingTag: "Nonogram",
+				matches: [
 					{
 						regex: /^(Submitted (?:in)?correct answer:|Generated solution (?:is|was):)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({
 								label: matches[1],
 								obj: pre(readMultiple(11))
@@ -3261,12 +3295,13 @@ $(function() {
 					}
 				]
 			},
-			"Number Pad": {
-				ID: "NumberPad",
-				Lines: [
+			{
+				moduleID: "NumberPad",
+				loggingTag: "Number Pad",
+				matches: [
 					{
 						regex: /Button colors are: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var colors = matches[1].split(', ');
 							if (colors.length === 10)
 							{
@@ -3279,7 +3314,7 @@ $(function() {
 									blue: "rgb(76, 76, 255)",
 									red: "rgb(255, 76, 76)"
 								};
-
+						
 								var svg = $('<svg viewBox="-0.1 -0.1 3 4" height="30%" style="display: block;"><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" y="3" fill="rgb(0, 255, 0)"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="0.4" y="3.4">ENT</text><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" x="2" y="3" fill="red"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="2.4" y="3.4">CLR</text></svg>');
 								for (var i = 0; i < 10; i++)
 								{
@@ -3290,9 +3325,9 @@ $(function() {
 									$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colorMapping[color]).appendTo(svg);
 									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(buttonToLabel[i]).appendTo(svg);
 								}
-
+						
 								module.push({ label: "Button Colors:", obj: svg });
-
+						
 								return true;
 							}
 						}
@@ -3302,12 +3337,13 @@ $(function() {
 					}
 				]
 			},
-			"Only Connect": {
-				ID: "OnlyConnectModule",
-				Lines: [
+			{
+				moduleID: "OnlyConnectModule",
+				loggingTag: "Only Connect",
+				matches: [
 					{
 						regex: /Hieroglyph +Position +Serial# +Ports +num/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({
 								label: 'Egyptian Hieroglyphs:',
 								obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
@@ -3320,13 +3356,17 @@ $(function() {
 					}
 				]
 			},
-			"PasswordRuleset": "Password",
-			"Painting": {
-				ID: "Painting",
-				Lines: [
+			{
+				moduleID: "Password",
+				loggingTag: "PasswordRuleset"
+			},
+			{
+				moduleID: "Painting",
+				loggingTag: "Painting",
+				matches: [
 					{
 						regex: /Generating painting/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push(["Initial State", module.Cells = []],
 								["Determining color-blind set", module.Rule = [], true],
 								["Answer", module.Swaps = []],
@@ -3336,35 +3376,35 @@ $(function() {
 					},
 					{
 						regex: /Cell #(\d) => (\w+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Cells.push(`Cell ${matches[1]} is ${matches[2]}`);
 							return true;
 						}
 					},
 					{
 						regex: /Cell #\d must (swap|remain)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Swaps.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /rule \w/i,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Rule.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /paint(ing)? cell #\d with/i,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Input.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /Determining active color-blind set/,
-						value: function() {
+						handler: function() {
 							return true;
 						}
 					},
@@ -3373,12 +3413,13 @@ $(function() {
 					}
 				]
 			},
-			"Perplexing Wires": {
-				ID: "PerplexingWiresModule",
-				Lines: [
+			{
+				moduleID: "PerplexingWiresModule",
+				loggingTag: "Perplexing Wires",
+				matches: [
 					{
 						regex: /^Star #(\d) is (empty|filled)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('PerplexingWires' in module))
 								module.PerplexingWires = {
 									Stars: [false, false, false, false],
@@ -3392,7 +3433,7 @@ $(function() {
 					},
 					{
 						regex: /^Arrow #(\d) is (\w+) and pointing (\w+)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							/* eslint-disable indent */
 							module.PerplexingWires.Arrows[parseInt(matches[1]) - 1] = {
 								Color:
@@ -3413,14 +3454,14 @@ $(function() {
 					},
 					{
 						regex: /^LED #(\d) is (on|off)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.PerplexingWires.LEDs[parseInt(matches[1]) - 1] = (matches[2] === 'on');
 							return true;
 						}
 					},
 					{
 						regex: /^Wire (\d) to (\d) is (\w+): (cut|don’t cut|cut first|cut last) \(Venn: ([+\w]+) = (\w)\)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.PerplexingWires.Wires[parseInt(matches[2]) - 1] = {
 								From: parseInt(matches[1]) - 1,
 								/* eslint-disable indent */
@@ -3442,7 +3483,7 @@ $(function() {
 											matches[4] === 'cut last' ? 'L' : null
 								/* eslint-enable indent */
 							};
-
+						
 							if (matches[2] === '6') {
 								var svg = '';
 								var starsCoords = [[123.3 - 5, 36.2], [161 - 5, 50], [198.5 - 5, 63.6], [236 - 5, 77.2]];
@@ -3450,7 +3491,7 @@ $(function() {
 								var arrowsCoords = [];
 								for (var i = 0; i < 6; i++)
 									arrowsCoords.push([40 + 40 * i, 250]);
-
+						
 								// Wires
 								for (i = 0; i < 6; i++) {
 									svg += (
@@ -3472,7 +3513,7 @@ $(function() {
 										.replace(/\{textcolor\}/g, module.PerplexingWires.Wires[i].Cut === '✗' ? '#a00' : '#080')
 										.replace(/\{cut\}/g, module.PerplexingWires.Wires[i].Cut);
 								}
-
+						
 								// Lettering at the bottom
 								var vennColors = ['#eb1414', '#ffb100', '#ee0', '#00be00', '#09f'];
 								var vennColorNames = ['Red', 'Orange', 'Yellow', 'Green', 'Blue'];
@@ -3485,18 +3526,18 @@ $(function() {
 											.replace(/\{c\}/g, vennColors[c]);
 									}
 								}
-
+						
 								// Frames
 								svg +=
 									'<path d="M10 10h50v110H10z"/>' +                                       // LEDs frame
 									'<path d="M95.5 10l169.2 61.7-10.2 28.2L85.3 38.2z" fill="#fff"/>' +    // stars
 									'<path d="M10 230h260v40H10z" fill="#fff"/>';                           // arrows
-
+						
 								// LEDs
 								svg += '<path d="M35 22  l8.7 4   2.2 9.6-6 7.6H30l-6-7.6 2-9.5z" fill="' + (module.PerplexingWires.LEDs[0] ? 'lime' : '#234') + '"/>';
 								svg += '<path d="M35 54.5l8.7 4   2.2 9.5-6 7.7H30L24 68l2-9.4z"  fill="' + (module.PerplexingWires.LEDs[1] ? 'lime' : '#234') + '"/>';
 								svg += '<path d="M35 86.8l8.7 4.3 2.2 9.5-6 7.5H30l-6-7.5 2-9.7z" fill="' + (module.PerplexingWires.LEDs[2] ? 'lime' : '#234') + '"/>';
-
+						
 								// Stars
 								for (i = 0; i < 4; i++) {
 									svg += "<path transform='translate({x}, {y}) rotate(20)' d='M0-10l2.2 7h7.3l-6 4.2 2.4 7-6-4.4-6 4.3 2.4-6.8-6-4.3H-2z' fill='{f}'/>"
@@ -3504,7 +3545,7 @@ $(function() {
 										.replace(/\{y\}/g, starsCoords[i][1])
 										.replace(/\{f\}/g, module.PerplexingWires.Stars[i] ? 'black' : 'white');
 								}
-
+						
 								// Arrows
 								for (i = 0; i < 6; i++) {
 									svg += "<path transform='translate({x}, {y}) rotate({r})' d='M0-15L11 0H5.7v15H-5.7v-15H-11z' fill='{f}'/>"
@@ -3513,7 +3554,7 @@ $(function() {
 										.replace(/\{f\}/g, module.PerplexingWires.Arrows[i].Color)
 										.replace(/\{r\}/g, module.PerplexingWires.Arrows[i].Rotation);
 								}
-
+						
 								module.push({ label: 'Module:', obj: $('<svg viewBox="0 0 280 400" fill="none" stroke="#000" stroke-width="2" style="width: 10cm; display: block">' + svg + '</svg>') });
 							}
 							return true;
@@ -3521,7 +3562,7 @@ $(function() {
 					},
 					{
 						regex: /Cutting wire \d to (\d) was (.+)./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(`Cutting bottom wire #${matches[1]} was ${matches[2]}.`);
 							return true;
 						}
@@ -3531,12 +3572,13 @@ $(function() {
 					}
 				]
 			},
-			"Perspective Pegs": {
-				ID: "spwizPerspectivePegs",
-				Lines: [
+			{
+				moduleID: "spwizPerspectivePegs",
+				loggingTag: "Perspective Pegs",
+				matches: [
 					{
 						regex: /Pegs:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var colors = {
 								R: '#E51537',
 								G: '#257A1C',
@@ -3544,7 +3586,7 @@ $(function() {
 								Y: '#E8E800',
 								P: '#A423A4'
 							};
-
+						
 							// OK, now this is weird. Sometimes the lines are fine,
 							// sometimes they are double-spaced with blank lines.
 							// Read one line to find out whether it’s blank.
@@ -3591,14 +3633,14 @@ $(function() {
 					},
 					{
 						regex: /^Sequence:.*/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.SequenceLine = matches.input;
 							return true;
 						}
 					},
 					{
 						regex: /^Look from ((?:top|bottom)-(?:left|right)|top). Correct solution: ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var indexes = {
 								'top': 0,
 								'top-right': 1,
@@ -3631,15 +3673,16 @@ $(function() {
 					}
 				]
 			},
-			"Piano Keys": {
-				ID: "PianoKeys",
-				Lines: [
+			{
+				moduleID: "PianoKeys",
+				loggingTag: "Piano Keys",
+				matches: [
 					{
 						regex: /Module generated with the following symbols/
 					},
 					{
 						regex: /The correct rule is the following/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var input = [];
 							module.Input = input;
 							module.push(matches.input);
@@ -3648,76 +3691,80 @@ $(function() {
 							readLine();
 							module.push(readLine().replace(/[|]/g, ""));
 							module.push(["Key Presses", input]);
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /Input .+ was received|The current valid sequence/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Input.push(matches.input);
 						}
 					}
 				]
 			},
-            "playFair": {
-                ID: "Playfair",
-                Lines: [
-                    {
-                        regex: /^:\s*(.+)/,
-                        value: function(matches, module) {
-                            module.push(matches[1]);
-                            return true;
-                        }
-                    }
-                ]
-            },
-			"Plumbing": {
-				ID: "MazeV2",
-				Lines: [
+			{
+				displayName: "Playfair Cipher",
+				moduleID: "Playfair",
+				loggingTag: "playFair",
+				matches: [
+					{
+						regex: /^:\s*(.+)/,
+						handler: function(matches, module) {
+							module.push(matches[1]);
+							return true;
+						}
+					}
+				]
+			},
+			{
+				displayName: "Plumbing",
+				moduleID: "MazeV2",
+				loggingTag: "Plumbing",
+				matches: [
 					{
 						regex: /Module solved/,
-						value: function() {
+						handler: function() {
 							return true;
 						}
 					},
 					{
 						regex: /\[[A-Z]{3}[-+]\].*/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!module.Conditions) {
 								module.Conditions = [];
 							}
-
+						
 							module.Conditions.push(matches[0]);
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /^[A-Z]+ (?:IN|OUT)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.Conditions) {
 								module.push([matches.input, module.Conditions]);
 							} else {
 								module.push(matches.input);
 							}
 							module.Conditions = null;
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Pipes = [];
 							module.Title = matches.input;
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Pipes.push(matches.input.replace(/┼/g, " "));
 
 							if (module.Pipes.length == 6) {
@@ -3728,7 +3775,7 @@ $(function() {
 									threeway: 'M 0,0.25 0.25,0.25 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0,0.75',
 									fourway: 'M 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0.75,0.75 0.75,1 0.25,1 0.25,0.75 0,0.75 0,0.25 0.25,0.25'
 								};
-
+						
 								var charMap = {
 									// [pipename, rotation * 90]
 									"╨": ["end", 0],
@@ -3747,7 +3794,7 @@ $(function() {
 									"╣": ["threeway", 3],
 									"╬": ["fourway", 0]
 								};
-
+						
 								var svgGrid = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" width="200" height="200" style="display: block; border: #a00 solid 4px; background: rgb(30, 30, 30)">');
 								for (var y in module.Pipes) {
 									for (var x in module.Pipes[y]) {
@@ -3768,19 +3815,20 @@ $(function() {
 										}
 									}
 								}
-
+						
 								module.push({ label: module.Title, obj: svgGrid });
 							}
 						}
 					}
 				]
 			},
-			"Poetry": {
-				ID: "poetry",
-				Lines: [
+			{
+				moduleID: "poetry",
+				loggingTag: "Poetry",
+				matches: [
 					{
 						regex: /Picked girl/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.stageNumber = 1;
 							module.correctSolves = 1;
 							module.push(["Stage 1", module.stage = []]);
@@ -3788,28 +3836,29 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.stage.push(matches.input);
 						}
 					},
 					{
 						regex: /(Correct|Wrong) Word!/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (module.correctSolves == 3) return;
 							if (matches[1] == "Correct") module.correctSolves++;
-
+						
 							module.stageNumber++;
 							module.push([`Stage ${module.stageNumber}`, module.stage = []]);
 						}
 					}
 				]
 			},
-			"Point of Order": {
-				ID: "PointOfOrderModule",
-				Lines: [
+			{
+				moduleID: "PointOfOrderModule",
+				loggingTag: "Point of Order",
+				matches: [
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var span = $("<span>").text(matches.input);
 							span.html(span.html().replace(/([♥♦])/g, "<span style='color: red'>$1</span>"));
 							module.push({ label: "", obj: span });
@@ -3817,75 +3866,77 @@ $(function() {
 					}
 				]
 			},
-			"NeedyQRCode": {
-				ID: "QRCode",
-				Lines: [
+			{
+				displayName: "QR Code",
+				moduleID: "QRCode",
+				loggingTag: "NeedyQRCode",
+				matches: [
 					{
 						regex: /.+/
 					}
 				]
 			},
-			"Resistors": {
-				ID: "resistors",
-				Lines: [
+			{
+				moduleID: "resistors",
+				loggingTag: "Resistors",
+				matches: [
 					{
 						regex: /batteries/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Bomb Info: " + matches.input);
 						}
 					},
 					{
 						regex: /Already placed/,
-						value: function() {
+						handler: function() {
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: "resistors"
+						handler: "resistors"
 					}
 				]
 			},
-			"Rhythms": "MusicRhythms",
-			//"Rock-Paper-Scissors-Lizard-Spock": "RockPaperScissorsLizardSpockModule",
-			"Round Keypad": {
-				ID: "KeypadV2",
-				Lines: [
+			{
+				displayName: "Rhythms",
+				moduleID: "MusicRhythms",
+				loggingTag: "Rhythms"
+			},
+			{
+				displayName: "Round Keypad",
+				moduleID: "KeypadV2",
+				loggingTag: "Round Keypad",
+				matches: [
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches[0].replace(/,/g, " "));
 						}
 					}
 				]
 			},
-			//"Rubik’s Cube": "RubiksCubeModule",
-			"Rubik's Clock": {
-				ID: "rubiksClock",
-				Lines: [
-					/*{
-						regex: /Moves to solve, move (\d):/,
-						value: function(matches, module) {
-							module.push([`Move #${matches[1]}:`, readMultiple(4).replace(/^\[.+\] /gm, "").split("\n")]);
-							return true;
-						}
-					},*/
+			{
+				displayName: "Rubik’s Clock",
+				moduleID: "rubiksClock",
+				loggingTag: "Rubik's Clock",
+				matches: [
 					{
 						regex: /^Serial=/,
-						value: function() {
+						handler: function() {
 							return true;
 						}
 					},
 					{
 						regex: /(Lit clock: [TBRLM]{1,2}. Lit pin: [TBRL]{2}.) (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches[1], matches[2].split(". ")]);
 							return true;
 						}
 					},
 					{
 						regex: /(Actions performed (?:before reset|to solve)): (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push([matches[1], matches[2].split(". ")]);
 							return true;
 						}
@@ -3895,59 +3946,68 @@ $(function() {
 					}
 				]
 			},
-			"Rules": [
-				{
-					regex: /Getting solution index for component (.+)Component\(Clone\)/,
-					value: function(matches) {
-						var line = readLine();
-						var allLines = line;
-
-						while (!line.includes("All queries passed.")) {
-							line = readLine();
-							allLines += "\n" + line;
+			{
+				loggingTag: "Rules",
+				matches: [
+					{
+						regex: /Getting solution index for component (.+)Component\(Clone\)/,
+						handler: function(matches) {
+							var line = readLine();
+							var allLines = line;
+						
+							while (!line.includes("All queries passed.")) {
+								line = readLine();
+								allLines += "\n" + line;
+							}
+						
+							var vanilla = {
+								Button: "BigButton",
+								WireSet: "Wires"
+							};
+						
+							readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
+							readDirectly({ label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false }, vanilla[matches[1]] || matches[1]);
 						}
-
-						var vanilla = {
-							Button: "BigButton",
-							WireSet: "Wires"
-						};
-
-						readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
-						readDirectly({ label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false }, vanilla[matches[1]] || matches[1]);
 					}
-				}
-			],
-			"Rules.WhosOnFirst": {
-				ID: "WhosOnFirst",
-				Lines: [
+				]
+			},
+			{
+				displayName: "Who’s on First",
+				moduleID: "WhosOnFirst",
+				loggingTag: "Rules.WhosOnFirst",
+				matches: [
 					{
 						regex: /Precedence List is:/
 					},
 					{
 						regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]);
 						}
 					}
 				]
 			},
-			"Safety Safe": {
-				ID: "PasswordV2",
-				Lines: [
+			{
+				displayName: "Safety Safe",
+				moduleID: "PasswordV2",
+				loggingTag: "Safety Safe",
+				matches: [
 					{
 						regex: /offset|Answer|Input|solved/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input.replace(/,/g, ", "));
 						}
 					}
 				]
 			},
-			"Screw": {
-				ID: "screw",
-				Lines: [
+			{
+				displayName: "The Screw",
+				moduleID: "screw",
+				loggingTag: "Screw",
+				matches: [
 					{
 						regex: /Stage \d of \d/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Stage = [matches.input, []];
 							module.push(module.Stage);
 							return true;
@@ -3955,18 +4015,19 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							(module.Stage ? module.Stage[1] : module).push(matches.input);
 						}
 					}
 				]
 			},
-			"Semaphore": {
-				ID: "Semaphore",
-				Lines: [
+			{
+				moduleID: "Semaphore",
+				loggingTag: "Semaphore",
+				matches: [
 					{
 						regex: /Module generated/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: "Flags", obj: pre(readMultiple(8)) });
 							return true;
 						}
@@ -3976,12 +4037,14 @@ $(function() {
 					}
 				]
 			},
-			"S.E.T.": {
-				ID: "SetModule",
-				Lines: [
+			{
+				displayName: "S.E.T.",
+				moduleID: "SetModule",
+				loggingTag: "S.E.T.",
+				matches: [
 					{
 						regex: /^Icon at \(module\) ([ABC][123]) is \(manual\) ([ABC][123]), (filled|wavy|empty), (\d) dots\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('SetInfo' in module)) {
 								module.SetInfo = {
 									Symbols: [null, null, null, null, null, null, null, null, null],
@@ -3991,10 +4054,10 @@ $(function() {
 								};
 								module.push(module.SetInfo.Node);
 							}
-
+						
 							var moduleXY = module.SetInfo.XY(matches[1]);
 							var manualXY = module.SetInfo.XY(matches[2]);
-
+						
 							var pathData =
 								// pacman
 								matches[2] === 'A1' ? "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z" :
@@ -4014,14 +4077,14 @@ $(function() {
 															matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
 																// star
 																matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
-
+						
 							var symbolSvg = "<path d='!data!' fill='!fill!' stroke='black' stroke-width='5' transform='translate(!x!, !y!)!transform!'/>"
 								.replace(/!data!/g, pathData)
 								.replace(/!x!/g, 100 * moduleXY.X - 100 * manualXY.X)
 								.replace(/!y!/g, 100 * moduleXY.Y - 100 * manualXY.Y - 600)
 								.replace(/!fill!/g, matches[3] === 'filled' ? 'black' : matches[3] === 'wavy' ? 'url(#Wavy' + module.SetInfo.WavyId + ')' : 'none')
 								.replace(/!transform!/, matches[2] === 'C3' ? "matrix(1.25 0 0 1 -437.5 -2.77)" : '');
-
+						
 							if (matches[4] !== '0')
 								symbolSvg += "<path d='!data!' fill='black' stroke='none' transform='translate(!x!, !y!)'/>"
 									.replace(/!x!/g, 100 * moduleXY.X)
@@ -4029,15 +4092,15 @@ $(function() {
 									.replace(/!data!/g, matches[4] === '1'
 										? "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z"
 										: "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z");
-
+						
 							module.SetInfo.Symbols[moduleXY.X + 3 * moduleXY.Y] = symbolSvg;
 							return true;
 						}
 					},
 					{
 						regex: /^Solution: ([ABC][123]), ([ABC][123]), ([ABC][123])/,
-						value: function(matches, module) {
-
+						handler: function(matches, module) {
+						
 							var framesSvg = '';
 							for (var i = 1; i <= 3; i++) {
 								var xy = module.SetInfo.XY(matches[i]);
@@ -4045,7 +4108,7 @@ $(function() {
 									.replace(/!x!/g, 100 * xy.X)
 									.replace(/!y!/g, 100 * xy.Y);
 							}
-
+						
 							module.SetInfo.Node.obj = $("<svg viewBox='-5 -5 310 310'><defs><pattern id='Wavy" + module.SetInfo.WavyId + "' height='5.2' width='30.1' patternUnits='userSpaceOnUse'><path d='M 7.597,0.061 C 5.079,-0.187 2.656,0.302 -0.01,1.788 L -0.01,3.061 C 2.773,1.431 5.173,1.052 7.472,1.280 C 9.770,1.508 11.969,2.361 14.253,3.218 C 18.820,4.931 23.804,6.676 30.066,3.061 L 30.062,1.788 C 23.622,5.497 19.246,3.770 14.691,2.061 C 12.413,1.207 10.115,0.311 7.597,0.061 z' /></pattern></defs>" + framesSvg + module.SetInfo.Symbols.join('') + "</svg>")
 								.css({ display: 'block', width: '12cm' });
 							return true;
@@ -4056,12 +4119,13 @@ $(function() {
 					}
 				]
 			},
-			"Silly Slots": {
-				ID: "SillySlots",
-				Lines: [
+			{
+				moduleID: "SillySlots",
+				loggingTag: "Silly Slots",
+				matches: [
 					{
 						regex: /Stage/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: matches.input, obj: pre(readMultiple(2)) });
 							return true;
 						}
@@ -4071,55 +4135,61 @@ $(function() {
 					}
 				]
 			},
-			"Simon Screams": {
-				ID: "SimonScreamsModule",
-				Lines: [
+			{
+				moduleID: "SimonScreamsModule",
+				loggingTag: "Simon Screams",
+				matches: [
 					{
 						regex: /Colors in|Small table/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push(matches.input);
 							return true;
 						}
 					},
 					{
 						regex: /Stage (.) sequence/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Stage = ["Stage #" + matches[1], []];
 							module.push(module.Stage);
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Stage[1].push(matches.input);
 						}
 					}
 				]
 			},
-			"Simon States": "SimonV2",
-			"Skewed Slots": {
-				ID: "SkewedSlotsModule",
-				Lines: [
+			{
+				displayName: "Simon States",
+				moduleID: "SimonV2",
+				loggingTag: "Simon States"
+			},
+			{
+				moduleID: "SkewedSlotsModule",
+				loggingTag: "Skewed Slots",
+				matches: [
 					{
 						regex: /Rule Log/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.push(readLine()); // Initial
-
+						
 							for (var i = 0; i < 3; i++) {
 								readLine();
 								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
 								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
-
+						
 								var line = readLine();
 								while (!(/Final digit/).exec(line)) {
 									slot[1].push(line);
 									line = readLine();
 								}
 								slot[1].push(line);
-
+						
 								module.push(slot);
 							}
-
+						
 							readLine();
 							module.push(readLine()); // Final
 						}
@@ -4129,12 +4199,13 @@ $(function() {
 					}
 				]
 			},
-			"Skyrim": {
-				ID: "skyrim",
-				Lines: [
+			{
+				moduleID: "skyrim",
+				loggingTag: "Skyrim",
+				matches: [
 					{
 						regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var div = $('<div>');
 							div.append($('<span>').text('The chosen shouts are:'));
 							div.append($('<ul>')
@@ -4154,7 +4225,7 @@ $(function() {
 					},
 					{
 						regex: /^(The correct shout is |Strike! You selected .*? & )(.*?)( \(.*?\)\.|\.)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var span = $('<span>');
 							span.text(matches[1]);
 							span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
@@ -4168,29 +4239,32 @@ $(function() {
 					}
 				]
 			},
-			"Sonic the Hedgehog": {
-				ID: "sonic",
-				Lines: [
+			{
+				displayName: "Sonic the Hedgehog",
+				moduleID: "sonic",
+				loggingTag: "Sonic the Hedgehog",
+				matches: [
 					{
 						regex: /boots sound/,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.groups.addGroup(true);
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					}
 				]
 			},
-			"Souvenir": {
-				ID: "SouvenirModule",
-				Lines: [
+			{
+				moduleID: "SouvenirModule",
+				loggingTag: "Souvenir",
+				matches: [
 					{
 						regex: /Asking question: (.+) — (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var answers = $("<div>").css({ margin: '.5em 0' });
 							matches[2].split(" | ").forEach(function(answer) {
 								var answerSpan = $("<span>");
@@ -4200,7 +4274,7 @@ $(function() {
 								}
 								answerSpan.text(answer).css({ border: '1px solid #888', padding: '0 .5em', margin: '0 .3em' }).appendTo(answers);
 							});
-
+						
 							module.push({ label: matches[1], obj: answers, expanded: true });
 						}
 					},
@@ -4209,13 +4283,18 @@ $(function() {
 					}
 				]
 			},
-			"Square Button": "ButtonV2",
-			"Symbol Cycle": {
-				ID: "SymbolCycleModule",
-				Lines: [
+			{
+				displayName: "Square Button",
+				moduleID: "ButtonV2",
+				loggingTag: "Square Button"
+			},
+			{
+				moduleID: "SymbolCycleModule",
+				loggingTag: "Symbol Cycle",
+				matches: [
 					{
 						regex: /^((Left|Right) cycle|Solution:|Wrong solution entered:.*,|Displayed symbols:).*/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var span = $('<span>');
 							var txt = matches[0];
 							var data;
@@ -4233,30 +4312,31 @@ $(function() {
 					},
 					{
 						regex: /Wrong solution entered:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!matches.input.includes(",")) {
 								module.groups.add(matches.input);
 							}
-
+						
 							module.groups.addGroup();
-
+						
 							return true;
 						}
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
-					},
+					}
 				]
 			},
-			"Symbolic Coordinates": {
-				ID: "symbolicCoordinates",
-				Lines: [
+			{
+				moduleID: "symbolicCoordinates",
+				loggingTag: "Symbolic Coordinates",
+				matches: [
 					{
 						regex: /(The .+ display is) ([PLACE ]+)\. The LEDs are (.+), (.+) & (.+)\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var conversion = {
 								P: 'Stain',
 								L: 'Vortex',
@@ -4282,46 +4362,49 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					}
 				]
 			},
-			"TicTacToe": {
-				ID: "TicTacToeModule",
-				Lines: [
+			{
+				displayName: "Tic-Tac-Toe",
+				moduleID: "TicTacToeModule",
+				loggingTag: "TicTacToe",
+				matches: [
 					{
 						regex: /Starting row/
 					},
 					{
 						regex: /Keypad is now/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var step = [];
 							module.Step = step;
-
+						
 							module.push(["Step " + module.length + ":", step]);
-
+						
 							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
-
+						
 							step.push(readLine()); // up next
 							step.push(readLine()); // current row
 						}
 					},
 					{
 						regex: /Next expectation is|Clicked/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.Step.push(matches.input);
 						}
 					}
 				]
 			},
-			"Web design": {
-				ID: "webDesign",
-				Lines: [
+			{
+				moduleID: "webDesign",
+				loggingTag: "Web design",
+				matches: [
 					{
 						regex: /For reference purpose/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							var lines = "";
 							var line = readLine();
 							while (!line.match("}") && line) {
@@ -4329,9 +4412,9 @@ $(function() {
 								line = readLine();
 							}
 							lines += "}";
-
+						
 							module.push({ label: matches.input, obj: pre(lines) });
-
+						
 							return true;
 						}
 					},
@@ -4340,12 +4423,14 @@ $(function() {
 					}
 				]
 			},
-			"VennWireComponent": {
-				ID: "Venn",
-				Lines: [
+			{
+				displayName: "Complicated Wires",
+				moduleID: "Venn",
+				loggingTag: "VennWireComponent",
+				matches: [
 					{
 						regex: /Wire (\d) (should(?: not)?) be snipped\./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							const rules = {
 								Cut: 							"Cut",
 								DoNotCut: 						"Don't\nCut",
@@ -4353,33 +4438,33 @@ $(function() {
 								CutIfParallelPortPresent: 		"Para.\nPort",
 								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
 							};
-
+						
 							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
 							if (wireData) {
 								if (!('diagram' in module)) {
 									module.diagram = $SVG(`<svg width="300px">`);
 									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
 								}
-
+						
 								const wireIndex = parseInt(wireData[1]);
 								if (module.parsedWires == undefined) module.parsedWires = [];
 								if (module.parsedWires[wireIndex] == true) return;
 								module.parsedWires[wireIndex] = true;
-
+						
 								const x = wireIndex * 0.6;
 								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
-
+						
 								// LED
 								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
-
+						
 								// Wire
 								const wireColors = wireData[2].split(", ");
 								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
 								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1/3)} width=0.475 height=${1/3} fill=${wireColors[1]}>`).appendTo(module.diagram);
-
+						
 								// Star
 								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
-
+						
 								// Rule/Should cut
 								$SVG(`<text x=${x+0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x+0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
 							}
@@ -4387,97 +4472,107 @@ $(function() {
 					},
 					{
 						regex: /Wire snipped ((?:in)?correctly): (\d)!/i,
-						value: function(matches, module) {
-							module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`)
+						handler: function(matches, module) {
+							module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`);
 						}
 					}
 				]
 			},
-            "Visual Impairment": {
-                ID: "visual_impairment",
-                Lines: [
-                    {
-                        regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
-                        value: function(matches, module) {
-                            module.push({
-                                obj: $(`<table>
-                                    <tr><th>Original</th><th>On the module</th></tr>
-                                    <tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
-                                        <td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
-                                </table>`)
-                            });
-                        }
-                    },
-                    {
-                        regex: /.+/
-                    }
-                ]
-            },
-			"WhosOnFirstComponent": {
-				ID: "WhosOnFirst",
-				Lines: [
+			{
+				displayName: "Visual Impairment",
+				moduleID: "visual_impairment",
+				loggingTag: "Visual Impairment",
+				matches: [
+					{
+						regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
+						handler: function(matches, module) {
+							module.push({
+								obj: $(`<table>
+									<tr><th>Original</th><th>On the module</th></tr>
+									<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
+										<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
+								</table>`)
+							});
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
+				displayName: "Who’s on First",
+				moduleID: "WhosOnFirst",
+				loggingTag: "WhosOnFirstComponent",
+				matches: [
 					{
 						regex: /State randomized: Phase: (\d), Keypads: (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "));
 						}
 					},
 					{
 						regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Displayed word: " + matches[1]);
 						}
 					}
 				]
 			},
-			"WireSequencePage": {
-				ID: "WireSequence",
-				Lines: [
+			{
+				moduleID: "WireSequence",
+				loggingTag: "WireSequencePage",
+				matches: [
 					{
 						regex: /Snipped wire of color (\w+) of number (\d+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1));
 						}
 					}
 				]
 			},
-			"WireSetComponent": {
-				ID: "Wires",
-				Lines: [
+			{
+				moduleID: "Wires",
+				loggingTag: "WireSetComponent",
+				matches: [
 					{
 						regex: /Wires.Count is now (\d)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("There are " + matches[1] + " wires");
 						}
 					}
 				]
 			},
-			"Who's that Monsplode?": {
-				ID: "monsplodeWho",
-				Lines: [
+			{
+				displayName: "Who's That Monsplode?",
+				moduleID: "monsplodeWho",
+				loggingTag: "Who's that Monsplode?",
+				icon: "Who’s that Monsplode",
+				matches: [
 					{
 						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
 			},
-			"Word Search": {
-				ID: "WordSearchModule",
-				Lines: [
+			{
+				moduleID: "WordSearchModule",
+				loggingTag: "Word Search",
+				matches: [
 					{
 						regex: /Correct word is (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Solution: " + matches[1]);
 						}
 					},
 					{
 						regex: /Wrong words are (.+)/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push("Wrong Words: " + matches[1]);
 						}
 					},
 					{
 						regex: /Field:/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
 						}
 					},
@@ -4486,12 +4581,14 @@ $(function() {
 					}
 				]
 			},
-			"X-Ray": {
-				ID: "XRayModule",
-				Lines: [
+			{
+				displayName: "X-Ray",
+				moduleID: "XRayModule",
+				loggingTag: "X-Ray",
+				matches: [
 					{
 						regex: /^(\d+)( = .*\. Solution symbol is )(\d+)\.$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							const span = $('<span>')
 								.append($("<img src='../HTML/img/X-Ray/Icon C" + matches[1] + ".png' width='20' />"))
 								.append($('<span>').text(matches[2]))
@@ -4503,7 +4600,7 @@ $(function() {
 					},
 					{
 						regex: /^Column (\d+), Row (\d+): symbol there is (\d+).$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							const span = $('<span>')
 								.append($("<img src='../HTML/img/X-Ray/Icon A" + matches[1] + ".png' width='20' />"))
 								.append($('<span>').text(" = Column " + matches[1] + ", "))
@@ -4517,79 +4614,279 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.groups.add(matches.input);
 						}
 					},
 					{
 						regex: /You pressed button #\d, which is wrong\. Resetting module\./,
-						value: function(_, module) {
+						handler: function(_, module) {
 							module.groups.addGroup();
 						}
 					}
 				]
 			},
-			"Yahtzee": {
-				ID: "YahtzeeModule",
-				Lines: [
+			{
+				moduleID: "YahtzeeModule",
+				loggingTag: "Yahtzee",
+				matches: [
 					{
 						regex: /rerolling \d./,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.push({ linebreak: true });
-						},
+						}
 					},
 					{
 						regex: /.+/
 					}
 				]
-			}
-		};
-
-		lineRegex["Cruel Piano Keys"] = {
-			ID: "CruelPianoKeys",
-			Lines: lineRegex["Piano Keys"].Lines
-		};
-
-		lineRegex["Festive Piano Keys"] = {
-			ID: "FestivePianoKeys",
-			Lines: lineRegex["Piano Keys"].Lines
-		};
-
-		const orientationCubeRules = [
-			"If the serial number on the bomb contains the letter R",
-			"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
-			"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
-			"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
-			"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
-			"Otherwise",
-		];
-
-		var taglessRegex = [
-			// TwoBits
-			{
-				regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
-				value: function(matches) {
-					var id = GetBomb().GetMod("TwoBits").IDs.length;
-					if (matches[1] == "Lookups") {
-						id = GetBomb().GetMod("TwoBits").IDs.length + 1;
-					}
-
-					var mod = GetBomb().GetModuleID("TwoBits", id);
-					mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
-					if (matches[1] == "Responses") {
-						mod.push(readLine());
-					}
-				},
 			},
-
-			// Orientation Cube
 			{
-				regex: /^rule([1-6])$/,
-				value: function(matches) {
-					GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
-				}
+				matches: [
+					{
+						regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
+						handler: function(matches) {
+							var id = GetBomb().GetMod("TwoBits").IDs.length;
+							if (matches[1] == "Lookups") {
+								id = GetBomb().GetMod("TwoBits").IDs.length + 1;
+							}
+						
+							var mod = GetBomb().GetModuleID("TwoBits", id);
+							mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
+							if (matches[1] == "Responses") {
+								mod.push(readLine());
+							}
+						}
+					},
+					{
+						regex: /^rule([1-6])$/,
+						handler: function(matches) {
+							const orientationCubeRules = [
+								"If the serial number on the bomb contains the letter R",
+								"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
+								"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
+								"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
+								"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
+								"Otherwise",
+							];
+
+							GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
+						}
+					}
+				]
+			},
+			{
+				displayName: "The Button",
+				moduleID: "BigButton"
+			},
+			{
+				displayName: "Morse Code",
+				moduleID: "Morse"
+			},
+			{
+				displayName: "Simon Says",
+				moduleID: "Simon",
+				hasLogging: false
+			},
+			{
+				displayName: "Venting Gas",
+				moduleID: "NeedyVentGas"
+			},
+			{
+				displayName: "Capacitor Discharge",
+				moduleID: "NeedyCapacitor"
+			},
+			{
+				displayName: "Knob",
+				moduleID: "NeedyKnob"
+			},
+			{
+				displayName: "Switches",
+				moduleID: "switchModule",
+				hasLogging: false
+			},
+			{
+				displayName: "Cryptography",
+				moduleID: "CryptModule"
+			},
+			{
+				displayName: "Shape Shift",
+				moduleID: "shapeshift",
+				hasLogging: false
+			},
+			{
+				displayName: "Double-Oh",
+				moduleID: "DoubleOhModule"
+			},
+			{
+				displayName: "Lettered Keys",
+				moduleID: "LetterKeys"
+			},
+			{
+				displayName: "Color Math",
+				moduleID: "colormath"
+			},
+			{
+				displayName: "Rubik’s Cube",
+				moduleID: "RubiksCubeModule"
+			},
+			{
+				displayName: "Rock-Paper-Scissors-Lizard-Spock",
+				moduleID: "RockPaperScissorsLizardSpockModule"
+			},
+			{
+				displayName: "Turn The Keys",
+				moduleID: "TurnTheKeyAdvanced",
+				hasLogging: false
+			},
+			{
+				displayName: "Hex To Decimal",
+				moduleID: "EternitySDec"
+			},
+			{
+				displayName: "Timezones",
+				moduleID: "timezone"
+			},
+			{
+				displayName: "The Jukebox",
+				moduleID: "jukebox"
+			},
+			{
+				displayName: "Button Masher",
+				moduleID: "buttonMasherNeedy"
+			},
+			{
+				displayName: "Refill that Beer!",
+				moduleID: "NeedyBeer"
+			},
+			{
+				displayName: "Random Number Generator",
+				moduleID: "rng"
+			},
+			{
+				displayName: "Radiator",
+				moduleID: "radiatorInova"
+			},
+			{
+				displayName: "Modern Cipher",
+				moduleID: "caesarCipher"
+			},
+			{
+				displayName: "Waste Management",
+				moduleID: "wastemanagement"
+			},
+			{
+				displayName: "The Stopwatch",
+				moduleID: "stopwatch"
+			},
+			{
+				displayName: "The London Underground",
+				moduleID: "londonUnderground"
+			},
+			{
+				displayName: "The Wire",
+				moduleID: "wire"
+			},
+			{
+				displayName: "The Sun",
+				moduleID: "sun"
+			},
+			{
+				displayName: "The Moon",
+				moduleID: "moon"
+			},
+			{
+				displayName: "Dr. Doctor",
+				moduleID: "DrDoctorModule"
+			},
+			{
+				displayName: "Rotary Phone",
+				moduleID: "NeedyKnobV2"
+			},
+			{
+				displayName: "Answering Questions",
+				moduleID: "NeedyVentV2"
+			},
+			{
+				displayName: "The Button (Translated)",
+				moduleID: "BigButtonTranslated",
+				icon: "The Button"
+			},
+			{
+				displayName: "Who’s On First (Translated)",
+				moduleID: "WhosOnFirstTranslated",
+				icon: "Who’s On First"
+			},
+			{
+				displayName: "Morse Code (Translated)",
+				moduleID: "MorseCodeTranslated",
+				icon: "Morse Code"
+			},
+			{
+				displayName: "Passwords (Translated)",
+				moduleID: "PasswordsTranslated",
+				icon: "Password"
+			},
+			{
+				displayName: "Venting Gas (Translated)",
+				moduleID: "VentGasTranslated",
+				icon: "Venting Gas"
+			},
+			{
+				moduleID: "SupermercadoSalvajeModule",
+				icon: "Cheap Checkout"
+			},
+			{
+				moduleID: "alphabet",
+				hasLogging: false
+			},
+			{
+				moduleID: "AnagramsModule",
+				hasLogging: false
+			},
+			{
+				moduleID: "CrazyTalk",
+				hasLogging: false
+			},
+			{
+				moduleID: "EnglishTest",
+				hasLogging: false
+			},
+			{
+				moduleID: "Listening",
+				hasLogging: false
+			},
+			{
+				moduleID: "Microcontroller",
+				hasLogging: false
+			},
+			{
+				moduleID: "SeaShells",
+				hasLogging: false
+			},
+			{
+				moduleID: "TurnTheKey",
+				hasLogging: false
+			},
+			{
+				moduleID: "WordScrambleModule",
+				hasLogging: false
+			},
+			{
+				moduleID: "ForeignExchangeRates",
+				hasLogging: false
+			},
+			{
+				moduleID: "Probing",
+				hasLogging: false
+			},
+			{
+				moduleID: "OrientationCube",
+				hasLogging: false
 			}
 		];
+
+		const taglessParsing = parseData.filter(data => data.loggingTag == undefined && data.matches != undefined)[0].matches;
 
 		readwarning = false;
 		buildwarning = false;
@@ -4606,44 +4903,46 @@ $(function() {
 				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\] ?(.+)/.exec(line);
 				if (match) {
 					var obj = null;
-					var name = null;
+					var loggingTag = null;
+					let name = null;
 					var id = null;
 
 					var submatch = /(.+?) #(\d+)/.exec(match[1]);
-					if (submatch && submatch[1] in TranslatedModuleNames) {
-						obj = lineRegex[TranslatedModuleNames[submatch[1]].key];
+					if (submatch && submatch[1] in DuplicateLogging) {
+						loggingTag = DuplicateLogging[submatch[1]].key;
 						id = submatch[2];
-						name = TranslatedModuleNames[submatch[1]].name;
+						name = DuplicateLogging[submatch[1]].name;
 					} else if (submatch) {
-						obj = lineRegex[submatch[1]];
+						loggingTag = submatch[1];
 						id = submatch[2];
 					} else
-						obj = lineRegex[match[1]];
+						loggingTag = match[1];
+
+					obj = Object.assign({}, parseData.find(x => x.loggingTag == loggingTag));
+					if (name !== null) obj.moduleID = name;
 
 					if (obj) {
 						try {
-							if (typeof (obj) != "string") {
-								var regex = (obj.Lines || obj);
-								regex.some(function(handler) {
-									var value = handler.value;
-									var matches = (handler.regex || /.+/).exec(match[2]);
-									if (matches) {
-										if (value instanceof Function) {
-											if (obj.Lines) {
-												var module = id ? GetBomb().GetModuleID(name || obj.ID, id) : GetBomb().GetModule(name || obj.ID);
-												if (value(matches, module, bomb.GetMod(name || obj.ID))) {
-													return true;
+							if (obj.matches) {
+								for (const matcher of obj.matches) {
+									if (matcher.handler) {
+										const matches = (matcher.regex || /.+/).exec(match[2]);
+										if (matches) {
+											if (obj.moduleID) {
+												var parsedModule = id ? GetBomb().GetModuleID(name || obj.moduleID, id) : GetBomb().GetModule(name || obj.moduleID);
+												if (matcher.handler(matches, parsedModule, bomb.GetMod(name || obj.moduleID))) {
+													break;
 												}
-											} else if (value(matches, id)) {
-												return true;
+											} else if (matcher.handler(matches)) {
+												break;
 											}
-										} else {
-											readDirectly(match[2], name || obj.ID || value, id);
 										}
+									} else if (matcher.regex && matcher.regex.test(match[2])) {
+										readDirectly(match[2], obj.moduleID, id);
 									}
-								});
-							} else {
-								readDirectly(match[2], obj, id);
+								}
+							} else if (obj.moduleID) {
+								readDirectly(match[2], obj.moduleID, id);
 							}
 						} catch (e) {
 							console.log(e);
@@ -4666,13 +4965,13 @@ $(function() {
 						});
 					}
 				} else {
-					taglessRegex.some(function(handler) {
+					taglessParsing.some(function(handler) {
 						var value = handler.value;
 						var matches = handler.regex.exec(line);
 						if (matches) {
 							try {
 								if (value instanceof Function) {
-									value(matches);
+									return value(matches);
 								} else {
 									readDirectly(match[2], value);
 								}
@@ -4700,9 +4999,9 @@ $(function() {
 		$(".bomb, .bomb-info").remove();
 		parsed.forEach(function(obj) { obj.ToHTML(url); });
 		$('#ui').addClass('has-bomb');
-        $('#wrap').removeClass('has-empty-log');
-        if (parsed.length < 1)
-            $('#wrap').addClass('has-empty-log');
+		$('#wrap').removeClass('has-empty-log');
+		if (parsed.length < 1)
+			$('#wrap').addClass('has-empty-log');
 		selectBomb(bombSerial);
 		toastr.success("Log read successfully!");
 	}
