@@ -4918,8 +4918,11 @@ $(function() {
 					} else
 						loggingTag = match[1];
 
-					obj = Object.assign({}, parseData.find(x => x.loggingTag == loggingTag));
-					if (name !== null) obj.moduleID = name;
+					const moduleData = parseData.find(x => x.loggingTag == loggingTag);
+					if (moduleData) {
+						obj = Object.assign({}, moduleData);
+						if (name !== null) obj.moduleID = name;
+					}
 
 					if (obj) {
 						try {
