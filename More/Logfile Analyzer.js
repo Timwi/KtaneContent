@@ -2691,7 +2691,7 @@ $(function() {
 				matches: [
 					{
 						regex: /^Colors: (.*)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.data = { colors: matches[1].split(', ') };
 							module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function() {
 								var data = $(this).data('data'), div = $(this).parent(), i, sel;
@@ -2810,14 +2810,14 @@ $(function() {
 					},
 					{
 						regex: /^Traps: (.*)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.data.traps = matches[1].split(', ');
 							return true;
 						}
 					},
 					{
 						regex: /^Rotations: (.*)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							if (!('states' in module.data))
 								module.data.states = [{ rotations: matches[1].split(', ') }];
 							else
@@ -2828,7 +2828,7 @@ $(function() {
 					},
 					{
 						regex: /^Rotations after strike: (.*)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.data.states.push({ rotations: matches[1].split(', '), clicked: '✗' });
 							module.obj.find('button').data('data', module.data);
 							return true;
@@ -2836,14 +2836,14 @@ $(function() {
 					},
 					{
 						regex: /^Clicked when last seconds digit was: (\d)$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.data.states.push({ clicked: matches[1] });
 							return true;
 						}
 					},
 					{
 						regex: /^Marble falls into (gap|trap) at level (\d)\.( Module solved\.| Strike!)?$/,
-						value: function(matches, module) {
+						handler: function(matches, module) {
 							module.data.states[module.data.states.length - 1][matches[1]] = matches[2];
 							if (matches[3] && matches[3] !== ' Strike!')
 								module.data.states[module.data.states.length - 1].solved = true;
