@@ -3046,11 +3046,12 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Morse Code",
+				moduleID: "Morse",
 				loggingTag: "MorseCodeComponent",
 				matches: [
 					{
-						regex: /Chosen word is:|Transmit button pressed when selected frequency is/,
-						handler: "Morse"
+						regex: /Chosen word is:|Transmit button pressed when selected frequency is/
 					}
 				]
 			},
@@ -3888,8 +3889,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /.+/,
-						handler: "resistors"
+						regex: /.+/
 					}
 				]
 			},
@@ -4967,9 +4967,9 @@ $(function() {
 						});
 					}
 				} else {
-					for (const data in taglessParsing) {
-						if (data.matches != null) {
-							console.error(`A tagless parser doesn't have any .matches: ${data.matches}`);
+					for (const data of taglessParsing) {
+						if (data.matches == null) {
+							console.error("A tagless parser doesn't have any .matches: %o", data.matches);
 							continue;
 						}
 
