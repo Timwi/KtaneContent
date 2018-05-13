@@ -796,11 +796,6 @@ $(function() {
 			return lines;
 		}
 
-		function getModuleName(moduleID) {
-			const moduleData = parseData.find(data => data.moduleID == moduleID);
-			return moduleData ? moduleData.displayName : convertID(moduleID);
-		}
-
 		// All of the data used for parsing
 		const parseData = [
 			{
@@ -4667,7 +4662,7 @@ $(function() {
 								"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
 								"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
 								"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
-								"Otherwise",
+								"Otherwise"
 							];
 
 							GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
@@ -4720,7 +4715,8 @@ $(function() {
 			},
 			{
 				displayName: "Lettered Keys",
-				moduleID: "LetterKeys"
+				moduleID: "LetterKeys",
+				hasLogging: false
 			},
 			{
 				displayName: "Color Math",
@@ -4837,8 +4833,7 @@ $(function() {
 				icon: "Cheap Checkout"
 			},
 			{
-				moduleID: "alphabet",
-				hasLogging: false
+				moduleID: "alphabet"
 			},
 			{
 				moduleID: "AnagramsModule",
@@ -4881,12 +4876,16 @@ $(function() {
 				hasLogging: false
 			},
 			{
-				moduleID: "OrientationCube",
-				hasLogging: false
+				moduleID: "OrientationCube"
 			}
 		];
 
-		const taglessParsing = parseData.filter(data => data.loggingTag == undefined && data.matches != undefined)[0].matches;
+		function getModuleName(moduleID) {
+			const moduleData = parseData.find(data => data.moduleID == moduleID);
+			return moduleData ? moduleData.displayName : convertID(moduleID);
+		}
+
+		const taglessParsing = parseData.filter(data => data.loggingTag == undefined && data.matches != undefined);
 
 		readwarning = false;
 		buildwarning = false;
@@ -4968,26 +4967,30 @@ $(function() {
 						});
 					}
 				} else {
-					taglessParsing.some(function(handler) {
-						var value = handler.value;
-						var matches = handler.regex.exec(line);
-						if (matches) {
-							try {
-								if (value instanceof Function) {
-									return value(matches);
-								} else {
-									readDirectly(match[2], value);
-								}
-							} catch (e) {
-								console.log(e);
+					for (const data in taglessParsing) {
+						if (data.matches != null) {
+							console.error(`A tagless parser doesn't have any .matches: ${data.matches}`);
+							continue;
+						}
 
-								if (!readwarning) {
-									readwarning = true;
-									toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+						data.matches.some(function(matcher) {
+							var matches = matcher.regex.exec(line);
+							if (matches) {
+								try {
+									if (matcher.handler) {
+										return matcher.handler(matches);
+									}
+								} catch (e) {
+									console.log(e);
+	
+									if (!readwarning) {
+										readwarning = true;
+										toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
+									}
 								}
 							}
-						}
-					});
+						});
+					}
 				}
 			}
 
