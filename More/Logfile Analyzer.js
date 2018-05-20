@@ -2310,29 +2310,74 @@ $(function() {
 				loggingTag: "Game of Life Cruel",
 				matches: [
 					{
-						regex: /\(0 is black, 1 is white and X is colored\):/,
+						regex: /Cell color reference:/,
 						handler: function(_, module) {
-							var grid = $("<div>").css({ display: "inline-block", "font-size": 0, border: "2px gray solid" });
-							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("")).forEach(row => {
-								var rowElem = $("<div>").appendTo(grid);
-								row.forEach(cell => {
-									$("<div>").css({
-										display: "inline-block",
-										width: "11px",
-										height: "11px",
-										background: cell == "1" ? "white" : (cell == "0" ? "#444" : "linear-gradient(to right, red, orange, yellow, green, blue, purple, saddlebrown)"),
-										border: '1px solid black'
-									}).appendTo(rowElem);
-								});
-							});
-						
-							module.push(grid);
-						
-							return true;
+							module.reference = {};
+
+							while (linen < lines.length) {
+								var matches = (/(.) = (.+)/).exec(readLine());
+								if (matches == null) break;
+								module.reference[matches[1]] = matches[2];
+							}
+
+							linen--;
 						}
 					},
 					{
-						regex: /.+/
+						regex: /((?:Answer for|Submitted at) .+):/,
+						handler: function(matches, module) {
+							module.push([matches[1], module.answer = []]);
+						}
+					},
+					{
+						regex: /(Initial state|Solution|Colored square states|Submit pressed. Submitted states are):/,
+						handler: function(matches, module) {
+							const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
+							readMultiple(8).split("\n").map(row => row.split("")).forEach((row, y) => {
+								row.forEach((cell, x) => {
+									const color = module.reference[cell];
+									const rect = $SVG(`<rect x=${x} y=${y} width=1 height=1 stroke=black stroke-width=0.05>`).appendTo(grid);
+									if (color == "White") rect.css("fill", "white");
+									else if (color == "Black") rect.css("fill", "#444");
+									else {
+										var matches = /(Flashing|Steady) ([^/]+)(?:\/(.+))?/.exec(color);
+										if (matches[1] == "Steady") rect.css("fill", color);
+										else {
+											$SVG(`<animate
+											attributeType="XML"
+											attributeName="fill"
+											values=${matches[2]};${matches[3] || "#444"}
+											dur="1s"
+											calcMode="discrete"
+											repeatCount="indefinite"/>`).appendTo(rect);
+										}
+									}
+								});
+							});
+
+							let target = module.answer || module;
+							if (matches[1] == "Submit pressed. Submitted states are") target = module;
+
+							target.push({ label: matches[1], obj: grid });
+						}
+					},
+					{
+						regex: /Found errors? at squares? ([A-Z0-9, ]+). Strike/,
+						handler: function(matches, module) {
+							const errors = matches[1].split(", ").map(pair => { return { x: pair.charCodeAt(0) - 65, y: parseInt(pair[1]) - 1 }; });
+							const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
+							for (var x = 0; x < 6; x++) {
+								for (var y = 0; y < 8; y++) {
+									const rect = $SVG(`<rect x=${x} y=${y} width=1 height=1 fill=#444 stroke=black stroke-width=0.05>`).appendTo(grid);
+									if (errors.some(error => error.x == x && error.y == y)) rect.css("fill", "red");
+								}
+							}
+							
+							module.push({ label: "Strike, incorrect squares:", obj: grid });
+						}
+					},
+					{
+						regex: /No errors found!/
 					}
 				]
 			},
@@ -2342,29 +2387,17 @@ $(function() {
 				loggingTag: "Game of Life Simple",
 				matches: [
 					{
-						regex: /\(0 is black, 1 is white\):/,
-						handler: function(_, module) {
-							var grid = $("<div>").css({ display: "inline-block", "font-size": 0, border: "2px gray solid" });
-							readMultiple(8).split("\n").map(row => row.replace(/ /g, "").split("").map(cell => cell == "1")).forEach(row => {
-								var rowElem = $("<div>").appendTo(grid);
-								row.forEach(cell => {
-									$("<div>").css({
-										display: "inline-block",
-										width: "11px",
-										height: "11px",
-										background: cell ? "white" : "#444",
-										border: '1px solid black'
-									}).appendTo(rowElem);
+						regex: /(Initial state|Solution):/,
+						handler: function(matches, module) {
+							const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
+							readMultiple(8).split("\n").map(row => row.split("").map(cell => cell == "◻")).forEach((row, y) => {
+								row.forEach((cell, x) => {
+									$SVG(`<rect x=${x} y=${y} width=1 height=1 stroke=black stroke-width=0.05 fill=${cell ? "white" : "#444"}>`).appendTo(grid);
 								});
 							});
 						
-							module.push(grid);
-						
-							return true;
+							module.push({ label: matches[1], obj: grid });
 						}
-					},
-					{
-						regex: /.+/
 					}
 				]
 			},
