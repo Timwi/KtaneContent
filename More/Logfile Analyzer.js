@@ -11,6 +11,10 @@ const DuplicateLogging = { // Used for modules that have a different logging tag
 		key: "Piano Keys",
 		name: "FestivePianoKeys"
 	},
+	"Game of Life Simple": {
+		key: "Game of Life Cruel",
+		name: "GameOfLifeSimple"
+	}
 };
 
 // A list of internal port names used to convert to their display name.
@@ -2341,7 +2345,7 @@ $(function() {
 									else if (color == "Black") rect.css("fill", "#444");
 									else {
 										var matches = /(Flashing|Steady) ([^/]+)(?:\/(.+))?/.exec(color);
-										if (matches[1] == "Steady") rect.css("fill", color);
+										if (matches[1] == "Steady") rect.css("fill", matches[2]);
 										else {
 											$SVG(`<animate
 											attributeType="XML"
@@ -2383,23 +2387,7 @@ $(function() {
 			},
 			{
 				displayName: "Game Of Life",
-				moduleID: "GameOfLifeSimple",
-				loggingTag: "Game of Life Simple",
-				matches: [
-					{
-						regex: /(Initial state|Solution):/,
-						handler: function(matches, module) {
-							const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
-							readMultiple(8).split("\n").map(row => row.split("").map(cell => cell == "◻")).forEach((row, y) => {
-								row.forEach((cell, x) => {
-									$SVG(`<rect x=${x} y=${y} width=1 height=1 stroke=black stroke-width=0.05 fill=${cell ? "white" : "#444"}>`).appendTo(grid);
-								});
-							});
-						
-							module.push({ label: matches[1], obj: grid });
-						}
-					}
-				]
+				moduleID: "GameOfLifeSimple"
 			},
 			{
 				moduleID: "HexamazeModule",
