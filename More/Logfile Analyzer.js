@@ -2395,13 +2395,27 @@ $(function() {
                 loggingTag: "Grid Matching",
                 matches: [
                     {
-                        regex: /^(.*:) (\d+) +(.*: [A-Z])$/,
+                        regex: /^(.*:) (\d+) +(.*:) ([A-Z])$/,
                         handler: function(matches, module) {
-                            if ('Already' in module && matches[1] in module.Already)
+                            var label = matches[1];
+                            var extra = matches[3];
+                            var letter = matches[4];
+                            if (label === 'Seed Grid:')
                                 return true;
-                            if (!('Already' in module))
-                                module.Already = {};
-                            module.Already[matches[1]] = true;
+                            if (label === 'Current Grid:') {
+                                if (!('currentGridSeen' in module)) {
+                                    module.currentGridSeen = true;
+                                    return true;
+                                }
+                                label = 'Submitted Grid:';
+                                extra = 'Submitted Label:';
+                            }
+                            if (label === 'Solution Grid:') {
+                                if (!('solutionGridSeen' in module))
+                                    module.solutionGridSeen = true;
+                                else
+                                    return true;
+                            }
                             var n = parseInt(matches[2]);
                             function each(n, fnc) {
                                 var str = '';
@@ -2410,7 +2424,7 @@ $(function() {
                                 return str;
                             }
                             module.push({
-                                label: `${matches[1]} (${matches[3]})`,
+                                label: `${label} (${extra} ${letter})`,
                                 obj: $(`<table style='border-collapse: collapse'>
                                     ${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
                                 </table>`)
