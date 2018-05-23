@@ -2405,10 +2405,12 @@ $(function() {
                             if (label === 'Current Grid:') {
                                 if (!('currentGridSeen' in module)) {
                                     module.currentGridSeen = true;
-                                    return true;
+                                    label = 'Initial Grid:';
+                                    extra = null;
+                                } else {
+                                    label = 'Submitted Grid:';
+                                    extra = 'Submitted Label:';
                                 }
-                                label = 'Submitted Grid:';
-                                extra = 'Submitted Label:';
                             }
                             if (label === 'Solution Grid:') {
                                 if (!('solutionGridSeen' in module))
@@ -2424,7 +2426,7 @@ $(function() {
                                 return str;
                             }
                             module.push({
-                                label: `${label} (${extra} ${letter})`,
+                                label: `${label}${(extra === null ? '' : ` (${extra} ${letter})`)}`,
                                 obj: $(`<table style='border-collapse: collapse'>
                                     ${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
                                 </table>`)
