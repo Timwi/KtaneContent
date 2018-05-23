@@ -821,7 +821,7 @@ $(function() {
 						handler: function(matches) {
 							if (bombgroup.isSingleBomb) {
 								bomb.Strikes = parseInt(matches[1]);
-						
+
 								if (bomb.Strikes == bomb.TotalStrikes) {
 									bomb.State = "Exploded (Strikes)";
 								}
@@ -834,7 +834,7 @@ $(function() {
 							bombgroup.FilterLines();
 							if (GetBomb().State == "Unsolved") {
 								GetBomb().State = "Exploded";
-						
+
 								if (bombgroup.isSingleBomb && bomb.Strikes != bomb.TotalStrikes) {
 									bomb.State = "Exploded (Time Ran Out)";
 									bomb.TimeLeft = 0;
@@ -861,15 +861,15 @@ $(function() {
 						regex: /Generating bomb with seed (\d+)/,
 						handler: function(matches) {
 							bomb = new Bomb(parseInt(matches[1]));
-						
+
 							if (!bombgroup) {
 								bombgroup = new BombGroup();
 								bombSerialIndex = 0;
 								bombgroup.StartLine = linen;
-						
+
 								parsed.push(bombgroup);
 							}
-						
+
 							bombgroup.Bombs.push(bomb);
 						}
 					},
@@ -897,17 +897,17 @@ $(function() {
 									moduleID: matches[1],
 								};
 							}
-							
+
 							if (moduleData.displayName == undefined) moduleData.displayName = convertID(moduleData.moduleID);
 							if (moduleData.icon == undefined) moduleData.icon = moduleData.displayName;
 
 							bomb.Modules[matches[1]].moduleData = moduleData;
-						
+
 							bomb.TotalModules++;
 							if (matches[2].includes("Needy")) {
 								bomb.Needies++;
 							}
-						
+
 						}
 					},
 					{
@@ -1085,7 +1085,7 @@ $(function() {
 								if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
 								else bomb.Solved = bomb.TotalModules;
 								bomb.TimeLeft = parseFloat(matches[3]) / 0.2 * bomb.Time;
-						
+
 								if (bomb.TimeLeft === 0) {
 									bomb.State = "Exploded (Time Ran Out)";
 								}
@@ -1201,12 +1201,12 @@ $(function() {
 					{
 						regex: /Ships: .+/,
 						handler: function(matches, module) {
-						
+
 							var fieldStr = readMultiple(6);
 							var field = fieldStr.replace('\r', '').split('\n');
-						
+
 							var r, tr, c, td;
-						
+
 							var stuff = [];
 							for (r = 0; r < 6; r++) {
 								stuff[r] = [];
@@ -1218,7 +1218,7 @@ $(function() {
 										stuff[r][c] = ch;
 								}
 							}
-						
+
 							var table = $('<table>').css('border-spacing', '0');
 							for (r = 0; r < 6; r++) {
 								tr = $('<tr>').appendTo(table);
@@ -1231,12 +1231,12 @@ $(function() {
 										var waterBelow = r == 5 || !stuff[r + 1][c].IsShip;
 										var waterLeft = c == 1 || !stuff[r][c - 1].IsShip;
 										var waterRight = c == 5 || !stuff[r][c + 1].IsShip;
-						
+
 										var shipAbove = r == 1 || stuff[r - 1][c].IsShip;
 										var shipBelow = r == 5 || stuff[r + 1][c].IsShip;
 										var shipLeft = c == 1 || stuff[r][c - 1].IsShip;
 										var shipRight = c == 5 || stuff[r][c + 1].IsShip;
-						
+
 										var imgId =
 											!stuff[r][c].IsShip ? "SqWater" :
 												waterAbove && waterBelow && waterLeft && waterRight ? "SqShipA" :
@@ -1246,14 +1246,14 @@ $(function() {
 																waterLeft && waterBelow && waterRight && shipAbove ? "SqShipB" :
 																	waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
 																		waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
-						
+
 										$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
 										if (stuff[r][c].IsSafeLocation)
 											td.css('border', '3px solid red');
 									}
 								}
 							}
-						
+
 							module.push({ label: "Solution:", obj: table });
 						}
 					}
@@ -1366,10 +1366,10 @@ $(function() {
 						regex: /Expression/,
 						handler: function(matches, module) {
 							readLine();
-						
+
 							var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
 								.appendTo("body");
-						
+
 							var sections = ["A", "NONE", "AB", "AC", "ABC", "B", "C", "BC"];
 							var positions = {
 								"AB": "translate(125px, 200px)",
@@ -1377,11 +1377,11 @@ $(function() {
 								"B": "translate(93px, 275px)",
 								"C": "translate(254px, 275px)"
 							};
-						
+
 							readMultiple(16).match(/[UL]/g).forEach(function(letter, index) {
 								var elem = svg.find("path, circle").eq(index);
 								elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
-						
+
 								var bbox = elem[0].getBBox();
 								var text = sections[index];
 								$SVG("<text>")
@@ -1396,7 +1396,7 @@ $(function() {
 									})
 									.appendTo(svg.children("g"));
 							});
-						
+
 							module.push({ label: "Diagram:", obj: $("<div style='width: 40%'>").append(svg), expanded: true });
 						}
 					}
@@ -1410,7 +1410,7 @@ $(function() {
 						regex: /Buttons:/,
 						handler: function(_, module) {
 							var step = module.Step || module;
-						
+
 							step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
 						}
 					},
@@ -1427,13 +1427,13 @@ $(function() {
 						handler: function(matches, module) {
 							var step = module.Step;
 							step.push("Press: " + matches[1]);
-						
+
 							var line = readLine();
 							while ((/".+" at \d, \d/).exec(line)) {
 								step.push(line);
 								line = readLine();
 							}
-						
+
 							linen--;
 						}
 					},
@@ -1450,25 +1450,25 @@ $(function() {
 						regex: /(Braille patterns (on module|after flips):) (.+)/,
 						handler: function(matches, module) {
 							var div = $("<div>");
-						
+
 							if (matches[2] == "on module") {
 								module.braille = [];
 							}
-						
+
 							matches[3].split("; ").forEach(function(spots, i) {
 								var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
-						
+
 								spots.split("-").forEach(function(posStr) {
 									var pos = parseInt(posStr) - 1;
 									$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 								});
-						
+
 								if (matches[2] == "on module") {
 									if (module.flipped) {
 										module.flipped.forEach(function(pos) {
 											var char = Math.floor(pos / 6);
 											if (char != i) return;
-						
+
 											var absPos = pos % 24;
 											var svg = module.flippedSVG[absPos];
 											svg[0].clone().prependTo(braille);
@@ -1479,9 +1479,9 @@ $(function() {
 									}
 								}
 							});
-						
+
 							module.groups.add({ label: matches[1], obj: div, expanded: true });
-						
+
 							return true;
 						}
 					},
@@ -1493,16 +1493,16 @@ $(function() {
 							matches[1].split(", ").forEach(function(posStr, flipNumber) {
 								var pos = parseInt(posStr) - 1;
 								module.flipped.push(pos);
-						
+
 								var char = Math.floor(pos / 6);
 								var dotPos = pos - char * 6;
-						
+
 								var absPos = pos % 24;
 								var text;
 								if (!module.flippedSVG[absPos]) {
 									var highlight = $SVG('<rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
 									text = $SVG('<text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
-						
+
 									module.flippedSVG[absPos] = [highlight, text];
 								}
 								else {
@@ -1511,7 +1511,7 @@ $(function() {
 									svg[1].text(`${svg[1].text()} ${flipNumber + 1}`).attr("font-size", parseFloat(svg[1].attr("font-size")) - 0.15);
 									text = svg[1];
 								}
-						
+
 								var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 								if (noDot) {
 									text.attr("fill", "black");
@@ -1631,7 +1631,7 @@ $(function() {
 								tr.append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingLeft: '1em' }));
 							}
 							$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
-						
+
 							module.push({ label: "Board:", obj: table });
 						}
 					},
@@ -1684,7 +1684,7 @@ $(function() {
 								};
 								module.push(module.SwitchInfo.dom);
 							}
-						
+
 							var state = matches[2];
 							var svg = "";
 							var i;
@@ -1695,7 +1695,7 @@ $(function() {
 									"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
 									"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
 									"</g>";
-						
+
 							var x = 0;
 							switch (matches[1][0]) {
 								case 'V':
@@ -1712,12 +1712,12 @@ $(function() {
 										+ module.SwitchInfo.svg;
 									module.SwitchInfo.prevState = state;
 									break;
-						
+
 								case 'I':
 									// Initial state
 									module.SwitchInfo.prevState = state;
 									break;
-						
+
 								case 'T':
 									// Desired state
 									module.SwitchInfo.y--;
@@ -1725,9 +1725,9 @@ $(function() {
 									module.SwitchInfo.svg = "<text font-size='7' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
 									break;
 							}
-						
+
 							svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect fill='#d7dbe5' x='0' y='0' width='55' height='35' />" + svg + "</g>";
-						
+
 							module.SwitchInfo.y++;
 							module.SwitchInfo.svg += svg;
 							module.SwitchInfo.set();
@@ -1739,7 +1739,7 @@ $(function() {
 						handler: function(matches, module) {
 							if (!('SwitchInfo' in module))
 								return;
-						
+
 							module.SwitchInfo.svg =
 								"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' /><g transform='translate({x}, {y2})' stroke-width='3' stroke='red'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
 									.replace(/\{x\}/g, 11 * (parseInt(matches[1]) - 1) + 5.5)
@@ -1755,11 +1755,11 @@ $(function() {
 						handler: function(matches, module) {
 							if (!('SwitchInfo' in module))
 								return;
-						
+
 							var cols = matches[1].split(',');
 							if (cols.length != 5)
 								return;
-						
+
 							var lightColors = {
 								'Red': '#f65353',
 								'Green': '#0fe325',
@@ -1776,7 +1776,7 @@ $(function() {
 								'Orange': 'hsl(39, 70%, 42%)',
 								'Turquoise': 'hsl(195, 70%, 56%)'
 							};
-						
+
 							for (var i = 0; i < 5; i++) {
 								module.SwitchInfo.lightColors[i] = lightColors[cols[i].trim()];
 								module.SwitchInfo.darkColors[i] = darkColors[cols[i].trim()];
@@ -1827,7 +1827,7 @@ $(function() {
 						regex: /(Solution|Submitted):/,
 						handler: function(matches, module) {
 							module.push([matches[1], module.items = []]);
-						
+
 							return true;
 						}
 					},
@@ -1870,7 +1870,7 @@ $(function() {
 						regex: /Grid:/,
 						handler: function(_, module) {
 							var x;
-						
+
 							var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
 							for (x = 0; x < module.Width; x++)
 								$('<col>').attr('width', (99 / module.Width) + '%').appendTo(table);
@@ -1883,7 +1883,7 @@ $(function() {
 										td.text(module.Coordinates[key].Text).css({ border: '3px solid ' + (module.Coordinates[key].Legal ? '#0c0' : '#f00'), fontSize: module.Coordinates[key].Text.length > 6 ? "80%" : "125%", whiteSpace: 'pre-line' });
 								}
 							}
-						
+
 							module.push({ label: "Grid:", obj: table });
 							return true;
 						}
@@ -1903,7 +1903,7 @@ $(function() {
 							if (module.length === 0) {
 								module.push(["Initial attempt", [], true]);
 							}
-						
+
 							module[module.length - 1][1].push(matches.input);
 						}
 					},
@@ -2022,7 +2022,7 @@ $(function() {
 								calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
 								calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
 								module.push({ label: 'Calculations:', obj: calcTable });
-						
+
 								function key(ix) {
 									return `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
 								}
@@ -2129,14 +2129,14 @@ $(function() {
 						regex: /Wire state:/,
 						handler: function(_, module) {
 							var states = [];
-						
+
 							var line = readLine();
 							while ((/^Wire \d+-to-\d+/).exec(line)) {
 								states.push(line);
 								line = readLine();
 							}
 							linen--;
-						
+
 							module.push(["Wire states:", states]);
 						}
 					},
@@ -2147,7 +2147,7 @@ $(function() {
 								module.push(matches.input);
 							} else {
 								var states = [];
-						
+
 								var line = readLine();
 								while ((/^Wire \d+-to-\d+/).exec(line)) {
 									states.push(line);
@@ -2193,9 +2193,9 @@ $(function() {
 								module.SymbolsText = [];
 								module.push(["Symbols", module.SymbolsText]);
 							}
-						
+
 							module.SymbolsText.push(matches.input.replace(/^Friendship symbol /, ""));
-						
+
 							var m2 = /^Friendship symbol #\d: \(X=(\d+), Y=(\d+), Pony=(.*) \((row|col)\)\)$/.exec(matches.input);
 							if (m2 === null)
 								module.SkipSvg = true;
@@ -2221,10 +2221,10 @@ $(function() {
 											isRowTie = true;
 									}
 								}
-						
+
 								module.Symbols.push({ X: x, Y: y, Pony: m2[3], IsRow: isRow, IsColTie: isColTie, IsRowTie: isRowTie, Disregard: false });
 							}
-						
+
 							return true;
 						}
 					},
@@ -2233,9 +2233,9 @@ $(function() {
 						handler: function(matches, module) {
 							if (!module.Symbols || module.SkipSvg)
 								return false;
-						
+
 							var i;
-						
+
 							var ix = -1;
 							for (i = 0; i < module.Symbols.length; i++)
 								if (module.Symbols[i].Pony === matches[2] && module.Symbols[i].IsRow === (matches[1] === 'row')) {
@@ -2260,7 +2260,7 @@ $(function() {
 						handler: function(matches, module) {
 							if (module.SkipSvg)
 								return false;
-						
+
 							var ponyNames = [
 								"Amethyst Star", "Apple Cinnamon", "Apple Fritter", "Babs Seed", "Berry Punch", "Big McIntosh", "Bulk Biceps",
 								"Cadance", "Carrot Top", "Celestia", "Cheerilee", "Cheese Sandwich", "Cherry Jubilee", "Coco Pommel",
@@ -2270,21 +2270,21 @@ $(function() {
 								"Screwball", "Shining Armor", "Silver Shill", "Silver Spoon", "Silverstar", "Spoiled Rich", "Starlight Glimmer",
 								"Sunburst", "Sunset Shimmer", "Suri Polomare", "Sweetie Drops", "Thunderlane", "Time Turner", "Toe Tapper",
 								"Tree Hugger", "Trenderhoof", "Trixie", "Trouble Shoes", "Twilight Velvet", "Twist", "Vinyl Scratch"];
-						
+
 							function imgHref(num) {
 								if (num < 10)
 									num = "0" + num;
 								return "../HTML/img/Friendship/Friendship Symbol " + num + ".png";
 							}
-						
+
 							var cutieMarks = '';
 							var colDisregards = '';
 							var rowDisregards = '';
 							for (var i = 0; i < module.Symbols.length; i++) {
 								cutieMarks += "<img src='" + imgHref(ponyNames.indexOf(module.Symbols[i].Pony)) + "' style='position: absolute; left: " + (30 * module.Symbols[i].X + 23) + "px; top: " + (30 * module.Symbols[i].Y + 23) + "px; width: 84px; height: 84px;' />";
-						
+
 								var color;
-						
+
 								var x = 30 * module.Symbols[i].X + 23 + 42;
 								var y = 30 * module.Symbols[i].Y + 23 + 42;
 								if (module.Symbols[i].IsRowTie || module.Symbols[i].Disregard === 'row') {
@@ -2296,7 +2296,7 @@ $(function() {
 									colDisregards += "<div style='position: absolute; left: " + (x - 2) + "px; top: " + y + "px; width: 4px; height: " + (390 - y) + "px; background: " + color + "'></div><div style='position: absolute; left: " + x + "px; top: 395px; color: " + color + "; transform: translateX(-50%)'>" + (module.Symbols[i].IsColTie ? 'tie' : 'disregard') + "</div>";
 								}
 							}
-						
+
 							var bkgSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 490 370'>" +
 								"<path fill='#C595EC' d='M 0,0 0,240 C 70,240 130,300 130,370 L 490,370 490,130 C 420,130 360,70 360,0 z'/>" +
 								"<path fill='#080814' d='M 20,20 340,20 C 350,90 400,140 470,150 L 470,350 150,350 C 140,280 90,230 20,220 z'/>" +
@@ -2376,7 +2376,7 @@ $(function() {
 									if (errors.some(error => error.x == x && error.y == y)) rect.css("fill", "red");
 								}
 							}
-							
+
 							module.push({ label: "Strike, incorrect squares:", obj: grid });
 						}
 					},
@@ -2389,6 +2389,42 @@ $(function() {
 				displayName: "Game Of Life",
 				moduleID: "GameOfLifeSimple"
 			},
+            {
+                displayName: "Grid Matching",
+                moduleID: "GridMatching",
+                loggingTag: "Grid Matching",
+                matches: [
+                    {
+                        regex: /^(.*:) (\d+) +(.*: [A-Z])$/,
+                        handler: function(matches, module) {
+                            if ('Already' in module && matches[1] in module.Already)
+                                return true;
+                            if (!('Already' in module))
+                                module.Already = {};
+                            module.Already[matches[1]] = true;
+                            var n = parseInt(matches[2]);
+                            function each(n, fnc) {
+                                var str = '';
+                                for (var i = 0; i < n; i++)
+                                    str += fnc(i);
+                                return str;
+                            }
+                            module.push({
+                                label: `${matches[1]} (${matches[3]})`,
+                                obj: $(`<table style='border-collapse: collapse'>
+                                    ${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
+                                </table>`)
+                                    .find('td').css({ width: '25px', height: '25px', border: '1px solid black', padding: '0' }).end()
+                                    .find('td.filled').css('background', 'black').end()
+                            });
+                            return true;
+                        }
+                    },
+                    {
+                        regex: /.+/
+                    }
+                ]
+            },
 			{
 				moduleID: "HexamazeModule",
 				loggingTag: "Hexamaze",
@@ -2400,7 +2436,7 @@ $(function() {
 								module.Moves = [];
 								module.push(["Moves", module.Moves]);
 							}
-						
+
 							module.Moves.push(matches.input);
 							return true;
 						}
@@ -2416,7 +2452,7 @@ $(function() {
 								color: matches[6],
 								markings: []
 							};
-						
+
 							module.push(module.Link);
 						}
 					},
@@ -2457,23 +2493,23 @@ $(function() {
 									.attr({ src: '../HTML/img/Hunting/' + str + (str.charCodeAt(0) >= 96 ? '_' : '') + '.png', width: 50 })
 									.css({ verticalAlign: 'middle', margin: '0 5px' }));
 							}
-						
+
 							var cluesLi = $('<li>').text('Clues: ').addClass('no-bullet');
 							addImg(cluesLi, matches[2]);
 							addImg(cluesLi, matches[3]);
-						
+
 							var buttonsLi = $('<li>').text('Buttons: ').addClass('no-bullet');
 							var arr = matches[4].trim().split(' ');
 							for (var j = 0; j < arr.length; j++) {
 								addImg(buttonsLi, arr[j]);
 							}
-						
+
 							var decoysLi = $('<li>').text('Decoys: ').addClass('no-bullet');
 							var arr = matches[5].trim().split(' ');
 							for (j = 0; j < arr.length; j++) {
 								addImg(decoysLi, arr[j]);
 							}
-						
+
 							module.push({ label: 'Stage ' + matches[1], obj: $('<ul>').append(cluesLi).append(buttonsLi).append(decoysLi), expandable: true });
 							return true;
 						}
@@ -2550,15 +2586,15 @@ $(function() {
 							for (var i = 0; i < 4; i++) {
 								var line = readLine();
 								if (line == "") break;
-						
+
 								lines.push(line);
 							}
-						
+
 							var verb = "Solution";
 							if (lines.length == 4) verb = lines.includes("Passed") ? "Solved" : "Striked";
-						
+
 							module.push([`${verb} for ${matches[1]} module${parseInt(matches[1]) == 1 ? "" : "s"}`, lines]);
-						
+
 							if (verb == "Solution" && matches[1] == "5") {
 								module.push({linebreak: true});
 							}
@@ -2635,16 +2671,16 @@ $(function() {
 								A: "gray",
 								K: "black"
 							};
-						
-						
+
+
 							for (let y = 1; y < 8; y++) {
 								$SVG(`<line x1=0 y1=${y} x2=8 y2=${y} stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
-						
+
 							for (let x = 1; x < 8; x++) {
 								$SVG(`<line x1=${x} y1=0 x2=${x} y2=8 stroke-width="0.05" stroke="black">`).appendTo(svg);
 							}
-						
+
 							for (let y = 0; y < 8; y++) {
 								for (let x = 0; x < 8; x++) {
 									const char = board[y][x];
@@ -2652,7 +2688,7 @@ $(function() {
 									$SVG(`<rect x=${x} y=${y} width=1 height=1 fill=${colors[char]}>`).appendTo(svg);
 								}
 							}
-						
+
 							module.push({ label: matches.input, obj: svg, expandable: true });
 							return true;
 						}
@@ -2952,7 +2988,7 @@ $(function() {
 						handler: function(matches, module) {
 							if (!module.Stages) module.Stages = [];
 							module.push([matches[1], module.Stage = []]);
-						
+
 							return true;
 						}
 					},
@@ -2960,7 +2996,7 @@ $(function() {
 						regex: /<Stage ?\d> /,
 						handler: function(matches, module) {
 							module.Stage.push(matches.input);
-						
+
 							return true;
 						}
 					},
@@ -2989,7 +3025,7 @@ $(function() {
 							while (/\| {2}/.test(lines) && !/\| [^ ]/.test(lines))
 								lines = lines.replace(/\| /g, '|');
 							module.push({ label: "Cards:", obj: pre(lines) });
-						
+
 							var line;
 							do {
 								line = readLine();
@@ -3028,7 +3064,7 @@ $(function() {
 							if (monsplode) {
 								module.Bullet[0] += ` (${monsplode[1]})`;
 							}
-						
+
 							module.CardGen.push(matches.input);
 						}
 					}
@@ -3100,7 +3136,7 @@ $(function() {
 								module.GroupLines.push(["Moves", module.Group.Moves = []]);
 							}
 							module.Group.Moves.push(matches.input);
-						
+
 							return true;
 						}
 					},
@@ -3113,7 +3149,7 @@ $(function() {
 							if (!module.Group) {
 								matches[1] = "Initial solution";
 							}
-						
+
 							module.push(module.Group = [matches[1], module.GroupLines = []]);
 							return true;
 						}
@@ -3137,7 +3173,7 @@ $(function() {
 							if (!module.GroupLines) {
 								module.push(module.Group = [matches[1], module.GroupLines = []]);
 							}
-						
+
 							var container = $("<div>").css("position", "relative");
 							$("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
 							var marker = $("<div>").css({
@@ -3146,7 +3182,7 @@ $(function() {
 								position: "absolute",
 								"border-radius": "50%"
 							});
-						
+
 							marker
 								.clone()
 								.css({
@@ -3154,7 +3190,7 @@ $(function() {
 									left: 12.5 + 35 * (matches[1].charCodeAt() - 65) + "px",
 									background: "green"
 								}).appendTo(container);
-						
+
 							marker
 								.clone()
 								.css({
@@ -3162,7 +3198,7 @@ $(function() {
 									left: 12.5 + 35 * (matches[3].charCodeAt() - 65) + "px",
 									background: "red"
 								}).appendTo(container);
-						
+
 							(module.GroupLines || module).push({ label: container });
 						}
 					}
@@ -3331,7 +3367,7 @@ $(function() {
 									blue: "rgb(76, 76, 255)",
 									red: "rgb(255, 76, 76)"
 								};
-						
+
 								var svg = $('<svg viewBox="-0.1 -0.1 3 4" height="30%" style="display: block;"><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" y="3" fill="rgb(0, 255, 0)"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="0.4" y="3.4">ENT</text><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" x="2" y="3" fill="red"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="2.4" y="3.4">CLR</text></svg>');
 								for (var i = 0; i < 10; i++)
 								{
@@ -3342,9 +3378,9 @@ $(function() {
 									$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colorMapping[color]).appendTo(svg);
 									$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(buttonToLabel[i]).appendTo(svg);
 								}
-						
+
 								module.push({ label: "Button Colors:", obj: svg });
-						
+
 								return true;
 							}
 						}
@@ -3500,7 +3536,7 @@ $(function() {
 											matches[4] === 'cut last' ? 'L' : null
 								/* eslint-enable indent */
 							};
-						
+
 							if (matches[2] === '6') {
 								var svg = '';
 								var starsCoords = [[123.3 - 5, 36.2], [161 - 5, 50], [198.5 - 5, 63.6], [236 - 5, 77.2]];
@@ -3508,7 +3544,7 @@ $(function() {
 								var arrowsCoords = [];
 								for (var i = 0; i < 6; i++)
 									arrowsCoords.push([40 + 40 * i, 250]);
-						
+
 								// Wires
 								for (i = 0; i < 6; i++) {
 									svg += (
@@ -3530,7 +3566,7 @@ $(function() {
 										.replace(/\{textcolor\}/g, module.PerplexingWires.Wires[i].Cut === '✗' ? '#a00' : '#080')
 										.replace(/\{cut\}/g, module.PerplexingWires.Wires[i].Cut);
 								}
-						
+
 								// Lettering at the bottom
 								var vennColors = ['#eb1414', '#ffb100', '#ee0', '#00be00', '#09f'];
 								var vennColorNames = ['Red', 'Orange', 'Yellow', 'Green', 'Blue'];
@@ -3543,18 +3579,18 @@ $(function() {
 											.replace(/\{c\}/g, vennColors[c]);
 									}
 								}
-						
+
 								// Frames
 								svg +=
 									'<path d="M10 10h50v110H10z"/>' +                                       // LEDs frame
 									'<path d="M95.5 10l169.2 61.7-10.2 28.2L85.3 38.2z" fill="#fff"/>' +    // stars
 									'<path d="M10 230h260v40H10z" fill="#fff"/>';                           // arrows
-						
+
 								// LEDs
 								svg += '<path d="M35 22  l8.7 4   2.2 9.6-6 7.6H30l-6-7.6 2-9.5z" fill="' + (module.PerplexingWires.LEDs[0] ? 'lime' : '#234') + '"/>';
 								svg += '<path d="M35 54.5l8.7 4   2.2 9.5-6 7.7H30L24 68l2-9.4z"  fill="' + (module.PerplexingWires.LEDs[1] ? 'lime' : '#234') + '"/>';
 								svg += '<path d="M35 86.8l8.7 4.3 2.2 9.5-6 7.5H30l-6-7.5 2-9.7z" fill="' + (module.PerplexingWires.LEDs[2] ? 'lime' : '#234') + '"/>';
-						
+
 								// Stars
 								for (i = 0; i < 4; i++) {
 									svg += "<path transform='translate({x}, {y}) rotate(20)' d='M0-10l2.2 7h7.3l-6 4.2 2.4 7-6-4.4-6 4.3 2.4-6.8-6-4.3H-2z' fill='{f}'/>"
@@ -3562,7 +3598,7 @@ $(function() {
 										.replace(/\{y\}/g, starsCoords[i][1])
 										.replace(/\{f\}/g, module.PerplexingWires.Stars[i] ? 'black' : 'white');
 								}
-						
+
 								// Arrows
 								for (i = 0; i < 6; i++) {
 									svg += "<path transform='translate({x}, {y}) rotate({r})' d='M0-15L11 0H5.7v15H-5.7v-15H-11z' fill='{f}'/>"
@@ -3571,7 +3607,7 @@ $(function() {
 										.replace(/\{f\}/g, module.PerplexingWires.Arrows[i].Color)
 										.replace(/\{r\}/g, module.PerplexingWires.Arrows[i].Rotation);
 								}
-						
+
 								module.push({ label: 'Module:', obj: $('<svg viewBox="0 0 280 400" fill="none" stroke="#000" stroke-width="2" style="width: 10cm; display: block">' + svg + '</svg>') });
 							}
 							return true;
@@ -3603,7 +3639,7 @@ $(function() {
 								Y: '#E8E800',
 								P: '#A423A4'
 							};
-						
+
 							// OK, now this is weird. Sometimes the lines are fine,
 							// sometimes they are double-spaced with blank lines.
 							// Read one line to find out whether it’s blank.
@@ -3708,7 +3744,7 @@ $(function() {
 							readLine();
 							module.push(readLine().replace(/[|]/g, ""));
 							module.push(["Key Presses", input]);
-						
+
 							return true;
 						}
 					},
@@ -3751,9 +3787,9 @@ $(function() {
 							if (!module.Conditions) {
 								module.Conditions = [];
 							}
-						
+
 							module.Conditions.push(matches[0]);
-						
+
 							return true;
 						}
 					},
@@ -3766,7 +3802,7 @@ $(function() {
 								module.push(matches.input);
 							}
 							module.Conditions = null;
-						
+
 							return true;
 						}
 					},
@@ -3775,7 +3811,7 @@ $(function() {
 						handler: function(matches, module) {
 							module.Pipes = [];
 							module.Title = matches.input;
-						
+
 							return true;
 						}
 					},
@@ -3792,7 +3828,7 @@ $(function() {
 									threeway: 'M 0,0.25 0.25,0.25 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0,0.75',
 									fourway: 'M 0.25,0 0.75,0 0.75,0.25 1,0.25 1,0.75 0.75,0.75 0.75,1 0.25,1 0.25,0.75 0,0.75 0,0.25 0.25,0.25'
 								};
-						
+
 								var charMap = {
 									// [pipename, rotation * 90]
 									"╨": ["end", 0],
@@ -3811,7 +3847,7 @@ $(function() {
 									"╣": ["threeway", 3],
 									"╬": ["fourway", 0]
 								};
-						
+
 								var svgGrid = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" width="200" height="200" style="display: block; border: #a00 solid 4px; background: rgb(30, 30, 30)">');
 								for (var y in module.Pipes) {
 									for (var x in module.Pipes[y]) {
@@ -3832,7 +3868,7 @@ $(function() {
 										}
 									}
 								}
-						
+
 								module.push({ label: module.Title, obj: svgGrid });
 							}
 						}
@@ -3862,7 +3898,7 @@ $(function() {
 						handler: function(matches, module) {
 							if (module.correctSolves == 3) return;
 							if (matches[1] == "Correct") module.correctSolves++;
-						
+
 							module.stageNumber++;
 							module.push([`Stage ${module.stageNumber}`, module.stage = []]);
 						}
@@ -3970,17 +4006,17 @@ $(function() {
 						handler: function(matches) {
 							var line = readLine();
 							var allLines = line;
-						
+
 							while (!line.includes("All queries passed.")) {
 								line = readLine();
 								allLines += "\n" + line;
 							}
-						
+
 							var vanilla = {
 								Button: "BigButton",
 								WireSet: "Wires"
 							};
-						
+
 							readDirectly(line.substring(20), vanilla[matches[1]] || matches[1]);
 							readDirectly({ label: "Rule Info", obj: pre(allLines), expandable: true, expanded: false }, vanilla[matches[1]] || matches[1]);
 						}
@@ -4070,10 +4106,10 @@ $(function() {
 								};
 								module.push(module.SetInfo.Node);
 							}
-						
+
 							var moduleXY = module.SetInfo.XY(matches[1]);
 							var manualXY = module.SetInfo.XY(matches[2]);
-						
+
 							var pathData =
 								// pacman
 								matches[2] === 'A1' ? "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z" :
@@ -4093,14 +4129,14 @@ $(function() {
 															matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
 																// star
 																matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
-						
+
 							var symbolSvg = "<path d='!data!' fill='!fill!' stroke='black' stroke-width='5' transform='translate(!x!, !y!)!transform!'/>"
 								.replace(/!data!/g, pathData)
 								.replace(/!x!/g, 100 * moduleXY.X - 100 * manualXY.X)
 								.replace(/!y!/g, 100 * moduleXY.Y - 100 * manualXY.Y - 600)
 								.replace(/!fill!/g, matches[3] === 'filled' ? 'black' : matches[3] === 'wavy' ? 'url(#Wavy' + module.SetInfo.WavyId + ')' : 'none')
 								.replace(/!transform!/, matches[2] === 'C3' ? "matrix(1.25 0 0 1 -437.5 -2.77)" : '');
-						
+
 							if (matches[4] !== '0')
 								symbolSvg += "<path d='!data!' fill='black' stroke='none' transform='translate(!x!, !y!)'/>"
 									.replace(/!x!/g, 100 * moduleXY.X)
@@ -4108,7 +4144,7 @@ $(function() {
 									.replace(/!data!/g, matches[4] === '1'
 										? "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z"
 										: "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z");
-						
+
 							module.SetInfo.Symbols[moduleXY.X + 3 * moduleXY.Y] = symbolSvg;
 							return true;
 						}
@@ -4116,7 +4152,7 @@ $(function() {
 					{
 						regex: /^Solution: ([ABC][123]), ([ABC][123]), ([ABC][123])/,
 						handler: function(matches, module) {
-						
+
 							var framesSvg = '';
 							for (var i = 1; i <= 3; i++) {
 								var xy = module.SetInfo.XY(matches[i]);
@@ -4124,7 +4160,7 @@ $(function() {
 									.replace(/!x!/g, 100 * xy.X)
 									.replace(/!y!/g, 100 * xy.Y);
 							}
-						
+
 							module.SetInfo.Node.obj = $("<svg viewBox='-5 -5 310 310'><defs><pattern id='Wavy" + module.SetInfo.WavyId + "' height='5.2' width='30.1' patternUnits='userSpaceOnUse'><path d='M 7.597,0.061 C 5.079,-0.187 2.656,0.302 -0.01,1.788 L -0.01,3.061 C 2.773,1.431 5.173,1.052 7.472,1.280 C 9.770,1.508 11.969,2.361 14.253,3.218 C 18.820,4.931 23.804,6.676 30.066,3.061 L 30.062,1.788 C 23.622,5.497 19.246,3.770 14.691,2.061 C 12.413,1.207 10.115,0.311 7.597,0.061 z' /></pattern></defs>" + framesSvg + module.SetInfo.Symbols.join('') + "</svg>")
 								.css({ display: 'block', width: '12cm' });
 							return true;
@@ -4190,22 +4226,22 @@ $(function() {
 						regex: /Rule Log/,
 						handler: function(_, module) {
 							module.push(readLine()); // Initial
-						
+
 							for (var i = 0; i < 3; i++) {
 								readLine();
 								var start = new RegExp(/#(\d). Starting at: (\d)/).exec(readLine());
 								var slot = ["Slot #" + start[1] + " (" + start[2] + ")", []];
-						
+
 								var line = readLine();
 								while (!(/Final digit/).exec(line)) {
 									slot[1].push(line);
 									line = readLine();
 								}
 								slot[1].push(line);
-						
+
 								module.push(slot);
 							}
-						
+
 							readLine();
 							module.push(readLine()); // Final
 						}
@@ -4290,7 +4326,7 @@ $(function() {
 								}
 								answerSpan.text(answer).css({ border: '1px solid #888', padding: '0 .5em', margin: '0 .3em' }).appendTo(answers);
 							});
-						
+
 							module.push({ label: matches[1], obj: answers, expanded: true });
 						}
 					},
@@ -4332,9 +4368,9 @@ $(function() {
 							if (!matches.input.includes(",")) {
 								module.groups.add(matches.input);
 							}
-						
+
 							module.groups.addGroup();
-						
+
 							return true;
 						}
 					},
@@ -4397,11 +4433,11 @@ $(function() {
 						handler: function(matches, module) {
 							var step = [];
 							module.Step = step;
-						
+
 							module.push(["Step " + module.length + ":", step]);
-						
+
 							step.push({ label: matches.input, obj: pre(readMultiple(3)) });
-						
+
 							step.push(readLine()); // up next
 							step.push(readLine()); // current row
 						}
@@ -4428,9 +4464,9 @@ $(function() {
 								line = readLine();
 							}
 							lines += "}";
-						
+
 							module.push({ label: matches.input, obj: pre(lines) });
-						
+
 							return true;
 						}
 					},
@@ -4454,33 +4490,33 @@ $(function() {
 								CutIfParallelPortPresent: 		"Para.\nPort",
 								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
 							};
-						
+
 							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
 							if (wireData) {
 								if (!('diagram' in module)) {
 									module.diagram = $SVG(`<svg width="300px">`);
 									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
 								}
-						
+
 								const wireIndex = parseInt(wireData[1]);
 								if (module.parsedWires == undefined) module.parsedWires = [];
 								if (module.parsedWires[wireIndex] == true) return;
 								module.parsedWires[wireIndex] = true;
-						
+
 								const x = wireIndex * 0.6;
 								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
-						
+
 								// LED
 								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
-						
+
 								// Wire
 								const wireColors = wireData[2].split(", ");
 								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
 								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1/3)} width=0.475 height=${1/3} fill=${wireColors[1]}>`).appendTo(module.diagram);
-						
+
 								// Star
 								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
-						
+
 								// Rule/Should cut
 								$SVG(`<text x=${x+0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x+0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
 							}
@@ -4666,7 +4702,7 @@ $(function() {
 							if (matches[1] == "Lookups") {
 								id = GetBomb().GetMod("TwoBits").IDs.length + 1;
 							}
-						
+
 							var mod = GetBomb().GetModuleID("TwoBits", id);
 							mod.push({ label: "Query " + matches[1], obj: pre(matches[2] + "\n" + readMultiple(99)), expandable: true });
 							if (matches[1] == "Responses") {
@@ -5003,7 +5039,7 @@ $(function() {
 									}
 								} catch (e) {
 									console.log(e);
-	
+
 									if (!readwarning) {
 										readwarning = true;
 										toastr.warning("An error occurred while reading the logfile. Some information might be missing.", "Reading Warning");
