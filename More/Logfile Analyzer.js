@@ -2037,7 +2037,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /((Stage \d+) button presses:|Strike! At stage 3, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
+						regex: /((Stage \d+) button presses:|Strike! At stage \d+, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
 						handler: function(matches, module) {
 							function many(num, fnc) {
 								var str = '';
