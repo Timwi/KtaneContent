@@ -2334,7 +2334,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /(Initial state|Solution|Colored square states|Submit pressed. Submitted states are):/,
+						regex: /(Initial state|Solution|Colored square states|Submitted):/,
 						handler: function(matches, module) {
 							const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
 							readMultiple(8).split("\n").map(row => row.split("")).forEach((row, y) => {
@@ -2360,7 +2360,7 @@ $(function() {
 							});
 
 							let target = module.answer || module;
-							if (matches[1] == "Submit pressed. Submitted states are") target = module;
+							if (matches[1] == "Submitted") target = module;
 
 							target.push({ label: matches[1], obj: grid });
 						}
