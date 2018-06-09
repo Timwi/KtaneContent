@@ -3778,6 +3778,16 @@ $(function() {
 				loggingTag: "playFair",
 				matches: [
 					{
+						regex: /^: Beginning of Matrix/,
+						handler: function(matches, module) {
+							let matrix = readMultiple(6).split("\n").map(line => line.replace(/^\[playFair #\d+\]: /, ""));
+							matrix.splice(5, 1);
+
+							module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
+							return true;
+						}
+					},
+					{
 						regex: /^:\s*(.+)/,
 						handler: function(matches, module) {
 							module.push(matches[1]);
