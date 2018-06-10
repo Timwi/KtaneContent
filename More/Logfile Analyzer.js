@@ -4323,7 +4323,7 @@ $(function() {
 				loggingTag: "Sonic the Hedgehog",
 				matches: [
 					{
-						regex: /boots sound/,
+						regex: /The boots monitor plays:/,
 						handler: function(_, module) {
 							module.groups.addGroup(true);
 						}
