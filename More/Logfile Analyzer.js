@@ -4475,7 +4475,12 @@ $(function() {
 						}
 					}
 				]
-			},
+            },
+            {
+                displayName: "USA Maze",
+                moduleID: "USA",
+                loggingTag: "USA Maze",
+            },
 			{
 				moduleID: "webDesign",
 				loggingTag: "Web design",
