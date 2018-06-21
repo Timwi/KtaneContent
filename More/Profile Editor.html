@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Mod Selector Profile Editor</title>
@@ -137,8 +138,24 @@
 		input {
 			font-family: inherit;
 		}
+
+		button {
+			color: inherit;
+			border: inherit;
+			font: inherit;
+			text-align: inherit;
+			background: inherit;
+			padding: 0;
+		}
+
+		.clickable {
+			font-size: inherit;
+			color: #0000ee;
+			cursor: pointer;
+			text-decoration: underline;
+		}
 	</style>
-	<script src="https://unpkg.com/vue@2.4.2/dist/vue.min.js"></script>
+	<script src="https://unpkg.com/vue@2.5.16/dist/vue.min.js"></script>
 	<script src="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.js"></script>
 	<link rel="stylesheet" href="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.css">
 	<script>
@@ -147,9 +164,10 @@
             { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
             { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular" },
             { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
-            { id: "PasswordsTranslated", name: "Passwords (Translated)", type: "Regular" },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
             { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
             { id: "SupermercadoSalvajeModule", name: "Supermercado Salvaje", type: "Regular" },
+			
             { name: "10x10 Casing (199 modules)", id: "10x10 Casing (199 modules)", type: "case" },
             { name: "11x11 Casing (241 modules)", id: "11x11 Casing (241 modules)", type: "case" },
             { name: "12x12 Casing (287 modules)", id: "12x12 Casing (287 modules)", type: "case" },
@@ -223,13 +241,22 @@
             { name: "Wood Case", id: "Wood Case", type: "case" },
             { name: "Wood Double Decker", id: "Wood Double Decker", type: "case" },
             { name: "Wood Quadruple Decker", id: "Wood Quadruple Decker", type: "case" },
+			
+            { name: "BetterCasePicker", id: "BetterCasePicker(Clone)", type: "service" },
             { name: "Camera Zoom", id: "CamZoom(Clone)", type: "service" },
             { name: "Competitive Server", id: "CompetitiveServer(Clone)", type: "service" },
             { name: "Free Play Helper", id: "FreePlayHelper(Clone)", type: "service" },
-            { name: "Multiple Bombs", id: "MultipleBombs(Clone)", type: "service" },
-            { name: "Pacing Extender", id: "PacingExtender(Clone)", type: "service" },
+			{ name: "Rule Seed Modifier", id: "GenerateCustomManual(Clone)", type: "service" },
+			{ name: "Pacing Extender", id: "PacingExtender(Clone)", type: "service" },
+			{ name: "Soundpack Maker", id: "SoundpackMaker(Clone)", type: "service" },
+			{ name: "Tweaks", id: "Tweaks(Clone)", type: "service" },
             { name: "Widget Expander", id: "WidgetExpandService(Clone)", type: "service" },
-            { name: "Soundpack Maker", id: "SoundpackMaker(Clone)", type: "service" }
+			
+			{ name: "The Bus That Couldn't Slow Down", id: "BusGameplayRoom", type: "Room" },
+			{ name: "Factory", id: "FactoryRoom", type: "Room" },
+			{ name: "Module Assembly Station", id: "moduleAssemblyStation", type: "Room" },
+			{ name: "Portal Gameplay Room", id: "Portal Room", type: "Room" },
+			{ name: "SPAAAAAAAACE!!", id: "SpaceRoom", type: "Room" }
 		];
 		/// MOD DATA ///
 
@@ -237,31 +264,36 @@
 			mod.sortkey = mod.name.replace(/^The /, "").toUpperCase();
 		});
 
+		function makeRequest(url) {
+			return new Promise(function(resolve, reject) {
+				const xhr = new XMLHttpRequest();
+				xhr.open("GET", url);
+				xhr.onload = function() { resolve(xhr.responseText); };
+				xhr.onerror = function() { reject(xhr.status); };
+				xhr.send();
+			});
+		}
+
 		// Load mod data from ktane.timwi.de
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.status == 200 && xhr.readyState == XMLHttpRequest.DONE) {
-				var websiteJSON = JSON.parse(xhr.responseText);
+		makeRequest("https://ktane.timwi.de/json/raw").then(responseText => {
+			const websiteJSON = JSON.parse(responseText);
 
-				websiteJSON.KtaneModules.forEach(function(module) {
-					if (!module.ModuleID) {
-						console.warn("Skipping " + module.Name + " because it lacks an ID.");
-						return;
-					}
+			websiteJSON.KtaneModules.forEach(function(module) {
+				if (!module.ModuleID) {
+					console.warn("Skipping " + module.Name + " because it lacks an ID.");
+					return;
+				}
 
-					if (module.Origin == "Mods") {
-						mods.push({
-							name: module.Name,
-							sortkey: module.SortKey,
-							id: module.ModuleID,
-							type: module.Type
-						});
-					}
-				});
-			}
-		};
-		xhr.open("GET", "https://ktane.timwi.de/json/raw");
-		xhr.send();
+				if (module.Origin == "Mods") {
+					mods.push({
+						name: module.Name,
+						sortkey: module.SortKey,
+						id: module.ModuleID,
+						type: module.Type
+					});
+				}
+			});
+		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
 		
 		const fallbackImage = "https://ktane.timwi.de/Icons/blank.png";
 
@@ -379,19 +411,9 @@
 				for (var index in vueData.profile) {
 					var modID = vueData.profile[index];
 					if (!(vueData.mods.some(function(mod) { return mod.id == modID; }))) {
-						console.log("Can't find mod for " + modID);
+						console.warn("Can't find mod for " + modID);
 					}
 				}
-			}
-
-			function makeRequest(url) {
-				return new Promise(function(resolve, reject) {
-					const xhr = new XMLHttpRequest();
-					xhr.open("GET", url);
-					xhr.onload = function() { resolve(xhr.responseText); };
-					xhr.onerror = function() { reject(xhr.status); };
-					xhr.send();
-				});
 			}
 
 			function downloadProfile(url) {
@@ -469,34 +491,34 @@
 				data: vueData,
 				methods: {
 					toggleMod: function(mod, event) {
-						var profile = vueData.profile;
-						var index = profile.indexOf(mod.id);
+						var index = this.profile.indexOf(mod.id);
 						if (index > -1) {
-							profile.splice(index, 1);
+							this.profile.splice(index, 1);
 						} else {
-							profile.push(mod.id);
+							this.profile.push(mod.id);
 						}
+						
 						if (event)
 							event.preventDefault();
 					},
 					getJSON: function() {
 						return JSON.stringify({
-							"DisabledList": vueData.profile,
-							"Operation": vueData.operation
+							"DisabledList": this.profile,
+							"Operation": this.operation
 						});
 					},
 					onFileUploaded: function(event) {
 						uploadProfile(event.target.files)
 					},
 					startRenaming: function() {
-						vueData.isRenaming = true;
+						this.isRenaming = true;
 						setTimeout((function() {
 							this.$refs.renameField.focus();
 						}).bind(this), 0);
 					},
 					handleRenaming: function(event) {
 						if ((event.type == "keydown" && event.key == "Enter") || event.type == "blur") {
-							vueData.isRenaming = false;
+							this.isRenaming = false;
 							event.type == "keydown" && event.target.blur();
 						}
 					},
@@ -507,19 +529,33 @@
 
 						event.target.src = fallbackImage;
 					},
+					fallbackDownload: function(event) {
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
+							event.preventDefault();
+						}
+					},
 					getMods: getMods,
 					toggleType: function(type) {
 						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
 					},
 					setAllMods: function(type, state) {
-						getMods(type).forEach(function(mod) {
-							var id = mod.id;
-							var profileIndex = vueData.profile.indexOf(id);
+						getMods(type).forEach(mod => {
+							const id = mod.id;
+							const profileIndex = this.profile.indexOf(id);
 							if (!state && profileIndex == -1) {
-								vueData.profile.push(id);
+								this.profile.push(id);
 							} else if (state && profileIndex != -1) {
-								vueData.profile.splice(profileIndex, 1);
+								this.profile.splice(profileIndex, 1);
 							}
+						});
+					},
+					toggleAllMods: function(type) {
+						getMods(type).forEach(mod => {
+							const id = mod.id;
+							const profileIndex = this.profile.indexOf(id);
+							if (profileIndex == -1) this.profile.push(id);
+							else this.profile.splice(profileIndex, 1);
 						});
 					}
 				}
@@ -537,31 +573,33 @@
 		<div class="title-container">
 			<div class="title">Profile Editor</div>
 			<div class="header">
-				<div v-if="!isRenaming" v-on:click="startRenaming">{{ profileName }}.json <a href="javascript:;">Rename</a></div>
-				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:blur="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name"></input>
-				<div>Operation: <a href="javascript:;" v-on:click="operation = 1 - operation">{{ operation ? "Union" : "Intersect" }}</a></div>
-				<div><a :download="profileName + '.json'" :href="'data:text/json,' + getJSON()">Download</a></div>
-				<a href="javascript:;"><label for="file-upload">Import</label></a>
+				<div v-if="!isRenaming" v-on:click="startRenaming">{{ profileName }}.json <button class="clickable">Rename</button></div>
+				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:blur="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name">
+				<div>Operation: <button class="clickable" v-on:click="operation = 1 - operation">{{ operation ? "Union" : "Intersect" }}</button></div>
+				<div><a v-on:click="fallbackDownload" :download="profileName + '.json'" :href="'data:application/json,' + getJSON()">Download</a></div>
+				<label class="clickable" for="file-upload">Import</label>
 			</div>
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<u v-on:click="toggleType(type)">{{ name }}</u></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button v-on:click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.id).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></h3>
 				<div class="toggleMods" v-if="visibleTypes[type]">
-					<a v-on:click="setAllMods(type, true)" href="javascript:;">Enable</a>
+					<button v-on:click="setAllMods(type, true)" class="clickable">Enable</button>
 					/
-					<a v-on:click="setAllMods(type, false)" href="javascript:;">Disable</a>
+					<button v-on:click="setAllMods(type, false)" class="clickable">Disable</button>
+					/
+					<button v-on:click="toggleAllMods(type)" class="clickable">Toggle</button>
 					All
 				</div>
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
-						<a href='#' v-on:click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.indexOf(mod.id) != -1 }">
-                            <img v-if="type == 'Regular' || type == 'Needy'" class="mod-icon" v-on:error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.name.replace(/ \(Translated\)$/, '') + '.png'">
+						<button v-on:click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.id) }">
+                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" v-on:error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.name.replace(/ \(Translated\)$/, '') + '.png'">
                             <div class="mod-info">
                                 <div>{{ mod.name }}</div>
                                 <div class="mod-id">{{ mod.id.replace(/\(Clone\)$/, "") }}</div>
                             </div>
-						</a>
+						</button>
 					</template>
 				</div>
 			</template>
