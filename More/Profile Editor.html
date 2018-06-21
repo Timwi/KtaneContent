@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Mod Selector Profile Editor</title>
@@ -528,6 +529,12 @@
 
 						event.target.src = fallbackImage;
 					},
+					fallbackDownload: function(event) {
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
+							event.preventDefault();
+						}
+					},
 					getMods: getMods,
 					toggleType: function(type) {
 						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
@@ -567,15 +574,15 @@
 			<div class="title">Profile Editor</div>
 			<div class="header">
 				<div v-if="!isRenaming" v-on:click="startRenaming">{{ profileName }}.json <button class="clickable">Rename</button></div>
-				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:blur="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name"></input>
+				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:blur="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name">
 				<div>Operation: <button class="clickable" v-on:click="operation = 1 - operation">{{ operation ? "Union" : "Intersect" }}</button></div>
-				<div><a :download="profileName + '.json'" :href="'data:text/json,' + getJSON()">Download</a></div>
+				<div><a v-on:click="fallbackDownload" :download="profileName + '.json'" :href="'data:application/json,' + getJSON()">Download</a></div>
 				<label class="clickable" for="file-upload">Import</label>
 			</div>
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button v-on:click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.id).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></span></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button v-on:click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.id).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></h3>
 				<div class="toggleMods" v-if="visibleTypes[type]">
 					<button v-on:click="setAllMods(type, true)" class="clickable">Enable</button>
 					/
@@ -592,7 +599,7 @@
                                 <div>{{ mod.name }}</div>
                                 <div class="mod-id">{{ mod.id.replace(/\(Clone\)$/, "") }}</div>
                             </div>
-						</a>
+						</button>
 					</template>
 				</div>
 			</template>
