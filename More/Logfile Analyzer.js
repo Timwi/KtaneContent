@@ -2389,58 +2389,58 @@ $(function() {
 				displayName: "Game Of Life",
 				moduleID: "GameOfLifeSimple"
 			},
-            {
-                displayName: "Grid Matching",
-                moduleID: "GridMatching",
-                loggingTag: "Grid Matching",
-                matches: [
-                    {
-                        regex: /^(.*:) (\d+) +(.*:) ([A-Z])$/,
-                        handler: function(matches, module) {
-                            var label = matches[1];
-                            var extra = matches[3];
-                            var letter = matches[4];
-                            if (label === 'Seed Grid:')
-                                return true;
-                            if (label === 'Current Grid:') {
-                                if (!('currentGridSeen' in module)) {
-                                    module.currentGridSeen = true;
-                                    label = 'Initial Grid:';
-                                    extra = null;
-                                } else {
-                                    label = 'Submitted Grid:';
-                                    extra = 'Submitted Label:';
-                                }
-                            }
-                            if (label === 'Solution Grid:') {
-                                if (!('solutionGridSeen' in module))
-                                    module.solutionGridSeen = true;
-                                else
-                                    return true;
-                            }
-                            var n = parseInt(matches[2]);
-                            function each(n, fnc) {
-                                var str = '';
-                                for (var i = 0; i < n; i++)
-                                    str += fnc(i);
-                                return str;
-                            }
-                            module.push({
-                                label: `${label}${(extra === null ? '' : ` (${extra} ${letter})`)}`,
-                                obj: $(`<table style='border-collapse: collapse'>
-                                    ${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
-                                </table>`)
-                                    .find('td').css({ width: '25px', height: '25px', border: '1px solid black', padding: '0' }).end()
-                                    .find('td.filled').css('background', 'black').end()
-                            });
-                            return true;
-                        }
-                    },
-                    {
-                        regex: /.+/
-                    }
-                ]
-            },
+			{
+				displayName: "Grid Matching",
+				moduleID: "GridMatching",
+				loggingTag: "Grid Matching",
+				matches: [
+					{
+						regex: /^(.*:) (\d+) +(.*:) ([A-Z])$/,
+						handler: function(matches, module) {
+							var label = matches[1];
+							var extra = matches[3];
+							var letter = matches[4];
+							if (label === 'Seed Grid:')
+								return true;
+							if (label === 'Current Grid:') {
+								if (!('currentGridSeen' in module)) {
+									module.currentGridSeen = true;
+									label = 'Initial Grid:';
+									extra = null;
+								} else {
+									label = 'Submitted Grid:';
+									extra = 'Submitted Label:';
+								}
+							}
+							if (label === 'Solution Grid:') {
+								if (!('solutionGridSeen' in module))
+									module.solutionGridSeen = true;
+								else
+									return true;
+							}
+							var n = parseInt(matches[2]);
+							function each(n, fnc) {
+								var str = '';
+								for (var i = 0; i < n; i++)
+									str += fnc(i);
+								return str;
+							}
+							module.push({
+								label: `${label}${(extra === null ? '' : ` (${extra} ${letter})`)}`,
+								obj: $(`<table style='border-collapse: collapse'>
+									${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
+								</table>`)
+									.find('td').css({ width: '25px', height: '25px', border: '1px solid black', padding: '0' }).end()
+									.find('td.filled').css('background', 'black').end()
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			{
 				moduleID: "HexamazeModule",
 				loggingTag: "Hexamaze",
@@ -4475,6 +4475,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				displayName: "USA Maze",
+				moduleID: "USA",
+				loggingTag: "USA Maze",
 			},
 			{
 				moduleID: "webDesign",
