@@ -35,6 +35,7 @@ e.onload = function()
 		}).keydown(function(event) {
 			if (event.altKey && event.keyCode >= 49 && event.keyCode <= 53)
 			{
+				event.preventDefault();
 				setColor(event.keyCode - 49);
 
 				if (alertTimeout) {
