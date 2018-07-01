@@ -4240,6 +4240,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Simon’s Star",
+				moduleID: "simonsStar",
+				loggingTag: "Simon's Star"
+			},
+			{
 				displayName: "Simon States",
 				moduleID: "SimonV2",
 				loggingTag: "Simon States"
@@ -4366,6 +4371,11 @@ $(function() {
 				moduleID: "ButtonV2",
 				loggingTag: "Square Button"
 			},
+			{
+				displayName: "The Stock Market",
+				moduleID: "stockMarket",
+				loggingTag: "The Stock Market"
+            },
 			{
 				moduleID: "SymbolCycleModule",
 				loggingTag: "Symbol Cycle",
