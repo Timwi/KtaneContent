@@ -4812,7 +4812,7 @@ $(function() {
 				moduleID: "DoubleOhModule"
 			},
 			{
-				displayName: "Lettered Keys",
+				displayName: "Letter Keys",
 				moduleID: "LetterKeys",
 				hasLogging: false
 			},
