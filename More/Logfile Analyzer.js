@@ -3364,6 +3364,11 @@ $(function() {
 					}
 				]
 			},
+            {
+                moduleID: "numberCipher",
+                loggingTag: "The Number Cipher",
+                displayName: "The Number Cipher"
+            },
 			{
 				moduleID: "NumberPad",
 				loggingTag: "Number Pad",
