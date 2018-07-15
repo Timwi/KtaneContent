@@ -369,17 +369,40 @@ $(function() {
 					});
 
 					bomb.ModdedIndicators.forEach(function(val) {
-						if (val[0] == "MultipleWidgets:EncryptedIndicator" || val[0] == "MultipleWidgets:Indicator") {
-							$("<div class='widget multiplewidgets indicator'>")
-								.addClass(val[1])
-								.appendTo(edgework)
-								.append($("<span class='label'>").text(val[2]));
-						}
-						if (val[0] == "EncryptedIndicatorWidget") {
-							$("<div class='widget encryptedindicator'>")
-								.addClass(val[1])
-								.appendTo(edgework)
-								.append($("<span class='label'>").text(val[2]));
+						switch (val[0]) {
+							case "MultipleWidgets:EncryptedIndicator":
+							case "MultipleWidgets:Indicator":
+								$("<div class='widget multiplewidgets indicator'>")
+									.addClass(val[1])
+									.appendTo(edgework)
+									.append($("<span class='label'>").text(val[2]));
+								break;
+							case "EncryptedIndicatorWidget":
+								$("<div class='widget encryptedindicator'>")
+									.addClass(val[1])
+									.appendTo(edgework)
+									.append($("<span class='label'>").text(val[2]));
+								break;
+							case "NumberedIndicator": {
+								const colors = {
+									red: "225, 3, 3",
+									orange: "6, 107, 27",
+									yellow: "255, 248, 0",
+									green: "6, 107, 27",
+									blue: "12, 0, 152",
+									purple: "172, 14, 206",
+									black: "0, 0, 0",
+									white: "255, 255, 255",
+									brown: "129, 66, 9"
+								};
+							
+								$("<div class='widget numberedindicator'>")
+									.addClass(val[1])
+									.css("background-color", `rgb(${colors[val[4]]})`)
+									.appendTo(edgework)
+									.append($("<span class='label'>").text(val[3]));
+								break;
+							}
 						}
 					});
 				}
@@ -1070,6 +1093,20 @@ $(function() {
 							bombgroup.FilterLines();
 							currentBomb.State = "Solved";
 							currentBomb.Solved = currentBomb.TotalModules;
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "NumberedIndicator",
+				matches: [
+					{
+						regex: /Added ((?:UN)LIT) ([A-Z]{3}), display is (\w{3}), color is ([A-Z]+)/,
+						handler: function(matches) {
+							matches[1] = matches[1].toLowerCase();
+							matches[4] = matches[4].toLowerCase();
+							bomb.ModdedWidgetInfo.push(`Numbered Indicator: ${matches[1]} ${matches[4]} ${matches[2]}. Display: ${matches[3]}`);
+							bomb.ModdedIndicators.push(["NumberedIndicator", matches[1], matches[2], matches[3], matches[4]]);
 						}
 					}
 				]
