@@ -800,12 +800,12 @@ $(function() {
 				return;
 			}
 
-            var match = /^=svg\[(.*?)\](<svg .*<\/svg>)$/.exec(line);
-            if (match)
-                line = {
-                    label: match[1],
-                    obj: $(match[2])
-                };
+			var match = /^=svg\[(.*?)\](<svg .*<\/svg>)$/.exec(line);
+			if (match)
+				line = {
+					label: match[1],
+					obj: $(match[2])
+				};
 
 			if (id) {
 				GetBomb().GetModuleID(name, id).push(line);
