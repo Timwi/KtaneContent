@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pattern Cube — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src='js/highlighter.js'></script>
+    <style>
+        .cube-row {
+            display: block;
+            margin-bottom: -.3cm;
+        }
+            .cube-row:nth-child(2n) {
+                padding-left: 1.3cm;
+            }
+
+        .cube-box {
+            display: inline-block;
+            position: relative;
+            width: 2.7cm;
+            height: 2.65cm;
+        }
+
+        .cube-rotation {
+            transform: translate(-.15cm, -.15cm) rotate3d(1,0,0, -25deg) rotate3d(0,1,0, 45deg);
+            perspective: 50cm;
+            transform-style: preserve-3d;
+            position: absolute;
+            left: .5cm;
+            top: .5cm;
+            width: 2cm;
+            height: 2cm;
+        }
+
+        .face {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1.8cm;
+            height: 1.8cm;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360"><path d="M20 140v80h80v-80H20zm40 10h30v30H60v-30zm140-20a30 30 0 0 0-27.06 42.94l-40 40a10 10 0 1 0 14.12 14.12l40-40A30 30 0 1 0 200 130zm20 220v-10h-30l40-40-50-50-50 50 40 40h-30v10h80zm80-220a20 20 0 1 0 0 40 20 20 0 0 0 0-40zm0 40a30 30 0 1 0 0 60 30 30 0 0 0 0-60zm0 10a20 20 0 1 1 0 40 20 20 0 0 1 0-40zM60 10a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm0 10a40 40 0 0 1 40 40H20a40 40 0 0 1 40-40zm190 230h100l-40 40v60h-20v-60zM180 10l-50 100h100zM60 250l-50 50h100zm0 50l-50 50h100zm320-160v30h50v50h30v-80zm40-130l-6.4 51.33-19.5-47.93 7.11 51.25L370 23.4C385 55 395 75 395 110h50c0-35 10-55 25-86.6l-31.21 41.25 7.1-51.25-19.48 47.93zM260 80h80v30h-80zm70-40a30 30 0 1 1-60 0 30 30 0 1 1 60 0z"/></svg>');
+            background-size: 6.4cm 4.8cm;
+            background-repeat: no-repeat;
+            border: .1cm solid black;
+            border-radius: .2cm;
+            box-sizing: border-box;
+        }
+            .face.symbol-A { background-position: 0 0; }
+            .face.symbol-B { background-position: -1.6cm 0; }
+            .face.symbol-C { background-position: -3.2cm 0; }
+            .face.symbol-D { background-position: -4.8cm 0; }
+
+            .face.symbol-E { background-position: 0 -1.6cm; }
+            .face.symbol-F { background-position: -1.6cm -1.6cm; }
+            .face.symbol-G { background-position: -3.2cm -1.6cm; }
+            .face.symbol-H { background-position: -4.8cm -1.6cm; }
+
+            .face.symbol-X { background-position: 0 -3.2cm; }
+            .face.symbol-Y { background-position: -1.6cm -3.2cm; }
+            .face.symbol-Z { background-position: -3.2cm -3.2cm; }
+
+        .front { background-color: #aaa; }
+            .front.or-0 { border-color: #eee #999 #888 #ccc; transform: translateZ(.9cm); }
+            .front.or-1 { border-color: #999 #888 #ccc #eee; transform: translateZ(.9cm) rotateZ(90deg); }
+            .front.or-2 { border-color: #888 #ccc #eee #999; transform: translateZ(.9cm) rotateZ(180deg); }
+            .front.or-3 { border-color: #ccc #eee #999 #888; transform: translateZ(.9cm) rotateZ(270deg); }
+
+        .left { background-color: #888; }
+            .left.or-0 { border-color: #bbb #bbb #666 #ddd; transform: rotateY(-90deg) translateZ(.9cm); }
+            .left.or-1 { border-color: #bbb #666 #ddd #bbb; transform: rotateY(-90deg) translateZ(.9cm) rotateZ(90deg); }
+            .left.or-2 { border-color: #666 #ddd #bbb #bbb; transform: rotateY(-90deg) translateZ(.9cm) rotateZ(180deg); }
+            .left.or-3 { border-color: #ddd #bbb #bbb #666; transform: rotateY(-90deg) translateZ(.9cm) rotateZ(270deg); }
+
+        .top { background-color: #ddd; }
+            .top.or-0 { border-color: #eee #eee #eee #ccc; transform: rotateX(90deg) translateZ(.9cm); }
+            .top.or-1 { border-color: #eee #eee #ccc #eee; transform: rotateX(90deg) translateZ(.9cm) rotateZ(90deg); }
+            .top.or-2 { border-color: #eee #ccc #eee #eee; transform: rotateX(90deg) translateZ(.9cm) rotateZ(180deg); }
+            .top.or-3 { border-color: #ccc #eee #eee #eee; transform: rotateX(90deg) translateZ(.9cm) rotateZ(270deg); }
+
+        .page-content {
+            position: relative;
+        }
+
+        div.footnotes {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            font-size: smaller;
+            margin: 0 0 1em;
+            padding-top: 1em;
+        }
+
+            div.footnotes::before {
+                content: '';
+                border-top: 1px solid #ccc;
+                width: 10em;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            div.footnotes p {
+                margin: .3em 0;
+            }
+
+        ul {
+            margin: 4em 5em 0 2em;
+        }
+
+        li {
+            margin: 1.5em 0;
+        }
+
+        h3 {
+            margin: 1.3em 0 .7em;
+        }
+
+        @media print {
+            a[href]:after {
+                content: none;
+            }
+        }
+
+        @media screen and (max-width: 900px) {
+            ul {
+                margin: 0;
+                padding-left: 1em;
+            }
+            li {
+                margin: .5em 0;
+            }
+
+            div.footnotes {
+                position: relative;
+            }
+                div.footnotes p {
+                    margin: .3em 0;
+                }
+
+            .cube-row {
+                margin: 0 -.5em -.35cm;
+            }
+            .cube-row:nth-child(2n) {
+                padding-left: .55cm;
+            }
+            .cube-box {
+                display: inline-block;
+                width: 1.35cm;
+                height: 1.35cm;
+            }
+            .cube-rotation {
+                transform: translate(-.2cm, -.1cm) scale(.5) rotate3d(1,0,0, -25deg) rotate3d(0,1,0, 45deg);
+                transform-origin: 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Cube</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Pattern Cube.svg">
+                <h2>On the Subject of Pattern Cube</h2>
+
+                <p class="flavour-text">Do I get any hint coins? Come on, it’s the Dropstone 50th Anniversary!</p>
+
+                <ul>
+                    <li>The module shows a net<sup>[1]</sup> for a cube and a selection bar of 5 symbols on the left.
+                        Take note of these symbols.</li>
+                    <li>One of the squares in the net is prefilled with a sixth symbol.
+                        Take note of that symbol and its orientation (rotation).</li>
+                    <li>The following page contains arrays of pictures of cubes with symbols on them, arranged in two groups.</li>
+                    <li>Choose <em>one</em> picture from Group 1 and <em>one</em> from Group 2 in such a way that
+                        <em>all</em> 6 symbols from the module are present.</li>
+                    <li>The two pictures thusly obtained show different perspectives of the <em>same</em> cube.
+                        Deduce the location and orientation of each symbol on the cube.</li>
+                    <li>One symbol in the selection bar and one of the unfilled squares are highlighted in red.
+                        The highlighted symbol must be placed in the highlighted square, but you must first
+                        deduce its correct orientation.</li>
+                    <li>To disarm the module, the 5 symbols from the selection bar must be placed in the correct
+                        squares in the correct orientation (rotation) so that the net corresponds to the cube.</li>
+                    <li>Tap a symbol in the selection bar to rotate it. Then tap a square in the net to
+                        place the symbol you last rotated.</li>
+                </ul>
+
+                <div class="footnotes">
+                    <p>[1] <a href="https://en.wikipedia.org/wiki/Net_(polyhedron)">https://en.wikipedia.org/wiki/Net_(polyhedron)</a></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Cube</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Group 1</h3>
+                <div class='cubes'>
+                <!-- g1-s -->
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-1'></div><div class='face left symbol-C or-2'></div><div class='face top symbol-X or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-C or-2'></div><div class='face left symbol-D or-1'></div><div class='face top symbol-B or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-D or-1'></div><div class='face left symbol-A or-3'></div><div class='face top symbol-C or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-X or-0'></div><div class='face left symbol-D or-0'></div><div class='face top symbol-Z or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-A or-1'></div><div class='face left symbol-C or-0'></div><div class='face top symbol-X or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-2'></div><div class='face left symbol-C or-3'></div><div class='face top symbol-A or-2'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-2'></div><div class='face left symbol-D or-0'></div><div class='face top symbol-C or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-X or-3'></div><div class='face left symbol-D or-0'></div><div class='face top symbol-Y or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-C or-1'></div><div class='face left symbol-Z or-2'></div><div class='face top symbol-X or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-D or-0'></div><div class='face left symbol-C or-1'></div><div class='face top symbol-X or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-0'></div><div class='face left symbol-C or-3'></div><div class='face top symbol-X or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-3'></div><div class='face left symbol-A or-0'></div><div class='face top symbol-D or-3'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-0'></div><div class='face left symbol-B or-2'></div><div class='face top symbol-D or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-A or-2'></div><div class='face left symbol-B or-0'></div><div class='face top symbol-Y or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-D or-2'></div><div class='face left symbol-A or-2'></div><div class='face top symbol-X or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-A or-1'></div><div class='face left symbol-B or-3'></div><div class='face top symbol-C or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-1'></div><div class='face left symbol-X or-3'></div><div class='face top symbol-Z or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-0'></div><div class='face left symbol-C or-1'></div><div class='face top symbol-Y or-3'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-1'></div><div class='face left symbol-A or-3'></div><div class='face top symbol-X or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-X or-0'></div><div class='face left symbol-A or-2'></div><div class='face top symbol-Z or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-A or-1'></div><div class='face left symbol-X or-1'></div><div class='face top symbol-Y or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-B or-0'></div><div class='face left symbol-Y or-2'></div><div class='face top symbol-X or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-D or-0'></div><div class='face left symbol-Y or-3'></div><div class='face top symbol-A or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-X or-0'></div><div class='face left symbol-B or-0'></div><div class='face top symbol-D or-0'></div></div></div></div>
+                <!-- g1-e -->
+                </div>
+                <h3>Group 2</h3>
+                <div class='cubes'>
+                <!-- g2-s -->
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-1'></div><div class='face left symbol-E or-3'></div><div class='face top symbol-X or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Z or-1'></div><div class='face left symbol-E or-2'></div><div class='face top symbol-G or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-0'></div><div class='face left symbol-X or-1'></div><div class='face top symbol-G or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-H or-2'></div><div class='face left symbol-Z or-1'></div><div class='face top symbol-F or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-E or-2'></div><div class='face left symbol-F or-1'></div><div class='face top symbol-Z or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-1'></div><div class='face left symbol-G or-1'></div><div class='face top symbol-H or-1'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-G or-2'></div><div class='face left symbol-H or-3'></div><div class='face top symbol-Z or-2'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-0'></div><div class='face left symbol-E or-3'></div><div class='face top symbol-H or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-1'></div><div class='face left symbol-Z or-1'></div><div class='face top symbol-G or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-E or-1'></div><div class='face left symbol-Z or-3'></div><div class='face top symbol-Y or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-H or-1'></div><div class='face left symbol-Y or-3'></div><div class='face top symbol-Z or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-0'></div><div class='face left symbol-Z or-2'></div><div class='face top symbol-G or-0'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-H or-3'></div><div class='face left symbol-E or-2'></div><div class='face top symbol-G or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-G or-1'></div><div class='face left symbol-X or-2'></div><div class='face top symbol-E or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-G or-3'></div><div class='face left symbol-X or-3'></div><div class='face top symbol-Y or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-0'></div><div class='face left symbol-H or-1'></div><div class='face top symbol-X or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-E or-3'></div><div class='face left symbol-H or-2'></div><div class='face top symbol-Z or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-G or-1'></div><div class='face left symbol-F or-0'></div><div class='face top symbol-E or-0'></div></div></div></div>
+                    <div class='cube-row'><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-E or-2'></div><div class='face left symbol-X or-2'></div><div class='face top symbol-H or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-X or-0'></div><div class='face left symbol-H or-3'></div><div class='face top symbol-G or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-F or-0'></div><div class='face left symbol-E or-0'></div><div class='face top symbol-X or-1'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-2'></div><div class='face left symbol-F or-0'></div><div class='face top symbol-X or-0'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Y or-0'></div><div class='face left symbol-H or-3'></div><div class='face top symbol-X or-3'></div></div></div><div class='cube-box highlightable'><div class='cube-rotation'><div class='face front symbol-Z or-0'></div><div class='face left symbol-Y or-2'></div><div class='face top symbol-F or-1'></div></div></div></div>
+                    <!-- g2-e -->
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
