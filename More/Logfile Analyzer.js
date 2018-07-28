@@ -3024,6 +3024,37 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "mineseeker",
+				loggingTag: "Mineseeker",
+				matches: [
+					{
+						regex: /Desired Bomb is (\d+|\d\D)$/,
+						handler: function(matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text("Desired Bomb is "))
+								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align":"baseline;" }))
+								.append($('<span>').text("."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /Bomb shown is (\d+|\d\D)$/,
+						handler: function(matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text("Bomb shown is "))
+								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align":"baseline;" }))
+								.append($('<span>').text("."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				moduleID: "MinesweeperModule",
 				loggingTag: "Minesweeper",
 				matches: [
