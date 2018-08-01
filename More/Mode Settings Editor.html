@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Tweaks Mode Settings Editor</title>
+	<link rel="stylesheet" type="text/css" href="../HTML/css/font.css">
+
+	<style>
+		body {
+			background: lightgray;
+			font-family: "Trebuchet MS";
+			margin: 0;
+		}
+
+		#editor {
+			margin-bottom: 9.36px;
+		}
+
+		.fullscreen-msg {
+			display: flex;
+			justify-content: center;
+			position: fixed;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			top: 0;
+			transition: background 0.25s, color 0.25s;
+			pointer-events: none;
+			color: transparent;
+		}
+
+		.fullscreen-msg.hovering {
+			background: rgba(127, 127, 127, 0.5);
+			color: white;
+		}
+
+		.fullscreen-msg span {
+			align-self: center;
+			font-size: 500%;
+		}
+
+		label {
+			pointer-events: all;
+			cursor: pointer;
+		}
+
+		div.title-container {
+			background: white;
+			margin-bottom: 8px;
+			margin: 6px;
+			padding: 8px;
+			min-width: 317px;
+		}
+
+		div.title {
+			text-align: center;
+			font-size: 150%;
+			padding-bottom: 10px;
+			border-bottom: gray 1px dashed;
+		}
+
+		div.header {
+			display: flex;
+			justify-content: space-around;
+			font-size: 125%;
+			padding-top: 10px;
+		}
+
+		div.sections {
+			padding-left: 8px;
+		}
+
+		h3.section {
+			margin: 0;
+			margin-top: 9.36px;
+			padding-left: 2px;
+			color: rgb(100, 100, 100);
+		}
+
+		h3.section u {
+			cursor: pointer;
+		}
+
+		h3.section.visible {
+			padding-left: 0px;
+		}
+
+		div.toggleMods {
+			color: rgb(100, 100, 100);
+			font-size: 75%;
+			margin-left: 30px;
+		}
+
+		div.mods {
+			display: flex;
+			flex-wrap: wrap;
+			padding: 3px;
+			padding-left: 0px;
+		}
+
+		.mod {
+			display: flex;
+			align-items: center;
+			background: white;
+			padding: 8px;
+			margin: 3px;
+			transition: background 0.4s;
+			user-select: none;
+			flex-grow: 1;
+			align-content: center;
+			color: black;
+            text-decoration: none;
+		}
+
+		.mod.disabled {
+			background: rgb(255, 200, 200);
+		}
+
+		.mod-id {
+			color: gray;
+			font-style: italic;
+			font-size: 60%;
+		}
+
+		img.mod-icon {
+			float: left;
+			margin-right: 10px;
+		}
+
+		div.mod-info {
+			float: right;
+		}
+
+		input[type="number"] {
+    		margin-left: 15px;
+			width: 2em;
+    		flex-grow: 1;
+		}
+
+		input[type="file"] {
+			display: none;
+		}
+
+		input {
+			font-family: inherit;
+		}
+
+		button {
+			color: inherit;
+			border: inherit;
+			font: inherit;
+			text-align: inherit;
+			background: inherit;
+			padding: 0;
+		}
+
+		.clickable {
+			font-size: inherit;
+			color: #0000ee;
+			cursor: pointer;
+			text-decoration: underline;
+		}
+	</style>
+	<script src="https://unpkg.com/vue@2.5.16/dist/vue.js"></script>
+	<script src="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/vue-toastr-2/dist/vue-toastr-2.min.css">
+	<script>
+		/// MOD DATA ///
+		var mods = [
+            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
+            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular" },
+            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
+            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
+            { id: "SupermercadoSalvajeModule", name: "Supermercado Salvaje", type: "Regular" }
+		];
+		/// MOD DATA ///
+
+		const vueData = {
+			settings: {
+				ComponentValues: {},
+				TimeModeStartingTime: 5.0,
+				TimeModeStartingMultiplier: 9.0,
+				TimeModeMaxMultiplier: 10.0,
+				TimeModeMinMultiplier: 1.0,
+				TimeModeSolveBonus: 0.1,
+				TimeModeMultiplierStrikePenalty: 1.5,
+				TimeModeTimerStrikePenalty: 0.25,
+				TimeModeMinimumTimeLost: 15.0,
+				TimeModeMinimumTimeGained: 20.0,
+			},
+			mods: [],
+
+			modTypes: {
+				Regular: "Solvable Modules",
+				Needy: "Needy Modules"
+			},
+			visibleTypes: {Settings: true, Regular: true, Needy: false},
+
+			isHovering: false,
+			sortOrder: false
+		};
+
+		class Mod {
+			constructor(name, sortkey, id, type) {
+				this.Name = name;
+				this.SortKey = sortkey;
+				this.ID =  id;
+				this.Type = type;
+			}
+
+			get Value() {
+				if (vueData.settings.ComponentValues[this.ID] != undefined) return vueData.settings.ComponentValues[this.ID];
+				else return 6;
+			}
+
+			set Value(value) {
+				vueData.settings.ComponentValues[this.ID] = value;
+			}
+		}
+
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type));
+
+		function makeRequest(url) {
+			return new Promise(function(resolve, reject) {
+				const xhr = new XMLHttpRequest();
+				xhr.open("GET", url);
+				xhr.onload = function() { resolve(xhr.responseText); };
+				xhr.onerror = function() { reject(xhr.status); };
+				xhr.send();
+			});
+		}
+
+		// Load mod data from ktane.timwi.de
+		makeRequest("https://ktane.timwi.de/json/raw").then(responseText => {
+			const websiteJSON = JSON.parse(responseText);
+
+			websiteJSON.KtaneModules.forEach(function(module) {
+				if (!module.ModuleID) {
+					console.warn("Skipping " + module.Name + " because it lacks an ID.");
+					return;
+				}
+
+				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type));
+			});
+		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
+
+		const fallbackImage = "https://ktane.timwi.de/Icons/blank.png";
+
+		/* global Vue */
+		const devMode = (window.location.protocol == "file:");
+		Vue.config.devtools = devMode;
+
+		var vm;
+
+		window.onload = function() {
+			var toastr = this.toastr; // A Vue version of toastr.
+
+			function getModuleCount(caseMod) {
+				if (!caseMod.moduleCount) {
+					var counts = {
+						Centurion: 101,
+						Quadruple: 47,
+						Double: 23
+					};
+
+					var found = false;
+
+					var name = caseMod.name;
+					for (var str in counts) {
+						if (name.includes(str)) {
+							caseMod.moduleCount = counts[str];
+							found = true;
+							break;
+						}
+					}
+
+					var matches = name.match(/(\d+)x(\d+)/);
+					if (matches) {
+						caseMod.moduleCount = parseInt(matches[1]) * parseInt(matches[2]);
+						found = true;
+					}
+
+					if (!found) {
+						caseMod.moduleCount = 11;
+					}
+				}
+
+				return caseMod.moduleCount;
+			}
+
+			const sortValue = (mod1, mod2) => mod1.Value == mod2.Value ? 0 : mod1.Value > mod2.Value ? 1 : -1;
+			const sortName = (mod1, mod2) => mod1.Name == mod2.Name ? 0 : mod1.SortKey > mod2.SortKey ? 1 : -1;
+
+			function getMods(type) {
+				var mods = vueData.mods.filter(mod => mod.Type == type);
+
+				const firstOrder = vueData.sortOrder ? sortValue : sortName;
+				const secondOrder = vueData.sortOrder ? sortName : sortValue;
+				
+				mods.sort((mod1, mod2) => {
+					const resp = firstOrder(mod1, mod2);
+					if (resp != 0) return resp;
+					else return secondOrder(mod1, mod2);
+				});
+
+				return mods;
+			}
+
+			function parseJSON(str) {
+				try {
+					return JSON.parse(str);
+				} catch (e) {
+					return false;
+				}
+			}
+
+			const ModeSettingsFormat = {
+				TimeModeStartingTime: "number",
+				TimeModeStartingMultiplier: "number",
+				TimeModeMaxMultiplier: "number",
+				TimeModeMinMultiplier: "number",
+				TimeModeSolveBonus: "number",
+				TimeModeMultiplierStrikePenalty: "number",
+				TimeModeTimerStrikePenalty: "number",
+				TimeModeMinimumTimeLost: "number",
+				TimeModeMinimumTimeGained: "number",
+				ComponentValues: "object"
+			};
+
+			function handleSettings(settingsData, fileName) {
+				var settings = parseJSON(settingsData);
+				if (!settings) {
+					toastr.error("Only valid JSON settings are allowed", "File Error");
+					return false;
+				}
+
+				if (fileName == "ModeSettings.json") {
+					for (var field in settings) {
+						if (ModeSettingsFormat[field] == undefined) {
+							toastr.error(`Unknown "${field}" field`, "Format Error");
+							return false;
+						}
+					}
+
+					for (var field in ModeSettingsFormat) {
+						if (settings[field] == undefined || typeof(settings[field]) != ModeSettingsFormat[field]) {
+							toastr.error(`Field "${field}" is missing or is the wrong type`, "Format Error");
+							return false;
+						}
+
+						vueData.settings[field] = settings[field];
+					}
+				} else if (fileName == "ModuleInformation.json") {
+					if (typeof(settings) != "object") {
+						toastr.error("Invalid ModInfo file", "Format Error");
+						return false;
+					}
+
+					const IDMap = {
+						ButtonComponentSolver: "BigButton",
+						KeypadComponentSolver: "Keypad",
+						InvisibleWallsComponentSolver: "Maze",
+						MemoryComponentSolver: "Memory",
+						MorseCodeComponentSolver: "Morse",
+						NeedyDischargeComponentSolver: "NeedyCapacitor",
+						NeedyKnobComponentSolver: "NeedyKnob",
+						NeedyVentComponentSolver: "NeedyVentGas",
+						PasswordComponentSolver: "Password",
+						SimonComponentSolver: "Simon",
+						VennWireComponentSolver: "Venn",
+						WhosOnFirstComponentSolver: "WhosOnFirst",
+						WireSetComponentSolver: "Wires",
+						WireSequenceComponentSolver: "WireSequence",
+					}
+
+					vueData.settings.ComponentValues = settings.reduce((map, obj) => {
+						map[IDMap[obj.moduleID] || obj.moduleID] = obj.moduleScore;
+						return map;
+					}, {})
+				} else {
+					toastr.error("Invalid file name", "File Error");
+					return false;
+				}
+
+				// Check if we support all the IDs in the settings.
+				for (var modID in vueData.settings.ComponentValues) {
+					if (!(vueData.mods.some(mod => mod.ID == modID))) {
+						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular"))
+						console.warn("Can't find mod for " + modID);
+					}
+				}
+			}
+
+			function downloadSettings(url) {
+				if (url.match(/^https?:\/\//)) {
+					let filename = url.match(/[^/]+\.json$/);
+					if (filename) {
+						makeRequest((devMode ? "https://ktane.timwi.de" : "") + "/proxy/" + url).then(function(data) {
+							handleSettings(data, filename[0]);
+						}).catch(function(err) {
+							toastr.error("Unable to load settings from URL", "HTTP Error");
+							console.error("HTTP Failure: " + err);
+						});
+
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			function uploadSettings(event) {
+				if (event.length == 1) {
+					var fr = new FileReader();
+					fr.onload = function() {
+						handleSettings(fr.result, event[0].name);
+					};
+					fr.readAsText(event[0]);
+				} else if (event.length > 1) {
+					toastr.error("You can only import 1 file at a time", "File Import Error");
+				} else {
+					toastr.error("Unable to find any imported files", "File Import Error");
+				}
+
+				vueData.isHovering = false;
+			}
+
+			window.addEventListener("dragover", function(e) {
+				vueData.isHovering = true;
+				e.preventDefault();
+			});
+
+			window.addEventListener("dragleave", function() {
+				vueData.isHovering = false;
+			});
+
+			window.addEventListener("drop", function(e) {
+				var text = e.dataTransfer.getData("Text");
+				if (!text) {
+					uploadSettings(e.dataTransfer.files);
+				} else {
+					vueData.isHovering = false;
+					if (!downloadSettings(text)) {
+						toastr.warning("Unable to read URL for settings.");
+					}
+				}
+
+				e.preventDefault();
+			});
+
+			window.addEventListener("paste", function(e) {
+				var clipText = "";
+				if (window.clipboardData) {
+					clipText = window.clipboardData.getData("Text");
+				} else if (typeof e == "object" && e.clipboardData) {
+					clipText = e.clipboardData.getData("text/plain");
+				}
+
+				if (!downloadSettings(clipText)) {
+					toastr.warning("Unable to read URL from paste.");
+				}
+			});
+
+			vm = new Vue({
+				el: "#editor",
+				data: vueData,
+				methods: {
+					getJSON: function() {
+						return JSON.stringify(this.settings);
+					},
+					onFileUploaded: function(event) {
+						uploadSettings(event.target.files)
+					},
+					fallbackToBlank: function(event) {
+						if (event.target.src == fallbackImage) {
+							return;
+						}
+
+						event.target.src = fallbackImage;
+					},
+					fallbackDownload: function(event) {
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), "ModeSettings.json");
+							event.preventDefault();
+						}
+					},
+					getMods: getMods,
+					toggleType: function(type) {
+						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					}
+				}
+			});
+		};
+	</script>
+</head>
+<body>
+	<div id="editor">
+		<input id="file-upload" type="file" v-on:change="onFileUploaded">
+		<div class="fullscreen-msg" :class="{ hovering: isHovering }" for="file-upload">
+			<span>Drop settings!</span>
+		</div>
+
+		<div class="title-container">
+			<div class="title">Mode Settings Editor</div>
+			<div class="header">
+				<label class="clickable" for="file-upload" accesskey="i">Import</label>
+				<div>Sort by: <span class="clickable" v-on:click="sortOrder = !sortOrder">{{ sortOrder ? "Value then Name" : "Name then Value" }}</span></div>
+				<div><a v-on:click="fallbackDownload" download="ModeSettings.json" :href="'data:application/json,' + encodeURIComponent(getJSON())" accesskey="d">Download</a></div>
+			</div>
+		</div>
+		<div class="sections">
+			<h3 class="section" :class="{ visible: visibleTypes['Settings'] }">{{ (visibleTypes['Settings'] ? "▼ " : "▶ ") }}<button v-on:click="toggleType('Settings')"><u>Settings</u></button></h3>
+			<div v-if="visibleTypes['Settings']" class="mods">
+				<div class="mod" v-for="(value, field) in settings" v-if="field != 'ComponentValues'">
+					<span>{{ field.replace(/^TimeMode/, "").replace(/([A-Z])/g, " $1") }}</span>
+					<input type="number" :required="true" v-model:value="settings[field]"></input>
+				</div>
+			</div>	
+			<template v-for="(name, type) in modTypes">
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button v-on:click="toggleType(type)"><u>{{ name }}</u></button></h3>
+				<div class="mods" v-if="visibleTypes[type]">
+					<template v-for="mod in getMods(type)">
+						<div class="mod" :key="mod.id">
+                            <img class="mod-icon" v-on:error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.Name.replace(/ \(Translated\)$/, '') + '.png'">
+                            <div class="mod-info">
+                                <div>{{ mod.Name }}</div>
+                                <div class="mod-id">{{ mod.ID }}</div>
+							</div>
+							<input type="number" :required="true" v-bind:value="mod.Value" v-on:change="mod.Value = $event.target.value"></input>
+						</div>
+					</template>
+				</div>
+			</template>
+		</div>
+	</div>
+</body>
