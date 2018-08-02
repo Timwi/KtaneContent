@@ -177,7 +177,6 @@
 
 		const vueData = {
 			settings: {
-				ComponentValues: {},
 				TimeModeStartingTime: 5.0,
 				TimeModeStartingMultiplier: 9.0,
 				TimeModeMaxMultiplier: 10.0,
@@ -187,6 +186,7 @@
 				TimeModeTimerStrikePenalty: 0.25,
 				TimeModeMinimumTimeLost: 15.0,
 				TimeModeMinimumTimeGained: 20.0,
+				ComponentValues: {},
 			},
 			mods: [],
 
@@ -201,20 +201,12 @@
 		};
 
 		class Mod {
-			constructor(name, sortkey, id, type) {
+			constructor(name, sortkey, id, type, value = 6) {
 				this.Name = name;
 				this.SortKey = sortkey;
 				this.ID =  id;
 				this.Type = type;
-			}
-
-			get Value() {
-				if (vueData.settings.ComponentValues[this.ID] != undefined) return vueData.settings.ComponentValues[this.ID];
-				else return 6;
-			}
-
-			set Value(value) {
-				vueData.settings.ComponentValues[this.ID] = value;
+				this.Value = value;
 			}
 		}
 
@@ -240,7 +232,7 @@
 					return;
 				}
 
-				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type));
+				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.TwitchPlaysScore));
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
 
@@ -384,8 +376,12 @@
 
 				// Check if we support all the IDs in the settings.
 				for (var modID in vueData.settings.ComponentValues) {
-					if (!(vueData.mods.some(mod => mod.ID == modID))) {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular"))
+					const mod = vueData.mods.find(mod => mod.ID == modID);
+
+					if (mod) {
+						mod.Value = vueData.settings.ComponentValues[modID];
+					} else {
+						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular", vueData.settings.ComponentValues[modID]))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -466,7 +462,17 @@
 				data: vueData,
 				methods: {
 					getJSON: function() {
-						return JSON.stringify(this.settings);
+						const settingsClone = {};
+						for (const field in ModeSettingsFormat) {
+							settingsClone[field] = this.settings[field];
+						}
+						
+						settingsClone.ComponentValues = {};
+						for (const mod of this.mods) {
+							settingsClone.ComponentValues[mod.ID] = mod.Value;
+						}
+
+						return JSON.stringify(settingsClone, null, 2);
 					},
 					onFileUploaded: function(event) {
 						uploadSettings(event.target.files)
@@ -487,6 +493,12 @@
 					getMods: getMods,
 					toggleType: function(type) {
 						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					},
+					setValue: function(mod, value) {
+						const val = parseInt(value);
+						if (Number.isNaN(val)) return;
+
+						mod.Value = val;
 					}
 				}
 			});
@@ -513,7 +525,7 @@
 			<div v-if="visibleTypes['Settings']" class="mods">
 				<div class="mod" v-for="(value, field) in settings" v-if="field != 'ComponentValues'">
 					<span>{{ field.replace(/^TimeMode/, "").replace(/([A-Z])/g, " $1") }}</span>
-					<input type="number" :required="true" v-model:value="settings[field]"></input>
+					<input type="number" :required="true" step="any" v-model:value="settings[field]"></input>
 				</div>
 			</div>	
 			<template v-for="(name, type) in modTypes">
@@ -526,7 +538,7 @@
                                 <div>{{ mod.Name }}</div>
                                 <div class="mod-id">{{ mod.ID }}</div>
 							</div>
-							<input type="number" :required="true" v-bind:value="mod.Value" v-on:change="mod.Value = $event.target.value"></input>
+							<input type="number" :required="true" step="any" v-bind:value="mod.Value" v-on:change="setValue(mod, $event.target.value);"></input>
 						</div>
 					</template>
 				</div>
