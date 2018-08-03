@@ -888,7 +888,7 @@ $(function() {
 				loggingTag: "BombGenerator",
 				matches: [
 					{
-						regex: /Generating bomb with seed (\d+)/,
+						regex: /Generating bomb with seed (-?\d+)/,
 						handler: function(matches) {
 							bomb = new Bomb(parseInt(matches[1]));
 
