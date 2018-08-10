@@ -4281,10 +4281,11 @@ $(function() {
                             });
 
                             module.push({ label: matches[1], obj: answers, expanded: true });
+                            return true;
                         }
                     },
                     {
-                        regex: /Clicked answer|Questions exhausted./
+                        regex: /.+/
                     }
                 ]
             },
