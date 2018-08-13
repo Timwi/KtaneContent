@@ -104,7 +104,6 @@
 			margin: 3px;
 			transition: background 0.4s;
 			user-select: none;
-			cursor: default;
 			flex-grow: 1;
 			align-content: center;
 			cursor: pointer;
@@ -260,9 +259,51 @@
 		];
 		/// MOD DATA ///
 
-		mods.forEach(mod => {
-			mod.sortkey = mod.name.replace(/^The /, "").toUpperCase();
-		});
+		const sortingMethods = [
+			{
+				Name: "Name",
+				Compare: (mod1, mod2) => mod1.SortKey > mod2.SortKey ? 1 : - 1
+			},
+			{
+				Name: "Publish Date",
+				Compare: (mod1, mod2) => mod1.Published < mod2.Published ? 1 : - 1
+			},
+		];
+
+		const vueData = {
+			profile: [],
+			profileName: "Profile",
+			operation: 0,
+			mods: mods,
+
+			modTypes: {
+				Regular: "Solvable Modules",
+				Needy: "Needy Modules",
+				service: "Services",
+				case: "Bomb Cases",
+				Room: "Gameplay Rooms",
+				Widget: "Widgets",
+			},
+			visibleTypes: {Regular: true, Needy: true},
+
+			isHovering: false,
+			isRenaming: false,
+		
+			sortingMethodIndex: 0,
+			sortingMethods: sortingMethods
+		};
+
+		class Mod {
+			constructor(name, sortKey, id, type, published = "1970-1-1") {
+				this.Name = name;
+				this.SortKey = sortKey;
+				this.ID = id;
+				this.Type = type;
+				this.Published = published;
+			}
+		}
+
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -285,12 +326,7 @@
 				}
 
 				if (module.Origin == "Mods") {
-					mods.push({
-						name: module.Name,
-						sortkey: module.SortKey,
-						id: module.ModuleID,
-						type: module.Type
-					});
+					vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published));
 				}
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
@@ -303,25 +339,6 @@
 
 		window.onload = function() {
 			var toastr = this.toastr; // A Vue version of toastr.
-			var vueData = {
-				profile: [],
-				profileName: "Profile",
-				operation: 0,
-				mods: mods,
-
-				modTypes: {
-					Regular: "Solvable Modules",
-					Needy: "Needy Modules",
-					service: "Services",
-					case: "Bomb Cases",
-					Room: "Gameplay Rooms",
-					Widget: "Widgets",
-				},
-				visibleTypes: {Regular: true, Needy: true},
-
-				isHovering: false,
-				isRenaming: false
-			};
 
 			function getModuleCount(caseMod) {
 				if (!caseMod.moduleCount) {
@@ -333,7 +350,7 @@
 
 					var found = false;
 
-					var name = caseMod.name;
+					var name = caseMod.Name;
 					for (var str in counts) {
 						if (name.includes(str)) {
 							caseMod.moduleCount = counts[str];
@@ -357,9 +374,8 @@
 			}
 
 			function getMods(type) {
-				var mods = vueData.mods.filter(function(mod) {
-					return mod.type == type;
-				});
+				var mods = vueData.mods.filter(mod => mod.Type == type);
+				const sortingMethod = sortingMethods[vueData.sortingMethodIndex].Compare;
 
 				if (type == "case") {
 					mods.sort(function(mod1, mod2) {
@@ -371,13 +387,11 @@
 						} else if (count1 < count2) {
 							return -1;
 						} else {
-							return mod1.sortkey > mod2.sortkey ? 1 : - 1; // Sort alphabetically.
+							return sortingMethod(mod1, mod2); //mod1.SortKey > mod2.SortKey ? 1 : - 1; // Sort alphabetically.
 						}
 					});
 				} else {
-					mods.sort(function(mod1, mod2) {
-						return mod1.sortkey > mod2.sortkey ? 1 : - 1;
-					});
+					mods.sort(sortingMethod);
 				}
 
 				return mods;
@@ -408,9 +422,11 @@
 				vueData.operation = profile.Operation;
 
 				// Check if we support all the IDs in the profile.
-				for (var index in vueData.profile) {
-					var modID = vueData.profile[index];
-					if (!(vueData.mods.some(function(mod) { return mod.id == modID; }))) {
+				for (var modID in vueData.profile) {
+					const mod = vueData.mods.find(mod => mod.ID == modID);
+
+					if (!mod) {
+						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular"))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -418,7 +434,7 @@
 
 			function downloadProfile(url) {
 				if (url.match(/^https?:\/\//)) {
-					var filename = url.match(/[^/]+\.json$/);
+					let filename = url.match(/[^/]+\.json$/);
 					if (filename) {
 						makeRequest((devMode ? "https://ktane.timwi.de" : "") + "/proxy/" + url).then(function(data) {
 							handleProfile(data, filename[0]);
@@ -491,11 +507,11 @@
 				data: vueData,
 				methods: {
 					toggleMod: function(mod, event) {
-						var index = this.profile.indexOf(mod.id);
+						var index = this.profile.indexOf(mod.ID);
 						if (index > -1) {
 							this.profile.splice(index, 1);
 						} else {
-							this.profile.push(mod.id);
+							this.profile.push(mod.ID);
 						}
 
 						if (event)
@@ -541,8 +557,8 @@
 					},
 					setAllMods: function(type, state) {
 						getMods(type).forEach(mod => {
-							const id = mod.id;
-							const profileIndex = this.profile.indexOf(id);
+							const id = mod.ID;
+							const profileIndex = this.profile.indexOf(ID);
 							if (!state && profileIndex == -1) {
 								this.profile.push(id);
 							} else if (state && profileIndex != -1) {
@@ -552,7 +568,7 @@
 					},
 					toggleAllMods: function(type) {
 						getMods(type).forEach(mod => {
-							const id = mod.id;
+							const id = mod.ID;
 							const profileIndex = this.profile.indexOf(id);
 							if (profileIndex == -1) this.profile.push(id);
 							else this.profile.splice(profileIndex, 1);
@@ -565,7 +581,7 @@
 </head>
 <body>
 	<div id="editor">
-		<input id="file-upload" type="file" v-on:change="onFileUploaded">
+		<input id="file-upload" type="file" @change="onFileUploaded">
 		<div class="fullscreen-msg" :class="{ hovering: isHovering }" for="file-upload">
 			<span>Drop profile!</span>
 		</div>
@@ -573,31 +589,32 @@
 		<div class="title-container">
 			<div class="title">Profile Editor</div>
 			<div class="header">
-				<div v-if="!isRenaming" v-on:click="startRenaming">{{ profileName }}.json <button class="clickable" accesskey="r">Rename</button></div>
-				<input v-if="isRenaming" v-on:keydown="handleRenaming" v-on:blur="handleRenaming" v-on:paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name">
-				<div>Operation: <button class="clickable" v-on:click="operation = 1 - operation" accesskey="o">{{ operation ? "Union" : "Intersect" }}</button></div>
-				<div><a v-on:click="fallbackDownload" :download="profileName + '.json'" :href="'data:application/json,' + encodeURIComponent(getJSON())" accesskey="d">Download</a></div>
 				<label class="clickable" for="file-upload" accesskey="i">Import</label>
+				<div v-if="!isRenaming" @click="startRenaming">{{ profileName }}.json <button class="clickable" accesskey="r">Rename</button></div>
+				<input v-if="isRenaming" @keydown="handleRenaming" @blur="handleRenaming" @paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name">
+				<div>Operation: <button class="clickable" @click="operation = 1 - operation" accesskey="o">{{ operation ? "Union" : "Intersect" }}</button></div>
+				<div>Sort By: <button class="clickable" @click="sortingMethodIndex++; sortingMethodIndex %= sortingMethods.length;" accesskey="s">{{ sortingMethods[sortingMethodIndex].Name }}</button></div>
+				<div><a @click="fallbackDownload" :download="profileName + '.json'" :href="'data:application/json,' + encodeURIComponent(getJSON())" accesskey="d">Download</a></div>
 			</div>
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button v-on:click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.id).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.ID).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></h3>
 				<div class="toggleMods" v-if="visibleTypes[type]">
-					<button v-on:click="setAllMods(type, true)" class="clickable">Enable</button>
+					<button @click="setAllMods(type, true)" class="clickable">Enable</button>
 					/
-					<button v-on:click="setAllMods(type, false)" class="clickable">Disable</button>
+					<button @click="setAllMods(type, false)" class="clickable">Disable</button>
 					/
-					<button v-on:click="toggleAllMods(type)" class="clickable">Toggle</button>
+					<button @click="toggleAllMods(type)" class="clickable">Toggle</button>
 					All
 				</div>
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
-						<button v-on:click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.id) }">
-                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" v-on:error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.name.replace(/ \(Translated\)$/, '') + '.png'">
+						<button @click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.ID) }">
+                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" @error="fallbackToBlank" :src="'https://ktane.timwi.de/Icons/' + mod.Name.replace(/ \(Translated\)$/, '') + '.png'">
                             <div class="mod-info">
-                                <div>{{ mod.name }}</div>
-                                <div class="mod-id">{{ mod.id.replace(/\(Clone\)$/, "") }}</div>
+                                <div>{{ mod.Name }}</div>
+                                <div class="mod-id">{{ mod.ID.replace(/\(Clone\)$/, "") }}</div>
                             </div>
 						</button>
 					</template>
