@@ -2782,6 +2782,24 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "logicGates",
+				loggingTag: "Logic Gates",
+				matches: [
+					{
+						regex: /Solution:/,
+						handler: function(matches, module) {
+							module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, ""))});
+							return true;
+						}
+					},
+					{
+						handler: function(matches, module) {
+							module.push(matches.input);
+						}
+					}
+				]
+			},
+			{
 				moduleID: "MafiaModule",
 				loggingTag: "Mafia",
 				matches: [
