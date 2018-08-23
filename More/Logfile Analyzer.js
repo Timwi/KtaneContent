@@ -2874,28 +2874,30 @@ $(function() {
 											.css('background', bgNoHover)
 											.mouseover(function() { $(this).css('background', bgOnHover); })
 											.mouseout(function() { $(this).css('background', bgNoHover); })
-											.click((ix, rotBefore, rotAfter, marbleBefore, marbleAfter) => function() {
-												for (var i = 0; i < 5; i++)
-													imgs[i].css('transition', '');
-												setRotations(rotBefore);
-												setMarble(rotBefore, marbleBefore);
-												window.setTimeout(function() {
+											.click(function(ix, rotBefore, rotAfter, marbleBefore, marbleAfter) {
+												return function() {
 													for (var i = 0; i < 5; i++)
-														imgs[i].css('transition', 'transform linear 1s');
-													marbleOuter.css('transition', 'transform linear 1s');
+														imgs[i].css('transition', '');
+													setRotations(rotBefore);
+													setMarble(rotBefore, marbleBefore);
 													window.setTimeout(function() {
-														setRotations(rotAfter);
-														setMarble(rotAfter, marbleBefore);
+														for (var i = 0; i < 5; i++)
+															imgs[i].css('transition', 'transform linear 1s');
+														marbleOuter.css('transition', 'transform linear 1s');
 														window.setTimeout(function() {
-															for (var i = 0; i < 5; i++)
-																imgs[i].css('transition', '');
-															marbleOuter.css('transition', '');
-															setMarble(rotAfter, marbleAfter);
-														}, 1100);
+															setRotations(rotAfter);
+															setMarble(rotAfter, marbleBefore);
+															window.setTimeout(function() {
+																for (var i = 0; i < 5; i++)
+																	imgs[i].css('transition', '');
+																marbleOuter.css('transition', '');
+																setMarble(rotAfter, marbleAfter);
+															}, 1100);
+														}, 100);
 													}, 100);
-												}, 100);
-												sel = ix;
-												setBackgrounds();
+													sel = ix;
+													setBackgrounds();
+												};
 											}(i, data.states[i-1].rotations, data.states[i].rotations, prevMarble, curMarble));
 									}
 
@@ -2905,13 +2907,15 @@ $(function() {
 										.appendTo(controlsDiv)
 										.mouseover(function(ix) { return function() { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
 										.mouseout(function(ix) { return function() { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
-										.click((ix, rot, marble) => function() {
-											setRotations(rot);
-											setMarble(rot, marble);
-											sel = ix;
-											setBackgrounds();
-											$(this).css('background', '#fef');
-											return false;
+										.click(function(ix, rot, marble) {
+											return function() {
+												setRotations(rot);
+												setMarble(rot, marble);
+												sel = ix;
+												setBackgrounds();
+												$(this).css('background', '#fef');
+												return false;
+											};
 										}(i, data.states[i].rotations, curMarble));
 									nextDivs.push(nextDiv);
 									if (data.states[i].solved || 'trap' in data.states[i])
