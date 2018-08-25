@@ -4392,6 +4392,22 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "SynchronizationModule",
+				loggingTag: "Synchronization",
+				matches: [
+					{
+						regex: /Light speeds:/,
+						handler: function(matches, module) {
+							module.push({ label: "Light speeds", obj: pre(readMultiple(3)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Tic-Tac-Toe",
 				moduleID: "TicTacToeModule",
 				loggingTag: "TicTacToe",
