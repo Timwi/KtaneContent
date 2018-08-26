@@ -2988,7 +2988,7 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Mastermind",
+				displayName: "Mastermind Simple",
 				moduleID: "Mastermind Simple",
 				loggingTag: "Mastermind Simple",
 				matches: [
