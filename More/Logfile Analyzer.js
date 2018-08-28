@@ -4312,6 +4312,11 @@ $(function() {
 				loggingTag: "The Stock Market"
 			},
 			{
+				displayName: "The Switch",
+				moduleID: "BigSwitch",
+				loggingTag: "The Switch"
+			},
+			{
 				moduleID: "SymbolCycleModule",
 				loggingTag: "Symbol Cycle",
 				matches: [
