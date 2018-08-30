@@ -1,44 +1,134 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title>Memory - Keep Talking and Nobody Explodes</title>
-		<meta name="viewport" content="initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="css/normalize.css">
-		<link rel="stylesheet" type="text/css" href="css/main.css">
-		<script src='js/highlighter.js'></script>
-		<link rel='stylesheet' type='text/css' href='css/font.css'>
-	</head>
-	<body>
-		<div class="section">
-		    <div class="page page-bg-03">
-				<div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Memory</span> </div>
-					<div class="page-footer absolute-footer"></div>
-					<div class="page-content"> <img src="img/Component/Memory.svg" class="diagram" />
-							<h2>On the Subject of Memory</h2>
-							<p class="flavour-text">Memory is a fragile thing but so is everything else when a bomb goes off, so pay attention!</p>
-							<ul>
-								<li>Press the correct button to progress the module to the next stage. Complete all stages to disarm the module.</li>
-								<li>Pressing an incorrect button will reset the module back to stage 1.</li>
-								<li>Button positions are ordered from left to right.</li>
-							</ul>
-							<div class="memory-rules">
-								<h4>Stage 1:</h4>
-								<p>If the display is 1, press the button in the second position.<br />If the display is 2, press the button in the second position.<br />If the display is 3, press the button in the third position.<br />If the display is 4, press the button in the fourth position.<br /></p>
-								<h4>Stage 2:</h4>
-								<p>If the display is 1, press the button labeled "4".<br />If the display is 2, press the button in the same position as you pressed in stage 1.<br />If the display is 3, press the button in the first position.<br />If the display is 4, press the button in the same position as you pressed in stage 1.<br /></p>
-								<h4>Stage 3:</h4>
-								<p>If the display is 1, press the button with the same label you pressed in stage 2.<br />If the display is 2, press the button with the same label you pressed in stage 1.<br />If the display is 3, press the button in the third position.<br />If the display is 4, press the button labeled "4".<br /></p>
-								<h4>Stage 4:</h4>
-								<p>If the display is 1, press the button in the same position as you pressed in stage 1.<br />If the display is 2, press the button in the first position.<br />If the display is 3, press the button in the same position as you pressed in stage 2.<br />If the display is 4, press the button in the same position as you pressed in stage 2.<br /></p>
-								<h4>Stage 5:</h4>
-								<p>If the display is 1, press the button with the same label you pressed in stage 1.<br />If the display is 2, press the button with the same label you pressed in stage 2.<br />If the display is 3, press the button with the same label you pressed in stage 4.<br />If the display is 4, press the button with the same label you pressed in stage 3.<br /></p>
-							</div>
-						</div>
-						<div class="page-footer relative-footer">Page 1 of 1</div>
-					</div>
-				</div>
-			</div>
-	</body>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Memory - Keep Talking and Nobody Explodes</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <script src='js/highlighter.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    tag.appendChild(document.createTextNode(`If the display is ${j}, ${rule}.`));
+                    if (j != 4)
+                        tag.appendChild(document.createElement('br'));
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "press the button in the first position";
+                case 1: return "press the button in the second position";
+                case 2: return "press the button in the third position";
+                case 3: return "press the button in the fourth position";
+                case 4: return `press the button labeled “${targetDigit}”`;
+                case 5: return `press the button in the same position as you pressed in stage ${targetStage}`;
+                case 6: return `press the button with the same label you pressed in stage ${targetStage}`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Memory</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory.svg" class="diagram" />
+                <h2>On the Subject of Memory</h2>
+                <p class="flavour-text">Memory is a fragile thing but so is everything else when a bomb goes off, so pay attention!</p>
+                <ul>
+                    <li>Press the correct button to progress the module to the next stage. Complete all stages to disarm the module.</li>
+                    <li>Pressing an incorrect button will reset the module back to stage 1.</li>
+                    <li>Button positions are ordered from left to right.</li>
+                </ul>
+                <div class="memory-rules">
+                    <h4>Stage 1:</h4>
+                    <p id="memory-stage-1">If the display is 1, press the button in the second position.<br />If the display is 2, press the button in the second position.<br />If the display is 3, press the button in the third position.<br />If the display is 4, press the button in the fourth position.<br /></p>
+                    <h4>Stage 2:</h4>
+                    <p id="memory-stage-2">If the display is 1, press the button labeled "4".<br />If the display is 2, press the button in the same position as you pressed in stage 1.<br />If the display is 3, press the button in the first position.<br />If the display is 4, press the button in the same position as you pressed in stage 1.<br /></p>
+                    <h4>Stage 3:</h4>
+                    <p id="memory-stage-3">If the display is 1, press the button with the same label you pressed in stage 2.<br />If the display is 2, press the button with the same label you pressed in stage 1.<br />If the display is 3, press the button in the third position.<br />If the display is 4, press the button labeled "4".<br /></p>
+                    <h4>Stage 4:</h4>
+                    <p id="memory-stage-4">If the display is 1, press the button in the same position as you pressed in stage 1.<br />If the display is 2, press the button in the first position.<br />If the display is 3, press the button in the same position as you pressed in stage 2.<br />If the display is 4, press the button in the same position as you pressed in stage 2.<br /></p>
+                    <h4>Stage 5:</h4>
+                    <p id="memory-stage-5">If the display is 1, press the button with the same label you pressed in stage 1.<br />If the display is 2, press the button with the same label you pressed in stage 2.<br />If the display is 3, press the button with the same label you pressed in stage 4.<br />If the display is 4, press the button with the same label you pressed in stage 3.<br /></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
 </html>
