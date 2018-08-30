@@ -69,6 +69,8 @@ class MonoRandom
     }
 
     // Brings an array into random order.
+    // This method is equivalent to doing .OrderBy(x => rnd.NextDouble()) in C#.
+    // Returns a new array and leaves the original array unmodified.
     shuffleArray(arr)
     {
         var sortArr = new Array(arr.length);
@@ -76,6 +78,22 @@ class MonoRandom
             sortArr[i] = { r: this.nextDouble(), v: arr[i] };
         sortArr.sort((a, b) => a.r - b.r);
         return sortArr.map(x => x.v);
+    }
+
+    // Brings an array into random order using the Fisher-Yates shuffle.
+    // This is an inplace array, i.e. the input array is modified.
+    shuffleFisherYates(list)
+    {
+        var i = list.length;
+        while (i > 1)
+        {
+            var index = this.next(0, i);
+            i--;
+            var value = list[index];
+            list[index] = list[i];
+            list[i] = value;
+        }
+        return list;
     }
 }
 
