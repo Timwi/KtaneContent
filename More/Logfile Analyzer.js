@@ -2064,6 +2064,11 @@ $(function() {
 								calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
 								calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
 								module.push({ label: 'Calculations:', obj: calcTable });
+								module.push({ label: 'Submit button:', obj:
+									$(`<div><div class='inner'>${module.SubmitButton.color} <span>${module.SubmitButton.label}</span></div></div>`)
+										.find('.inner').css({ backgroundColor: colors[module.SubmitButton.color], border: '1px solid black', padding: '.1em .4em', margin: '.5em 0 2em', display: 'inline-block' })
+										.find('span').css({ fontFamily: 'KRA', fontSize: '28pt' })
+										.end().end()});
 
 								const key = ix => `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
 								var keypad = $(`
