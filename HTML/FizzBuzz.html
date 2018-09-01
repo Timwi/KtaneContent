@@ -8,7 +8,8 @@
     <link rel='stylesheet' type='text/css' href='css/font.css'>
     <link href="css/normalize.css" rel="stylesheet" type="text/css">
     <link href="css/main.css" rel="stylesheet" type="text/css">
-    <script src='js/highlighter.js'></script>
+    <script src="js/highlighter.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         table.fizz-buzz {
             border: none;
@@ -41,6 +42,221 @@
             }
         }
     </style>
+    <script>
+        var DefaultTable = [
+            [7, 3, 2, 4, 5], // ≥ 3 battery holders present
+            [3, 4, 9, 2, 8], // Serial & parallel ports present
+            [4, 5, 8, 8, 2], // 3 letters & 3 digits in serial number
+            [2, 3, 7, 9, 1], // DVI & Stereo RCA ports present
+            [1, 2, 2, 5, 3], // ≥ 5 batteries present
+            [3, 1, 8, 3, 4], // None of the above
+            [6, 6, 1, 2, 8] // ≥ 2 strikes
+        ];
+        
+        function GenerateOffsetTable(rnd) {
+            if (rnd.seed === 1) {
+                return DefaultTable;
+            }
+            var rules = [];
+            for (var i = 0; i < 7; i++) {
+                rules.push([]);
+            }
+            for (var i = 0; i < 5; i++) {
+                let list = generateIntList(1, 10);
+                list = rnd.shuffleFisherYates(list);
+                list.splice(0, 3);
+                list.push(list[rnd.next(0, 6)]);
+                for (var j = 0; j < 7; j++) {
+                    rules[j][i] = list[j];
+                }
+            }
+            return rules;
+        }
+
+        function generateIntList(min, max) {
+            var result = [];
+            for (var i = min; i < max; i++) {
+                result.push(i);
+            }
+            return result;
+        }
+
+        var divisibilityRules = [
+            [ 2, 4, 5, 8 ],
+            [ 3, 7, 9, 11 ]
+        ];
+        var NumNames = [null, "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"]
+
+        function GenerateDivisibilityRules(rnd) {
+            if (rnd.seed === 1) {
+                return [ 3, 5 ];
+            }
+            var result = [
+                divisibilityRules[0][rnd.next(0, 4)],
+                divisibilityRules[1][rnd.next(0, 4)]
+            ];
+            result.sort();
+            return result;
+        }
+
+        var ports = ["PS/2", "DVI-D", "Stereo RCA", "RJ-45"];
+        var indicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+
+        var ruleSet1 = [
+            {
+                Id: "AtLeast2Strikes",
+                RuleText: "2 or more strikes are present on the bomb."
+            },
+            {
+                Id: "LessThanOneThirdStartingTime",
+                RuleText: "Less than one third of the bomb's starting time remains on the timer."
+            },
+            {
+                Id: "MoreThanTwoThirdsModulesSolved",
+                RuleText: "More than two thirds of the modules present on the bomb have been solved."
+            }
+        ];
+
+        var ruleSet2 = [
+            {
+                Id: "SerialAndParallelPortPresent",
+                RuleText: "At least one Serial <u>and</u> Parallel port are present on the bomb."
+            },
+            {
+                Id: "ThreeLettersAndThreeDigitsInSerialNumber",
+                RuleText: "3 letters and 3 digits are present in the serial number."
+            },
+            {
+                Id: "SerialNumberHasVowel",
+                RuleText: "A vowel is present in the serial number."
+            },
+            {
+                Id: "GreenNumberPresent",
+                RuleText: "A green number is present on the module."
+            }
+        ];
+
+        var ruleSet3 = [
+            {
+                Id: "AtLeastXBatteryHoldersPresent",
+                RuleText: a => `${a} or more battery holders are present on the bomb.`,
+                GenRule: rnd => [ rnd.next(2, 4) ],
+            },
+            {
+                Id: "AtLeastXBatteriesPresent",
+                RuleText: a => `${a} or more batteries are present on the bomb.`,
+                GenRule: rnd => [ rnd.next(4, 6) ],
+            },
+            {
+                Id: "XAndYPortsPresent",
+                RuleText: (a, b) => `At least one ${a} <u>and</u> ${b} port are present on the bomb.`,
+                GenRule: rnd => {
+                    var port1Index = rnd.next(0, 4);
+                    var port2Index;
+                    do { port2Index = rnd.next(0, 4); } while (port2Index === port1Index);
+                    var port1 = ports[port1Index];
+                    var port2 = ports[port2Index];
+                    return [
+                        port1, port2
+                    ]
+                },
+            },
+            {
+                Id: "IndicatorXPresent",
+                RuleText: (a, b) => `A${a} ${b} indicator is present on the bomb.`,
+                GenRule: rnd => {
+                    var label = indicators[rnd.next(0, 12)];
+                    var lit = rnd.next(0, 2) === 0;
+                    return [lit ? " lit" : "n unlit", label]
+                },
+            },
+        ];
+
+        function GenerateRuleSet(rnd) {
+            if (rnd.seed === 1) {
+                return [
+                    ruleSet3[0].RuleText(3),
+                    ruleSet2[0].RuleText,
+                    ruleSet2[1].RuleText,
+                    ruleSet3[2].RuleText("DVI-D", "Stereo RCA"),
+                    ruleSet3[1].RuleText(5),
+                    "None of the above apply.",
+                    ruleSet1[0].RuleText
+                ]
+            }
+            var result = [];
+
+            var ix1 = rnd.next(0, ruleSet2.length);
+            var ix2;
+            do { ix2 = rnd.next(0, ruleSet2.length); } while (ix2 === ix1);
+            result.push(ruleSet2[ix1].RuleText);
+            result.push(ruleSet2[ix2].RuleText);
+
+            var ix1 = rnd.next(0, ruleSet3.length);
+            var ix2, ix3;
+            do { ix2 = rnd.next(0, ruleSet3.length); } while (ix2 === ix1);
+            do { ix3 = rnd.next(0, ruleSet3.length); } while (ix3 === ix1 || ix3 === ix2);
+            var rs3Rule1 = ruleSet3[ix1];
+            var rs3Rule2 = ruleSet3[ix2];
+            var rs3Rule3 = ruleSet3[ix3];
+            var rs3Rule1Configs = rs3Rule1.GenRule(rnd);
+            var rs3Rule2Configs = rs3Rule2.GenRule(rnd);
+            var rs3Rule3Configs = rs3Rule3.GenRule(rnd);
+            result.push(rs3Rule1.RuleText(rs3Rule1Configs[0], rs3Rule1Configs[1]));
+            result.push(rs3Rule2.RuleText(rs3Rule2Configs[0], rs3Rule2Configs[1]));
+            result.push(rs3Rule3.RuleText(rs3Rule3Configs[0], rs3Rule3Configs[1]));
+
+            result = rnd.shuffleFisherYates(result); // After this, they are in the same order as C#
+
+            result.push("None of the above apply.");
+            result.push(ruleSet1[rnd.next(0, ruleSet1.Count)].RuleText);
+
+            return result;
+        }
+
+        function setRules(rnd) {
+            var nums = document.getElementsByClassName("rule-num");
+            var conditions = document.getElementsByClassName("rule-condition");
+            var table = GenerateOffsetTable(rnd);
+            var ruleSet = GenerateRuleSet(rnd);
+
+            var divisibilityRules = GenerateDivisibilityRules(rnd);
+            for (var el of document.getElementsByClassName("rule-div-1")) el.innerHTML = NumNames[divisibilityRules[0]];
+            for (var el of document.getElementsByClassName("rule-div-2")) el.innerHTML = NumNames[divisibilityRules[1]];
+
+            var ix = ruleSet.indexOf("None of the above apply.");
+            var noneRule = ruleSet.splice(ix, 1)[0];
+            var noneNums = table.splice(ix, 1)[0];
+
+            var newRuleSet = [];
+            var newTable = [];
+            var indices;
+            if (rnd.seed === 1) {
+                indices = [0, 1, 2, 3, 5, 4];   
+            } else {
+                indices = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(indices);
+            }
+            for (var i = 0; i < 6; i++) {
+                newRuleSet.push(ruleSet[indices[i]]);
+                newTable.push(table[indices[i]]);
+            }
+
+            newRuleSet.push(noneRule);
+            newTable.push(noneNums);
+
+            for (var i = 0; i < 7; i++) {
+                conditions[i].innerHTML = newRuleSet[i];
+                for (var j = 0; j < 5; j++) {
+                    nums[i * 5 + j].innerHTML = newTable[i][j];
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
 </head>
 <body>
 <div class="section">
@@ -63,10 +279,10 @@
                 <li>
                     Take the sum of these integers to get a number. Take this number and add it to each digit of the displayed number to get a new seven-digit (or less if the first few digits are zeros) number. <b>Be sure to disregard any carry digits you get when performing this operation</b>.
                 <li>
-                    If the new number is not divisible by three or five, do nothing.<br>
-                    If the new number is divisible by three and not five, use the button to change the display to "FIZZ".<br>
-					If the new number is divisible by five and not three, use the button to change the display to "BUZZ".<br>
-					If the new number is divisible by both five and three, use the button to change the display to "FIZZBUZZ"
+                    If the new number is not divisible by <span class="rule-div-1">three</span> or <span class="rule-div-2">five</span>, do nothing.<br>
+                    If the new number is divisible by <span class="rule-div-1">three</span> and not <span class="rule-div-2">five</span>, use the button to change the display to "FIZZ".<br>
+					If the new number is divisible by <span class="rule-div-2">five</span> and not <span class="rule-div-1">three</span>, use the button to change the display to "BUZZ".<br>
+					If the new number is divisible by both <span class="rule-div-2">five</span> and <span class="rule-div-1">three</span>, use the button to change the display to "FIZZBUZZ"
 				<li>
 					Finally, repeat for the remaining numbers and press "SUBMIT" once all three numbers' displays are correct.
             </ul>
@@ -81,13 +297,13 @@
                     <th><span class='text'>white</span>
                 </tr>
 
-                <tr><th>3 or more battery holders are present on the bomb.                   <td>7<td>3<td>2<td>4<td>5</tr>
-                <tr><th>At least one Serial <u>and</u> Parallel port is present on the bomb. <td>3<td>4<td>9<td>2<td>8</tr>
-                <tr><th>3 letters and 3 digits are present in the serial number.             <td>4<td>5<td>8<td>8<td>2</tr>
-                <tr><th>At least one DVI-D <u>and</u> Stereo RCA port is present on the bomb.<td>2<td>3<td>7<td>9<td>1</tr>
-                <tr><th>2 or more strikes are present on the bomb.                           <td>6<td>6<td>1<td>2<td>8</tr>
-                <tr><th>5 or more batteries are present on the bomb.                         <td>1<td>2<td>2<td>5<td>3</tr>
-				<tr><th>None of the above apply.                                             <td>3<td>1<td>8<td>3<td>4</tr>
+                <tr><th><span class="rule-condition">3 or more battery holders are present on the bomb.                   </span><td class="rule-num">7<td class="rule-num">3<td class="rule-num">2<td class="rule-num">4<td class="rule-num">5</tr>
+                <tr><th><span class="rule-condition">At least one Serial <u>and</u> Parallel port is present on the bomb. </span><td class="rule-num">3<td class="rule-num">4<td class="rule-num">9<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">3 letters and 3 digits are present in the serial number.             </span><td class="rule-num">4<td class="rule-num">5<td class="rule-num">8<td class="rule-num">8<td class="rule-num">2</tr>
+                <tr><th><span class="rule-condition">At least one DVI-D <u>and</u> Stereo RCA port is present on the bomb.</span><td class="rule-num">2<td class="rule-num">3<td class="rule-num">7<td class="rule-num">9<td class="rule-num">1</tr>
+                <tr><th><span class="rule-condition">2 or more strikes are present on the bomb.                           </span><td class="rule-num">6<td class="rule-num">6<td class="rule-num">1<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">5 or more batteries are present on the bomb.                         </span><td class="rule-num">1<td class="rule-num">2<td class="rule-num">2<td class="rule-num">5<td class="rule-num">3</tr>
+				<tr><th><span class="rule-condition">None of the above apply.                                             </span><td class="rule-num">3<td class="rule-num">1<td class="rule-num">8<td class="rule-num">3<td class="rule-num">4</tr>
             </table>
 		</div>
 	</div>
