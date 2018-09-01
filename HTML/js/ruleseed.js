@@ -35,7 +35,7 @@ class MonoRandom
     }
 
     // Returns a random number between 0.0 and 1.0.
-    nextDouble()
+    nextDouble(logging)
     {
         if (((++this._inext) | 0) >= (56 | 0))
             this._inext = 1 | 0;
@@ -45,7 +45,10 @@ class MonoRandom
         if ((num | 0) < 0)
             num = ((num | 0) + 2147483647) | 0;
         this._seedArray[this._inext | 0] = num | 0;
-        return +(num * 4.6566128752457969E-10);
+        var result = +(num * 4.6566128752457969E-10);
+        if (logging)
+            console.log(`rnd.nextDouble() = ${result}`);
+        return result;
     }
 
     // Returns a non-negative random integer.
@@ -61,11 +64,16 @@ class MonoRandom
     }
 
     // Returns a random integer within the specified range (minValue is inclusive, maxValue is exclusive).
-    next(minValue, maxValue)
+    next(minValue, maxValue, logging)
     {
+        var result;
         if (maxValue - minValue <= 1)
-            return minValue;
-        return this.nextMax(maxValue - minValue) + minValue;
+            result = minValue;
+        else
+            result = this.nextMax(maxValue - minValue) + minValue;
+        if (logging)
+            console.log(`rnd.next(${minValue}, ${maxValue}) = ${result}`);
+        return result;
     }
 
     // Brings an array into random order.
