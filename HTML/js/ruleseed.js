@@ -89,7 +89,7 @@ class MonoRandom
     }
 
     // Brings an array into random order using the Fisher-Yates shuffle.
-    // This is an inplace array, i.e. the input array is modified.
+    // This is an inplace algorithm, i.e. the input array is modified.
     shuffleFisherYates(list)
     {
         var i = list.length;
