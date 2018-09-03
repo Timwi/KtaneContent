@@ -464,6 +464,9 @@ $(function() {
 			if (Needies > 0) {
 				$("<div class='needy-count'>").text(Needies).appendTo(bombHTML);
 			}
+			if (this.RuleSeed) {
+				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
+			}
 
 			// Modules
 			var modules = $("<div class='modules'>").appendTo(info);
@@ -780,6 +783,7 @@ $(function() {
 
 		var bombgroup;
 		var bomb;
+		var ruleseed;
 		var parsed = [];
 		var bombSerialIndex = 0;
 
@@ -895,6 +899,8 @@ $(function() {
 								bombgroup = new BombGroup();
 								bombSerialIndex = 0;
 								bombgroup.StartLine = linen;
+								if (ruleseed)
+									bombgroup.RuleSeed = ruleseed;
 
 								parsed.push(bombgroup);
 							}
@@ -1150,6 +1156,17 @@ $(function() {
 						regex: /ReturnToSetupRoom/,
 						handler: function() {
 							bombgroup.FilterLines();
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "Vanilla Rule Modifier",
+				matches: [
+					{
+						regex: /Generating Rules based on Seed (\d+)/,
+						handler: function(m) {
+							ruleseed = m[1];
 						}
 					}
 				]
