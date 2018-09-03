@@ -4,6 +4,7 @@ class MonoRandom
     constructor(seed)
     {
         this.seed = seed;
+        this.count = 0;
         this._seedArray = new Array(56);
         for (var i = 0; i < 56; i++)
             this._seedArray[i] = 0;
@@ -37,6 +38,7 @@ class MonoRandom
     // Returns a random number between 0.0 and 1.0.
     nextDouble(logging)
     {
+        this.count++;
         if (((++this._inext) | 0) >= (56 | 0))
             this._inext = 1 | 0;
         if (((++this._inextp) | 0) >= (56 | 0))
