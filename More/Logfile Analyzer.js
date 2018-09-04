@@ -3953,25 +3953,27 @@ $(function() {
 			{
 				displayName: "Rubik’s Clock",
 				moduleID: "rubiksClock",
-				loggingTag: "Rubik's Clock",
+				loggingTag: "Rubik’s Clock",
 				matches: [
 					{
-						regex: /^Serial=/,
-						handler: function() {
+						regex: /(.*) \{/,
+						handler: function(matches, module) {
+							module.listHeader = matches[1];
+							module.listItems = [];
 							return true;
 						}
 					},
 					{
-						regex: /(Lit clock: [TBRLM]{1,2}. Lit pin: [TBRL]{2}.) (.+)/,
+						regex: /- (.*)/,
 						handler: function(matches, module) {
-							module.push([matches[1], matches[2].split(". ")]);
+							module.listItems.push(matches[1]);
 							return true;
 						}
 					},
 					{
-						regex: /(Actions performed (?:before reset|to solve)): (.+)/,
+						regex: /\}/,
 						handler: function(matches, module) {
-							module.push([matches[1], matches[2].split(". ")]);
+							module.push([module.listHeader, module.listItems]);
 							return true;
 						}
 					},
@@ -4150,6 +4152,54 @@ $(function() {
 					},
 					{
 						regex: /.+/
+					}
+				]
+			},
+			{
+				moduleID: "shikaku",
+				loggingTag: "Shikaku",
+				matches: [
+					{
+						regex: /Possible solution:/,
+						handler: function(matches, module) {
+							var grid = readMultiple(7).replace(/\[Shikaku #\d] /g, "");
+							var lines = grid.replace('\r', '').split('\n');
+							var shapes = lines[6].replace('Shape data for Logfile Analyzer: ', '');
+							var colors = [
+								'#0082C8', // Blue
+								'#644117', // Brown
+								'#0B6623', // Forest
+								'#43C853', // Green
+								'#808080', // Grey
+								'#0000AB', // Navy
+								'#F59331', // Orange
+								'#911EB4', // Purple
+								'#E61919', // Red
+							];
+							var table = $('<table>')
+								.css('background-color', 'black')
+								.css('font-family', 'Shikaku')
+								.css('font-size', '30px')
+								.css('color', 'white');
+							for (var r = 0; r < 6; r++) {
+								var tr = $('<tr>').appendTo(table);
+								for (var c = 0; c < 6; c++) {
+									$('<td>')
+										.text(shapes[r*6 + c])
+										.css('background-color', colors[lines[r][c] - 1])
+										.css('text-align', 'center')
+										.css('width', '40px')
+										.css('height', '40px')
+										.appendTo(tr);
+								}
+							}
+
+							module.push({ label: "Possible solution:", obj: table });
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function() {}
 					}
 				]
 			},
