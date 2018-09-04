@@ -4162,8 +4162,8 @@ $(function() {
 					{
 						regex: /Possible solution:/,
 						handler: function(matches, module) {
-							var grid = readMultiple(7).replace(/\[Shikaku #\d] /g, "");
-							var lines = grid.replace('\r', '').split('\n');
+							var grid = readMultiple(7).replace(/\[Shikaku #\d+\] /g, "");
+							var lines = grid.replace(/\r/g, '').split('\n');
 							var shapes = lines[6].replace('Shape data for Logfile Analyzer: ', '');
 							var colors = [
 								'#0082C8', // Blue
