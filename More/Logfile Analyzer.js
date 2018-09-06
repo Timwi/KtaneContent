@@ -1113,7 +1113,7 @@ $(function() {
 				loggingTag: "NumberedIndicator",
 				matches: [
 					{
-						regex: /Added ((?:UN)LIT) ([A-Z]{3}), display is (\w{3}), color is ([A-Z]+)/,
+						regex: /Added ((?:UN)?LIT) ([A-Z]{3}), display is (\w{3}), color is ([A-Z]+)/,
 						handler: function(matches) {
 							matches[1] = matches[1].toLowerCase();
 							matches[4] = matches[4].toLowerCase();
