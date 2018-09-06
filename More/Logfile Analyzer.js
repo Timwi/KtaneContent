@@ -1412,6 +1412,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Boolean Maze",
+				moduleID: "boolMaze",
+				loggingTag: "BooleanMaze"
+			},
+			{
 				displayName: "Boolean Venn Diagram",
 				moduleID: "booleanVennModule",
 				loggingTag: "Boolean Venn Diagram",
