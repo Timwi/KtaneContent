@@ -464,7 +464,7 @@ $(function() {
 			if (Needies > 0) {
 				$("<div class='needy-count'>").text(Needies).appendTo(bombHTML);
 			}
-			if (this.RuleSeed) {
+			if (this.RuleSeed && this.RuleSeed != 1) {
 				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
 			}
 
