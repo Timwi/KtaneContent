@@ -3137,6 +3137,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Module Homework",
+				moduleID: "KritHomework",
+				loggingTag: "Module Homework"
+			},
+			{
 				displayName: "Modules Against Humanity",
 				moduleID: "ModuleAgainstHumanity",
 				loggingTag: "Modules Against Humanity",
