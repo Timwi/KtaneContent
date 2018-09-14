@@ -4374,6 +4374,48 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "SplittingTheLootModule",
+				loggingTag: "Splitting The Loot",
+				matches: [
+					{
+						regex: /^\t{2}\w{2}\(\d{1,2}\)$/,
+						handler: function(matches, module) {
+							const bagData = [];
+							linen--;
+							for (let i = 0; i < 3; i++) {
+								const bagInfo = readTaggedLine().trimStart("	").split(",   ");
+								readLine();
+								const colors = readTaggedLine().trimStart("	").split(",   ");
+								readLine();
+								for (let n = 0; n < bagInfo.length; n++) {
+									const values = /(\w{2})\((\d{1,2})\)/.exec(bagInfo[n]);
+									bagData.push({ label: values[1], value: values[2], color: colors[n] });
+								}
+							}
+
+							const diagram = $(`<svg width=30% display=block viewBox="-0.15 -0.15 0.9 0.9">`);
+							const bags = $SVG("<g fill=white stroke=black stroke-width=0.01>").appendTo(diagram);
+							const text = $SVG("<g dominant-baseline=middle text-anchor=middle>").appendTo(diagram);
+							for (let y = 0; y < 3; y++) {
+								for (let x = 0; x < 3; x++) {
+									if (y == 0 && (x == 0 || x == 2)) continue;
+									const data = bagData.shift();
+									const bag = $SVG(`<circle r=0.125 cx=${x * .3} cy=${y * .3}></circle>`).appendTo(bags);
+									$SVG(`<text x=${x * .3} y=${y * .3} font-size=.1>${data.label}</text>`).appendTo(text);
+									if (data.label != data.value) $SVG(`<text x=${x * .3} y=${y * .3 + 0.075} font-size=.05>(${data.value})</text>`).appendTo(text);
+
+									if (data.color != "Normal") bag.attr("fill", `hsl(${data.color == "Red" ? 0 : 240}, 100%, 81.25%)`);
+								}
+							}
+
+							if (module.SolutionNumber === undefined) module.SolutionNumber = -1;
+
+							module.push({ label: ++module.SolutionNumber == 0 ? "Found solution to:" : `Solution #${module.SolutionNumber}:`, obj: diagram });
+						}
+					}
+				]
+			},
+			{
 				displayName: "Square Button",
 				moduleID: "ButtonV2",
 				loggingTag: "Square Button"
