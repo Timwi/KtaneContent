@@ -825,6 +825,10 @@ $(function() {
 			return lines[linen];
 		}
 
+		function readTaggedLine() {
+			return /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?.+?\] ?(.+)/.exec(readLine())[1];
+		}
+
 		function readMultiple(count, fnc) {
 			var lines = '';
 			for (var i = 0; i < count; i++) {
