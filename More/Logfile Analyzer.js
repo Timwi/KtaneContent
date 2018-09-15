@@ -261,11 +261,16 @@ $(function() {
 			}
 		});
 
-		this.ToHTML = function(url) {
+		// opt: { url: '' } or { file: '' }
+		this.ToHTML = function(opt) {
 			// Build up the bomb.
 			var serial = this.Bombs[0].Serial;
 			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>").hide().appendTo($("#wrap"));
-			var fragment = (url ? '#url=' + url + ';' : '#') + 'bomb=' + serial;
+			var fragment = `#bomb=${serial}`;
+			if (opt.url)
+				fragment += `;#url=${opt.url}`;
+			else if (opt.file)
+				fragment += `;#file=${opt.file}`;
 			var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
 				.appendTo($("#bombs"))
 				.click(function() { selectBomb(serial); return false; })
@@ -577,7 +582,7 @@ $(function() {
 			}
 
 			mods.sort(function(a, b) {
-				let sortKeyA =  a.moduleData.displayName.toLowerCase();
+				let sortKeyA = a.moduleData.displayName.toLowerCase();
 				if (a.counter) {
 					sortKeyA += a.counter;
 				}
@@ -772,9 +777,14 @@ $(function() {
 		};
 	}
 
-	function parseLog(log, url, bombSerial) {
-		//log = $("<div>").text(log).html(); // Escape any HTML.
-		log = log.replace(/\r/g, "");
+	// opt = {
+	//		log:	entire file contents
+	//		url:	URL of the file (if available and no 'file')
+	//		file:	filename of the file (if available and no 'url')
+	//		bombSerial:	bomb to switch to when done
+	// }
+	function parseLog(opt) {
+		var log = opt.log.replace(/\r/g, "");
 
 		if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz/.exec(log))) {
 			toastr.error("Invalid logfile.", "Reading Error");
@@ -1234,7 +1244,7 @@ $(function() {
 					{
 						regex: /The (?:true )?value of [CZ] is/,
 						handler: function(_, module) {
-							module.push({linebreak: true});
+							module.push({ linebreak: true });
 						}
 					}
 				]
@@ -2009,7 +2019,7 @@ $(function() {
 							module.SubmitButton = { color: result[1], label: result[2] };
 							module.Buttons = new Array(8);
 							for (var i = 0; i < 8; i++) {
-								var result = new RegExp(`#${i+1} is (\\w+?) and says (.)\\.`).exec(matches[1]);
+								var result = new RegExp(`#${i + 1} is (\\w+?) and says (.)\\.`).exec(matches[1]);
 								module.Buttons[i] = { color: result[1], label: result[2] };
 							}
 							return true;
@@ -2068,8 +2078,8 @@ $(function() {
 								var calcTable = $(`
 									<table style='border-collapse: collapse; border: 2px solid black; margin: 8pt 0 24pt;'>
 										<tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
-										<tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x*50}px -50px'></div><div>${module.Faces[5-x]}</div></td>`)}</tr>
-										<tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x]+1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
+										<tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x * 50}px -50px'></div><div>${module.Faces[5 - x]}</div></td>`)}</tr>
+										<tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x] + 1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
 										<tr><th>After modulo</th>${many(6, x => `<td>${module.Cipher1.substr(x, 1)}</td>`)}</tr>
 										<tr><th>Display 1</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[0].substr(x, 1)}</div><div>${module.Cipher2.substr(x, 1)}</div></td>`)}</tr>
 										<tr><th>Display 2</th>   ${many(8, x => `<td><div class='symbol'>${module.Screens[1].substr(x, 1)}</div><div>${module.Cipher3.substr(x, 1)}</div></td>`)}</tr>
@@ -2090,16 +2100,18 @@ $(function() {
 								calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
 								calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
 								module.push({ label: 'Calculations:', obj: calcTable });
-								module.push({ label: 'Submit button:', obj:
-									$(`<div><div class='inner'>${module.SubmitButton.color} <span>${module.SubmitButton.label}</span></div></div>`)
-										.find('.inner').css({ backgroundColor: colors[module.SubmitButton.color], border: '1px solid black', padding: '.1em .4em', margin: '.5em 0 2em', display: 'inline-block' })
-										.find('span').css({ fontFamily: 'KRA', fontSize: '28pt' })
-										.end().end()});
+								module.push({
+									label: 'Submit button:', obj:
+										$(`<div><div class='inner'>${module.SubmitButton.color} <span>${module.SubmitButton.label}</span></div></div>`)
+											.find('.inner').css({ backgroundColor: colors[module.SubmitButton.color], border: '1px solid black', padding: '.1em .4em', margin: '.5em 0 2em', display: 'inline-block' })
+											.find('span').css({ fontFamily: 'KRA', fontSize: '28pt' })
+											.end().end()
+								});
 
 								const key = ix => `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
 								var keypad = $(`
 									<table style="background: #cdf; border-spacing: 5px; border: 2px solid black; font-family: 'KRA'; font-size: 28pt; margin: 8pt 0 24pt;">
-										${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}
+										${many(4, x => `<tr>${key(2 * x)}${key(2 * x + 1)}</tr>`)}
 									</table>
 								`);
 								module.push({ label: 'Keys:', obj: keypad });
@@ -2117,11 +2129,11 @@ $(function() {
 								return str;
 							}
 							function key(ix) {
-								return `<td style='color: ${matches[ix+3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix+3] === 'True' ? '✓' : '✗'}</td>`;
+								return `<td style='color: ${matches[ix + 3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix + 3] === 'True' ? '✓' : '✗'}</td>`;
 							}
 							module.push({
 								label: matches[2] ? matches[2] + ' solution:' : matches[1],
-								obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2*x)}${key(2*x + 1)}</tr>`)}</table>`)
+								obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2 * x)}${key(2 * x + 1)}</tr>`)}</table>`)
 							});
 							if (matches[11].length > 0)
 								module.push(matches[11].trim());
@@ -2490,7 +2502,7 @@ $(function() {
 							module.push({
 								label: `${label}${(extra === null ? '' : ` (${extra} ${letter})`)}`,
 								obj: $(`<table style='border-collapse: collapse'>
-									${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6*row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
+									${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6 * row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
 								</table>`)
 									.find('td').css({ width: '25px', height: '25px', border: '1px solid black', padding: '0' }).end()
 									.find('td.filled').css('background', 'black').end()
@@ -2674,7 +2686,7 @@ $(function() {
 							module.push([`${verb} for ${matches[1]} module${parseInt(matches[1]) == 1 ? "" : "s"}`, lines]);
 
 							if (verb == "Solution" && matches[1] == "5") {
-								module.push({linebreak: true});
+								module.push({ linebreak: true });
 							}
 						}
 					}
@@ -2694,20 +2706,20 @@ $(function() {
 						regex: /The chosen LED colours are (.*)\./,
 						handler: function(matches, module) {
 							var colorCodes = {
-								black:  [ "#000000", 'white' ],
-								blue:   [ "#0000FF", 'white' ],
-								green:  [ "#00A651", 'black' ],
-								orange: [ "#F26522", 'black' ],
-								pink:   [ "#F06EAA", 'black' ],
-								purple: [ "#662D91", 'white' ],
-								red:    [ "#FF0000", 'black' ],
-								white:  [ "#FFFFFF", 'black' ],
-								yellow: [ "#FFF200", 'black' ],
+								black: ["#000000", 'white'],
+								blue: ["#0000FF", 'white'],
+								green: ["#00A651", 'black'],
+								orange: ["#F26522", 'black'],
+								pink: ["#F06EAA", 'black'],
+								purple: ["#662D91", 'white'],
+								red: ["#FF0000", 'black'],
+								white: ["#FFFFFF", 'black'],
+								yellow: ["#FFF200", 'black'],
 							};
 							var colors = matches[1].split(', ');
 							var table = `<table style='border-spacing: 1cm; border: 3px solid black;'>${[0, 1, 2].map(row =>
 								`<tr>${[0, 1, 2].map(col =>
-									`<td><div style='background-color: ${colorCodes[colors[3*row + col]][0]}; color: ${colorCodes[colors[3*row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3*row + col]}</span></div></td>`
+									`<td><div style='background-color: ${colorCodes[colors[3 * row + col]][0]}; color: ${colorCodes[colors[3 * row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3 * row + col]}</span></div></td>`
 								).join('')}</tr>`
 							).join('')}</table>`;
 							module.push({ label: 'LED colors:', obj: $(table) });
@@ -2809,7 +2821,7 @@ $(function() {
 					{
 						regex: /Solution:/,
 						handler: function(matches, module) {
-							module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, ""))});
+							module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, "")) });
 							return true;
 						}
 					},
@@ -2855,7 +2867,7 @@ $(function() {
 									imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' style='position: absolute; left: 0; top: 0; right: 0; bottom: 0' />`).appendTo(imgDiv));
 								function setRotations(rot) {
 									for (var i = 0; i < 5; i++)
-										imgs[i].css('transform', `rotate(${rot[i]*36-90}deg)`);
+										imgs[i].css('transform', `rotate(${rot[i] * 36 - 90}deg)`);
 								}
 
 								var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`)
@@ -2863,8 +2875,8 @@ $(function() {
 								var marbleInner = $(`<div style='position: absolute; width: 20px; height: 20px; border: 2px solid black; border-radius: 100%; background: #def; left: 210px; transform: translate(-50%, -50%)'>`)
 									.appendTo(marbleOuter);
 								function setMarble(rot, marble) {
-									marbleInner.css('top', marble === 0 ? '217px' : `${210-((marble+.5)*420/12)-10}px`);
-									marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble]*36}deg)`);
+									marbleInner.css('top', marble === 0 ? '217px' : `${210 - ((marble + .5) * 420 / 12) - 10}px`);
+									marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble] * 36}deg)`);
 								}
 
 								var controlsDiv = $(`<div style='margin-top: 30px'>`).appendTo(div);
@@ -2919,7 +2931,7 @@ $(function() {
 													sel = ix;
 													setBackgrounds();
 												};
-											}(i, data.states[i-1].rotations, data.states[i].rotations, prevMarble, curMarble));
+											}(i, data.states[i - 1].rotations, data.states[i].rotations, prevMarble, curMarble));
 									}
 
 									data.states[i].marble = curMarble;
@@ -3070,7 +3082,7 @@ $(function() {
 						handler: function(matches, module) {
 							const span = $('<span>')
 								.append($('<span>').text("Desired Bomb is "))
-								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align":"baseline;" }))
+								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
 								.append($('<span>').text("."));
 							module.groups.add(span);
 							return true;
@@ -3081,7 +3093,7 @@ $(function() {
 						handler: function(matches, module) {
 							const span = $('<span>')
 								.append($('<span>').text("Bomb shown is "))
-								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align":"baseline;" }))
+								.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
 								.append($('<span>').text("."));
 							module.groups.add(span);
 							return true;
@@ -4189,7 +4201,7 @@ $(function() {
 								var tr = $('<tr>').appendTo(table);
 								for (var c = 0; c < 6; c++) {
 									$('<td>')
-										.text(shapes[r*6 + c])
+										.text(shapes[r * 6 + c])
 										.css('background-color', colors[lines[r][c] - 1])
 										.css('text-align', 'center')
 										.css('width', '40px')
@@ -4203,7 +4215,7 @@ $(function() {
 					},
 					{
 						regex: /.+/,
-						handler: function() {}
+						handler: function() { }
 					}
 				]
 			},
@@ -4492,9 +4504,9 @@ $(function() {
 							};
 							var colors = {
 								purple: '#808',
-								aqua:   '#0ff',
+								aqua: '#0ff',
 								yellow: '#ff0',
-								green:  '#080'
+								green: '#080'
 							};
 							function color(name) {
 								return `<span style='display: inline-block; width: 1em; height: 1em; border-radius: 50%; background: ${colors[name]}'></span> ${name}`;
@@ -4599,10 +4611,10 @@ $(function() {
 						regex: /Wire (\d) (should(?: not)?) be snipped\./,
 						handler: function(matches, module) {
 							const rules = {
-								Cut:                            "Cut",
-								DoNotCut:                       "Don't\nCut",
-								CutIfSerialEven:                "SN\nEven",
-								CutIfParallelPortPresent:       "Para.\nPort",
+								Cut: "Cut",
+								DoNotCut: "Don't\nCut",
+								CutIfSerialEven: "SN\nEven",
+								CutIfParallelPortPresent: "Para.\nPort",
 								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
 							};
 
@@ -4627,13 +4639,13 @@ $(function() {
 								// Wire
 								const wireColors = wireData[2].split(", ");
 								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
-								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1/3)} width=0.475 height=${1/3} fill=${wireColors[1]}>`).appendTo(module.diagram);
+								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1 / 3)} width=0.475 height=${1 / 3} fill=${wireColors[1]}>`).appendTo(module.diagram);
 
 								// Star
 								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
 
 								// Rule/Should cut
-								$SVG(`<text x=${x+0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x+0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
+								$SVG(`<text x=${x + 0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x + 0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
 							}
 						}
 					},
@@ -5171,16 +5183,22 @@ $(function() {
 
 		// Update hash
 		var state = readHash();
-		state.url = url;
+		if (opt.url)
+			state.url = opt.url;
+		else if (opt.file)
+			state.file = opt.file;
 		updateHash(state);
 
 		$(".bomb, .bomb-info").remove();
-		parsed.forEach(function(obj) { obj.ToHTML(url); });
+		parsed.forEach(function(obj) { obj.ToHTML(opt); });
 		$('#ui').addClass('has-bomb');
 		$('#wrap').removeClass('has-empty-log');
 		if (parsed.length < 1)
 			$('#wrap').addClass('has-empty-log');
-		selectBomb(bombSerial);
+		if (opt.bombSerial && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bombSerial).length).length)
+			selectBomb(opt.bombSerial);
+		else
+			selectBomb(parsed[parsed.length - 1].Bombs[0].Serial);
 		toastr.success("Log read successfully!");
 	}
 
@@ -5193,18 +5211,17 @@ $(function() {
 		var url = clipText;
 		try { url = decodeURIComponent(clipText); } catch (e) { }
 
-		if (/^https?:\/\//.exec(url)) { // Very basic regex to detect a URL being pasted.
-			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
-				parseLog(data, url, bombSerial);
-			}).fail(function() {
-				$.get(url, function(data) {
-					parseLog(data, url, bombSerial);
-				}).fail(function() {
-					toastr.error("Unable to get logfile from URL.", "Upload Error");
-				});
-			});
-		} else {
-			parseLog(clipText, null, bombSerial);
+		// Very basic regex to detect a URL being pasted.
+		if (/^https?:\/\//.exec(url)) {
+			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) { parseLog({ log: data, url: url, bombSerial: bombSerial }); })
+				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
+		}
+		else if (/^[0-9a-f]{40}$/.exec(url)) {
+			$.get((debugging ? "https://ktane.timwi.de" : "") + `/Logfiles/${url}.txt`, function(data) { parseLog({ log: data, file: url, bombSerial: bombSerial }); })
+				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
+		}
+		else {
+			parseLog({ log: clipText, bombSerial: bombSerial });
 		}
 	}
 
@@ -5213,7 +5230,7 @@ $(function() {
 			var fr = new FileReader();
 			fr.onload = function() {
 				dropMsg.removeClass("hovering");
-				parseLog(fr.result);
+				parseLog({ log: fr.result });
 			};
 			fr.readAsText(files[0]);
 		} else if (files.length === 0) {
@@ -5270,16 +5287,20 @@ $(function() {
 	});
 
 	$("#upload").change(function() {
-		uploadFiles(this.files);
+		if ($("#upload-to-server").prop('checked'))
+			$('#upload-form').submit();
+		else
+			uploadFiles(this.files);
 	});
 
 	window.onhashchange = function() {
 		var hashState = readHash();
 
 		var logUrl = hashState.url;
+		var logFile = hashState.file;
 		var bombSerial = hashState.bomb;
-		if (logUrl)
-			readPaste(logUrl, bombSerial);
+		if (logUrl || logFile)
+			readPaste(logUrl || logFile, bombSerial);
 		else if (bombSerial)
 			selectBomb(bombSerial);
 	};
