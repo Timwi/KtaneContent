@@ -4990,27 +4990,32 @@ $(function() {
 			{
 				displayName: "The Button (Translated)",
 				moduleID: "BigButtonTranslated",
-				icon: "The Button"
+				icon: "The Button",
+				loggingTag: "The Button Translated"
 			},
 			{
 				displayName: "Who’s On First (Translated)",
 				moduleID: "WhosOnFirstTranslated",
-				icon: "Who’s On First"
+				icon: "Who’s On First",
+				loggingTag: "Who's on First Translated"
 			},
 			{
 				displayName: "Morse Code (Translated)",
 				moduleID: "MorseCodeTranslated",
-				icon: "Morse Code"
+				icon: "Morse Code",
+				loggingTag: "Morse Code Translated"
 			},
 			{
-				displayName: "Passwords (Translated)",
+				displayName: "Password (Translated)",
 				moduleID: "PasswordsTranslated",
-				icon: "Password"
+				icon: "Password",
+				loggingTag: "Passwords Translated"
 			},
 			{
 				displayName: "Venting Gas (Translated)",
 				moduleID: "VentGasTranslated",
-				icon: "Venting Gas"
+				icon: "Venting Gas",
+				loggingTag: "Vent Gas Translated"
 			},
 			{
 				moduleID: "SupermercadoSalvajeModule",
