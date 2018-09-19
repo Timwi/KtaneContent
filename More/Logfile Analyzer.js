@@ -604,21 +604,12 @@ $(function() {
 				return 0;
 			});
 
-			// Filtered log
-			if (this.FilteredLog === "") {
-				this.FilterLines();
-			}
-
-			var loginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Filtered Log").appendTo(loginfo);
-			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
-
-			var filteredTab = $("<a href='#' class='module'>").text("Filtered Log");
+			var filteredTab;
 
 			// Display modules
 			mods.forEach(function(minfo) {
 				// Information
-				var modinfo = $("<div class='module-info'>").appendTo(info);
+				var modinfo = $("<div class='module-info'>").appendTo(info).data('module-id', minfo.moduleID);
 				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
 				if (minfo.tree) {
 					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
@@ -636,7 +627,7 @@ $(function() {
 				}
 
 				// Listing
-				var mod = $("<a href='#' class='module'>")
+				var mod = $(`<a href='#' class='module module-${minfo.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
 					.text(minfo.moduleData.displayName + (minfo.counter ? " " + minfo.counter : ""))
 					.appendTo(modules)
 					.addCardClick(modinfo);
@@ -648,7 +639,15 @@ $(function() {
 					}).attr("src", "../Icons/" + minfo.moduleData.icon + ".png").appendTo(mod);
 			});
 
-			filteredTab.appendTo(modules).addCardClick(loginfo);
+			// Filtered log
+			if (this.FilteredLog === "") {
+				this.FilterLines();
+			}
+
+			var loginfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Filtered Log").appendTo(loginfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
+			filteredTab = $("<a href='#' class='module'>").text("Filtered Log").appendTo(modules).addCardClick(loginfo);
 
 			return bombHTML;
 		};
@@ -778,10 +777,11 @@ $(function() {
 	}
 
 	// opt = {
-	//		log:	entire file contents
-	//		url:	URL of the file (if available and no 'file')
-	//		file:	filename of the file (if available and no 'url')
-	//		bombSerial:	bomb to switch to when done
+	//      log:    entire file contents
+	//      url:    URL of the file (if available and no 'file')
+	//      file:   filename of the file (if available and no 'url')
+	//      bomb:   bomb serial number to switch to when done
+	//      module: module ID to find and switch to when done
 	// }
 	function parseLog(opt) {
 		var log = opt.log.replace(/\r/g, "");
@@ -2460,7 +2460,7 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Game Of Life",
+				displayName: "Game Of Life Simple",
 				moduleID: "GameOfLifeSimple"
 			},
 			{
@@ -4399,9 +4399,9 @@ $(function() {
 							const bagData = [];
 							linen--;
 							for (let i = 0; i < 3; i++) {
-								const bagInfo = readTaggedLine().trimStart("	").split(",   ");
+								const bagInfo = readTaggedLine().trimStart("    ").split(",   ");
 								readLine();
-								const colors = readTaggedLine().trimStart("	").split(",   ");
+								const colors = readTaggedLine().trimStart(" ").split(",   ");
 								readLine();
 								for (let n = 0; n < bagInfo.length; n++) {
 									const values = /(\w{2})\((\d{1,2})\)/.exec(bagInfo[n]);
@@ -5187,6 +5187,25 @@ $(function() {
 			state.url = opt.url;
 		else if (opt.file)
 			state.file = opt.file;
+		if (opt.bomb)
+			state.bomb = opt.bomb;
+		else if (opt.module)
+			state.module = opt.module;
+
+		// Find bomb/module to switch to
+		var bombSerial = null;
+		var bombModule = null;
+		if (opt.bomb && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bombSerial).length).length) {
+			bombSerial = opt.bomb;
+		} else if (opt.module) {
+			for (var i = 0; i < parsed.length; i++)
+				for (var j = 0; j < parsed[i].Bombs.length; j++)
+					if (opt.module in parsed[i].Bombs[j].Modules)
+					{
+						bombSerial = parsed[i].Bombs[j].Serial;
+						bombModule = opt.module.replace(/[^-_A-Za-z0-9]/g, '-');
+					}
+		}
 		updateHash(state);
 
 		$(".bomb, .bomb-info").remove();
@@ -5195,10 +5214,9 @@ $(function() {
 		$('#wrap').removeClass('has-empty-log');
 		if (parsed.length < 1)
 			$('#wrap').addClass('has-empty-log');
-		if (opt.bombSerial && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bombSerial).length).length)
-			selectBomb(opt.bombSerial);
-		else
-			selectBomb(parsed[parsed.length - 1].Bombs[0].Serial);
+		selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
+		if (bombSerial && bombModule)
+			$(`#bomb-${bombSerial}>.modules>.module.module-${bombModule}`).click();
 		toastr.success("Log read successfully!");
 	}
 
@@ -5207,21 +5225,34 @@ $(function() {
 	const pasteButton = $("#paste");
 	const pasteBox = $("#paste-box");
 
-	function readPaste(clipText, bombSerial) {
+	// opt = {
+	//      bomb: (bomb serial number to find)
+	//      module: (module ID to find)
+	// }
+	function readPaste(clipText, opt) {
 		var url = clipText;
 		try { url = decodeURIComponent(clipText); } catch (e) { }
 
 		// Very basic regex to detect a URL being pasted.
 		if (/^https?:\/\//.exec(url)) {
-			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) { parseLog({ log: data, url: url, bombSerial: bombSerial }); })
+			$.get((debugging ? "https://ktane.timwi.de" : "") + "/proxy/" + url, function(data) {
+				opt.log = data;
+				opt.url = url;
+				parseLog(opt);
+			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
 		}
 		else if (/^[0-9a-f]{40}$/.exec(url)) {
-			$.get((debugging ? "https://ktane.timwi.de" : "") + `/Logfiles/${url}.txt`, function(data) { parseLog({ log: data, file: url, bombSerial: bombSerial }); })
+			$.get((debugging ? "https://ktane.timwi.de" : "") + `/Logfiles/${url}.txt`, function(data) {
+				opt.log = data;
+				opt.file = url;
+				parseLog(opt);
+			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
 		}
 		else {
-			parseLog({ log: clipText, bombSerial: bombSerial });
+			opt.log = clipText;
+			parseLog(opt);
 		}
 	}
 
@@ -5298,9 +5329,8 @@ $(function() {
 
 		var logUrl = hashState.url;
 		var logFile = hashState.file;
-		var bombSerial = hashState.bomb;
 		if (logUrl || logFile)
-			readPaste(logUrl || logFile, bombSerial);
+			readPaste(logUrl || logFile, hashState);
 		else if (bombSerial)
 			selectBomb(bombSerial);
 	};
