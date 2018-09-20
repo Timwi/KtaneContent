@@ -4345,6 +4345,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Sonic & Knuckles",
+				moduleID: "sonicKnuckles",
+				loggingTag: "Sonic & Knuckles"
+			},
+			{
 				displayName: "Sonic the Hedgehog",
 				moduleID: "sonic",
 				loggingTag: "Sonic the Hedgehog",
