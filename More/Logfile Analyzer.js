@@ -2345,12 +2345,6 @@ $(function() {
 							if (module.SkipSvg)
 								return false;
 
-							function imgHref(num) {
-								if (num < 10)
-									num = "0" + num;
-								return "../HTML/img/Friendship/Friendship Symbol " + num + ".png";
-							}
-
 							var cutieMarks = '';
 							var colDisregards = '';
 							var rowDisregards = '';
@@ -5210,8 +5204,7 @@ $(function() {
 		} else if (opt.module) {
 			for (var i = 0; i < parsed.length; i++)
 				for (var j = 0; j < parsed[i].Bombs.length; j++)
-					if (opt.module in parsed[i].Bombs[j].Modules)
-					{
+					if (opt.module in parsed[i].Bombs[j].Modules) {
 						bombSerial = parsed[i].Bombs[j].Serial;
 						bombModule = opt.module.replace(/[^-_A-Za-z0-9]/g, '-');
 					}
@@ -5251,16 +5244,14 @@ $(function() {
 				parseLog(opt);
 			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
-		}
-		else if (/^[0-9a-f]{40}$/.exec(url)) {
+		} else if (/^[0-9a-f]{40}$/.exec(url)) {
 			$.get((debugging ? "https://ktane.timwi.de" : "") + `/Logfiles/${url}.txt`, function(data) {
 				opt.log = data;
 				opt.file = url;
 				parseLog(opt);
 			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
-		}
-		else {
+		} else {
 			opt.log = clipText;
 			parseLog(opt);
 		}
