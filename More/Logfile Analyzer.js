@@ -2345,12 +2345,6 @@ $(function() {
 							if (module.SkipSvg)
 								return false;
 
-							function imgHref(num) {
-								if (num < 10)
-									num = "0" + num;
-								return "../HTML/img/Friendship/Friendship Symbol " + num + ".png";
-							}
-
 							var cutieMarks = '';
 							var colDisregards = '';
 							var rowDisregards = '';
@@ -5205,13 +5199,12 @@ $(function() {
 		// Find bomb/module to switch to
 		var bombSerial = null;
 		var bombModule = null;
-		if (opt.bomb && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bombSerial).length).length) {
+		if (opt.bomb && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bomb).length).length) {
 			bombSerial = opt.bomb;
 		} else if (opt.module) {
 			for (var i = 0; i < parsed.length; i++)
 				for (var j = 0; j < parsed[i].Bombs.length; j++)
-					if (opt.module in parsed[i].Bombs[j].Modules)
-					{
+					if (opt.module in parsed[i].Bombs[j].Modules) {
 						bombSerial = parsed[i].Bombs[j].Serial;
 						bombModule = opt.module.replace(/[^-_A-Za-z0-9]/g, '-');
 					}
@@ -5239,7 +5232,7 @@ $(function() {
 	//      bomb: (bomb serial number to find)
 	//      module: (module ID to find)
 	// }
-	function readPaste(clipText, opt) {
+	function readPaste(clipText, opt = {}) {
 		var url = clipText;
 		try { url = decodeURIComponent(clipText); } catch (e) { }
 
@@ -5251,16 +5244,14 @@ $(function() {
 				parseLog(opt);
 			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
-		}
-		else if (/^[0-9a-f]{40}$/.exec(url)) {
+		} else if (/^[0-9a-f]{40}$/.exec(url)) {
 			$.get((debugging ? "https://ktane.timwi.de" : "") + `/Logfiles/${url}.txt`, function(data) {
 				opt.log = data;
 				opt.file = url;
 				parseLog(opt);
 			})
 				.fail(function() { toastr.error("Unable to get logfile from URL.", "Upload Error"); });
-		}
-		else {
+		} else {
 			opt.log = clipText;
 			parseLog(opt);
 		}
@@ -5339,6 +5330,7 @@ $(function() {
 
 		var logUrl = hashState.url;
 		var logFile = hashState.file;
+		var bombSerial = hashState.bomb;
 		if (logUrl || logFile)
 			readPaste(logUrl || logFile, hashState);
 		else if (bombSerial)
