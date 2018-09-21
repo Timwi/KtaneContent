@@ -5199,7 +5199,7 @@ $(function() {
 		// Find bomb/module to switch to
 		var bombSerial = null;
 		var bombModule = null;
-		if (opt.bomb && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bombSerial).length).length) {
+		if (opt.bomb && parsed.filter(prs => prs.Bombs.filter(b => b.Serial === opt.bomb).length).length) {
 			bombSerial = opt.bomb;
 		} else if (opt.module) {
 			for (var i = 0; i < parsed.length; i++)
@@ -5232,7 +5232,7 @@ $(function() {
 	//      bomb: (bomb serial number to find)
 	//      module: (module ID to find)
 	// }
-	function readPaste(clipText, opt) {
+	function readPaste(clipText, opt = {}) {
 		var url = clipText;
 		try { url = decodeURIComponent(clipText); } catch (e) { }
 
@@ -5330,6 +5330,7 @@ $(function() {
 
 		var logUrl = hashState.url;
 		var logFile = hashState.file;
+		var bombSerial = hashState.bomb;
 		if (logUrl || logFile)
 			readPaste(logUrl || logFile, hashState);
 		else if (bombSerial)
