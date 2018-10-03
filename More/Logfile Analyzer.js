@@ -4572,6 +4572,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Time Keeper",
+				moduleID: "timeKeeper",
+				loggingTag: "TimeKeeper"
+			},
+			{
 				displayName: "USA Maze",
 				moduleID: "USA",
 				loggingTag: "USA Maze",
