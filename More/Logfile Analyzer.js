@@ -2817,6 +2817,12 @@ $(function() {
 						regex: /Apportion prey to (\d+) lions:/,
 						handler: function(matches, module) {
 							module.push({ label: matches[0], obj: pre(readMultiple(+matches[1] + 3)) });
+							return true;
+						}
+					},
+					{
+						handler: function(matches, module) {
+							module.push(matches.input);
 						}
 					}
 				]
