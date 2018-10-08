@@ -2809,6 +2809,19 @@ $(function() {
 				]
 			},
 			{
+				moduleID: 'LionsShareModule',
+				loggingTag: 'Lion’s Share',
+				displayName: 'Lion’s Share',
+				matches: [
+					{
+						regex: /Apportion prey to (\d+) lions:/,
+						handler: function(matches, module) {
+							module.push({ label: matches[0], obj: pre(readMultiple(+matches[1] + 3)) });
+						}
+					}
+				]
+			},
+			{
 				moduleID: "logicGates",
 				loggingTag: "Logic Gates",
 				matches: [
