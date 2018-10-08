@@ -2814,16 +2814,54 @@ $(function() {
 				displayName: 'Lion’s Share',
 				matches: [
 					{
-						regex: /Apportion prey to (\d+) lions:/,
+						regex: /Lions present: (.*)$/,
 						handler: function(matches, module) {
-							module.push({ label: matches[0], obj: pre(readMultiple(+matches[1] + 3)) });
+							var list = matches[1].split(',');
+							module.LionInfo = {};
+							for (var i = 0; i < list.length; i++)
+							{
+								/\s*(\w+) \((.*)\)\s*/.test(list[i]);
+								module.LionInfo[RegExp.$1] = RegExp.$2;
+							}
 							return true;
 						}
 					},
 					{
+						regex: /Apportion prey to (\d+) lions:/,
 						handler: function(matches, module) {
-							module.push(matches.input);
+							readMultiple(3);
+							var rows = [];
+							for (var i = 0; i < +matches[1]; i++) {
+								var raw = readLine();
+								var tds = [];
+								for (var j = 0; j < 8; j++)
+									tds.push(`<td>${raw.substr(9 + 8*j, 7)}</td>`);
+								var lionName = raw.substr(0, 8).trim();
+								rows.push(`<tr><th><div>${lionName}</div><div class='extra'>${module.LionInfo[lionName]}</div></th>${tds.join('')}</tr>`);
+								delete module.LionInfo[lionName];
+							}
+							var additionalLions = Object.keys(module.LionInfo);
+							for (var i = 0; i < additionalLions.length; i++) {
+								var tds = [];
+								for (var j = 0; j < 8; j++)
+									tds.push(`<td>${j === 7 ? '0%' : ''}</td>`);
+								rows.push(`<tr><th><div>${additionalLions[i]}</div><div class='extra'>${module.LionInfo[additionalLions[i]]}</div></th>${tds.join('')}</tr>`);
+							}
+							module.push({
+								label: matches[0],
+								obj: $(`<table style='border: 2px solid black; border-collapse: collapse'><tr class='top-row'><th><span>Lion</span></th><th><span>Base<br>entitlement</span></th><th><span>Indicator<br>bonus</span></th><th><span>Serial#<br>bonus</span></th><th><span>Unborn<br>cubs</span></th><th><span>Entitlement</span></th><th><span>Portion</span></th><th><span>Lead<br>huntress</span></th><th><span>Final<br>portion</span></th></tr>${rows.join('')}</table>`)
+									.find('.top-row th').css({ width: '3em', height: '7em' }).end()
+									.find('td,th').css({ border: '1px solid #ccc', position: 'relative', padding: '.3em .7em' }).end()
+									.find('td:last-child,th:last-child').css({ background: '#fed' }).end()
+									.find('span').css({ position: 'absolute', left: '50%', top: '100%', transform: 'translate(0, -.5em) translate(0, -50%) rotate(-90deg)', transformOrigin: '0 50%' }).end()
+									.find('td').css({ textAlign: 'right' }).end()
+									.find('div.extra').css({ fontSize: '8pt' }).end()
+							});
+							return true;
 						}
+					},
+					{
+						regex: /.+/
 					}
 				]
 			},
