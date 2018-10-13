@@ -4445,6 +4445,11 @@ $(function() {
                     }
                 ]
             },
+			{
+				moduleID: "sphere",
+				loggingTag: "The Sphere",
+				displayName: "The Sphere"
+			},
             {
                 moduleID: "SplittingTheLootModule",
                 loggingTag: "Splitting The Loot",
