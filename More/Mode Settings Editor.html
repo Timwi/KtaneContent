@@ -201,6 +201,10 @@
 				TimeModeTimerStrikePenalty: 0.25,
 				TimeModeMinimumTimeLost: 15.0,
 				TimeModeMinimumTimeGained: 20.0,
+				ZenModeTimePenalty: 0.0,
+				ZenModeTimePenaltyIncrease: 0.0,
+				ZenModeTimerSpeedUp: 0.25,
+				ZenModeTimerMaxSpeed: 2.0,
 				ComponentValues: {},
 			},
 			mods: [],
@@ -209,7 +213,11 @@
 				Regular: "Solvable Modules",
 				Needy: "Needy Modules"
 			},
-			visibleTypes: {Settings: true, Regular: true, Needy: false},
+			settingTypes: {
+				ZenMode: "Zen Mode",
+				TimeMode: "Time Mode"
+			},
+			visibleTypes: {ZenMode: true, TimeMode: true, Regular: true, Needy: false},
 
 			isHovering: false,
 		
@@ -327,6 +335,10 @@
 				TimeModeTimerStrikePenalty: "number",
 				TimeModeMinimumTimeLost: "number",
 				TimeModeMinimumTimeGained: "number",
+				ZenModeTimePenalty: "number",
+  				ZenModeTimePenaltyIncrease: "number",
+				ZenModeTimerSpeedUp: "number",
+				ZenModeTimerMaxSpeed: "number",
 				ComponentValues: "object"
 			};
 
@@ -532,13 +544,15 @@
 			</div>
 		</div>
 		<div class="sections">
-			<h3 class="section" :class="{ visible: visibleTypes['Settings'] }">{{ (visibleTypes['Settings'] ? "▼ " : "▶ ") }}<button @click="toggleType('Settings')"><u>Settings</u></button></h3>
-			<div v-if="visibleTypes['Settings']" class="mods">
-				<div class="mod" v-for="(value, field) in settings" v-if="field != 'ComponentValues'">
-					<span>{{ field.replace(/^TimeMode/, "").replace(/([A-Z])/g, " $1") }}</span>
-					<input type="number" :required="true" step="any" v-model:value="settings[field]"></input>
+			<template v-for="(name, type) in settingTypes">
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button></h3>
+				<div v-if="visibleTypes[type]" class="mods">
+					<div class="mod" v-for="(value, field) in settings" v-if="field.startsWith(type)">
+						<span>{{ field.replace(/^(Time|Zen)Mode/, "").replace(/([A-Z])/g, " $1") }}</span>
+						<input type="number" :required="true" step="any" v-model:value="settings[field]">
+					</div>
 				</div>
-			</div>	
+			</template>
 			<template v-for="(name, type) in modTypes">
 				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button></h3>
 				<div class="mods" v-if="visibleTypes[type]">
@@ -549,7 +563,7 @@
                                 <div>{{ mod.Name }}</div>
                                 <div class="mod-id">{{ mod.ID }}</div>
 							</div>
-							<input type="number" :required="true" step="any" v-bind:value="mod.Value" @change="setValue(mod, $event.target.value);"></input>
+							<input type="number" :required="true" step="any" v-bind:value="mod.Value" @change="setValue(mod, $event.target.value);">
 						</div>
 					</template>
 				</div>
