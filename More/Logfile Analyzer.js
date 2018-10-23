@@ -1426,6 +1426,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Blackjack",
+				moduleID: "KritBlackjack",
+				loggingTag: "Blackjack"
+			},
+			{
 				displayName: "Boolean Maze",
 				moduleID: "boolMaze",
 				loggingTag: "BooleanMaze"
