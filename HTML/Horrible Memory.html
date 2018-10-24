@@ -8,6 +8,80 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type='text/css' href="css/font.css">
     <script src='js/highlighter.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var defaultRules = null;
+
+        function getDefaultRules()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = {};
+            for (var stage = 1; stage <= 5; stage++)
+                for (var disp = 1; disp <= 6; disp++)
+                    defaultRules[`rule-${stage}-${disp}`] = document.getElementById(`rule-${stage}-${disp}`).innerText;
+        }
+
+        function setDefaultRules()
+        {
+            getDefaultRules();
+            for (var stage = 1; stage <= 5; stage++)
+                for (var disp = 1; disp <= 6; disp++)
+                    document.getElementById(`rule-${stage}-${disp}`).innerText = defaultRules[`rule-${stage}-${disp}`];
+        }
+
+        // Rule types:
+        //  0 = SimpleLabel                 // “press label 6”
+        //  1 = SimpleColor                 // “press the blue button”
+        //  2 = SimplePosition              // “press the 4th button”
+        //  3 = EarlierPressedLabel         // “press the button with the same label as the one you pressed in Stage 1”
+        //  4 = EarlierPressedColour        // “press the button with the same colour as the one you pressed in Stage 1”
+        //  5 = EarlierPressedPosition      // “press the button in the same position as the one you pressed in Stage 1”
+        //  6 = EarlierLabelByColour        // “press the button with the same label as the one that was blue in Stage 1”
+        //  7 = EarlierLabelByPosition      // “press the button with the same label as the one that was in position 2 in Stage 1”
+        //  8 = EarlierColourByLabel        // “press the button with the same colour as the one that had the label 3 in Stage 1”
+        //  9 = EarlierColourByPosition     // “press the button with the same colour as the one that was in position 2 in Stage 1”
+        // 10 = EarlierPositionByColour     // “press the button in the same position as the one that was blue in Stage 1”
+        // 11 = EarlierPositionByLabel      // “press the button with the same label as the one that was in position 2 in Stage 1”
+
+        function setRules(rnd)
+        {
+            getDefaultRules();
+
+            var ordinals = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+            var colourNames = "blue,green,orange,pink,purple,red".split(',');
+
+            for (var stage = 0; stage < 5; stage++)
+            {
+                for (var displayNumber = 0; displayNumber < 6; displayNumber++)
+                {
+                    var span = document.getElementById(`rule-${stage+1}-${displayNumber+1}`);
+                    var rule = stage == 0
+                        ? { type: rnd.nextMax(3), parameter: rnd.nextMax(6) }
+                        : { type: rnd.nextMax(12), parameter: rnd.nextMax(6), earlierStage: rnd.nextMax(stage) };
+
+                    switch (rule.type)
+                    {
+                        case  0: span.innerText = `press the button labelled ${rule.parameter + 1}.`; break;
+                        case  1: span.innerText = `press the ${colourNames[rule.parameter]} button.`; break;
+                        case  2: span.innerText = `press the button in the ${ordinals[rule.parameter]} position.`; break;
+
+                        case  3: span.innerText = `press the button with the label that was pressed in stage ${rule.earlierStage + 1}.`; break;
+                        case  4: span.innerText = `press the button with the colour that was pressed in stage ${rule.earlierStage + 1}.`; break;
+                        case  5: span.innerText = `press the button in the position that was pressed in stage ${rule.earlierStage + 1}.`; break;
+
+                        case  6: span.innerText = `press the button with the label that was ${colourNames[rule.parameter]} at stage ${rule.earlierStage + 1}.`; break;
+                        case  7: span.innerText = `press the button with the label that was in the ${ordinals[rule.parameter]} position at stage ${rule.earlierStage + 1}.`; break;
+                        case  8: span.innerText = `press the button with the colour that had the label ${rule.parameter + 1} at stage ${rule.earlierStage + 1}.`; break;
+                        case  9: span.innerText = `press the button with the colour that was in the ${ordinals[rule.parameter]} position at stage ${rule.earlierStage + 1}.`; break;
+                        case 10: span.innerText = `press the button in the position that was ${colourNames[rule.parameter]} at stage ${rule.earlierStage + 1}.`; break;
+                        case 11: span.innerText = `press the button in the position that had the label ${rule.parameter + 1} at stage ${rule.earlierStage + 1}.`; break;
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -27,26 +101,26 @@
                     <li>Button positions are ordered from left to right.</li>
                 </ul>
                 <h3>Stage 1:</h3>
-                If the display is 1, press the button labelled 6.<br>
-                If the display is 2, press the button in the 1st position.<br>
-                If the display is 3, press the green button.<br>
-                If the display is 4, press the button in the 3rd position.<br>
-                If the display is 5, press the button labelled 2.<br>
-                If the display is 6, press the orange button.<br>
+                If the display is 1, <span class='rule' id='rule-1-1'>press the button labelled 6.</span><br>
+                If the display is 2, <span class='rule' id='rule-1-2'>press the button in the 1st position.</span><br>
+                If the display is 3, <span class='rule' id='rule-1-3'>press the green button.</span><br>
+                If the display is 4, <span class='rule' id='rule-1-4'>press the button in the 3rd position.</span><br>
+                If the display is 5, <span class='rule' id='rule-1-5'>press the button labelled 2.</span><br>
+                If the display is 6, <span class='rule' id='rule-1-6'>press the orange button.</span>
                 <h3>Stage 2:</h3>
-                If the display is 1, press the button in the position that was pressed at stage 1.<br>
-                If the display is 2, press the purple button.<br>
-                If the display is 3, press the button labelled 1.<br>
-                If the display is 4, press the button with the label that was pressed at stage 1.<br>
-                If the display is 5, press the button in the 6th position.<br>
-                If the display is 6, press the button with the colour that was pressed at stage 1.<br>
+                If the display is 1, <span class='rule' id='rule-2-1'>press the button in the position that was pressed at stage 1.</span><br>
+                If the display is 2, <span class='rule' id='rule-2-2'>press the purple button.</span><br>
+                If the display is 3, <span class='rule' id='rule-2-3'>press the button labelled 1.</span><br>
+                If the display is 4, <span class='rule' id='rule-2-4'>press the button with the label that was pressed at stage 1.</span><br>
+                If the display is 5, <span class='rule' id='rule-2-5'>press the button in the 6th position.</span><br>
+                If the display is 6, <span class='rule' id='rule-2-6'>press the button with the colour that was pressed at stage 1.</span>
                 <h3>Stage 3:</h3>
-                If the display is 1, press the button with the label that was in the 4th position at stage 1.<br>
-                If the display is 2, press the button in the position that was green at stage 2.<br>
-                If the display is 3, press the button with the colour that was labelled 5 at stage 2.<br>
-                If the display is 4, press the button with the label that was in the 1st position at stage 1.<br>
-                If the display is 5, press the button in the position that was pressed at stage 2.<br>
-                If the display is 6, press the button with the colour that was in the 3rd position at stage 1.<br>
+                If the display is 1, <span class='rule' id='rule-3-1'>press the button with the label that was in the 4th position at stage 1.</span><br>
+                If the display is 2, <span class='rule' id='rule-3-2'>press the button in the position that was green at stage 2.</span><br>
+                If the display is 3, <span class='rule' id='rule-3-3'>press the button with the colour that was labelled 5 at stage 2.</span><br>
+                If the display is 4, <span class='rule' id='rule-3-4'>press the button with the label that was in the 1st position at stage 1.</span><br>
+                If the display is 5, <span class='rule' id='rule-3-5'>press the button in the position that was pressed at stage 2.</span><br>
+                If the display is 6, <span class='rule' id='rule-3-6'>press the button with the colour that was in the 3rd position at stage 1.</span>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -60,19 +134,19 @@
             <div class="page-content">
 
               <h3>Stage 4:</h3>
-              If the display is 1, press the button in the position that was labelled 2 at stage 1.<br>
-              If the display is 2, press the button with the label that was in the 2nd position at stage 3.<br>
-              If the display is 3, press the button with the colour that was pressed at stage 2.<br>
-              If the display is 4, press the button in the position that was pressed at stage 3.<br>
-              If the display is 5, press the button with the colour that was labelled 4 at stage 1.<br>
-              If the display is 6, press the button with the label that was in the 6th position at stage 3.<br>
+              If the display is 1, <span class='rule' id='rule-4-1'>press the button in the position that was labelled 2 at stage 1.</span><br>
+              If the display is 2, <span class='rule' id='rule-4-2'>press the button with the label that was in the 2nd position at stage 3.</span><br>
+              If the display is 3, <span class='rule' id='rule-4-3'>press the button with the colour that was pressed at stage 2.</span><br>
+              If the display is 4, <span class='rule' id='rule-4-4'>press the button in the position that was pressed at stage 3.</span><br>
+              If the display is 5, <span class='rule' id='rule-4-5'>press the button with the colour that was labelled 4 at stage 1.</span><br>
+              If the display is 6, <span class='rule' id='rule-4-6'>press the button with the label that was in the 6th position at stage 3.</span>
               <h3>Stage 5:</h3>
-              If the display is 1, press the button with the colour that was in the 3rd position at stage 4.<br>
-              If the display is 2, press the button in the position that was labelled 6 at stage 3.<br>
-              If the display is 3, press the button with the label that was pressed at stage 4.<br>
-              If the display is 4, press the button with the label that was red at stage 1.<br>
-              If the display is 5, press the button with the colour that was pressed at stage 3.<br>
-              If the display is 6, press the button in the position that was blue at stage 2.<br>
+              If the display is 1, <span class='rule' id='rule-5-1'>press the button with the colour that was in the 3rd position at stage 4.</span><br>
+              If the display is 2, <span class='rule' id='rule-5-2'>press the button in the position that was labelled 6 at stage 3.</span><br>
+              If the display is 3, <span class='rule' id='rule-5-3'>press the button with the label that was pressed at stage 4.</span><br>
+              If the display is 4, <span class='rule' id='rule-5-4'>press the button with the label that was red at stage 1.</span><br>
+              If the display is 5, <span class='rule' id='rule-5-5'>press the button with the colour that was pressed at stage 3.</span><br>
+              If the display is 6, <span class='rule' id='rule-5-6'>press the button in the position that was blue at stage 2.</span>
 
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
