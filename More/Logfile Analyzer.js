@@ -4995,8 +4995,9 @@ $(function() {
 				moduleID: "EternitySDec"
 			},
 			{
-				displayName: "Timezones",
-				moduleID: "timezone"
+				displayName: "Timezone",
+				moduleID: "timezone",
+				loggingTag: "Timezones"
 			},
 			{
 				displayName: "The Jukebox",
