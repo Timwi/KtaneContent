@@ -86,7 +86,7 @@ function convertID(id) {
 }
 
 function $SVG(elem) {
-    return $(`<svg>${elem}</svg>`).children().eq(0).unwrap();
+	return $(`<svg>${elem}</svg>`).children().eq(0).unwrap();
 }
 
 function readHash() {
@@ -154,8 +154,8 @@ $(function() {
 					} else if (typeof (node) === "object" && "label" in node) {
 						elem.html(node.label);
 					} else if (typeof (node) === "object" && "linebreak" in node) {
-                        elem.remove();
-                        $("<br>").appendTo(parent);
+						elem.remove();
+						$("<br>").appendTo(parent);
 					} else {
 						console.log("Unrecognized node: " + node);
 						console.log(node);
@@ -235,7 +235,7 @@ $(function() {
 		infoCard
 			.click(function() {
 				parent.parent().children(".module-info").hide();
-                info.show();
+				info.show();
 				parent.children(".selected").removeClass("selected");
 				infoCard.addClass("selected");
 
@@ -272,7 +272,7 @@ $(function() {
 			else if (opt.file)
 				fragment += `;#file=${opt.file}`;
 			var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
-                .appendTo($("#bombs"))
+				.appendTo($("#bombs"))
 				.click(function() { selectBomb(serial); return false; })
 				.mousedown(function() { return false; });
 
@@ -1459,19 +1459,19 @@ $(function() {
 								"AB": "translate(125px, 200px)",
 								"AC": "translate(225px, 200px)",
 								"B": "translate(93px, 275px)",
-                                "C": "translate(254px, 275px)"
+								"C": "translate(254px, 275px)"
 							};
 
 							readMultiple(16).match(/[UL]/g).forEach(function(letter, index) {
 								var elem = svg.find("path, circle").eq(index);
 								elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
 
-                                var bbox = elem[0].getBBox();
+								var bbox = elem[0].getBBox();
 								var text = sections[index];
 								$SVG("<text>")
 									.text(text)
 									.css({
-                                        transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
+										transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
 										"text-anchor": "middle",
 										"dominant-baseline": "central",
 										stroke: "none",
@@ -5143,7 +5143,7 @@ $(function() {
 
 		function getModuleName(moduleID) {
 			const moduleData = parseData.find(data => data.moduleID == moduleID);
-            return moduleData ? moduleData.displayName : convertID(moduleID);
+			return moduleData ? moduleData.displayName : convertID(moduleID);
 		}
 
 		const taglessParsing = parseData.filter(data => data.loggingTag == undefined && data.matches != undefined);
