@@ -4480,20 +4480,41 @@ $(function() {
 							const text = $SVG("<g dominant-baseline=middle text-anchor=middle>").appendTo(diagram);
 							for (let y = 0; y < 3; y++) {
 								for (let x = 0; x < 3; x++) {
-									if (y == 0 && (x == 0 || x == 2)) continue;
+									if (y == 0 && (x == 0 || x == 2))
+										continue;
 									const data = bagData.shift();
 									const bag = $SVG(`<circle r=0.125 cx=${x * .3} cy=${y * .3}></circle>`).appendTo(bags);
 									$SVG(`<text x=${x * .3} y=${y * .3} font-size=.1>${data.label}</text>`).appendTo(text);
-									if (data.label != data.value) $SVG(`<text x=${x * .3} y=${y * .3 + 0.075} font-size=.05>(${data.value})</text>`).appendTo(text);
-
-									if (data.color != "Normal") bag.attr("fill", `hsl(${data.color == "Red" ? 0 : 240}, 100%, 81.25%)`);
+									if (data.label != data.value)
+										$SVG(`<text x=${x * .3} y=${y * .3 + 0.075} font-size=.05>(${data.value})</text>`).appendTo(text);
+									if (data.color != "Normal")
+										bag.attr("fill", `hsl(${data.color == "Red" ? 0 : 240}, 100%, 81.25%)`);
 								}
 							}
 
-							if (module.SolutionNumber === undefined) module.SolutionNumber = -1;
+							if (!('SolutionNumber' in module))
+								module.SolutionNumber = 1;
 
-							module.push({ label: ++module.SolutionNumber == 0 ? "Found solution to:" : `Solution #${module.SolutionNumber}:`, obj: diagram });
+							module.push({ label: module.LastLabel || `Solution #${module.SolutionNumber++}:`, obj: diagram });
+							module.LastLabel = null;
+							return true;
 						}
+					},
+					{
+						regex: /^Solutions:$/,
+						handler: function(matches, module) {
+							return true;
+						}
+					},
+					{
+						regex: /^(Found solutions to:|Submitted:)$/,
+						handler: function(matches, module) {
+							module.LastLabel = matches[1];
+							return true;
+						}
+					},
+					{
+						regex: /^(?!-+$)(.+)$/
 					}
 				]
 			},
