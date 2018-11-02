@@ -1,51 +1,291 @@
-<!DOCTYPE html><html><head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Bitmaps — Keep Talking and Nobody Explodes Module</title>
-	<meta name="viewport" content="initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="css/font.css">
-	<link rel="stylesheet" type="text/css" href="css/normalize.css">
-	<link rel="stylesheet" type="text/css" href="css/main.css">
-	<script src="js/highlighter.js"></script>
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Bitmaps — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/highlighter.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+
+            var edgeworkVariables = [
+                'indicators', 'lit indicators', 'unlit indicators', 'indicators with a vowel', 'indicators with no vowel',
+                'ports', 'port plates', 'non-empty port plates', 'port types', 'port types the bomb has exactly one port of', 'duplicate port types',
+                'batteries', 'battery holders', 'AA batteries', 'D batteries',
+                'letters in the serial number', 'consonants in the serial number', 'vowels in the serial number',
+                'digits in the serial number', 'odd digits in the serial number', 'even digits in the serial number',
+                'modules on the bomb (including needies)', 'non-needy modules on the bomb',
+                'solved modules on the bomb', 'unsolved non-needy modules on the bomb',
+
+                // Note: variables that start with “the” are handled specially by later code to ensure grammatical sentences
+                'the first numeric digit of the serial number', 'the second-last numeric digit of the serial number',
+                'the last numeric digit of the serial number', 'the sum of the digits in the serial number',
+                'the ones digit of the seconds in the countdown timer',
+                'the tens digit of the seconds in the countdown timer',
+                'the ones digit of the minutes in the countdown timer',
+                'the tens digit of the minutes in the countdown timer'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['completely white or completely black', 'completely white', 'completely black'][rnd.next(0, 3)];
+
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: 'If exactly one row or column is completely white or completely black' },
+                { extra: 'R', name: 'If exactly one row is completely white or completely black' },
+                { extra: 'C', name: 'If exactly one column is completely white or completely black' },
+                { extra: 'S', name: 'If there is a 3×3 square that is completely white or completely black' },
+                { extra: 'T', name: `If there is a 2×2 square that is ${type2x2}` },
+                { extra: '', name: `If there are exactly as many mostly-white quadrants as ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `If there are more mostly-white quadrants than ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `If there are fewer mostly-white quadrants than ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `If there are exactly as many mostly-black quadrants as ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `If there are more mostly-black quadrants than ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `If there are fewer mostly-black quadrants than ${edgeworkVariables[edgeworkVariableIx++]}` }
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1} or fewer` : `${16 - pixelCount1} or more`;
+            var blackWhite = rnd.next(0, 2) === 0 ? 'white' : 'black';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? 'white' : 'black';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `If no quadrant has ${moreOrLess} ${blackWhite} pixels` },
+                    { extra: 'Q', name: `If exactly one quadrant has ${moreOrLess} ${blackWhite} pixels` },
+                    { extra: '', name: `If more than one quadrant has ${moreOrLess} ${blackWhite} pixels` },
+                ],
+                [
+                    { name: 'If there are fewer mostly-white quadrants than mostly-black quadrants', extra: '' },
+                    { name: 'If there are more mostly-white quadrants than mostly-black quadrants', extra: '' },
+                    { name: 'If there are exactly as many mostly-white quadrants as mostly-black quadrants', extra: '' },
+                ],
+                [
+                    { name: `If the entire bitmap has ${64 - pixelCount2} or more ${blackWhite2} pixels`, extra: '' },
+                    { name: `If the entire bitmap has ${pixelCount2} or fewer ${blackWhite2} pixels`, extra: '' },
+                    { name: `If the entire bitmap has between ${pixelCount2 + 1} and ${63 - pixelCount2} ${blackWhite2} pixels`, extra: '' },
+                ],
+                [
+                    { name: 'If no quadrant has 8 white and 8 black pixels', extra: '' },
+                    { name: 'If there is exactly one quadrant with 8 white and 8 black pixels', extra: 'Q' },
+                    { name: 'If there is more than one quadrant with 8 white and 8 black pixels', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = startRule.startsWith("the ") ? startRule : `the number of ${startRule}`;
+
+            var solutions = [
+                'the number of mostly-black quadrants',
+                'the number of mostly-white quadrants',
+                'the number of quadrants with 8 white and 8 black pixels',
+                'the total number of white pixels',
+                'the total number of black pixels',
+                'the smallest number of black pixels in any quadrant',
+                'the largest number of black pixels in any quadrant',
+                'the smallest number of white pixels in any quadrant',
+                'the largest number of white pixels in any quadrant',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    'the number of white pixels in the other 3 quadrants',
+                    'the number of black pixels in the other 3 quadrants',
+                    'the number of white pixels in the diagonally opposite quadrant',
+                    'the number of black pixels in the diagonally opposite quadrant',
+                    'the number of white pixels in the horizontally adjacent quadrant',
+                    'the number of black pixels in the horizontally adjacent quadrant',
+                    'the number of white pixels in the vertically adjacent quadrant',
+                    'the number of black pixels in the vertically adjacent quadrant'
+                ],
+                'R': [
+                    'its y-coordinate, counting from 1 from top to bottom',
+                    'its y-coordinate, counting from 1 from bottom to top'
+                ],
+                'C': [
+                    'its x-coordinate, counting from 1 from left to right',
+                    'its x-coordinate, counting from 1 from right to left'
+                ],
+                'L': [
+                    'its x-/y-coordinate, counting from 1 from top/left to bottom/right',
+                    'its x-/y-coordinate, counting from 1 from bottom/right to top/left'
+                ],
+                'S': [
+                    'the x-coordinate (counting from 1 from left to right) of the center of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the center of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the center of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the center of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-left corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-left corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-left corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-left corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-right corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-right corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-right corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-right corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-left corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-left corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-left corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-left corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-right corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-right corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-right corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-right corner of the last such square in reading order'
+                ],
+                'T': [
+                    'the x-coordinate (counting from 1 from left to right) of the top-left corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-left corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-left corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-left corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-right corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-right corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the top-right corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the top-right corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-left corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-left corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-left corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-left corner of the last such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-right corner of the first such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-right corner of the first such square in reading order',
+                    'the x-coordinate (counting from 1 from left to right) of the bottom-right corner of the last such square in reading order',
+                    'the y-coordinate (counting from 1 from top to bottom) of the bottom-right corner of the last such square in reading order'
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `${conditions[i].name}, the answer is ${solution.startsWith("the ") ? solution : `the number of ${solution}`}.`;
+            }
+        }
+    </script>
+    <style>
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
+        }
+    </style>
 </head>
 <body>
-<div class="section">
-    <div class="page page-bg-04">
-        <div class="page-header">
-			<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-			<span class="page-header-section-title">Bitmaps</span>
-		</div>
-		<div class="page-content">
-            <img class="diagram" src="img/Component/Bitmaps.svg">
-            <h2>On the Subject of Bitmaps</h2>
-            <p class="flavour-text">Over 18 quintillion combinations, only some of them actually matter.
-
-            </p><ul>
-                <li>The module displays a bitmap of 64 pixels divided into four “quadrants”. Each pixel is
-                    bright (which we call “white” although it may be colored) or dark (“black”).
-                </li><li>There are 4 buttons underneath, labeled 1, 2, 3, and 4.
-                </li><li>In the following table, start at the rule whose number equals the last digit of the serial number.
-                </li><li>Keep going through the rules (wrapping around if necessary) until you encounter a condition that applies.
-                </li><li>Calculate the answer for the applicable rule. Repeatedly add or subtract 4 until the answer is between
-                    1 and 4 and press the corresponding button to disarm the module.
-            </li></ul>
-
-            <table>
-                <tbody><tr><th>#</th><th class="rule">Rule</th></tr>
-                <tr><th>0</th><td class="rule">If exactly one quadrant has 5 or fewer white pixels, the answer is the number of white pixels in the other 3 quadrants.</td></tr>
-                <tr><th>1</th><td class="rule">If there are exactly as many mostly-white quadrants as there are lit indicators, the answer is the number of batteries.</td></tr>
-                <tr><th>2</th><td class="rule">If exactly one row or column is completely white or completely black, the answer is its x-/y-coordinate (starting from 1 in the top/left).</td></tr>
-                <tr><th>3</th><td class="rule">If there are fewer mostly-white quadrants than mostly-black quadrants, the answer is the number of mostly-black quadrants.</td></tr>
-                <tr><th>4</th><td class="rule">If the entire bitmap has 36 or more white pixels, the answer is the total number of white pixels.</td></tr>
-                <tr><th>5</th><td class="rule">If there are more mostly-white quadrants than mostly-black quadrants, the answer is the smallest number of black pixels in any quadrant.</td></tr>
-                <tr><th>6</th><td class="rule">If exactly one quadrant has 5 or fewer black pixels, the answer is the number of black pixels in the other 3 quadrants.</td></tr>
-                <tr><th>7</th><td class="rule">If there are exactly as many mostly-black quadrants as there are unlit indicators, the answer is the number of ports.</td></tr>
-                <tr><th>8</th><td class="rule">If there is a 3×3 square that is completely white or completely black, the answer is the x-coordinate (starting from 1) of the center of the first such square in reading order.</td></tr>
-                <tr><th>9</th><td class="rule">If there are exactly as many mostly-white quadrants as mostly-black quadrants, the answer is the first numeric digit of the serial number.</td></tr>
-            </tbody></table>
-
-		</div>
-        <div class="page-footer relative-footer">Page 1 of 1</div>
-	</div>
-</div>
-</body></html>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Bitmaps</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Bitmaps.svg">
+                <h2>On the Subject of Bitmaps</h2>
+                <p class="flavour-text">Over 18 quintillion combinations, only some of them actually matter.</p>
+                <ul>
+                    <li>The module displays a bitmap of 64 pixels divided into four “quadrants”. Each pixel is bright (which we call “white” although it may be colored) or dark (“black”).</li>
+                    <li>There are 4 buttons underneath, labeled 1, 2, 3, and 4.</li>
+                    <li>In the following table, start at the rule whose number equals <span id='start-rule'>the last digit of the serial number</span><span id='start-rule-modulo'> (modulo 10)</span>.</li>
+                    <li>Keep going through the rules (wrapping around if necessary) until you encounter a condition that applies.</li>
+                    <li>Calculate the answer for the applicable rule. Repeatedly add or subtract 4 until the answer is between 1 and 4 and press the corresponding button to disarm the module.</li>
+                </ul>
+                <table>
+                    <tbody>
+                        <tr><th>#</th><th>Rule</th></tr>
+                        <tr><th>0</th><td class="rule">If exactly one quadrant has 5 or fewer white pixels, the answer is the number of white pixels in the other 3 quadrants.</td></tr>
+                        <tr><th>1</th><td class="rule">If there are exactly as many mostly-white quadrants as there are lit indicators, the answer is the number of batteries.</td></tr>
+                        <tr><th>2</th><td class="rule">If exactly one row or column is completely white or completely black, the answer is its x-/y-coordinate (starting from 1 in the top/left).</td></tr>
+                        <tr><th>3</th><td class="rule">If there are fewer mostly-white quadrants than mostly-black quadrants, the answer is the number of mostly-black quadrants.</td></tr>
+                        <tr><th>4</th><td class="rule">If the entire bitmap has 36 or more white pixels, the answer is the total number of white pixels.</td></tr>
+                        <tr><th>5</th><td class="rule">If there are more mostly-white quadrants than mostly-black quadrants, the answer is the smallest number of black pixels in any quadrant.</td></tr>
+                        <tr><th>6</th><td class="rule">If exactly one quadrant has 5 or fewer black pixels, the answer is the number of black pixels in the other 3 quadrants.</td></tr>
+                        <tr><th>7</th><td class="rule">If there are exactly as many mostly-black quadrants as there are unlit indicators, the answer is the number of ports.</td></tr>
+                        <tr><th>8</th><td class="rule">If there is a 3×3 square that is completely white or completely black, the answer is the x-coordinate (starting from 1) of the center of the first such square in reading order.</td></tr>
+                        <tr><th>9</th><td class="rule">If there are exactly as many mostly-white quadrants as mostly-black quadrants, the answer is the first numeric digit of the serial number.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
