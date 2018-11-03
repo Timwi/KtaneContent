@@ -1903,6 +1903,11 @@ $(function() {
 				loggingTag: "Connection Check"
 			},
 			{
+				displayName: "Connection Device",
+				moduleID: "KritConnectionDev",
+				loggingTag: "Connection Device"
+			},
+			{
 				moduleID: "cooking",
 				loggingTag: "Cooking",
 				matches: [
@@ -2649,6 +2654,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "The Jack-O’-Lantern",
+				moduleID: "jackOLantern",
+				loggingTag: "The Jack-O'-Lantern"
 			},
 			{
 				displayName: "The Jewel Vault",
