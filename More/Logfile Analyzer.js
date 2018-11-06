@@ -2007,7 +2007,7 @@ $(function() {
 				displayName: "The Crystal Maze",
 				moduleID: "crystalMaze",
 				loggingTag: "The Crystal Maze"
-			}
+			},
 			{
 				displayName: "The Cube",
 				moduleID: "cube",
