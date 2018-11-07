@@ -3945,6 +3945,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Plunger Button",
+				moduleID: "plungerButton",
+				loggingTag: "The Plunger Button"
+			},
+			{
 				moduleID: "poetry",
 				loggingTag: "Poetry",
 				matches: [
@@ -4678,6 +4683,11 @@ $(function() {
 				displayName: "The Time Keeper",
 				moduleID: "timeKeeper",
 				loggingTag: "TimeKeeper"
+			},
+			{
+				displayName: "T-Words",
+				moduleID: "tWords",
+				loggingTag: "T-Words"
 			},
 			{
 				displayName: "USA Maze",
