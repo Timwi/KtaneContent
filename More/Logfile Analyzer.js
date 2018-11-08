@@ -3335,6 +3335,19 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Morse War",
+				moduleID: "MorseWar",
+				loggingTag: "Morse War",
+				matches: [
+					{
+						regex: /Generated random values:/,
+						handler: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(3)) });
+						}
+					}
+				]
+			},
+			{
 				displayName: "Morsematics",
 				moduleID: "MorseV2",
 				loggingTag: "Morsematics"
