@@ -2635,6 +2635,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "IKEA",
+				moduleID: "qSwedishMaze",
+				loggingTag: "IKEA"
+			},
+			{
 				moduleID: "Maze",
 				loggingTag: "InvisibleWallsComponent"
 			},
