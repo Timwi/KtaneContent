@@ -4174,6 +4174,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Schlag den Bomb",
+				moduleID: "qSchlagDenBomb",
+				loggingTag: "Schlag den Bomb"
+			},
+			{
 				displayName: "The Screw",
 				moduleID: "screw",
 				loggingTag: "Screw",
