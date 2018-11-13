@@ -1185,6 +1185,33 @@ $(function() {
 					}
 				]
 			},
+
+			// ** MODULES START HERE ** //
+
+			{
+				displayName: "101 Dalmatians",
+				loggingTag: "101 Dalmatians",
+				moduleID: "OneHundredAndOneDalmatiansModule",
+				matches: [
+					{
+						regex: /Showing fur pattern (\d+) rotated (\d+)° clockwise/,
+						handler: function(m, module) {
+							module.push({ label: 'Fur pattern shown on module:', obj: $(`<div style="
+								border-radius: 100%;
+								background-image: url('img/101 Dalmatians/Fur${m[1]}.png');
+								background-size: contain;
+								width: 10cm;
+								height: 10cm;
+								transform: rotate(${m[2]}deg);
+							"></div>`) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
 			{
 				displayName: "3D Maze",
 				moduleID: "spwiz3DMaze",
