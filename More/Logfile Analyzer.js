@@ -4959,6 +4959,17 @@ $(function() {
 						}
 					},
 					{
+						regex: /^(Button #\d+ has symbol )(\d+)\.$/,
+						handler: function(matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text(matches[1]))
+								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[2] / 12) | 0] + (matches[2] % 12 + 1) + ".png' width='20' />"))
+								.append($('<span>').text("."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
 						regex: /.+/,
 						handler: function(matches, module) {
 							module.groups.add(matches.input);
