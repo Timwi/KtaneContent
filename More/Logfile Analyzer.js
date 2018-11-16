@@ -1925,6 +1925,61 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Complicated Wires",
+				moduleID: "Venn",
+				loggingTag: "VennWireComponent",
+				matches: [
+					{
+						regex: /Wire (\d) (should(?: not)?) be snipped\./,
+						handler: function(matches, module) {
+							const rules = {
+								Cut: "Cut",
+								DoNotCut: "Don't\nCut",
+								CutIfSerialEven: "SN\nEven",
+								CutIfParallelPortPresent: "Para.\nPort",
+								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
+							};
+
+							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
+							if (wireData) {
+								if (!('diagram' in module)) {
+									module.diagram = $SVG(`<svg width="300px">`);
+									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
+								}
+
+								const wireIndex = parseInt(wireData[1]);
+								if (module.parsedWires == undefined) module.parsedWires = [];
+								if (module.parsedWires[wireIndex] == true) return;
+								module.parsedWires[wireIndex] = true;
+
+								const x = wireIndex * 0.6;
+								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
+
+								// LED
+								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+
+								// Wire
+								const wireColors = wireData[2].split(", ");
+								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1 / 3)} width=0.475 height=${1 / 3} fill=${wireColors[1]}>`).appendTo(module.diagram);
+
+								// Star
+								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
+
+								// Rule/Should cut
+								$SVG(`<text x=${x + 0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x + 0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
+							}
+						}
+					},
+					{
+						regex: /Wire snipped ((?:in)?correctly): (\d)!/i,
+						handler: function(matches, module) {
+							module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`);
+						}
+					}
+				]
+			},
+			{
 				displayName: "Connection Check",
 				moduleID: "graphModule",
 				loggingTag: "Connection Check"
@@ -4766,61 +4821,6 @@ $(function() {
 					},
 					{
 						regex: /.+/
-					}
-				]
-			},
-			{
-				displayName: "Complicated Wires",
-				moduleID: "Venn",
-				loggingTag: "VennWireComponent",
-				matches: [
-					{
-						regex: /Wire (\d) (should(?: not)?) be snipped\./,
-						handler: function(matches, module) {
-							const rules = {
-								Cut: "Cut",
-								DoNotCut: "Don't\nCut",
-								CutIfSerialEven: "SN\nEven",
-								CutIfParallelPortPresent: "Para.\nPort",
-								CutIfTwoOrMoreBatteriesPresent: "Batt.\n&ge; 2",
-							};
-
-							const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
-							if (wireData) {
-								if (!('diagram' in module)) {
-									module.diagram = $SVG(`<svg width="300px">`);
-									module.splice(0, 0, { obj: module.diagram, nobullet: true, });
-								}
-
-								const wireIndex = parseInt(wireData[1]);
-								if (module.parsedWires == undefined) module.parsedWires = [];
-								if (module.parsedWires[wireIndex] == true) return;
-								module.parsedWires[wireIndex] = true;
-
-								const x = wireIndex * 0.6;
-								module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
-
-								// LED
-								$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
-
-								// Wire
-								const wireColors = wireData[2].split(", ");
-								$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
-								if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1 / 3)} width=0.475 height=${1 / 3} fill=${wireColors[1]}>`).appendTo(module.diagram);
-
-								// Star
-								if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
-
-								// Rule/Should cut
-								$SVG(`<text x=${x + 0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x + 0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
-							}
-						}
-					},
-					{
-						regex: /Wire snipped ((?:in)?correctly): (\d)!/i,
-						handler: function(matches, module) {
-							module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`);
-						}
 					}
 				]
 			},
