@@ -153,6 +153,8 @@ $(function() {
 						}
 					} else if (typeof (node) === "object" && "label" in node) {
 						elem.html(node.label);
+						if (node.monospace)
+							elem.css('font-family', 'monospace');
 					} else if (typeof (node) === "object" && "linebreak" in node) {
 						elem.remove();
 						$("<br>").appendTo(parent);
@@ -4793,6 +4795,23 @@ $(function() {
 				displayName: "T-Words",
 				moduleID: "tWords",
 				loggingTag: "T-Words"
+			},
+			{
+				displayName: "Tennis",
+				moduleID: "TennisModule",
+				loggingTag: "Tennis",
+				matches: [
+					{
+						regex: /^.*(?:→|(Initial score:)).*$/,
+						handler: function(matches, module) {
+							module.push({ label: matches.input.replace('Initial score:', 'INITIAL'), monospace: true });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "USA Maze",
