@@ -153,8 +153,8 @@ $(function() {
 						}
 					} else if (typeof (node) === "object" && "label" in node) {
 						elem.html(node.label);
-						if (node.monospace)
-							elem.css('font-family', 'monospace');
+						if (node.css)
+							elem.css(node.css);
 					} else if (typeof (node) === "object" && "linebreak" in node) {
 						elem.remove();
 						$("<br>").appendTo(parent);
@@ -4804,7 +4804,16 @@ $(function() {
 					{
 						regex: /^.*(?:→|(Initial score:)).*$/,
 						handler: function(matches, module) {
-							module.push({ label: matches.input.replace('Initial score:', 'INITIAL'), monospace: true });
+							var css = { fontFamily: 'monospace' };
+							var curScoreCount = module.TennisScoreCount || 0;
+							if (curScoreCount % 5 === 1)
+							{
+								css.borderTop = '1px solid #ccc';
+								css.paddingTop = '.5em';
+								css.marginTop = '.5em';
+							}
+							module.push({ label: matches.input.replace('Initial score:', 'INITIAL'), css: css });
+							module.TennisScoreCount = curScoreCount + 1;
 							return true;
 						}
 					},
