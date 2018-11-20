@@ -1646,6 +1646,7 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Button Sequence",
 				moduleID: "buttonSequencesModule",
 				loggingTag: "Button Sequences",
 				matches: [
