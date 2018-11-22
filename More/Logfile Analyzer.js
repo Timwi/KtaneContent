@@ -4803,18 +4803,30 @@ $(function() {
 				loggingTag: "Tennis",
 				matches: [
 					{
-						regex: /^.*(?:→|(Initial score:)).*$/,
+						regex: /^Initial score: (.*)$/,
 						handler: function(matches, module) {
-							var css = { fontFamily: 'monospace' };
-							var curScoreCount = module.TennisScoreCount || 0;
-							if (curScoreCount % 5 === 1)
+							module.push({ label: 'Initial score:', obj: $('<pre>').text(`        ${matches[1]}`) });
+							return true;
+						}
+					},
+					{
+						regex: /^. = [01]{5}$/,
+						handler: function(matches, module) {
+							module.TennisLastHeading = matches.input;
+							return true;
+						}
+					},
+					{
+						regex: /→/,
+						handler: function(matches, module) {
+							if (!('TennisLines' in module))
+								module.TennisLines = [];
+							module.TennisLines.push(matches.input);
+							if (module.TennisLines.length % 5 === 0)
 							{
-								css.borderTop = '1px solid #ccc';
-								css.paddingTop = '.5em';
-								css.marginTop = '.5em';
+								module.push({ label: module.TennisLastHeading || 'SN character:', obj: $('<pre>').text(module.TennisLines.join("\n")) });
+								module.TennisLines = [];
 							}
-							module.push({ label: matches.input.replace('Initial score:', 'INITIAL'), css: css });
-							module.TennisScoreCount = curScoreCount + 1;
 							return true;
 						}
 					},
