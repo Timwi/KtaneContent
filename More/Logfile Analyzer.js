@@ -4123,6 +4123,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Radio",
+				moduleID: "KritRadio",
+				loggingTag: "The Radio"
+			},
+			{
 				moduleID: "resistors",
 				loggingTag: "Resistors",
 				matches: [
