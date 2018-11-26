@@ -4097,6 +4097,22 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "Probing",
+				loggingTag: "Probing",
+				matches: [
+					{
+						regex: /Wire values:/i,
+						handler: function(matches, module) {
+							module.push({ label: matches.input, obj: pre(readMultiple(2)) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+					}
+				]
+			},
+			{
 				displayName: "QR Code",
 				moduleID: "QRCode",
 				loggingTag: "NeedyQRCode",
@@ -5278,10 +5294,6 @@ $(function() {
 			},
 			{
 				moduleID: "ForeignExchangeRates",
-				hasLogging: false
-			},
-			{
-				moduleID: "Probing",
 				hasLogging: false
 			},
 			{
