@@ -4995,52 +4995,21 @@ $(function() {
 				loggingTag: "X-Ray",
 				matches: [
 					{
-						regex: /^(\d+)( = .*\. Solution symbol is )(\d+)\.$/,
-						handler: function(matches, module) {
-							const span = $('<span>')
-								.append($("<img src='../HTML/img/X-Ray/Icon C" + matches[1] + ".png' width='20' />"))
-								.append($('<span>').text(matches[2]))
-								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
-								.append($('<span>').text("."));
-							module.groups.add(span);
-							return true;
-						}
-					},
-					{
-						regex: /^Column (\d+), Row (\d+): symbol there is (\d+).$/,
-						handler: function(matches, module) {
-							const span = $('<span>')
-								.append($("<img src='../HTML/img/X-Ray/Icon A" + matches[1] + ".png' width='20' />"))
-								.append($('<span>').text(" = Column " + matches[1] + ", "))
-								.append($("<img src='../HTML/img/X-Ray/Icon B" + matches[2] + ".png' width='20' />"))
-								.append($('<span>').text(" = Row " + matches[2] + ": symbol there is "))
-								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[3] / 12) | 0] + (matches[3] % 12 + 1) + ".png' width='20' />"))
-								.append($('<span>').text("."));
-							module.groups.add(span);
-							return true;
-						}
-					},
-					{
-						regex: /^(Button #\d+ has symbol )(\d+)\.$/,
-						handler: function(matches, module) {
-							const span = $('<span>')
-								.append($('<span>').text(matches[1]))
-								.append($("<img src='../HTML/img/X-Ray/Icon " + "ABC"[(matches[2] / 12) | 0] + (matches[2] % 12 + 1) + ".png' width='20' />"))
-								.append($('<span>').text("."));
-							module.groups.add(span);
-							return true;
-						}
-					},
-					{
 						regex: /.+/,
 						handler: function(matches, module) {
-							module.groups.add(matches.input);
-						}
-					},
-					{
-						regex: /You pressed button #\d, which is wrong\. Resetting module\./,
-						handler: function(_, module) {
-							module.groups.addGroup();
+							var m, span = null, txt = matches[0];
+							while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt))
+							{
+								if (span === null)
+									span = $('<span>');
+								span
+									.append($('<span>').text(m[1]))
+									.append($(`<div style='display: inline-block; width: 20px; height: 20px; background-image: url(img/X-Ray/Icons.svg); background-size: 220px 200px; background-repeat: no-repeat; background-position: ${-20*(m[2] % 11)}px ${-20*Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
+								txt = txt.substr(m[0].length);
+							}
+							module.groups.add(span === null ? matches.input : span.append($('<span>').text(txt)));
+							if (matches.input.indexOf('Resetting module') !== -1)
+								module.groups.addGroup();
 						}
 					}
 				]
