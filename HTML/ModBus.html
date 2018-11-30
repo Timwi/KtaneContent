@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <title>ModBus — Keep Talking and Nobody Explodes Module</title>
+        <meta name="viewport" content="initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+        <script src="js/highlighter.js"></script>
+        <style>
+            table {
+                margin: 1em auto;
+            }
+
+            /* Example CSS; Remove what is not used.*/
+            .bold {
+                font-weight: bold;
+            }
+            .underline {
+                text-decoration: underline;
+            }
+            .italics {
+                font-style: italic;
+            }
+
+            img.center {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            img.example-image {
+                width: 60%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="ManualContent">
+            <div class="section">
+                <div class="page page-bg-02">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">ModBus</span>
+                    </div>
+                    <div class="page-content">
+                        <img src="img/Component/ModBus.svg" class="diagram">
+                        <h2>On the Subject of ModBus</h2>
+                        <p class="flavour-text">"I got this, I'm a professional" was his last word.</p>
+                        
+                        <p>The ModBus is a serial communications protocol originally published by Modicon in 1979, for use with it's PLCs (Programmable Logic Controllers). </p>
+						<p class="flavour-text">A little bit of History is good, right?</p>
+						
+						<br>
+						
+						<p>It's commonly used as means of connecting industrial electronic devices...and can be involved with making a bomb.<br>
+						To defuse the module, it is simple. You only need to send the right frame.<br>
+						Don't send anything before are done writing the frame.</p>
+						
+						<p class="flavour-text">You just have to follow the instructions. As simple as cooking a turkey!</p>
+						
+						<br>
+						
+                        <h2>ModBus Protocol</h2>
+						<p class="flavour-text">"READ THIS SECTION! please."</p>
+						<p>Like we said before, you need to follow a strict protocol. We are lucky, bomb-makers never use CRC (Cyclic Redundancy Check, "Error check").<br>
+						Furthermore, we know they only use the RTU frame format described below</p>
+						
+                        <img src="img/ModBus/frameModBus.png" width="500" />
+						<p class="flavour-text"> Like we said before, we don't need to calculate the CRC (lucky you).<br></p>
+						<p>16 bit words (2 bytes) are sent in "Big endian" (Most Signifiant Bit First).<br>
+						i.e. : You have to send (42)<SUB>10</SUB> = (21)<SUB>HEX</SUB>, so you need to send "2" then "1".</p>
+						
+						
+						<h3>Address</h3>
+						<p class="flavour-text"> "Where do I have to enter the defuse code?"</p>
+						<p>To fill the address, you need to look at the first number (or letter) of the serial code on the bomb.<br>
+						Convert it (they are all in ASCII) into a hexademal number (See Appendix ASCII Tab), this is the address (yay!).<p>
+						<p class="flavour-text">Don't use decimal numbers!</p>
+                    </div>
+                   <div class="page-footer relative-footer">Page 1 of 5</div>
+                </div>
+                <div class="page page-bg-01">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">ModBus</span>
+                    </div>
+                    <div class="page-content">
+                        <h3>Function</h3>
+						<p class="flavour-text">"Hmm... I guess it's an important section..."</p>
+						<p>Bomb-makers (or defusers, or someone else?) use only 2 functions:<p>
+						<ol>
+                            <li>Function 04, used to read a data word. (and Yes, we'll have to use it)</li>
+                            <li>Function 06, used to write a data word.</li>
+                        </ol>
+						<p> The choice is simple, look at the last number (or letter) of the serial code. <br>
+						...Convert it into a decimal number. (they are all in ASCII)<br>
+						THEN calculate this number modulo 4(e.g. : 12%4 = 0,&nbsp;&nbsp; 15%4 = 3)</p>
+						<p class="flavour-text">"Simple, right?"</p>
+						<br>
+						<p>After that, multiply it by 3, and calculate the result modulo 2<br>
+						If the result is ... </p>
+						<ol>
+                            <li>&nbsp;...0, use function 04.</li>
+                            <li>&nbsp;...1, use function 06.</li>
+                        </ol>
+						<h3>Function 04</h3>
+						<p class="flavour-text">Read data, defuse the module, be a hero. BOOM dream achieved.</p>
+						<p>Bomb-makers developed a new kind of protection. Instead of using the write function to defuse their module, You only need to read the right data on the module using function 04.<br></p>
+							<p class="flavour-text">Don't care about it.</p>
+							<br>
+							<p>So, How is the data area composed? (Read the tab below)</p>	
+						<img src="img/ModBus/FrameFunction04.png" width="400" />
+						<p class="flavour-text">You see, It's the last 4 bytes to find! Keep calm and defuse it! </p>
+                    </div>
+                   <div class="page-footer relative-footer">Page 2 of 5</div>
+                </div>
+                <div class="page page-bg-03">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">ModBus</span>
+                    </div>
+                    <div class="page-content">
+						<h4>Address of the word</h4>
+						<p>First, to find the word address, multiply the third digit by the fourth digit.<br>
+							Convert letters into decimal with appendix ASCII Tab.<br>
+							Don't change numbers like above, take the number write (If it's write 5 take 5).<br>
+							Next, multiply the result by 100.<br>
+							Then, just take the least significant byte. <br>
+							i.e. : (45BA72C)<SUB>HEX</SUB> -> (A72C)<SUB>HEX</SUB> <br> </p>
+						<h4>The number of words to read</h4>	
+						<p>Hmmm, you might think, "I will read 210 words, that's nonsense!", and I will tell you, Yes.<br>
+							BUT, it does not work like that, bomb-makers use this function sneakily, so they don't use it's real purpose.<br>
+							Please find those last 2 bytes (even if they don't relate to anything).<br>
+							<br>
+							Take the address of the slave (decimal), multiply by the the number of function (4 or 6) then add the data number (decimal too).<br>
+							Convert the result into Hexadecimal, simplify like just before. And you got it!<br>
+							<br>
+							Send the data and you will be a hero (or not if you failed).<br></p>
+
+						<h3>Function 06</h3>
+						<p class="flavour-text"> Be careful, the keyboard is stronger than the sword!</p>
+						<p>You previously determine the slave address and the function "write". <br>
+							But now you need to find what you need to write, and where (in the slave memory)? <br>
+							See below for how the data area is composed when you want to write something.
+						<img src="img/ModBus/FrameFunction06.png" width="400" />
+						<p class="flavour-text">I believe in you! You got this!</p>
+                    </div>
+                    <div class="page-footer relative-footer">Page 3 of 5</div>
+                </div>
+				<div class="page page-bg-04">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">ModBus</span>
+                    </div>
+                    <div class="page-content">
+						<h4>Address in the register</h4>
+						<p>I hope you reviewed your binary operation because you will use it! (It's not a joke).<br>
+							First step, take the 4th number (or letter, they are all ASCII), convert it with the ASCII table (in binary this time).<br>
+							*When you've got the number, fill the rest of the 16 bits with 0 to convert it into the same number in 16 bits. example : 101 = 0000 0101 (for 8 bits).<br>
+							You have to invert this number (NOT Operation), truth table below:</p>
+						<table style="text-align: center;">
+							<tr>
+								<th>A</th>
+								<th>NOT A</th>
+							</tr>
+							<tr>
+								<td>1</td>
+								<td>0</td>
+							</tr>
+							<tr>
+								<td>0</td>
+								<td>1</td>
+							</tr>
+						</table>
+						<p>You just have to convert the 16 bits binary number into an decimal number.<br>
+							Simplify by cut the higher value. i.e. : 265486 -> 5486 <br>
+							Annnnndddd, you have the address in the register.</p>
+						
+						<h4>Value</h4>
+						<p>The last part is the easiest! To find the value to enter at this adress, take the first digit of the serial number (in decimal) and subtract the number of function.<br>
+							Then multiply this result by the 5th digit of the serial number (or letter, again in decimal) and simplify like above.</p>
+						<p>If you there, and you think it's finised, and yes, it's finished! <br>
+							Now, enter all the parameters in the right order, and click on the send button.<br>
+							YOU DID IT MY BOY !</p>
+                    </div>
+                    <div class="page-footer relative-footer">Page 4 of 5</div>
+                </div>
+				<div class="page page-bg-05">
+                    <div class="page-header">
+                        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                        <span class="page-header-section-title">ASCII table</span>
+                    </div>
+                    <div class="page-content">
+						<h2>Appendix ASCII table</h2>
+						<img src="img/ModBus/ascii_table.png" width="650" />
+						<p class="flavour-text">When you need to convert a letter (or an number in some cases), you need to find the letter (or number) into the Char column <br>
+												 Bonus : You got Dec/Bin/Hex/Char conversion</p>
+                    </div>
+                    <div class="page-footer relative-footer">Page 5 of 5</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
