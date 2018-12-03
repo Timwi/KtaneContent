@@ -4819,6 +4819,11 @@ $(function() {
 				loggingTag: "T-Words"
 			},
 			{
+				displayName: "The Triangle",
+				moduleID: "triangle",
+				loggingTag: "The Triangle"
+			},
+			{
 				displayName: "Tennis",
 				moduleID: "TennisModule",
 				loggingTag: "Tennis",
