@@ -2770,6 +2770,24 @@ $(function() {
 				loggingTag: "KeypadComponent"
 			},
 			{
+				moduleID: "KudosudokuModule",
+				displayName: "Kudosudoku",
+				loggingTag: "Kudosudoku",
+				matches: [
+					{
+						regex: /^(Solution|Codings|New codings):$/,
+						handler: function(matches, module) {
+							var lines = readMultiple(4).split('\n').map(l => l.split(' '));
+							module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({border: '1px solid black', padding: '.1em .5em'}).end() });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				moduleID: "Laundry",
 				loggingTag: "Laundry",
 				matches: [
