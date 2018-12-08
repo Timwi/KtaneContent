@@ -2965,7 +2965,7 @@ $(function() {
 								for (var j = 0; j < 8; j++)
 									tds.push(`<td>${raw.substr(9 + 8*j, 7)}</td>`);
 								var lionName = raw.substr(0, 8).trim();
-								rows.push(`<tr><th><div>${lionName}</div><div class='extra'>${module.LionInfo[lionName].replace('; ', '<br>')}</div></th>${tds.join('')}</tr>`);
+								rows.push(`<tr><th><div>${lionName}</div><div class='extra'>${module.LionInfo[lionName].replace(/; /g, '<br>')}</div></th>${tds.join('')}</tr>`);
 								delete module.LionInfo[lionName];
 							}
 							var additionalLions = Object.keys(module.LionInfo);
@@ -2973,7 +2973,7 @@ $(function() {
 								var tds = [];
 								for (var j = 0; j < 8; j++)
 									tds.push(`<td>${j === 7 ? '0%' : ''}</td>`);
-								rows.push(`<tr><th><div>${additionalLions[i]}</div><div class='extra'>${module.LionInfo[additionalLions[i]]}</div></th>${tds.join('')}</tr>`);
+								rows.push(`<tr><th><div>${additionalLions[i]}</div><div class='extra'>${module.LionInfo[additionalLions[i]].replace(/; /g, '<br>')}</div></th>${tds.join('')}</tr>`);
 							}
 							module.push({
 								label: matches[0],
