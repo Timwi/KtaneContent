@@ -101,18 +101,20 @@
 			display: flex;
 			align-items: center;
 			background: white;
-			padding: 8px;
+			padding: 6px;
 			margin: 3px;
-			transition: background 0.4s;
+			transition: background 0.4s, border-color 0.4s;
 			user-select: none;
 			flex-grow: 1;
 			align-content: center;
 			color: black;
             text-decoration: none;
+			border: 2px dashed rgb(255, 255, 255);
 		}
 
-		.mod.disabled {
-			background: rgb(255, 200, 200);
+		.mod.noValue {
+			border-color: rgb(200, 25, 25);
+			cursor: help;
 		}
 
 		.mod-id {
@@ -144,6 +146,21 @@
 			font-family: inherit;
 		}
 
+		.tp-score {
+			color: rgb(110, 110, 110);
+			margin-left: 3px;
+			transition: color 0.4s;
+			cursor: help;
+		}
+
+		.tp-score-positive {
+			color: rgb(25, 130, 25);
+		}
+		
+		.tp-score-negative {
+			color: rgb(200, 25, 25);
+		}
+
 		button {
 			color: inherit;
 			border: inherit;
@@ -166,10 +183,10 @@
 	<script>
 		/// MOD DATA ///
 		var mods = [
-            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
-            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular" },
-            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
-            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
+            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", score: 1 },
+            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular", score: 4 },
+            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", score: 3 },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", score: 2 },
             { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
             { id: "SupermercadoSalvajeModule", name: "Supermercado Salvaje", type: "Regular" }
 		];
@@ -227,17 +244,18 @@
 		};
 
 		class Mod {
-			constructor(name, sortkey, id, type, published = "1970-1-1", value = 6) {
+			constructor(name, sortkey, id, type, published = "1970-1-1", value) {
 				this.Name = name;
 				this.SortKey = sortkey;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
 				this.Value = value;
+				this.TPValue = value;
 			}
 		}
 
-		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published));
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published, mod.score));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -400,6 +418,11 @@
 					return false;
 				}
 
+				// Reset any values specified for modules so that they have to be defined by the file passed in
+				for (const mod of vueData.mods) {
+					mod.Value = undefined;
+				}
+
 				// Check if we support all the IDs in the settings.
 				for (var modID in vueData.settings.ComponentValues) {
 					const mod = vueData.mods.find(mod => mod.ID == modID);
@@ -483,6 +506,30 @@
 				}
 			});
 
+			Vue.component("tp-score", {
+				props: ["mod"],
+				render: function(createElement) {
+					const difference = this.mod.Value - this.mod.TPValue;
+					let differenceText = "?";
+					let titleText = "There is no score defined for Twitch Plays.";
+					if (this.mod.TPValue != undefined && this.mod.Value != undefined) {
+						differenceText = (difference == 0 ? "" : (difference > 0 ? "+" : "-")) + Math.abs(difference);
+						titleText = (difference == 0 ? "Your score is the same as Twitch Plays." : `Your score is ${Math.abs(difference)} ${(difference > 0 ? "higher" : "lower")} than for Twitch Plays.`);
+					}
+
+					return createElement("div", {
+						class: {
+							"tp-score": true,
+							"tp-score-positive": difference > 0,
+							"tp-score-negative": difference < 0
+						},
+						attrs: {
+							title: titleText
+						}
+					}, [ `(${differenceText})` ]);
+				} 
+			});
+
 			new Vue({
 				el: "#editor",
 				data: vueData,
@@ -521,8 +568,8 @@
 						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
 					},
 					setValue: function(mod, value) {
-						const val = parseInt(value);
-						if (Number.isNaN(val)) return;
+						let val = parseInt(value);
+						if (Number.isNaN(val)) val = undefined;
 
 						mod.Value = val;
 					}
@@ -560,13 +607,14 @@
 				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button></h3>
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
-						<div class="mod" :key="mod.id">
+						<div class="mod" :key="mod.id" :class="{ noValue: mod.Value === undefined }" :title="mod.Value === undefined ? 'No score is assigned to this module.' : ''">
                             <img class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + mod.Name.replace(/ \(Translated\)$/, '') + '.png'">
                             <div class="mod-info">
                                 <div>{{ mod.Name }}</div>
                                 <div class="mod-id">{{ mod.ID }}</div>
 							</div>
-							<input type="number" :required="true" step="any" v-bind:value="mod.Value" @change="setValue(mod, $event.target.value);">
+							<input type="number" :required="true" step="any" v-bind:value="mod.Value" placeholder="6" @change="setValue(mod, $event.target.value);">
+							<tp-score :mod="mod"></tp-score>
 						</div>
 					</template>
 				</div>
