@@ -1682,6 +1682,11 @@ $(function() {
 				loggingTag: "CaesarCipher"
 			},
 			{
+				displayName: "Challenge & Contact",
+				moduleID: "challengeAndContact",
+				loggingTag: "Challenge & Contact"
+			},
+			{
 				moduleID: "CheapCheckoutModule",
 				loggingTag: "Cheap Checkout",
 				matches: [
@@ -2246,6 +2251,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Cursed Double-Oh",
+				moduleID: "CursedDoubleOhModule",
+				loggingTag: "Cursed Double-Oh"
+			},
+			{
 				moduleID: "fastMath",
 				loggingTag: "Fast Math",
 				matches: [
@@ -2476,6 +2486,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Functions",
+				moduleID: "qFunctions",
+				loggingTag: "Functions"
 			},
 			{
 				moduleID: "GameOfLifeCruel",
@@ -4297,6 +4312,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Scripting",
+				moduleID: "KritScripts",
+				loggingTag: "Scripting"
+			},
+			{
 				moduleID: "Semaphore",
 				loggingTag: "Semaphore",
 				matches: [
@@ -4795,6 +4815,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Ten-Button Color Code",
+				moduleID: "TenButtonColorCode",
+				loggingTag: "Ten-Button Color Code"
 			},
 			{
 				displayName: "Tic-Tac-Toe",
