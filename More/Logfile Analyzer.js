@@ -1933,6 +1933,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "lgndColorMatch",
+				loggingTag: "Color Match",
+				displayName: "Color Match"
+			},
+			{
 				displayName: "Complicated Wires",
 				moduleID: "Venn",
 				loggingTag: "VennWireComponent",
@@ -3821,6 +3826,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				moduleID: "lgndPayRespects",
+				loggingTag: "Pay Respects",
+				displayName: "Pay Respects"
 			},
 			{
 				moduleID: "spwizPerspectivePegs",
