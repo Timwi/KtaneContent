@@ -9,62 +9,129 @@
 		<link rel='stylesheet' type='text/css' href='css/font.css'>
 		<link href="css/normalize.css" rel="stylesheet" type="text/css">
 		<link href="css/main.css" rel="stylesheet" type="text/css">
-		<script src='js/highlighter.js'></script>
+		<script src="js/highlighter.js"></script>
+		<script src="js/ruleseed.js"></script>
 		<style>
-			html {
-				font-size: 12pt;
+			html { font-size: 12pt; }
+
+			.xes1 { position: relative; font-weight: normal; }
+			.xes2 { position: absolute; left: -.05em; font-size: 17pt; }
+			.magic { position: absolute; left: 50%; bottom: 80%; font-size: 12pt; transform: translateX(-50%); }
+
+			table.friendship { border-collapse: collapse; border: none; margin: 0 auto; }
+			table.friendship th, table.friendship td { padding: .6mm; text-align: center; vertical-align: middle; }
+			img.fs { width: 8mm; height: 8mm; }
+
+			div.elements { column-count: 4; -moz-column-count: 4; }
+			div.elements > div { white-space: nowrap; }
+			div.elements > div > span { transform-origin: left center; display: inline-block; }
+
+			ul { margin: 0; padding: 0; }
+			.ruleseed-active .rule-text {
+				font-size: 11pt;
 			}
-			
-			.xes1 {
-				position: relative;
-				font-weight: normal;
+
+			.ruleseed-active .rule {
+				font-weight: bold;
+				text-decoration: underline;
 			}
-			
-			.xes2 {
-				position: absolute;
-				left: .1em;
-			}
-			
-			.magic {
-				position: absolute;
-				left: 50%;
-				bottom: 80%;
-				font-size: 12pt;
-				transform: translateX(-50%);
-			}
-			
-			table.friendship {
-				border-collapse: collapse;
-				border: none;
-				margin: 0 auto;
-			}
-			
-			table.friendship th,
-			table.friendship td {
-				padding: .6mm;
-				text-align: center;
-				vertical-align: middle;
-			}
-			
-			img.fs {
-				width: 8mm;
-				height: 8mm;
-			}
-			
-			div.elements {
-				column-count: 4;
-				-moz-column-count: 4;
-			}
-			
-			div.elements div {
-				white-space: nowrap;
-			}
-			
-			ul {
-				margin: 0;
-				padding: 0;
+
+			@media screen and (max-width: 900px) {
+				table.friendship { font-size: 9pt; }
+				img.fs { width: 4.4mm; height: 4.4mm; }
+				div.elements { column-count: 2; -moz-column-count: 2; }
 			}
 		</style>
+		<script>
+			var friendshipSymbols = [
+				"Starstreak", "Coloratura", "Pickpocket", "Lemon Zest", "Night Light", "Bow Hothoof", "Midnight Strike", "Amethyst Star", "Mayor Mare", "Non-pony 6", "Score", "Apple Flora",
+				"Sandbar", "Joe", "Spitfire", "Lily", "Snips", "Suri Polomare", "Shoeshine", "Noteworthy", "Rainbow Swoop", "Lucky Clover", "Cherry Berry", "Meadow Song", "Tootsie Flute",
+				"Sapphire Shores", "Pursey Pink", "Lemon Hearts", "Filthy Rich", "Snails", "Cherry Jubilee", "Cozy Glow", "Count Caesar", "Mr. Carrot Cake", "Cheerilee", "Cadance",
+				"Strawberry Sunrise", "Silverstar", "Lily Lace", "Globe Trotter", "Royal Riff", "Horte Cuisine", "Sealed Scroll", "Granny Smith", "Non-pony 10", "Igneous Rock Pie", "Derpy",
+				"Limestone Pie", "Apple Fritter", "Sunset Shimmer", "Daring Do", "Aria Blaze", "Pinny Lane", "Photo Finish", "Ms. Harshwhinny", "Starlight Glimmer", "Stellar Eclipse", "Fleetfoot",
+				"Mrs. Cup Cake", "Caramel", "Hoops", "Open Skies", "Moon Dancer", "Minty", "Dr. Caballeron", "Non-pony 5", "Non-pony 9", "Featherweight", "Blossomforth", "Sunshower Raindrops",
+				"Spoiled Rich", "Mr. Stripes", "Clear Skies", "Radiant Hope", "Apple Honey", "Sugarcoat", "Shooting Star", "Quibble Pants", "Lyra", "Coco Pommel", "Comet Tail", "Sweetie Belle",
+				"Screwball", "Twist", "Starry Eyes", "Indigo Zap", "Trixie", "White Lightning", "Apple Split", "Cloudy Quartz", "Zephyr Breeze", "Leadwing", "Electric Sky", "Silver Shill",
+				"Fleur Dis Lee", "Dr. Horse", "Cheese Sandwich", "Flash Sentry", "Apple Bumpkin", "Non-pony 3", "Flax Seed", "Hoity Toity", "Rose", "Scootaloo", "Thunderlane", "Red Gala",
+				"Cloud Kicker", "Sour Sweet", "Hayseed Turnip Truck", "Prim Hemline", "Pinkie Pie", "Hondo Flanks", "Twilight Velvet", "Fancy Pants", "Dr. Fauna", "Firecracker Burst",
+				"Tender Taps", "Inky Rose", "Screwy", "Golden Gavel", "Blow Dry", "Auntie Applesauce", "Torch Song", "All Aboard", "Emerald Green", "Non-pony 1", "Pear Butter", "Pixel Pizzaz",
+				"Biff", "Davenport", "Peachy Sweet", "Peachy Pie", "Strike", "Violet Blurr", "Rarity", "Diamond Tiara", "Trouble Shoes", "Hughbert Jellius", "Babs Seed", "Aloe Blossom", "Flam",
+				"Apple Leaves", "Apple Rose", "Lily Blossom", "Plaid Stripes", "Sweetie Drops", "Nurse Redheart", "Non-pony 12", "Sprinkle Medley", "Windy Whistles", "Celestia", "Adagio Dazzle",
+				"Saffron Masala", "Non-pony 7", "Truffle", "Feather Bangs", "Twinkleshine", "Vapor Trail", "Non-pony 2", "Golden Harvest", "Octavia Melody", "Apple Bloom", "Unconditioner",
+				"Sassaflash", "Magnet Bolt", "Rainbow Dash", "Meadow Flower", "Bright Mac", "Ms. Peachbottom", "Holly Dash", "Silver Spoon", "Rockhoof", "Apple Cobbler", "Mane Moon", "Fluttershy",
+				"Apple Strudel", "Diamond Rose", "Luna", "Blue Bobbin", "Fluffy Clouds", "Flitter", "Non-pony 8", "Archer", "Cookie Crumbles", "Lickety Split", "Upper Crust", "Aunt Orange",
+				"Withers", "Rogue", "Royal Pin", "Big McIntosh", "Flim", "Double Diamond", "Bumblesweet", "Jet Set", "Toola Roola", "Apple Cinnamon", "Neon Brush", "Clean Sweep", "Coriander Cumin",
+				"Sea Swirl", "Compass Star", "Cloudchaser", "Comb Over", "Twilight Sparkle", "Banana Fluff", "Applejack", "Wild Fire", "Cherry Fizzy", "Sunny Daze", "Wheat Grass", "Non-pony 13",
+				"Vinyl Scratch", "Maud Pie", "Sunburst", "Prince Blueblood", "Silver Spanner", "Crusoe Palm", "Quick Trim", "Lotus Blossom", "Sunshower", "Orange Swirl", "Daisy", "Sunny Rays",
+				"Dumb-Bell", "Goldengrape", "Soarin", "Zipporwhill", "Toe Tapper", "Night Glider", "Star Swirl", "Beauty Brass", "Marble Pie", "Tree Hugger", "Bulk Biceps", "Uncle Orange",
+				"Lightning Dust", "Non-pony 4", "Time Turner", "Berryshine", "Gladmane", "Timber Spruce", "Coconut Cream", "Rainbowshine", "Sonata Dusk", "Non-pony 14", "Equality", "Braeburn",
+				"Parasol", "Shining Armor", "Trenderhoof"
+			];
+	
+			var elementsOfHarmony = [
+				{ Name: 'Serenity', Scale: 1 },           { Name: 'Resilience', Scale: 1 },         { Name: 'Scrupulousness', Scale: 1 },     { Name: 'Adventurousness', Scale: .9 },
+				{ Name: 'Selflessness', Scale: 1 },       { Name: 'Companionship', Scale: 1 },      { Name: 'Softheartedness', Scale: .9 },   { Name: 'Esteem', Scale: 1 },
+				{ Name: 'Pardoning', Scale: 1 },          { Name: 'Solidarity', Scale: 1 },         { Name: 'Integrity', Scale: 1 },          { Name: 'Self-respect', Scale: 1 },
+				{ Name: 'Neutrality', Scale: 1 },         { Name: 'Authenticity', Scale: 1 },       { Name: 'Virtue', Scale: 1 },             { Name: 'Empathy', Scale: 1 },
+				{ Name: 'Steadfastness', Scale: 1 },      { Name: 'Perseverance', Scale: 1 },       { Name: 'Thoughtfulness', Scale: 1 },     { Name: 'Courage', Scale: 1 },
+				{ Name: 'Yielding', Scale: 1 },           { Name: 'Faithfulness', Scale: 1 },       { Name: 'Laughter', Scale: 1 },           { Name: 'Graciousness', Scale: 1 },
+				{ Name: 'Creativity', Scale: 1 },         { Name: 'Affability', Scale: 1 },         { Name: 'Cordiality', Scale: 1 },         { Name: 'Altruism', Scale: 1 },
+				{ Name: 'Purposefulness', Scale: 1 },     { Name: 'Regard', Scale: 1 },             { Name: 'Warmheartedness', Scale: .9 },   { Name: 'Tactfulness', Scale: 1 },
+				{ Name: 'Hospitality', Scale: 1 },        { Name: 'Gentleness', Scale: 1 },         { Name: 'Sensitivity', Scale: 1 },        { Name: 'Determination', Scale: 1 },
+				{ Name: 'Sociability', Scale: 1 },        { Name: 'Good will', Scale: 1 },          { Name: 'Reliability', Scale: 1 },        { Name: 'Bounteousness', Scale: 1 },
+				{ Name: 'Beneficence', Scale: 1 },        { Name: 'Dependability', Scale: 1 },      { Name: 'Affinity', Scale: 1 },           { Name: 'Munificence', Scale: 1 },
+				{ Name: 'Attentiveness', Scale: 1 },      { Name: 'Fidelity', Scale: 1 },           { Name: 'Honesty', Scale: 1 },            { Name: 'Bravery', Scale: 1 },
+				{ Name: 'Resoluteness', Scale: 1 },       { Name: 'Helpfulness', Scale: 1 },        { Name: 'Decorum', Scale: 1 },            { Name: 'Decency', Scale: 1 },
+				{ Name: 'Open-mindedness', Scale: .9 },   { Name: 'Good faith', Scale: 1 },         { Name: 'Dauntlessness', Scale: 1 },      { Name: 'Impartiality', Scale: 1 },
+				{ Name: 'Benignity', Scale: 1 },          { Name: 'Courteousness', Scale: 1 },      { Name: 'Uprightness', Scale: 1 },        { Name: 'Merriment', Scale: 1 },
+				{ Name: 'Daring', Scale: 1 },             { Name: 'Tenderheartedness', Scale: .8 }, { Name: 'Morality', Scale: 1 },           { Name: 'Unity', Scale: 1 },
+				{ Name: 'Intrepidity', Scale: 1 },        { Name: 'Condolence', Scale: 1 },         { Name: 'Liberality', Scale: 1 },         { Name: 'Goodness', Scale: 1 },
+				{ Name: 'Compassion', Scale: 1 },         { Name: 'Openhandedness', Scale: .95 },   { Name: 'Affection', Scale: 1 },          { Name: 'Comradery', Scale: 1 },
+				{ Name: 'Philanthropy', Scale: 1 },       { Name: 'Gallantry', Scale: 1 },          { Name: 'Concord', Scale: 1 },            { Name: 'Calmness', Scale: 1 },
+				{ Name: 'Fair-mindedness', Scale: .9 },   { Name: 'Mildness', Scale: 1 },           { Name: 'Consideration', Scale: 1 },      { Name: 'Candor', Scale: 1 },
+				{ Name: 'Humility', Scale: 1 },           { Name: 'Mercy', Scale: 1 },              { Name: 'Evenhandedness', Scale: .95 },   { Name: 'Hilarity', Scale: 1 },
+				{ Name: 'Sincerity', Scale: 1 },          { Name: 'Wholeheartedness', Scale: .85 }, { Name: 'Equity', Scale: 1 },             { Name: 'Justice', Scale: 1 },
+				{ Name: 'Wholesomeness', Scale: 1 },      { Name: 'Benevolence', Scale: 1 },        { Name: 'Clemency', Scale: 1 },           { Name: 'Generosity', Scale: 1 },
+				{ Name: 'Patience', Scale: 1 },           { Name: 'Magnanimity', Scale: 1 },        { Name: 'Forgiving', Scale: 1 },          { Name: 'Imperturbability', Scale: .9 },
+				{ Name: 'Sympathy', Scale: 1 },           { Name: 'Charitableness', Scale: 1 },     { Name: 'Kindness', Scale: 1 },           { Name: 'Truthfulness', Scale: 1 },
+				{ Name: 'Heedfulness', Scale: 1 },        { Name: 'Genuineness', Scale: 1 },        { Name: 'Adaptability', Scale: 1 },       { Name: 'Caring', Scale: 1 },
+				{ Name: 'Flexibility', Scale: 1 },        { Name: 'Understanding', Scale: 1 },      { Name: 'Humanitarianism', Scale: .9 },   { Name: 'Mindfulness', Scale: 1 },
+				{ Name: 'Lenity', Scale: 1 },             { Name: 'Comradeship', Scale: 1 },        { Name: 'Venturesomeness', Scale: .9 },   { Name: 'Fairness', Scale: 1 },
+				{ Name: 'Equanimity', Scale: 1 },         { Name: 'Candidness', Scale: 1 },         { Name: 'Earnestness', Scale: 1 },        { Name: 'Amicability', Scale: 1 },
+				{ Name: 'Endurance', Scale: 1 },          { Name: 'Support', Scale: 1 },            { Name: 'Comity', Scale: 1 },             { Name: 'Tolerance', Scale: 1 },
+				{ Name: 'Loyalty', Scale: 1 },            { Name: 'Trustworthiness', Scale: .9 },   { Name: 'Amusement', Scale: 1 },          { Name: 'Encouragement', Scale: 1 },
+				{ Name: 'Responsibility', Scale: 1 },     { Name: 'Conscientiousness', Scale: .8 }, { Name: 'Inspiration', Scale: 1 },        { Name: 'Straightforwardness', Scale: .75 },
+				{ Name: 'Kindheartedness', Scale: .9 },   { Name: 'Devotion', Scale: 1 },           { Name: 'Friendliness', Scale: 1 }
+			];
+	
+			function setRules(rnd)
+			{
+				// Add extra randomess
+				for (var i = rnd.next(0, 10); i > 0; i--)
+					rnd.nextDouble();
+	
+				var symbols = rnd.shuffleFisherYates(friendshipSymbols.slice(0));
+				for (var i = 0; i < 56; i++) {
+					var sym = document.getElementById(`fs-${i}`);
+					sym.src = `img/Friendship/${symbols[i]}.png`;
+					sym.title = symbols[i];
+				}
+	
+				var eoHs = rnd.shuffleFisherYates(elementsOfHarmony.slice(0));
+				for (var i = 0; i < 28; i++) {
+					var eoH = document.getElementById(`eoh-${i+1}`);
+					eoH.innerText = eoHs[i].Name;
+					eoH.style.transform = `scaleX(${eoHs[i].Scale})`;
+				}
+	
+				var leftOrRight = rnd.next(0, 2);
+				document.getElementById('rule-lr').innerText = leftOrRight ? 'leftmost' : 'rightmost';
+				var topOrBottom = rnd.next(0, 2);
+				document.getElementById('rule-tb').innerText = topOrBottom ? 'topmost' : 'bottommost';
+			}
+	
+			function setDefaultRules(rnd) { setRules(rnd); }
+		</script>
 	</head>
 
 	<body>
@@ -83,313 +150,75 @@
 
 						<ul>
 							<li>Locate the friendship symbols on the display in the table.</li>
-							<li>Starting at the leftmost symbol on the display, that doesn't align vertically with other symbols, disregard the first one that appears in a column.</li>
-							<li>Do the same with the topmost symbol and disregard the first one in a row.</li>
+							<li>Starting at the <span class='rule' id='rule-lr'>leftmost</span> symbol on the display, that doesn't align vertically with other symbols, disregard the first one that appears in a <u>column</u>.</li>
+							<li>Do the same with the <span class='rule' id='rule-tb'>topmost</span> symbol and disregard the first one in a <u>row</u>.</li>
 							<li>Select one of the Elements of Harmony located at the intersections of the remaining rows and columns.</li>
 						</ul>
 
 						<table class='friendship'>
 							<tr>
 								<th style="border: none;"></th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 00.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 41.png'></th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 01.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 40.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 02.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 39.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 03.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 38.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 04.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 37.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 05.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 36.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 06.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 35.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 07.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 34.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 08.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 33.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 09.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 32.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 10.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 31.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 11.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 30.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 12.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 29.png'>
-								</th>
-								<th><img class='fs' src='img/Friendship/Friendship Symbol 13.png'><br><img class='fs' src='img/Friendship/Friendship Symbol 28.png'>
-								</th>
+								<th><img class='fs' id='fs-0' src='img/Friendship/Amethyst Star.png'><br><img class='fs' id='fs-41' src='img/Friendship/Starlight Glimmer.png'></th>
+								<th><img class='fs' id='fs-1' src='img/Friendship/Apple Cinnamon.png'><br><img class='fs' id='fs-40' src='img/Friendship/Spoiled Rich.png'></th>
+								<th><img class='fs' id='fs-2' src='img/Friendship/Apple Fritter.png'><br><img class='fs' id='fs-39' src='img/Friendship/Silverstar.png'></th>
+								<th><img class='fs' id='fs-3' src='img/Friendship/Babs Seed.png'><br><img class='fs' id='fs-38' src='img/Friendship/Silver Spoon.png'></th>
+								<th><img class='fs' id='fs-4' src='img/Friendship/Berryshine.png'><br><img class='fs' id='fs-37' src='img/Friendship/Silver Shill.png'></th>
+								<th><img class='fs' id='fs-5' src='img/Friendship/Big McIntosh.png'><br><img class='fs' id='fs-36' src='img/Friendship/Shining Armor.png'></th>
+								<th><img class='fs' id='fs-6' src='img/Friendship/Bulk Biceps.png'><br><img class='fs' id='fs-35' src='img/Friendship/Screwball.png'></th>
+								<th><img class='fs' id='fs-7' src='img/Friendship/Cadance.png'><br><img class='fs' id='fs-34' src='img/Friendship/Rose.png'></th>
+								<th><img class='fs' id='fs-8' src='img/Friendship/Golden Harvest.png'><br><img class='fs' id='fs-33' src='img/Friendship/Octavia Melody.png'></th>
+								<th><img class='fs' id='fs-9' src='img/Friendship/Celestia.png'><br><img class='fs' id='fs-32' src='img/Friendship/Nurse Redheart.png'></th>
+								<th><img class='fs' id='fs-10' src='img/Friendship/Cheerilee.png'><br><img class='fs' id='fs-31' src='img/Friendship/Night Light.png'></th>
+								<th><img class='fs' id='fs-11' src='img/Friendship/Cheese Sandwich.png'><br><img class='fs' id='fs-30' src='img/Friendship/Ms. Harshwhinny.png'></th>
+								<th><img class='fs' id='fs-12' src='img/Friendship/Cherry Jubilee.png'><br><img class='fs' id='fs-29' src='img/Friendship/Moon Dancer.png'></th>
+								<th><img class='fs' id='fs-13' src='img/Friendship/Coco Pommel.png'><br><img class='fs' id='fs-28' src='img/Friendship/Mayor Mare.png'></th>
 							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 55.png'>
-									<img class='fs' src='img/Friendship/Friendship Symbol 14.png'></td>
-								<td>J</td>
-								<td>G</td>
-								<td>U</td>
-								<td>K</td>
-								<td>V</td>
-								<td>8</td>
-								<td>L</td>
-								<td>C</td>
-								<td>H</td>
-								<td>4</td>
-								<td>W</td>
-								<td>P</td>
-								<td>M</td>
-								<td>R</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 54.png'><img class='fs' src='img/Friendship/Friendship Symbol 15.png'></td>
-								<td>7</td>
-								<td>S</td>
-								<td>8</td>
-								<td>U</td>
-								<td>N</td>
-								<td>J</td>
-								<td>9</td>
-								<td>Y</td>
-								<td>F</td>
-								<td>P</td>
-								<td>Q</td>
-								<td>C</td>
-								<td>R</td>
-								<td>4</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 53.png'><img class='fs' src='img/Friendship/Friendship Symbol 16.png'></td>
-								<td>Q</td>
-								<td>R</td>
-								<td>H</td>
-								<td>4</td>
-								<td>F</td>
-								<td>7</td>
-								<td>J</td>
-								<td>E</td>
-								<td>8</td>
-								<td>T</td>
-								<td>N</td>
-								<td>9</td>
-								<td>A</td>
-								<td>X</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 52.png'><img class='fs' src='img/Friendship/Friendship Symbol 17.png'></td>
-								<td>D</td>
-								<td>3</td>
-								<td>S</td>
-								<td>H</td>
-								<td>U</td>
-								<td>E</td>
-								<td>T</td>
-								<td>P</td>
-								<td>V</td>
-								<td>J</td>
-								<td>L</td>
-								<td>A</td>
-								<td>4</td>
-								<td>7</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 51.png'><img class='fs' src='img/Friendship/Friendship Symbol 18.png'></td>
-								<td>A</td>
-								<td>F</td>
-								<td>3</td>
-								<td>T</td>
-								<td>M</td>
-								<td>P</td>
-								<td>R</td>
-								<td>W</td>
-								<td>S</td>
-								<td>X</td>
-								<td>U</td>
-								<td>N</td>
-								<td>G</td>
-								<td>B</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 50.png'><img class='fs' src='img/Friendship/Friendship Symbol 19.png'></td>
-								<td>V</td>
-								<td>K</td>
-								<td>G</td>
-								<td>P</td>
-								<td>Q</td>
-								<td>D</td>
-								<td>U</td>
-								<td>L</td>
-								<td>3</td>
-								<td>H</td>
-								<td>M</td>
-								<td>R</td>
-								<td>E</td>
-								<td>C</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 49.png'><img class='fs' src='img/Friendship/Friendship Symbol 20.png'></td>
-								<td>4</td>
-								<td>9</td>
-								<td>T</td>
-								<td>F</td>
-								<td>B</td>
-								<td>X</td>
-								<td>D</td>
-								<td>U</td>
-								<td>Y</td>
-								<td>3</td>
-								<td>R</td>
-								<td>L</td>
-								<td>H</td>
-								<td>M</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 48.png'><img class='fs' src='img/Friendship/Friendship Symbol 21.png'></td>
-								<td>G</td>
-								<td>4</td>
-								<td>9</td>
-								<td>J</td>
-								<td>8</td>
-								<td>3</td>
-								<td>X</td>
-								<td>K</td>
-								<td>A</td>
-								<td>Y</td>
-								<td>S</td>
-								<td>W</td>
-								<td>7</td>
-								<td>D</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 47.png'><img class='fs' src='img/Friendship/Friendship Symbol 22.png'></td>
-								<td>K</td>
-								<td>T</td>
-								<td>F</td>
-								<td>B</td>
-								<td>J</td>
-								<td>Q</td>
-								<td>3</td>
-								<td>S</td>
-								<td>E</td>
-								<td>C</td>
-								<td>P</td>
-								<td>U</td>
-								<td>W</td>
-								<td>L</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 46.png'><img class='fs' src='img/Friendship/Friendship Symbol 23.png'></td>
-								<td>S</td>
-								<td>M</td>
-								<td>A</td>
-								<td>C</td>
-								<td>7</td>
-								<td>H</td>
-								<td>E</td>
-								<td>B</td>
-								<td>G</td>
-								<td>F</td>
-								<td>V</td>
-								<td>X</td>
-								<td>L</td>
-								<td>N</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 45.png'><img class='fs' src='img/Friendship/Friendship Symbol 24.png'></td>
-								<td>8</td>
-								<td>7</td>
-								<td>V</td>
-								<td>L</td>
-								<td>9</td>
-								<td>R</td>
-								<td>K</td>
-								<td>D</td>
-								<td>T</td>
-								<td>Q</td>
-								<td>B</td>
-								<td>Y</td>
-								<td>X</td>
-								<td>A</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 44.png'><img class='fs' src='img/Friendship/Friendship Symbol 25.png'></td>
-								<td>W</td>
-								<td>8</td>
-								<td>4</td>
-								<td>Q</td>
-								<td>G</td>
-								<td>Y</td>
-								<td>V</td>
-								<td>T</td>
-								<td>7</td>
-								<td>N</td>
-								<td>3</td>
-								<td>B</td>
-								<td>C</td>
-								<td>P</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 43.png'><img class='fs' src='img/Friendship/Friendship Symbol 26.png'></td>
-								<td>M</td>
-								<td>A</td>
-								<td>W</td>
-								<td>9</td>
-								<td>H</td>
-								<td>K</td>
-								<td>Y</td>
-								<td>J</td>
-								<td>N</td>
-								<td>D</td>
-								<td>X</td>
-								<td>E</td>
-								<td>8</td>
-								<td>F</td>
-							</tr>
-							<tr>
-								<td><img class='fs' src='img/Friendship/Friendship Symbol 42.png'><img class='fs' src='img/Friendship/Friendship Symbol 27.png'></td>
-								<td>Y</td>
-								<td>N</td>
-								<td>B</td>
-								<td>G</td>
-								<td>W</td>
-								<td>S</td>
-								<td>M</td>
-								<td>Q</td>
-								<td>K</td>
-								<td>9</td>
-								<td>C</td>
-								<td>V</td>
-								<td>D</td>
-								<td>E</td>
-							</tr>
+							<tr><th><img class='fs' id='fs-55' src='img/Friendship/Vinyl Scratch.png'><img class='fs' id='fs-14' src='img/Friendship/Coloratura.png'></th><td>J<td>G<td>U<td>K<td>V<td>8<td>L<td>C<td>H<td>4<td>W<td>P<td>M<td>R</tr>
+							<tr><th><img class='fs' id='fs-54' src='img/Friendship/Twist.png'><img class='fs' id='fs-15' src='img/Friendship/Daisy.png'></th><td>7<td>S<td>8<td>U<td>N<td>J<td>9<td>Y<td>F<td>P<td>Q<td>C<td>R<td>4</tr>
+							<tr><th><img class='fs' id='fs-53' src='img/Friendship/Twilight Velvet.png'><img class='fs' id='fs-16' src='img/Friendship/Daring Do.png'></th><td>Q<td>R<td>H<td>4<td>F<td>7<td>J<td>E<td>8<td>T<td>N<td>9<td>A<td>X</tr>
+							<tr><th><img class='fs' id='fs-52' src='img/Friendship/Trouble Shoes.png'><img class='fs' id='fs-17' src='img/Friendship/Derpy.png'></th><td>D<td>3<td>S<td>H<td>U<td>E<td>T<td>P<td>V<td>J<td>L<td>A<td>4<td>7</tr>
+							<tr><th><img class='fs' id='fs-51' src='img/Friendship/Trixie.png'><img class='fs' id='fs-18' src='img/Friendship/Diamond Tiara.png'></th><td>A<td>F<td>3<td>T<td>M<td>P<td>R<td>W<td>S<td>X<td>U<td>N<td>G<td>B</tr>
+							<tr><th><img class='fs' id='fs-50' src='img/Friendship/Trenderhoof.png'><img class='fs' id='fs-19' src='img/Friendship/Double Diamond.png'></th><td>V<td>K<td>G<td>P<td>Q<td>D<td>U<td>L<td>3<td>H<td>M<td>R<td>E<td>C</tr>
+							<tr><th><img class='fs' id='fs-49' src='img/Friendship/Tree Hugger.png'><img class='fs' id='fs-20' src='img/Friendship/Filthy Rich.png'></th><td>4<td>9<td>T<td>F<td>B<td>X<td>D<td>U<td>Y<td>3<td>R<td>L<td>H<td>M</tr>
+							<tr><th><img class='fs' id='fs-48' src='img/Friendship/Toe Tapper.png'><img class='fs' id='fs-21' src='img/Friendship/Granny Smith.png'></th><td>G<td>4<td>9<td>J<td>8<td>3<td>X<td>K<td>A<td>Y<td>S<td>W<td>7<td>D</tr>
+							<tr><th><img class='fs' id='fs-47' src='img/Friendship/Time Turner.png'><img class='fs' id='fs-22' src='img/Friendship/Hoity Toity.png'></th><td>K<td>T<td>F<td>B<td>J<td>Q<td>3<td>S<td>E<td>C<td>P<td>U<td>W<td>L</tr>
+							<tr><th><img class='fs' id='fs-46' src='img/Friendship/Thunderlane.png'><img class='fs' id='fs-23' src='img/Friendship/Lightning Dust.png'></th><td>S<td>M<td>A<td>C<td>7<td>H<td>E<td>B<td>G<td>F<td>V<td>X<td>L<td>N</tr>
+							<tr><th><img class='fs' id='fs-45' src='img/Friendship/Sweetie Drops.png'><img class='fs' id='fs-24' src='img/Friendship/Lily.png'></th><td>8<td>7<td>V<td>L<td>9<td>R<td>K<td>D<td>T<td>Q<td>B<td>Y<td>X<td>A</tr>
+							<tr><th><img class='fs' id='fs-44' src='img/Friendship/Suri Polomare.png'><img class='fs' id='fs-25' src='img/Friendship/Luna.png'></th><td>W<td>8<td>4<td>Q<td>G<td>Y<td>V<td>T<td>7<td>N<td>3<td>B<td>C<td>P</tr>
+							<tr><th><img class='fs' id='fs-43' src='img/Friendship/Sunset Shimmer.png'><img class='fs' id='fs-26' src='img/Friendship/Lyra.png'></th><td>M<td>A<td>W<td>9<td>H<td>K<td>Y<td>J<td>N<td>D<td>X<td>E<td>8<td>F</tr>
+							<tr><th><img class='fs' id='fs-42' src='img/Friendship/Sunburst.png'><img class='fs' id='fs-27' src='img/Friendship/Maud Pie.png'></th><td>Y<td>N<td>B<td>G<td>W<td>S<td>M<td>Q<td>K<td>9<td>C<td>V<td>D<td>E</tr>
 						</table>
 						<br>
 						<div class="elements">
-	                        <div class="highlightable">A&nbsp;=&nbsp;Altruism</div>
-	                        <div class="highlightable">B&nbsp;=&nbsp;Amicability</div>
-	                        <div class="highlightable">C&nbsp;=&nbsp;Authenticity</div>
-	                        <div class="highlightable">D&nbsp;=&nbsp;Benevolence</div>
-	                        <div class="highlightable">E&nbsp;=&nbsp;Caring</div>
-	                        <div class="highlightable">F&nbsp;=&nbsp;Charitableness</div>
-	                        <div class="highlightable">G&nbsp;=&nbsp;Compassion</div>
-	                        <div class="highlightable">H&nbsp;=&nbsp;<span style="transform: scaleX(.8); transform-origin: left center; display: inline-block;">Conscientiousness</span></div>
-	                        <div class="highlightable">J&nbsp;=&nbsp;Consideration</div>
-	                        <div class="highlightable">K&nbsp;=&nbsp;Courage</div>
-	                        <div class="highlightable">L&nbsp;=&nbsp;Fairness</div>
-	                        <div class="highlightable">M&nbsp;=&nbsp;Flexibility</div>
-	                        <div class="highlightable">N&nbsp;=&nbsp;Generosity</div>
-	                        <div class="highlightable">P&nbsp;=&nbsp;Helpfulness</div>
-	                        <div class="highlightable">Q&nbsp;=&nbsp;Honesty</div>
-	                        <div class="highlightable">R&nbsp;=&nbsp;Inspiration</div>
-	                        <div class="highlightable">S&nbsp;=&nbsp;Kindness</div>
-	                        <div class="highlightable">T&nbsp;=&nbsp;Laughter</div>
-	                        <div class="highlightable">U&nbsp;=&nbsp;Loyalty</div>
-	                        <div class="highlightable">V&nbsp;=&nbsp;<span style="transform: scaleX(.9); transform-origin: left center; display: inline-block;">Open-mindedness</span></div>
-	                        <div class="highlightable">W&nbsp;=&nbsp;Patience</div>
-	                        <div class="highlightable">X&nbsp;=&nbsp;Resoluteness</div>
-	                        <div class="highlightable">Y&nbsp;=&nbsp;Selflessness</div>
-	                        <div class="highlightable">3&nbsp;=&nbsp;Sincerity</div>
-	                        <div class="highlightable">4&nbsp;=&nbsp;Solidarity</div>
-	                        <div class="highlightable">7&nbsp;=&nbsp;Support</div>
-	                        <div class="highlightable">8&nbsp;=&nbsp;Sympathy</div>
-	                        <div class="highlightable">9&nbsp;=&nbsp;Thoughtfulness</div>
-	                    </div>
+							<div class="highlightable">A&nbsp;=&nbsp;<span id='eoh-1'>Altruism</span></div>
+							<div class="highlightable">B&nbsp;=&nbsp;<span id='eoh-2'>Amicability</span></div>
+							<div class="highlightable">C&nbsp;=&nbsp;<span id='eoh-3'>Authenticity</span></div>
+							<div class="highlightable">D&nbsp;=&nbsp;<span id='eoh-4'>Benevolence</span></div>
+							<div class="highlightable">E&nbsp;=&nbsp;<span id='eoh-5'>Caring</span></div>
+							<div class="highlightable">F&nbsp;=&nbsp;<span id='eoh-6'>Charitableness</span></div>
+							<div class="highlightable">G&nbsp;=&nbsp;<span id='eoh-7'>Compassion</span></div>
+							<div class="highlightable">H&nbsp;=&nbsp;<span id='eoh-8' style="transform: scaleX(.8);">Conscientiousness</span></div>
+							<div class="highlightable">J&nbsp;=&nbsp;<span id='eoh-9'>Consideration</span></div>
+							<div class="highlightable">K&nbsp;=&nbsp;<span id='eoh-10'>Courage</span></div>
+							<div class="highlightable">L&nbsp;=&nbsp;<span id='eoh-11'>Fairness</span></div>
+							<div class="highlightable">M&nbsp;=&nbsp;<span id='eoh-12'>Flexibility</span></div>
+							<div class="highlightable">N&nbsp;=&nbsp;<span id='eoh-13'>Generosity</span></div>
+							<div class="highlightable">P&nbsp;=&nbsp;<span id='eoh-14'>Helpfulness</span></div>
+							<div class="highlightable">Q&nbsp;=&nbsp;<span id='eoh-15'>Honesty</span></div>
+							<div class="highlightable">R&nbsp;=&nbsp;<span id='eoh-16'>Inspiration</span></div>
+							<div class="highlightable">S&nbsp;=&nbsp;<span id='eoh-17'>Kindness</span></div>
+							<div class="highlightable">T&nbsp;=&nbsp;<span id='eoh-18'>Laughter</span></div>
+							<div class="highlightable">U&nbsp;=&nbsp;<span id='eoh-19'>Loyalty</span></div>
+							<div class="highlightable">V&nbsp;=&nbsp;<span id='eoh-20' style="transform: scaleX(.9);">Open-mindedness</span></div>
+							<div class="highlightable">W&nbsp;=&nbsp;<span id='eoh-21'>Patience</span></div>
+							<div class="highlightable">X&nbsp;=&nbsp;<span id='eoh-22'>Resoluteness</span></div>
+							<div class="highlightable">Y&nbsp;=&nbsp;<span id='eoh-23'>Selflessness</span></div>
+							<div class="highlightable">3&nbsp;=&nbsp;<span id='eoh-24'>Sincerity</span></div>
+							<div class="highlightable">4&nbsp;=&nbsp;<span id='eoh-25'>Solidarity</span></div>
+							<div class="highlightable">7&nbsp;=&nbsp;<span id='eoh-26'>Support</span></div>
+							<div class="highlightable">8&nbsp;=&nbsp;<span id='eoh-27'>Sympathy</span></div>
+							<div class="highlightable">9&nbsp;=&nbsp;<span id='eoh-28'>Thoughtfulness</span></div>
+						</div>
 					</div>
 					<div class="page-footer relative-footer">Page 1 of 1</div>
 				</div>
