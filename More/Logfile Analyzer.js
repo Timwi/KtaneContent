@@ -4166,6 +4166,102 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Quintuples",
+				moduleID: "quintuples",
+				loggingTag: "Quintuples",
+				matches: [
+					{
+						regex: /Position (\d+) numbers: (\d+)\. Position (\d+) colours: (.*)\.$/,
+						handler: function(matches, module) {
+							var colours = matches[4].split(', ');
+							if (matches[1] !== matches[3] || matches[2].length !== 5 || colours.length !== 5)
+							{
+								console.error("Quintuples logfile has unexpected format.");
+								return;
+							}
+							if (!('Quintuples' in module))
+								module.Quintuples = { numbers: new Array(25), colours: new Array(25), op: new Array(25), rowInf: new Array(5), solution: new Array(5) };
+							var c = parseInt(matches[1]) - 1;
+							for (var r = 0; r < 5; r++)
+							{
+								module.Quintuples.numbers[c + 5*r] = parseInt(matches[2].substr(r, 1));
+								if (module.Quintuples.numbers[c + 5*r] === 0)
+									module.Quintuples.numbers[c + 5*r] = 10;
+								module.Quintuples.colours[c + 5*r] = colours[r];
+							}
+							return true;
+						}
+					},
+					{
+						regex: /Iteration (\d+), position (\d+) \(\d+\) is affected\. (.*)\.$/,
+						handler: function(matches, module) {
+							var r = parseInt(matches[1]) - 1;
+							var c = parseInt(matches[2]) - 1;
+							module.Quintuples.op[c + 5*r] = matches[3].replace(/x/g, '×').replace('Half and round down', '/2');
+							return true;
+						}
+					},
+					{
+						regex: /The sum of the modified (.*) iteration numbers \((\d+)\), modulo (\(.*\))(?:, modulo 10)?,? is (\d+)\.$/,
+						handler: function(matches, module) {
+							var r = "first,second,third,fourth".split(',').indexOf(matches[1]);
+							var inf = `(${matches[2]} % ${matches[3]}) % 10 =`;
+							module.Quintuples.rowInf[r] = inf;
+							module.Quintuples.solution[r] = matches[4];
+							return true;
+						}
+					},
+					{
+						regex: /The tens column of the sum of the modified fifth iteration numbers \((\d+)\), (\+ \(.*\)), modulo 10 is (\d+)\.$/,
+						handler: function(matches, module) {
+							module.Quintuples.rowInf[4] = `${matches[1]} ${matches[2]} =`;
+							module.Quintuples.solution[4] = matches[3];
+							return true;
+						}
+					},
+					{
+						regex: /The correct number to input is \d+\.$/,
+						handler: function(matches, module) {
+							var arr = [0, 1, 2, 3, 4];
+							var bgColours = {
+								'red':      '#f88',
+								'blue':     '#88f',
+								'orange':   '#f80',
+								'green':    '#8f8',
+								'pink':     '#fae'
+							};
+							var txColours = {
+								'red':      '#a00',
+								'blue':     '#00a',
+								'orange':   '#f80',
+								'green':    '#0a0',
+								'pink':     '#f6d'
+							};
+							module.push({
+								label: 'Solution:',
+								obj: $(`<table style='border-collapse: collapse;'>${arr.map(r => `<tr>${arr.map(c => {
+									var tdStyle = '';
+									if (module.Quintuples.op[c + 5*r])
+										tdStyle = ` style='background:${bgColours[module.Quintuples.colours[c + 5*r]]}'`;
+									else
+										tdStyle = ` style='color:${txColours[module.Quintuples.colours[c + 5*r]]}'`;
+									return `<td class='n'${tdStyle}>
+										<div style='font-size: 15pt'>${module.Quintuples.numbers[c + 5*r]}${module.Quintuples.op[c + 5*r] || ''}</div>
+										<div style='font-size: 10pt'>${module.Quintuples.colours[c + 5*r]}</div>
+									</td>`;
+								}).join('')}<td>${module.Quintuples.rowInf[r]}</td><td>${module.Quintuples.solution[r]}</td></tr>`).join('')}</table>`)
+									.find('td').css({ border: '1px solid black', padding: '.3em .7em' }).end()
+									.find('td.n').css({ width: '1.75cm', textAlign: 'center' }).end()
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "The Radio",
 				moduleID: "KritRadio",
 				loggingTag: "The Radio"
