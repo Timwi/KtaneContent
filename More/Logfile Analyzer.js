@@ -2365,11 +2365,81 @@ $(function() {
 				loggingTag: "Forget Everything",
 				matches: [
 					{
-						regex: /(Stage \d{1,}) is an important stage\. (.+), (.+), (.+)/,
+						regex: /Initial answer \(stage 1 display\): (\d+)$/,
 						handler: function(matches, module) {
-							module.push([matches[1], [matches[2], matches[3], matches[4]]]);
+							module.ForgetEverything = [{
+								Display: matches[1],
+								Tubes:   null,
+								Colors:  null,
+								Op:      null,
+								Calc:    null,
+								Answer:  matches[1],
+								Valid:   null
+							}];
+							module.ForgetEverythingNumber = matches[1];
 							return true;
 						}
+					},
+					{
+						regex: /Stage (\d+) - Display: (\d+), Tubes: (\d\d), (?:Colours: ([RGBY]{3}) (Red|Green|Blue|Yellow) *\((.*?)\) +\(.*?\), New answer: (\d+)|(Not important\.))\s*$/,
+						handler: function(matches, module) {
+							var digits = matches[2].split('');
+							var ix = (parseInt(matches[1]) - 1) % 10;
+							var c = digits[ix];
+							var p = module.ForgetEverythingNumber.substr(ix, 1);
+							digits[ix] = `[ ${digits[ix]} ]`;
+							var op = (matches[6] || '').replace(/a/g, 'p').replace(/b/g, 'c').replace(/-/g, '−').replace(/\+/g, '+');
+							module.ForgetEverything.push({
+								Display: digits.join(' '),
+								Tubes:   matches[3],
+								Colors:  matches[4],
+								Color:   matches[5],
+								Op:      op,
+								Calc:    op.replace(/c/g, c).replace(/p/g, p),
+								Answer:  matches[7],
+								Valid:   !matches[8]
+							});
+							if (!matches[8])
+								module.ForgetEverythingNumber = matches[7];
+							return true;
+						}
+					},
+					{
+						regex: /Total important stages: \d+/,
+						handler: function(matches, module) {
+							var arr = [];
+							for (var i = 0; i < 10; i++)
+								arr.push(i);
+							var colours = {
+								'Red': '#f77',
+								'Green': '#7f7',
+								'Blue': '#7af',
+								'Yellow': '#ff4'
+							};
+							module.push({
+								label: 'Calculations:',
+								obj: $(`<table style='border-collapse: collapse'>
+									<tr><th>#</th><th>Valid?</th><th>LEDs → Color</th><th colspan='2'>Calculation</th><th>Answer</th></tr>
+									${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
+										<th style='text-align: right'>${stage + 1}</th>
+										${
+											inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+											inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+																 `<td colspan='6' style='color: #888'>(not valid)</td>`
+										}
+									</tr>`).join('')}
+									<tr><th colspan='5'>FINAL ANSWER</th><td>${arr.map(i => `<span class='digit'>${module.ForgetEverythingNumber.substr(i, 1)}</span>`).join('')}</td></tr>
+								</table>`)
+									.find('td, th').css({ border: '1px solid black', padding: '.3em .5em' }).end()
+									.find('.digit').css({ border: '1px solid #888', padding: '0 .3em', background: '#ddd' }).end()
+									.find('.digit.t').css({ background: '#ecc', color: '#f00' }).end()
+							});
+							return false;
+						}
+					},
+					{
+						regex: /Final answer: \d+$/,
+						handler: function() { return true; }
 					},
 					{
 						regex: /.+/
