@@ -1367,6 +1367,30 @@ $(function() {
 				loggingTag: "Binary LEDs"
 			},
 			{
+				displayName: "Binary Puzzle",
+				moduleID: "BinaryPuzzleModule",
+				loggingTag: "Binary Puzzle",
+				matches: [
+					{
+						regex: /(Puzzle:|Solution:) ([01\?]{36})$/,
+						handler: function(matches, module) {
+							var arr = [];
+							for (var i = 0; i < 6; i++)
+								arr.push(i);
+							module.push({
+								label: matches[1],
+								obj: $(`<table style='border-collapse: collapse'>${arr.map(y => `<tr>${arr.map(x => {
+									var val = matches[2][x + 6*y];
+									return `<td${val === '1' ? ` style='background: #cfc'` : val === '0' ? ` style='background: #fcc'` : ''}>${val}</td>`;
+								}).join('')}</tr>`).join('')}</table>`)
+									.find('td').css({ border: '1px solid black', padding: '.4em 0', width: '1.1cm', textAlign: 'center' }).end()
+							});
+							return true;
+						}
+					}
+				]
+			},
+			{
 				moduleID: "BitmapsModule",
 				loggingTag: "Bitmaps",
 				matches: [
