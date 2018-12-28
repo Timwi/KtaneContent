@@ -4843,6 +4843,23 @@ $(function() {
 				displayName: "The Sphere"
 			},
 			{
+				moduleID: "spinningButtons",
+				loggingTag: "Spinning Buttons",
+				matches: [
+					{
+						regex: /(Button #\d is \w+ and says )(\w)(. Its value is \d+.)/,
+						handler: function(matches, module) {
+							const span = $("<span>").append(
+								document.createTextNode(matches[1]),
+								$(`<span style="font-family: 'https://ktane.timwi.de/HTML/font/cyrillic.ttf'">`).text(matches[2]),
+								document.createTextNode(matches[3])
+							);
+							module.push({ obj: span });
+						}
+					}
+				]
+			},
+			{
 				moduleID: "SplittingTheLootModule",
 				loggingTag: "Splitting The Loot",
 				matches: [
@@ -5388,6 +5405,18 @@ $(function() {
 			{
 				displayName: "The Jukebox",
 				moduleID: "jukebox"
+			},
+			{
+				displayName: "The Festive Jukebox",
+				moduleID: "festiveJukebox"
+			},
+			{
+				displayName: "The Labyrinth",
+				moduleID: "labyrinth"
+			},
+			{
+				displayName: "The Hangover",
+				moduleID: "hangover"
 			},
 			{
 				displayName: "Button Masher",
