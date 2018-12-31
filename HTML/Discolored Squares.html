@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Discolored Squares — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/highlighter.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        ul {
+            padding-left: 1.5em;
+        }
+        table.order {
+            float: left;
+            margin-right: .7cm;
+        }
+            table.order td {
+                padding: .3em 0 .2em;
+                text-align: center;
+                width: 2.1em;
+            }
+        caption {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        var _instructions = [
+            "Move up-left",
+            "Move up",
+            "Move up-right",
+            "Move right",
+            "Move down-right",
+            "Move down",
+            "Move down-left",
+            "Move left",
+            "Mirror horizontally",
+            "Mirror vertically",
+            "Mirror diagonally (about A1–D4)",
+            "Mirror diagonally (about A4–D1)",
+            "Rotate 90° clockwise",
+            "Rotate 90° counter-clockwise",
+            "Rotate 180°",
+            "Stay where you are"
+        ];
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 6);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+            var four = [0, 1, 2, 3];
+            var arr = rnd.shuffleFisherYates(_instructions.slice(0));
+            document.getElementById('rules').innerHTML = '<caption>Instructions</caption>' + four.map(row =>
+                `<tr>${four.map(col => `<td>${arr[col + 4*row]}</td>`).join('')}</tr>`
+            ).join('');
+
+            var numbers = [];
+            for (var i = 0; i < 16; i++)
+                numbers.push(i);
+            var html = '';
+            for (var stage = 0; stage < 4; stage++)
+            {
+                rnd.shuffleFisherYates(numbers);
+                html += `<table class='order'><caption>Stage ${(stage + 1)}</caption>${four.map(row => `<tr>${four.map(col => `<td>${numbers[col + 4*row] + 1}</td>`).join('')}</tr>`).join('')}</table>`;
+            }
+            document.getElementById('orders').innerHTML = html;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Discolored Squares</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Discolored Squares.svg">
+                <h2>On the Subject of Discolored Squares</h2>
+                <p class="flavour-text">There is order in chaos. A pattern in the colors. Find it, and all will become clear.</p>
+
+                <ul>
+                    <li>At the start, if there are not four colors that occur exactly once each, you are looking at a different module.</li>
+                    <li>Begin by pressing those four colors. <em>Remember</em> their positions and colors in the order you pressed them. Then stage 1 begins. If none of the squares in stage 1 are of the first remembered color, you are looking at a different module.</li>
+                    <li>At each stage, look at the below table and read the cell in the respective <em>remembered position</em> to obtain an instruction.</li>
+                </ul>
+                <table id='rules'></table>
+                <ul>
+                    <li>Take all the squares of the respective <em>remembered color</em> in the order specified below and do the following for each such square:
+                        <ul>
+                            <li>Modify its position as instructed by the table cell.</li>
+                            <li>If the modification takes you to an already white square, keep applying the modification.</li>
+                            <li>Press the first non-white square you land on.</li>
+                            <li>If you land on a square of the current <em>remembered color</em>, remove that square from consideration for the remainder of this stage.</li>
+                        </ul>
+                    </li>
+                    <li>Process the squares in the following order:</li>
+                </ul>
+                <div id='orders'></div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
