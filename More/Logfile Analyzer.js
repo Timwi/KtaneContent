@@ -2968,7 +2968,7 @@ $(function() {
 				]
 			},
 			{
-				displayName: "LEGO",
+				displayName: "LEGOs",
 				moduleID: "LEGOModule",
 				loggingTag: "LEGO",
 				matches: [
