@@ -4731,7 +4731,7 @@ $(function() {
 					{
 						regex: /STAGE (.) RESPONSE/,
 						handler: function(matches, module) {
-							module.Stage = {"Stage #" + matches[1] + " Response", []];
+							module.Stage = ["Stage #" + matches[1] + " Response", []];
 							module.push(module.Stage);
 						}
 					},
