@@ -4724,7 +4724,7 @@ $(function() {
 					{
 						regex: /STAGE #(.)/,
 						handler: function(matches, module) {
-							module.Stage = {"Stage #" + matches[1], []];
+							module.Stage = ["Stage #" + matches[1], []];
 							module.push(module.Stage);
 						}
 					},
