@@ -2341,6 +2341,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Flip The Coin",
+				moduleID: "KritFlipTheCoin",
+				loggingTag: "Flip The Coin"
+			},
+			{
 				displayName: "Follow the Leader",
 				moduleID: "FollowTheLeaderModule",
 				loggingTag: "FollowTheLeader",
@@ -4703,6 +4708,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				displayName: "Simon’s Stages",
+				moduleID: "simonsStages",
+				loggingTag: "Simon's Stages"
 			},
 			{
 				displayName: "Simon’s Star",
