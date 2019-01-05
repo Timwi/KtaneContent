@@ -3113,6 +3113,40 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Logical Buttons",
+				moduleID: "logicalButtonsModule",
+				loggingTag: "Logical Buttons",
+				matches: [
+					{
+						regex: /STAGE: (.+)/,
+						handler: function(matches, module) {
+							module.Stage = ["Stage #" + matches[1], []];
+							module.push(module.Stage);
+							return true;
+						}
+					},
+					{
+						regex: /Completed stage/,
+						handler: function(matches, module) {
+							return true;
+						}
+					},
+					{
+						regex: /All 3 stages/,
+						handler: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function(matches, module) {
+							module.Stage[1].push(matches.input);
+						}
+					}
+				]
+			},
+			{
 				moduleID: "logicGates",
 				loggingTag: "Logic Gates",
 				matches: [
@@ -4722,17 +4756,21 @@ $(function() {
 						}
 					},
 					{
-						regex: /STAGE #(.)/,
+						regex: /STAGE #(.+):/,
 						handler: function(matches, module) {
 							module.Stage = ["Stage #" + matches[1], []];
 							module.push(module.Stage);
+							
+							return true;
 						}
 					},
 					{
-						regex: /STAGE (.) RESPONSE/,
+						regex: /STAGE (.+) RESPONSE/,
 						handler: function(matches, module) {
 							module.Stage = ["Stage #" + matches[1] + " Response", []];
 							module.push(module.Stage);
+							
+							return true;
 						}
 					},
 					{
