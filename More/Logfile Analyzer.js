@@ -4713,6 +4713,35 @@ $(function() {
 				displayName: "Simon’s Stages",
 				moduleID: "simonsStages",
 				loggingTag: "Simon's Stages"
+				matches: [
+					{
+						regex: /There are no more|Inputs correct|Strike!/
+						handler: function(matches, module) {
+							module.push(matches.input);
+							return true;
+						}
+					},
+					{
+						regex: /STAGE #(.)/,
+						handler: function(matches, module) {
+							module.Stage = {"Stage #" + matches[1], []];
+							module.push(module.Stage);
+						}
+					},
+					{
+						regex: /STAGE (.) RESPONSE/,
+						handler: function(matches, module) {
+							module.Stage = {"Stage #" + matches[1] + " Response", []];
+							module.push(module.Stage);
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function(matches, module) {
+							module.Stage[1].push(matches.input);
+						}
+					}
+				]
 			},
 			{
 				displayName: "Simon’s Star",
@@ -5160,6 +5189,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Varicolored Squares",
+				moduleID: "VaricoloredSquaresModule",
+				loggingTag: "VaricoloredSquares"
 			},
 			{
 				displayName: "Visual Impairment",
