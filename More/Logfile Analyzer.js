@@ -4712,7 +4712,7 @@ $(function() {
 			{
 				displayName: "Simon’s Stages",
 				moduleID: "simonsStages",
-				loggingTag: "Simon's Stages"
+				loggingTag: "Simon's Stages",
 				matches: [
 					{
 						regex: /There are no more|Inputs correct|Strike!/
