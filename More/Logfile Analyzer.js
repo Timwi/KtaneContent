@@ -4715,7 +4715,7 @@ $(function() {
 				loggingTag: "Simon's Stages",
 				matches: [
 					{
-						regex: /There are no more|Inputs correct|Strike!/
+						regex: /There are no more|Inputs correct|Strike!/,
 						handler: function(matches, module) {
 							module.push(matches.input);
 							return true;
