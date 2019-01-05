@@ -5329,6 +5329,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Zoni",
+				moduleID: "lgndZoni",
+				loggingTag: "Zoni"
+			},
+			{
 				displayName: "The Button",
 				moduleID: "BigButton"
 			},
