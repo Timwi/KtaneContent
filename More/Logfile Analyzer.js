@@ -3141,6 +3141,7 @@ $(function() {
 					{
 						regex: /.+/,
 						handler: function(matches, module) {
+							// Stage[0] is the label, Stage[1] is the list of subitems
 							module.Stage[1].push(matches.input);
 						}
 					}
@@ -4760,7 +4761,7 @@ $(function() {
 						handler: function(matches, module) {
 							module.Stage = ["Stage #" + matches[1], []];
 							module.push(module.Stage);
-							
+
 							return true;
 						}
 					},
@@ -4769,7 +4770,7 @@ $(function() {
 						handler: function(matches, module) {
 							module.Stage = ["Stage #" + matches[1] + " Response", []];
 							module.push(module.Stage);
-							
+
 							return true;
 						}
 					},
