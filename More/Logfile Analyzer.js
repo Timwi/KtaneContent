@@ -4445,24 +4445,23 @@ $(function() {
 				loggingTag: "Rubik’s Clock",
 				matches: [
 					{
-						regex: /(.*) \{/,
+						regex: /Moves to solve, move \d+:/,
 						handler: function(matches, module) {
-							module.listHeader = matches[1];
-							module.listItems = [];
+							module.push([matches.input, readMultiple(4).replace(/^\[.*?\] - /mg, '').split('\n')]);
 							return true;
 						}
 					},
 					{
-						regex: /- (.*)/,
+						regex: /Actions performed to solve:/,
 						handler: function(matches, module) {
-							module.listItems.push(matches[1]);
+							module.push([matches.input, module.RCActions = []]);
 							return true;
 						}
 					},
 					{
-						regex: /\}/,
+						regex: /^- (.*)$/,
 						handler: function(matches, module) {
-							module.push([module.listHeader, module.listItems]);
+							module.RCActions.push(matches[1]);
 							return true;
 						}
 					},
