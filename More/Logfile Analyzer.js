@@ -2986,7 +2986,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Manual Page|Solution:|Submitting:/,
+						regex: /(Manual Page (\d+)) w\/(o)?|(Solution:|Submitting:)/,
 						handler: function(matches, module) {
 							const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
 							const board = readMultiple(8).split("\n");
@@ -3020,7 +3020,36 @@ $(function() {
 								}
 							}
 
-							module.push({ label: matches.input, obj: svg, expandable: true });
+							if (matches[3] && ('LegoManualPages' in module) && (matches[2] in module.LegoManualPages))
+							{
+								var oldSvg = module.LegoManualPages[matches[2]].obj;
+								module.LegoManualPages[matches[2]].obj = $('<div>').append(oldSvg).append(svg);
+								var which = false;
+								window.setInterval(function() {
+									which = !which;
+									if (which)
+									{
+										oldSvg.hide();
+										svg.show();
+									}
+									else
+									{
+										svg.hide();
+										oldSvg.show();
+									}
+								}, 700);
+							}
+							else
+							{
+								var entry = { label: matches[1] || matches[4], obj: svg, expandable: true };
+								if (matches[2])
+								{
+									if (!('LegoManualPages' in module))
+										module.LegoManualPages = {};
+									module.LegoManualPages[matches[2]] = entry;
+								}
+								module.push(entry);
+							}
 							return true;
 						}
 					},
