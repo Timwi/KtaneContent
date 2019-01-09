@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Decolored Squares — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/highlighter.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        body.ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        svg#flowchart {
+            width: 85%;
+            margin: 0 auto;
+            display: block;
+        }
+
+        ul {
+            margin-bottom: .5em;
+            padding-left: 1.25em;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 50);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            var direction = rnd.next(0, 8);
+            document.getElementById('rule-start').innerText = ['top-left', 'top-right', 'bottom-left', 'bottom-right'][direction % 4];
+            document.getElementById('rule-dir1').innerText = ['below', 'below', 'above', 'above', 'to the right of', 'to the left of', 'to the right of', 'to the left of'][direction];
+            document.getElementById('rule-dir-colrow1').innerText = ['column', 'row'][(direction / 4)|0];
+            document.getElementById('rule-dir-colrow2').innerText = ['columns', 'rows'][(direction / 4)|0];
+            document.getElementById('rule-dir2').innerText = ['left to right', 'right to left', 'left to right', 'right to left', 'top to bottom', 'top to bottom', 'bottom to top', 'bottom to top'][direction];
+
+            var convert = function(coord)
+            {
+                return String.fromCharCode(0x41 + (coord % 4)) + String.fromCharCode(0x31 + (coord / 4)|0);
+            }
+
+            var c1 = rnd.next(0, 16);
+            var c2 = rnd.next(0, 15);
+            if (c2 >= c1)
+                c2++;
+
+            document.getElementById('initial-col').innerText = convert(c1);
+            document.getElementById('initial-row').innerText = convert(c2);
+
+            var colorNames = ['R', 'G', 'B', 'Y', 'M'];
+            var subsets = [];
+            for (var i = 0; i < 32; i++)
+            {
+                var colors = [];
+                for (var j = 0; j < 5; j++)
+                    if ((i & (1 << j)) != 0)
+                        colors.push(colorNames[j]);
+                rnd.shuffleFisherYates(colors);
+                subsets.push(colors);
+            }
+            rnd.shuffleFisherYates(subsets);
+
+            var svg, paths, missingCells, pointedAt = new Array(36);
+            do
+            {
+                svg = '';
+                paths = [];
+                missingCells = [];
+
+                var ixs = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='${.5 + 1.5*ixs[i]}' y='-.25' font-size='.4'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    missingCells.push(ixs[5] + 6*i);
+
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='-.25' y='${.5 + 1.5*ixs[i]}' font-size='.4' text-anchor='end'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    if (missingCells.indexOf(i + 6*ixs[5]) === -1)
+                        missingCells.push(i + 6*ixs[5]);
+
+                for (var ix = 0; ix < 36; ix++)
+                    pointedAt[ix] = false;
+
+                rnd.shuffleFisherYates(missingCells);
+                missingCells = missingCells.slice(0, 4);
+
+                function pointsAt(px, dir)
+                {
+                    var x = px % 6;
+                    var y = (px / 6)|0;
+                    do
+                    {
+                        x += [0, 1, 0, -1][dir];
+                        y += [-1, 0, 1, 0][dir];
+                        if (x < 0 || x >= 6 || y < 0 || y >= 6)
+                            return null;
+                    }
+                    while (missingCells.indexOf(x + 6*y) >= 0);
+                    return x + 6*y;
+                }
+
+                for (var ix = 0; ix < 36; ix++)
+                {
+                    if (missingCells.indexOf(ix) >= 0)
+                        continue;
+
+                    var x = ix % 6;
+                    var y = (ix / 6)|0;
+                    var dirs = [];
+                    for (var dir = 0; dir < 4; dir++)
+                        if (pointsAt(ix, dir) !== null)
+                            dirs.push(dir);
+                    rnd.shuffleFisherYates(dirs);
+                    dirs = dirs.slice(0, 2);    // 0 = no, 1 = yes
+
+                    var sbstIx = ix - missingCells.filter(cel => cel < ix).length;
+                    svg += `<text transform='translate(${.5 + 1.5*x}, ${.5 + 1.5*y}) rotate(-45)' x='0' y='.1'>${subsets[sbstIx].join('')}</text>`;
+                    if (subsets[sbstIx].length === 0)
+                        dirs[1] = null;
+                    else if (subsets[sbstIx].length === 5)
+                        dirs[0] = null;
+
+                    var path = `M${x*1.5} ${y*1.5}`;
+                    path += (dirs.indexOf(0) >= 0) ? 'h.3l.2-.2.2.2h.3' : 'h1';
+                    path += (dirs.indexOf(1) >= 0) ? 'v.3l.2.2-.2.2v.3' : 'v1';
+                    path += (dirs.indexOf(2) >= 0) ? 'h-.3l-.2.2-.2-.2h-.3' : 'h-1';
+                    path += (dirs.indexOf(3) >= 0) ? 'v-.3l-.2-.2.2-.2z' : 'z';
+                    paths.push({ pathData: path, ix: ix });
+
+                    for (var yn = 0; yn < 2; yn++)
+                    {
+                        if (dirs[yn] === null)
+                            continue;
+                        pointedAt[pointsAt(ix, dirs[yn])] = true;
+                        svg += `<text x='${[.5, .9, .5, .1][dirs[yn]] + x*1.5}' y='${[.15, .6, 1.05, .6][dirs[yn]] + y*1.5}' text-anchor='${['middle', 'start', 'middle', 'end'][dirs[yn]]}'>${['N', 'P'][yn]}</text>`;
+                    }
+                }
+            }
+            while (pointedAt.filter((p, pIx) => !p && (missingCells.indexOf(pIx) < 0)).length);
+            for (var pIx = 0; pIx < paths.length; pIx++)
+                svg += `<path fill='none' stroke='black' stroke-width='.03' d='${paths[pIx].pathData}' />`;
+
+            document.getElementById('flowchart').innerHTML = svg;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decolored Squares</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Decolored Squares.svg">
+                <h2>On the Subject of Decolored Squares</h2>
+                <p class="flavour-text">A structure cannot stand without a foundation. Logic is the foundation of function. Function is the essence of control.</p>
+
+                <ul>
+                    <li>At the start, if there are not three colors that occur exactly twice each and two that occur exactly 5 times each, you are looking at a different module.</li>
+                    <li>Find your starting position in the following flowchart. The column is the color of <span class='rule' id='initial-col'>B1</span>, the row that of <span class='rule' id='initial-row'>B4</span> (letters are columns from left to right, numbers rows from top to bottom). Re-assess this in case of strikes.</li>
+                    <li>Examine the <span class='rule' id='rule-start'>top-left</span> square. If its color is listed in your current flowchart cell, follow the “P” arrow, tap the square, and continue with the square’s new color; otherwise follow the “N” and move on to the next square.</li>
+                    <li>The “next square” is the one <span class='rule' id='rule-dir1'>to the right of</span> the current square. After each full <span class='rule' id='rule-dir-colrow1'>row</span>, continue processing the remaining <span class='rule' id='rule-dir-colrow2'>rows</span> from <span class='rule' id='rule-dir2'>top to bottom</span>.</li>
+                    <li>The colors are <strong>B</strong> (blue), <strong>G</strong> (green), <strong>M</strong> (magenta), <strong>R</strong> (red) and <strong>Y</strong> (yellow).
+                </ul>
+
+                <svg id='flowchart' viewBox='-.55 -.55 9.15 9.15' font-family='Special Elite' font-size='.25' text-anchor='middle'>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
