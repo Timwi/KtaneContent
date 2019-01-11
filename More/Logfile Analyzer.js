@@ -1187,6 +1187,17 @@ $(function() {
 					}
 				]
 			},
+			{
+				loggingTag: "Rule Seed Modifier",
+				matches: [
+					{
+						regex: /The Seed is (\d+)/,
+						handler: function(m) {
+							bombgroup.RuleSeed = m[1];
+						}
+					}
+				]
+			},
 
 			// ** MODULES START HERE ** //
 
