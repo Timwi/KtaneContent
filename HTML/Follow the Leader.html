@@ -6,12 +6,184 @@
     <title>Follow The Leader — Keep Talking and Nobody Explodes Module</title>
     <meta content="initial-scale=1" name="viewport">
     <link rel='stylesheet' type='text/css' href='css/font.css'>
-    <link href="css/normalize.css" rel="stylesheet" type="text/css">
-    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src='js/highlighter.js'></script>
+    <script src='js/ruleseed.js'></script>
     <style>
         table.repeaters-table th { white-space: nowrap; }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
     </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var ports = ["a parallel port", "a serial port", "an RJ-45 port", "a PS/2 port", "a DVI-D port", "a Stereo RCA port"];
+            document.getElementById('rule-port').innerText = ports [ rnd.next(0, ports.length) ];
+
+            var startingPlugConditions = [
+                "the number of indicators on the bomb",
+                "the number of lit indicators on the bomb",
+                "the number of unlit indicators on the bomb",
+                "the number of batteries on the bomb",
+                "the number of battery holders on the bomb",
+                "the number of AA batteries on the bomb",
+                "the number of D batteries on the bomb",
+                "the number of ports on the bomb",
+                "the number of port plates on the bomb",
+                "the number of unique port types on the bomb",
+                "the number of modules on the bomb",
+                "the number of non-needy modules on the bomb",
+                "the alphabetic position of the first letter in the serial number",
+                "the alphabetic position of the second letter in the serial number",
+                "the alphabetic position of the last letter in the serial number",
+                "the alphabetic position of the second-last letter in the serial number",
+                "the last numeral of the serial number",
+                "the second numeral of the serial number",
+                "the first numeral of the serial number"
+            ];
+
+            var startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            var startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            var startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `plug ${startPlug}`;
+
+            var indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            var indicator = indicators [ rnd.next(0, indicators.length) ];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            var endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `plug ${endPlug}`;
+
+            var litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? 'lit' : 'unlit';
+
+            var startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `clockwise after plug ${startAt}` : 'earliest in numerical order';
+
+            var startingRuleConditions = [
+                [ "alphabetically first letter in any indicator", "If there are no indicators" ],
+                [ "alphabetically last letter in any indicator", "If there are no indicators" ],
+                [ "second letter in the serial number", "If the serial number contains no letters" ],
+                [ "second-last letter in the serial number", "If the serial number contains no letters" ],
+                [ "last letter in the serial number", "If the serial number contains no letters" ],
+                [ "first letter in the serial number", "If the serial number contains no letters" ],
+            ];
+            var startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            var colors = ["red", "green", "blue", "white", "black", "yellow"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]} or ${colors[2]}`;
+
+            var tableRules = [
+                "Cut this wire.",
+                "Don’t cut this wire.",
+                "The previous wire leads to an even numbered plug.",
+                "The previous wire leads to an odd numbered plug.",
+                "The previous wire leads to a prime numbered plug.",
+                "The previous wire does not lead to a prime numbered plug.",
+                "The previous wire should be cut.",
+                "The previous wire should not be cut.",
+                "The previous two wires are the same color.",
+                "The previous two wires are different colors.",
+                "Two of the previous three wires share a color.",
+                "The previous three wires have different colors.",
+                "The previous three wires are all the same color.",
+                "The previous wire has the same color as this wire.",
+                "The previous wire has a different color than this wire.",
+                "Neither of the previous two wires is the same color as this wire.",
+                "Exactly one of the previous two wires is the same color as this wire.",
+                "Both of the previous two wires are the same color as this wire.",
+                "Exactly one or neither of the previous two wires is the same color as this wire.",
+                "Exactly one or both of the previous two wires are the same color as this wire.",
+                "Neither or both of the previous two wires is the same color as this wire.",
+                "The previous wire skips a plug.",
+                "The previous wire does not skip a plug.",
+                "Neither of the previous two wires skips a plug.",
+                "Exactly one of the previous two wires skips a plug.",
+                "Both of the previous two wires skip a plug.",
+                "Exactly one or neither of the previous two wires skips a plug.",
+                "Exactly one or both of the previous two wires skip a plug.",
+                ['n12', n => `The previous wire leads to a position labeled ${n} or less.`],
+                ['n12', n => `The previous wire does not lead to a position labeled ${n} or less.`],
+                ['n12', n => `The previous wire leads to a position labeled ${n} or more.`],
+                ['n12', n => `The previous wire does not lead to a position labeled ${n} or more.`],
+                ['n6', n => `There are ${n} or more wires on the module in total.`],
+                ['n6', n => `There are ${n} or fewer wires on the module in total.`],
+                ['c', c => `The previous wire is ${c[0]} or ${c[1]} or ${c[2]}.`],
+                ['c', c => `The previous wire is not ${c[0]} or ${c[1]} or ${c[2]}.`],
+                ['c', c => `The wire before the previous is ${c[0]} or ${c[1]} or ${c[2]}.`],
+                ['c', c => `The wire before the previous is not ${c[0]} or ${c[1]} or ${c[2]}.`],
+                ['c', c => `Neither of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `Exactly one of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `Both of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `Exactly one or neither of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `Exactly one or both of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `Neither or both of the previous two wires are ${c[0]} or ${c[1]}.`],
+                ['c', c => `All previous ${c[0]} wires after the starting wire should be cut.`],
+                ['c', c => `All previous ${c[0]} wires after the starting wire should not be cut.`],
+                "More than half of the wires so far (including the starting wire) should be cut.",
+                "Less than half of the wires so far (including the starting wire) should be cut.",
+                "More than half of the wires so far (not including the starting wire) should be cut.",
+                "Less than half of the wires so far (not including the starting wire) should be cut.",
+                "The previous wire has the same color as the starting wire.",
+                "The previous wire has a different color than the starting wire.",
+            ];
+            var list = document.getElementsByClassName('table-rule');
+            if (rnd.seed === 1)
+            {
+                list[ 0].innerText = tableRules[35][1](['yellow', 'blue', 'green']);
+                list[ 1].innerText = tableRules[2];
+                list[ 2].innerText = tableRules[6];
+                list[ 3].innerText = tableRules[34][1](['red', 'blue', 'black']);
+                list[ 4].innerText = tableRules[10];
+                list[ 5].innerText = tableRules[16];
+                list[ 6].innerText = tableRules[34][1](['yellow', 'white', 'green']);
+                list[ 7].innerText = tableRules[7];
+                list[ 8].innerText = tableRules[21];
+                list[ 9].innerText = tableRules[35][1](['white', 'black', 'red']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['white', 'black']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (var i = 0; i < 13; i++)
+                {
+                    var str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="ManualContent">
@@ -41,20 +213,20 @@
                     <p>Follow the first rule below that applies:
 
                     <ol>
-                        <li>If an RJ-45 port is present and there is a wire
-                            leading from plug 4 <u>directly</u> to plug 5, begin at that wire.
+                        <li>If <span class='rule' id='rule-port'>an RJ-45 port</span> is present and there is a wire
+                            leading from <span class='rule' id='rule-plug-start'>plug 4</span> <em>directly</em> to <span class='rule' id='rule-plug-end'>plug 5</span>, begin at that wire.
                         <li>Otherwise, if there is a wire that begins at a plug
-						    matching the number of batteries on the bomb, begin
+						    matching <span class='rule' id='rule-start-2'>the number of batteries on the bomb</span>, begin
 						    with that wire.
                         <li>Otherwise, if there is a wire that begins at a plug
-						    matching the first numeral of the serial number,
+						    matching <span class='rule' id='rule-start-3'>the first numeral of the serial number</span>,
 						    begin at that wire.
-                        <li>Otherwise, if there is a lit indicator with the
-						    label CLR, disregard all further instructions and
+                        <li>Otherwise, if there is a <span class='rule' id='rule-indicator-lit'>lit</span> indicator with the
+						    label <span class='rule' id='rule-indicator'>CLR</span>, disregard all further instructions and
 						    cut all wires present on this module in descending
 						    numerical order.
                         <li>If none of the above apply, the start position is
-						    the plug containing a wire earliest in numerical order.
+						    the plug containing a wire <span class='rule' id='rule-else'>earliest in numerical order</span>.
                     </ol>
                 </div>
                 <div class="page-footer relative-footer">Page 1 of 2</div>
@@ -71,16 +243,16 @@
 						    Then progress to the next wire.
                         <li>From this position, cut the wires as directed by
 						    the steps in the following table.  The starting
-						    step corresponds to the first letter in the serial
-						    number. If the serial number contains no letters,
-						    begin at step A.
+						    step corresponds to the <span class='rule' id='rule-starting-step'>first letter in the serial
+						    number</span>. <span id='rule-starting-step-fallback'>If the serial number contains no letters</span>,
+						    begin at step <span class='rule' id='rule-starting-step-fallback-step'>A</span>.
                         <li>When progressing to the next wire, also progress to
 						    the next step alphabetically in the table to determine
 						    whether to cut the wire.
-                        <li>"Previous wire(s)" may refer to wires beyond the
+                        <li>“Previous wire(s)” may refer to wires beyond the
 						    original starting position in the sequence.
-                        <li>If the wire at the starting plug is red, green, or
-						    white, progress through the steps in reverse
+                        <li>If the wire at the starting plug is <span class='rule' id='rule-reverse-colors'>red, green, or
+						    white</span>, progress through the steps in reverse
 						    alphabetical order instead.
                     </ul>
                     <table class="repeaters-table">
@@ -89,56 +261,56 @@
                             <th>Cut this wire if:
                         </tr>
                         <tr>
-                            <th>A or N
-                            <td>The previous wire is not yellow or blue or green.
+                            <th>A or N</th>
+                            <td class='table-rule'>The previous wire is not yellow or blue or green.</td>
                         </tr>
                         <tr>
-                            <th>B or O
-                            <td>The previous wire leads to an even numbered plug.
+                            <th>B or O</th>
+                            <td class='table-rule'>The previous wire leads to an even numbered plug.</td>
                         </tr>
                         <tr>
-                            <th>C or P
-                            <td>The previous wire should be cut.
+                            <th>C or P</th>
+                            <td class='table-rule'>The previous wire should be cut.</td>
                         </tr>
                         <tr>
-                            <th>D or Q
-                            <td>The previous wire is red or blue or black.
+                            <th>D or Q</th>
+                            <td class='table-rule'>The previous wire is red or blue or black.</td>
                         </tr>
                         <tr>
-                            <th>E or R
-                            <td>Two of the previous three wires share a color.
+                            <th>E or R</th>
+                            <td class='table-rule'>Two of the previous three wires share a color.</td>
                         </tr>
                         <tr>
-                            <th>F or S
-                            <td>Exactly one of the previous two wires is the same color as this wire.
+                            <th>F or S</th>
+                            <td class='table-rule'>Exactly one of the previous two wires is the same color as this wire.</td>
                         </tr>
                         <tr>
-                            <th>G or T
-                            <td>The previous wire is yellow or white or green.
+                            <th>G or T</th>
+                            <td class='table-rule'>The previous wire is yellow or white or green.</td>
                         </tr>
                         <tr>
-                            <th>H or U
-                            <td>The previous wire should not be cut.
+                            <th>H or U</th>
+                            <td class='table-rule'>The previous wire should not be cut.</td>
                         </tr>
                         <tr>
-                            <th>I or V
-                            <td>The previous wire skips a plug.
+                            <th>I or V</th>
+                            <td class='table-rule'>The previous wire skips a plug.</td>
                         </tr>
                         <tr>
-                            <th>J or W
-                            <td>The previous wire is not white or black or red.
+                            <th>J or W</th>
+                            <td class='table-rule'>The previous wire is not white or black or red.</td>
                         </tr>
                         <tr>
-                            <th>K or X
-                            <td>The previous two wires are different colors.
+                            <th>K or X</th>
+                            <td class='table-rule'>The previous two wires are different colors.</td>
                         </tr>
                         <tr>
-                            <th>L or Y
-                            <td>The previous wire does not lead to a position labeled 6 or less.
+                            <th>L or Y</th>
+                            <td class='table-rule'>The previous wire does not lead to a position labeled 6 or less.</td>
                         </tr>
                         <tr>
-                            <th>M or Z
-                            <td>Exactly one or neither of the previous two wires are white or black.
+                            <th>M or Z</th>
+                            <td class='table-rule'>Exactly one or neither of the previous two wires are white or black.</td>
                         </tr>
                     </table>
                 </div>

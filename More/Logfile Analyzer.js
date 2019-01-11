@@ -2344,7 +2344,7 @@ $(function() {
 			{
 				displayName: "Follow the Leader",
 				moduleID: "FollowTheLeaderModule",
-				loggingTag: "FollowTheLeader",
+				loggingTag: "Follow the Leader",
 				matches: [
 					{
 						regex: /Starting at wire:|Strike because you cut/
