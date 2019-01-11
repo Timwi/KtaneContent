@@ -4953,15 +4953,24 @@ $(function() {
 				loggingTag: "Spinning Buttons",
 				matches: [
 					{
-						regex: /(Button #\d is \w+ and says )(\w)(. Its value is \d+.)/,
+						regex: /((?:Button #\d is \w+ and|(?:Strike! )?You pressed the \w+ button that) says )(\w)(\. (?:Its value is \d+\.|That is (?:in)?correct\.))/,
 						handler: function(matches, module) {
 							const span = $("<span>").append(
 								document.createTextNode(matches[1]),
-								$(`<span style="font-family: 'https://ktane.timwi.de/HTML/font/cyrillic.ttf'">`).text(matches[2]),
+								$(`<span style="font-family: 'cyrillic'">`).text(matches[2]),
 								document.createTextNode(matches[3])
 							);
 							module.push({ obj: span });
 						}
+					},
+					{
+						regex: /Strike!/,
+						handler: function(_, module) {
+							module.push({ linebreak: true })
+						}
+					},
+					{
+						regex: /Module disarmed./
 					}
 				]
 			},
