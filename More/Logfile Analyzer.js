@@ -1792,21 +1792,6 @@ $(function() {
 				loggingTag: "ColorMorse"
 			},
 			{
-				moduleID: "ColoredSquaresModule",
-				loggingTag: "ColoredSquares",
-				matches: [
-					{
-						regex: /First stage color is (.+); count=(\d+)./,
-						handler: function(matches, module) {
-							module.push("First stage is: " + matches[1] + ". Count: " + matches[2]);
-						}
-					},
-					{
-						regex: /\d+ lit:|Button #\d/
-					}
-				]
-			},
-			{
 				moduleID: "ColoredSwitchesModule",
 				loggingTag: "Colored Switches",
 				matches: [
@@ -5265,11 +5250,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Varicolored Squares",
-				moduleID: "VaricoloredSquaresModule",
-				loggingTag: "VaricoloredSquares"
 			},
 			{
 				displayName: "Visual Impairment",
