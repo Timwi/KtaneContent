@@ -293,6 +293,39 @@ $(function() {
 
 				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
 
+				if (bomb.DayTimeWidgets.length > 0) {
+					edgework.append("<div class='widget separator'>");
+
+					bomb.DayTimeWidgets.forEach(function(val) {
+						const widget = $("<div class='widget'>")
+							.addClass(val[0].toLowerCase())	
+							.appendTo(edgework);
+
+						switch (val[0]) {
+							case "RandomizedTime":
+								widget.append(
+									$("<span class='shadow'>").text(`⠃${val[1].replace(/\d/g, "8")}`),
+									$("<span class='label'>").html(`${val[2] == "MIL" ? "<span style='visibility: hidden'>⠃</span>" : val[2] == "AM" ? "⠁" : "⠂"}${val[1]}`)
+								);
+								break;
+							case "ManufactureDate":
+								widget.append($("<span class='label'>").text(val[1].replace("-", " ")));
+								break;
+							case "DayoftheWeek": {
+								const split = val[1].split("-");
+								
+								widget.toggleClass("colored", val[3]).append(
+									$("<span class='weekday'>").css("color", val[2] == "Green" ? "lime" : val[2].toLowerCase()).text(split[0] + " "),
+									$("<span>").addClass(val[4] == "(DD/MM)" ? "day" : "month").text(split[1]),
+									$("<span>-</span>"),
+									$("<span>").addClass(val[4] == "(DD/MM)" ? "month" : "day").text(split[2])
+								);
+								break;
+							}
+						}
+					});
+				}
+
 				var edgeworkSeperator = false;
 				if (bomb.Batteries.length > 0) {
 					edgeworkSeperator = true;
@@ -379,7 +412,7 @@ $(function() {
 							case "MultipleWidgets:EncryptedIndicator":
 							case "MultipleWidgets:Indicator":
 								$("<div class='widget multiplewidgets indicator'>")
-									.addClass(val[1])
+									.addClass(val[1].toLowerCase())
 									.appendTo(edgework)
 									.append($("<span class='label'>").text(val[2]));
 								break;
@@ -730,6 +763,7 @@ $(function() {
 		this.ModdedIndicators = [];
 		this.ModdedPortPlates = [];
 		this.ModdedTwoFactor = [];
+		this.DayTimeWidgets = [];
 		this.Serial = "";
 		this.State = "Unsolved";
 		this.StartLine = 0;
@@ -1032,6 +1066,27 @@ $(function() {
 								bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
 							else
 								bomb.Serial = matches[1];
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "DayTime",
+				matches: [
+					{
+						regex: /Day of the week: (\(colors(?: not)? enabled\)) (.+) (.+-.+-.+) (\(\w{2}\/\w{2}\)) \/ Manufacture Date: (.+-.+)/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Day of the Week: ${matches[3]} ${matches[4]} Color: ${matches[2]} ${matches[1]}`);
+							bomb.DayTimeWidgets.push(["DayoftheWeek", matches[3], matches[2], matches[1] == "(colors enabled)", matches[4]]);
+							bomb.ModdedWidgetInfo.push(`Manufacture Date: ${matches[5]}`);
+							bomb.DayTimeWidgets.push(["ManufactureDate", matches[5]]);
+						}
+					},
+					{
+						regex: /Chosen time: (\d{2}:\d{2})(MIL|PM|AM)/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Randomized Time: ${matches[1]} ${matches[2]}`);
+							bomb.DayTimeWidgets.push(["RandomizedTime", matches[1], matches[2]]);
 						}
 					}
 				]
