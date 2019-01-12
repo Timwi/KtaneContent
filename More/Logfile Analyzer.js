@@ -313,9 +313,18 @@ $(function() {
 								break;
 							case "DayoftheWeek": {
 								const split = val[1].split("-");
+								const colors = {
+									"Yellow": "yellow",
+									"Brown": "rgb(135, 85, 52)",
+									"Blue": "rgb(0, 148, 255)",
+									"White": "white",
+									"Magenta": "magenta",
+									"Green": "rgb(0, 255, 44)",
+									"Orange": "rgb(255, 195, 0)"
+								};
 								
 								widget.toggleClass("colored", val[3]).append(
-									$("<span class='weekday'>").css("color", val[2] == "Green" ? "lime" : val[2].toLowerCase()).text(split[0] + " "),
+									$("<span class='weekday'>").css("color", colors[val[2]]).text(split[0] + " "),
 									$("<span>").addClass(val[4] == "(DD/MM)" ? "day" : "month").text(split[1]),
 									$("<span>-</span>"),
 									$("<span>").addClass(val[4] == "(DD/MM)" ? "month" : "day").text(split[2])
