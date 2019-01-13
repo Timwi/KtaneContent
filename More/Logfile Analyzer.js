@@ -1453,7 +1453,7 @@ $(function() {
 				loggingTag: "Binary Puzzle",
 				matches: [
 					{
-						regex: /(Puzzle:|Solution:) ([01\?]{36})$/,
+						regex: /(Puzzle:|Solution:) ([01?]{36})$/,
 						handler: function(matches, module) {
 							var arr = [];
 							for (var i = 0; i < 6; i++)
@@ -3087,30 +3087,23 @@ $(function() {
 								}
 							}
 
-							if (matches[3] && ('LegoManualPages' in module) && (matches[2] in module.LegoManualPages))
-							{
+							if (matches[3] && ('LegoManualPages' in module) && (matches[2] in module.LegoManualPages)) {
 								var oldSvg = module.LegoManualPages[matches[2]].obj;
 								module.LegoManualPages[matches[2]].obj = $('<div>').append(oldSvg).append(svg);
 								var which = false;
 								window.setInterval(function() {
 									which = !which;
-									if (which)
-									{
+									if (which) {
 										oldSvg.hide();
 										svg.show();
-									}
-									else
-									{
+									} else {
 										svg.hide();
 										oldSvg.show();
 									}
 								}, 700);
-							}
-							else
-							{
+							} else {
 								var entry = { label: matches[1] || matches[4], obj: svg, expandable: true };
-								if (matches[2])
-								{
+								if (matches[2]) {
 									if (!('LegoManualPages' in module))
 										module.LegoManualPages = {};
 									module.LegoManualPages[matches[2]] = entry;
@@ -3161,8 +3154,7 @@ $(function() {
 						handler: function(matches, module) {
 							var list = matches[1].split(',');
 							module.LionInfo = {};
-							for (var i = 0; i < list.length; i++)
-							{
+							for (var i = 0; i < list.length; i++) {
 								/\s*(\w+) \((.*)\)\s*/.test(list[i]);
 								module.LionInfo[RegExp.$1] = RegExp.$2;
 							}
@@ -3223,7 +3215,7 @@ $(function() {
 					},
 					{
 						regex: /Completed stage/,
-						handler: function(matches, module) {
+						handler: function() {
 							return true;
 						}
 					},
@@ -4409,16 +4401,14 @@ $(function() {
 						regex: /Position (\d+) numbers: (\d+)\. Position (\d+) colours: (.*)\.$/,
 						handler: function(matches, module) {
 							var colours = matches[4].split(', ');
-							if (matches[1] !== matches[3] || matches[2].length !== 5 || colours.length !== 5)
-							{
+							if (matches[1] !== matches[3] || matches[2].length !== 5 || colours.length !== 5) {
 								console.error("Quintuples logfile has unexpected format.");
 								return;
 							}
 							if (!('Quintuples' in module))
 								module.Quintuples = { numbers: new Array(25), colours: new Array(25), op: new Array(25), rowInf: new Array(5), solution: new Array(5) };
 							var c = parseInt(matches[1]) - 1;
-							for (var r = 0; r < 5; r++)
-							{
+							for (var r = 0; r < 5; r++) {
 								module.Quintuples.numbers[c + 5*r] = parseInt(matches[2].substr(r, 1));
 								if (module.Quintuples.numbers[c + 5*r] === 0)
 									module.Quintuples.numbers[c + 5*r] = 10;
@@ -5048,7 +5038,7 @@ $(function() {
 					{
 						regex: /Strike!/,
 						handler: function(_, module) {
-							module.push({ linebreak: true })
+							module.push({ linebreak: true });
 						}
 					},
 					{
@@ -5103,7 +5093,7 @@ $(function() {
 					},
 					{
 						regex: /^Solutions:$/,
-						handler: function(matches, module) {
+						handler: function() {
 							return true;
 						}
 					},
@@ -5305,8 +5295,7 @@ $(function() {
 							if (!('TennisLines' in module))
 								module.TennisLines = [];
 							module.TennisLines.push(matches.input);
-							if (module.TennisLines.length % 5 === 0)
-							{
+							if (module.TennisLines.length % 5 === 0) {
 								module.push({ label: module.TennisLastHeading || 'SN character:', obj: $('<pre>').text(module.TennisLines.join("\n")) });
 								module.TennisLines = [];
 							}
@@ -5460,8 +5449,7 @@ $(function() {
 						regex: /.+/,
 						handler: function(matches, module) {
 							var m, span = null, txt = matches[0];
-							while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt))
-							{
+							while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt)) {
 								if (span === null)
 									span = $('<span>');
 								span
