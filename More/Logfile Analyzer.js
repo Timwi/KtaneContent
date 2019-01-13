@@ -1,22 +1,3 @@
-const DuplicateLogging = { // Used for modules that have a different logging tag but the same parsing.
-	"Supermercado Salvaje": {
-		key: "Cheap Checkout",
-		name: "SupermercadoSalvajeModule"
-	},
-	"Cruel Piano Keys": {
-		key: "Piano Keys",
-		name: "CruelPianoKeys"
-	},
-	"Festive Piano Keys": {
-		key: "Piano Keys",
-		name: "FestivePianoKeys"
-	},
-	"Game of Life Simple": {
-		key: "Game of Life Cruel",
-		name: "GameOfLifeSimple"
-	}
-};
-
 // A list of internal port names used to convert to their display name.
 const PortNames = {
 	0: "Empty Port Plate",
@@ -841,6 +822,7 @@ $(function() {
 		var ruleseed;
 		var parsed = [];
 		var bombSerialIndex = 0;
+		let parseData = [];
 
 		function GetBomb() {
 			return bombgroup || bomb;
@@ -892,8 +874,32 @@ $(function() {
 			return lines;
 		}
 
+		// Get module data based on a field.
+		// Also changes fields that have multiple values into the one relevant to the field.
+		function getModuleData(value, field = "loggingTag") {
+			for (const moduleData of parseData) {
+				if (Array.isArray(moduleData[field]) && moduleData[field].includes(value)) {
+					const singleModuleData = Object.assign({}, moduleData);
+					const index = moduleData[field].indexOf(value);
+					const fields = ["loggingTag", "moduleID", "displayName", "icon"];
+
+					for (const field of fields) {
+						if (!Array.isArray(singleModuleData[field])) continue;
+
+						singleModuleData[field] = singleModuleData[field][index];
+					}
+
+					return singleModuleData;
+				} else if (moduleData[field] == value) {
+					return Object.assign({}, moduleData);
+				}
+			}
+
+			return null;
+		}
+
 		// All of the data used for parsing
-		const parseData = [
+		parseData = [
 			{
 				loggingTag: "State",
 				matches: [
@@ -985,7 +991,7 @@ $(function() {
 								Tree: tree
 							};
 
-							let moduleData = parseData.find(data => data.moduleID == matches[1]);
+							let moduleData = getModuleData(matches[1], "moduleID");
 							if (!moduleData) {
 								moduleData = {
 									moduleID: matches[1],
@@ -1786,8 +1792,8 @@ $(function() {
 				loggingTag: "Challenge & Contact"
 			},
 			{
-				moduleID: "CheapCheckoutModule",
-				loggingTag: "Cheap Checkout",
+				moduleID: ["CheapCheckoutModule", "SupermercadoSalvajeModule"],
+				loggingTag: ["Cheap Checkout", "Supermercado Salvaje"],
 				matches: [
 					{
 						regex: /(Receipt|Recibo)/,
@@ -2662,8 +2668,8 @@ $(function() {
 				loggingTag: "Functions"
 			},
 			{
-				moduleID: "GameOfLifeCruel",
-				loggingTag: "Game of Life Cruel",
+				moduleID: ["GameOfLifeCruel", "GameOfLifeSimple"],
+				loggingTag: ["Game of Life Cruel", "Game of Life Simple"],
 				matches: [
 					{
 						regex: /Cell color reference:/,
@@ -2736,10 +2742,6 @@ $(function() {
 						regex: /No errors found!/
 					}
 				]
-			},
-			{
-				displayName: "Game Of Life Simple",
-				moduleID: "GameOfLifeSimple"
 			},
 			{
 				displayName: "Grid Matching",
@@ -4160,8 +4162,8 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "PianoKeys",
-				loggingTag: "Piano Keys",
+				moduleID: ["PianoKeys", "CruelPianoKeys", "FestivePianoKeys"],
+				loggingTag: ["Piano Keys", "Cruel Piano Keys", "Festive Piano Keys"],
 				matches: [
 					{
 						regex: /Module generated with the following symbols/
@@ -5705,10 +5707,6 @@ $(function() {
 				loggingTag: "Vent Gas Translated"
 			},
 			{
-				moduleID: "SupermercadoSalvajeModule",
-				icon: "Cheap Checkout"
-			},
-			{
 				moduleID: "alphabet"
 			},
 			{
@@ -5753,7 +5751,7 @@ $(function() {
 		];
 
 		function getModuleName(moduleID) {
-			const moduleData = parseData.find(data => data.moduleID == moduleID);
+			const moduleData = getModuleData(moduleID, "moduleID");
 			return moduleData ? moduleData.displayName : convertID(moduleID);
 		}
 
@@ -5773,27 +5771,17 @@ $(function() {
 			if (line !== "") {
 				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\] ?(.+)/.exec(line);
 				if (match && !match[2].startsWith("(h)")) {
-					var obj = null;
 					var loggingTag = null;
-					let name = null;
 					var id = null;
 
 					var submatch = /(.+?) #(\d+)/.exec(match[1]);
-					if (submatch && submatch[1] in DuplicateLogging) {
-						loggingTag = DuplicateLogging[submatch[1]].key;
-						id = submatch[2];
-						name = DuplicateLogging[submatch[1]].name;
-					} else if (submatch) {
+					if (submatch) {
 						loggingTag = submatch[1];
 						id = submatch[2];
 					} else
 						loggingTag = match[1];
 
-					const moduleData = parseData.find(x => x.loggingTag == loggingTag);
-					if (moduleData) {
-						obj = Object.assign({}, moduleData);
-						if (name !== null) obj.moduleID = name;
-					}
+					const obj = getModuleData(loggingTag);
 
 					if (obj) {
 						try {
@@ -5803,8 +5791,8 @@ $(function() {
 										const matches = (matcher.regex || /.+/).exec(match[2]);
 										if (matches) {
 											if (obj.moduleID) {
-												var parsedModule = id ? GetBomb().GetModuleID(name || obj.moduleID, id) : GetBomb().GetModule(name || obj.moduleID);
-												if (matcher.handler(matches, parsedModule, bomb.GetMod(name || obj.moduleID))) {
+												var parsedModule = id ? GetBomb().GetModuleID(obj.moduleID, id) : GetBomb().GetModule(obj.moduleID);
+												if (matcher.handler(matches, parsedModule, bomb.GetMod(obj.moduleID))) {
 													break;
 												}
 											} else if (matcher.handler(matches)) {
