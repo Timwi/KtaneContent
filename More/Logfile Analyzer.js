@@ -2345,6 +2345,11 @@ $(function() {
 				loggingTag: "Cursed Double-Oh"
 			},
 			{
+				displayName: "DetoNATO",
+				moduleID: "Detonato",
+				loggingTag: "DetoNATO"
+			},
+			{
 				moduleID: "fastMath",
 				loggingTag: "Fast Math",
 				matches: [
@@ -4389,6 +4394,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Question Mark",
+				moduleID: "Questionmark",
+				loggingTag: "Question Mark"
+			},
+			{
 				displayName: "Quintuples",
 				moduleID: "quintuples",
 				loggingTag: "Quintuples",
@@ -4743,6 +4753,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Shapes And Bombs",
+				moduleID: "ShapesBombs",
+				loggingTag: "Shapes Bombs"
+			},
+			{
 				moduleID: "shikaku",
 				loggingTag: "Shikaku",
 				matches: [
@@ -4831,6 +4846,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				displayName: "Simon Squawks",
+				moduleID: "simonSquawks",
+				loggingTag: "Simons Squawks"
 			},
 			{
 				displayName: "Simon’s Stages",
