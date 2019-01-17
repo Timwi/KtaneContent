@@ -3040,6 +3040,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "LED Math",
+				moduleID: "lgndLEDMath",
+				loggingTag: "LED Math"
+			},
+			{
 				displayName: "LEGOs",
 				moduleID: "LEGOModule",
 				loggingTag: "LEGO",
@@ -5306,6 +5311,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "UNO",
+				moduleID: "UNO",
+				loggingTag: "UNO"
 			},
 			{
 				displayName: "USA Maze",
