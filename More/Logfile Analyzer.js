@@ -5210,6 +5210,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "sync125_3",
+				displayName: "SYNC-125 [3]",
+				loggingTag: "SYNC-125 [3]"
+			},
+			{
 				moduleID: "SynchronizationModule",
 				loggingTag: "Synchronization",
 				matches: [
