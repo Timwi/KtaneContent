@@ -908,6 +908,13 @@ $(function() {
 						handler: function() {
 							bombgroup = undefined;
 						}
+					},
+					{
+						regex: /OnRoundEnd\(\)/,
+						handler: function() {
+							bombgroup.FilterLines();
+							bombgroup = undefined;
+						}
 					}
 				]
 			},
@@ -929,7 +936,6 @@ $(function() {
 					{
 						regex: /Boom/,
 						handler: function() {
-							bombgroup.FilterLines();
 							if (GetBomb().State == "Unsolved") {
 								GetBomb().State = "Exploded";
 
@@ -944,7 +950,6 @@ $(function() {
 						regex: /A winner is you!!/,
 						handler: function() {
 							if (bombgroup.isSingleBomb) {
-								bombgroup.FilterLines();
 								bomb.State = "Solved";
 								bomb.Solved = bomb.TotalModules;
 							}
@@ -1215,7 +1220,7 @@ $(function() {
 					{
 						regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
 						handler: function(matches) {
-							if (bombgroup.isSingleBomb) {
+							if (bombgroup !== undefined && bombgroup.isSingleBomb) {
 								const num2 = parseFloat(matches[1]);
 								if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
 								else bomb.Solved = bomb.TotalModules;
