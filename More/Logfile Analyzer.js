@@ -2673,7 +2673,7 @@ $(function() {
 				loggingTag: "Functions"
 			},
 			{
-				displayName: "Gadgetron Vendor"
+				displayName: "Gadgetron Vendor",
 				moduleID: "lgndGadgetronVendor",
 				loggingTag: "Gadgetron Vendor"
 			},
