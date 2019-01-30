@@ -9,6 +9,67 @@
         <link rel="stylesheet" type="text/css" href="css/main.css">
         <link rel="stylesheet" type="text/css" href="css/font.css">
         <script src="js/highlighter.js"></script>
+        <script src="js/ruleseed.js"></script>
+        <script>
+            var noteNames = ["C4", "C♯4", "D4", "D♯4", "E4", "F4", "F♯4", "G4", "G♯4", "A4", "A♯4", "B4", "C5", "C♯5", "D5", "D♯5", "E5", "F5", "F♯5", "G5", "G♯5", "A5", "A♯5", "B5"];
+
+            function setDefaultRules()
+            {
+                var melody = [
+                    "D4, F4, A4, F4, A♯4, F4, A4, F4",
+                    "D4, F4, A4, C5, D5, A5, D5, C5",
+                    "F5, D5, F5, A5, A♯5, F5, A♯5, A5",
+                    "G5, E5, G5, E5, C5, E5, C5, A4",
+                    "G4, E4, G4, E4, A4, E4, A4, F4",
+                    "A♯4, F4, A♯4, G4, C5, G4, C5, A4",
+                    "D5, A4, D5, G4, C5, G4, C5, F4",
+                    "A♯4, F4, A♯4, E4, A4, E4, A4, C4"
+                ];
+                var list = document.getElementsByClassName('part');
+                for (var i = 0; i < melody.length; i++)
+                    list[i].innerHTML = melody[i];
+            }
+
+            function setRules(rnd)
+            {
+                // Decide on the key of the first part. The rest of the parts are in specific keys relative to each previous one
+                var keys = [ rnd.next(0, 12) ];
+                for (var partIx = 1; partIx < 8; partIx++)
+                {
+                    var eligibleKeys = [ 5, 7, -5, -7 ].map(jump => keys[partIx - 1] + jump).filter(key => key >= 0 && key < 12);
+                    keys.push(eligibleKeys[rnd.next(0, eligibleKeys.length)]);
+                }
+
+                var list = document.getElementsByClassName('part');
+
+                // Generate a new melody at random!
+                parts = [];
+                for (var partIx = 0; partIx < 8; partIx++)
+                {
+                    var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
+                    var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
+
+                    parts.push([]);
+                    for (var note = 0; note < 8; note++)
+                    {
+                        var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
+                        if (note > 0)
+                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx][note - 1]) < 7);
+                        else if (partIx > 0)
+                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
+                        if (note > 1 && parts[partIx][note - 1] === parts[partIx][note - 2])
+                        {
+                            var ix = Array.indexOf(eligibleNotes, parts[partIx][note - 1]);
+                            if (ix !== -1)
+                                eligibleNotes.splice(ix, 1);
+                        }
+                        parts[partIx].push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
+                    }
+
+                    list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
+                }
+            }
+        </script>
     </head>
     <body>
         <div id="ManualContent">
@@ -26,35 +87,35 @@
 						<table style='float: right; clear: right; margin-left: 1em; margin-top: 1em;'>
 						<tr>
 							<th>Part 1</th>
-							<td>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
+							<td class='part'>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
 						</tr>
 						<tr>
 							<th>Part 2</th>
-							<td>D4, F4, A4, C5, D5, A5, D5, C5</td>
+							<td class='part'>D4, F4, A4, C5, D5, A5, D5, C5</td>
 						</tr>
 						<tr>
 							<th>Part 3</th>
-							<td>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
+							<td class='part'>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
 						</tr>
 						<tr>
 							<th>Part 4</th>
-							<td>G5, E5, G5, E5, C5, E5, C5, A4</td>
+							<td class='part'>G5, E5, G5, E5, C5, E5, C5, A4</td>
 						</tr>
 						<tr>
 							<th>Part 5</th>
-							<td>G4, E4, G4, E4, A4, E4, A4, F4</td>
+							<td class='part'>G4, E4, G4, E4, A4, E4, A4, F4</td>
 						</tr>
 						<tr>
 							<th>Part 6</th>
-							<td>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
+							<td class='part'>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
 						</tr>
 						<tr>
 							<th>Part 7</th>
-							<td>D5, A4, D5, G4, C5, G4, C5, F4</td>
+							<td class='part'>D5, A4, D5, G4, C5, G4, C5, F4</td>
 						</tr>
 						<tr>
 							<th>Part 8</th>
-							<td>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
+							<td class='part'>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
 						</tr>
                         </table>
 
