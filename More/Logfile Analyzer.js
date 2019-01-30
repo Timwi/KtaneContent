@@ -2673,6 +2673,11 @@ $(function() {
 				loggingTag: "Functions"
 			},
 			{
+				displayName: "Gadgetron Vendor"
+				moduleID: "lgndGadgetronVendor",
+				loggingTag: "Gadgetron Vendor"
+			},
+			{
 				moduleID: ["GameOfLifeCruel", "GameOfLifeSimple"],
 				loggingTag: ["Game of Life Cruel", "Game of Life Simple"],
 				matches: [
