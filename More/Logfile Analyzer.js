@@ -279,7 +279,7 @@ $(function() {
 
 					bomb.DayTimeWidgets.forEach(function(val) {
 						const widget = $("<div class='widget'>")
-							.addClass(val[0].toLowerCase())	
+							.addClass(val[0].toLowerCase())
 							.appendTo(edgework);
 
 						switch (val[0]) {
@@ -303,7 +303,7 @@ $(function() {
 									"Green": "rgb(0, 255, 44)",
 									"Orange": "rgb(255, 195, 0)"
 								};
-								
+
 								widget.toggleClass("colored", val[3]).append(
 									$("<span class='weekday'>").css("color", colors[val[2]]).text(split[0] + " "),
 									$("<span>").addClass(val[4] == "(DD/MM)" ? "day" : "month").text(split[1]),
@@ -3053,6 +3053,11 @@ $(function() {
 				displayName: "LED Math",
 				moduleID: "lgndLEDMath",
 				loggingTag: "LED Math"
+			},
+			{
+				displayName: "Left and Right",
+				moduleID: "leftandRight",
+				loggingTag: "Left and Right"
 			},
 			{
 				displayName: "LEGOs",
