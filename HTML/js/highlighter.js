@@ -12,7 +12,7 @@
 
 var protocol = location.protocol;
 var e = document.createElement("script");
-e.src = "js/jquery.3.1.1.min.js";
+e.src = (protocol != "file:" ? protocol : "https:") + "//code.jquery.com/jquery-3.1.1.min.js";
 e.onload = function()
 {
 	$(function()
@@ -35,7 +35,6 @@ e.onload = function()
 		}).keydown(function(event) {
 			if (event.altKey && event.keyCode >= 49 && event.keyCode <= 53)
 			{
-				event.preventDefault();
 				setColor(event.keyCode - 49);
 
 				if (alertTimeout) {
