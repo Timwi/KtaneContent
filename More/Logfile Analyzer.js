@@ -1318,8 +1318,9 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "AdjacentLettersModule",
-				loggingTag: "AdjacentLetters",
+				moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
+				loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
+				displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
 				matches: [
 					{
 						regex: /Solution:/,
@@ -1334,6 +1335,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				moduleID: "JuckAlchemy",
+				displayName: "Alchemy",
+				loggingTag: "Alchemy"
 			},
 			{
 				moduleID: "algebra",
@@ -2420,6 +2426,11 @@ $(function() {
 				displayName: "Flip The Coin",
 				moduleID: "KritFlipTheCoin",
 				loggingTag: "Flip The Coin"
+			},
+			{
+				displayName: "Flavor Text EX",
+				moduleID: "FlavorTextCruel",
+				loggingTag: "Flavor Text EX"
 			},
 			{
 				displayName: "Follow the Leader",
@@ -4563,7 +4574,7 @@ $(function() {
 						}
 					},
 					{
-						regex: /Actions performed to solve:/,
+						regex: /Actions performed (to solve|before bomb exploded):/,
 						handler: function(matches, module) {
 							module.push([matches.input, module.RCActions = []]);
 							return true;
