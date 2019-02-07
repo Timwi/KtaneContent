@@ -1803,8 +1803,8 @@ $(function() {
 				loggingTag: "Challenge & Contact"
 			},
 			{
-				moduleID: ["CheapCheckoutModule", "SupermercadoSalvajeModule"],
-				loggingTag: ["Cheap Checkout", "Supermercado Salvaje"],
+				moduleID: "CheapCheckoutModule",
+				loggingTag: "Cheap Checkout",
 				matches: [
 					{
 						regex: /(Receipt|Recibo)/,
