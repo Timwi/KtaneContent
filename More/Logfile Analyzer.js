@@ -3528,6 +3528,11 @@ $(function () {
 				]
 			},
 			{
+				displayName: "Micro-Modules",
+				moduleID: "KritMicroModules",
+				loggingTag: "Micro-Modules"
+			},
+			{
 				moduleID: "mineseeker",
 				loggingTag: "Mineseeker",
 				matches: [
