@@ -5616,6 +5616,34 @@ $(function () {
 			{
 				matches: [
 					{
+						regex: /^rule([1-6])$/,
+						handler: function (matches) {
+							const orientationCubeRules = [
+								"If the serial number on the bomb contains the letter R",
+								"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
+								"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
+								"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
+								"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
+								"Otherwise"
+							];
+
+							GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
+						}
+					},
+					{
+						regex: /^[I,N-O,S,X,Z,6,8-9]{4}$/,
+						handler: function (matches) {
+							var name1 = "Display: " + matches[0];
+							var name2 = "Button Label: " + readLine();
+							var name3 = "Solution: " + readLine();
+							var mod = GetBomb().GetModule("ThirdBase");
+							if (!mod.num) mod.num = 0;
+							mod.num = mod.num + 1;
+							mod.push("Attempt # " + mod.num);
+							mod.push(pre(name1 + "\n" + name2 + "\n" + name3));
+						}
+					},
+					{
 						regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
 						handler: function(matches) {
 							var id = GetBomb().GetMod("TwoBits").IDs.length;
@@ -5628,21 +5656,6 @@ $(function () {
 							if (matches[1] == "Responses") {
 								mod.push(readLine());
 							}
-						}
-					},
-					{
-						regex: /^rule([1-6])$/,
-						handler: function(matches) {
-							const orientationCubeRules = [
-								"If the serial number on the bomb contains the letter R",
-								"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
-								"Otherwise, if the bomb has a PS2 port OR there have been one or more strikes",
-								"Otherwise, if the serial number on the bomb contains either the number 7 or 8",
-								"Otherwise, if there are more than two batteries on the bomb OR the virtual observer's initial position is facing the initial left face",
-								"Otherwise"
-							];
-
-							GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
 						}
 					}
 				]
@@ -5854,6 +5867,9 @@ $(function () {
 			{
 				moduleID: "SeaShells",
 				hasLogging: false
+			},
+			{
+				moduleID: "ThirdBase"
 			},
 			{
 				moduleID: "TurnTheKey",
