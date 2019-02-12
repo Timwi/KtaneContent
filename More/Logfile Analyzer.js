@@ -4992,7 +4992,11 @@ $(function () {
 					{
 						regex: /.+/,
 						handler: function(matches, module) {
-							module.Stage[1].push(matches.input);
+							if ('Stage' in module)
+								module.Stage[1].push(matches.input);
+							else
+								// Any messages logged before the start
+								module.push(matches.input);
 						}
 					}
 				]
