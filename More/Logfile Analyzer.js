@@ -5646,13 +5646,13 @@ $(function () {
 						}
 					},
 					{
-						regex: /^[I,N-O,S,X,Z,6,8-9]{4}$/,
+						regex: /^[689HINOSXZ]{4}$/,
 						handler: function (matches) {
 							var mod = GetBomb().GetModule("ThirdBase");
-                            mod.groups.addGroup(true);
-                            mod.groups.add("Display: " + matches[0]);
-                            mod.groups.add("Button Label: " + readLine());
-                            mod.groups.add("Solution: " + readLine());
+							mod.groups.addGroup(true);
+							mod.groups.add("Display: " + matches[0]);
+							mod.groups.add("Button Label: " + readLine());
+							mod.groups.add("Solution: " + readLine());
 						}
 					},
 				]
