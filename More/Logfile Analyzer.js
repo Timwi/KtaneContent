@@ -571,7 +571,7 @@ $(function () {
 				for (var m in bomb.Modules) {
 					if (bomb.Modules.hasOwnProperty(m)) {
 						var mod = bomb.Modules[m];
-						if (mod.IDs.length > 0 || mod.Tree.length > 0 || !current.Modules[m]) {
+						if (mod.IDs.length > 0 || mod.Tree.length > 0 || mod.Tree.groups.groups.length > 0 || !current.Modules[m]) {
 							current.Modules[m] = mod;
 						}
 					}
@@ -586,7 +586,7 @@ $(function () {
 					const parsedMod = new ParsedMod(mod.moduleData);
 
 					if (mod.IDs.length === 0) {
-						if (mod.Tree.length !== 0) {
+						if (mod.Tree.length !== 0 || mod.Tree.groups.groups.length !== 0) {
 							parsedMod.tree = mod.Tree;
 						}
 					} else if (mod.IDs.length == 1) {
@@ -5644,7 +5644,17 @@ $(function () {
 
 							GetBomb().GetModule("OrientationCube").push(`Using rule #${matches[1]}: ${orientationCubeRules[parseInt(matches[1]) - 1]}`);
 						}
-					}
+					},
+					{
+						regex: /^[I,N-O,S,X,Z,6,8-9]{4}$/,
+						handler: function (matches) {
+							var mod = GetBomb().GetModule("ThirdBase");
+                            mod.groups.addGroup(true);
+                            mod.groups.add("Display: " + matches[0]);
+                            mod.groups.add("Button Label: " + readLine());
+                            mod.groups.add("Solution: " + readLine());
+						}
+					},
 				]
 			},
 			{
