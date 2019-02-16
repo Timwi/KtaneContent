@@ -18,6 +18,9 @@
         .tile > img {
             width: 1.1cm;
         }
+        .tile.selected {
+            outline: 3px solid #800;
+        }
         div.row {
             text-align: center;
             margin: .2cm 0;
@@ -29,13 +32,16 @@
             margin: .5cm 0 .2cm;
         }
         ul {
-            margin: 1cm 0 .5cm;
+            margin: 0 0 .5cm;
         }
         ul.first {
             margin-top: .5cm;
         }
         li {
             margin: .15cm 0;
+        }
+        .cycle-buttons {
+            margin: 1em 0 0;
         }
         span.indicate {
             position: absolute;
@@ -111,7 +117,7 @@
                 <span class="tile highlightable" title="Wheel 2"><img src="img/Mahjong/Wheel 2.png"></span>
                 <span class="tile highlightable" title="Char 3"><img src="img/Mahjong/Char 3.png"></span>
             </div>
-            <div class="row">
+            <div class="row shiftable">
                 <span class="tile highlightable" title="Wheel 9"><img src="img/Mahjong/Wheel 9.png"></span>
                 <span class="tile highlightable" title="Wheel 1"><img src="img/Mahjong/Wheel 1.png"></span>
                 <span class="tile highlightable" title="Char 8"><img src="img/Mahjong/Char 8.png"></span>
@@ -126,6 +132,10 @@
                 <span class="tile highlightable" title="Wheel 3"><img src="img/Mahjong/Wheel 3.png"></span>
                 <span class="tile highlightable" title="Wheel 6"><img src="img/Mahjong/Wheel 6.png"></span>
                 <span class="tile highlightable" title="Char 5"><img src="img/Mahjong/Char 5.png"></span>
+                <div class='cycle-buttons'>
+                    <button id="cycle-left">←</button>
+                    <button id="cycle-right">→</button>
+                </div>
             </div>
 
             <ul>
@@ -161,5 +171,60 @@
         </div>
         <div class="page-footer relative-footer">Page 1 of 1</div>
     </div>
+    <script>
+        var tiles = document.getElementsByClassName('tile');
+        var selectedTile = null;
+        for (var tileIx = 0; tileIx < tiles.length; tileIx++)
+        {
+            (function(i)
+            {
+                tiles[i].onclick = function()
+                {
+                    if (selectedTile === null)
+                    {
+                        selectedTile = i;
+                        tiles[i].classList.add('selected');
+                    }
+                    else if (selectedTile === i)
+                    {
+                        selectedTile = null;
+                        tiles[i].classList.remove('selected');
+                    }
+                    else
+                    {
+                        tiles[selectedTile].classList.remove('selected');
+                        var imgSrc = tiles[i].firstChild.src;
+                        var title = tiles[i].getAttribute('title');
+                        tiles[i].firstChild.src = tiles[selectedTile].firstChild.src;
+                        tiles[i].setAttribute('title', tiles[selectedTile].getAttribute('title'));
+                        tiles[selectedTile].firstChild.src = imgSrc;
+                        tiles[selectedTile].setAttribute('title', title);
+                        selectedTile = null;
+                    }
+                };
+            })(tileIx);
+        }
+
+        function cycleHandler(offset)
+        {
+            return function()
+            {
+                var infs = Array.from(tiles).map(tile => ({ title: tile.getAttribute('title'), imgSrc: tile.firstChild.src }));
+                console.log(infs);
+                var cutOut = infs.splice(28-offset, offset);
+                console.log(infs);
+                console.log(cutOut);
+                infs.splice(14, 0, ...cutOut);
+                console.log(infs);
+                for (var i = 0; i < infs.length; i++)
+                {
+                    tiles[i].firstChild.src = infs[i].imgSrc;
+                    tiles[i].setAttribute('title', infs[i].title);
+                }
+            }
+        }
+        document.getElementById('cycle-left').onclick = cycleHandler(13);
+        document.getElementById('cycle-right').onclick = cycleHandler(1);
+    </script>
 </div>
 </body></html>
