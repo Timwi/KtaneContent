@@ -5656,46 +5656,23 @@ $(function () {
 						}
 					},
 					{
-						regex: /^(Total|Next Item Price): (\d{1,3}|\d{1,3}\.\d{2,3})$/,
+						regex: /^(Total|Next Item Price): (\d{1,3}|\d{1,3}\.\d{1,5})$/,
 						handler: function (matches) {
 							var mod = GetBomb().GetModule("groceryStore");
-							var list = ["Apples", "Bananas", "Bottled Water", "Bread", "Butter", "Candy", "Cat Food", "Cheese", "Coffee", "Cookies", "Detergent", "Eggs", "Flour", "Glass Cleaner", "Hot Sauce",
-								"Jelly", "Lettuce", "Milk", "Paper Towels", "Peanut Butter", "Pepper", "Pork or Toothpaste", "Potatoes", "Salt", "Sausage", "Snacks", "Soda", "Soup", "Steak", "Sugar", "Toilet Paper", "Tomatoes", "Turkey"];
-							var list2 = [0.96, 0.58, 12.48, 2.5, 5.14, 3.99, 11.99, 2.56, 11.68, 3.56, 19.94, 2.5, 6.75, 6.28, 5.42, 5.49, 1.49,
-								1.39, 8.68, 5.64, 4.98, 4.99, 4.59, 3.48, 2.99, 16.98, 4.48, 5.28, 12, 11.37, 16.99, 1.71, 4.99, 7.48];
-							if (!mod.Cur) {
-								mod.Cur = [];
-								mod.Li = [0, 0];
-								mod.Index = 0;
-								mod.firstTotal = false;
+							var itemPrices = {
+								0.96: "Apples", 0.58: "Bananas", 12.48: "Bottled Water", 2.5: "Bread or Glass Cleaner", 5.14: "Butter", 3.99: "Candy", 11.99: "Cat Food",
+								2.56: "Cheese", 11.68: "Coffee", 3.56: "Cookies", 19.94: "Detergent", 6.75: "Eggs", 6.28: "Flour", 5.42: "Hot Sauce",
+								5.49: "Jelly", 1.49: "Lettuce", 1.39: "Milk", 8.68: "Paper Towels", 5.64: "Peanut Butter", 4.98: "Pepper", 4.99: "Pork or Toothpaste",
+								4.59: "Potatoes", 3.48: "Salt", 2.99: "Sausage" , 16.98: "Snacks", 4.48: "Soda", 5.28: "Soup", 12: "Steak", 11.37: "Sugar", 16.99: "Toilet Paper", 1.71: "Tomatoes", 7.48: "Turkey"};
+							if (!mod.lastTotal) {
+								mod.lastTotal = "";
 							}
 							if (matches[1] == "Total") {
-								mod.Li[0]++;
-								mod.firstTotal = true;
-								if (mod.Cur.includes(parseInt(matches[2] * 2000).toString())) {
-									mod.Index = mod.Cur.indexOf(parseInt(matches[2] * 2000).toString());
-								}
-								else {
-									mod.Index = mod.Cur.length;
-								}
+								mod.push("The current total is $" + Math.round(matches[2] * 1000) / 500);
+								mod.lastTotal = matches[2];
 							}
 							else {
-								mod.Li[1]++;
-								if (mod.Li[0] != mod.Li[1]) {
-									mod.Li[0] = 0;
-									mod.Li[1] = 0;
-									mod.Index++;
-								}
-								if (mod.Cur.length <= mod.Index || !mod.firstTotal) {
-									mod.Cur.push(parseInt(matches[2] * 1000).toString());
-								}
-								else {
-									mod.Cur[mod.Index] = (parseInt(mod.Cur[mod.Index]) + parseInt(matches[2] * 1000)).toString();
-								}
-								if (mod.firstTotal)
-									mod.push("Adding " + list[list2.indexOf(parseFloat(matches[2]))] + " to cart.\nCurrent cost: $" + mod.Cur[mod.Index] / 1000);
-								else
-									mod.push("The first calculated item is: " + list[list2.indexOf(parseFloat(matches[2]))]);
+								mod.push("The current display shows " + itemPrices[matches[2]] + " (worth $" + matches[2] + ").");
 							}
 						}
 					},
