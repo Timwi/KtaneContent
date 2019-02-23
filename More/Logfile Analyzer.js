@@ -3287,6 +3287,11 @@ $(function () {
 				]
 			},
 			{
+				moduleID: "lgndLombaxCubes",
+				loggingTag: "Lombax Cubes",
+				displayName: "Lombax Cubes"
+			},
+			{
 				moduleID: "MafiaModule",
 				loggingTag: "Mafia",
 				matches: [
