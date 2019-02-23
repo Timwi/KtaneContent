@@ -4564,7 +4564,7 @@ $(function () {
 					{
 						regex: /The tens column of the sum of the modified fifth iteration numbers \((\d+)\), (\+ \(.*\)), modulo 10 is (\d+)\.$/,
 						handler: function(matches, module) {
-							module.Quintuples.rowInf[4] = `${matches[1]} ${matches[2]} =`;
+							module.Quintuples.rowInf[4] = `${matches[1]} ${matches[2]} % 10 =`;
 							module.Quintuples.solution[4] = matches[3];
 							return true;
 						}
