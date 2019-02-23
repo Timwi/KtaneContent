@@ -5655,27 +5655,6 @@ $(function () {
 							mod.groups.add("Solution: " + readLine());
 						}
 					},
-					{
-						regex: /^(Total|Next Item Price): (\d{1,3}|\d{1,3}\.\d{1,5})$/,
-						handler: function (matches) {
-							var mod = GetBomb().GetModule("groceryStore");
-							var itemPrices = {
-								0.96: "Apples", 0.58: "Bananas", 12.48: "Bottled Water", 2.5: "Bread or Glass Cleaner", 5.14: "Butter", 3.99: "Candy", 11.99: "Cat Food",
-								2.56: "Cheese", 11.68: "Coffee", 3.56: "Cookies", 19.94: "Detergent", 6.75: "Eggs", 6.28: "Flour", 5.42: "Hot Sauce",
-								5.49: "Jelly", 1.49: "Lettuce", 1.39: "Milk", 8.68: "Paper Towels", 5.64: "Peanut Butter", 4.98: "Pepper", 4.99: "Pork or Toothpaste",
-								4.59: "Potatoes", 3.48: "Salt", 2.99: "Sausage" , 16.98: "Snacks", 4.48: "Soda", 5.28: "Soup", 12: "Steak", 11.37: "Sugar", 16.99: "Toilet Paper", 1.71: "Tomatoes", 7.48: "Turkey"};
-							if (!mod.lastTotal) {
-								mod.lastTotal = "";
-							}
-							if (matches[1] == "Total") {
-								mod.push("The current total is $" + Math.round(matches[2] * 1000) / 500);
-								mod.lastTotal = matches[2];
-							}
-							else {
-								mod.push("The current display shows " + itemPrices[matches[2]] + " (worth $" + matches[2] + ").");
-							}
-						}
-					},
 				]
 			},
 			{
