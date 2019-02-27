@@ -3538,6 +3538,11 @@ $(function () {
 				loggingTag: "Micro-Modules"
 			},
 			{
+				displayName: "Mega Man 2",
+				moduleID: "megaMan2",
+				loggingTag: "Megaman 2"
+			},
+			{
 				moduleID: "mineseeker",
 				loggingTag: "Mineseeker",
 				matches: [
