@@ -2824,6 +2824,10 @@ $(function () {
 				]
 			},
 			{
+				moduleID: "hexabutton",
+				displayName: "The Hexabutton"
+			},
+			{
 				moduleID: "HexamazeModule",
 				loggingTag: "Hexamaze",
 				matches: [
