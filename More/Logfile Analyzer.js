@@ -1881,6 +1881,11 @@ $(function () {
 				loggingTag: "ChordQualities"
 			},
 			{
+				moduleID: "lgndColoredKeys",
+				loggingTag: "Colored Keys",
+				displayName: "Colored Keys"
+			},
+			{
 				displayName: "Color Morse",
 				moduleID: "ColorMorseModule",
 				loggingTag: "ColorMorse"
