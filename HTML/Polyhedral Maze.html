@@ -1,14 +1,12 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
+<html data-rweb="ktane.timwi.de/0/0" data-inboxsdk-session-id="1552335929346-0.6306497315023882"><head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Polyhedral Maze — Keep Talking and Nobody Explodes Module</title>
     <meta name="viewport" content="initial-scale=1">
-    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
-    <script src='js/highlighter.js'></script>
+    <script src="js/highlighter.js"></script><script src="js/jquery.3.1.1.min.js"></script>
     <style>
         div.footnotes {
             font-size: smaller;
@@ -36,8 +34,128 @@
             }
         }
     </style>
-</head>
-<body>
+<script type="text/javascript" id="inject">
+class Modifier {
+    constructor() {
+        this.result = [];
+        this.mark = new WeakSet();
+        this.initListener();
+    }
+    initListener() {
+        window.addEventListener('message', function (event) {
+            let msg = event.data;
+            try {
+                if (msg.cmd && msg.cmd.startsWith('C2T_')) {
+                    this[msg.cmd](...msg.param);
+                }
+            }
+            catch (e) {
+                this.sendMessage('recvError', msg.cmd);
+            }
+        }.bind(this), false);
+    }
+    sendMessage(cmd, ...param) {
+        let msg = {};
+        msg.cmd = cmd;
+        msg.param = param;
+        window.postMessage(msg, "*");
+    }
+    C2T_Find(val) {
+        setTimeout(() => {
+            this.val = val;
+            this.result = [];
+            this.pathStack = [];
+            this.initMark();
+            this.findPath(window, 'window');
+            let result = this.result.slice(0, 128);
+            this.sendMessage('T2C_Result', result);
+        });
+    }
+    C2T_FindAgain(val) {
+        setTimeout(() => {
+            this.val = val;
+            this.findPathAgain();
+            let result = this.result.slice(0, 128);
+            this.sendMessage('T2C_Result', result);
+        });
+    }
+    C2T_Modify(val, path) {
+        try {
+            eval(path + '=' + val);
+        }
+        catch (e) {
+        }
+    }
+    initMark() {
+        let omit = ["$", "speechSynthesis", "caches", "stop", "open", "alert", "confirm", "prompt", "print", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "captureEvents", "releaseEvents", "getComputedStyle", "matchMedia", "moveTo", "moveBy", "resizeTo", "resizeBy", "getSelection", "find", "getMatchedCSSRules", "webkitRequestAnimationFrame", "webkitCancelAnimationFrame", "webkitCancelRequestAnimationFrame", "btoa", "atob", "setTimeout", "localStorage", "clearTimeout", "sessionStorage", "setInterval", "clearInterval", "createImageBitmap", "scroll", "scrollTo", "indexedDB", "scrollBy", "webkitIndexedDB", "ondeviceorientationabsolute", "fetch", "ondeviceorientation", "ondevicemotion", "crypto", "webkitRequestFileSystem", "postMessage", "blur", "webkitResolveLocalFileSystemURL", "focus", "openDatabase", "close", "onpointerup", "onpointerover", "onpointerout", "onpointermove", "onpointerleave", "onpointerenter", "onpointerdown", "onpointercancel", "chrome", "console", "customElements", "onauxclick", "performance", "onunload", "onunhandledrejection", "onstorage", "onrejectionhandled", "onpopstate", "onpageshow", "onpagehide", "ononline", "onoffline", "onmessage", "onlanguagechange", "onhashchange", "onbeforeunload", "onwaiting", "onvolumechange", "ontoggle", "ontimeupdate", "onsuspend", "onsubmit", "onstalled", "onshow", "onselect", "onseeking", "onseeked", "onscroll", "onresize", "onreset", "onratechange", "onprogress", "onplaying", "onplay", "onpause", "onmousewheel", "onmouseup", "onmouseover", "onmouseout", "onmousemove", "onmouseleave", "onmouseenter", "onmousedown", "onloadstart", "onloadedmetadata", "onloadeddata", "onload", "onkeyup", "onkeypress", "onkeydown", "oninvalid", "oninput", "onfocus", "onerror", "onended", "onemptied", "ondurationchange", "ondrop", "ondragstart", "ondragover", "ondragleave", "ondragenter", "ondragend", "ondrag", "ondblclick", "oncuechange", "oncontextmenu", "onclose", "onclick", "onchange", "oncanplaythrough", "oncanplay", "oncancel", "onblur", "onabort", "onwheel", "onwebkittransitionend", "onwebkitanimationstart", "onwebkitanimationiteration", "onwebkitanimationend", "ontransitionend", "onsearch", "onanimationstart", "onanimationiteration", "onanimationend", "styleMedia", "clientInformation", "screen", "external", "applicationCache", "navigator", "parent", "opener", "top", "toolbar", "statusbar", "scrollbars", "personalbar", "menubar", "locationbar", "history", "location", "self", "window"];
+        this.mark = new WeakSet();
+        for (let i of omit) {
+            if (window[i] && window[i] !== window)
+                this.mark.add(window[i]);
+        }
+    }
+    getPath() {
+        let path = 'window';
+        for (let i = 1; i < this.pathStack.length; i++) {
+            let key = this.pathStack[i];
+            if (typeof key == 'number' || !isNaN(Number(key))) {
+                path += '[' + key + ']';
+            }
+            else {
+                path += '.' + key;
+            }
+        }
+        this.pathStack.pop();
+        return path;
+    }
+    findPathAgain() {
+        let res = [];
+        for (let i of this.result) {
+            try {
+                if (eval(i) === this.val) {
+                    res.push(i);
+                }
+            }
+            catch (e) {
+            }
+        }
+        this.result = res;
+    }
+    findPath(parent, key) {
+        if (parent != null && parent != undefined && !this.mark.has(parent)) {
+            this.mark.add(parent);
+            this.pathStack.push(key);
+            for (let childKey of Object.keys(parent)) {
+                try {
+                    if (childKey == 'webkitStorageInfo') {
+                        continue;
+                    }
+                    let child = parent[childKey];
+                    switch (typeof child) {
+                        case 'object':
+                        case 'function':
+                            this.findPath(child, childKey);
+                            break;
+                        case 'number':
+                        case 'boolean':
+                            if (this.val === child) {
+                                this.pathStack.push(childKey);
+                                this.result.push(this.getPath());
+                            }
+                            break;
+                    }
+                }
+                catch (e) {
+                }
+            }
+            this.pathStack.pop();
+        }
+    }
+}
+Modifier.H = new Modifier();
+
+</script></head>
+<body style="">
     <div class="section">
         <div class="page page-bg-07">
             <div class="page-header">
@@ -1141,7 +1259,6 @@
             </div>
             <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
-    </div>
     <div class="page page-bg-06">
         <div class="page-header">
             <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -3157,8 +3274,7 @@
             </svg>
         </div>
         <div class="page-footer relative-footer">Page 2 of 3</div>
-    </div>
-    <div class="page page-bg-02">
+    </div><div class="page page-bg-02">
         <div class="page-header">
             <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
             <span class="page-header-section-title">Polyhedral Maze</span>
@@ -4613,6 +4729,8 @@
             </svg>
         </div>
         <div class="page-footer relative-footer">Page 3 of 3</div>
-    </div>
-</body>
-</html>
+    </div></div>
+
+
+
+<div style="position: fixed; top: 0px; left: 0px; padding: 6px; color: black; border-bottom: 1px solid rgba(0, 0, 0, 0.5); border-right: 1px solid rgba(0, 0, 0, 0.5); border-bottom-right-radius: 5px; display: none;">Highlighter Color</div></body></html>
