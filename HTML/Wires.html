@@ -11,7 +11,7 @@
     <script src='js/highlighter.js'></script>
     <script src='js/ruleseed.js'></script>
     <script>
-        var WireColor = [ "black", "blue", "red", "white", "yellow" ];
+        var WireColor = ["black", "blue", "red", "white", "yellow"];
         var MIN_WIRES = 3;
         var MAX_WIRES = 6;
         var LOGGING = false;
@@ -31,44 +31,44 @@
         // QUERIES (conditions)
         // These correspond to the QueryableProperty instances. Their text may be parametrized with a color.
         var IsExactlyOneColorWire = {
-			id: "isExactlyOneColorWire",
-			Text: color => `there is exactly one ${color} wire`,
+            id: "isExactlyOneColorWire",
+            Text: color => `there is exactly one ${color} wire`,
             UsesColor: true,
             ColorAvailableForSolution: true,
             WiresInvolvedInQuery: 1,
-            AdditionalSolutions: [ WireColorExactlyOne ],
+            AdditionalSolutions: [WireColorExactlyOne],
             CompoundQueryOnly: false
         };
 
         var MoreThanOneColorWire = {
-			id: "isMoreThanOneColorWire",
-			Text: color => `there is more than one ${color} wire`,
-			UsesColor: true,
-			ColorAvailableForSolution: true,
-			WiresInvolvedInQuery: 2,
-			AdditionalSolutions: [ WireColorCutFirst, WireColorCutLast ],
+            id: "isMoreThanOneColorWire",
+            Text: color => `there is more than one ${color} wire`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 2,
+            AdditionalSolutions: [WireColorCutFirst, WireColorCutLast],
             CompoundQueryOnly: false
-		};
+        };
 
         var IsExactlyZeroColorWire = {
-			id: "isExactlyZeroColorWire",
-			Text: color => `there are no ${color} wires`,
-			UsesColor: true,
-			ColorAvailableForSolution: false,
+            id: "isExactlyZeroColorWire",
+            Text: color => `there are no ${color} wires`,
+            UsesColor: true,
+            ColorAvailableForSolution: false,
             WiresInvolvedInQuery: 0,
             AdditionalSolutions: [],
             CompoundQueryOnly: false
-		};
+        };
 
-		var LastWireIsColor = {
-			id: "isLastWireColor",
-			Text: color => `the last wire is ${color}`,
-			UsesColor: true,
-			ColorAvailableForSolution: true,
-			WiresInvolvedInQuery: 1,
-			AdditionalSolutions: [],
+        var LastWireIsColor = {
+            id: "isLastWireColor",
+            Text: color => `the last wire is ${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 1,
+            AdditionalSolutions: [],
             CompoundQueryOnly: false
-		};
+        };
 
         var DoesSerialNumberStartWithLetter = { id: "doesSerialNumberStartWithLetter", Text: color => "the serial number starts with a letter", CompoundQueryOnly: true };
         var IsSerialNumberOdd = { id: "isSerialNumberOdd", Text: color => "the last digit of the serial number is odd", CompoundQueryOnly: true };
@@ -234,9 +234,9 @@
 
         function setRules(rnd)
         {
-            var serialNumberQueries = [ DoesSerialNumberStartWithLetter, IsSerialNumberOdd ];
-            var wireQueries = [ IsExactlyOneColorWire, IsExactlyZeroColorWire, LastWireIsColor, MoreThanOneColorWire ];
-            var portQueries = [ "DVI-D", "PS/2", "RJ-45", "Stereo RCA", "parallel", "serial" ].map(p => IsPortPresent(p));
+            var serialNumberQueries = [DoesSerialNumberStartWithLetter, IsSerialNumberOdd];
+            var wireQueries = [IsExactlyOneColorWire, IsExactlyZeroColorWire, LastWireIsColor, MoreThanOneColorWire];
+            var portQueries = ["DVI-D", "PS/2", "RJ-45", "Stereo RCA", "parallel", "serial"].map(p => IsPortPresent(p));
             portQueries.push(EmptyPortPlate);
             for (var i = MIN_WIRES; i <= MAX_WIRES; i++)
             {
@@ -295,16 +295,18 @@
                 }
 
                 list2 = list2.map((inf, ix) => { return { obj: inf, ix: ix }; });
-                list2.sort((a, b) => {
+                list2.sort((a, b) =>
+                {
                     var p = b.obj.Queries.length - a.obj.Queries.length;
-                    return p === 0 ? a.ix-b.ix : p;
+                    return p === 0 ? a.ix - b.ix : p;
                 });
                 list2 = list2.map(inf => inf.obj);
 
                 var rule2 = new Rule([], null);
                 var list4 = CalculatePossibleSolutions(solutionWeights, i, rule2);
-                if (rnd.seed !== 1) {   // Enforce no redundant rules.
-                    var forbiddenId = list2 [ list2.length - 1 ].Solution.Obj.id;
+                if (rnd.seed !== 1)
+                {   // Enforce no redundant rules.
+                    var forbiddenId = list2[list2.length - 1].Solution.Obj.id;
                     list4 = list4.filter(l => l.id !== forbiddenId);
                 }
                 rule2.Solution = { Obj: list4[rnd.next(0, list4.length, LOGGING)] };
@@ -316,94 +318,92 @@
         function setDefaultRules()
         {
             document.getElementById('wires-3').innerHTML = `
-                <strong><em>3 wires:</em></strong><br>
-                If there are no red wires, cut the second wire.<br>
-                Otherwise, if the last wire is white, cut the last wire.<br>
-                Otherwise, if there is more than one blue wire, cut the last blue wire.<br>
-                Otherwise, cut the last wire.`;
+                    <strong><em>3 wires:</em></strong><br>
+                    If there are no red wires, cut the second wire.<br>
+                    Otherwise, if the last wire is white, cut the last wire.<br>
+                    Otherwise, if there is more than one blue wire, cut the last blue wire.<br>
+                    Otherwise, cut the last wire.`;
             document.getElementById('wires-4').innerHTML = `
-                <strong><em>4 wires:</em></strong><br>
-                If there is more than one red wire and the last digit of the serial number is odd, cut the last red wire.<br>
-                Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.<br>
-                Otherwise, if there is exactly one blue wire, cut the first wire.<br>
-                Otherwise, if there is more than one yellow wire, cut the last wire.<br>
-                Otherwise, cut the second wire.`;
+                    <strong><em>4 wires:</em></strong><br>
+                    If there is more than one red wire and the last digit of the serial number is odd, cut the last red wire.<br>
+                    Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.<br>
+                    Otherwise, if there is exactly one blue wire, cut the first wire.<br>
+                    Otherwise, if there is more than one yellow wire, cut the last wire.<br>
+                    Otherwise, cut the second wire.`;
             document.getElementById('wires-5').innerHTML = `
-                <strong><em>5 wires:</em></strong><br>
-                If the last wire is black and the last digit of the serial number is odd, cut the fourth wire.<br>
-                Otherwise, if there is exactly one red wire and there is more than one yellow wire, cut the first wire.<br>
-                Otherwise, if there are no black wires, cut the second wire.<br>
-                Otherwise, cut the first wire.`;
+                    <strong><em>5 wires:</em></strong><br>
+                    If the last wire is black and the last digit of the serial number is odd, cut the fourth wire.<br>
+                    Otherwise, if there is exactly one red wire and there is more than one yellow wire, cut the first wire.<br>
+                    Otherwise, if there are no black wires, cut the second wire.<br>
+                    Otherwise, cut the first wire.`;
             document.getElementById('wires-6').innerHTML = `
-                <strong><em>6 wires:</em></strong><br>
-                If there are no yellow wires and the last digit of the serial number is odd, cut the third wire.<br>
-                Otherwise, if there is exactly one yellow wire and there is more than one white wire, cut the fourth wire.<br>
-                Otherwise, if there are no red wires, cut the last wire.<br>
-                Otherwise, cut the fourth wire.`;
+                    <strong><em>6 wires:</em></strong><br>
+                    If there are no yellow wires and the last digit of the serial number is odd, cut the third wire.<br>
+                    Otherwise, if there is exactly one yellow wire and there is more than one white wire, cut the fourth wire.<br>
+                    Otherwise, if there are no red wires, cut the last wire.<br>
+                    Otherwise, cut the fourth wire.`;
         }
 
     </script>
 </head>
 <body>
     <div class="section">
-        <div class="section">
-            <div class="page">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
-                    <span class="page-header-section-title">Wires</span>
-                </div>
-                <div class="page-footer absolute-footer"></div>
-                <div class="page-content">
-                    <img src="img/Component/Wires.svg" class="diagram" />
-                    <h2>On the Subject of Wires</h2>
-                    <p class="flavour-text"> Wires are the lifeblood of electronics! Wait, no, electricity is the lifeblood. Wires are more like the arteries. The veins? No matter…</p>
-                    <ul>
-                        <li>A wire module can have 3-6 wires on it.</li>
-                        <li>Only the <em>one</em> correct wire needs to be cut to disarm the module.</li>
-                        <li>Wire ordering begins with the first on the top.</li>
-                    </ul>
-                    <table>
-                        <tr>
-                            <td id='wires-3'>
-                                <strong><em>3 wires:</em></strong><br>
-                                If there are no red wires, cut the second wire.<br>
-                                Otherwise, if the last wire is white, cut the last wire.<br>
-                                Otherwise, if there is more than one blue wire, cut the last blue wire.<br>
-                                Otherwise, cut the last wire.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td id='wires-4'>
-                                <strong><em>4 wires:</em></strong><br>
-                                If there is more than one red wire and the last digit of the serial number is odd, cut the last red wire.<br>
-                                Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.<br>
-                                Otherwise, if there is exactly one blue wire, cut the first wire.<br>
-                                Otherwise, if there is more than one yellow wire, cut the last wire.<br>
-                                Otherwise, cut the second wire.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td id='wires-5'>
-                                <strong><em>5 wires:</em></strong><br>
-                                If the last wire is black and the last digit of the serial number is odd, cut the fourth wire.<br>
-                                Otherwise, if there is exactly one red wire and there is more than one yellow wire, cut the first wire.<br>
-                                Otherwise, if there are no black wires, cut the second wire.<br>
-                                Otherwise, cut the first wire.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td id='wires-6'>
-                                <strong><em>6 wires:</em></strong><br>
-                                If there are no yellow wires and the last digit of the serial number is odd, cut the third wire.<br>
-                                Otherwise, if there is exactly one yellow wire and there is more than one white wire, cut the fourth wire.<br>
-                                Otherwise, if there are no red wires, cut the last wire.<br>
-                                Otherwise, cut the fourth wire.
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div class="page-footer relative-footer">Page 1 of 1</div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Wires</span>
             </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <img src="img/Component/Wires.svg" class="diagram" />
+                <h2>On the Subject of Wires</h2>
+                <p class="flavour-text"> Wires are the lifeblood of electronics! Wait, no, electricity is the lifeblood. Wires are more like the arteries. The veins? No matter…</p>
+                <ul>
+                    <li>A wire module can have 3-6 wires on it.</li>
+                    <li>Only the <em>one</em> correct wire needs to be cut to disarm the module.</li>
+                    <li>Wire ordering begins with the first on the top.</li>
+                </ul>
+                <table>
+                    <tr>
+                        <td id='wires-3'>
+                            <strong><em>3 wires:</em></strong><br>
+                            If there are no red wires, cut the second wire.<br>
+                            Otherwise, if the last wire is white, cut the last wire.<br>
+                            Otherwise, if there is more than one blue wire, cut the last blue wire.<br>
+                            Otherwise, cut the last wire.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-4'>
+                            <strong><em>4 wires:</em></strong><br>
+                            If there is more than one red wire and the last digit of the serial number is odd, cut the last red wire.<br>
+                            Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.<br>
+                            Otherwise, if there is exactly one blue wire, cut the first wire.<br>
+                            Otherwise, if there is more than one yellow wire, cut the last wire.<br>
+                            Otherwise, cut the second wire.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-5'>
+                            <strong><em>5 wires:</em></strong><br>
+                            If the last wire is black and the last digit of the serial number is odd, cut the fourth wire.<br>
+                            Otherwise, if there is exactly one red wire and there is more than one yellow wire, cut the first wire.<br>
+                            Otherwise, if there are no black wires, cut the second wire.<br>
+                            Otherwise, cut the first wire.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-6'>
+                            <strong><em>6 wires:</em></strong><br>
+                            If there are no yellow wires and the last digit of the serial number is odd, cut the third wire.<br>
+                            Otherwise, if there is exactly one yellow wire and there is more than one white wire, cut the fourth wire.<br>
+                            Otherwise, if there are no red wires, cut the last wire.<br>
+                            Otherwise, cut the fourth wire.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
     </div>
 </body>
