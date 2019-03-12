@@ -15,6 +15,53 @@ var e = document.createElement("script");
 e.src = "js/jquery.3.1.1.min.js";
 e.onload = function()
 {
+	$(function() {
+		var optionsMenuDOM=$('<div id="optionsMenu"><h2>Options (Shift-O)</h2><div id="optionsMenuItems"></div></div>').appendTo("body");
+		var openOptionsMenu=false;
+		function updateOptionsMenu() {
+			if(openOptionsMenu) {
+				optionsMenuDOM.addClass("open");
+			} else {
+				optionsMenuDOM.removeClass("open");
+			}
+		}
+		$(document).keypress(function(event) {
+			if (event.shiftKey&&event.which==79) {
+				openOptionsMenu=!openOptionsMenu;
+				updateOptionsMenu();
+			}
+		});
+	})
+	// multipage option
+	$(function() {
+		function updateMultipageView() {
+			if(localStorage.getItem('pageType')=="multi") {
+				$("body").addClass("multipage");
+			} else {
+				$("body").removeClass("multipage");
+			}
+		}
+		var openOptionsMenu=false;
+		var pageTypeDOM=$('<div id="pageTypeOption"></div>').appendTo("#optionsMenuItems");
+		var changeToSingle=$('<div></div>').appendTo(pageTypeDOM);
+		var changeToMulti=$('<div></div>').appendTo(pageTypeDOM);
+		var enabled = false;
+		if(localStorage.getItem('pageType')==null) {
+			localStorage.setItem('pageType','single');
+		}
+		updateMultipageView();
+		changeToSingle.click(()=>{
+			localStorage.setItem('pageType','single');
+			updateMultipageView();
+		});
+		changeToMulti.click(()=>{
+			localStorage.setItem('pageType','multi');
+			updateMultipageView();
+		})
+	})
+
+
+
 	$(function()
 	{
 		var enabled = true;
