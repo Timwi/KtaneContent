@@ -74,7 +74,10 @@ e.onload = function()
             { color: "rgba(34, 195, 34, 0.4)", name: 'green' },
             { color: "rgba(223, 223, 32, 0.4)", name: 'yellow' }];
         let currentColor = 0;
-        let setColor = function(color) { currentColor = color; };   // The mobile UI overrides this function
+        let setColor = function(color) {
+            currentColor = color;
+            localStorage.setItem("ktane-highlighter-color",color);
+        };   // The mobile UI overrides this function
 
         $('#highlighter-enabled').click(function() { localStorage.setItem('ktane-highlighter-enabled', $('#highlighter-enabled').prop('checked')); });
         $('.highlighter-color').click(function(e)
@@ -105,6 +108,7 @@ e.onload = function()
             setColor = function(color)
             {
                 currentColor = color;
+                localStorage.setItem("highlighter-color",color);
                 styleTag.text((
                     ".ktane-highlight-svg { width: 50px; height: 50px; }" +
                     ".ktane-highlight-pen { fill: !0!; }" +
@@ -305,8 +309,8 @@ e.onload = function()
         $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled);
         let pageLayout = localStorage.getItem('ktane-page-layout') || 'vertical';
         $(`#page-layout-${pageLayout}`).prop('checked', true);
+        setColor(localStorage.getItem('ktane-highlighter-color') || 0);
         updateMultipageView();
-        setColor(0);
     });
 };
 document.head.appendChild(e);
