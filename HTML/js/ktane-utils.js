@@ -306,6 +306,7 @@ e.onload = function()
         let pageLayout = localStorage.getItem('ktane-page-layout') || 'vertical';
         $(`#page-layout-${pageLayout}`).prop('checked', true);
         updateMultipageView();
+        setColor(0);
     });
 };
 document.head.appendChild(e);
