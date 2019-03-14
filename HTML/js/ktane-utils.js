@@ -76,7 +76,6 @@ e.onload = function()
         let currentColor = 0;
         let setColor = function(color) {
             currentColor = color;
-            localStorage.setItem("ktane-highlighter-color",color);
         };   // The mobile UI overrides this function
 
         $('#highlighter-enabled').click(function() { localStorage.setItem('ktane-highlighter-enabled', $('#highlighter-enabled').prop('checked')); });
@@ -309,8 +308,8 @@ e.onload = function()
         $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled);
         let pageLayout = localStorage.getItem('ktane-page-layout') || 'vertical';
         $(`#page-layout-${pageLayout}`).prop('checked', true);
-        setColor(localStorage.getItem('ktane-highlighter-color') || 0);
         updateMultipageView();
+        setColor(0);
     });
 };
 document.head.appendChild(e);
