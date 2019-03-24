@@ -2046,6 +2046,21 @@ $(function () {
 				displayName: "Color Match"
 			},
 			{
+				moduleID: "complexKeypad",
+				loggingTag: "Complex Keypad",
+				matches: [
+					{
+						regex: /(.+: .+)/,
+						handler: function(matches, module) {
+							module.push($("<span style='direction: ltr;'>").text(matches[1]));
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Complicated Wires",
 				moduleID: "Venn",
 				loggingTag: "VennWireComponent",
