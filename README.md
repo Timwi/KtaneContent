@@ -16,11 +16,19 @@ Contains image files used _both_ by the manuals as well as the website proper. T
 
 Contains the JavaScript used by the manuals that enables the highlighting features, as well as external libraries such as jQuery UI.
 
+## `JSON`
+
+Contains JSON files about each module's various pieces of information such as: name, description, source code, release date, steam workshop ID, etc.
+
 ## `Icons`
 
 Contains the module icons. Each icon should be 32×32 pixels, use alpha transparency, and preferably be minimalized using pngcrush.
 
 This folder does _not_ contain other UI icons used on the website. Those are in `HTML/img`.
+
+## `puzzles`
+
+Contains the files of the puzzles made by the community
 
 ## `More`
 
