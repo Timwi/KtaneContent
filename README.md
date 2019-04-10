@@ -28,7 +28,7 @@ This folder does _not_ contain other UI icons used on the website. Those are in 
 
 ## `puzzles`
 
-Contains the files of the puzzles made by the community
+Contains the files of the puzzles made by the community.
 
 ## `More`
 
