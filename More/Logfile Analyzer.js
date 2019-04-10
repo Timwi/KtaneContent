@@ -63,7 +63,7 @@ class ParsedMod {
 }
 
 function convertID(id) {
-	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/(?!\b)([A-Z])/g, " $1");
+	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^spwiz/i, "").replace(/^lgnd/i, "").replace(/^Krit/i, "").replace(/(?!\b)([A-Z])/g, " $1");
 }
 
 function $SVG(elem) {
@@ -2046,6 +2046,11 @@ $(function () {
 				displayName: "Color Match"
 			},
 			{
+				moduleID: "colourcode",
+				loggingTag: "Colour Code",
+				displayName: "Colour Code"
+			},
+			{
 				moduleID: "complexKeypad",
 				loggingTag: "Complex Keypad",
 				matches: [
@@ -2590,6 +2595,11 @@ $(function () {
 				loggingTag: "Forget Me Not"
 			},
 			{
+				displayName: "Four-Card Monte",
+				moduleID: "Krit4CardMonte",
+				loggingTag: "Four-Card Monte"
+			},
+			{
 				moduleID: "FriendshipModule",
 				loggingTag: "Friendship",
 				matches: [
@@ -2785,6 +2795,11 @@ $(function () {
 						regex: /No errors found!/
 					}
 				]
+			},
+			{
+				moduleID: "giantsDrink",
+				loggingTag: "The Giant's Drink",
+				displayName: "The Giant’s Drink"
 			},
 			{
 				displayName: "Grid Matching",
@@ -4038,6 +4053,11 @@ $(function () {
 				]
 			},
 			{
+				moduleID: "necronomicon",
+				loggingTag: "The Necronomicon",
+				displayName: "The Necronomicon"
+			},
+			{
 				moduleID: "neutralization",
 				loggingTag: "Neutralization",
 				matches: [
@@ -5273,6 +5293,16 @@ $(function () {
 				loggingTag: "Square Button"
 			},
 			{
+				displayName: "Stack’em",
+				moduleID: "stackem",
+				loggingTag: "Stack'em"
+			},
+			{
+				displayName: "The Stare",
+				moduleID: "StareModule",
+				loggingTag: "The Stare"
+			},
+			{
 				displayName: "The Stock Market",
 				moduleID: "stockMarket",
 				loggingTag: "The Stock Market"
@@ -5471,6 +5501,11 @@ $(function () {
 				]
 			},
 			{
+				moduleID: "troll",
+				displayName: "The Troll",
+				loggingTag: "The Troll"
+			},
+			{
 				displayName: "UNO",
 				moduleID: "UNO",
 				loggingTag: "UNO"
@@ -5580,6 +5615,11 @@ $(function () {
 						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
+			},
+			{
+				moduleID: "thewitness",
+				loggingTag: "The Witness",
+				displayName: "The Witness"
 			},
 			{
 				moduleID: "WordSearchModule",
