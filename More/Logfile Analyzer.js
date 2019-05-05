@@ -3572,6 +3572,11 @@ $(function () {
 				]
 			},
 			{
+				displayName: "Maze³",
+				moduleID: "maze3",
+				loggingTag: "Maze^3"
+			},
+			{
 				displayName: "Micro-Modules",
 				moduleID: "KritMicroModules",
 				loggingTag: "Micro-Modules"
