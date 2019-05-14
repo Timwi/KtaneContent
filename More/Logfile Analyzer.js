@@ -1389,6 +1389,11 @@ $(function () {
 				loggingTag: "Astrology"
 			},
 			{
+				moduleID: "babaIsWho",
+				displayName: "Baba Is Who",
+				loggingTag: "Baba Is Who?"
+			},
+			{
 				moduleID: "BattleshipModule",
 				loggingTag: "Battleship",
 				matches: [
