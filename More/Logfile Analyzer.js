@@ -832,6 +832,10 @@ $(function () {
 			return $('<pre>').text(line.replace(/^\n/g, ""));
 		}
 
+		function removeTag(str) {
+			return str.replace(/^[ \t]*\[.+?\] /, '');
+		}
+
 		function readDirectly(line, name, id) {
 			if (line instanceof Array) {
 				line.forEach(function (val) {
@@ -2598,6 +2602,26 @@ $(function () {
 				displayName: "Forget Me Not",
 				moduleID: "MemoryV2",
 				loggingTag: "Forget Me Not"
+			},
+			{
+				displayName: "Forget This",
+				moduleID: "forgetThis",
+				loggingTag: "Forget This",
+				matches: [
+					{
+						regex: /Stages \d+ to \d+/,
+						handler: function(matches, module) {
+							module.push({
+								label: matches.input, 
+								obj: pre(readMultiple(2, removeTag))
+							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "Four-Card Monte",
