@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         table {
             border: none;
@@ -30,6 +31,112 @@
             width: 10cm;
         }
     </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            var candidateFallbacks = rnd.shuffleFisherYates([
+                "There is an odd number of batteries",
+                "There is an odd number of indicators",
+                "There is an odd number of ports",
+                "There is an odd number of letters in the serial number",
+                "There is an odd number of port plates",
+                "The first digit of the serial number is odd",
+                "There is an odd number of distinct port types",
+                "The last digit of the serial number is odd",
+                "There is an odd number of lit indicators",
+                "There is an odd number of unlit indicators",
+                "There is an odd number of battery holders",
+                "There is an even number of batteries",
+                "The last digit of the serial number is even",
+                "The first digit of the serial number is even",
+                "There is an even number of port plates",
+                "There is an even number of indicators",
+                "There is an even number of ports",
+                "There is an even number of distinct port types",
+                "There is an even number of letters in the serial number",
+                "There is an even number of lit indicators",
+                "There is an even number of unlit indicators",
+                "There is an even number of battery holders",
+            ]);
+
+            var candidateRules = rnd.shuffleFisherYates([
+                "We are in the {stage} stage of the module.",
+                "If this is the {digit} digit in its 4-digit binary number: {fallback}. Otherwise: This number’s {digit} color referred to a {flavour} key.",
+                "If this is the first of the 8 digits: {fallback}. Otherwise: The previous digit was {0or1}.",
+                "If there are no indicators: {fallback}. Otherwise: The position of this digit in its 4-digit number matches the number of lit or unlit indicators, whichever is greater.",
+                "The position of this digit in its 4-digit number matches the number of port plates.",
+                "If we are in the first stage: {fallback}. Otherwise: exactly {3to5} colors flashing in the previous stage refer to {flavour} keys.",
+                "If there are no port plates: {fallback}. Otherwise: The position of this digit in its 4-digit number matches the number of ports on the port plate with the most ports on it.",
+                "The current stage number matches the number of {element}.",
+                "If there are no battery holders: {fallback}. Otherwise: The position of this digit in its 4-digit number matches the number of batteries.",
+                "This is the {first} or {second} digit in its 4-digit binary number.",
+                "Another color in this 4-digit number refers to {key1} or {key2}.",
+                "This digit’s number would be a prime number if this digit is 1.",
+                "If we are in the first stage: {fallback}. Otherwise: {operator} of the 4-digit numbers in the previous stage {was-were} less than 5.",
+                "We are not in the {stage} stage of the module.",
+                "If we are in the first stage: {fallback}. Otherwise: Two colors flashing consecutively in the previous stage refer to {flavour} keys.",
+                "A color in the other 4-digit number refers to {key3} or {key4}.",
+                "The other number’s {digit} color referred to a {flavour} key.",
+                "This is the {third} or {fourth} digit in its 4-digit binary number.",
+            ]);
+
+            var candidateElements = rnd.shuffleFisherYates([
+                "batteries",
+                "battery holders",
+                "indicators",
+                "letters in the serial number minus one",
+                "unlit indicators",
+                "ports",
+                "distinct port types",
+                "port plates",
+                "digits in the serial number minus one",
+                "lit indicators",
+            ]);
+
+            var fallbackIx = 0;
+            var elementIx = 0;
+            var rules = [];
+            var digitOrder = rnd.shuffleFisherYates(["last", "second", "first", "third"]);
+            var keys = rnd.shuffleFisherYates("C,C♯/D♭,F♯/G♭,D♯/E♭,E,A♯/B♭,D,G,G♯/A♭,A,F,B".split(','));
+            var operator = rnd.next(0, 4);
+
+            var tds = document.getElementsByClassName('rule');
+            for (var i = 0; i < 12; i++)
+            {
+                var digit = ["third", "second", "first", "fourth"][rnd.next(0, 4)];
+                tds[i].innerText = candidateRules[i].replace(/\{(.*?)\}/g, (_, varName) => {
+                    switch (varName)
+                    {
+                        case "first": return digitOrder[0];
+                        case "second": return digitOrder[1];
+                        case "third": return digitOrder[2];
+                        case "fourth": return digitOrder[3];
+
+                        case "digit": return digit;
+                        case "0or1": return 1-rnd.next(0, 2);
+                        case "element": return candidateElements[elementIx++];
+                        case "stage": return ["first", "third", "second"][rnd.next(0, 3)];
+                        case "flavour": return ["sharp/flat", "natural"][rnd.next(0, 2)];
+                        case "3to5": return rnd.next(3, 6);
+                        case "operator": return ["Neither", "One, but not both,", "One (or both)", "Both"][operator];
+                        case "was-were": return ["were", "was", "was", "were"][operator];
+                        case "key1": return keys[0];
+                        case "key2": return keys[1];
+                        case "key3": return keys[2];
+                        case "key4": return keys[3];
+
+                        case "fallback": return candidateFallbacks[fallbackIx++];
+                    }
+                    return "INVALID";
+                });
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -55,13 +162,13 @@
 
                 <h3>Table 1</h3>
                 <table>
-                    <tr><th>C</th><td>This is the first or last digit in its 4-digit binary number.</td></tr>
-                    <tr><th>C♯/D♭</th><td>This is the second or third digit in its 4-digit binary number.</td></tr>
-                    <tr><th>D</th><td>If this is the first of the 8 digits: The last digit of the serial number is odd. Otherwise: The previous digit was 0.</td></tr>
-                    <tr><th>D♯/E♭</th><td>The position of this digit in its 4-digit number matches the number of port plates.</td></tr>
-                    <tr><th>E</th><td>If there are no port plates: There is an odd number of batteries. Otherwise: The position of this digit in its 4-digit number matches the number of ports on the port plate with the most ports on it.</td></tr></td></tr>
-                    <tr><th>F</th><td>We are in the third stage of the module.</td></tr>
-                    <tr><th>F♯/G♭</th><td>The current stage number matches the number of letters in the serial number minus one.</td></tr>
+                    <tr><th>C</th><td class='rule'>This is the first or last digit in its 4-digit binary number.</td></tr>
+                    <tr><th>C♯/D♭</th><td class='rule'>This is the second or third digit in its 4-digit binary number.</td></tr>
+                    <tr><th>D</th><td class='rule'>If this is the first of the 8 digits: The last digit of the serial number is odd. Otherwise: The previous digit was 0.</td></tr>
+                    <tr><th>D♯/E♭</th><td class='rule'>The position of this digit in its 4-digit number matches the number of port plates.</td></tr>
+                    <tr><th>E</th><td class='rule'>If there are no port plates: There is an odd number of batteries. Otherwise: The position of this digit in its 4-digit number matches the number of ports on the port plate with the most ports on it.</td></tr>
+                    <tr><th>F</th><td class='rule'>We are in the third stage of the module.</td></tr>
+                    <tr><th>F♯/G♭</th><td class='rule'>The current stage number matches the number of letters in the serial number minus one.</td></tr>
                 </table>
 
             </div>
@@ -75,11 +182,11 @@
             <div class="page-content">
 
                 <table>
-                    <tr><th>G</th><td>If this is the first digit in its 4-digit binary number: There is an odd number of indicators. Otherwise: This number’s first color referred to a sharp/flat key.</td></tr>
-                    <tr><th>G♯/A♭</th><td>If we are in the first stage: There is an odd number of ports. Otherwise: Two colors flashing consecutively in the previous stage refer to sharp/flat keys.</td></tr>
-                    <tr><th>A</th><td>If we are in the first stage: There is an even number of indicators. Otherwise: One (or both) of the 4-digit numbers in the previous stage was less than 5.</td></tr>
-                    <tr><th>A♯/B♭</th><td>Another color in this 4-digit number refers to F or F♯/G♭.</td></tr>
-                    <tr><th>B</th><td>This digit’s number would be a prime number if this digit is 1.</td></tr>
+                    <tr><th>G</th><td class='rule'>If this is the first digit in its 4-digit binary number: There is an odd number of indicators. Otherwise: This number’s first color referred to a sharp/flat key.</td></tr>
+                    <tr><th>G♯/A♭</th><td class='rule'>If we are in the first stage: There is an odd number of ports. Otherwise: Two colors flashing consecutively in the previous stage refer to sharp/flat keys.</td></tr>
+                    <tr><th>A</th><td class='rule'>If we are in the first stage: There is an even number of indicators. Otherwise: One (or both) of the 4-digit numbers in the previous stage was less than 5.</td></tr>
+                    <tr><th>A♯/B♭</th><td class='rule'>Another color in this 4-digit number refers to F or F♯/G♭.</td></tr>
+                    <tr><th>B</th><td class='rule'>This digit’s number would be a prime number if this digit is 1.</td></tr>
                 </table>
 
                 <h3>Table 2</h3>
