@@ -2403,6 +2403,30 @@ $(function () {
 				loggingTag: "DetoNATO"
 			},
 			{
+				moduleID: "EncryptedEquationsModule",
+				loggingTag: "Encrypted Equations",
+				matches: [
+					{
+						regex: /Equation:/,
+						handler: function(matches, module) {
+							module.push({ label: "Equation:", obj: pre(readMultiple(19)) });
+						}
+					}
+				]
+			},
+			{
+				moduleID: "EncryptedValuesModule",
+				loggingTag: "Encrypted Values",
+				matches: [
+					{
+						regex: /Operand:/,
+						handler: function(matches, module) {
+							module.push({ label: "Operand:", obj: pre(readMultiple(2)) });
+						}
+					}
+				]
+			},
+			{
 				moduleID: "fastMath",
 				loggingTag: "Fast Math",
 				matches: [
