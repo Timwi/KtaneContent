@@ -2027,7 +2027,7 @@ $(function () {
 				]
 			},
 			{
-				displayName: "Color Flash",
+				displayName: "Colour Flash",
 				moduleID: "ColourFlash",
 				loggingTag: "Colour Flash",
 				matches: [
@@ -3026,6 +3026,11 @@ $(function () {
 				loggingTag: "IKEA"
 			},
 			{
+				displayName: "Insane Talk",
+				moduleID: "insanetalk",
+				loggingTag: "Insane Talk"
+			},
+			{
 				moduleID: "Maze",
 				loggingTag: "InvisibleWallsComponent"
 			},
@@ -3685,6 +3690,11 @@ $(function () {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				moduleID: "MistakeModule",
+				displayName: "A Mistake",
+				loggingTag: "Mistake"
 			},
 			{
 				moduleID: "modernCipher",
@@ -6008,6 +6018,10 @@ $(function () {
 			},
 			{
 				moduleID: "SeaShells",
+				hasLogging: false
+			},
+			{
+				moduleID: "lgndTerrariaQuiz",
 				hasLogging: false
 			},
 			{
