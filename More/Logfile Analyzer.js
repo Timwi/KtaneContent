@@ -5994,9 +5994,6 @@ $(function () {
 				loggingTag: "Vent Gas Translated"
 			},
 			{
-				moduleID: "alphabet"
-			},
-			{
 				moduleID: "AnagramsModule",
 				hasLogging: false
 			},
