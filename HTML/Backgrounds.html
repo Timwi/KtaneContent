@@ -26,10 +26,6 @@
         var options2;
         var options3;
         var possibilities;
-        var batteries =
-            [
-                "D", "AA", "holders with 3 batteries", "holders with 4 batteries"
-            ];
         var ports =
             [
                 "DVI", "Parallel", "PS/2", "RJ-45", "Serial", "Stereo RCA", "Component Video",
@@ -74,13 +70,7 @@
                 rnd.shuffleFisherYates(coordXCopy);
                 rnd.shuffleFisherYates(coordYCopy);
                 rnd.shuffleFisherYates(ManualTableCopy);
-                //Slight manual change that makes more sense for just ruleseed.
-                document.getElementById('background-foot-2').innerHTML = "***: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing any color with White will <strong>not</strong> make the original color";
             }
-			else
-			{
-				document.getElementById('background-foot-2').innerHTML = "***: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.";
-			}
             for (var j = 0; j < coordXCopy.length; j++)
                 document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
             for (var j = 0; j < coordYCopy.length; j++)
@@ -96,7 +86,7 @@
 			possibilities = [];
 			chosen = [];
             //Create possible options for Possibilities
-            AddToOptions(i);
+            AddToOptions(i, rnd.seed == 1);
             //Generate all possible rules
             Possibilities();
             //Variable for holding the chosen Possibilty indicies
@@ -128,8 +118,8 @@
         }
         function Swap()
         {
-            var values = [326, 1496, 396, 1424, 570, 1183, 947, 1316, 559 ];
-            var newValues = [0, 463, 1320, 1326, 8, 22, 1400, 1360, 28];
+            var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+            var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
             for (var i = 0; i < values.length; i++)
             {
                 var hold = possibilities[values[i]];
@@ -141,15 +131,13 @@
         {
             setRules(rnd);
         }
-        function AddToOptions(i)
+        function AddToOptions(i, r)
         {
             options1.push("backing");
             options1.push("button");
             options1.push("submit button");
             options1.push("screen");
-            DetermineColors(i);
-            for (var j = 0; j < batteries.length; j++)
-                options3.push(batteries[j]);
+            DetermineColors(i, r);
             for (var j = 0; j < ports.length; j++)
                 options3.push(ports[j]);
             for (var j = 0; j < indicators.length; j++)
@@ -215,13 +203,22 @@
             }
         }
         //Checking the primary colors chosen
-        function DetermineColors(i) {
+        function DetermineColors(i, r) {
             if (i == 0)
             {
                 options2.push(["red", " yellow", " or blue"]);
                 options2.push(["orange", " green", " or purple"]);
                 options2.push(" mixed with red ");
                 options2.push(" mixed with yellow ");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("Green", "Yellow");
+                foot1.innerHTML = foot1.innerHTML.replace("Cyan, Yellow, and Magenta", "Orange, Green, and Purple");
+                if (r){
+                    document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.";
+					}
+                else
+                    document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing any color with White will <strong>not</strong> make the original color";
             }
             else
             {
@@ -229,9 +226,11 @@
                 options2.push(["cyan", " yellow", " or magenta"]);
                 options2.push(" mixed with red ");
                 options2.push(" mixed with green ");
-                document.getElementById('background-foot-0').innerHTML.replace("Yellow", "Green");
-                document.getElementById('background-foot-1').innerHTML.replace("Orange, Green, and Purple", "Cyan, Yellow, and Magenta");
-                document.getElementById('background-foot-2').innerHTML = "Mixing Red and Green will make Yellow, Blue and Green will make Cyan, and Red and Blue will make Magenta. Mixing any color with White will <strong>not</strong> make the original color."
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("Yellow", "Green");
+                foot1.innerHTML = foot1.innerHTML.replace("Orange, Green, and Purple", "Cyan, Yellow, and Magenta");
+                document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Green will make Yellow, Blue and Green will make Cyan, and Red and Blue will make Magenta. Mixing any color with White will <strong>not</strong> make the original color."
             }
             options2.push(" mixed with blue ");
         }
@@ -246,14 +245,14 @@
                 if (options2[i].length == 2)
                     options2[i] = ("" + options2[i]).replace(",", "");
                 if (i < 2) {
-                    var word = i == 0 ? "primary color*" : "secondary color**";
-                    possibilities.push("the button or the backing are a " + word);
+                    var word = i == 0 ? "primary color **" : "secondary color ***";
+                    possibilities.push("the button or the backing (or both) are a " + word);
                     possibilities.push("only the button is a " + word);
                     possibilities.push("only the backing is a " + word);
-                    possibilities.push("the button <strong>OR</strong> the backing is a " + word);
-                    var word2 = i == 0 ? "primary colors*" : "secondary colors**";
-                    possibilities.push("the button <strong>AND</strong> the backing are " + word2);
-                    possibilities.push("neither the button nor the backing are " + word2);
+                    possibilities.push("the button or the backing (but not both) is a " + word);
+                    var word2 = i == 0 ? "primary colors **" : "secondary colors ***";
+                    possibilities.push("the button and the backing are " + word2);
+                    possibilities.push("neither the button or the backing are " + word2);
                     for (var j = 0; j < 2; j++) {
                         possibilities.push("the color of the " + options1[j] + " is a " + word);
                         possibilities.push("the color of the " + options1[j] + " is not a " + word);
@@ -261,7 +260,7 @@
                 }
                 else if (i < 5) {
                     for (var j = 0; j < 2; j++)
-                        possibilities.push("the " + options1[j] + "'s color" + options2[i] + "creates the " + (j == 0 ? "button's" : "backing's") + " color***");
+                        possibilities.push("the " + options1[j] + "'s color" + options2[i] + "creates the " + (j == 0 ? "button's" : "backing's") + " color ****");
                 }
                 else {
                     var word = i < 16 ? "is " : "is either ";
@@ -269,9 +268,9 @@
                     possibilities.push("the button or the backing (or both) " + word2 + options2[i]);
                     possibilities.push("only the button " + word + options2[i]);
                     possibilities.push("only the backing " + word + options2[i]);
-                    possibilities.push("the button <strong>OR</strong> the backing (but not both) " + word2 + options2[i]);
-                    possibilities.push("the button <strong>AND</strong> the backing " + word + options2[i]);
-                    possibilities.push("neither the button nor the backing " + word + options2[i]);
+                    possibilities.push("the button or the backing (but not both) " + word2 + options2[i]);
+                    possibilities.push("the button and the backing " + word + options2[i]);
+                    possibilities.push("neither the button or the backing " + word + options2[i]);
                     for (var j = 0; j < 2; j++) {
                         possibilities.push("the color of the " + options1[j] + " " + word + options2[i]);
                         possibilities.push("the color of the " + options1[j] + " " + word.replace("is", "is not") + options2[i]);
@@ -286,9 +285,23 @@
             possibilities.push("there are no batteries present on the bomb");
             possibilities.push("there are an odd amount of batteries present on the bomb");
             possibilities.push("there are an even amount of batteries present on the bomb");
+            possibilities.push("there are no D batteries present on the bomb *");
+            possibilities.push("there is exactly one D battery present on the bomb *");
+            possibilities.push("there is more than one D battery present on the bomb *");
+            possibilities.push("there are no AA batteries present on the bomb");
+            possibilities.push("there are two AA batteries present on the bomb");
+            possibilities.push("there are three AA batteries present on the bomb");
+            possibilities.push("there are four AA batteries present on the bomb");
+            possibilities.push("there are more than four AA batteries present on the bomb");
             possibilities.push("there are no battery holders present on the bomb");
             possibilities.push("there is one battery holder present on the bomb");
             possibilities.push("there is more than one battery holder present on the bomb");
+			possibilities.push("there is a battery holder with no batteries present on the bomb");
+			possibilities.push("there is a battery holder with exactly two batteries present on the bomb");
+            possibilities.push("there is a battery holder with exactly three batteries present on the bomb");
+            possibilities.push("there are multiple battery holders with an odd amount of batteries present on the bomb");
+            possibilities.push("there is a battery holder with four batteries present on the bomb");
+            possibilities.push("there are multiple holders with an even amount of batteries present on the bomb");
             possibilities.push("there are no indicators present on the bomb");
             possibilities.push("there is one indicator present on the bomb");
             possibilities.push("there is more than one indicator present on the bomb");
@@ -299,16 +312,7 @@
             possibilities.push("there is one unlit indicator present on the bomb");
             possibilities.push("there is more than one unlit indicator present on the bomb");
             for (var i = 0; i < options3.length; i++) {
-                if (i < 4) {
-                    possibilities.push("there are no " + options3[i] + " batteries present on the bomb");
-                    possibilities.push("there is one " + options3[i] + " battery present on the bomb");
-                    possibilities.push("there is more than one " + options3[i] + " battery present on the bomb");
-                    possibilities.push("there are no battery holders of type " + options3[i] + " present on the bomb");
-                    possibilities.push("there is one battery holder of type " + options3[i] + " present on the bomb");
-                    possibilities.push("there is more than one battery holder of type " + options3[i] + " present on the bomb");
-                    continue;
-                }
-                else if (i < 17) {
+                if (i < 13) {
                     possibilities.push("the bomb contains a " + options3[i] + " port");
                     possibilities.push("the bomb contains more than one " + options3[i] + " port");
                     possibilities.push("the bomb contains exactly one " + options3[i] + " port");
@@ -454,12 +458,12 @@
                             <td><div id="background-r-0"></div></td>
                         </tr>
                         <tr>
-                            <td id="background-rule-1">Otherwise, if the button <strong>OR</strong> the backing are black or white</td>
+                            <td id="background-rule-1">Otherwise, if the button or the backing (but not both) are black or white</td>
                             <td><div id="background-l-1"></div></td>
                             <td><div id="background-r-1"></div></td>
                         </tr>
                         <tr>
-                            <td id="background-rule-2">Otherwise, if there are no D batteries on the bomb</td>
+                            <td id="background-rule-2">Otherwise, if there are no D batteries on the bomb *</td>
                             <td><div id="background-l-2"></div></td>
                             <td><div id="background-r-2"></div></td>
                         </tr>
@@ -469,12 +473,12 @@
                             <td><div id="background-r-3"></div></td>
                         </tr>
                         <tr>
-                            <td id="background-rule-4">Otherwise, if the button <strong>AND</strong> the backing are primary colors*</td>
+                            <td id="background-rule-4">Otherwise, if the button and the backing are primary colors **</td>
                             <td><div id="background-l-4"></div></td>
                             <td><div id="background-r-4"></div></td>
                         </tr>
                         <tr>
-                            <td id="background-rule-5">Otherwise, if the button is a secondary color**</td>
+                            <td id="background-rule-5">Otherwise, if the button is a secondary color ***</td>
                             <td><div id="background-l-5"></div></td>
                             <td><div id="background-r-5"></div></td>
                         </tr>
@@ -489,7 +493,7 @@
                             <td><div id="background-r-7"></div></td>
                         </tr>
                         <tr>
-                            <td id="background-rule-8">Otherwise, if the backing's color mixed with blue creates the Button's Color***</td>
+                            <td id="background-rule-8">Otherwise, if the backing's color mixed with blue creates the Button's Color ****</td>
                             <td><div id="background-l-8"></div></td>
                             <td><div id="background-r-8"></div></td>
                         </tr>
@@ -501,9 +505,10 @@
                     </tbody>
                 </table>
                 <p>
-                    <div id="background-foot-0" class="footnotes">*: Primary colors are Red, Yellow, and Blue</div>
-                    <div id="background-foot-1" class="footnotes">**: Secondary colors are Orange, Green, and Purple</div>
-                    <div id="background-foot-2" class="footnotes">***: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.</div>
+					<div id="background-foot-3" class="footnotes">*: D batteries are detected as any battery holder with exactly one battery.</div>
+                    <div id="background-foot-0" class="footnotes">**: Primary colors are Red, Yellow, and Blue</div>
+                    <div id="background-foot-1" class="footnotes">***: Secondary colors are Orange, Green, and Purple</div>
+                    <div id="background-foot-2" class="footnotes">****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will not make Blue.</div>
                 </p>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
