@@ -2636,7 +2636,7 @@ $(function () {
 						regex: /Stages \d+ to \d+/,
 						handler: function(matches, module) {
 							module.push({
-								label: matches.input, 
+								label: matches.input,
 								obj: pre(readMultiple(2, removeTag))
 							});
 							return true;
@@ -6011,10 +6011,6 @@ $(function () {
 			},
 			{
 				moduleID: "Microcontroller",
-				hasLogging: false
-			},
-			{
-				moduleID: "SeaShells",
 				hasLogging: false
 			},
 			{
