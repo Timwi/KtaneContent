@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SOLUTION — Nibbles</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../css/puzzles.css">
+    <link rel="stylesheet" type="text/css" href="../../HTML/css/font.css">
+    <link rel="stylesheet" type="text/css" href="timwi-puzzles.css">
+    <script src='highlighter.js'></script>
+    <style>
+        #left {
+            float: left;
+        }
+
+            #left svg {
+                width: 100%;
+            }
+
+                #left svg text.letter {
+                    text-anchor: middle;
+                    font-size: .7pt;
+                    font-family: Candara;
+                }
+
+                    #left svg text.letter.solution {
+                        fill: #f00;
+                    }
+
+                #left svg text.crossings {
+                    font-size: .2pt;
+                    fill: #888;
+                }
+
+                #left svg rect.square {
+                    fill: none;
+                    stroke: none;
+                }
+
+                    #left svg rect.square.caution {
+                        fill: #f2f2ff;
+                    }
+
+        #right {
+            clear: both;
+        }
+
+            #right #info {
+                column-count: 3;
+                margin-bottom: 1.5em;
+            }
+
+                #right #info div.category {
+                    margin-bottom: 1em;
+                    break-inside: avoid;
+                }
+
+                    #right #info div.category .title {
+                        padding: .2em .5em;
+                        font-size: 13pt;
+                    }
+
+                    #right #info div.category .words {
+                        padding: .2em .5em;
+                        font-size: 12pt;
+                    }
+
+                        #right #info div.category .words div.word span.info {
+                            font-size: smaller;
+                        }
+
+                        #right #info div.category .words div.word .error {
+                            background: #833;
+                            padding: .1em .5em;
+                            color: white;
+                            font-weight: bold;
+                        }
+
+                        #right #info div.category .words div.word.highlighted {
+                            background: #8f8;
+                            border: 1px solid #282;
+                            padding: .2em .5em;
+                        }
+
+        kbd {
+            font: inherit;
+            text-decoration: underline;
+        }
+
+        @media screen and (min-width: 1300px) {
+            #everything {
+                width: 33cm;
+            }
+
+            #left {
+                float: left;
+                width: 14cm;
+                padding-right: .5cm;
+            }
+
+            #right {
+                width: 16cm;
+                float: right;
+                clear: none;
+            }
+        }
+
+        @media screen and (min-width: 1580px) {
+            #everything {
+                width: 41cm;
+            }
+
+            #right #info {
+                column-count: 4;
+            }
+
+            #right {
+                width: 24cm;
+            }
+        }
+
+        #everything {
+            overflow: auto;
+        }
+
+        div.solution p.solution {
+            width: 12cm;
+            margin-bottom: 1cm;
+        }
+
+        strong {
+            text-decoration: underline;
+        }
+
+        @media print {
+            #left svg {
+                width: 12cm;
+                float: left;
+                margin-right: .5cm;
+                margin-bottom: .5cm;
+            }
+
+            div.solution p.solution {
+                clear: both;
+                width: 13cm;
+                margin-top: 1cm;
+            }
+
+            #right {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id='everything' class='solution'>
+        <h1><img src='Nibbles.png' alt='Nibbles' style='width: 7.5cm' /></h1>
+        <h2>Solution</h2>
+        <p>The grid contains words/phrases from KTANE modules in a winding fashion. These words/phrases all fit in the boxes on the right, categorized under their respective module names. The module names are in alphabetical order, as are all the words/phrases within each module group. The numbers in parentheses indicate the number of 90° turns (which means words with a 0 are written in a straight line). This realization is significant in cases where different windings can yield the same word but would alter the solution.</p>
+        <div id="left">
+            <svg viewBox="-.1 -.1 18.2 18.2">
+                <g id="generated"></g>
+            </svg>
+            <p><strong>Click on any letter</strong> to see the words used by that letter, or <strong>click on a word on the right</strong> to see where in the grid it is. The small numbers show how many words/phrases that use that letter.</p>
+            <p>Once all words are obtained, the unused letters read out the solution in reading order.</p>
+            <p class='solution'>UPRIGHT TRIFORCE</p>
+        </div>
+        <div id="right">
+            <div id="info">
+            </div>
+        </div>
+        <script>
+            String.prototype.fmt = function(args)
+            {
+                return this.replace(/(\{\{)|(\}\})|\{(\w+)\}/g, (_, op, cl, word) => op ? '{' : cl ? '}' : args[word]);
+            }
+
+            var words, grid;
+
+            function updateView(rawData)
+            {
+                words = [];
+                var categories = {};
+                var rawDataList = rawData.split('\n');
+                var solutionWord = '';
+                for (var i = 0; i < rawDataList.length; i++)
+                {
+                    if (rawDataList[i].startsWith('#'))
+                        continue;
+                    if (rawDataList[i].startsWith('='))
+                        solutionWord = rawDataList[i].substr(1);
+                    var arr = rawDataList[i].split('/');
+                    if (arr.length === 2)
+                        categories[arr[0]] = { name: arr[1], id: 'cat-' + arr[0] };
+                    else if (arr.length >= 4)
+                        words.push({ x: +arr[0], y: +arr[1], wordpath: arr[2], category: categories[arr[3]], line: i });
+                }
+
+                document.getElementById('generated').innerHTML = '';
+                document.getElementById('info').innerHTML = '';
+
+                var catKeys = Object.keys(categories).sort();
+                for (var catIx = 0; catIx < catKeys.length; catIx++)
+                {
+                    categories[catKeys[catIx]].color = `hsl(${360 * catIx / catKeys.length}, 80%, 90%)`;
+                    categories[catKeys[catIx]].gradient = `linear-gradient(90deg, hsl(${360 * catIx / catKeys.length}, 80%, 95%), hsl(${360 * catIx / catKeys.length}, 80%, 85%))`;
+                }
+
+                var g = '';
+
+                // Squares
+                for (x = 0; x < 18; x++)
+                    for (y = 0; y < 18; y++)
+                        g += `<rect x='${x}' y='${y}' width='1' height='1' class='square' id='square-${x}-${y}'/>`;
+
+                g += `<rect fill="none" stroke="black" stroke-width=".1" x="0" y="0" width="18" height="18" />`;
+
+                // Words
+                grid = new Array(18);
+                for (x = 0; x < 18; x++)
+                {
+                    grid[x] = new Array(18);
+                    for (y = 0; y < 18; y++)
+                        grid[x][y] = { letter: null, words: [] };
+                }
+                for (var wordIx = 0; wordIx < words.length; wordIx++)
+                {
+                    var wordInfo = words[wordIx];
+                    wordInfo.word = '';
+                    wordInfo.error = null;
+                    wordInfo.coords = [];
+                    wordInfo.correct = true;
+                    var x = wordInfo.x, y = wordInfo.y, dx = 1, dy = 0;
+                    for (var i = 0; i < wordInfo.wordpath.length; i++)
+                    {
+                        if (wordInfo.wordpath[i] === '<') { var t = dx; dx = dy; dy = -t; }
+                        else if (wordInfo.wordpath[i] === '>') { var t = dx; dx = -dy; dy = t; }
+                        else
+                        {
+                            wordInfo.word += wordInfo.wordpath[i];
+                            if (wordInfo.error === null)
+                            {
+                                if (x < 0 || x >= 18 || y < 0 || y >= 18)
+                                    wordInfo.error = 'Word runs off the edge.';
+                                else if (grid[x][y].letter !== null && grid[x][y].letter !== wordInfo.wordpath[i])
+                                    wordInfo.error = `Word collides with ${'word' in grid[x][y].words[0] ? grid[x][y].words[0].word : 'itself'}.`;
+                                else
+                                {
+                                    wordInfo.coords.push({ x: x, y: y });
+                                    grid[x][y].letter = wordInfo.wordpath[i];
+                                    grid[x][y].words.push(wordInfo);
+                                    x += dx;
+                                    y += dy;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                words.sort((a, b) => a.word < b.word ? -1 : a.word > b.word ? 1 : 0);
+
+                for (var catIx = 0; catIx < catKeys.length; catIx++)
+                {
+                    var div = document.createElement('div');
+                    div.innerHTML = `<div class='category' id='${categories[catKeys[catIx]].id}'>
+                        <div class='title' style='background: ${categories[catKeys[catIx]].gradient}'>${categories[catKeys[catIx]].name}</div>
+
+                        <div class='words'></div>
+                    </div>`;
+                    document.getElementById('info').appendChild(div);
+                }
+
+                for (var wordIx = 0; wordIx < words.length; wordIx++)
+                {
+                    var wordInfo = words[wordIx];
+                    var crossings = [];
+                    var weak = true;
+                    for (var i = 0; i < wordInfo.coords.length; i++)
+                    {
+                        var wordList = grid[wordInfo.coords[i].x][wordInfo.coords[i].y].words;
+                        if (wordList.length === 1)
+                            weak = false;
+                        for (var j = 0; j < wordList.length; j++)
+                            if (wordList[j].word !== wordInfo.word && crossings.indexOf(wordList[j].word) === -1)
+                                crossings.push(wordList[j].word);
+                    }
+                    var newDiv = document.createElement('div');
+
+                    // Used to show: number of crossing words and number of letters unique to this word
+                    // <span class='info' title='${crossings.join(', ')}'>(${crossings.length}, ${wordInfo.coords.filter(c => grid[c.x][c.y].words.length === 1).length})</span>
+                    var wPath = wordInfo.wordpath;
+                    while (wPath.startsWith("<") || wPath.startsWith(">"))
+                        wPath = wPath.substr(1);
+                    var windingness = 0;
+                    for (let i = 0; i < wPath.length; i++)
+                        if (wPath.substr(i, 1) === '<' || wPath.substr(i, 1) === '>')
+                            windingness++;
+
+                    newDiv.innerHTML = `<div class='word${wordInfo.correct ? ' correct' : ''}${weak ? ' weak' : ''}' id='${wordInfo.word}'>
+                        <span class='word'>${wordInfo.word}</span>
+                        <span class='info'>(${windingness})</span>
+                        ${wordInfo.error !== null ? `<div class='error'>${wordInfo.error}</div>` : ''}
+                    </div>`;
+                    document.querySelector(`#${wordInfo.category.id} .words`).appendChild(newDiv);
+                }
+
+                var numUnusedSquares = 0;
+                var texts = "";
+                for (y = 0; y < 18; y++)
+                    for (x = 0; x < 18; x++)
+                    {
+                        if (grid[x][y].letter === null)
+                        {
+                            if (solutionWord.length === 0)
+                            {
+                                numUnusedSquares++;
+                                continue;
+                            }
+                            grid[x][y].letter = solutionWord.substr(0, 1);
+                            grid[x][y].solution = true;
+                            solutionWord = solutionWord.substr(1);
+                        }
+                        texts += `<text x='${x + .5}' y='${y + .8}' class='letter${grid[x][y].words.filter(w => w.correct).length > 0 ? ' correct' : ''}${grid[x][y].solution ? ' solution' : ''}' id='text-${x}-${y}'>${grid[x][y].letter}</text><text x='${x + .8}' y='${y + .9}' class='crossings'>${grid[x][y].words.length}</text>`;
+                    }
+
+                g += texts;
+
+                document.getElementById('generated').innerHTML = g;
+
+                for (x = 0; x < 18; x++)
+                    for (y = 0; y < 18; y++)
+                        if (grid[x][y].letter === null || grid[x][y].solution)
+                            document.getElementById(`square-${x}-${y}`).classList.add('caution');
+
+                function removeHighlights()
+                {
+                    Array.from(document.getElementsByClassName('highlighted')).forEach(elem => { elem.classList.remove('highlighted'); });
+                    Array.from(document.getElementsByClassName('square')).forEach(elem => { elem.style.fill = ''; });
+                    return false;
+                }
+
+                Array.from(document.getElementsByClassName('letter')).forEach(elem =>
+                {
+                    elem.onclick = function()
+                    {
+                        removeHighlights();
+                        /^text-(\d+)-(\d+)$/.exec(this.getAttribute('id'));
+                        var wordList = grid[+RegExp.$1][+RegExp.$2].words;
+                        var s = [];
+                        for (var i = 0; i < wordList.length; i++)
+                        {
+                            document.getElementById(wordList[i].word).classList.add('highlighted');
+                            for (var j = 0; j < wordList[i].coords.length; j++)
+                            {
+                                var wl2 = grid[wordList[i].coords[j].x][wordList[i].coords[j].y].words.filter(wd => wordList.indexOf(wd) !== -1);
+                                document.getElementById(`square-${wordList[i].coords[j].x}-${wordList[i].coords[j].y}`).style.fill = wordList.length < 2 ? wordList[0].category.color : wl2.length < 2 ? wl2[0].category.color : '#ddd';
+                            }
+                        }
+                        return false;
+                    };
+                });
+
+                Array.from(document.getElementsByClassName('word')).forEach(elem =>
+                {
+                    elem.onclick = function()
+                    {
+                        removeHighlights();
+                        this.classList.add('highlighted');
+                        var word = this.getAttribute('id');
+                        for (var i = 0; i < words.length; i++)
+                            if (words[i].word === word)
+                            {
+                                var s = [];
+                                for (var j = 0; j < words[i].coords.length; j++)
+                                    document.getElementById(`square-${words[i].coords[j].x}-${words[i].coords[j].y}`).style.fill = words[i].category.color;
+                            }
+                        return false;
+                    };
+                });
+
+                return false;
+            }
+
+            updateView(`curr/Curriculum
+astro/Astrology
+mon/Monsplode, Fight!
+tz/Timezone
+adv/Adventure Game
+zoo/Zoo
+flags/Flags
+lis/Listening
+ext/Extended Password
+cheap/Cheap Checkout
+cr/Creation
+pt/Periodic Table
+
+0/3/>IODINE/pt
+0/0/EL>E>C<T<R>O<N<I>CS/curr
+0/0/ELEPHA>NT/zoo
+3/0/P>HYSICS/curr
+2/1/COYOTE/zoo
+4/2/<<SCOR<PIO/astro
+6/3/<<D>EM>OTE/ext
+1/4/CANCER/astro
+0/5/>DI<NOS<A<UR/cr
+6/3/<<D<E<ER/zoo
+5/1/>O<MSK/tz
+11/1/<<T>A>UR>US/astro
+9/1/<<G<OL<EM/adv
+6/5/W<HI>TE<M<ILK/cheap
+8/4/<G>E<M>INI/astro
+1/5/>TOOTH<PASTE/cheap
+3/5/>QU<A<R>TZ/ext
+5/6/>ZIPPER/lis
+0/7/>N<E>T<H<E>RL>A>N<DS/flags
+1/11/<<F>EA>TH<ER/adv
+6/5/<<W<I<ZARD/adv
+3/7/ARIES/astro
+1/10/PAS>TASAUCE/cheap
+7/8/<<JAP<AN/flags
+3/10/STEAM/cr
+6/10/>AU>S>T<RAL>IA/flags
+9/8/>>BU<JUM>BURA/tz
+5/13/<<N>A<S<T>Y>KN<IFE/adv
+7/7/<<S<EAL/zoo
+8/9/CAN>OLA/cheap
+11/1/>T<I<SS>UES/cheap
+1/14/<T>OK>YO/tz
+1/11/<<F<ERR<ET/zoo
+2/16/<<S>OU>T<H<KO<REA/flags
+2/17/<<G>H>O<ST/cr
+2/17/GOB<LIN/adv
+4/17/<B>EI<J<I>NG/tz
+13/1/>C>ASI<NO/lis
+13/0/>E<CO<N>OMY/curr
+16/0/<<M<O<NK<EY/zoo
+12/2/S>AO<P<AULO/tz
+17/3/<T<U>R>K<EY/cheap
+14/2/>L<U<G>I>R<IT/mon
+9/4/M<OON/astro
+6/16/<J>I>GS>AW/ext
+6/17/WATERFALL/lis
+17/5/<M<AN>A<G<UA/tz
+15/5/<P>AN>A>MA/flags
+10/6/>O<X<YGEN/ext
+10/7/X>YL<O>SE/ext
+14/7/<<EN>E<R<GY/cr
+10/5/Z<E>N>L<AD/mon
+16/6/<<CLO>N<D<AR/mon
+9/4/>MARS/astro
+17/7/<S<O<C>C<ERMA>TCH/lis
+14/11/<<C>H>E<A<T>C>O<DE/adv
+17/5/>MO>S<COW/tz
+17/5/>MOSS/cr
+15/9/>MAT<HS/curr
+17/8/>S>E<W<I>NGMACH>INE/lis
+17/14/>CH>I>NA/flags
+12/16/>B<ALLO<ON/adv
+16/14/>>GLOORIM/mon
+15/14/<L>AVA/cr
+14/11/<<C>H<E<E>TAH/zoo
+7/10/MYR>C<HAT/mon
+9/9/A>NC>H>OR/ext
+16/12/<<SHA<MP<OO/cheap
+14/13/<D<A<M>P>EN/ext
+16/14/<<G<L>ASSS<H>A>T<T<E>R>I<NG/lis
+6/15/IG>NI<TE/ext
+6/12/>S<A<G>IT>T<A<R>I>US/astro
+6/14/PHO>NE>R>I<NGI>NG/lis
+10/13/<<RA<DON/pt
+16/8/<O<C>E<L>OT/zoo
+9/0/<<HYENA/zoo
+8/7/>T<U>BA/lis
+0/14/>EAR<TH/astro
+14/15/<SO>DA/cheap
+12/9/<S>T<O>NE/cr
+5/9/>PE<RU/flags
+10/10/<<C>RAB/zoo
+16/9/<W<O<RM/cr
+3/11/>>LIFE/cr
+
+=UPRIGHTTRIFORCE`);
+        </script>
+    </div>
+</body>
+</html>
