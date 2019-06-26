@@ -5592,7 +5592,11 @@ $(function () {
                         regex: /^(.*)([01]{3})(.*)$/,
                         handler: function(matches, module) {
                             module.push(matches[1] + matches[2].replace(/0/g, '○').replace(/1/g, '●') + matches[3]);
+                            return true;
                         }
+                    },
+                    {
+                        regex: /.+/
                     }
                 ]
             },
