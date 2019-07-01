@@ -2398,6 +2398,11 @@ $(function () {
 				loggingTag: "Cursed Double-Oh"
 			},
 			{
+				displayName: "The Dealmaker",
+				moduleID: "thedealmaker",
+				loggingTag: "TheDealmaker"
+			},
+			{
 				displayName: "DetoNATO",
 				moduleID: "Detonato",
 				loggingTag: "DetoNATO"
@@ -2443,6 +2448,11 @@ $(function () {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Find The Date",
+				moduleID: "DateFinder",
+				loggingTag: "Date Finder"
 			},
 			{
 				displayName: "FizzBuzz",
@@ -5374,6 +5384,11 @@ $(function () {
 				displayName: "The Stock Market",
 				moduleID: "stockMarket",
 				loggingTag: "The Stock Market"
+			},
+			{
+				displayName: "Subscribe to Pewdiepie",
+				moduleID: "subscribeToPewdiepie",
+				loggingTag: "Subscribe to Pewdiepie"
 			},
 			{
 				displayName: "The Switch",
