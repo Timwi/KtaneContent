@@ -1773,6 +1773,11 @@ $(function () {
 				]
 			},
 			{
+				displayName: "Button Grid",
+				moduleID: "buttonGrid",
+				loggingTag: "Button Grids"
+			},
+			{
 				displayName: "Button Sequence",
 				moduleID: "buttonSequencesModule",
 				loggingTag: "Button Sequences",
@@ -1812,6 +1817,11 @@ $(function () {
 				displayName: "Challenge & Contact",
 				moduleID: "challengeAndContact",
 				loggingTag: "Challenge & Contact"
+			},
+			{
+				displayName: "Character Codes",
+				moduleID: "characterCodes",
+				loggingTag: "CharacterCodes"
 			},
 			{
 				moduleID: "CheapCheckoutModule",
@@ -3643,6 +3653,11 @@ $(function () {
 						}
 					}
 				]
+			},
+			{
+				displayName: "The Matrix",
+				moduleID: "matrix",
+				loggingTag: "The Matrix"
 			},
 			{
 				displayName: "Maze³",
