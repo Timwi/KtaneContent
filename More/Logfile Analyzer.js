@@ -2403,6 +2403,11 @@ $(function () {
 				loggingTag: "TheDealmaker"
 			},
 			{
+				displayName: "The Deck of Many Things",
+				moduleID: "deckOfManyThings",
+				loggingTag: "The Deck of Many Things"
+			},
+			{
 				displayName: "DetoNATO",
 				moduleID: "Detonato",
 				loggingTag: "DetoNATO"
