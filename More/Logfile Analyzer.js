@@ -3662,7 +3662,22 @@ $(function () {
 			{
 				displayName: "Maze³",
 				moduleID: "maze3",
-				loggingTag: "Maze^3"
+				loggingTag: "Maze³",
+				matches: [
+					{
+						regex: /Node mapping for logging purposes:/,
+						handler: function (matches, module) {
+							module.push({
+                                label: "Node mapping:",
+                                obj: $("<img src='img/Maze³/mazeLog.png' width='200' style='margin: 1em; display: block;'/>")
+                            });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "Micro-Modules",
