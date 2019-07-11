@@ -1548,38 +1548,7 @@ $(function () {
 			},
 			{
 				moduleID: "BlindAlleyModule",
-				loggingTag: "Blind Alley",
-				matches: [
-					{
-						regex: /Region condition counts:/,
-						handler: function (_, module) {
-							var line1 = readLine();
-							var line2 = readLine();
-							var line3 = readLine();
-							var numbers = [line1[0], line1[2], line2[0], line2[2], line2[4], line3[0], line3[2], line3[4]];
-							var max = 0;
-							for (var i = 0; i < numbers.length; i++)
-								if (numbers[i] > max)
-									max = numbers[i];
-							var table = $('<table><tr><td>0<td>1</tr><tr><td>2<td>3<td>4</tr><tr><td>5<td>6<td>7</tr></table>'.replace(/\d/g, function (i) {
-								return numbers[i];
-							})).css({ borderCollapse: 'collapse' });
-							table.find('td').each(function (_, elem) {
-								$(elem).css({
-									padding: '.5em 1em',
-									fontSize: '150%',
-									border: '1px solid black',
-									background: $(elem).text() == max ? '#dfd' : null,
-									fontWeight: $(elem).text() == max ? 'bold' : null
-								});
-							});
-							module.push({ label: "Region counts:", obj: table });
-						}
-					},
-					{
-						regex: /Region .+ is correct|You pressed region/
-					}
-				]
+				loggingTag: "Blind Alley"
 			},
 			{
 				displayName: "Blackjack",
