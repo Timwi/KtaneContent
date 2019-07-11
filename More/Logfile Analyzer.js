@@ -4743,6 +4743,80 @@ $(function () {
 				]
 			},
 			{
+				displayName: "Qwirkle",
+				moduleID: "qwirkle",
+				loggingTag: "Qwirkle",
+				matches: [
+					{
+						regex: /Successfully placed ([a-z0-9_]+) at ([A-Z][0-9])./,
+						handler: function (matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text("Successfully placed "))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
+								.append($('<span>').text(" at " + matches[2] + "."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /Strike! Tried to place ([a-z0-9_]+) at ([A-Z][0-9]), which violates placement rules./,
+						handler: function (matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text("Strike! Tried to place "))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
+								.append($('<span>').text(" at " + matches[2] + ", which violates placement rules."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /Available pieces for stage ([0-9]) are ([a-z0-9_]+) ([a-z0-9_]+) ([a-z0-9_]+) ([a-z0-9_]+) . ([a-z0-9_]+) is guaranteed valid for ([A-Z][0-9])./,
+						handler: function (matches, module) {
+							const span = $('<span>')
+								.append($('<span>').text("Available pieces for stage " + matches[1] + " are "))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[2] + ".png' width='20' />"))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[3] + ".png' width='20' />"))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[4] + ".png' width='20' />"))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[5] + ".png' width='20' />"))
+								.append($('<span>').text(". "))
+								.append($("<img src='../HTML/img/Qwirkle/" + matches[6] + ".png' width='20' />"))
+								.append($('<span>').text(" is guaranteed valid for " + matches[7] + "."));
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /Stage ([0-9]) board: ([a-z0-9_ ]+)/,
+						handler: function (matches, module) {
+							var tiles = matches[2].split(" ");
+
+							const span = $('<span style="display: flex; flex-direction: column">')
+								.append($('<span>').text("Stage " + matches[1] + " board:"));
+
+							for(var i = 0; i < 7; i++)
+							{
+								var row = $('<span style="height: 20px;">');
+								for(var j = 0; j < 7; j++)
+								{
+									row.append($("<img src='../HTML/img/Qwirkle/" + tiles[i * 7 + j] + ".png' width='20' />"))
+								}
+								span.append(row);
+							}
+
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function (matches, module) {
+							module.groups.add($('<li>').text(matches[0]));
+							return true;
+						}
+					}
+				]
+			},
+			{
 				displayName: "The Radio",
 				moduleID: "KritRadio",
 				loggingTag: "The Radio"
