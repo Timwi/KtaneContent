@@ -1783,6 +1783,11 @@ $(function () {
 				loggingTag: "CaesarCipher"
 			},
 			{
+				displayName: "Calculus",
+				moduleID: "calcModule",
+				loggingTag: "Calc"
+			},
+			{
 				displayName: "Challenge & Contact",
 				moduleID: "challengeAndContact",
 				loggingTag: "Challenge & Contact"
