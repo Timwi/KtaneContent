@@ -1,5 +1,3 @@
-##THIS IS A FORKED VERSION. ORIGINAL VERSON CAN BE FOUND HERE: https://github.com/Timwi/KtaneContent
-
 # KTANE Content
 
 This repository contains the files that are hosted on https://ktane.timwi.de/. It does not contain the software that runs the server; this is hosted in https://github.com/Timwi/KtaneWeb.
