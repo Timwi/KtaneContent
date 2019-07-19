@@ -9,19 +9,18 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         table {
             margin: 1em auto;
         }
 
-        img.Icon {
-            width: 70%;
-            height: 70%:
+        img.robot-master {
+            width: 1.5cm;
         }
 
-        img.Weapon {
-            width: 100%;
-            height: 70%;
+        img.weapon {
+            width: 1.5cm;
         }
 
         img.center {
@@ -29,7 +28,162 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        .robot-master-name {
+            font-weight: bold;
+        }
+
+        td.center {
+            text-align: center;
+        }
     </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let robotMasters = rnd.seed === 1 ? [
+                "Air Man",
+                "Bubble Man",
+                "Crash Man",
+                "Flash Man",
+                "Heat Man",
+                "Metal Man",
+                "Quick Man",
+                "Wood Man"
+            ] : rnd.shuffleFisherYates([ "Cold Man", "Magma Man", "Dust Man", "Sword Man", "Splash Woman", "Ice Man", "Quick Man", "Hard Man", "Pharaoh Man", "Charge Man", "Pirate Man", "Pump Man", "Galaxy Man", "Grenade Man", "Snake Man", "Burst Man", "Cut Man", "Air Man", "Magnet Man", "Toad Man", "Gyro Man", "Tomahawk Man", "Wood Man", "Strike Man", "Blade Man", "Aqua Man", "Shade Man", "Flash Man", "Flame Man", "Concrete Man", "Metal Man", "Needle Man", "Wave Man", "Knight Man", "Slash Man", "Shadow Man", "Sheep Man", "Ground Man", "Wind Man", "Fire Man", "Stone Man", "Tengu Man", "Bright Man", "Centaur Man", "Cloud Man", "Frost Man", "Dynamo Man", "Chill Man", "Turbo Man", "Napalm Man", "Jewel Man", "Drill Man", "Freeze Man", "Blizzard Man", "Gravity Man", "Junk Man", "Clown Man", "Hornet Man", "Skull Man", "Solar Man", "Commando Man", "Yamato Man", "Dive Man", "Search Man", "Gemini Man", "Bubble Man", "Guts Man", "Tornado Man", "Astro Man", "Plug Man", "Elec Man", "Crystal Man", "Nitro Man", "Burner Man", "Spark Man", "Spring Man", "Plant Man", "Star Man", "Ring Man", "Top Man", "Crash Man", "Bomb Man", "Heat Man", "Magic Man" ]);
+
+            let presetCoordinates = {
+                "Air Man":    { coord1: "B2", coord2: "E1" },
+                "Bubble Man": { coord1: "D5", coord2: "D2" },
+                "Crash Man":  { coord1: "D4", coord2: "B1" },
+                "Flash Man":  { coord1: "C5", coord2: "B3" },
+                "Heat Man":   { coord1: "C1", coord2: "E4" },
+                "Metal Man":  { coord1: "B4", coord2: "E5" },
+                "Quick Man":  { coord1: "C3", coord2: "D3" },
+                "Wood Man":   { coord1: "E2", coord2: "C4" }
+            };
+
+            let coordinates = [];
+            for (let row = 1; row < 5; row++)
+                for (let col = 0; col < 5; col++)
+                    coordinates.push(String.fromCharCode(65 + row) + (col+1));
+
+            let robotMasterImgs = document.getElementsByClassName('robot-master');
+            let robotMasterNames = document.getElementsByClassName('robot-master-name');
+            let weaponImgs = document.getElementsByClassName('weapon');
+            for (let i = 0; i < 8; i++)
+            {
+                robotMasterImgs[i].src = `img/Mega Man 2/Robot Masters/${robotMasters[i]}.png`;
+                robotMasterNames[i].innerText = robotMasters[i];
+                weaponImgs[i].src = `img/Mega Man 2/Weapons/${robotMasters[i]}.png`;
+                if (robotMasters[i] in presetCoordinates)
+                {
+                    coordinates.splice(coordinates.indexOf(presetCoordinates[robotMasters[i]].coord1), 1);
+                    coordinates.splice(coordinates.indexOf(presetCoordinates[robotMasters[i]].coord2), 1);
+                }
+            }
+
+            rnd.shuffleFisherYates(coordinates);
+
+            let coordinatesIx = 0;
+            let coordinateTds = document.getElementsByClassName('coordinates');
+            for (let i = 0; i < 8; i++)
+            {
+                if (robotMasters[i] in presetCoordinates)
+                {
+                    coordinateTds[2*i  ].innerText = presetCoordinates[robotMasters[i]].coord1;
+                    coordinateTds[2*i+1].innerText = presetCoordinates[robotMasters[i]].coord2;
+                }
+                else
+                {
+                    coordinateTds[2*i  ].innerText = coordinates[coordinatesIx];
+                    coordinateTds[2*i+1].innerText = coordinates[coordinatesIx+1];
+                    coordinatesIx += 2;
+                }
+            }
+
+            // These must all have at least 3 because each of them can potentially occur 3 times
+            let brules = rnd.shuffleFisherYates([ "# of batteries", "# of D batteries", "# of AA batteries", "# of battery holders" ]);
+            let irules = rnd.shuffleFisherYates([ "# of indicators", "# of lit indicators", "# of unlit indicators" ]);
+            let prules = rnd.shuffleFisherYates([ "# of ports", "# of port types", "# of port plates" ]);
+            let srules = rnd.shuffleFisherYates([ "first SN digit", "second SN digit", "last SN digit" ]);
+            let inds = rnd.shuffleFisherYates([ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ]);
+            let ports = rnd.shuffleFisherYates([ "DVI-D", "Parallel", "PS/2", "RJ-45", "Serial", "Stereo RCA" ]);
+
+            let possibleAliveConditions = [
+                { text: "indicator labeled “{ind}” {presence}" },
+                { text: "lit indicator labeled “{ind}” {presence}" },
+                { text: "unlit indicator labeled “{ind}” {presence}" },
+                { text: "E-Tanks spot {op} A{num:1-5}", etanks: true },
+                { text: "{brule} {op} {num:1-10}" },
+                { text: "{irule} {op} {num:2-5}" },
+                { text: "{prule} {op} {num:2-7}" },
+                { text: "{srule} {op} {num:0-9}" },
+                { text: "{port} port {presence}" },
+                { text: "{brule} {op} {irule}" },
+                { text: "{brule} {op} {prule}" },
+                { text: "{brule} {op} {srule}" },
+                { text: "{irule} {op} {prule}" },
+                { text: "{irule} {op} {srule}" },
+                { text: "{prule} {op} {srule}" }
+            ];
+            if (rnd.seed !== 1)
+            {
+                possibleAliveConditions.push({ text: "# of modules on the bomb {op} {num:5-30}" });
+                possibleAliveConditions.push({ text: "Starting time of the bomb {op} {num:10-60} minutes" });
+            }
+            rnd.shuffleFisherYates(possibleAliveConditions);
+
+            let conditionTds = document.getElementsByClassName('alive-condition');
+            let anyETanks = false;
+            for (let i = 0; i < 8; i++)
+            {
+                let ruleInfo = possibleAliveConditions[i];
+                let op = ["=", "≤", "≥", "≠"][rnd.next(0, 4)];
+                let presence = ["present", "absent"][rnd.next(0, 2)];
+                let ruleText = ruleInfo.text
+                    .replace(/\{op\}/g, op)
+                    .replace(/\{ind\}/g, () => inds.shift())
+                    .replace(/\{presence\}/g, presence)
+                    .replace(/\{port\}/g, () => ports.shift())
+                    .replace(/\{num:(\d+)-(\d+)\}/g, (_, min, max) => rnd.next(+min, +max + 1))
+                    .replace(/\{brule\}/g, () => brules.shift())
+                    .replace(/\{irule\}/g, () => irules.shift())
+                    .replace(/\{prule\}/g, () => prules.shift())
+                    .replace(/\{srule\}/g, () => srules.shift());
+                conditionTds[i].innerText = ruleText;
+                if (ruleInfo.etanks)
+                    anyETanks = true;
+            }
+
+            let possibleETanksRules = rnd.seed === 1 ? [
+                "sum of all digits in the serial number",
+            ] : [
+                "sum of all digits in the serial number",
+                "sum of the alphabetic positions of the letters in the serial number",
+                "sum of the alphabetic positions of the letters in all indicators",
+                "sum of the values of the indicators, where lit={0} and unlit={1}",
+                "sum of the values of the ports, where parallel={0}, serial={1}, DVI-D={2}, Stereo RCA={3}, PS/2={4} and RJ-45={5} (other port types are 0)",
+                "sum of the values of the batteries, where AA={0} and D={1}",
+                "number of modules on the bomb (including needies)",
+                "number of modules on the bomb (excluding needies)",
+                "number of the current month when the bomb was activated",
+                "day of the month when the bomb was activated",
+                "total number of Mega Man 2 modules on the bomb"
+            ];
+            if (rnd.seed !== 1 && !anyETanks)
+            {
+                possibleETanksRules.push("total number of robot masters that are alive");
+                possibleETanksRules.push("total number of robot masters that are dead");
+            }
+
+            let numbers = rnd.shuffleFisherYates([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
+            let eTankRuleIx = rnd.next(0, possibleETanksRules.length);
+            document.getElementById('etanks-rule').innerText = possibleETanksRules[eTankRuleIx]
+                .replace(/\{(\d+)\}/g, (_, x) => numbers[x]);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -44,7 +198,7 @@
                 <p class="flavour-text">In the year 200X, a super robot named Mega Man was created. Dr. Light created Mega Man to stop the evil desires of Dr. Wily. However, after his defeat, Dr. Wily created eight of his own robots to counter Mega Man.</p>
                 <p>Mega Man 2 lets you input a password using 9 red points. To solve the module, create the correct password.</p>
                 <p>The master who uses the weapon shown on the module is dead, the master shown is alive. The rest of the masters are only alive if the <strong>Alive condition</strong> applies. Otherwise, they’re dead.</p>
-                <p>The number of <strong>E-Tanks</strong> you have is the sum of all digits in the serial number. Keep subtracting 5 till you are in the range of 1-5. The spot for E-Tanks is <strong>"A#"</strong>.</p>
+                <p>The number of <strong>E-Tanks</strong> you have is the <span id='etanks-rule'>sum of all digits in the serial number</span>. Keep adding/subtracting 5 until you are in the range of 1-5. The spot for E-Tanks is <strong>"A#"</strong>.</p>
                 <table>
                     <tr>
                         <th>Robot master</th>
@@ -52,71 +206,71 @@
                         <th>Name</th>
                         <th>Is dead</th>
                         <th>Is alive</th>
-                        <th>Alive Condition</th>
+                        <th>Alive condition</th>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Air_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Air_Shooter.png"></td>
-                        <td><strong>Air Man</strong></td>
-                        <td><strong>B2</strong></td>
-                        <td><strong>E1</strong></td>
-                        <td># of <strong>Battery Holders</strong> ≥ # of <strong>Indicators</strong></td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Air Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Air Man.png"></td>
+                        <td class='robot-master-name'>Air Man</td>
+                        <td class='coordinates'>B2</td>
+                        <td class='coordinates'>E1</td>
+                        <td class='alive-condition'># of <strong>Battery Holders</strong> ≥ # of <strong>Indicators</strong></td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Bubble_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Bubble_Lead.png"></td>
-                        <td><strong>Bubble Man</strong></td>
-                        <td><strong>D5</strong></td>
-                        <td><strong>D2</strong></td>
-                        <td># of <strong>E-Tanks</strong> ≠ 2</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Bubble Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Bubble Man.png"></td>
+                        <td class='robot-master-name'>Bubble Man</td>
+                        <td class='coordinates'>D5</td>
+                        <td class='coordinates'>D2</td>
+                        <td class='alive-condition'># of <strong>E-Tanks</strong> ≠ 2</td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Crash_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Crash_Bomber.png"></td>
-                        <td><strong>Crash Man</strong></td>
-                        <td><strong>D4</strong></td>
-                        <td><strong>B1</strong></td>
-                        <td><strong>Indicator</strong> labeled <strong>"CAR"</strong> present</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Crash Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Crash Man.png"></td>
+                        <td class='robot-master-name'>Crash Man</td>
+                        <td class='coordinates'>D4</td>
+                        <td class='coordinates'>B1</td>
+                        <td class='alive-condition'><strong>Indicator</strong> labeled <strong>"CAR"</strong> present</td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Flash_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Time_Stopper.png"></td>
-                        <td><strong>Flash Man</strong></td>
-                        <td><strong>C5</strong></td>
-                        <td><strong>B3</strong></td>
-                        <td>Last digit in <strong>S#</strong> ≤ 5</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Flash Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Flash Man.png"></td>
+                        <td class='robot-master-name'>Flash Man</td>
+                        <td class='coordinates'>C5</td>
+                        <td class='coordinates'>B3</td>
+                        <td class='alive-condition'>Last digit in <strong>S#</strong> ≤ 5</td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Heat_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Atomic_Fire.png"></td>
-                        <td><strong>Heat Man</strong></td>
-                        <td><strong>C1</strong></td>
-                        <td><strong>E4</strong></td>
-                        <td># of <strong>modules</strong> on the bomb ≥ 11</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Heat Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Heat Man.png"></td>
+                        <td class='robot-master-name'>Heat Man</td>
+                        <td class='coordinates'>C1</td>
+                        <td class='coordinates'>E4</td>
+                        <td class='alive-condition'># of <strong>modules</strong> on the bomb ≥ 11</td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Metal_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Metal_Blade.png"></td>
-                        <td><strong>Metal Man</strong></td>
-                        <td><strong>B4</strong></td>
-                        <td><strong>E5</strong></td>
-                        <td># of <strong>batteries</strong> = first digit in the <strong>S#</strong></td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Metal Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Metal Man.png"></td>
+                        <td class='robot-master-name'>Metal Man</td>
+                        <td class='coordinates'>B4</td>
+                        <td class='coordinates'>E5</td>
+                        <td class='alive-condition'># of <strong>batteries</strong> = first digit in the <strong>S#</strong></td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Quick_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Quick_Boomerang.png"></td>
-                        <td><strong>Quick Man</strong></td>
-                        <td><strong>C3</strong></td>
-                        <td><strong>D3</strong></td>
-                        <td><strong>Port RJ-45</strong> present</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Quick Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Quick Man.png"></td>
+                        <td class='robot-master-name'>Quick Man</td>
+                        <td class='coordinates'>C3</td>
+                        <td class='coordinates'>D3</td>
+                        <td class='alive-condition'><strong>Port RJ-45</strong> present</td>
                     </tr>
                     <tr>
-                        <td align="center"><img class="Weapon" src="img/Mega Man 2/Robot Masters/Wood_Man.png"></td>
-                        <td align="center"><img class="Icon" src="img/Mega Man 2/Weapons/Leaf_Shield.png"></td>
-                        <td><strong>Wood Man</strong></td>
-                        <td><strong>E2</strong></td>
-                        <td><strong>C4</strong></td>
-                        <td>Starting time of the <strong>bomb</strong> ≥ 40 minutes</td>
+                        <td class="center"><img class="robot-master" src="img/Mega Man 2/Robot Masters/Wood Man.png"></td>
+                        <td class="center"><img class="weapon" src="img/Mega Man 2/Weapons/Wood Man.png"></td>
+                        <td class='robot-master-name'>Wood Man</td>
+                        <td class='coordinates'>E2</td>
+                        <td class='coordinates'>C4</td>
+                        <td class='alive-condition'>Starting time of the <strong>bomb</strong> ≥ 40 minutes</td>
                     </tr>
                 </table>
             </div>
