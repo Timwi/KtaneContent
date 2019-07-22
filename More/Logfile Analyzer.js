@@ -3093,6 +3093,42 @@ $(function () {
 				]
 			},
 			{
+				displayName: "Langton's Ant",
+				moduleID: "langtonAnt",
+				loggingTag: "Langton's Ant",
+				matches: [
+					{
+						regex: /Expected solution: \[([0-9/]+)\]./,
+						handler: function (matches, module) {
+							var tiles = matches[1].split("/");
+
+							const span = $('<span style="display: flex; flex-direction: column">')
+								.append($('<span>').text("Expected solution:"));
+
+							for(var i = 0; i < 5; i++)
+							{
+								var row = $('<span style="height: 20px;">');
+								for(var j = 0; j < 5; j++)
+								{
+									row.append($("<img src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png' width='20' />"))
+								}
+								span.append(row);
+							}
+
+							module.groups.add(span);
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function (matches, module) {
+							module.groups.add($('<li>').text(matches[0]));
+							return true;
+						}
+					}
+				]
+			},
+			{
 				moduleID: "Laundry",
 				loggingTag: "Laundry",
 				matches: [
