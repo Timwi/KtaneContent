@@ -1374,6 +1374,7 @@ $(function() {
 
 							// Set the display names for all the modules we got.
 							for (const moduleType in targetBomb.Modules) {
+								if (bombInfo.displayNames[moduleType] == undefined) continue;
 								targetBomb.Modules[moduleType].moduleData.displayName = bombInfo.displayNames[moduleType];
 							}
 
