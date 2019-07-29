@@ -183,8 +183,8 @@ $(function () {
 
 		$(".bomb.selected").removeClass("selected");
 		a.addClass("selected");
-		$(".bomb-info").hide();
-		div.show();
+		$(".bomb-group").hide();
+		div.parent().show();
 
 		$("body").scrollTop(div.offset().top);
 		div.find('.autopress').click();
@@ -214,12 +214,12 @@ $(function () {
 
 	$.fn.addCardClick = function (info) {
 		var infoCard = $(this);
-		var parent = infoCard.parent();
 		infoCard
 			.click(function () {
-				parent.parent().children(".module-info").hide();
+				const parent = infoCard.parent().parent().parent();
+				parent.find(".module-info").hide();
 				info.show();
-				parent.children(".selected").removeClass("selected");
+				parent.find(".selected").removeClass("selected");
 				infoCard.addClass("selected");
 
 				return false;
@@ -230,7 +230,6 @@ $(function () {
 	};
 
 	function BombGroup() {
-		var current = this;
 		this.Bombs = [];
 		this.Modules = {};
 		this.State = "Unsolved";
@@ -248,7 +247,6 @@ $(function () {
 		this.ToHTML = function (opt) {
 			// Build up the bomb.
 			var serial = this.Bombs[0].Serial;
-			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>").hide().appendTo($("#wrap"));
 			var fragment = `#bomb=${serial}`;
 			if (opt.url)
 				fragment += `;#url=${opt.url}`;
@@ -258,236 +256,15 @@ $(function () {
 				.appendTo($("#bombs"))
 				.click(function () { selectBomb(serial); return false; })
 				.mousedown(function () { return false; });
+			var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
 			var TotalModules = 0;
 			var Needies = 0;
 			this.Bombs.forEach(function (bomb) {
 				TotalModules += bomb.TotalModules;
-				Needies += bomb.Needies;
-			});
+				Needies += bomb.Needies; 
 
-			this.Bombs.forEach(function (bomb) {
 				$("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML);
-
-				// Build the edgework.
-				var edgework = $("<div class='edgework'>").appendTo(info);
-
-				$("<div class='widget serial'>").text(bomb.Serial).appendTo(edgework);
-
-				if (bomb.DayTimeWidgets.length > 0) {
-					edgework.append("<div class='widget separator'>");
-
-					bomb.DayTimeWidgets.forEach(function (val) {
-						const widget = $("<div class='widget'>")
-							.addClass(val[0].toLowerCase())
-							.appendTo(edgework);
-
-						switch (val[0]) {
-							case "RandomizedTime":
-								widget.append(
-									$("<span class='shadow'>").text(`⠃${val[1].replace(/\d/g, "8")}`),
-									$("<span class='label'>").html(`${val[2] == "MIL" ? "<span style='visibility: hidden'>⠃</span>" : val[2] == "AM" ? "⠁" : "⠂"}${val[1]}`)
-								);
-								break;
-							case "ManufactureDate":
-								widget.append($("<span class='label'>").text(val[1].replace("-", " ")));
-								break;
-							case "DayoftheWeek": {
-								const split = val[1].split("-");
-								const colors = {
-									"Yellow": "yellow",
-									"Brown": "rgb(135, 85, 52)",
-									"Blue": "rgb(0, 148, 255)",
-									"White": "white",
-									"Magenta": "magenta",
-									"Green": "rgb(0, 255, 44)",
-									"Orange": "rgb(255, 195, 0)"
-								};
-
-								widget.toggleClass("colored", val[3]).append(
-									$("<span class='weekday'>").css("color", colors[val[2]]).text(split[0] + " "),
-									$("<span>").addClass(val[4] == "(DD/MM)" ? "day" : "month").text(split[1]),
-									$("<span>-</span>"),
-									$("<span>").addClass(val[4] == "(DD/MM)" ? "month" : "day").text(split[2])
-								);
-								break;
-							}
-						}
-					});
-				}
-
-				var edgeworkSeperator = false;
-				if (bomb.Batteries.length > 0) {
-					edgeworkSeperator = true;
-					edgework.append("<div class='widget separator'>");
-
-					bomb.Batteries.sort().reverse();
-					bomb.Batteries.forEach(function (val) {
-						$("<div class='widget battery'>")
-							.addClass(val == 1 ? "d" : "aa")
-							.appendTo(edgework);
-					});
-				}
-
-				//Multiple Widget Batteries
-				if (bomb.ModdedBatteries.length > 0) {
-					if (!edgeworkSeperator) {
-						edgework.append("<div class='widget separator'>");
-					}
-
-					bomb.ModdedBatteries.sort(function (batt1, batt2) {
-						if (batt1[0] < batt2[0]) return -1;
-						if (batt1[0] > batt2[0]) return 1;
-						if (batt1[1] < batt2[1]) return -1;
-						if (batt1[1] > batt2[1]) return 1;
-						if (batt1[2] < batt2[2]) return -1;
-						if (batt1[2] > batt2[2]) return 1;
-						return 0;
-					}).reverse();
-
-					bomb.ModdedBatteries.forEach(function (val) {
-						if (val[0] == "MultipleWidgets:Batteries") {
-							if (val[1] > 0) {
-								$("<div class='widget multiplewidgets battery'>")
-									.addClass(val[1] == 4 ? "fouraa" : val[1] == 3 ? "threeaa" : val[1] == 2 ? "twoaa" : "ninevolt")
-									.appendTo(edgework);
-							} else {
-								$("<div class='widget multiplewidgets battery'>")
-									.addClass(val[2] == 4 ? "emptyfouraa" : val[2] == 3 ? "emptythreeaa" : val[2] == 2 ? "emptytwoaa" : "emptyninevolt")
-									.appendTo(edgework);
-							}
-						}
-					});
-				}
-
-				edgeworkSeperator = false;
-				if (bomb.Indicators.length > 0) {
-					edgeworkSeperator = true;
-					edgework.append("<div class='widget separator'>");
-
-					bomb.Indicators.sort(function (ind1, ind2) {
-						if (ind1[0] < ind2[0]) return -1;
-						if (ind1[0] > ind2[0]) return 1;
-						if (ind1[1] < ind2[1]) return -1;
-						if (ind1[1] > ind2[1]) return 1;
-						return 0;
-					});
-
-					bomb.Indicators.forEach(function (val) {
-						$("<div class='widget indicator'>")
-							.addClass(val[0])
-							.appendTo(edgework)
-							.append($("<span class='label'>").text(val[1]));
-					});
-				}
-				//Multiple Widgets Indicator
-				//Encrypted Indicator
-				if (bomb.ModdedIndicators.length > 0) {
-					if (!edgeworkSeperator) {
-						edgework.append("<div class='widget separator'>");
-					}
-
-					bomb.ModdedIndicators.sort(function (ind1, ind2) {
-						if (ind1[0] < ind2[0]) return -1;
-						if (ind1[0] > ind2[0]) return 1;
-						if (ind1[1] < ind2[1]) return -1;
-						if (ind1[1] > ind2[1]) return 1;
-						if (ind1[2] < ind2[2]) return -1;
-						if (ind1[2] > ind2[2]) return 1;
-						return 0;
-					});
-
-					bomb.ModdedIndicators.forEach(function (val) {
-						switch (val[0]) {
-							case "MultipleWidgets:EncryptedIndicator":
-							case "MultipleWidgets:Indicator":
-								$("<div class='widget multiplewidgets indicator'>")
-									.addClass(val[1].toLowerCase())
-									.appendTo(edgework)
-									.append($("<span class='label'>").text(val[2]));
-								break;
-							case "EncryptedIndicatorWidget":
-								$("<div class='widget encryptedindicator'>")
-									.addClass(val[1])
-									.appendTo(edgework)
-									.append($("<span class='label'>").text(val[2]));
-								break;
-							case "NumberedIndicator": {
-								const colors = {
-									red: "225, 3, 3",
-									orange: "6, 107, 27",
-									yellow: "255, 248, 0",
-									green: "6, 107, 27",
-									blue: "12, 0, 152",
-									purple: "172, 14, 206",
-									black: "0, 0, 0",
-									white: "255, 255, 255",
-									brown: "129, 66, 9"
-								};
-
-								$("<div class='widget numberedindicator'>")
-									.addClass(val[1])
-									.css("background-color", `rgb(${colors[val[4]]})`)
-									.appendTo(edgework)
-									.append($("<span class='label'>").text(val[3]));
-								break;
-							}
-						}
-					});
-				}
-				edgeworkSeperator = false;
-
-				if (bomb.PortPlates.length > 0) {
-					edgework.append("<div class='widget separator'>");
-					edgeworkSeperator = true;
-
-					bomb.PortPlates.forEach(function (val) {
-						var plate = $("<div class='widget portplate'>").appendTo(edgework);
-						val.forEach(function (port) {
-							$("<span>").addClass(port.toLowerCase()).appendTo(plate);
-						});
-					});
-				}
-
-				if (bomb.ModdedPortPlates.length > 0) {
-					if (!edgeworkSeperator) {
-						edgework.append("<div class='widget separator'>");
-					}
-
-					bomb.ModdedPortPlates.sort(function (pp1, pp2) {
-						if (pp1[0] < pp2[0]) return -1;
-						if (pp1[0] > pp2[0]) return 1;
-						return 0;
-					});
-
-					bomb.ModdedPortPlates.forEach(function (val) {
-						if (val[0] == "MultipleWidgets:Ports") {
-							var plate = $("<div class='widget multiplewidgets portplate'>").appendTo(edgework);
-							val[1].forEach(function (port) {
-								$("<span>").addClass(port.toLowerCase()).appendTo(plate);
-							});
-						}
-					});
-				}
-
-				if (bomb.ModdedTwoFactor.length > 0) {
-					edgework.append("<div class='widget separator'>");
-
-					bomb.ModdedTwoFactor.sort(function (tfa1, tfa2) {
-						if (tfa1[0] < tfa2[0]) return -1;
-						if (tfa1[0] > tfa2[0]) return 1;
-						return 0;
-					});
-
-					bomb.ModdedTwoFactor.forEach(function (val) {
-						if (val == "TwoFactorWidget") {
-							edgework.append("<div class='widget twofactor'>");
-						}
-						if (val == "MultipleWidgets:TwoFactor") {
-							edgework.append("<div class='widget multiplewidgets twofactor'>");
-						}
-					});
-				}
 			});
 
 			$("<div class='module-count'>").text(TotalModules).appendTo(bombHTML);
@@ -498,11 +275,14 @@ $(function () {
 				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
 			}
 
-			// Modules
+			var filteredTab;
+
+			var info = $("<div class='bomb-info'>").css("padding-top", "10px").appendTo(bombGroupHTML);
 			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Mission Information
 			var missioninfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").css("margin-top", "10px").text("Mission Information").appendTo(missioninfo);
 
 			var missionInfoTree = [
 				"Mission: " + this.MissionName
@@ -527,142 +307,14 @@ $(function () {
 				.appendTo(modules)
 				.addCardClick(missioninfo).click();
 
-			// Edgework Information
-			this.Bombs.forEach(function (bomb) {
-				var ind = bomb.Indicators.map(function (val) { return val.join(" "); });
-
-				var ports = {};
-				bomb.PortPlates.forEach(function (plate) {
-					plate.forEach(function (port) {
-						if (!ports[port]) {
-							ports[port] = 0;
-						}
-
-						ports[port]++;
-					});
-				});
-
-				var portlist = [];
-				Object.keys(ports).forEach(function (port) {
-					var count = ports[port];
-					portlist.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
-				});
-
-				var edgeinfo = $("<div class='module-info'>").appendTo(info);
-				makeTree([
-					"Serial: " + bomb.Serial,
-					"Batteries: " + bomb.Batteries.reduce(function (a, b) { return a + b; }, 0),
-					"Holders: " + bomb.Batteries.length,
-					"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
-					"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
-					"Port Plates: " + bomb.PortPlates.length,
-					"Widgets: " + (bomb.Batteries.length + ind.length + bomb.PortPlates.length + bomb.ModdedWidgets),
-					bomb.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", bomb.ModdedWidgetInfo] : null
-				], $("<ul>").appendTo(edgeinfo));
-
-				$("<a href='#' class='module'>")
-					.text(!current.isSingleBomb ? "Edgework for #" + bomb.Serial : "Edgework")
-					.appendTo(modules)
-					.addCardClick(edgeinfo);
+			this.Bombs.forEach(function(bomb) {
+				bomb.ToHTML(this).appendTo(bombGroupHTML, filteredTab);
 			});
 
-			// Convert modules
-			this.Bombs.forEach(function (bomb) {
-				for (var m in bomb.Modules) {
-					if (bomb.Modules.hasOwnProperty(m)) {
-						var mod = bomb.Modules[m];
-						if (mod.IDs.length > 0 || mod.Tree.length > 0 || !current.Modules[m]) {
-							current.Modules[m] = mod;
-						}
-					}
-				}
-			});
+			$("<hr color=#ccc size=1>").appendTo(bombGroupHTML);
 
-			var mods = [];
-			for (var m in this.Modules) {
-				if (this.Modules.hasOwnProperty(m)) {
-					var mod = this.Modules[m];
-
-					const parsedMod = new ParsedMod(mod.moduleData);
-
-					if (mod.IDs.length === 0) {
-						if (mod.Tree.length !== 0) {
-							parsedMod.tree = mod.Tree;
-						}
-					} else if (mod.IDs.length == 1) {
-						parsedMod.tree = mod.IDs[0][1];
-					} else {
-						mod.IDs.forEach(function (info) {
-							const modClone = Object.assign({}, parsedMod);
-							modClone.tree = info[1];
-							modClone.counter = info[0];
-							mods.push(modClone);
-						});
-
-						continue;
-					}
-
-					mods.push(parsedMod);
-				}
-			}
-
-			mods.sort(function (a, b) {
-				let sortKeyA = a.moduleData.displayName.toLowerCase();
-				if (a.counter) {
-					sortKeyA += a.counter;
-				}
-
-				let sortKeyB = b.moduleData.displayName.toLowerCase();
-				if (b.counter) {
-					sortKeyB += b.counter;
-				}
-
-				sortKeyA = sortKeyA.replace(/^the /i, "");
-				sortKeyB = sortKeyB.replace(/^the /i, "");
-
-				if (sortKeyA < sortKeyB) {
-					return -1;
-				} else if (sortKeyA > sortKeyB) {
-					return 1;
-				}
-
-				return 0;
-			});
-
-			var filteredTab;
-
-			// Display modules
-			mods.forEach(function (minfo) {
-				// Information
-				var modinfo = $("<div class='module-info'>").appendTo(info).data('module-id', minfo.moduleID);
-				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
-				if (minfo.tree) {
-					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
-				} else if (minfo.moduleData.hasLogging === false) {
-					$("<p>").text("No information logged.").appendTo(modinfo);
-				} else {
-					$("<p>")
-						.html("Please check the ")
-						.append($('<a href="#bomb=' + serial + '">Filtered Log</a>').click(function () {
-							filteredTab.click();
-							return false;
-						}))
-						.append(' as the information for this module cannot be automatically parsed.')
-						.appendTo(modinfo);
-				}
-
-				// Listing
-				var mod = $(`<a href='#' class='module module-${minfo.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
-					.text(minfo.moduleData.displayName + (minfo.counter ? " " + minfo.counter : ""))
-					.appendTo(modules)
-					.addCardClick(modinfo);
-
-				$("<img>")
-					.on("error", function () {
-						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleData.displayName, minfo);
-						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + minfo.moduleData.icon + ".png").appendTo(mod);
-			});
+			var info = $("<div class='bomb-info'>").appendTo(bombGroupHTML);
+			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Filtered log
 			if (this.FilteredLog === "") {
@@ -670,7 +322,7 @@ $(function () {
 			}
 
 			var loginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Filtered Log").appendTo(loginfo);
+			$("<h3>").css("margin-top", "10px").text("Filtered Log").appendTo(loginfo);
 			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
 			filteredTab = $("<a href='#' class='module'>").text("Filtered Log").appendTo(modules).addCardClick(loginfo);
 
@@ -699,10 +351,15 @@ $(function () {
 		this.GetModuleID = function (name, id) {
 			var mod;
 			this.Bombs.forEach(function (bomb) {
-				mod = (mod || bomb.GetModuleID(name, id));
+				mod = (mod || bomb.GetModuleID(name, id, false));
 			});
 
-			return mod;
+			if (mod) return mod;
+
+			for (const bomb of this.Bombs) {
+				mod = bomb.GetModuleID(name, id);
+				if (mod) return mod;
+			}
 		};
 		this.FilterLines = function () {
 			if (!this.StartLine) {
@@ -759,14 +416,17 @@ $(function () {
 		this.StartLine = 0;
 		this.FilteredLog = "";
 
-		this.GetMod = function (name) {
+		this.Anchors = null;
+		this.ModuleOrder = null;
+
+		this.GetMod = function(name) {
 			return this.Modules[name];
 		};
 		this.GetModule = function (name) {
 			var mod = this.GetMod(name);
 			return mod ? mod.Tree : undefined;
 		};
-		this.GetModuleID = function (name, id) {
+		this.GetModuleID = function(name, id, createIfMissing = true) {
 			var mod = this.GetMod(name);
 			if (!mod) {
 				return undefined;
@@ -790,7 +450,7 @@ $(function () {
 				}
 			});
 
-			if (info) {
+			if (info || !createIfMissing) {
 				return info;
 			}
 
@@ -799,6 +459,423 @@ $(function () {
 			module.push(info);
 
 			return info[1];
+		};
+		this.ToHTML = function(filteredTab) {
+			var serial = this.Serial;
+			var info = $("<div class='bomb-info' id='bomb-" + serial + "'>");
+
+			// Build the edgework.
+			var edgework = $("<div class='edgework'>").appendTo(info);
+
+			$("<div class='widget serial'>").text(serial).appendTo(edgework);
+
+			if (this.DayTimeWidgets.length > 0) {
+				edgework.append("<div class='widget separator'>");
+
+				this.DayTimeWidgets.forEach(function(val) {
+					const widget = $("<div class='widget'>")
+						.addClass(val[0].toLowerCase())
+						.appendTo(edgework);
+
+					switch (val[0]) {
+						case "RandomizedTime":
+							widget.append(
+								$("<span class='shadow'>").text(`⠃${val[1].replace(/\d/g, "8")}`),
+								$("<span class='label'>").html(`${val[2] == "MIL" ? "<span style='visibility: hidden'>⠃</span>" : val[2] == "AM" ? "⠁" : "⠂"}${val[1]}`)
+							);
+							break;
+						case "ManufactureDate":
+							widget.append($("<span class='label'>").text(val[1].replace("-", " ")));
+							break;
+						case "DayoftheWeek": {
+							const split = val[1].split("-");
+							const colors = {
+								"Yellow": "yellow",
+								"Brown": "rgb(135, 85, 52)",
+								"Blue": "rgb(0, 148, 255)",
+								"White": "white",
+								"Magenta": "magenta",
+								"Green": "rgb(0, 255, 44)",
+								"Orange": "rgb(255, 195, 0)"
+							};
+
+							widget.toggleClass("colored", val[3]).append(
+								$("<span class='weekday'>").css("color", colors[val[2]]).text(split[0] + " "),
+								$("<span>").addClass(val[4] == "(DD/MM)" ? "day" : "month").text(split[1]),
+								$("<span>-</span>"),
+								$("<span>").addClass(val[4] == "(DD/MM)" ? "month" : "day").text(split[2])
+							);
+							break;
+						}
+					}
+				});
+			}
+
+			var edgeworkSeperator = false;
+			if (this.Batteries.length > 0) {
+				edgeworkSeperator = true;
+				edgework.append("<div class='widget separator'>");
+
+				this.Batteries.sort().reverse();
+				this.Batteries.forEach(function(val) {
+					$("<div class='widget battery'>")
+						.addClass(val == 1 ? "d" : "aa")
+						.appendTo(edgework);
+				});
+			}
+
+			//Multiple Widget Batteries
+			if (this.ModdedBatteries.length > 0) {
+				if (!edgeworkSeperator) {
+					edgework.append("<div class='widget separator'>");
+				}
+
+				this.ModdedBatteries.sort(function(batt1, batt2) {
+					if (batt1[0] < batt2[0]) return -1;
+					if (batt1[0] > batt2[0]) return 1;
+					if (batt1[1] < batt2[1]) return -1;
+					if (batt1[1] > batt2[1]) return 1;
+					if (batt1[2] < batt2[2]) return -1;
+					if (batt1[2] > batt2[2]) return 1;
+					return 0;
+				}).reverse();
+
+				this.ModdedBatteries.forEach(function(val) {
+					if (val[0] == "MultipleWidgets:Batteries") {
+						if (val[1] > 0) {
+							$("<div class='widget multiplewidgets battery'>")
+								.addClass(val[1] == 4 ? "fouraa" : val[1] == 3 ? "threeaa" : val[1] == 2 ? "twoaa" : "ninevolt")
+								.appendTo(edgework);
+						} else {
+							$("<div class='widget multiplewidgets battery'>")
+								.addClass(val[2] == 4 ? "emptyfouraa" : val[2] == 3 ? "emptythreeaa" : val[2] == 2 ? "emptytwoaa" : "emptyninevolt")
+								.appendTo(edgework);
+						}
+					}
+				});
+			}
+
+			edgeworkSeperator = false;
+			if (this.Indicators.length > 0) {
+				edgeworkSeperator = true;
+				edgework.append("<div class='widget separator'>");
+
+				this.Indicators.sort(function(ind1, ind2) {
+					if (ind1[0] < ind2[0]) return -1;
+					if (ind1[0] > ind2[0]) return 1;
+					if (ind1[1] < ind2[1]) return -1;
+					if (ind1[1] > ind2[1]) return 1;
+					return 0;
+				});
+
+				this.Indicators.forEach(function(val) {
+					$("<div class='widget indicator'>")
+						.addClass(val[0])
+						.appendTo(edgework)
+						.append($("<span class='label'>").text(val[1]));
+				});
+			}
+			//Multiple Widgets Indicator
+			//Encrypted Indicator
+			if (this.ModdedIndicators.length > 0) {
+				if (!edgeworkSeperator) {
+					edgework.append("<div class='widget separator'>");
+				}
+
+				this.ModdedIndicators.sort(function(ind1, ind2) {
+					if (ind1[0] < ind2[0]) return -1;
+					if (ind1[0] > ind2[0]) return 1;
+					if (ind1[1] < ind2[1]) return -1;
+					if (ind1[1] > ind2[1]) return 1;
+					if (ind1[2] < ind2[2]) return -1;
+					if (ind1[2] > ind2[2]) return 1;
+					return 0;
+				});
+
+				this.ModdedIndicators.forEach(function(val) {
+					switch (val[0]) {
+						case "MultipleWidgets:EncryptedIndicator":
+						case "MultipleWidgets:Indicator":
+							$("<div class='widget multiplewidgets indicator'>")
+								.addClass(val[1].toLowerCase())
+								.appendTo(edgework)
+								.append($("<span class='label'>").text(val[2]));
+							break;
+						case "EncryptedIndicatorWidget":
+							$("<div class='widget encryptedindicator'>")
+								.addClass(val[1])
+								.appendTo(edgework)
+								.append($("<span class='label'>").text(val[2]));
+							break;
+						case "NumberedIndicator": {
+							const colors = {
+								red: "225, 3, 3",
+								orange: "6, 107, 27",
+								yellow: "255, 248, 0",
+								green: "6, 107, 27",
+								blue: "12, 0, 152",
+								purple: "172, 14, 206",
+								black: "0, 0, 0",
+								white: "255, 255, 255",
+								brown: "129, 66, 9"
+							};
+
+							$("<div class='widget numberedindicator'>")
+								.addClass(val[1])
+								.css("background-color", `rgb(${colors[val[4]]})`)
+								.appendTo(edgework)
+								.append($("<span class='label'>").text(val[3]));
+							break;
+						}
+					}
+				});
+			}
+			edgeworkSeperator = false;
+
+			if (this.PortPlates.length > 0) {
+				edgework.append("<div class='widget separator'>");
+				edgeworkSeperator = true;
+
+				this.PortPlates.forEach(function(val) {
+					var plate = $("<div class='widget portplate'>").appendTo(edgework);
+					val.forEach(function(port) {
+						$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+					});
+				});
+			}
+
+			if (this.ModdedPortPlates.length > 0) {
+				if (!edgeworkSeperator) {
+					edgework.append("<div class='widget separator'>");
+				}
+
+				this.ModdedPortPlates.sort(function(pp1, pp2) {
+					if (pp1[0] < pp2[0]) return -1;
+					if (pp1[0] > pp2[0]) return 1;
+					return 0;
+				});
+
+				this.ModdedPortPlates.forEach(function(val) {
+					if (val[0] == "MultipleWidgets:Ports") {
+						var plate = $("<div class='widget multiplewidgets portplate'>").appendTo(edgework);
+						val[1].forEach(function(port) {
+							$("<span>").addClass(port.toLowerCase()).appendTo(plate);
+						});
+					}
+				});
+			}
+
+			if (this.ModdedTwoFactor.length > 0) {
+				edgework.append("<div class='widget separator'>");
+
+				this.ModdedTwoFactor.sort(function(tfa1, tfa2) {
+					if (tfa1[0] < tfa2[0]) return -1;
+					if (tfa1[0] > tfa2[0]) return 1;
+					return 0;
+				});
+
+				this.ModdedTwoFactor.forEach(function(val) {
+					if (val == "TwoFactorWidget") {
+						edgework.append("<div class='widget twofactor'>");
+					}
+					if (val == "MultipleWidgets:TwoFactor") {
+						edgework.append("<div class='widget multiplewidgets twofactor'>");
+					}
+				});
+			}
+
+			// Modules
+			var modules = $("<div class='modules'>").appendTo(info);
+
+			// Edgework Information
+			var ind = this.Indicators.map(function(val) { return val.join(" "); });
+
+			var ports = {};
+			this.PortPlates.forEach(function(plate) {
+				plate.forEach(function(port) {
+					if (!ports[port]) {
+						ports[port] = 0;
+					}
+
+					ports[port]++;
+				});
+			});
+
+			var portlist = [];
+			Object.keys(ports).forEach(function(port) {
+				var count = ports[port];
+				portlist.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
+			});
+
+			var caseHTML = $("<span>").text("Unknown");
+
+			var edgeinfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Edgework").appendTo(edgeinfo);
+			makeTree([
+				"Serial: " + this.Serial,
+				"Batteries: " + this.Batteries.reduce(function(a, b) { return a + b; }, 0),
+				"Holders: " + this.Batteries.length,
+				"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
+				"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
+				"Port Plates: " + this.PortPlates.length,
+				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
+				this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
+				{ label: "Case: ", obj: caseHTML }
+			], $("<ul>").appendTo(edgeinfo));
+
+			$("<a href='#' class='module'>")
+				.text("Edgework")
+				.appendTo(modules)
+				.addCardClick(edgeinfo);
+
+			// Convert modules
+			var mods = [];
+			for (var m in this.Modules) {
+				if (this.Modules.hasOwnProperty(m)) {
+					var mod = this.Modules[m];
+
+					//if (mod.IDs.length == 0 && mod.Tree.length == 0) continue;
+
+					const parsedMod = new ParsedMod(mod.moduleData);
+
+					if (mod.IDs.length === 0) {
+						if (mod.Tree.length !== 0) {
+							parsedMod.tree = mod.Tree;
+						}
+					//} else if (mod.IDs.length == 1) {
+					//	parsedMod.tree = mod.IDs[0][1];
+					} else {
+						mod.IDs.forEach(function(info) {
+							const modClone = Object.assign({}, parsedMod);
+							modClone.tree = info[1];
+							modClone.counter = info[0];
+							mods.push(modClone);
+						});
+
+						continue;
+					}
+
+					mods.push(parsedMod);
+				}
+			}
+
+			mods.sort(function(a, b) {
+				let sortKeyA = a.moduleData.displayName.toLowerCase();
+				if (a.counter) {
+					sortKeyA += a.counter;
+				}
+
+				let sortKeyB = b.moduleData.displayName.toLowerCase();
+				if (b.counter) {
+					sortKeyB += b.counter;
+				}
+
+				sortKeyA = sortKeyA.replace(/^the /i, "");
+				sortKeyB = sortKeyB.replace(/^the /i, "");
+
+				if (sortKeyA < sortKeyB) {
+					return -1;
+				} else if (sortKeyA > sortKeyB) {
+					return 1;
+				}
+
+				return 0;
+			});
+
+			// Display modules
+			mods.forEach(function(minfo) {
+				// Information
+				var modinfo = $("<div class='module-info'>").appendTo(info).data('module-id', minfo.moduleID);
+				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
+				if (minfo.tree && minfo.tree.length !== 0) {
+					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
+				} else if (minfo.moduleData.hasLogging === false) {
+					$("<p>").text("No information logged.").appendTo(modinfo);
+				} else {
+					$("<p>")
+						.html("Please check the ")
+						.append($('<a href="#bomb=' + serial + '">Filtered Log</a>').click(function() {
+							filteredTab.click();
+							return false;
+						}))
+						.append(' as the information for this module cannot be automatically parsed.')
+						.appendTo(modinfo);
+				}
+
+				// Listing
+				var mod = $(`<a href='#' class='module module-${minfo.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
+					.text(minfo.moduleData.displayName + (minfo.counter ? " " + minfo.counter : ""))
+					.appendTo(modules)
+					.addCardClick(modinfo);
+
+				$("<img>")
+					.on("error", function() {
+						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleData.displayName, minfo);
+						$(this).attr("src", "../Icons/blank.png");
+					}).attr("src", "../Icons/" + minfo.moduleData.icon + ".png").appendTo(mod);
+			});
+
+			// Case representation
+			if (this.Anchors != null && this.ModuleOrder != null) {
+				const viewBox = [0, 0, 0, 0];
+
+				const faceParent = $("<div>").css("position", "relative");
+				caseHTML.replaceWith(faceParent);
+				
+				const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s" };
+				let svg = $SVG("<svg>")
+					.css(faceStyle)
+					.appendTo(faceParent);
+
+				// Build the faces.
+				const frontFace = svg;
+				for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+					if (moduleIndex == this.ModuleOrder.length / 2) {
+						svg = $SVG("<svg>")
+							.css(faceStyle)
+							.css({ "transform": "rotateY(180deg)", "display": "block", "position": "absolute", "top": 0 })
+							.appendTo(faceParent);
+					}
+					
+					if (this.ModuleOrder[moduleIndex] == null)
+						continue;
+
+					const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+					const ID = moduleSplit.splice(moduleSplit.length - 1);
+					const moduleID = moduleSplit.join(" ");
+
+					const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+					const module = matchingModules.length == 1 ? matchingModules[0] : {
+						moduleData: {
+							icon: (moduleID == "Empty" || moduleID == "Timer") ? moduleID : "blank"
+						}
+					};
+
+					// The X axis needs to be flipped for the back face, so we multiply it by -1.
+					// And the Y axis is always upside down, so we always multiply it by -1.
+					const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
+					const y = this.Anchors[moduleIndex][1] * -1;
+					$SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).css("image-rendering", "crisp-edges").appendTo(svg);
+					$SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
+				
+					for (let j = 0; j < 4; j++) {
+						viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 0.22));
+					}
+					svg.attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${Math.abs(viewBox[0]) + viewBox[2]} ${Math.abs(viewBox[1]) + viewBox[3]}`);
+					svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
+				}
+				const backFace = svg;
+				
+				let currentFace = false; // false = front, back = true
+				faceParent.click(() => {
+					currentFace = !currentFace;
+					const degrees = currentFace ? 180 : 0;
+					frontFace.css("transform", `rotateY(${degrees}deg)`);
+					backFace.css("transform", `rotateY(${180 - degrees}deg)`);
+				});
+			}
+
+			return info;
 		};
 	}
 
@@ -1273,6 +1350,66 @@ $(function () {
 						regex: /The Seed is (\d+)/,
 						handler: function (m) {
 							bombgroup.RuleSeed = m[1];
+						}
+					}
+				]
+			},
+			{
+				loggingTag: "Tweaks",
+				matches: [
+					{
+						regex: /LFABombInfo (\d+)/,
+						handler: function(matches) {
+							// Parse the JSON based on the number of lines specified in the log message.
+							const bombInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
+
+							// Find the bomb being referenced based on it's serial number
+							let targetBomb;
+							for (const bomb of bombgroup.Bombs) {
+								if (bomb.Serial == bombInfo.serial) {
+									targetBomb = bomb;
+									break;
+								}
+							}
+
+							// Set the display names for all the modules we got.
+							for (const moduleType in targetBomb.Modules) {
+								targetBomb.Modules[moduleType].moduleData.displayName = bombInfo.displayNames[moduleType];
+							}
+
+							// Pass along the case information
+							targetBomb.Anchors = bombInfo.anchors;
+							targetBomb.ModuleOrder = bombInfo.modules;
+
+							// Make sure each module ID is on the correct bomb.
+							for (const moduleType in bombInfo.ids) {
+								if (moduleType == "Timer") continue; // The timer shouldn't have an ID, so just ignore it.
+
+								for (const id of bombInfo.ids[moduleType]) {
+									// Create the ID'd module on the correct bomb.
+									var newModInfo = targetBomb.GetModuleID(moduleType, id);
+
+									// If we are already on the first bomb, we don't need do anything else.
+									if (targetBomb == bombgroup.Bombs[0]) continue;
+
+									// See if the module type got put on the first bomb by default.
+									const modInfo = bombgroup.Bombs[0].GetMod(moduleType);
+									if (!modInfo) continue;
+
+									// See if it has the ID we're looking at
+									for (const mod of modInfo.IDs) {
+										if (mod[0] == "#" + id) {
+											// Transfer over the already parsed information and groups.
+											newModInfo.push(...mod[0]);
+											newModInfo.groups = mod[1].groups;
+
+											// Remove it from the first bomb.
+											modInfo.IDs.splice(modInfo.IDs.indexOf(mod), 1);
+										}
+									}
+								}
+							}
+
 						}
 					}
 				]
