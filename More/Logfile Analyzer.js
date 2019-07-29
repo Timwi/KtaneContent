@@ -5506,7 +5506,7 @@ $(function() {
 										continue;
 									}
 									$SVG(`<rect x='${c*5}' y='${r*5}' width='5' height='5' fill='${col}' />`).appendTo(svg);
-									$SVG(`<text x="${c*5+1}" y="${r*5+4}" fill="black" font-size="3px">${numOrder[r*10+c]}</text>`).appendTo(svg);
+									$SVG(`<text x="${c*5+2.5}" y="${r*5+3}" fill="${col=="yellow"?"black":"white"}" font-size="3px" dominant-baseline="middle" text-anchor="middle">${numOrder[r*10+c]}</text>`).appendTo(svg);
 								}
 							}
 							module.push(span);
