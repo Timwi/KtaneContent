@@ -262,7 +262,7 @@ $(function() {
 			var Needies = 0;
 			this.Bombs.forEach(function(bomb) {
 				TotalModules += bomb.TotalModules;
-				Needies += bomb.Needies; 
+				Needies += bomb.Needies;
 
 				$("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML);
 			});
@@ -821,7 +821,7 @@ $(function() {
 
 				const faceParent = $("<div>").css("position", "relative");
 				caseHTML.replaceWith(faceParent);
-				
+
 				const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s" };
 				let svg = $SVG("<svg>")
 					.css(faceStyle)
@@ -836,7 +836,7 @@ $(function() {
 							.css({ "transform": "rotateY(180deg)", "display": "block", "position": "absolute", "top": 0 })
 							.appendTo(faceParent);
 					}
-					
+
 					if (this.ModuleOrder[moduleIndex] == null)
 						continue;
 
@@ -857,7 +857,7 @@ $(function() {
 					const y = this.Anchors[moduleIndex][1] * -1;
 					$SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).css("image-rendering", "crisp-edges").appendTo(svg);
 					$SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
-				
+
 					for (let j = 0; j < 4; j++) {
 						viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 0.22));
 					}
@@ -865,7 +865,7 @@ $(function() {
 					svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
 				}
 				const backFace = svg;
-				
+
 				let currentFace = false; // false = front, back = true
 				faceParent.click(() => {
 					currentFace = !currentFace;
@@ -5463,6 +5463,52 @@ $(function() {
 							span.text(matches[1]);
 							span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
 							span.append($('<span>').text(matches[3]));
+							module.push(span);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
+				displayName: "Snakes and Ladders",
+				moduleID: "snakesAndLadders",
+				loggingTag: "Snakes and Ladders",
+				matches:[
+					{
+						regex: /^board: ([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/$/,
+						handler: function(matches, module) {
+							var span=$('<span>');
+							var svg=$('<svg viewBox="-4 -4 54 54" width="270" height="270"></svg>').appendTo(span);
+							var rows=matches.slice(1,11).reverse();
+							for(var i=0;i<rows.length;i++) {
+								if(i%2==0)rows[i]=rows[i].split("").reverse().join("");
+							}
+							var numOrder=[
+								100,99,98,97,96,95,94,93,92,91,
+								81,82,83,84,85,86,87,88,89,90,
+								80,79,78,77,76,75,74,73,72,71,
+								61,62,63,64,65,66,67,68,69,70,
+								60,59,58,57,56,55,54,53,52,51,
+								41,42,43,44,45,46,47,48,49,50,
+								40,39,38,37,36,35,34,33,32,31,
+								21,22,23,24,25,26,27,28,29,30,
+								20,19,18,17,16,15,14,13,12,11,
+								1,2,3,4,5,6,7,8,9,10
+							];
+							for(var r=0;r<10;r++) {
+								for(var c=0;c<10;c++) {
+									var col=rows[r][c]==0?"red":rows[r][c]==1?"blue":rows[r][c]==2?"green":"yellow";
+									if(c==0&&r==0) {
+										$SVG(`<circle cx='0' cy='0' r='4' fill='#222'>`).appendTo(svg);
+										continue;
+									}
+									$SVG(`<rect x='${c*5}' y='${r*5}' width='5' height='5' fill='${col}' />`).appendTo(svg);
+									$SVG(`<text x="${c*5+1}" y="${r*5+4}" fill="black" font-size="3px">${numOrder[r*10+c]}</text>`).appendTo(svg);
+								}
+							}
 							module.push(span);
 							return true;
 						}
