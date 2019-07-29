@@ -872,7 +872,7 @@ $(function() {
 					const degrees = currentFace ? 180 : 0;
 					frontFace.css("transform", `rotateY(${degrees}deg)`);
 					backFace.css("transform", `rotateY(${180 - degrees}deg)`);
-				});
+				}).after("(Click to flip)");
 			}
 
 			return info;
