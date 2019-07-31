@@ -48,23 +48,39 @@
                 {
                     var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
                     var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
+                    var newPart, isIdentical;
 
-                    parts.push([]);
-                    for (var note = 0; note < 8; note++)
+                    do
                     {
-                        var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
-                        if (note > 0)
-                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx][note - 1]) < 7);
-                        else if (partIx > 0)
-                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
-                        if (note > 1 && parts[partIx][note - 1] === parts[partIx][note - 2])
+                        newPart = [];
+                        for (var note = 0; note < 8; note++)
                         {
-                            var ix = eligibleNotes.indexOf(parts[partIx][note - 1]);
-                            if (ix !== -1)
-                                eligibleNotes.splice(ix, 1);
+                            var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
+                            if (note > 0)
+                                eligibleNotes = eligibleNotes.filter(n => Math.abs(n - newPart[note - 1]) < 7);
+                            else if (partIx > 0)
+                                eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
+                            if (note > 1 && newPart[note - 1] === newPart[note - 2])
+                            {
+                                var ix = eligibleNotes.indexOf(newPart[note - 1]);
+                                if (ix !== -1)
+                                    eligibleNotes.splice(ix, 1);
+                            }
+                            newPart.push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
                         }
-                        parts[partIx].push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
+
+                        isIdentical = false;
+                        for (var p = 0; p < partIx && !isIdentical; p++)
+                        {
+                            var identical = true;
+                            for (var q = 0; q < parts[p].length && identical; q++)
+                                identical = identical && (parts[p][q] === newPart[q]);
+                            isIdentical = isIdentical || identical;
+                        }
                     }
+                    while (isIdentical);
+
+                    parts.push(newPart);
 
                     list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
                 }
