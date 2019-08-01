@@ -59,6 +59,7 @@ class ParsedMod {
 		this.moduleData = moduleData;
 		this.tree = undefined;
 		this.counter = undefined;
+		this.displayCounter = false;
 	}
 }
 
@@ -734,21 +735,18 @@ $(function() {
 				if (this.Modules.hasOwnProperty(m)) {
 					var mod = this.Modules[m];
 
-					//if (mod.IDs.length == 0 && mod.Tree.length == 0) continue;
-
 					const parsedMod = new ParsedMod(mod.moduleData);
 
 					if (mod.IDs.length === 0) {
 						if (mod.Tree.length !== 0) {
 							parsedMod.tree = mod.Tree;
 						}
-					//} else if (mod.IDs.length == 1) {
-					//	parsedMod.tree = mod.IDs[0][1];
 					} else {
 						mod.IDs.forEach(function(info) {
 							const modClone = Object.assign({}, parsedMod);
 							modClone.tree = info[1];
 							modClone.counter = info[0];
+							modClone.displayCounter = mod.IDs.length != 1;
 							mods.push(modClone);
 						});
 
@@ -804,7 +802,7 @@ $(function() {
 
 				// Listing
 				var mod = $(`<a href='#' class='module module-${minfo.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
-					.text(minfo.moduleData.displayName + (minfo.counter ? " " + minfo.counter : ""))
+					.text(minfo.moduleData.displayName + (minfo.displayCounter ? " " + minfo.counter : ""))
 					.appendTo(modules)
 					.addCardClick(modinfo);
 
