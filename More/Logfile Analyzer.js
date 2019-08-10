@@ -2170,6 +2170,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Colo(u)r Talk",
+				moduleID: "colourTalk",
+				loggingTag:"Colo(u)r Talk"
+			},
+			{
 				moduleID: "lgndColorMatch",
 				loggingTag: "Color Match",
 				displayName: "Color Match"
@@ -3781,7 +3786,7 @@ $(function() {
 						handler: function(matches, module) {
 							if (module.LastInput == matches.input) return true;
 							module.LastInput = matches.input;
-							
+
 							module.push({ label: matches.input, obj: module.Table = $("<table>").css("border-collapse", "collapse"), expandable: true });
 							const row = $("<tr><th>#<th>Color<th>#<th>Color<th>A<th>B<th>C</tr>");
 							row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
