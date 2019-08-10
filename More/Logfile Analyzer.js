@@ -6114,6 +6114,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "Yoinkingmodule",
+				loggingTag: "Yoinking E-Bucks",
+				displayName: "Yoinking E-Bucks"
+			},
+			{
 				matches: [
 					{
 						regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
