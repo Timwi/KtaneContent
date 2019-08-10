@@ -2170,6 +2170,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Colo(u)r Talk",
+				moduleID: "colourTalk",
+				loggingTag:"Colo(u)r Talk"
+			},
+			{
 				moduleID: "lgndColorMatch",
 				loggingTag: "Color Match",
 				displayName: "Color Match"
@@ -3779,7 +3784,13 @@ $(function() {
 					{
 						regex: /Query:/,
 						handler: function(matches, module) {
-							module.push([matches.input, module.GroupLines = []]);
+							if (module.LastInput == matches.input) return true;
+							module.LastInput = matches.input;
+
+							module.push({ label: matches.input, obj: module.Table = $("<table>").css("border-collapse", "collapse"), expandable: true });
+							const row = $("<tr><th>#<th>Color<th>#<th>Color<th>A<th>B<th>C</tr>");
+							row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
+							row.appendTo(module.Table);
 							return true;
 						}
 					},
@@ -3791,9 +3802,28 @@ $(function() {
 						}
 					},
 					{
-						regex: /.+/,
+						regex: /Query result: A=(\d+), B=(\d+), C=(\d+)/,
 						handler: function(matches, module) {
-							(module.GroupLines || module).push(matches.input);
+							module.LastResult = matches;
+							return true;
+						}
+					},
+					{
+						regex: /Display shows: (\d+) (\w+), (\d+) (\w+)/,
+						handler: function(matches, module) {
+							const row = $("<tr>").appendTo(module.Table);
+							for (let i = 1; i <= 4; i++) {
+								$("<td>").text(matches[i]).appendTo(row);
+							}
+
+							for (let i = 1; i <= 3; i++) {
+								$("<td>").text(module.LastResult[i]).appendTo(row);
+							}
+
+							row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
+							row.children().eq(0).css("text-align", "right");
+							row.children().eq(2).css("text-align", "right");
+							return true;
 						}
 					}
 				]
