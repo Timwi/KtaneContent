@@ -2788,6 +2788,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Forget Perspective",
+				moduleID: "qkForgetPerspective",
+				loggingTag: "Forget Perspective"
+			},
+			{
 				displayName: "Four-Card Monte",
 				moduleID: "Krit4CardMonte",
 				loggingTag: "Four-Card Monte"
