@@ -739,7 +739,7 @@ $(function() {
 					const parsedMod = new ParsedMod(mod.moduleData);
 
 					if (mod.IDs.length === 0) {
-						if (mod.Tree.length !== 0) {
+						if (mod.Tree.length !== 0 || mod.Tree.groups.groups.length !== 0) {
 							parsedMod.tree = mod.Tree;
 						}
 					} else {
@@ -786,7 +786,7 @@ $(function() {
 				// Information
 				var modinfo = $("<div class='module-info'>").appendTo(info).data('module-id', minfo.moduleID);
 				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
-				if (minfo.tree && minfo.tree.length !== 0) {
+				if (minfo.tree && (minfo.tree.length !== 0 || minfo.tree.groups !== 0)) {
 					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
 				} else if (minfo.moduleData.hasLogging === false) {
 					$("<p>").text("No information logged.").appendTo(modinfo);
