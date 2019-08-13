@@ -276,7 +276,8 @@ $(function() {
 				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
 			}
 
-			var filteredTab;
+			var filteredTab = $("<a href='#' class='module'>").text("Filtered Log");
+
 
 			var info = $("<div class='bomb-info'>").css("padding-top", "10px").appendTo(bombGroupHTML);
 			var modules = $("<div class='modules'>").appendTo(info);
@@ -309,7 +310,7 @@ $(function() {
 				.addCardClick(missioninfo).click();
 
 			this.Bombs.forEach(function(bomb) {
-				bomb.ToHTML(this).appendTo(bombGroupHTML, filteredTab);
+				bomb.ToHTML(filteredTab).appendTo(bombGroupHTML);
 			});
 
 			$("<hr color=#ccc size=1>").appendTo(bombGroupHTML);
@@ -325,7 +326,7 @@ $(function() {
 			var loginfo = $("<div class='module-info'>").appendTo(info);
 			$("<h3>").css("margin-top", "10px").text("Filtered Log").appendTo(loginfo);
 			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
-			filteredTab = $("<a href='#' class='module'>").text("Filtered Log").appendTo(modules).addCardClick(loginfo);
+			filteredTab.appendTo(modules).addCardClick(loginfo);
 
 			return bombHTML;
 		};
