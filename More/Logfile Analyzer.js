@@ -259,18 +259,18 @@ $(function() {
 				.mousedown(function() { return false; });
 			var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
-			var TotalModules = 0;
-			var Needies = 0;
+			var totalModules = 0;
+			var totalNeedies = 0;
 			this.Bombs.forEach(function(bomb) {
-				TotalModules += bomb.TotalModules;
-				Needies += bomb.Needies;
+				totalModules += bomb.TotalModules;
+				totalNeedies += bomb.Needies;
 
 				$("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML);
 			});
 
-			$("<div class='module-count'>").text(TotalModules).appendTo(bombHTML);
-			if (Needies > 0) {
-				$("<div class='needy-count'>").text(Needies).appendTo(bombHTML);
+			$("<div class='module-count'>").text(totalModules).appendTo(bombHTML);
+			if (totalNeedies > 0) {
+				$("<div class='needy-count'>").text(totalNeedies).appendTo(bombHTML);
 			}
 			if (this.RuleSeed && this.RuleSeed != 1) {
 				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
@@ -283,8 +283,8 @@ $(function() {
 			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Mission Information
-			var missioninfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").css("margin-top", "10px").text("Mission Information").appendTo(missioninfo);
+			var missionInfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").css("margin-top", "10px").text("Mission Information").appendTo(missionInfo);
 
 			var missionInfoTree = [
 				"Mission: " + this.MissionName
@@ -302,12 +302,12 @@ $(function() {
 			} else {
 				missionInfoTree.push("State: " + this.State);
 			}
-			makeTree(missionInfoTree, $("<ul>").appendTo(missioninfo));
+			makeTree(missionInfoTree, $("<ul>").appendTo(missionInfo));
 
 			$("<a href='#' class='module'>")
 				.text("Mission Information")
 				.appendTo(modules)
-				.addCardClick(missioninfo).click();
+				.addCardClick(missionInfo).click();
 
 			this.Bombs.forEach(function(bomb) {
 				bomb.ToHTML(filteredTab).appendTo(bombGroupHTML);
@@ -323,10 +323,10 @@ $(function() {
 				this.FilterLines();
 			}
 
-			var loginfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").css("margin-top", "10px").text("Filtered Log").appendTo(loginfo);
-			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(loginfo);
-			filteredTab.appendTo(modules).addCardClick(loginfo);
+			var logInfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").css("margin-top", "10px").text("Filtered Log").appendTo(logInfo);
+			$("<pre>").css("white-space", "pre-wrap").text(this.FilteredLog).appendTo(logInfo);
+			filteredTab.appendTo(modules).addCardClick(logInfo);
 
 			return bombHTML;
 		};
@@ -513,9 +513,9 @@ $(function() {
 				});
 			}
 
-			var edgeworkSeperator = false;
+			var edgeworkSeparator = false;
 			if (this.Batteries.length > 0) {
-				edgeworkSeperator = true;
+				edgeworkSeparator = true;
 				edgework.append("<div class='widget separator'>");
 
 				this.Batteries.sort().reverse();
@@ -528,7 +528,7 @@ $(function() {
 
 			//Multiple Widget Batteries
 			if (this.ModdedBatteries.length > 0) {
-				if (!edgeworkSeperator) {
+				if (!edgeworkSeparator) {
 					edgework.append("<div class='widget separator'>");
 				}
 
@@ -557,9 +557,9 @@ $(function() {
 				});
 			}
 
-			edgeworkSeperator = false;
+			edgeworkSeparator = false;
 			if (this.Indicators.length > 0) {
-				edgeworkSeperator = true;
+				edgeworkSeparator = true;
 				edgework.append("<div class='widget separator'>");
 
 				this.Indicators.sort(function(ind1, ind2) {
@@ -580,7 +580,7 @@ $(function() {
 			//Multiple Widgets Indicator
 			//Encrypted Indicator
 			if (this.ModdedIndicators.length > 0) {
-				if (!edgeworkSeperator) {
+				if (!edgeworkSeparator) {
 					edgework.append("<div class='widget separator'>");
 				}
 
@@ -632,11 +632,11 @@ $(function() {
 					}
 				});
 			}
-			edgeworkSeperator = false;
+			edgeworkSeparator = false;
 
 			if (this.PortPlates.length > 0) {
 				edgework.append("<div class='widget separator'>");
-				edgeworkSeperator = true;
+				edgeworkSeparator = true;
 
 				this.PortPlates.forEach(function(val) {
 					var plate = $("<div class='widget portplate'>").appendTo(edgework);
@@ -647,7 +647,7 @@ $(function() {
 			}
 
 			if (this.ModdedPortPlates.length > 0) {
-				if (!edgeworkSeperator) {
+				if (!edgeworkSeparator) {
 					edgework.append("<div class='widget separator'>");
 				}
 
@@ -690,7 +690,7 @@ $(function() {
 			var modules = $("<div class='modules'>").appendTo(info);
 
 			// Edgework Information
-			var ind = this.Indicators.map(function(val) { return val.join(" "); });
+			var indicators = this.Indicators.map(function(val) { return val.join(" "); });
 
 			var ports = {};
 			this.PortPlates.forEach(function(plate) {
@@ -703,38 +703,38 @@ $(function() {
 				});
 			});
 
-			var portlist = [];
+			var portList = [];
 			Object.keys(ports).forEach(function(port) {
 				var count = ports[port];
-				portlist.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
+				portList.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
 			});
 
 			var caseHTML = $("<span>").text("Unknown");
 
-			var edgeinfo = $("<div class='module-info'>").appendTo(info);
-			$("<h3>").text("Edgework").appendTo(edgeinfo);
+			var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").text("Edgework").appendTo(edgeworkInfo);
 			makeTree([
 				"Serial: " + this.Serial,
 				"Batteries: " + this.Batteries.reduce(function(a, b) { return a + b; }, 0),
 				"Holders: " + this.Batteries.length,
-				"Ports: " + (portlist.length > 0 ? portlist.join(", ") : "None"),
-				"Indicators: " + (ind.length > 0 ? ind.join(", ") : "None"),
+				"Ports: " + (portList.length > 0 ? portList.join(", ") : "None"),
+				"Indicators: " + (indicators.length > 0 ? indicators.join(", ") : "None"),
 				"Port Plates: " + this.PortPlates.length,
-				"Widgets: " + (this.Batteries.length + ind.length + this.PortPlates.length + this.ModdedWidgets),
+				"Widgets: " + (this.Batteries.length + indicators.length + this.PortPlates.length + this.ModdedWidgets),
 				this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
 				{ label: "Case: ", obj: caseHTML }
-			], $("<ul>").appendTo(edgeinfo));
+			], $("<ul>").appendTo(edgeworkInfo));
 
 			$("<a href='#' class='module'>")
 				.text("Edgework")
 				.appendTo(modules)
-				.addCardClick(edgeinfo);
+				.addCardClick(edgeworkInfo);
 
 			// Convert modules
 			var mods = [];
-			for (var m in this.Modules) {
-				if (this.Modules.hasOwnProperty(m)) {
-					var mod = this.Modules[m];
+			for (var moduleID in this.Modules) {
+				if (this.Modules.hasOwnProperty(moduleID)) {
+					var mod = this.Modules[moduleID];
 
 					const parsedMod = new ParsedMod(mod.moduleData);
 
@@ -758,15 +758,15 @@ $(function() {
 				}
 			}
 
-			mods.sort(function(a, b) {
-				let sortKeyA = a.moduleData.displayName.toLowerCase();
-				if (a.counter) {
-					sortKeyA += a.counter;
+			mods.sort(function(modA, modB) {
+				let sortKeyA = modA.moduleData.displayName.toLowerCase();
+				if (modA.counter) {
+					sortKeyA += modA.counter;
 				}
 
-				let sortKeyB = b.moduleData.displayName.toLowerCase();
-				if (b.counter) {
-					sortKeyB += b.counter;
+				let sortKeyB = modB.moduleData.displayName.toLowerCase();
+				if (modB.counter) {
+					sortKeyB += modB.counter;
 				}
 
 				sortKeyA = sortKeyA.replace(/^the /i, "");
@@ -782,14 +782,14 @@ $(function() {
 			});
 
 			// Display modules
-			mods.forEach(function(minfo) {
+			mods.forEach(function(parseData) {
 				// Information
-				var modinfo = $("<div class='module-info'>").appendTo(info).data('module-id', minfo.moduleID);
-				$("<h3>").text(minfo.moduleData.displayName).appendTo(modinfo);
-				if (minfo.tree && (minfo.tree.length !== 0 || minfo.tree.groups !== 0)) {
-					makeTree(minfo.tree, $("<ul>").appendTo(modinfo));
-				} else if (minfo.moduleData.hasLogging === false) {
-					$("<p>").text("No information logged.").appendTo(modinfo);
+				var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
+				$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
+				if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups !== 0)) {
+					makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
+				} else if (parseData.moduleData.hasLogging === false) {
+					$("<p>").text("No information logged.").appendTo(moduleInfo);
 				} else {
 					$("<p>")
 						.html("Please check the ")
@@ -798,20 +798,20 @@ $(function() {
 							return false;
 						}))
 						.append(' as the information for this module cannot be automatically parsed.')
-						.appendTo(modinfo);
+						.appendTo(moduleInfo);
 				}
 
 				// Listing
-				var mod = $(`<a href='#' class='module module-${minfo.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
-					.text(minfo.moduleData.displayName + (minfo.displayCounter ? " " + minfo.counter : ""))
+				var modListing = $(`<a href='#' class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
+					.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
 					.appendTo(modules)
-					.addCardClick(modinfo);
+					.addCardClick(moduleInfo);
 
 				$("<img>")
 					.on("error", function() {
-						console.warn("Couldn't find a module icon for %s. More information: %o", minfo.moduleData.displayName, minfo);
+						console.warn("Couldn't find a module icon for %s. More information: %o", parseData.moduleData.displayName, parseData);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + minfo.moduleData.icon + ".png").appendTo(mod);
+					}).attr("src", "../Icons/" + parseData.moduleData.icon + ".png").appendTo(modListing);
 			});
 
 			// Case representation
