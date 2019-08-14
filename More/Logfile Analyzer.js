@@ -40,16 +40,20 @@ const blacklist = [
 
 class Groups {
 	constructor() {
-		this.groups = [this.latest = []];
+		this.groups = [];
 		this.prefix = "Attempt #";
 	}
 
 	addGroup(avoidEmpty = false) {
-		if (avoidEmpty && this.latest.length == 0) return;
+		if (avoidEmpty && this.latest != null && this.latest.length == 0) return;
 		this.groups.push(this.latest = []);
 	}
 
 	add(obj) {
+		if (this.latest == null) {
+			this.addGroup();
+		}
+
 		this.latest.push(obj);
 	}
 }
@@ -786,7 +790,7 @@ $(function() {
 				// Information
 				var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 				$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
-				if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups !== 0)) {
+				if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
 					makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
 				} else if (parseData.moduleData.hasLogging === false) {
 					$("<p>").text("No information logged.").appendTo(moduleInfo);
@@ -1400,7 +1404,7 @@ $(function() {
 									for (const mod of modInfo.IDs) {
 										if (mod[0] == "#" + id) {
 											// Transfer over the already parsed information and groups.
-											newModInfo.push(...mod[0]);
+											newModInfo.push(...mod[1]);
 											newModInfo.groups = mod[1].groups;
 
 											// Remove it from the first bomb.
