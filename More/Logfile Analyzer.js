@@ -6413,7 +6413,7 @@ $(function() {
 			}
 
 			if (line !== "") {
-				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\] ?(.+)/.exec(line);
+				var match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\]:? ?(.+)/.exec(line);
 				if (match && !match[2].startsWith("(h)")) {
 					var loggingTag = null;
 					var id = null;
