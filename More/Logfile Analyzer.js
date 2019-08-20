@@ -1530,6 +1530,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "alphaBits",
+				loggingTag: "Alpha-Bits",
+				displayName: "Alpha-Bits"
+			},
+			{
 				moduleID: "spwizAstrology",
 				loggingTag: "Astrology"
 			},
