@@ -1530,6 +1530,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "alphaBits",
+				loggingTag: "Alpha-Bits",
+				displayName: "Alpha-Bits"
+			},
+			{
 				moduleID: "spwizAstrology",
 				loggingTag: "Astrology"
 			},
@@ -6322,6 +6327,11 @@ $(function() {
 			{
 				displayName: "Answering Questions",
 				moduleID: "NeedyVentV2"
+			},
+			{
+				displayName: "Prime Checker",
+				moduleID: "primechecker",
+				hasLogging: false
 			},
 			{
 				displayName: "The Button (Translated)",
