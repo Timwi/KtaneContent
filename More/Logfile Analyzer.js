@@ -6329,6 +6329,11 @@ $(function() {
 				moduleID: "NeedyVentV2"
 			},
 			{
+				displayName: "Prime Checker",
+				moduleID: "primechecker",
+				hasLogging: false
+			},
+			{
 				displayName: "The Button (Translated)",
 				moduleID: "BigButtonTranslated",
 				icon: "The Button",
