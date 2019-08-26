@@ -1702,6 +1702,11 @@ $(function() {
 				loggingTag: "Blackjack"
 			},
 			{
+				displayName: "Bob Barks",
+				moduleID: "ksmBobBarks",
+				loggingTag: "Bob Barks"
+			},
+			{
 				displayName: "Boolean Maze",
 				moduleID: "boolMaze",
 				loggingTag: "BooleanMaze"
