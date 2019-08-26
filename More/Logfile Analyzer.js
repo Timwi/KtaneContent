@@ -5848,9 +5848,6 @@ $(function() {
 				loggingTag: "TicTacToe",
 				matches: [
 					{
-						regex: /Starting row/
-					},
-					{
 						regex: /Keypad is now/,
 						handler: function(matches, module) {
 							var step = [];
@@ -5869,6 +5866,9 @@ $(function() {
 						handler: function(matches, module) {
 							module.Step.push(matches.input);
 						}
+					},
+					{
+						regex: /.+/
 					}
 				]
 			},
