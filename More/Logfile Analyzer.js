@@ -1702,6 +1702,19 @@ $(function() {
 				loggingTag: "Blackjack"
 			},
 			{
+				displayName: "Bob Barks",
+				moduleID: "ksmBobBarks",
+				loggingTag: "Bob Barks",
+				matches: [
+					{
+						regex: /.+/,
+						handler: function(matches, module) {
+							if (!matches[0].startsWith("Receive") && !matches[0].startsWith("Yielding")) module.push(matches.input);
+						}
+					}
+				]					
+			},
+			{
 				displayName: "Boolean Maze",
 				moduleID: "boolMaze",
 				loggingTag: "BooleanMaze"
