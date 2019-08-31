@@ -5374,6 +5374,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Simon Literally Says",
+				moduleID: "ksmSimonLitSays",
+				loggingTag: "Simon Literally Says"
+			},
+			{
 				moduleID: "SimonScreamsModule",
 				loggingTag: "Simon Screams",
 				matches: [
@@ -5884,6 +5889,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "The Button",
+				moduleID: "BigButton",
+				loggingTag: "ButtonComponent"
 			},
 			{
 				displayName: "The Time Keeper",
