@@ -1771,6 +1771,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Boolean Wires",
+				moduleID: "booleanWires",
+				loggingTag: "Boolean Wires"
+			},
+			{
 				moduleID: "BrokenButtonsModule",
 				loggingTag: "Broken Buttons",
 				matches: [
@@ -3262,6 +3267,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Knob",
+				moduleID: "NeedyKnob",
+				loggingTag: "NeedyKnobComponent"
+			},
+			{
 				displayName: "Langton's Ant",
 				moduleID: "langtonAnt",
 				loggingTag: "Langton's Ant",
@@ -3882,6 +3892,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Memory",
+				moduleID: "Memory",
+				loggingTag: "MemoryComponent"
+			},
+			{
 				displayName: "Micro-Modules",
 				moduleID: "KritMicroModules",
 				loggingTag: "Micro-Modules"
@@ -4482,7 +4497,7 @@ $(function() {
 			},
 			{
 				moduleID: "Password",
-				loggingTag: "PasswordRuleset"
+				loggingTag: "PasswordComponent"
 			},
 			{
 				moduleID: "Painting",
@@ -5374,6 +5389,16 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Simon Literally Says",
+				moduleID: "ksmSimonLitSays",
+				loggingTag: "Simon Literally Says"
+			},
+			{
+				displayName: "Simon's On First",
+				moduleID: "simonsOnFirst",
+				loggingTag: "Simon's On First"
+			},
+			{
 				moduleID: "SimonScreamsModule",
 				loggingTag: "Simon Screams",
 				matches: [
@@ -5886,6 +5911,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Button",
+				moduleID: "BigButton",
+				loggingTag: "ButtonComponent"
+			},
+			{
 				displayName: "The Time Keeper",
 				moduleID: "timeKeeper",
 				loggingTag: "TimeKeeper"
@@ -5968,6 +5998,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Venting Gas",
+				moduleID: "NeedyVentGas",
+				loggingTag: "NeedyVentComponent",
 			},
 			{
 				moduleID: "webDesign",
@@ -6069,6 +6104,11 @@ $(function() {
 						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
+			},
+			{
+				displayName: "Who’s on First",
+				moduleID: "WhosOnFirst",
+				loggingTag: "WhosOnFirstComponent",
 			},
 			{
 				moduleID: "thewitness",
