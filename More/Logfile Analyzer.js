@@ -1771,6 +1771,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Boolean Wires",
+				moduleID: "booleanWires",
+				loggingTag: "Boolean Wires"
+			},
+			{
 				moduleID: "BrokenButtonsModule",
 				loggingTag: "Broken Buttons",
 				matches: [
@@ -3880,6 +3885,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Memory",
+				moduleID: "Memory",
+				loggingTag: "MemoryComponent"
 			},
 			{
 				displayName: "Micro-Modules",
