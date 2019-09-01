@@ -5389,6 +5389,11 @@ $(function() {
 				loggingTag: "Simon Literally Says"
 			},
 			{
+				displayName: "Simon's On First",
+				moduleID: "simonsOnFirst",
+				loggingTag: "Simon's On First"
+			},
+			{
 				moduleID: "SimonScreamsModule",
 				loggingTag: "Simon Screams",
 				matches: [
