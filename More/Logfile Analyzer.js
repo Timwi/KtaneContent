@@ -3262,6 +3262,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Knob",
+				moduleID: "NeedyKnob",
+				loggingTag: "NeedyKnobComponent"
+			},
+			{
 				displayName: "Langton's Ant",
 				moduleID: "langtonAnt",
 				loggingTag: "Langton's Ant",
@@ -4482,7 +4487,7 @@ $(function() {
 			},
 			{
 				moduleID: "Password",
-				loggingTag: "PasswordRuleset"
+				loggingTag: "PasswordComponent"
 			},
 			{
 				moduleID: "Painting",
@@ -5970,6 +5975,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Venting Gas",
+				moduleID: "NeedyVentGas",
+				loggingTag: "NeedyVentComponent",
+			},
+			{
 				moduleID: "webDesign",
 				loggingTag: "Web design",
 				matches: [
@@ -6069,6 +6079,11 @@ $(function() {
 						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
+			},
+			{
+				displayName: "Who’s on First",
+				moduleID: "WhosOnFirst",
+				loggingTag: "WhosOnFirstComponent",
 			},
 			{
 				moduleID: "thewitness",
