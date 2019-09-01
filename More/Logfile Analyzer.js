@@ -1771,6 +1771,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Boolean Wires",
+				moduleID: "booleanWires",
+				loggingTag: "Boolean Wires"
+			},
+			{
 				moduleID: "BrokenButtonsModule",
 				loggingTag: "Broken Buttons",
 				matches: [
@@ -3887,6 +3892,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Memory",
+				moduleID: "Memory",
+				loggingTag: "MemoryComponent"
+			},
+			{
 				displayName: "Micro-Modules",
 				moduleID: "KritMicroModules",
 				loggingTag: "Micro-Modules"
@@ -5379,6 +5389,16 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Simon Literally Says",
+				moduleID: "ksmSimonLitSays",
+				loggingTag: "Simon Literally Says"
+			},
+			{
+				displayName: "Simon's On First",
+				moduleID: "simonsOnFirst",
+				loggingTag: "Simon's On First"
+			},
+			{
 				moduleID: "SimonScreamsModule",
 				loggingTag: "Simon Screams",
 				matches: [
@@ -5889,6 +5909,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "The Button",
+				moduleID: "BigButton",
+				loggingTag: "ButtonComponent"
 			},
 			{
 				displayName: "The Time Keeper",
