@@ -3277,7 +3277,7 @@ $(function() {
 				loggingTag: "NeedyKnobComponent"
 			},
 			{
-				displayName: "Langton's Ant",
+				displayName: "Langton’s Ant",
 				moduleID: "langtonAnt",
 				loggingTag: "Langton's Ant",
 				matches: [
