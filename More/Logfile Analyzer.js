@@ -5191,6 +5191,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Safety Square",
+				moduleID: "safetySquare",
+				loggingTag: "Safety Square"
+			},
+			{
 				displayName: "Schlag den Bomb",
 				moduleID: "qSchlagDenBomb",
 				loggingTag: "Schlag den Bomb"
