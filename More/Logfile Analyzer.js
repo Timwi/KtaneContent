@@ -1518,6 +1518,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "A-maze-ing Buttons",
+				moduleID: "ksmAmazeingButtons",
+				loggingTag: "A-maze-ing Buttons"
+			},
+			{
 				moduleID: "Keypad",
 				loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
 				matches: [
