@@ -6040,6 +6040,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Vigenère Cipher",
+				moduleID: "vigenereCipher",
+				loggingTag: "Vigenère Cipher",
+			},
+			{
 				displayName: "Visual Impairment",
 				moduleID: "visual_impairment",
 				loggingTag: "Visual Impairment",
