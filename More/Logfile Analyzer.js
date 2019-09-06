@@ -2566,6 +2566,11 @@ $(function() {
 				loggingTag: "The Deck of Many Things"
 			},
 			{
+				displayName: "Desert Bus",
+				moduleID: "desertBus",
+				loggingTag:"desertBus"
+			},
+			{
 				displayName: "DetoNATO",
 				moduleID: "Detonato",
 				loggingTag: "DetoNATO"
