@@ -2568,7 +2568,7 @@ $(function() {
 			{
 				displayName: "Desert Bus",
 				moduleID: "desertBus",
-				loggingTag:"desertBus"
+				loggingTag:"Desert Bus"
 			},
 			{
 				displayName: "DetoNATO",
@@ -6018,6 +6018,11 @@ $(function() {
 				displayName: "Venting Gas",
 				moduleID: "NeedyVentGas",
 				loggingTag: "NeedyVentComponent",
+			},
+			{
+				displayName: "The Very Annoying Button",
+				moduleID: "veryAnnoyingButton",
+				loggingTag: "The Very Annoying Button"
 			},
 			{
 				moduleID: "webDesign",
