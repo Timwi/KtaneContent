@@ -5901,6 +5901,30 @@ $(function() {
 				loggingTag: "Ten-Button Color Code"
 			},
 			{
+				displayName: "TetraVex",
+				moduleID: "ksmTetraVex",
+				loggingTag: "TetraVex",
+				matches: [
+					{
+						regex: /Intended solution:/,
+						handler: function(matches, module) {
+							module.push({ label: "Solution:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+							return true;
+						}
+					},
+					{
+						regex: /Submitted solution:/,
+						handler: function(matches, module) {
+							module.push({ label: "Submitted:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Tic-Tac-Toe",
 				moduleID: "TicTacToeModule",
 				loggingTag: "TicTacToe",
