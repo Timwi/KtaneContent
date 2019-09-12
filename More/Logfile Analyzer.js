@@ -2566,6 +2566,11 @@ $(function() {
 				loggingTag: "The Deck of Many Things"
 			},
 			{
+				displayName: "Desert Bus",
+				moduleID: "desertBus",
+				loggingTag:"Desert Bus"
+			},
+			{
 				displayName: "DetoNATO",
 				moduleID: "Detonato",
 				loggingTag: "DetoNATO"
@@ -6013,6 +6018,11 @@ $(function() {
 				displayName: "Venting Gas",
 				moduleID: "NeedyVentGas",
 				loggingTag: "NeedyVentComponent",
+			},
+			{
+				displayName: "The Very Annoying Button",
+				moduleID: "veryAnnoyingButton",
+				loggingTag: "The Very Annoying Button"
 			},
 			{
 				moduleID: "webDesign",
