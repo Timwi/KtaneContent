@@ -5621,6 +5621,10 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Snap!",
+				moduleID: "lgndSnap"
+			},
+			{
 				displayName: "Sonic & Knuckles",
 				moduleID: "sonicKnuckles",
 				loggingTag: "Sonic & Knuckles"
