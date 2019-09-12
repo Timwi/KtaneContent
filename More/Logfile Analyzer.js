@@ -4001,6 +4001,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Modkit",
+				moduleID: "modkit",
+				loggingTag: "The Modkit"
+			},
+			{
 				displayName: "Module Homework",
 				moduleID: "KritHomework",
 				loggingTag: "Module Homework"
