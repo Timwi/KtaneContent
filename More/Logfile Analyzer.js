@@ -5414,7 +5414,7 @@ $(function() {
 				loggingTag: "Simon Literally Says"
 			},
 			{
-				displayName: "Simon's On First",
+				displayName: "Simon’s On First",
 				moduleID: "simonsOnFirst",
 				loggingTag: "Simon's On First"
 			},
