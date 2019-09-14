@@ -858,7 +858,7 @@ $(function() {
 					// And the Y axis is always upside down, so we always multiply it by -1.
 					const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
 					const y = this.Anchors[moduleIndex][1] * -1;
-					$SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).css("image-rendering", "crisp-edges").appendTo(svg);
+					const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).appendTo(svg);
 					$SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
 
 					for (let j = 0; j < 4; j++) {
@@ -866,6 +866,12 @@ $(function() {
 					}
 					svg.attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${Math.abs(viewBox[0]) + viewBox[2]} ${Math.abs(viewBox[1]) + viewBox[3]}`);
 					svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
+				
+					// Attempt to make the image pixelated
+					image.css("image-rendering", "crisp-edges");
+					if (image.css("image-render") == null) {
+						image.css("image-rendering", "pixelated");
+					}
 				}
 				const backFace = svg;
 
