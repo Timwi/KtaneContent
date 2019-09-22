@@ -5088,6 +5088,11 @@ $(function() {
 				loggingTag: "The Radio"
 			},
 			{
+				displayName: "Red Buttons",
+				moduleID: "SamRedButtons",
+				loggingTag: "Red Buttons"
+			},
+			{
 				moduleID: "resistors",
 				loggingTag: "Resistors",
 				matches: [
@@ -5198,6 +5203,11 @@ $(function() {
 					}
 				]
 			},
+			{
+				displayName: "Wire Sequence",
+				moduleID: "WireSequence",
+				loggingTag: "WireSequenceComponent",
+			}
 			{
 				displayName: "Safety Safe",
 				moduleID: "PasswordV2",
@@ -5965,6 +5975,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Timing is Everything",
+				moduleID: "timingIsEverything",
+				loggingTag: "Timing is Everything"
+			},
+			{
 				displayName: "The Button",
 				moduleID: "BigButton",
 				loggingTag: "ButtonComponent"
@@ -6480,6 +6495,7 @@ $(function() {
 				icon: "Venting Gas",
 				loggingTag: "Vent Gas Translated"
 			},
+			
 			{
 				moduleID: "AnagramsModule",
 				hasLogging: false
