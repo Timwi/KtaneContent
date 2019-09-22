@@ -5207,7 +5207,7 @@ $(function() {
 				displayName: "Wire Sequence",
 				moduleID: "WireSequence",
 				loggingTag: "WireSequenceComponent",
-			}
+			},
 			{
 				displayName: "Safety Safe",
 				moduleID: "PasswordV2",
@@ -6495,7 +6495,6 @@ $(function() {
 				icon: "Venting Gas",
 				loggingTag: "Vent Gas Translated"
 			},
-			
 			{
 				moduleID: "AnagramsModule",
 				hasLogging: false
