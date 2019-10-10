@@ -2624,6 +2624,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Faulty RGB Maze",
+				moduleID: "faultyrgbMaze",
+				loggingTag: "Faulty RGB Maze"
+			},
+			{
 				displayName: "Find The Date",
 				moduleID: "DateFinder",
 				loggingTag: "Date Finder"
