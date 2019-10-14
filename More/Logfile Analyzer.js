@@ -6320,6 +6320,11 @@ $(function() {
 				loggingTag: "Zoni"
 			},
 			{
+				displayName: "Übermodule",
+				moduleID: "ubermodule",
+				loggingTag: "Übermodule"
+			},
+			{
 				displayName: "The Button",
 				moduleID: "BigButton"
 			},
