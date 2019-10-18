@@ -5926,6 +5926,11 @@ $(function() {
 				loggingTag: "Ten-Button Color Code"
 			},
 			{
+				displayName: "Ternary Converter",
+				moduleID: "qkTernaryConverter",
+				loggingTag: "Ternary Converter"
+			},
+			{
 				displayName: "TetraVex",
 				moduleID: "ksmTetraVex",
 				loggingTag: "TetraVex",
