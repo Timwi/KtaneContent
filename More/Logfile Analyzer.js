@@ -6056,6 +6056,11 @@ $(function() {
 				moduleID: "UNO",
 				loggingTag: "UNO"
 			},
+      {
+        displayName: "UltraStores",
+        moduleID: "UltraStores",
+        loggingTag: "UltraStores"
+      },
 			{
 				displayName: "USA Maze",
 				moduleID: "USA",
