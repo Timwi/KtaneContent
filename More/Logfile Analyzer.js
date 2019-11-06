@@ -68,7 +68,7 @@ class ParsedMod {
 }
 
 function convertID(id) {
-	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^(spwiz|lgnd|Krit)/i, "").replace(/(?!\b)([A-Z])/g, " $1");
+	return (id.substring(0, 1).toUpperCase() + id.substring(1)).replace(/module$/i, "").replace(/^(spwiz|lgnd|Krit|ksm)/i, "").replace(/(?!\b)([A-Z])/g, " $1");
 }
 
 function $SVG(elem) {
@@ -3150,6 +3150,11 @@ $(function() {
 					}
 				]
 			},
+      {
+        displayName: "The High Score",
+        moduleID: "ksmHighScore",
+        loggingTag: "The High Score"
+      },
 			{
 				displayName: "HTTP Response",
 				moduleID: "http",
