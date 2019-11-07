@@ -2059,6 +2059,11 @@ $(function() {
 				loggingTag: "ColorMorse"
 			},
 			{
+				moduleID: "coloredMaze",
+				loggingTag: "The Colored Maze",
+				displayName: "The Colored Maze"
+			},
+			{
 				moduleID: "ColoredSwitchesModule",
 				loggingTag: "Colored Switches",
 				matches: [
@@ -3203,6 +3208,11 @@ $(function() {
 					}
 				]
 			},
+			{
+        			displayName: "The Hyperlink",
+        			moduleID: "hyperlink",
+        			loggingTag: "The Hyperlink"
+      			},
 			{
 				moduleID: "iceCreamModule",
 				loggingTag: "Ice Cream",
@@ -4442,6 +4452,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				moduleID: "NandMs",
+				loggingTag: "N&Ms",
+				displayName: "N&Ms"
 			},
 			{
 				moduleID: "NonogramModule",
