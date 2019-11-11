@@ -6189,9 +6189,9 @@ $(function() {
 				loggingTag: "WireSequencePage",
 				matches: [
 					{
-						regex: /Snipped wire of color (\w+) of number (\d+)/,
+						regex: /Snipped wire of color (\w+) of number (\d+) to index (\d+)/,
 						handler: function(matches, module) {
-							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1));
+							module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1) + " connected to " + "ABC"[parseInt(matches[3])]);
 						}
 					}
 				]
