@@ -9,6 +9,94 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel='stylesheet' type='text/css' href='css/font.css'>
     <script src='js/ktane-utils.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    tag.appendChild(document.createTextNode(`If the display is ${j}, ${rule}.`));
+                    if (j != 4)
+                        tag.appendChild(document.createElement('br'));
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "druk op de knop in de eerste positie";
+                case 1: return "druk op de knop in de tweede positie";
+                case 2: return "druk op de knop in de derde positie";
+                case 3: return "druk op de knop in de vierde positie";
+                case 4: return `druk op de knop met het opschrift “${targetDigit}”`;
+                case 5: return `druk op de knop de positie die je ook in fase ${targetStage}` indrukte;
+                case 6: return `druk op de knop met hetzelfde opschrift als in fase ${targetStage}`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
 </head>
 <body>
     <div class="section">
