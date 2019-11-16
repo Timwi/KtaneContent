@@ -2405,6 +2405,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Cruel Boolean Maze",
+				moduleID: "boolMazeCruel",
+				loggingTag: "Cruel Boolean Maze"
+			},
+			{
 				displayName: "The Crystal Maze",
 				moduleID: "crystalMaze",
 				loggingTag: "The Crystal Maze"
@@ -3416,6 +3421,11 @@ $(function() {
 				displayName: "Left and Right",
 				moduleID: "leftandRight",
 				loggingTag: "Left and Right"
+			},
+			{
+				displayName: "The Legendre Symbol",
+				moduleID: "legendreSymbol",
+				loggingTag: "The Legendre Symbol"
 			},
 			{
 				displayName: "LEGOs",
