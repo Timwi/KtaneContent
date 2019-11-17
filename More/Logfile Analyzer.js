@@ -3171,11 +3171,11 @@ $(function() {
 					}
 				]
 			},
-      {
-        displayName: "The High Score",
-        moduleID: "ksmHighScore",
-        loggingTag: "The High Score"
-      },
+			{
+				displayName: "The High Score",
+				moduleID: "ksmHighScore",
+				loggingTag: "The High Score"
+			},
 			{
 				displayName: "HTTP Response",
 				moduleID: "http",
@@ -3225,10 +3225,10 @@ $(function() {
 				]
 			},
 			{
-        			displayName: "The Hyperlink",
-        			moduleID: "hyperlink",
-        			loggingTag: "The Hyperlink"
-      			},
+				displayName: "The Hyperlink",
+				moduleID: "hyperlink",
+				loggingTag: "The Hyperlink"
+			},
 			{
 				moduleID: "iceCreamModule",
 				loggingTag: "Ice Cream",
@@ -6097,11 +6097,11 @@ $(function() {
 				moduleID: "UNO",
 				loggingTag: "UNO"
 			},
-      {
-        displayName: "UltraStores",
-        moduleID: "UltraStores",
-        loggingTag: "UltraStores"
-      },
+			{
+				displayName: "UltraStores",
+				moduleID: "UltraStores",
+				loggingTag: "UltraStores"
+			},
 			{
 				displayName: "USA Maze",
 				moduleID: "USA",
