@@ -241,6 +241,7 @@ $(function() {
 		this.MissionName = "Unknown";
 		this.StartLine = 0;
 		this.FilteredLog = "";
+		this.ParseAgain = []; // Lines that might be for a module but couldn't be matched by name. If Tweaks is installed, it'll try to parse these again once the LFABombInfo is logged.
 
 		Object.defineProperty(this, "isSingleBomb", {
 			get: function() {
@@ -1420,6 +1421,16 @@ $(function() {
 								}
 							}
 
+							// Reparse any lines that might now match because we have proper module names.
+							for (const lineData of bombgroup.ParseAgain) {
+								for (var modID in targetBomb.Modules) {
+									if (bombInfo.displayNames[modID] == undefined) continue;
+
+									if (targetBomb.Modules[modID].moduleData.displayName == lineData.modName) {
+										readDirectly(lineData.line, modID, lineData.id);
+									}
+								}
+							}
 						}
 					}
 				]
@@ -6653,7 +6664,7 @@ $(function() {
 					} else if (bombgroup) {
 						var modName = submatch ? submatch[1] : match[1];
 
-						bombgroup.Bombs.some(function(bomb) {
+						const parsed = bombgroup.Bombs.some(function(bomb) {
 							for (var modID in bomb.Modules) {
 								if (getModuleName(modID) == modName) {
 									readDirectly(match[2], modID, id);
@@ -6661,6 +6672,10 @@ $(function() {
 								}
 							}
 						});
+
+						if (!parsed) {
+							bombgroup.ParseAgain.push({ modName: modName, line: match[2], id: id });
+						}
 					}
 				} else {
 					for (const data of taglessParsing) {
