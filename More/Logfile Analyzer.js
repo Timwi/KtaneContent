@@ -2647,7 +2647,24 @@ $(function() {
 			{
 				displayName: "Faulty RGB Maze",
 				moduleID: "faultyrgbMaze",
-				loggingTag: "Faulty RGB Maze"
+				loggingTag: "Faulty RGB Maze",
+				matches: [
+					{
+						regex: /The grid:/,
+						handler: function(matches, module) {
+							let lines = readTaggedLine();
+							for (let i = 0; i < 14; i++) {
+								lines += `\n${readTaggedLine()}`;
+							}
+
+							module.push({ label: "The grid:", obj: pre(lines) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "Find The Date",
