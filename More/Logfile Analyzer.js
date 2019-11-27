@@ -4460,6 +4460,11 @@ $(function() {
 					}
 				]
 			},
+      {
+        moduleID: "mcdNatures",
+        loggingTag: "Natures",
+        displayName: "Natures"
+      },
 			{
 				moduleID: "necronomicon",
 				loggingTag: "The Necronomicon",
