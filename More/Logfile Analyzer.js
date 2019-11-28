@@ -3971,6 +3971,38 @@ $(function() {
         loggingTag: "MemoryComponent"
       },
       {
+        moduleID: "memorableButtons",
+        loggingTag: "Memorable Buttons",
+        matches: [
+          {
+            regex: /(?:([ABCDEFGJKLPQ]), ([ABCDEFGJKLPQ]), ([ABCDEFGJKLPQ]) & ([ABCDEFGJKLPQ]))|(?:s | d)([ABCDEFGJKLPQ]+)|([ABCDEFGJKLPQ])(?:\.)/,
+            handler: function(matches, module) {
+              var span = $('<span>');
+              var text = matches.input.substring(1);
+              var str1 = "<span style=\"font-family: 'kra'; font-size: 28pt\">";
+              var letter = matches.input[0];
+              var letters = "ABCDEFGJKLPQ".split("");
+              for (let i = 1; i <= matches.length; i++){
+                if (matches[i] != null)
+                  text = text.replace(matches[i], str1 + matches[i] + "</span>");
+              };
+              text = letter + text;
+              if (letters.includes(text.charAt(text.length - 2)))
+              {
+                letter = text.charAt(text.length - 2);
+                text = text.substring(0, text.length - 2) + str1 + letter + "</span>.";
+              }
+              span.append(text);
+              module.push(span);
+              return true;
+            }
+          },
+          {
+            regex: /.+/
+          }
+        ]
+      },
+      {
         displayName: "Micro-Modules",
         moduleID: "KritMicroModules",
         loggingTag: "Micro-Modules"
