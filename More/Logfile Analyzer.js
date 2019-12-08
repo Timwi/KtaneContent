@@ -3453,7 +3453,7 @@ $(function() {
       {
         displayName: "The Legendre Symbol",
         moduleID: "legendreSymbol",
-        loggingTag: "The Legendre Symbol"
+        loggingTag: "Legendre Symbol"
       },
       {
         displayName: "LEGOs",
@@ -4476,6 +4476,11 @@ $(function() {
             }
           }
         ]
+      },
+			{
+        moduleID: "Transposition",
+        loggingTag: "Musical Transposition",
+        displayName: "Musical Transposition"
       },
       {
         moduleID: "MysticSquareModule",
