@@ -4991,6 +4991,11 @@ $(function() {
         ]
       },
       {
+        displayName: "Polygons",
+        moduleID: "polygons",
+        loggingTag: "Polygons"
+      },
+      {
         moduleID: "Probing",
         loggingTag: "Probing",
         matches: [
