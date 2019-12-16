@@ -6174,6 +6174,11 @@ $(function() {
         loggingTag: "The Troll"
       },
       {
+        displayName: "Ultimate Custom Night",
+        moduleID: "qkUCN",
+        loggingTag: "Ultimate Custom Night"
+      },
+      {
         displayName: "UNO",
         moduleID: "UNO",
         loggingTag: "UNO"
