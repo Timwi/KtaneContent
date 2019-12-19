@@ -5225,6 +5225,39 @@ $(function() {
         loggingTag: "The Radio"
       },
       {
+        displayName: "Rainbow Arrows",
+        moduleID: "ksmRainbowArrows",
+        loggingTag: "Rainbow Arrows",
+        matches: [
+          {
+            regex: /^\((.+)\) (.+)/,
+            handler: function(matches, module) {
+              if (module.length === 0 || module[module.length-1][0] !== matches[1]) {
+                module.push([matches[1], [], false]);
+              }
+              module[module.length-1][1].push(matches[2]);
+              return true;
+            }
+          },
+          {
+            regex: /The above rule returned (.+), which wasn't unique. The closest unique arrow was (.+)./,
+            handler: function(matches, module) {
+              module[module.length-1][1].push("…but " + matches[1] + " was already pressed; the closest unpressed button is " + matches[2] + ".");
+              return true;
+            }
+          },
+          {
+            regex: /^-+$/,
+            handler: function(matches, module) {
+              return true;
+            }
+          },
+          {
+            regex: /.+/
+          }
+        ]
+      },
+      {
         displayName: "Red Buttons",
         moduleID: "SamRedButtons",
         loggingTag: "Red Buttons"
