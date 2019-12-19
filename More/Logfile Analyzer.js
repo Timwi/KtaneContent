@@ -1465,6 +1465,24 @@ $(function() {
         ]
       },
       {
+        displayName: "15 Mystic Lights",
+        moduleID: "15MysticLights",
+        loggingTag: "15 Mystic Lights",
+        matches: [
+          {
+            regex: /Light states generated are:/,
+            handler: function(matches, module) {
+              var board = readMultiple(4);
+              module.push({ label: matches.input, obj: pre(board)});
+              return true;
+            }
+          },
+          {
+            regex: /.+/
+          }
+        ]
+      },
+      {
         displayName: "3D Maze",
         moduleID: "spwiz3DMaze",
         loggingTag: "3D Maze",
@@ -1963,6 +1981,10 @@ $(function() {
             }
           }
         ]
+      },
+      {
+        moduleID: "buzzfizz",
+        loggingTag: "BuzzFizz"
       },
       {
         moduleID: "CaesarCipherModule",
@@ -2601,6 +2623,11 @@ $(function() {
         displayName: "DetoNATO",
         moduleID: "Detonato",
         loggingTag: "DetoNATO"
+      },
+      {
+        displayName: "egg",
+        moduleID: "bigegg",
+        loggingTag: "egg"
       },
       {
         moduleID: "EncryptedEquationsModule",
@@ -4556,6 +4583,11 @@ $(function() {
             regex: /.+/
           }
         ]
+      },
+      {
+        moduleID: "nonverbalSimon",
+        loggingTag: "❖",
+        displayName: "❖"
       },
       {
         moduleID: "numberCipher",
