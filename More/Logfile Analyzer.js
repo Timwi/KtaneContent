@@ -6745,7 +6745,11 @@ $(function() {
       },
       {
         moduleID: "OrientationCube"
-      }
+      },
+	  { displayName: "複雑漢字",
+        moduleID: "複雑漢字Module",
+        loggingTag: "複雑漢字"
+	  }
     ];
 
     function getModuleName(moduleID) {
