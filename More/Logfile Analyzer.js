@@ -5229,7 +5229,7 @@ $(function() {
 				loggingTag: "Rainbow Arrows",
 				matches: [
 					{
-						regex: /^\((.+)\) (.+)/,
+						regex: /^\((.+?)\) (.+)/,
 						handler: function(matches, module) {
 							if (module.length === 0 || module[module.length-1][0] !== matches[1]) {
 								module.push([matches[1], [], false]);
