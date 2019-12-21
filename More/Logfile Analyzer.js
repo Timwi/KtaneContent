@@ -849,7 +849,7 @@ $(function() {
 					const moduleID = moduleSplit.join(" ");
 
 					const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-					const module = matchingModules.length == 1 ? matchingModules[0] : {
+					const module = matchingModules.length >= 1 ? matchingModules[0] : {
 						moduleData: {
 							icon: (moduleID == "Empty" || moduleID == "Timer") ? moduleID : "blank"
 						}
