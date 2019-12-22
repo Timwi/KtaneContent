@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Probing — Keep Talking and Nobody Explodes Mod</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="css/normalize.css">
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+		<script src='js/ktane-utils.js'></script>
+		<link rel='stylesheet' type='text/css' href='css/font.css'>
+		<script src="js/jquery.3.1.1.min.js"></script>
+		<script type="text/javascript">
+			$(function() {
+				var selected = "";
+				var start;
+
+				$(document).click(function() {
+					start = null;
+				});
+
+				var row;
+				var probing = $(".probing");
+				for (let y = 0; y < 6; y++) {
+					row = $("<div>").addClass("probe-row").appendTo(probing);
+					$("<div>").addClass("square").text(y + 1).appendTo(row);
+					for (let x = 0; x < 4; x++) {
+						$("<div>").addClass("square probe").appendTo(row).each(function(_, e) {
+							var element = $(e);
+							element.mousedown(function(event) {
+								start = [x, y];
+								event.preventDefault();
+								event.stopPropagation();
+							});
+
+							element.mouseup(function(event) {
+								if (start) { // Just incase.
+									var changed = [];
+									var a, b, i;
+									if (start[0] == x) {
+										a = (start[1] > y ? y : start[1]);
+										b = (start[1] > y ? start[1] : y);
+										for (i = a; i <= b; i++) {
+											changed.push([x, i]);
+										}
+									} else if (start[1] == y) {
+										a = (start[0] > x ? x : start[0]);
+										b = (start[0] > x ? start[0] : x);
+										for (i = a; i <= b; i++) {
+											changed.push([i, y]);
+										}
+									} else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+										var dist = Math.abs(start[0] - x);
+										var dirx = (start[0] < x) ? 1 : -1;
+										var diry = (start[1] < y) ? 1 : -1;
+
+										for (i = 0; i <= dist; i++) {
+											changed.push([start[0] + i * dirx, start[1] + i * diry]);
+										}
+									}
+
+									if (changed.length > 0) {
+										var first = probing.children().eq(start[1]).children().eq(start[0] + 1).hasClass("occupied");
+										changed.forEach(function(pos) {
+											var elm = probing.children().eq(pos[1]).children().eq(pos[0] + 1);
+											if (selected == "marking") {
+												if (changed.length == 1) {
+													elm.toggleClass("occupied");
+												} else {
+													elm.toggleClass("occupied", !first);
+												}
+											} else if (changed.length == 1) {
+												elm.text(elm.text() == "" ? selected : "");
+											}
+										});
+									}
+
+									start = null;
+								}
+								event.preventDefault();
+								event.stopPropagation();
+							});
+
+							if (x === 0) {
+								element.css("border-left-width", "2px");
+							} else if (x == 3) {
+								element.css("border-right-width", "2px");
+							}
+
+							if (y === 0) {
+								element.css("border-top-width", "2px");
+								element.parent().addClass("extra-height");
+							} else if (y == 5) {
+								element.css("border-bottom-width", "2px");
+								element.parent().addClass("extra-height");
+							}
+						});
+					}
+				}
+
+				row = $("<div>").addClass("probe-row letters").appendTo(probing);
+				
+				$("<div>").addClass("square").text("1").appendTo(row);
+				$("<div>").addClass("square").text("2").appendTo(row);
+				$("<div>").addClass("square").text("5").appendTo(row);
+				$("<div>").addClass("square").text("6").appendTo(row);
+
+
+				selected = "marking"
+
+				$(".reset").click(function() {
+					$(".probe.square").text("").removeClass("occupied");
+				});
+			});
+		</script>
+		
+		<style>
+			.probing {
+				width: 424px;
+			}
+
+			.probe-row {
+				height: 60px;
+			}
+				
+			.probe-row.extra-height {
+				height: 61px;
+			}
+			.probe-row.letters {
+				margin-left: 60px;
+			}
+
+			.square {
+				width: 58px;
+				height: 58px;
+				float: left;
+				font-size: 50px;
+				user-select: none;
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				text-align: center;
+				border: black 0px solid;
+				cursor: default;
+			}
+
+			@media screen and (max-width: 600px) {
+				.probe-row, .probe-pieces {
+					height: 40px;
+				}
+					.probe-row.extra-height {
+						height: 42px;
+					}
+					.probe-row.letters {
+						margin-left: 40px;
+					}
+
+				.square {
+					width: 40px;
+					height: 40px;
+					font-size: 40px;
+				}
+			}
+
+			.probe.square {
+				cursor: pointer;
+				border: black 1px solid;
+			}
+
+			.white {
+				background-color: white;
+				color: black;
+				transition: background-color 0.3s, color 0.3s;
+				border: black 1px solid;
+			}
+
+			.probe.occupied {
+				background-color: rgba(255, 105, 105, 1);
+				border-color: rgba(150, 0, 0, 1);
+			}
+
+			.piece {
+				margin: 2px;
+				cursor: pointer;
+			}
+
+			button {
+				font-family: Special Elite;
+				background-color: white;
+				color: black;
+				padding: 10px 20px;
+				border-radius: 5px;
+				border: black 3px solid;
+				transition: 0.3s;
+			}
+
+			button:hover {
+				background-color: black;
+				color: white;
+			}
+
+            .note {
+                font-size: 70%;
+                font-style: italic;
+            }			
+
+        </style>
+	</head>
+	<body>
+		<div class="section">
+			<div class="page page-bg-02">
+				<div class="page-header">
+					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+					<span class="page-header-section-title">Probing</span>
+				</div>
+				<div class="page-content">
+					<img src="img/Component/Probing.svg" class="diagram">
+					<h2>On the Subject of Probing</h2>
+					<p class="flavour-text">Not that kind of probing...
+
+                    <p>This module has six wires and two crocodile clips. There are four possible frequencies a wire can have; 10hz, 22hz, 50hz, and 60hz. Each wire will have three of these four frequencies.
+
+                    <p>In order to probe the circuit you need to connect the red
+                    clip to a wire and the blue clip to a different wire. The common frequencies in both wires will cancel out, leaving the display to show only frequencies that differ between the two wires.
+					<p>For example, if you connect a wire with frequencies 10, 22 and 50 to a wire with frequencies 10, 22 and 60 the display will show "50hz 60hz". If, instead, both wires are 10hz, 22hz and 50hz the display will be blank, as there are no differing frequencies.
+
+                    <p>Wires are numbered in reading order* in two rows; wire #1 is the red and white wire, wire #5 is the red and yellow wire. Frequencies are listed by their first digit; 10 = 1, 22 = 2, 50 = 5, 60 = 6.
+					
+					<p><h3>Placing the red clip:</h3>
+					
+					<p>If wire #1 is missing 1, 2 or 6, put the red clip on the wire missing 5,
+					<br>Otherwise if wire #5 is missing 1, put the red clip on wire #5,
+					<br>Otherwise put the red clip on the wire missing 6.
+
+					<p><h3>Placing the blue clip:</h3>
+					
+                    <p>If wire #5 is missing 2, 5 or 6 put the blue clip on the wire missing two,
+					<br>Otherwise put the blue clip on the wire missing 6.
+
+                    <p>Leave the clips connected for at least six seconds to defuse. Leaving the
+                    incorrect wires connected for more than six seconds will cause a strike. Leaving just the red clip connected to a wire will not incur a strike after 6 seconds.
+
+                    <p class='note'>NOTE: Be aware that each time a strike is gained the frequencies in each wire may change.
+					<p class='note'>*Reading order refers to English reading order; that is, top to bottom and left to right.
+				</div>
+								
+				<div class="page-footer relative-footer">Page 1 of 2</div>
+				
+			</div>
+			
+			<div class="page page-bg-02">
+				<div class="page-content">
+					<h3>Probing</h3>
+					<p>Wires are numbered along the left, frequencies along the bottom.
+					<br>Use the marker tool to mark/unmark a square.
+					<br>Drag using the marker tool to mark/unmark several squares.
+					<br>
+					You can reset the board using the button below the board.
+					<div class="probing"></div>
+					<br>
+					<p><button class="reset">Reset Table</button>
+				</div>
+				<div class="page-footer relative-footer">Page 2 of 2</div>
+			</div>
+		</div>
+	</body>
+</html>
