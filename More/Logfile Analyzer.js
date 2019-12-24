@@ -4653,6 +4653,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "xtrpasscodes",
+				displayName: "Passcodes",
+				loggingtag: "Passcodes"
+			},
+			{
 				moduleID: "Password",
 				loggingTag: "PasswordComponent"
 			},
