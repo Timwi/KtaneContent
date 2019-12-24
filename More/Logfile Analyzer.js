@@ -2443,6 +2443,11 @@ $(function() {
 				loggingTag: "Cruel Boolean Maze"
 			},
 			{
+				displayName: "The cRule",
+				moduleID: "the_cRule",
+				loggingTag: "The cRule"
+			},
+			{
 				displayName: "The Crystal Maze",
 				moduleID: "crystalMaze",
 				loggingTag: "The Crystal Maze"
