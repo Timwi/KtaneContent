@@ -1500,6 +1500,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "AdditionModule",
+				displayName: "Addition",
+				loggingTag: "Addition"
+			},
+			{
 				moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 				loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
 				displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
