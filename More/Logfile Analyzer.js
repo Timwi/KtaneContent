@@ -1500,6 +1500,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "AdditionModule",
+				loggingTag: "Addition",
+				displayName: "Addition"
+			},
+			{
 				moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 				loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
 				displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
@@ -1551,6 +1556,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				moduleID: "AtbashCipherModule",
+				loggingTag: "Atbash Cipher",
+				displayName: "Atbash Cipher"
 			},
 			{
 				displayName: "A-maze-ing Buttons",
