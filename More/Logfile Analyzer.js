@@ -1743,6 +1743,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Binary Grid",
+				moduleID: "binaryGrid",
+				loggingTag: "Binary Grid"
+			},
+			{
 				moduleID: "BlindAlleyModule",
 				loggingTag: "Blind Alley"
 			},
