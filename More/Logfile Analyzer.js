@@ -4457,6 +4457,11 @@ $(function() {
 				loggingTag: "Mouse in the Maze"
 			},
 			{
+				displayName: "Multi-Colored Switches",
+				moduleID: "R4YMultiColoredSwitches",
+				loggingTag: "Multicolored Switches"
+			},
+			{
 				moduleID: "murder",
 				loggingTag: "Murder",
 				matches: [
