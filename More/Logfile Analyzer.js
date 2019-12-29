@@ -1437,7 +1437,12 @@ $(function() {
 			},
 
 			// ** MODULES START HERE ** //
-
+			
+			{
+				displayName: "% Grey",
+				loggingTag: "% Grey",
+				moduleID: "PercentageGreyModule",
+			},
 			{
 				displayName: "101 Dalmatians",
 				loggingTag: "101 Dalmatians",
