@@ -3191,6 +3191,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Going Backwards",
+				moduleID: "GoingBackwardsModule",
+				loggingTag: "Going Backwards",
+			},
+			{
 				moduleID: "hexabutton",
 				displayName: "The Hexabutton"
 			},
