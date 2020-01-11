@@ -7,100 +7,70 @@
     <meta name="viewport" content="initial-scale=1">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
-    <script src='js/ktane-utils.js'></script>
-    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
-
         table.wire-placement {
-            float: left;
-            margin: 0 .5em .5em 0;
-        }
-
-        table.wire-placement-embellish {
-            float: right;
             border: none;
-            margin: 0 .5em .5em 0;
         }
 
-            table.wire-placement-embellish td.corner {
-                border: none;
-                font-weight: bold;
-                text-align: center;
-            }
-
-                table.wire-placement-embellish td.corner:before {
-                    content: 'C3';
-                    border-radius: 2mm;
-                    padding: 1.75mm;
-                }
-
-            table.wire-placement-embellish.black td.corner:before {
-                background: black;
-                border-color: black;
-                color: white;
-            }
-
-            table.wire-placement-embellish.red td.corner:before {
-                background: red;
-                border-color: red;
-                color: white;
-            }
-
-            table.wire-placement-embellish.blue td.corner:before {
-                background: blue;
-                border-color: blue;
-                color: white;
-            }
-
-            table.wire-placement-embellish.yellow td.corner:before {
-                background: yellow;
-                border: 1px solid black;
-                color: black;
-            }
-
-            table.wire-placement-embellish.white td.corner:before {
-                background: white;
-                border: 1px solid black;
-                color: black;
-            }
-
-            table.wire-placement-embellish.red {
-            }
-
-        .wire-placement-embellish th, .wire-placement-embellish td {
-            width: 10mm;
-            height: 10mm;
-            padding: 0;
-        }
-
-            .wire-placement-embellish td.black {
-                background: black;
-            }
-
-            .wire-placement-embellish td.red {
-                background: red;
-            }
-
-            .wire-placement-embellish td.yellow {
-                background: yellow;
-            }
-
-            .wire-placement-embellish td.blue {
-                background: blue;
-            }
-
-            .wire-placement-embellish td.white {
-                background: white;
-            }
-
-            .wire-placement-embellish td.none {
-                background: url("data:image/svg+xml,<svg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'><path fill='%23ccc' d='M3,1 L5,3 7,1 9,3 7,5 9,7 7,9 5,7 3,9 1,7 3,5 1,3 z'/></svg>") no-repeat 50% 50%;
-            }
-
-        div.wire-placement-embellishment {
-            color: #48c;
+        td.corner {
+            border: none;
         }
     </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function setRules(rnd) {
+            var coords = ['A1', 'A2', 'A3', 'A4', 'B1', 'C3', 'B3', 'B4', 'C1', 'C2', 'B2', 'C4', 'D1', 'D2', 'D3', 'D4'];
+            var coord = coords[rnd.next(0, coords.length)];
+
+            var spans = document.getElementsByClassName('coordinate');
+            for (var i = 0; i < spans.length; i++)
+                spans[i].innerText = coord;
+
+            var colors = ['Black', 'Blue', 'Red', 'White', 'Yellow'];
+
+            // All of this convoluted code is here to recreate the rules the module had before rule-seed support
+            for (var i = 0; i < 6; i++)
+                rnd.next(0, 10);
+
+            while (colors.length < 10)
+                colors.push(['Black', 'Blue', 'Red', 'White', 'Yellow'][rnd.next(0, 5)]);
+
+            rnd.shuffleFisherYates(colors);
+            colors = [colors[4], colors[0], colors[5], colors[7], colors[3], colors[2], colors[1], colors[8], colors[6], colors[9]];
+
+            var columns = [];
+            coords = ['C3', 'A1', 'C4', 'A4', 'B3', 'B2', 'D3', 'B4', 'A3', 'D1', 'A2', 'C1', 'B1', 'C2', 'D4', 'D2'];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = ['A2', 'A3', 'D3', 'D1', 'C3', 'C4', 'A4', 'C1', 'B3', 'C2', 'B1', 'B2', 'B4', 'D2', 'A1', 'D4'];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = ['A3', 'B3', 'C2', 'B4', 'B1', 'D2', 'C1', 'A2', 'A4', 'C3', 'D1', 'A1', 'D3', 'C4', 'D4', 'B2'];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = ['C1', 'A2', 'A3', 'B2', 'D3', 'B1', 'C2', 'C3', 'C4', 'D1', 'B3', 'D2', 'D4', 'A4', 'B4', 'A1'];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = ['A1', 'A2', 'D4', 'A4', 'C2', 'C3', 'B4', 'C1', 'C4', 'B1', 'D2', 'B2', 'B3', 'A3', 'D1', 'D3'];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            var ths = document.getElementsByClassName('color');
+            var tds = document.getElementsByClassName('cell');
+            for (var row = 0; row < 10; row++) {
+                ths[row].innerText = colors[row];
+                for (var col = 0; col < 5; col++)
+                    tds[5 * row + col].innerText = columns[col][row];
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="ManualContent">
@@ -115,6 +85,7 @@
                     <h2>Na téma Umístění Drátu (čeština)</h2>
                     <p class="flavour-text">
                         Drát někdy může vypadat jako obličej a uklidnit vás... a poté explodujete.
+
                     </p>
                     <ul>
                         <li>
@@ -127,7 +98,7 @@
                             Dráty mohou být červené, modré, žluté, černé nebo bílé.
                         </li>
                         <li>
-                            V níže uvedené tabulce použijte pouze sloupec odpovídající barvě drátu, který je připojen na souřadnicích <span class="coordinate">C3</span>.
+                            V níže uvedené tabulce použijte pouze sloupec odpovídající barvě drátu, který je připojen na souřadnicích <span class='coordinate'>C3</span>.
                         </li>
                         <li>
                             Stříhejte drát pokud má konkrétní barvu a je připojen ke konkrétní souřadnici na mřížce, tak jak je uvedeno v tabulce.
@@ -151,41 +122,9 @@
                             <tr><th>Žluté    </th><td>D1</td><td>A1</td><td>B2</td><td>B4</td><td>A4</td></tr>
                         </tbody>
                     </table>
-
-                    <div class="wire-placement-embellishment">
-                        <!--
-                            <p>Cut any wire that touches an area that has the same color as the wire. Ignore the areas with a cross in them.
-
-                            <p>The possible wire colors are red, blue, yellow, black and white.
-                        -->
-                        <!--##--><table class="wire-placement-embellish black"><tbody><tr><th>A</th><th>B</th><th>C</th><th>D</th><td class="corner"></td></tr><tr><td class="red"></td><td class="black"></td><td class="none"></td><td class="yellow"></td><th>1</th></tr><tr><td class="blue"></td><td class="white"></td><td class="none"></td><td class="yellow"></td><th>2</th></tr><tr><td class="yellow"></td><td class="none"></td><td class="blue"></td><td class="white"></td><th>3</th></tr><tr><td class="none"></td><td class="none"></td><td class="red"></td><td class="none"></td><th>4</th></tr></tbody></table><table class="wire-placement-embellish blue"><tbody><tr><th>A</th><th>B</th><th>C</th><th>D</th><td class="corner"></td></tr><tr><td class="yellow"></td><td class="none"></td><td class="white"></td><td class="yellow"></td><th>1</th></tr><tr><td class="none"></td><td class="none"></td><td class="blue"></td><td class="white"></td><th>2</th></tr><tr><td class="none"></td><td class="red"></td><td class="yellow"></td><td class="red"></td><th>3</th></tr><tr><td class="none"></td><td class="none"></td><td class="blue"></td><td class="black"></td><th>4</th></tr></tbody></table><table class="wire-placement-embellish red"><tbody><tr><th>A</th><th>B</th><th>C</th><th>D</th><td class="corner"></td></tr><tr><td class="blue"></td><td class="red"></td><td class="blue"></td><td class="none"></td><th>1</th></tr><tr><td class="yellow"></td><td class="yellow"></td><td class="none"></td><td class="yellow"></td><th>2</th></tr><tr><td class="none"></td><td class="none"></td><td class="none"></td><td class="none"></td><th>3</th></tr><tr><td class="black"></td><td class="white"></td><td class="red"></td><td class="white"></td><th>4</th></tr></tbody></table><table class="wire-placement-embellish white"><tbody><tr><th>A</th><th>B</th><th>C</th><th>D</th><td class="corner"></td></tr><tr><td class="white"></td><td class="none"></td><td class="red"></td><td class="none"></td><th>1</th></tr><tr><td class="yellow"></td><td class="red"></td><td class="none"></td><td class="black"></td><th>2</th></tr><tr><td class="none"></td><td class="white"></td><td class="none"></td><td class="blue"></td><th>3</th></tr><tr><td class="yellow"></td><td class="yellow"></td><td class="blue"></td><td class="none"></td><th>4</th></tr></tbody></table><table class="wire-placement-embellish yellow"><tbody><tr><th>A</th><th>B</th><th>C</th><th>D</th><td class="corner"></td></tr><tr><td class="none"></td><td class="blue"></td><td class="white"></td><td class="yellow"></td><th>1</th></tr><tr><td class="none"></td><td class="white"></td><td class="red"></td><td class="none"></td><th>2</th></tr><tr><td class="yellow"></td><td class="red"></td><td class="none"></td><td class="none"></td><th>3</th></tr><tr><td class="yellow"></td><td class="black"></td><td class="none"></td><td class="blue"></td><th>4</th></tr></tbody></table><!--###-->
-                    </div>
-
                 </div>
                 <div class="page-footer relative-footer">Strana 1 z 1</div>
             </div>
-        </div>
-    </div>
-
-
-    <div id="notification" style="display: none;"></div>
-    <div id="optionsMenu">
-        <h2>Options (Alt-O)</h2>
-        <div class="option-group">
-            <h3>Highlighter</h3>
-            <div><input type="checkbox" id="highlighter-enabled">&nbsp;<label for="highlighter-enabled" accesskey="h">Enabled</label> (Alt-H)</div>
-            <div>Color:</div>
-            <blockquote>
-                <div><input type="radio" name="highlighter-color" class="highlighter-color" id="highlighter-color-blue" data-color="0" checked="">&nbsp;<label for="highlighter-color-blue" accesskey="1">Blue</label> (Alt-1)</div>
-                <div><input type="radio" name="highlighter-color" class="highlighter-color" id="highlighter-color-red" data-color="1">&nbsp;<label for="highlighter-color-red" accesskey="2">Red</label> (Alt-2)</div>
-                <div><input type="radio" name="highlighter-color" class="highlighter-color" id="highlighter-color-green" data-color="2">&nbsp;<label for="highlighter-color-green" accesskey="3">Green</label> (Alt-3)</div>
-                <div><input type="radio" name="highlighter-color" class="highlighter-color" id="highlighter-color-yellow" data-color="3">&nbsp;<label for="highlighter-color-yellow" accesskey="4">Yellow</label> (Alt-4)</div>
-            </blockquote>
-        </div>
-        <div class="option-group">
-            <h3>Page layout</h3>
-            <div><input type="radio" name="page-layout" class="page-layout" id="page-layout-vertical">&nbsp;<label for="page-layout-vertical" accesskey="v"><kbd>V</kbd>ertical</label></div>
-            <div><input type="radio" name="page-layout" class="page-layout" id="page-layout-side-by-side">&nbsp;<label for="page-layout-side-by-side" accesskey="s"><kbd>S</kbd>ide by side</label></div>
         </div>
     </div>
 </body>
