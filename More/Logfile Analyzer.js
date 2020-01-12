@@ -2650,6 +2650,11 @@ $(function() {
 				loggingTag: "DetoNATO"
 			},
 			{
+				displayName: "Digital Dials",
+				moduleID: "digitalDials",
+				loggingTag: "Digital Dials"
+			},
+			{
 				displayName: "egg",
 				moduleID: "bigegg",
 				loggingTag: "egg"
