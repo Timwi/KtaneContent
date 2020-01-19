@@ -6595,6 +6595,7 @@ $(function() {
 			{
 				displayName: "The World's Largest Button",
 				moduleID: "WorldsLargestButton",
+				icon: "The World’s Largest Button",
 				loggingTag: "The World's Largest Button"
 			},
 			{
