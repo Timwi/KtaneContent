@@ -2820,6 +2820,24 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Following Orders",
+				moduleID: "FollowingOrders",
+				loggingTag: "Following Orders",
+				matches: [
+					{
+						regex: /The maze generated as such, where '\.' represents a safe tile and '\*' represents a trapped tile:\s*/,
+						handler: function(matches, module) {
+							var board = readMultiple(5);
+							module.push({ label: matches.input.replace(/'/g, ''), obj: pre(board) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Forget Everything",
 				moduleID: "HexiEvilFMN",
 				loggingTag: "Forget Everything",
@@ -3623,6 +3641,35 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Matrices",
+				moduleID: "MatrixQuiz",
+				loggingTag: "Linear Algebra Matrix Quiz",
+				matches: [
+					{
+						regex: /Generated question (\d+): Matrix:\[(-?\d+) (-?\d+) (-?\d+) \]\[(-?\d+) (-?\d+) (-?\d+) \]\[(-?\d+) (-?\d+) (-?\d+) \] Answer:(.*)Question:(.*)/,
+						handler: function(matches, module) {
+							//CSS style from https://stackoverflow.com/a/11561235
+							var style = $("<style>.matrix {position: relative;} body {padding: 20px;} .matrix:before, .matrix:after {content: \"\"; position: absolute; top: 0; border: 2px solid #000; width: 6px; height: 100%;} .matrix:before { left: 0px; border-right: 0px;} .matrix:after { right: -8px; border-left: 0px;} .matrix td {padding: 5px; text-align: center;</style>");
+							if (module.styleIsPush == null )
+							{
+								module.styleIsPush = true;
+								module.push(style);
+							}
+							var table = $('<table>').addClass("matrix");
+							$(`<tr><td></td><td>${matches[2]}</td><td>${matches[3]}</td><td>${matches[4]}</td></tr><tr><td></td><td>${matches[5]}</td><td>${matches[6]}</td><td>${matches[7]}</td></tr><tr><td></td><td>${matches[8]}</td><td>${matches[9]}</td><td>${matches[10]}</td></tr></table>`).appendTo(table);
+							var div = $("<div>").css({"paddingBottom": "5px"}).append(table).append("</div>");
+							module.push({label: `Generated Question ${matches[1]}: Matrix A is`, obj: div, expanded: true});
+							module.push(`Question: ${matches[12]}`);
+							module.push(`Answer: ${matches[11]}`);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				moduleID: 'LionsShareModule',
 				loggingTag: 'Lion’s Share',
 				displayName: 'Lion’s Share',
@@ -3997,6 +4044,79 @@ $(function() {
 							row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
 							row.children().eq(0).css("text-align", "right");
 							row.children().eq(2).css("text-align", "right");
+							return true;
+						}
+					}
+				]
+			},
+			{
+				displayName: "Masyu",
+				moduleID: "masyuModule",
+				loggingTag: "Masyu",
+				matches: [
+					{
+						regex: /The dots\/circles are in the following pattern, where 0=blank,1=white,2=black.../,
+						handler: function(matches, module) {
+							var board = readMultiple(8).replace(/\[Masyu #\d+\] /g, "");
+							var row = board.replace(/\r/g, '').split('\n');
+							var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>').prepend('<div>');
+							for (let i = 0; i < 7; i++) {
+								let xPosition = i * 118;
+								$SVG(`<path style="fill:#000000" d="M ${xPosition}, 0 h 5 v 949 h -5" z/>`).appendTo(svg);
+							}
+							for (let i = 0; i < 9; i++) {
+								let yPosition = i * 118;
+								$SVG(`<path style="fill:#000000" d="M 0, ${yPosition} v 5 h 713 v -5" z/>`).appendTo(svg);
+							}
+							for (let i = 0; i < row.length; i++) {
+								for (let j = 0; j < row[i].length; j++) {
+									let xPosition = j * 118 + 61.5;
+									let yPosition = i * 118 + 103.5;
+									switch(row[i][j]) {
+										case '1':
+										$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+										break;
+										case '2':
+										$SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+										break;
+									}
+								}
+							}
+							var div = $('<div>').append(svg);
+							if (!('MasyuSvg' in module))
+								module.MasyuSvg = {};
+							module.MasyuSvg[0] = { label: "Generated Puzzle:", obj: div, expanded: true };
+							module.MasyuSvg[1] = { label: "Solution:", obj: svg.clone(), expanded: true };
+							module.push(module.MasyuSvg[0]);
+							return true;
+						}
+					},
+					{
+						regex: /^(\d{40}|\d{42})$/,
+						handler: function(matches, module) {
+							var svg = module.MasyuSvg[1].obj;
+							switch (matches[1].length) {
+								case 40: //Drawing horizontal lines
+								for (let i = 0; i < matches[1].length; i++) {
+									let xPosition = (i % 5) * 118 + 61.5;
+									let yPosition = Math.floor(i / 5) * 118 + 64;
+									if (matches[1][i] == '1')
+										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} v -5 h 118 v 5 z"/>`).appendTo(svg);
+								}
+								module.MasyuSvg[1].obj = svg;
+								break;
+								case 42: //Drawing vertical lines
+								for (let i = 0; i < matches[1].length; i++) {
+									let xPosition = Math.floor(i / 7) * 118 + 59;
+									let yPosition = (i % 7) * 118 + 61.5;
+									if (matches[1][i] == '1')
+										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
+								}
+								var div = $('<div>').append(svg);
+								module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
+								module.push(module.MasyuSvg[1]);
+								break;
+							}
 							return true;
 						}
 					}
@@ -6471,6 +6591,11 @@ $(function() {
 						regex: /Coordinates clicked/
 					}
 				]
+			},
+			{
+				displayName: "The World's Largest Button",
+				moduleID: "WorldsLargestButton",
+				loggingTag: "The World's Largest Button"
 			},
 			{
 				displayName: "X-Ray",
