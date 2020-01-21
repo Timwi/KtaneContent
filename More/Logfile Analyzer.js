@@ -2660,6 +2660,24 @@ $(function() {
 				loggingTag: "egg"
 			},
 			{
+				displayName: "Echolocation",
+				moduleID: "echolocation",
+				loggingTag: "Echolocation",
+				matches: [
+					{
+						regex: /Maze:/,
+						handler: function(matches, module) {
+							var maze = readMultiple(6).replace(/\[Echolocation #\d+\] /g, '');
+							module.push({ label: matches.input, obj: pre(maze) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				moduleID: "EncryptedEquationsModule",
 				loggingTag: "Encrypted Equations",
 				matches: [
@@ -3650,7 +3668,7 @@ $(function() {
 						handler: function(matches, module) {
 							//CSS style from https://stackoverflow.com/a/11561235
 							var style = $("<style>.matrix {position: relative;} body {padding: 20px;} .matrix:before, .matrix:after {content: \"\"; position: absolute; top: 0; border: 2px solid #000; width: 6px; height: 100%;} .matrix:before { left: 0px; border-right: 0px;} .matrix:after { right: -8px; border-left: 0px;} .matrix td {padding: 5px; text-align: center;</style>");
-							if (module.styleIsPush == null )
+							if (module.styleIsPush == null)
 							{
 								module.styleIsPush = true;
 								module.push(style);
@@ -4082,7 +4100,7 @@ $(function() {
 									}
 								}
 							}
-							var div = $('<div>').append(svg);
+							var div = $('<div>').append(svg).append('</div>');
 							if (!('MasyuSvg' in module))
 								module.MasyuSvg = {};
 							module.MasyuSvg[0] = { label: "Generated Puzzle:", obj: div, expanded: true };
@@ -4112,7 +4130,7 @@ $(function() {
 									if (matches[1][i] == '1')
 										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
 								}
-								var div = $('<div>').append(svg);
+								var div = $('<div>').append(svg).append('</div>');
 								module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
 								module.push(module.MasyuSvg[1]);
 								break;
