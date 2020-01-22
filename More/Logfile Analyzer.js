@@ -816,7 +816,7 @@ $(function() {
 					.on("error", function() {
 						console.warn("Couldn't find a module icon for %s. More information: %o", parseData.moduleData.displayName, parseData);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + parseData.moduleData.icon + ".png").appendTo(modListing);
+					}).attr("src", "../Icons/" + encodeURI(parseData.moduleData.icon) + ".png").appendTo(modListing);
 			});
 
 			// Case representation
