@@ -859,7 +859,7 @@ $(function() {
 					// And the Y axis is always upside down, so we always multiply it by -1.
 					const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
 					const y = this.Anchors[moduleIndex][1] * -1;
-					const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).appendTo(svg);
+					const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=.22 height=.22>`).appendTo(svg);
 					$SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
 
 					for (let j = 0; j < 4; j++) {
