@@ -816,7 +816,7 @@ $(function() {
 					.on("error", function() {
 						console.warn("Couldn't find a module icon for %s. More information: %o", parseData.moduleData.displayName, parseData);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + parseData.moduleData.icon + ".png").appendTo(modListing);
+					}).attr("src", "../Icons/" + encodeURI(parseData.moduleData.icon) + ".png").appendTo(modListing);
 			});
 
 			// Case representation
@@ -859,7 +859,7 @@ $(function() {
 					// And the Y axis is always upside down, so we always multiply it by -1.
 					const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
 					const y = this.Anchors[moduleIndex][1] * -1;
-					const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${module.moduleData.icon}.png" width=.22 height=.22>`).appendTo(svg);
+					const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=.22 height=.22>`).appendTo(svg);
 					$SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
 
 					for (let j = 0; j < 4; j++) {
@@ -1461,6 +1461,57 @@ $(function() {
 									transform: rotate(${m[2]}deg);
 								"></div>`)
 							});
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
+				displayName: "14",
+				moduleID: "14",
+				loggingTag: "14",
+				matches: [
+					{
+						regex: /The correct submission is:|Incorrect Submission:/,
+						handler: function(matches, module){
+							var colorList = {
+								R: '#FF0000',
+								G: '#00FF00',
+								B: '#0000FF',
+								C: '#00FFFF',
+								M: '#FF00FF',
+								Y: '#FFFF00',
+								W: '#FFFFFF',
+								K: '#000000'
+							};
+							var pathList = [
+							"M 8.1096029,8.1096358 16.06242,16.062435 c 47.178457,0 32.125547,0 79.304027,0 L 103.31926,8.1096358 95.366447,0.15681581 c -47.17848,0 -32.12557,0 -79.304027,0 L 8.1096029,8.1096358",
+							"m 8.1096189,68.595748 7.9528011,-7.95281 c 0,-14.86016 0,-29.720333 0,-44.580503 L 8.1096179,8.1096358 0.15681581,16.062435 c 0,14.86017 0,29.720343 0,44.580503 l 7.95280009,7.95281",
+							"m 27.30938,16.062445 -11.24696,-10e-6 v 11.24696 l 20.467477,33.333543 11.24696,2e-5 v -11.24696 z",
+							"m 55.729667,68.595768 7.9528,-7.95281 V 16.062435 h -15.90561 v 44.580523 l 7.95281,7.95281",
+							"m 84.149967,16.062445 11.24696,-10e-6 v 11.24696 l -20.46749,33.333543 -11.24697,2e-5 v -11.24696 z",
+							"m 103.34974,68.595748 7.95279,-7.95282 c 0,-14.86016 0,-29.720323 0,-44.580493 l -7.95279,-7.9527992 -7.952813,7.9527992 c 0,14.86017 0,29.720333 0,44.580493 l 7.952813,7.95282",
+							"m 47.776857,76.548538 7.95281,-7.95281 -7.95281,-7.95279 H 16.06242 l -7.9528161,7.95279 7.9528161,7.95281 z",
+							"m 95.396907,76.548558 7.952823,-7.95281 -7.952823,-7.95279 h -31.71444 l -7.95281,7.95279 7.95281,7.95281 z",
+							"M 8.1096199,129.08184 16.06242,121.12905 V 98.838788 76.548538 l -7.9528011,-7.95281 -7.95280209,7.95281 v 22.29025 22.290262 l 7.95280109,7.95279",
+							"m 36.529897,76.548548 11.24696,-1e-5 v 11.24696 l -20.467477,33.333532 -11.246959,3e-5 v -11.24698 z",
+							"m 55.729667,68.595738 7.9528,7.95282 V 121.12906 H 47.776857 V 76.548558 l 7.95281,-7.95282",
+							"m 74.929437,76.548578 -11.24697,-2e-5 v 11.24696 l 20.46749,33.333542 11.24697,2e-5 v -11.24696 z",
+							"m 103.34972,68.595738 -7.952813,7.95282 v 22.29022 22.290262 l 7.952813,7.9528 7.9528,-7.9528 V 98.838778 76.548558 l -7.9528,-7.95282",
+							"m 8.1400989,129.08188 7.9528171,7.95281 h 22.290241 22.29025 -9.85698 22.29024 22.29026 l 7.952803,-7.95281 -7.952803,-7.9528 h -22.29026 -22.29024 9.85698 -22.29025 -22.290241 l -7.9528171,7.9528"
+							];
+							var display = readMultiple(5).replace(/\[14 #\d+\] |\r|\n|-/g, '');
+							var div = $('<div>');
+							var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 111.45934 137.19151" width="30%">').appendTo(div);
+							for (let i = 0; i < 14; i++) {
+								$SVG(`<path d="${pathList[i]}" stroke = "#000000" stroke-width = ".314" fill = "${colorList[display[i]]}"/>`).appendTo(svg);
+							}
+							$SVG('</g>').appendTo(svg);
+							div.append('</div>');
+							module.push({ label: matches.input, obj: div });
 							return true;
 						}
 					},
@@ -2465,7 +2516,20 @@ $(function() {
 			{
 				displayName: "The cRule",
 				moduleID: "the_cRule",
-				loggingTag: "The cRule"
+				loggingTag: "The cRule",
+				matches: [
+					{
+						regex: /One possible solution is:|Submitted the following states:/,
+						handler: function(matches, module) {
+							var grid = readMultiple(4);
+							module.push({ label: matches.input, obj: pre(grid) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "The Crystal Maze",
@@ -2658,6 +2722,24 @@ $(function() {
 				displayName: "egg",
 				moduleID: "bigegg",
 				loggingTag: "egg"
+			},
+			{
+				displayName: "Echolocation",
+				moduleID: "echolocation",
+				loggingTag: "Echolocation",
+				matches: [
+					{
+						regex: /Maze:/,
+						handler: function(matches, module) {
+							var maze = readMultiple(6).replace(/\[Echolocation #\d+\] /g, '');
+							module.push({ label: matches.input, obj: pre(maze) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				moduleID: "EncryptedEquationsModule",
@@ -3650,7 +3732,7 @@ $(function() {
 						handler: function(matches, module) {
 							//CSS style from https://stackoverflow.com/a/11561235
 							var style = $("<style>.matrix {position: relative;} body {padding: 20px;} .matrix:before, .matrix:after {content: \"\"; position: absolute; top: 0; border: 2px solid #000; width: 6px; height: 100%;} .matrix:before { left: 0px; border-right: 0px;} .matrix:after { right: -8px; border-left: 0px;} .matrix td {padding: 5px; text-align: center;</style>");
-							if (module.styleIsPush == null )
+							if (module.styleIsPush == null)
 							{
 								module.styleIsPush = true;
 								module.push(style);
@@ -4059,7 +4141,7 @@ $(function() {
 						handler: function(matches, module) {
 							var board = readMultiple(8).replace(/\[Masyu #\d+\] /g, "");
 							var row = board.replace(/\r/g, '').split('\n');
-							var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>').prepend('<div>');
+							var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
 							for (let i = 0; i < 7; i++) {
 								let xPosition = i * 118;
 								$SVG(`<path style="fill:#000000" d="M ${xPosition}, 0 h 5 v 949 h -5" z/>`).appendTo(svg);
@@ -4082,7 +4164,7 @@ $(function() {
 									}
 								}
 							}
-							var div = $('<div>').append(svg);
+							var div = $('<div>').append(svg).append('</div>');
 							if (!('MasyuSvg' in module))
 								module.MasyuSvg = {};
 							module.MasyuSvg[0] = { label: "Generated Puzzle:", obj: div, expanded: true };
@@ -4112,7 +4194,7 @@ $(function() {
 									if (matches[1][i] == '1')
 										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
 								}
-								var div = $('<div>').append(svg);
+								var div = $('<div>').append(svg).append('</div>');
 								module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
 								module.push(module.MasyuSvg[1]);
 								break;
@@ -5510,6 +5592,25 @@ $(function() {
 						regex: /^- (.*)$/,
 						handler: function(matches, module) {
 							module.RCActions.push(matches[1]);
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
+				displayName: "The Rule",
+				moduleID: "theRule",
+				loggingTag: "The Rule",
+				matches: [
+					{
+						regex: /Solution is:|Submitted the following:/,
+						handler: function(matches, module) {
+							readLine();
+							var grid = readMultiple(4);
+							module.push({ label: matches.input, obj: pre(grid) });
 							return true;
 						}
 					},
