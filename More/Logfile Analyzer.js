@@ -2465,7 +2465,20 @@ $(function() {
 			{
 				displayName: "The cRule",
 				moduleID: "the_cRule",
-				loggingTag: "The cRule"
+				loggingTag: "The cRule",
+				matches: [
+					{
+						regex: /One possible solution is:|Submitted the following states:/,
+						handler: function(matches, module) {
+							var grid = readMultiple(4);
+							module.push({ label: matches.input, obj: pre(grid) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				displayName: "The Crystal Maze",
