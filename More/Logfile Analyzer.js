@@ -1509,7 +1509,6 @@ $(function() {
 							for (let i = 0; i < 14; i++) {
 								$SVG(`<path d="${pathList[i]}" stroke = "#000000" stroke-width = ".314" fill = "${colorList[display[i]]}"/>`).appendTo(svg);
 							}
-							$SVG('</g>').appendTo(svg);
 							div.append('</div>');
 							module.push({ label: matches.input, obj: div });
 							return true;
@@ -3299,6 +3298,33 @@ $(function() {
 				displayName: "Going Backwards",
 				moduleID: "GoingBackwardsModule",
 				loggingTag: "Going Backwards",
+			},
+			{
+				displayName: "Hereditary Base Notation",
+				moduleID: "hereditaryBaseNotationModule",
+				loggingTag: "Hereditary Base Notation",
+				matches: [
+					{
+						regex:/(The initial number|The number after incrementing its base and subtracting 1,) in hereditary base-\d,? is:/,
+						handler: function(matches, module){
+							readLine();
+							var equation = readLine();
+							var style = $("<style> .heredExponent { vertical-align: super; font-size: smaller; } .heredExponent .heredExponent { font-size: 100%; } </style>");
+							if (module.styleIsPush == null)
+							{
+								module.styleIsPush = true;
+								module.push(style);
+							}
+							equation = equation.replace(/{/g, '<span class = "heredExponent">').replace(/}/g, '</span>');
+							var div = $('<div style="white-space: nowrap; overflow-x:scroll;">').append(equation).append('</div>');
+							module.push({ label: matches.input, obj: div });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
 			},
 			{
 				moduleID: "hexabutton",
