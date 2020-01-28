@@ -4154,6 +4154,9 @@ $(function() {
 							row.children().eq(2).css("text-align", "right");
 							return true;
 						}
+					},
+					{
+						regex: /.+/
 					}
 				]
 			},
@@ -5608,9 +5611,9 @@ $(function() {
 						}
 					},
 					{
-						regex: /Actions performed (to solve|before bomb exploded):/,
+						regex: /Actions performed (to solve|before bomb exploded|before reset):/,
 						handler: function(matches, module) {
-							module.push([matches.input, module.RCActions = []]);
+							module.push([matches.input.replace(/None\./, ''), module.RCActions = []]);
 							return true;
 						}
 					},
