@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Tweaks Mode Settings Editor</title>
@@ -104,7 +105,6 @@
 			padding: 6px;
 			margin: 3px;
 			transition: background 0.4s, border-color 0.4s;
-			user-select: none;
 			flex-grow: 1;
 			align-content: center;
 			color: black;
@@ -117,8 +117,13 @@
 			cursor: help;
 		}
 
+		.mod.differentValue {
+			border-color: rgb(25, 25, 200);
+			cursor: help;
+		}
+
 		.mod-id {
-			color: gray;
+			color: #757575;
 			font-style: italic;
 			font-size: 60%;
 		}
@@ -146,18 +151,18 @@
 			font-family: inherit;
 		}
 
-		.tp-score {
+		.external-score {
 			color: rgb(110, 110, 110);
 			margin-left: 3px;
 			transition: color 0.4s;
 			cursor: help;
 		}
 
-		.tp-score-positive {
+		.external-score-positive {
 			color: rgb(25, 130, 25);
 		}
 
-		.tp-score-negative {
+		.external-score-negative {
 			color: rgb(200, 25, 25);
 		}
 
@@ -183,13 +188,13 @@
 	<script>
 		/// MOD DATA ///
 		var mods = [
-            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", score: 1 },
-            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular", score: 4 },
-            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", score: 3 },
-            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", score: 2 },
-            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
+            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy", published: "2017-01-25" },
             
-            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular" },
+            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular", published: "2019-01-09" },
 		];
 		/// MOD DATA ///
 
@@ -200,7 +205,9 @@
 			},
 			{
 				Name: "Value",
-				Compare: (mod1, mod2) => (mod1.Value || 6) - (mod2.Value || 6)
+				Compare: (mod1, mod2) => vueData.perModule ?
+				-((mod1.PerModuleValue || mod1.DefaultPerModuleValue || 0) - (mod2.PerModuleValue || mod2.DefaultPerModuleValue || 0)) :
+				(mod1.Value || mod1.DefaultValue || 10) - (mod2.Value || mod2.DefaultValue || 10)
 			},
 			{
 				Name: "Publish Date",
@@ -223,6 +230,8 @@
 				ZenModeTimePenaltyIncrease: 0.0,
 				ZenModeTimerSpeedUp: 0.25,
 				ZenModeTimerMaxSpeed: 2.0,
+  				SteadyModeFixedPenalty: 2.0,
+  				SteadyModePercentPenalty: 0.0,
 				ComponentValues: {},
 				TotalModulesMultiplier: {}
 			},
@@ -234,25 +243,30 @@
 			},
 			settingTypes: {
 				ZenMode: "Zen Mode",
+				SteadyMode: "Steady Mode",
 				TimeMode: "Time Mode"
 			},
-			visibleTypes: {ZenMode: true, TimeMode: true, Regular: true, Needy: false},
+			visibleTypes: {ZenMode: true, SteadyMode: true, TimeMode: true, Regular: true, Needy: false},
 
 			isHovering: false,
 
 			sortingMethodIndex: 0,
-			sortingMethods: sortingMethods
+			sortingMethods: sortingMethods,
+
+			perModule: false
 		};
 
 		class Mod {
-			constructor(name, sortkey, id, type, published = "1970-1-1", value) {
+			constructor(name, sortkey, id, type, published = "1970-1-1", value, perModuleValue) {
 				this.Name = name;
 				this.SortKey = sortkey;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
-				this.Value = value;
-				this.TPValue = value;
+				this.Value = undefined;
+				this.DefaultValue = value;
+				this.PerModuleValue = undefined;
+				this.DefaultPerModuleValue = perModuleValue;
 			}
 		}
 
@@ -269,8 +283,24 @@
 		}
 
 		// Load mod data from ktane.timwi.de
-		makeRequest("https://ktane.timwi.de/json/raw").then(responseText => {
+		makeRequest("https://ktane.timwi.de/json/raw").then(async responseText => {
 			const websiteJSON = JSON.parse(responseText);
+
+			let defaultScores = {};
+			let perModuleValues = {};
+			try {
+				const spreadsheetJSON = JSON.parse(await makeRequest("https://spreadsheets.google.com/feeds/list/16lz2mCqRWxq__qnamgvlD0XwTuva4jIDW1VPWX49hzM/1/public/values?alt=json"));
+
+				for (const entry of spreadsheetJSON.feed.entry) {
+					if (entry.gsx$score.$t != "")
+						defaultScores[entry.gsx$_cn6ca.$t] = parseFloat(entry.gsx$score.$t);
+						
+					if (entry.gsx$bossmodulepointspermodule.$t != "")
+						perModuleValues[entry.gsx$_cn6ca.$t] = parseFloat(entry.gsx$bossmodulepointspermodule.$t);
+				}
+			} catch (exception) {
+				console.error(exception);
+			}
 
 			websiteJSON.KtaneModules.forEach(function(module) {
 				if (!module.ModuleID) {
@@ -278,7 +308,7 @@
 					return;
 				}
 
-				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published, module.TwitchPlaysScore));
+				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published, defaultScores[module.ModuleID], perModuleValues[module.ModuleID]));
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
 
@@ -290,6 +320,48 @@
 
 		window.onload = function() {
 			var toastr = this.toastr; // A Vue version of toastr.
+			let vm = new Vue({
+				el: "#editor",
+				data: vueData,
+				methods: {
+					getJSON: function() {
+						const settingsClone = {};
+						for (const field in this.settings) {
+							settingsClone[field] = this.settings[field];
+						}
+
+						settingsClone.ComponentValues = {};
+						for (const mod of this.mods) {
+							settingsClone.ComponentValues[mod.ID] = mod.Value;
+						}
+
+						settingsClone.TotalModulesMultiplier = {};
+						for (const mod of this.mods) {
+							settingsClone.TotalModulesMultiplier[mod.ID] = mod.PerModuleValue;
+						}
+
+						return JSON.stringify(settingsClone, null, 2);
+					},
+					onFileUploaded: function(event) {
+						uploadSettings(event.target.files)
+					},
+					fallbackDownload: function(event) {
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), "ModeSettings.json");
+							event.preventDefault();
+						}
+					},
+					getMods: getMods,
+					toggleType: function(type) {
+						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					}
+				},
+				watch: {
+					perModule: function() {
+						vm.$emit("inputs");
+					}
+				}
+			});
 
 			function getModuleCount(caseMod) {
 				if (!caseMod.moduleCount) {
@@ -325,8 +397,8 @@
 			}
 
 			function getMods(type) {
-				var mods = vueData.mods.filter(mod => mod.Type == type);
-				const sortingMethod = sortingMethods[vueData.sortingMethodIndex].Compare;
+				var mods = this.mods.filter(mod => mod.Type == type);
+				const sortingMethod = sortingMethods[this.sortingMethodIndex].Compare;
 
 				mods.sort((mod1, mod2) => {
 					const resp = sortingMethod(mod1, mod2);
@@ -376,7 +448,7 @@
 							toastr.error(`Unknown "${field}" field`, "Format Error");
 							return false;
 						}*/
-						vueData.settings[field] = settings[field];
+						vm.settings[field] = settings[field];
 					}
 
 					/*for (var field in ModeSettingsFormat) {
@@ -410,7 +482,7 @@
 						WireSequenceComponentSolver: "WireSequence",
 					}
 
-					vueData.settings.ComponentValues = settings.reduce((map, obj) => {
+					vm.settings.ComponentValues = settings.reduce((map, obj) => {
 						map[IDMap[obj.moduleID] || obj.moduleID] = obj.moduleScore;
 						return map;
 					}, {})
@@ -420,18 +492,18 @@
 				}
 
 				// Reset any values specified for modules so that they have to be defined by the file passed in
-				for (const mod of vueData.mods) {
+				for (const mod of vm.mods) {
 					mod.Value = undefined;
 				}
 
 				// Check if we support all the IDs in the settings.
-				for (var modID in vueData.settings.ComponentValues) {
-					const mod = vueData.mods.find(mod => mod.ID == modID);
+				for (var modID in vm.settings.ComponentValues) {
+					const mod = vm.mods.find(mod => mod.ID == modID);
 
 					if (mod) {
-						mod.Value = vueData.settings.ComponentValues[modID];
+						mod.Value = vm.settings.ComponentValues[modID];
 					} else {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular", vueData.settings.ComponentValues[modID]))
+						vm.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular", vm.settings.ComponentValues[modID]))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -468,16 +540,16 @@
 					toastr.error("Unable to find any imported files", "File Import Error");
 				}
 
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			}
 
 			window.addEventListener("dragover", function(e) {
-				vueData.isHovering = true;
+				vm.isHovering = true;
 				e.preventDefault();
 			});
 
 			window.addEventListener("dragleave", function() {
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			});
 
 			window.addEventListener("drop", function(e) {
@@ -485,7 +557,7 @@
 				if (!text) {
 					uploadSettings(e.dataTransfer.files);
 				} else {
-					vueData.isHovering = false;
+					vm.isHovering = false;
 					if (!downloadSettings(text)) {
 						toastr.warning("Unable to read URL for settings.");
 					}
@@ -507,73 +579,86 @@
 				}
 			});
 
-			Vue.component("tp-score", {
+			Vue.component("module", {
 				props: ["mod"],
 				render: function(createElement) {
-					const difference = this.mod.Value - this.mod.TPValue;
-					let differenceText = "?";
-					let titleText = "There is no score defined for Twitch Plays.";
-					if (this.mod.TPValue != undefined && this.mod.Value != undefined) {
-						differenceText = (difference == 0 ? "" : (difference > 0 ? "+" : "-")) + Math.abs(difference);
-						titleText = (difference == 0 ? "Your score is the same as Twitch Plays." : `Your score is ${Math.abs(difference)} ${(difference > 0 ? "higher" : "lower")} than for Twitch Plays.`);
-					}
+					const mod = this.mod;
+					const value = vm.perModule ? mod.PerModuleValue : mod.Value;
+					const defaultValue = vm.perModule ? mod.DefaultPerModuleValue : mod.DefaultValue;
 
-					return createElement("div", {
-						class: {
-							"tp-score": true,
-							"tp-score-positive": difference > 0,
-							"tp-score-negative": difference < 0
-						},
-						attrs: {
-							title: titleText
-						}
-					}, [ `(${differenceText})` ]);
-				}
-			});
-
-			new Vue({
-				el: "#editor",
-				data: vueData,
-				methods: {
-					getJSON: function() {
-						const settingsClone = {};
-						for (const field in this.settings) {
-							settingsClone[field] = this.settings[field];
-						}
-
-						settingsClone.ComponentValues = {};
-						for (const mod of this.mods) {
-							settingsClone.ComponentValues[mod.ID] = mod.Value;
-						}
-
-						return JSON.stringify(settingsClone, null, 2);
-					},
-					onFileUploaded: function(event) {
-						uploadSettings(event.target.files)
-					},
-					fallbackToBlank: function(event) {
+					function fallbackToBlank(event) {
 						if (event.target.src == fallbackImage) {
 							return;
 						}
 
 						event.target.src = fallbackImage;
-					},
-					fallbackDownload: function(event) {
-						if (navigator.msSaveBlob) {
-							navigator.msSaveBlob(new Blob([this.getJSON()]), "ModeSettings.json");
-							event.preventDefault();
+					}
+
+					function onChange(event) {
+						const value = parseInt(event.target.value);
+
+						if (!vm.perModule)
+							mod.Value = isNaN(value) ? undefined : value;
+						else
+							mod.PerModuleValue = isNaN(value) ? undefined : value;
+					}
+
+					vm.$on("inputs", () => {
+						let curValue = vm.perModule ? mod.PerModuleValue : mod.Value;
+						this.$el.getElementsByTagName("input")[0].value = curValue == undefined ? "" : curValue;
+					});
+
+					return createElement("div", {
+						class: {
+							"mod": true,
+							"noValue": defaultValue === undefined,
+							"differentValue": value !== undefined && value !== defaultValue
+						},
+						attrs: {
+							title: value === undefined
+								? "No score is assigned to this module, the default will be used instead."
+								: value !== undefined && value !== defaultValue
+									? "This score is different from the default value."
+									: undefined
 						}
 					},
-					getMods: getMods,
-					toggleType: function(type) {
-						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
-					},
-					setValue: function(mod, value) {
-						let val = parseInt(value);
-						if (Number.isNaN(val)) val = undefined;
+					[
+						createElement("img", { class: "mod-icon", on: { error: fallbackToBlank }, attrs: { src: '../Icons/' + encodeURIComponent(mod.Name.replace(/ \((Translated|Russian)\)$/, '')) + '.png', alt: mod.Name + " Icon" } }),
+						createElement("div", { class: "mod-info" }, [
+							createElement("div", mod.Name),
+							createElement("div", { class: "mod-id" }, mod.ID)
+						]),
+						createElement("input", { class: "mod-icon", on: { change: onChange }, attrs: { type: "number", step: "any", value: value, placeholder: defaultValue || (vm.perModule ? 0 : 10), "aria-label": 'Module value' } }),
+						createElement("external-score", { class: "mod-icon", attrs: { mod: mod } }),
+					]);
+				}
+			});
 
-						mod.Value = val;
+			Vue.component("external-score", {
+				props: ["mod"],
+				render: function(createElement) {
+					const mod = this.mod;
+					const value = vm.perModule ? mod.PerModuleValue : mod.Value;
+					const defaultValue = vm.perModule ? mod.DefaultPerModuleValue : mod.DefaultValue;
+
+					const difference = (value || defaultValue) - defaultValue;
+					let differenceText = "?";
+					let titleText = "There is no score defined by default.";
+					if (defaultValue != undefined) {
+						differenceText = (difference == 0 ? "" : (difference > 0 ? "+" : "-")) + Math.abs(difference);
+						titleText = (difference == 0 ? "Your score is the same as the default." : `Your score is ${Math.abs(difference)} ${(difference > 0 ? "higher" : "lower")} than the default.`);
 					}
+
+					return createElement("div", {
+						class: {
+							"external-score": true,
+							"external-score-positive": difference > 0,
+							"external-score-negative": difference < 0
+						},
+						attrs: {
+							title: titleText
+						}
+					}, [ `(${differenceText})` ]);
 				}
 			});
 		};
@@ -590,36 +675,28 @@
 			<div class="title">Mode Settings Editor</div>
 			<div class="header">
 				<label class="clickable" for="file-upload" accesskey="i">Import</label>
-				<div>Sort By: <button class="clickable" @click="sortingMethodIndex++; sortingMethodIndex %= sortingMethods.length;" accesskey="s">{{ sortingMethods[sortingMethodIndex].Name }}</button></div>
+				<div>Sort By: <button class="clickable" @click="sortingMethodIndex++; sortingMethodIndex %= sortingMethods.length;" accesskey="s" type="button">{{ sortingMethods[sortingMethodIndex].Name }}</button></div>
+				<div>Edit: <button class="clickable" @click="perModule = !perModule" accesskey="e" type="button">{{ perModule ? "Per Module" : "Base" }} Value</button></div>
 				<div><a @click="fallbackDownload" download="ModeSettings.json" :href="'data:application/json,' + encodeURIComponent(getJSON())" accesskey="d">Download</a></div>
 			</div>
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in settingTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)" type="button"><u>{{ name }}</u></button></h3>
 				<div v-if="visibleTypes[type]" class="mods">
 					<div class="mod" v-for="(value, field) in settings" v-if="field.startsWith(type)">
-						<span>{{ field.replace(/^(Time|Zen)Mode/, "").replace(/([A-Z])/g, " $1") }}</span>
-						<input type="number" :required="true" step="any" v-model:value="settings[field]">
+						<span>{{ field.replace(/^(Time|Zen|Steady)Mode/, "").replace(/([A-Z])/g, " $1") }}</span>
+						<input type="number" :required="true" step="any" v-model:value="settings[field]" aria-label="Setting value">
 					</div>
 				</div>
 			</template>
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)" type="button"><u>{{ name }}</u></button></h3>
 				<div class="mods" v-if="visibleTypes[type]">
-					<template v-for="mod in getMods(type)">
-						<div class="mod" :key="mod.id" :class="{ noValue: mod.Value === undefined }" :title="mod.Value === undefined ? 'No score is assigned to this module.' : ''">
-                            <img class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + mod.Name.replace(/ \((Translated|Russian)\)$/, '') + '.png'">
-                            <div class="mod-info">
-                                <div>{{ mod.Name }}</div>
-                                <div class="mod-id">{{ mod.ID }}</div>
-							</div>
-							<input type="number" :required="true" step="any" v-bind:value="mod.Value" placeholder="6" @change="setValue(mod, $event.target.value);">
-							<tp-score :mod="mod"></tp-score>
-						</div>
-					</template>
+					<module v-for="mod in getMods(type)" :mod="mod" :key="mod.id"></module>
 				</div>
 			</template>
 		</div>
 	</div>
 </body>
+</html>
