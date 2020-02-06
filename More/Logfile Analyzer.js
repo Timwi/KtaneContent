@@ -1825,6 +1825,11 @@ $(function() {
 				]					
 			},
 			{
+				displayName: "Book of Mario",
+				moduleID: "BookOfMarioModule",
+				loggingTag: "Book of Mario",
+			},
+			{
 				displayName: "Boolean Maze",
 				moduleID: "boolMaze",
 				loggingTag: "BooleanMaze"
