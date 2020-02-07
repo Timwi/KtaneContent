@@ -6558,6 +6558,11 @@ $(function() {
 				loggingTag: "USA Maze",
 			},
 			{
+				displayName: "V",
+				moduleID: "qkV",
+				loggingTag: "V"
+			},
+			{
 				displayName: "Valves",
 				moduleID: "valves",
 				loggingTag: "Valves",
