@@ -6559,7 +6559,7 @@ $(function() {
 			},
 			{
 				displayName: "V",
-				moduleID: "qkV",
+				moduleID: "V",
 				loggingTag: "V"
 			},
 			{
