@@ -4938,6 +4938,11 @@ $(function() {
 				loggingTag: "PasswordComponent"
 			},
 			{
+				moduleID: "passwordGenerator",
+				displayName: "Password Generator",
+				loggingtag: "Password Generator"
+			},
+			{
 				moduleID: "Painting",
 				loggingTag: "Painting",
 				matches: [
