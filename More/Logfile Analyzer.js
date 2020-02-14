@@ -4938,7 +4938,7 @@ $(function() {
 				loggingTag: "PasswordComponent"
 			},
 			{
-				moduleID: "passwordGenerator",
+				moduleID: "pwGenerator",
 				displayName: "Password Generator",
 				loggingtag: "Password Generator"
 			},
