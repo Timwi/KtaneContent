@@ -838,16 +838,19 @@ $(function() {
 
 				// Listing
 				var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
-					.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
 					.appendTo(modules)
 					.addCardClick(moduleInfo);
+
+				var buttonGrid = $("<div>")
+					.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
+					.appendTo(modListing);
 
 				const eventSymbols = {
 					"PASS": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 270" height="30px"><path stroke="rgb(16, 229, 60)" stroke-width="60" fill="none" d="M30 170l80 60L245 20"></path></svg>',
 					"STRIKE": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 100 100" height="30px"><path d="M96 14L82 0 48 34 14 0 0 14l34 34L0 82l14 14 34-34 34 34 14-14-34-34z" fill="red"/></svg>'
 				};
 
-				const eventIndicator = $("<div class='event-indicators'>").appendTo(modListing);
+				const eventIndicator = $("<div class='event-indicators'>").appendTo(buttonGrid);
 				let moduleColor = 0;
 				for (const event of parseData.events) {
 					eventIndicator.append($SVG(eventSymbols[event.type]));
@@ -866,7 +869,7 @@ $(function() {
 					.on("error", function() {
 						console.warn("Couldn't find a module icon for %s. More information: %o", parseData.moduleData.displayName, parseData);
 						$(this).attr("src", "../Icons/blank.png");
-					}).attr("src", "../Icons/" + encodeURI(parseData.moduleData.icon) + ".png").appendTo(modListing);
+					}).attr("src", "../Icons/" + encodeURI(parseData.moduleData.icon) + ".png").appendTo(buttonGrid);
 			});
 
 			// Case representation
