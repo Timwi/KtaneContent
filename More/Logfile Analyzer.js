@@ -64,6 +64,7 @@ class ParsedMod {
 		this.tree = undefined;
 		this.counter = undefined;
 		this.displayCounter = false;
+		this.events = [];
 	}
 }
 
@@ -99,7 +100,7 @@ $(function() {
 	// Read Logfile
 	var readwarning = false;
 	var buildwarning = false;
-	var debugging = (window.location.protocol == "file:");
+	var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1");
 	var linen = 0;
 	var lines = [];
 
@@ -202,19 +203,22 @@ $(function() {
 		return false;
 	}
 
-	// http://stackoverflow.com/a/1267338
-	function zeroFill(number, width) {
-		width -= number.toString().length;
-		if (width > 0) {
-			return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
-		}
-		return number + ""; // always return a string
-	}
-
 	function formatTime(seconds) {
-		var date = new Date(seconds * 1000);
+		const timeParts = [];
 
-		return zeroFill(date.getUTCMinutes(), 2) + ":" + zeroFill(date.getUTCSeconds(), 2) + "." + zeroFill(date.getUTCMilliseconds(), 2).substring(0, 2);
+		const negative = seconds < 0;
+		if (negative) seconds = -seconds;
+
+		let showRemaining = false;
+		for (const part of [3600, 60, 1]) {
+			if (showRemaining || seconds / part >= 1 || part == 1) {
+				timeParts.push(Math.floor(seconds / part).toString().padStart(2, "0"));
+				seconds -= Math.floor(seconds / part) * part;
+				showRemaining = true;
+			}
+		}
+
+		return `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}`;
 	}
 
 	$.fn.addCardClick = function(info) {
@@ -234,23 +238,29 @@ $(function() {
 		return infoCard;
 	};
 
-	function BombGroup() {
-		this.Bombs = [];
-		this.Modules = {};
-		this.State = "Unsolved";
-		this.MissionName = "Unknown";
-		this.StartLine = 0;
-		this.FilteredLog = "";
-		this.ParseAgain = []; // Lines that might be for a module but couldn't be matched by name. If Tweaks is installed, it'll try to parse these again once the LFABombInfo is logged.
+	class BombGroup {
+		constructor() {
+			this.Bombs = [];
+			this.Modules = {};
+			this.State = "Unsolved";
+			this.MissionName = "Unknown";
+			this.StartLine = 0;
+			this.FilteredLog = "";
+			this.ParseAgain = []; // Lines that might be for a module but couldn't be matched by name. If Tweaks is installed, it'll try to parse these again once the LFABombInfo is logged.
+			this.LoggedSerials = [];
+			this.Events = [];
+		}
 
-		Object.defineProperty(this, "isSingleBomb", {
-			get: function() {
-				return this.Bombs.length == 1;
-			}
-		});
+		get loggedBombs() {
+			return this.Bombs.filter(bomb => this.LoggedSerials.length == 0 || this.LoggedSerials.includes(bomb.Serial));
+		}
+
+		get isSingleBomb() {
+			return this.loggedBombs.length == 1;
+		}
 
 		// opt: { url: '' } or { file: '' }
-		this.ToHTML = function(opt) {
+		ToHTML(opt) {
 			// Build up the bomb.
 			var serial = this.Bombs[0].Serial;
 			var fragment = `#bomb=${serial}`;
@@ -266,7 +276,7 @@ $(function() {
 
 			var totalModules = 0;
 			var totalNeedies = 0;
-			this.Bombs.forEach(function(bomb) {
+			this.loggedBombs.forEach(function(bomb) {
 				totalModules += bomb.TotalModules;
 				totalNeedies += bomb.Needies;
 
@@ -281,7 +291,7 @@ $(function() {
 				$("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
 			}
 
-			var filteredTab = $("<a href='#' class='module'>").text("Filtered Log");
+			var filteredTab = $("<button class='module'>").text("Filtered Log");
 
 
 			var info = $("<div class='bomb-info'>").css("padding-top", "10px").appendTo(bombGroupHTML);
@@ -309,12 +319,22 @@ $(function() {
 			}
 			makeTree(missionInfoTree, $("<ul>").appendTo(missionInfo));
 
-			$("<a href='#' class='module'>")
+			$("<button class='module'>")
 				.text("Mission Information")
 				.appendTo(modules)
 				.addCardClick(missionInfo).click();
 
-			this.Bombs.forEach(function(bomb) {
+			// Events
+			var eventInfo = $("<div class='module-info'>").appendTo(info);
+			$("<h3>").css("margin-top", "10px").text("Events").appendTo(eventInfo);
+			makeTree(this.Events.length > 0 ? this.Events : ["No events."], $("<ul>").appendTo(eventInfo));
+
+			$("<button class='module'>")
+				.text("Events")
+				.appendTo(modules)
+				.addCardClick(eventInfo);
+
+			this.loggedBombs.forEach(function(bomb) {
 				bomb.ToHTML(filteredTab).appendTo(bombGroupHTML);
 			});
 
@@ -334,8 +354,9 @@ $(function() {
 			filteredTab.appendTo(modules).addCardClick(logInfo);
 
 			return bombHTML;
-		};
-		this.GetMod = function(name, id) {
+		}
+		
+		GetMod(name, id) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
 				mod = (mod || bomb.GetMod(name, id));
@@ -346,16 +367,18 @@ $(function() {
 			}
 
 			return mod;
-		};
-		this.GetModule = function(name) {
+		}
+		
+		GetModule(name) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
 				mod = (mod || bomb.GetModule(name));
 			});
 
 			return mod;
-		};
-		this.GetModuleID = function(name, id) {
+		}
+
+		GetModuleID(name, id) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
 				mod = (mod || bomb.GetModuleID(name, id, false));
@@ -367,8 +390,9 @@ $(function() {
 				mod = bomb.GetModuleID(name, id);
 				if (mod) return mod;
 			}
-		};
-		this.FilterLines = function() {
+		}
+
+		FilterLines() {
 			if (!this.StartLine) {
 				return;
 			}
@@ -395,7 +419,7 @@ $(function() {
 
 			this.StartLine = undefined;
 			this.FilteredLog = log.replace(/\n{3,}/g, "\n\n");
-		};
+		}
 	}
 
 	function Bomb(seed) {
@@ -425,6 +449,8 @@ $(function() {
 
 		this.Anchors = null;
 		this.ModuleOrder = null;
+
+		this.LoggingIDs = {};
 
 		this.GetMod = function(name) {
 			return this.Modules[name];
@@ -730,7 +756,7 @@ $(function() {
 				{ label: "Case: ", obj: caseHTML }
 			], $("<ul>").appendTo(edgeworkInfo));
 
-			$("<a href='#' class='module'>")
+			$("<button class='module'>")
 				.text("Edgework")
 				.appendTo(modules)
 				.addCardClick(edgeworkInfo);
@@ -742,17 +768,21 @@ $(function() {
 					var mod = this.Modules[moduleID];
 
 					const parsedMod = new ParsedMod(mod.moduleData);
+					parsedMod.events = mod.Events;
 
 					if (mod.IDs.length === 0) {
 						if (mod.Tree.length !== 0 || mod.Tree.groups.groups.length !== 0) {
 							parsedMod.tree = mod.Tree;
 						}
 					} else {
-						mod.IDs.forEach(function(info) {
+						const IDs = mod.IDs.filter(info => this.LoggingIDs == null || this.LoggingIDs[moduleID] == null || this.LoggingIDs[moduleID].includes(parseInt(info[0].substring(1))));
+
+						IDs.forEach(info => {
 							const modClone = Object.assign({}, parsedMod);
 							modClone.tree = info[1];
 							modClone.counter = info[0];
-							modClone.displayCounter = mod.IDs.length != 1;
+							modClone.displayCounter = IDs.length != 1;
+							modClone.events = mod.Events.filter(event => "#" + event.loggingID == info[0]);
 							mods.push(modClone);
 						});
 
@@ -807,10 +837,30 @@ $(function() {
 				}
 
 				// Listing
-				var modListing = $(`<a href='#' class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
+				var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
 					.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
 					.appendTo(modules)
 					.addCardClick(moduleInfo);
+
+				const eventSymbols = {
+					"PASS": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 270" height="30px"><path stroke="rgb(16, 229, 60)" stroke-width="60" fill="none" d="M30 170l80 60L245 20"></path></svg>',
+					"STRIKE": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 100 100" height="30px"><path d="M96 14L82 0 48 34 14 0 0 14l34 34L0 82l14 14 34-34 34 34 14-14-34-34z" fill="red"/></svg>'
+				};
+
+				const eventIndicator = $("<div class='event-indicators'>").appendTo(modListing);
+				let moduleColor = 0;
+				for (const event of parseData.events) {
+					eventIndicator.append($SVG(eventSymbols[event.type]));
+
+					if (event.type == "PASS")
+						moduleColor++;
+				}
+
+				if (parseData.events.length > 0) {
+					modListing.css("border-right", `5px solid hsla(${moduleColor / parseData.events.length * 120}, 100%, 50%)`);
+				} else {
+					modListing.css("padding-right", "10px");
+				}
 
 				$("<img>")
 					.on("error", function() {
@@ -899,12 +949,13 @@ $(function() {
 	function parseLog(opt) {
 		var log = opt.log.replace(/\r/g, "");
 
-		if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz/.exec(log))) {
+		if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz|Mono path\[0\] = '/.exec(log))) {
 			toastr.error("Invalid logfile.", "Reading Error");
 			return false;
 		}
 
 		var bombgroup;
+		var lastBombGroup;
 		var bomb;
 		var ruleseed;
 		var parsed = [];
@@ -1058,6 +1109,7 @@ $(function() {
 
 							if (!bombgroup) {
 								bombgroup = new BombGroup();
+								lastBombGroup = bombgroup;
 								bombSerialIndex = 0;
 								bombgroup.StartLine = linen;
 								if (ruleseed)
@@ -1084,7 +1136,8 @@ $(function() {
 							tree.groups = new Groups();
 							bomb.Modules[matches[1]] = {
 								IDs: [],
-								Tree: tree
+								Tree: tree,
+								Events: []
 							};
 
 							let moduleData = getModuleData(matches[1], "moduleID");
@@ -1284,7 +1337,6 @@ $(function() {
 						regex: /All bombs solved, what a winner!/,
 						handler: function() {
 							var currentBomb = GetBomb();
-							bombgroup.FilterLines();
 							currentBomb.State = "Solved";
 							currentBomb.Solved = currentBomb.TotalModules;
 						}
@@ -1373,6 +1425,8 @@ $(function() {
 							// Parse the JSON based on the number of lines specified in the log message.
 							const bombInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
 
+							bombgroup.LoggedSerials.push(bombInfo.serial);
+
 							// Find the bomb being referenced based on it's serial number
 							let targetBomb;
 							for (const bomb of bombgroup.Bombs) {
@@ -1391,6 +1445,7 @@ $(function() {
 							// Pass along the case information
 							targetBomb.Anchors = bombInfo.anchors;
 							targetBomb.ModuleOrder = bombInfo.modules;
+							targetBomb.LoggingIDs = bombInfo.ids;
 
 							// Make sure each module ID is on the correct bomb.
 							for (const moduleType in bombInfo.ids) {
@@ -1430,6 +1485,61 @@ $(function() {
 										readDirectly(lineData.line, modID, lineData.id);
 									}
 								}
+							}
+						}
+					},
+					{
+						regex: /LFAEvent (\d+)/,
+						handler: function(matches) {
+							// Parse the JSON based on the number of lines specified in the log message.
+							const eventInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
+							switch (eventInfo.type) {
+								case "STRIKE":
+								case "PASS": {
+									const mod = lastBombGroup.GetMod(eventInfo.moduleID);
+									mod.Events.push(eventInfo);
+
+									const text = [
+										`${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck" } at ${formatTime(eventInfo.realTime)}.`,
+										[
+											`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
+											eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
+										]
+									];
+									if (bombgroup != null) bombgroup.Events.push(text);
+									else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
+
+									break;
+								}
+								case "ROUND_START":
+									GetBomb().MissionName = eventInfo.mission;
+									break;
+								case "BOMB_DETONATE":
+									for (const bomb of bombgroup.loggedBombs) {
+										if (bomb.Serial == eventInfo.serial) {
+											bomb.Solved = eventInfo.solves;
+											bomb.Strikes = eventInfo.strikes;
+											bomb.TimeLeft = eventInfo.bombTime;
+											bomb.State = `Exploded (${bomb.Strikes == bomb.TotalStrikes ? "Strikes" : "Time Ran Out"})`;
+
+											bombgroup.Events.push([`Bomb (${bomb.Serial}) exploded at ${formatTime(eventInfo.realTime)} ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+										}
+									}
+
+									break;
+								case "BOMB_SOLVE":
+									for (const bomb of bombgroup.loggedBombs) {
+										if (bomb.Serial == eventInfo.serial) {
+											bomb.Solved = eventInfo.solves;
+											bomb.Strikes = eventInfo.strikes;
+											bomb.TimeLeft = eventInfo.bombTime;
+											bomb.State = "Solved";
+
+											bombgroup.Events.push([`Bomb (${bomb.Serial}) solved at ${formatTime(eventInfo.realTime)}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+										}
+									}
+
+									break;
 							}
 						}
 					}
@@ -1488,20 +1598,20 @@ $(function() {
 								K: '#000000'
 							};
 							var pathList = [
-							"M 8.1096029,8.1096358 16.06242,16.062435 c 47.178457,0 32.125547,0 79.304027,0 L 103.31926,8.1096358 95.366447,0.15681581 c -47.17848,0 -32.12557,0 -79.304027,0 L 8.1096029,8.1096358",
-							"m 8.1096189,68.595748 7.9528011,-7.95281 c 0,-14.86016 0,-29.720333 0,-44.580503 L 8.1096179,8.1096358 0.15681581,16.062435 c 0,14.86017 0,29.720343 0,44.580503 l 7.95280009,7.95281",
-							"m 27.30938,16.062445 -11.24696,-10e-6 v 11.24696 l 20.467477,33.333543 11.24696,2e-5 v -11.24696 z",
-							"m 55.729667,68.595768 7.9528,-7.95281 V 16.062435 h -15.90561 v 44.580523 l 7.95281,7.95281",
-							"m 84.149967,16.062445 11.24696,-10e-6 v 11.24696 l -20.46749,33.333543 -11.24697,2e-5 v -11.24696 z",
-							"m 103.34974,68.595748 7.95279,-7.95282 c 0,-14.86016 0,-29.720323 0,-44.580493 l -7.95279,-7.9527992 -7.952813,7.9527992 c 0,14.86017 0,29.720333 0,44.580493 l 7.952813,7.95282",
-							"m 47.776857,76.548538 7.95281,-7.95281 -7.95281,-7.95279 H 16.06242 l -7.9528161,7.95279 7.9528161,7.95281 z",
-							"m 95.396907,76.548558 7.952823,-7.95281 -7.952823,-7.95279 h -31.71444 l -7.95281,7.95279 7.95281,7.95281 z",
-							"M 8.1096199,129.08184 16.06242,121.12905 V 98.838788 76.548538 l -7.9528011,-7.95281 -7.95280209,7.95281 v 22.29025 22.290262 l 7.95280109,7.95279",
-							"m 36.529897,76.548548 11.24696,-1e-5 v 11.24696 l -20.467477,33.333532 -11.246959,3e-5 v -11.24698 z",
-							"m 55.729667,68.595738 7.9528,7.95282 V 121.12906 H 47.776857 V 76.548558 l 7.95281,-7.95282",
-							"m 74.929437,76.548578 -11.24697,-2e-5 v 11.24696 l 20.46749,33.333542 11.24697,2e-5 v -11.24696 z",
-							"m 103.34972,68.595738 -7.952813,7.95282 v 22.29022 22.290262 l 7.952813,7.9528 7.9528,-7.9528 V 98.838778 76.548558 l -7.9528,-7.95282",
-							"m 8.1400989,129.08188 7.9528171,7.95281 h 22.290241 22.29025 -9.85698 22.29024 22.29026 l 7.952803,-7.95281 -7.952803,-7.9528 h -22.29026 -22.29024 9.85698 -22.29025 -22.290241 l -7.9528171,7.9528"
+								"M 8.1096029,8.1096358 16.06242,16.062435 c 47.178457,0 32.125547,0 79.304027,0 L 103.31926,8.1096358 95.366447,0.15681581 c -47.17848,0 -32.12557,0 -79.304027,0 L 8.1096029,8.1096358",
+								"m 8.1096189,68.595748 7.9528011,-7.95281 c 0,-14.86016 0,-29.720333 0,-44.580503 L 8.1096179,8.1096358 0.15681581,16.062435 c 0,14.86017 0,29.720343 0,44.580503 l 7.95280009,7.95281",
+								"m 27.30938,16.062445 -11.24696,-10e-6 v 11.24696 l 20.467477,33.333543 11.24696,2e-5 v -11.24696 z",
+								"m 55.729667,68.595768 7.9528,-7.95281 V 16.062435 h -15.90561 v 44.580523 l 7.95281,7.95281",
+								"m 84.149967,16.062445 11.24696,-10e-6 v 11.24696 l -20.46749,33.333543 -11.24697,2e-5 v -11.24696 z",
+								"m 103.34974,68.595748 7.95279,-7.95282 c 0,-14.86016 0,-29.720323 0,-44.580493 l -7.95279,-7.9527992 -7.952813,7.9527992 c 0,14.86017 0,29.720333 0,44.580493 l 7.952813,7.95282",
+								"m 47.776857,76.548538 7.95281,-7.95281 -7.95281,-7.95279 H 16.06242 l -7.9528161,7.95279 7.9528161,7.95281 z",
+								"m 95.396907,76.548558 7.952823,-7.95281 -7.952823,-7.95279 h -31.71444 l -7.95281,7.95279 7.95281,7.95281 z",
+								"M 8.1096199,129.08184 16.06242,121.12905 V 98.838788 76.548538 l -7.9528011,-7.95281 -7.95280209,7.95281 v 22.29025 22.290262 l 7.95280109,7.95279",
+								"m 36.529897,76.548548 11.24696,-1e-5 v 11.24696 l -20.467477,33.333532 -11.246959,3e-5 v -11.24698 z",
+								"m 55.729667,68.595738 7.9528,7.95282 V 121.12906 H 47.776857 V 76.548558 l 7.95281,-7.95282",
+								"m 74.929437,76.548578 -11.24697,-2e-5 v 11.24696 l 20.46749,33.333542 11.24697,2e-5 v -11.24696 z",
+								"m 103.34972,68.595738 -7.952813,7.95282 v 22.29022 22.290262 l 7.952813,7.9528 7.9528,-7.9528 V 98.838778 76.548558 l -7.9528,-7.95282",
+								"m 8.1400989,129.08188 7.9528171,7.95281 h 22.290241 22.29025 -9.85698 22.29024 22.29026 l 7.952803,-7.95281 -7.952803,-7.9528 h -22.29026 -22.29024 9.85698 -22.29025 -22.290241 l -7.9528171,7.9528"
 							];
 							var display = readMultiple(5).replace(/\[14 #\d+\] |\r|\n|-/g, '');
 							var div = $('<div>');
@@ -3315,8 +3425,7 @@ $(function() {
 							readLine();
 							var equation = readLine();
 							var style = $("<style> .heredExponent { vertical-align: super; font-size: smaller; } .heredExponent .heredExponent { font-size: 100%; } </style>");
-							if (module.styleIsPush == null)
-							{
+							if (module.styleIsPush == null) {
 								module.styleIsPush = true;
 								module.push(style);
 							}
@@ -3763,8 +3872,7 @@ $(function() {
 						handler: function(matches, module) {
 							//CSS style from https://stackoverflow.com/a/11561235
 							var style = $("<style>.matrix {position: relative;} body {padding: 20px;} .matrix:before, .matrix:after {content: \"\"; position: absolute; top: 0; border: 2px solid #000; width: 6px; height: 100%;} .matrix:before { left: 0px; border-right: 0px;} .matrix:after { right: -8px; border-left: 0px;} .matrix td {padding: 5px; text-align: center;</style>");
-							if (module.styleIsPush == null)
-							{
+							if (module.styleIsPush == null) {
 								module.styleIsPush = true;
 								module.push(style);
 							}
@@ -4177,24 +4285,24 @@ $(function() {
 							var row = board.replace(/\r/g, '').split('\n');
 							var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
 							for (let i = 0; i < 7; i++) {
-								let xPosition = i * 118;
+								const xPosition = i * 118;
 								$SVG(`<path style="fill:#000000" d="M ${xPosition}, 0 h 5 v 949 h -5" z/>`).appendTo(svg);
 							}
 							for (let i = 0; i < 9; i++) {
-								let yPosition = i * 118;
+								const yPosition = i * 118;
 								$SVG(`<path style="fill:#000000" d="M 0, ${yPosition} v 5 h 713 v -5" z/>`).appendTo(svg);
 							}
 							for (let i = 0; i < row.length; i++) {
 								for (let j = 0; j < row[i].length; j++) {
-									let xPosition = j * 118 + 61.5;
-									let yPosition = i * 118 + 103.5;
+									const xPosition = j * 118 + 61.5;
+									const yPosition = i * 118 + 103.5;
 									switch(row[i][j]) {
 										case '1':
-										$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
-										break;
+											$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+											break;
 										case '2':
-										$SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
-										break;
+											$SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+											break;
 									}
 								}
 							}
@@ -4213,25 +4321,25 @@ $(function() {
 							var svg = module.MasyuSvg[1].obj;
 							switch (matches[1].length) {
 								case 40: //Drawing horizontal lines
-								for (let i = 0; i < matches[1].length; i++) {
-									let xPosition = (i % 5) * 118 + 61.5;
-									let yPosition = Math.floor(i / 5) * 118 + 64;
-									if (matches[1][i] == '1')
-										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} v -5 h 118 v 5 z"/>`).appendTo(svg);
-								}
-								module.MasyuSvg[1].obj = svg;
-								break;
+									for (let i = 0; i < matches[1].length; i++) {
+										const xPosition = (i % 5) * 118 + 61.5;
+										const yPosition = Math.floor(i / 5) * 118 + 64;
+										if (matches[1][i] == '1')
+											$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} v -5 h 118 v 5 z"/>`).appendTo(svg);
+									}
+									module.MasyuSvg[1].obj = svg;
+									break;
 								case 42: //Drawing vertical lines
-								for (let i = 0; i < matches[1].length; i++) {
-									let xPosition = Math.floor(i / 7) * 118 + 59;
-									let yPosition = (i % 7) * 118 + 61.5;
-									if (matches[1][i] == '1')
-										$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
-								}
-								var div = $('<div>').append(svg).append('</div>');
-								module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
-								module.push(module.MasyuSvg[1]);
-								break;
+									for (let i = 0; i < matches[1].length; i++) {
+										const xPosition = Math.floor(i / 7) * 118 + 59;
+										const yPosition = (i % 7) * 118 + 61.5;
+										if (matches[1][i] == '1')
+											$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
+									}
+									var div = $('<div>').append(svg).append('</div>');
+									module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
+									module.push(module.MasyuSvg[1]);
+									break;
 							}
 							return true;
 						}
@@ -7060,12 +7168,31 @@ $(function() {
 			},
 			{
 				moduleID: "OrientationCube"
-      },
-	  { displayName: "複雑漢字",
-        moduleID: "複雑漢字Module",
-        loggingTag: "複雑漢字"
+			},
+			{
+				displayName: "複雑漢字",
+				moduleID: "複雑漢字Module",
+				loggingTag: "複雑漢字"
 			}
 		];
+
+		$.get("https://ktane.timwi.de/json/raw", function(data) {
+			for (const module of data.KtaneModules) {
+				const matches = parseData.filter(data => data.moduleID == module.ModuleID);
+				if (matches.length === 0) {
+					parseData.push({
+						moduleID: module.ModuleID,
+						displayName: module.Name,
+						loggingTag: module.Name
+					});
+				} else if (matches.length === 1) {
+					const match = matches[0];
+					if (match.displayName == module.Name && (match.loggingTag == module.Name || match.loggingTag == null) && match.matches == null) {
+						console.log(`Unnecessary module: ${module.Name}`);
+					}
+				}
+			}
+		}, "json");
 
 		function getModuleName(moduleID) {
 			const moduleData = getModuleData(moduleID, "moduleID");
