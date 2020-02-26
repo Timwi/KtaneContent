@@ -1511,6 +1511,9 @@ $(function() {
 									];
 									if (bombgroup != null) bombgroup.Events.push(text);
 									else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
+									
+									if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb)
+										bombgroup.loggedBombs[0].Solved++;
 
 									break;
 								}
