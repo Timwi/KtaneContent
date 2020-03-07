@@ -1625,7 +1625,6 @@ $(function() {
 							for (let i = 0; i < 14; i++) {
 								$SVG(`<path d="${pathList[i]}" stroke = "#000000" stroke-width = ".314" fill = "${colorList[display[i]]}"/>`).appendTo(svg);
 							}
-							div.append('</div>');
 							module.push({ label: matches.input, obj: div });
 							return true;
 						}
@@ -4312,7 +4311,7 @@ $(function() {
 									}
 								}
 							}
-							var div = $('<div>').append(svg).append('</div>');
+							var div = $('<div>').append(svg);
 							if (!('MasyuSvg' in module))
 								module.MasyuSvg = {};
 							module.MasyuSvg[0] = { label: "Generated Puzzle:", obj: div, expanded: true };
@@ -4342,7 +4341,7 @@ $(function() {
 										if (matches[1][i] == '1')
 											$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
 									}
-									var div = $('<div>').append(svg).append('</div>');
+									var div = $('<div>').append(svg);
 									module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
 									module.push(module.MasyuSvg[1]);
 									break;
