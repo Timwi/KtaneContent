@@ -5965,6 +5965,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Settlers of KTaNE",
+				moduleID: "SettlersOfKTaNE",
+				loggingTag: "Settlers Of KTaNE"
+			},
+			{
 				displayName: "Shapes And Bombs",
 				moduleID: "ShapesBombs",
 				loggingTag: "Shapes Bombs"
