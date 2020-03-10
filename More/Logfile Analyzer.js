@@ -355,7 +355,7 @@ $(function() {
 
 			return bombHTML;
 		}
-		
+
 		GetMod(name, id) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
@@ -368,7 +368,7 @@ $(function() {
 
 			return mod;
 		}
-		
+
 		GetModule(name) {
 			var mod;
 			this.Bombs.forEach(function(bomb) {
@@ -920,7 +920,7 @@ $(function() {
 					}
 					svg.attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${Math.abs(viewBox[0]) + viewBox[2]} ${Math.abs(viewBox[1]) + viewBox[3]}`);
 					svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
-				
+
 					// Attempt to make the image pixelated
 					image.css("image-rendering", "crisp-edges");
 					if (image.css("image-render") == null) {
@@ -1511,7 +1511,7 @@ $(function() {
 									];
 									if (bombgroup != null) bombgroup.Events.push(text);
 									else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
-									
+
 									if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb)
 										bombgroup.loggedBombs[0].Solved++;
 
@@ -1553,7 +1553,7 @@ $(function() {
 			},
 
 			// ** MODULES START HERE ** //
-			
+
 			{
 				displayName: "% Grey",
 				loggingTag: "% Grey",
@@ -1937,7 +1937,7 @@ $(function() {
 							if (!matches[0].startsWith("Receive") && !matches[0].startsWith("Yielding")) module.push(matches.input);
 						}
 					}
-				]					
+				]
 			},
 			{
 				displayName: "Book of Mario",
@@ -4976,6 +4976,66 @@ $(function() {
 				moduleID: "nonverbalSimon",
 				loggingTag: "❖",
 				displayName: "❖"
+			},
+			{
+				moduleID: "NotButton",
+				loggingTag: "Not the Button",
+				displayName: "Not the Button"
+			},
+			{
+				moduleID: "NotCapacitorDischarge",
+				loggingTag: "Not Capacitor Discharge",
+				displayName: "Not Capacitor Discharge"
+			},
+			{
+				moduleID: "NotComplicatedWires",
+				loggingTag: "Not Complicated Wires",
+				displayName: "Not Complicated Wires"
+			},
+			{
+				moduleID: "NotKeypad",
+				loggingTag: "Not Keypad",
+				displayName: "Not Keypad"
+			},
+			{
+				moduleID: "NotMaze",
+				loggingTag: "Not Maze",
+				displayName: "Not Maze"
+			},
+			{
+				moduleID: "NotMemory",
+				loggingTag: "Not Memory",
+				displayName: "Not Memory"
+			},
+			{
+				moduleID: "NotMorseCode",
+				loggingTag: "Not Morse Code",
+				displayName: "Not Morse Code"
+			},
+			{
+				moduleID: "NotPassword",
+				loggingTag: "Not Password",
+				displayName: "Not Password"
+			},
+			{
+				moduleID: "NotSimaze",
+				loggingTag: "Not Simaze",
+				displayName: "Not Simaze"
+			},
+			{
+				moduleID: "NotWhosOnFirst",
+				loggingTag: "Not Who's on First",
+				displayName: "Not Who’s on First"
+			},
+			{
+				moduleID: "NotWireSequence",
+				loggingTag: "Not Wire Sequence",
+				displayName: "Not Wire Sequence"
+			},
+			{
+				moduleID: "NotWiresword",
+				loggingTag: "Not Wiresword",
+				displayName: "Not Wiresword"
 			},
 			{
 				moduleID: "numberCipher",
