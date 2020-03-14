@@ -1764,6 +1764,11 @@ $(function() {
 				loggingTag: "Baba Is Who?"
 			},
 			{
+				moduleID: "bananaNeedy",
+				displayName: "Banana",
+				loggingTag: "Banana"
+			},
+			{
 				moduleID: "BattleshipModule",
 				loggingTag: "Battleship",
 				matches: [
