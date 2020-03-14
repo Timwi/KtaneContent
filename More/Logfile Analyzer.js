@@ -2136,6 +2136,12 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Brainf---",
+				moduleID: "brainf",
+				loggingTag: "Brainf---"
+			},
+
+			{
 				displayName: "Button Grid",
 				moduleID: "buttonGrid",
 				loggingTag: "Button Grids"
@@ -4413,6 +4419,11 @@ $(function() {
 				]
 			},
 			{
+				displayName: "A Message",
+				moduleID: "AMessageForTheReader",
+				loggingTag: "A Message"
+			},
+			{
 				displayName: "Micro-Modules",
 				moduleID: "KritMicroModules",
 				loggingTag: "Micro-Modules"
@@ -4468,6 +4479,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				moduleID: "SquaresOfMisery",
+				displayName: "Misery Squares",
+				loggingTag: "SquaresOfMisery"
 			},
 			{
 				moduleID: "MistakeModule",
