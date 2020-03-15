@@ -782,7 +782,7 @@ $(function() {
 							modClone.tree = info[1];
 							modClone.counter = info[0];
 							modClone.displayCounter = IDs.length != 1;
-							modClone.events = mod.Events.filter(event => "#" + event.loggingID == info[0]);
+							modClone.events = IDs.length == 1 ? mod.Events : mod.Events.filter(event => "#" + event.loggingID == info[0]);
 							mods.push(modClone);
 						});
 
