@@ -1,0 +1,950 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<title>Faulty RGB Maze — Keep Talking and Nobody Explodes Module</title>
+		<meta name="viewport" content="initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="css/normalize.css">
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+		<link rel="stylesheet" type="text/css" href="css/font.css">
+		<script src="js/ktane-utils.js"></script>
+		<style>
+			#mazes {
+				padding: 4px;
+				background-color: black;
+				color: white;
+				border: 6pt solid;
+				clear: both;
+			}
+			.rgbMaze {
+				display: inline-grid;
+				grid-template-columns: 25% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;
+				width: 13em;
+			}
+			#mazeGroup { margin-bottom: 8px; }
+			#mazes > div {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: space-evenly;
+			}
+			.canvasWrapper {
+				position: relative;
+				grid-area: 1/1/2/8;
+			}
+			canvas {
+				border: 2px solid;
+				width: 10em;
+				margin: 0.5em 1.5em;
+			}
+			.led {
+				border-radius: 50%;
+				width: 1em;
+				height: 1em;
+				position: absolute;
+			}
+			select:nth-of-type(1) { grid-area: 2/2/3/4; }
+			select:nth-of-type(2) { grid-area: 4/2/5/8; }
+			button:nth-of-type(1) { grid-area: 2/4/3/6; }
+			button:nth-of-type(2) { grid-area: 2/6/3/8; }
+			div:nth-last-of-type(2) { grid-area: 3/2/4/5; }
+			div:nth-last-of-type(1) { grid-area: 3/5/4/8; }
+			input { width: 3em; margin-left: 1ch; }
+			label { margin: 3px 1px 0; }
+			#toolbar, #clearToolbar { text-align: center; }
+			#toolbar button, #clearToolbar button { padding: 2px; }
+			#toolbar div, #clearToolbar div {
+				width: 2em;
+				height: 2em;
+				box-sizing: content-box;
+				background-image: url('img/Faulty RGB Maze/toolbar.png');
+				background-repeat: no-repeat;
+				background-size: auto 2em;
+				background-clip: content-box;
+				background-origin: content-box;
+			}
+			button[aria-checked=true] { color: red; border: 2px solid; }
+			#clearToolbar { margin-left: 1em; }
+			button img { width: 2em; }
+
+			.displays div {
+				display: inline-block;
+				height: 48px;
+				padding: 4px;
+				margin: 4px;
+				border: 1px solid;
+				background-image: url('img/Faulty RGB Maze/digits.png');
+				background-repeat: no-repeat;
+				background-size: 240px 240px;
+				background-clip: content-box;
+				background-origin: content-box;
+			}
+			#mazeDisplays div { width: 60px; }
+			#columnDisplays div { width: 29px; }
+		</style>
+		<script>
+			'use strict';
+			const mazeSize = 7;
+			const wallWest = 1;
+			const wallSouth = 2;
+
+			const ClickModes = {
+				Key: 1,
+				Fault: 2,
+				FaultRow: 3,
+				FaultColumn: 4,
+				FaultDiagonal: 5,
+				Goal: 6,
+				Position: 7,
+				PositionMeasure: 8
+			}
+			var clickMode = ClickModes.Key;
+
+			class PointSet {
+				static getKey(x, y) { return x.toString() + y; }
+				contains(x, y) { return this.hasOwnProperty(PointSet.getKey(x, y)); }
+				add(x, y) { this[PointSet.getKey(x, y)] = true; }
+				remove(x, y) { delete this[PointSet.getKey(x, y)]; }
+				toggle(x, y) {
+					var key = PointSet.getKey(x, y);
+					if (this.hasOwnProperty(key)) delete this[key];
+					else this[key] = true;
+				}
+				toggleRange(iteratorFunction) {
+					for (const key of iteratorFunction()) {
+						if (!this.hasOwnProperty(key)) {
+							// If not all of the specified cells are highlighted, highlight them all.
+							for (const key2 of iteratorFunction()) this[key2] = true;
+							return;
+						}
+					}
+					// If all of the soecified cells are highlighted, unhighlight them.
+					for (const key2 of iteratorFunction()) delete this[key2];
+				}
+			}
+
+			class Maze {
+				constructor(div, colour) {
+					this.element = div;
+					var div2 = document.createElement('div');
+					div2.setAttribute('class', 'canvasWrapper');
+					div.appendChild(div2);
+					div2.appendChild(this.canvas = document.createElement('canvas'));
+					this.canvas.width = this.canvas.height = 700;
+					div2.appendChild(this.led = document.createElement('div'));
+					this.led.setAttribute('class', 'led');
+
+					div.appendChild(div2 = document.createElement('label'));
+					div2.appendChild(document.createTextNode('Maze'));
+
+					div.appendChild(this.mazeSelect = document.createElement('select'));
+					this.mazeSelect.setAttribute('class', 'mazeSelect');
+					for (var i = 0; i <= 9; ++i) {
+						var element = document.createElement('option');
+						element.appendChild(document.createTextNode(element.value = String.fromCharCode(48 + i)));
+						this.mazeSelect.appendChild(element);
+					}
+					for (var i = 0; i < 6; ++i) {
+						var element = document.createElement('option');
+						element.appendChild(document.createTextNode(element.value = String.fromCharCode(97 + i)));
+						this.mazeSelect.appendChild(element);
+					}
+					var button;
+					div.appendChild(button = document.createElement('button'));
+					button.appendChild(document.createTextNode('↔'));
+					button.addEventListener('click', e => { this.Rotation ^= 1; });
+					div.appendChild(button = document.createElement('button'));
+					button.appendChild(document.createTextNode('↕'));
+					button.addEventListener('click', e => { this.Rotation ^= 2; });
+
+					div.appendChild(div2 = document.createElement('label'));
+					div2.appendChild(document.createTextNode('Offset'));
+					div.appendChild((this.xBox = this.makeNumberBox('→')).parentElement);
+					div.appendChild((this.yBox = this.makeNumberBox('↓')).parentElement);
+
+					div.appendChild(div2 = document.createElement('label'));
+					div2.appendChild(document.createTextNode('Fault'));
+					div.appendChild(this.faultSelect = document.createElement('select'));
+					this.faultSelect.setAttribute('class', 'faultSelect');
+					addOption(this.faultSelect, '0', 'Fixed');
+					addOption(this.faultSelect, '9', 'Entry row');
+					addOption(this.faultSelect, 'd', 'Entry column');
+					addOption(this.faultSelect, 'b', '> 3 from entry');
+
+					this.context = this.canvas.getContext('2d');
+					this.mouseX = -1;
+					this.mouseY = -1;
+					this.originalCells = null;
+					this.cells = null;
+					this.rotation = 0;
+					this.faultMarks = new PointSet();
+					this.goalMarks = new PointSet();
+					this.keyX = -1;
+					this.keyY = -1;
+					this.active = false;
+					this.posX = -1;
+					this.posY = -1;
+					this.lastMarkX = -1;
+					this.lastMarkY = -1;
+					this.colour = colour;
+					this.visible = true;
+
+					this.canvas.addEventListener('mousemove', e => {
+						this.mouseX = Math.floor(e.offsetX / e.target.getBoundingClientRect().width * mazeSize);
+						this.mouseY = Math.floor(e.offsetY / e.target.getBoundingClientRect().width * mazeSize);
+						if (this.onMouseMove) this.onMouseMove(this, this.mouseX, this.mouseY);
+						this.redraw();
+					});
+
+					this.canvas.addEventListener('mouseout', e => {
+						this.mouseX = -1;
+						this.mouseY = -1;
+						if (this.onMouseOut) this.onMouseOut(this);
+						this.redraw();
+					});
+
+					this.canvas.addEventListener('mousedown', e => {
+						if (e.button == 0) {
+							var mode = clickMode;
+							if (mode == ClickModes.Fault) {
+								if (e.ctrlKey) mode = ClickModes.FaultColumn;
+								else if (e.shiftKey) mode = ClickModes.FaultRow;
+								else if (e.altKey) mode = ClickModes.FaultDiagonal;
+							}
+							if (mode != ClickModes.FaultDiagonal) {
+								this.lastMarkX = -1;
+								this.lastMarkY = -1;
+							}
+							switch (mode) {
+								case ClickModes.Key:
+									this.keyX = this.mouseX;
+									this.keyY = this.mouseY;
+									this.redraw();
+									break;
+								case ClickModes.Fault:
+									this.faultMarks.toggle(this.mouseX, this.mouseY);
+									this.redraw();
+									break;
+								case ClickModes.FaultRow:
+									this.faultMarks.toggleRange(function*() {
+										for (var x = 0; x < mazeSize; ++x) yield PointSet.getKey(x, this.mouseY);
+									}.bind(this));
+									this.redraw();
+									break;
+								case ClickModes.FaultColumn:
+									this.faultMarks.toggleRange(function*() {
+										for (var y = 0; y < mazeSize; ++y) yield PointSet.getKey(this.mouseX, y);
+									}.bind(this));
+									this.redraw();
+									break;
+								case ClickModes.FaultDiagonal:
+									if (this.lastMarkX < 0 || this.lastMarkY < 0 || Math.abs(this.mouseX - this.lastMarkX) != Math.abs(this.mouseY - this.lastMarkY)) {
+										// Not a valid diagonal.
+										this.faultMarks.add(this.mouseX, this.mouseY);
+									} else {
+										this.faultMarks.toggleRange(function*() {
+											var dx = this.mouseX < this.lastMarkX ? -1 : 1;
+											var dy = this.mouseY < this.lastMarkY ? -1 : 1;
+											var x = this.lastMarkX, y = this.lastMarkY;
+											while (true) {
+												yield PointSet.getKey(x, y);
+												if (x == this.mouseX) break;
+												x += dx; y += dy;
+											};
+										}.bind(this));
+									}
+									this.lastMarkX = this.mouseX;
+									this.lastMarkY = this.mouseY;
+									this.redraw();
+									break;
+								case ClickModes.Goal:
+									this.goalMarks.toggle(this.mouseX, this.mouseY);
+									this.redraw();
+									break;
+								case ClickModes.Position:
+								case ClickModes.PositionMeasure:
+									this.posX = this.mouseX;
+									this.posY = this.mouseY;
+									if (this.onPositionChange) this.onPositionChange(this);
+									this.redraw();
+									break;
+							}
+						}
+					});
+
+					this.mazeSelect.addEventListener('input', e => {
+						this.OriginalCells = allMazes[this.mazeSelect.value];
+					});
+
+					this.OriginalCells = allMazes[0];
+					this.redraw();
+					this.updateLED();
+				}
+
+				makeNumberBox(label) {
+					var div = document.createElement('div');
+					div.appendChild(document.createTextNode(label));
+					var el = document.createElement('input');
+					el.setAttribute('type', 'number');
+					el.min = -6; el.max = 6; el.value = 0;
+					el.addEventListener('input', e => { if (this.onOffsetChange) this.onOffsetChange(this); });
+					div.appendChild(el);
+					return el;
+				}
+
+				get Visible() { return this.visible; }
+				set Visible(value) {
+					this.visible = value;
+					if (value) this.element.removeAttribute('style');
+					else this.element.setAttribute('style', 'display: none;');
+				}
+
+				get OriginalCells() { return this.originalCells; }
+				set OriginalCells(value) {
+					this.originalCells = value;
+					this.cells = value;
+					this.Rotation = this.rotation;
+				}
+
+				get Rotation() { return this.rotation; }
+				set Rotation(value) {
+					this.rotation = value;
+					switch (value) {
+						case 1:
+							this.cells = [];
+							for (var y = 0; y < mazeSize; ++y) {
+								for (var x = 0; x < mazeSize; ++x) {
+									this.cells.push(
+										(x >= mazeSize - 1 ? wallWest : this.originalCells[y * mazeSize + (mazeSize - 2 - x)] & wallWest) +
+										(this.originalCells[y * mazeSize + (mazeSize - 1 - x)] & wallSouth)
+									);
+								}
+							}
+							break;
+						case 2:
+							this.cells = [];
+							for (var y = 0; y < mazeSize; ++y) {
+								for (var x = 0; x < mazeSize; ++x) {
+									this.cells.push(
+										(this.originalCells[(mazeSize - 1 - y) * mazeSize + x] & wallWest) +
+										(y >= mazeSize - 1 ? wallSouth : this.originalCells[(mazeSize - 2 - y) * mazeSize + x] & wallSouth)
+									);
+								}
+							}
+							break;
+						case 3:
+							this.cells = [];
+							for (var y = 0; y < mazeSize; ++y) {
+								for (var x = 0; x < mazeSize; ++x) {
+									this.cells.push(
+										(x >= mazeSize - 1 ? wallWest : this.originalCells[(mazeSize - 1 - y) * mazeSize + (mazeSize - 2 - x)] & wallWest) +
+										(y >= mazeSize - 1 ? wallSouth : this.originalCells[(mazeSize - 2 - y) * mazeSize + (mazeSize - 1 - x)] & wallSouth)
+									);
+								}
+							}
+							break;
+						default: this.cells = this.originalCells; break;
+					}
+					this.redraw();
+					this.updateLED();
+				}
+
+				updateLED() {
+					this.led.setAttribute('style', `${this.rotation & 1 ? 'right' : 'left'}: 0; ${this.rotation & 2 ? 'bottom' : 'top'}: 0; background-color: ${this.colour};`);
+				}
+
+				redraw() {
+					this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+					this.context.fillStyle = '#444';
+					for (var cell in this.faultMarks) {
+						this.context.fillRect(parseInt(cell[0]) * 100, parseInt(cell[1]) * 100, 100, 100);
+					}
+					if (this.mouseX >= 0 && this.mouseX < mazeSize && this.mouseY >= 0 && this.mouseY < mazeSize) {
+						this.context.fillStyle = this.faultMarks.contains(this.mouseX, this.mouseY) ? '#888' : '#666';
+						this.context.fillRect(this.mouseX * 100, this.mouseY * 100, 100, 100);
+					}
+					if (this.keyX >= 0 && this.keyY >= 0) {
+						this.context.fillStyle = this.colour;
+						this.context.beginPath();
+						this.context.arc(this.keyX * 100 + 50, this.keyY * 100 + 50, 40, 0, 2 * Math.PI)
+						this.context.fill();
+					}
+					this.context.lineWidth = 5;
+					if (this.posX >= 0 && this.posY >= 0) {
+						this.context.fillStyle = 'white';
+						this.context.strokeStyle = 'white';
+						this.context.beginPath();
+						this.context.arc(this.posX * 100 + 50, this.posY * 100 + 50, 40, 0, 2 * Math.PI)
+						this.context.arc(this.posX * 100 + 50, this.posY * 100 + 50, 40, 0, 2 * Math.PI)
+						if (this.active) this.context.fill(); else this.context.stroke();
+					}
+					this.context.fillStyle = this.colour;
+					this.context.strokeStyle = 'black';
+					for (var cell in this.goalMarks) {
+						if (PointSet.getKey(this.keyX, this.keyY) == cell)
+							this.context.strokeRect(parseInt(cell[0]) * 100 + 40, parseInt(cell[1]) * 100 + 40, 20, 20);
+						else
+							this.context.fillRect(parseInt(cell[0]) * 100 + 40, parseInt(cell[1]) * 100 + 40, 20, 20);
+					}
+					if (this.cells) {
+						this.context.strokeStyle = this.colour;
+						this.context.lineWidth = 10;
+						var i = 0;
+						for (var y = 0; y < mazeSize; ++y) {
+							for (var x = 0; x < mazeSize; ++x) {
+								if (x < mazeSize - 1 && (this.cells[i] & wallWest)) {
+									this.context.beginPath();
+									this.context.moveTo((x + 1) * 100, y * 100);
+									this.context.lineTo((x + 1) * 100, (y + 1) * 100);
+									this.context.stroke();
+								}
+								if (y < mazeSize - 1 && (this.cells[i] & wallSouth)) {
+									this.context.beginPath();
+									this.context.moveTo(x * 100, (y + 1) * 100);
+									this.context.lineTo((x + 1) * 100, (y + 1) * 100);
+									this.context.stroke();
+								}
+								++i;
+							}
+						}
+					}
+				}
+			}
+
+			var allMazes = {
+				'0': [
+					0, 2, 1, 2, 0, 2, 3,
+					3, 0, 3, 1, 2, 1, 1,
+					1, 3, 2, 2, 1, 3, 1,
+					2, 2, 0, 3, 1, 2, 1,
+					2, 1, 1, 1, 1, 1, 1,
+					1, 1, 3, 1, 3, 1, 1,
+					2, 2, 3, 2, 2, 3, 3 ],
+				'1': [
+					0, 3, 0, 1, 2, 1, 1,
+					2, 1, 3, 1, 1, 2, 1,
+					1, 0, 3, 2, 3, 2, 3,
+					1, 3, 1, 2, 0, 3, 1,
+					0, 2, 3, 0, 3, 1, 1,
+					3, 1, 2, 3, 1, 1, 1,
+					2, 2, 2, 2, 3, 2, 3 ],
+				'2': [
+					2, 2, 2, 1, 1, 0, 3,
+					0, 0, 1, 1, 0, 3, 1,
+					3, 1, 3, 1, 1, 1, 1,
+					1, 3, 1, 3, 3, 0, 3,
+					1, 0, 3, 0, 3, 1, 1,
+					2, 3, 0, 3, 1, 3, 1,
+					2, 2, 3, 2, 2, 2, 3 ],
+				'3': [
+					2, 0, 2, 1, 0, 2, 1,
+					1, 3, 1, 1, 1, 1, 3,
+					2, 0, 3, 3, 1, 2, 1,
+					1, 1, 2, 1, 3, 1, 1,
+					1, 3, 0, 3, 0, 3, 1,
+					2, 1, 2, 1, 1, 2, 2,
+					2, 2, 3, 3, 2, 2, 3 ],
+				'4': [
+					2, 1, 0, 3, 2, 2, 1,
+					1, 0, 3, 1, 0, 2, 3,
+					1, 3, 2, 1, 3, 0, 1,
+					0, 2, 1, 1, 2, 3, 1,
+					3, 1, 3, 0, 3, 1, 1,
+					0, 2, 3, 3, 2, 1, 3,
+					2, 2, 3, 2, 2, 2, 3 ],
+				'5': [
+					2, 2, 0, 3, 1, 0, 3,
+					2, 1, 0, 3, 1, 2, 1,
+					1, 1, 3, 1, 0, 3, 1,
+					1, 2, 1, 2, 3, 2, 3,
+					2, 1, 2, 3, 0, 3, 1,
+					0, 3, 0, 2, 3, 0, 1,
+					3, 2, 3, 2, 2, 3, 3 ],
+				'6': [
+					1, 0, 2, 1, 2, 2, 1,
+					1, 3, 1, 0, 3, 0, 3,
+					2, 2, 1, 3, 2, 3, 1,
+					1, 1, 3, 2, 2, 2, 1,
+					1, 2, 1, 2, 0, 3, 1,
+					0, 1, 2, 1, 2, 1, 3,
+					3, 2, 3, 2, 3, 2, 3 ],
+				'7': [
+					1, 2, 2, 0, 2, 3, 1,
+					2, 2, 1, 1, 0, 2, 3,
+					0, 3, 1, 3, 1, 2, 1,
+					1, 1, 1, 1, 2, 3, 1,
+					1, 1, 3, 2, 1, 1, 1,
+					1, 2, 0, 3, 1, 2, 3,
+					2, 3, 2, 3, 2, 2, 3 ],
+				'8': [
+					0, 2, 2, 1, 1, 2, 1,
+					1, 1, 1, 3, 1, 1, 1,
+					3, 1, 2, 0, 3, 1, 1,
+					0, 2, 3, 3, 0, 3, 1,
+					2, 3, 0, 3, 1, 2, 3,
+					0, 2, 3, 2, 3, 1, 1,
+					2, 3, 2, 2, 2, 2, 3 ],
+				'9': [
+					1, 0, 0, 1, 2, 2, 1,
+					1, 3, 3, 1, 0, 3, 1,
+					0, 2, 3, 3, 1, 2, 1,
+					1, 1, 2, 2, 2, 3, 3,
+					3, 2, 0, 3, 1, 2, 1,
+					2, 2, 3, 1, 2, 2, 1,
+					2, 2, 2, 2, 2, 3, 3 ],
+				'a': [
+					2, 2, 1, 2, 0, 2, 3,
+					0, 1, 2, 1, 1, 2, 1,
+					1, 3, 2, 3, 2, 3, 1,
+					1, 2, 1, 2, 2, 2, 3,
+					2, 3, 0, 2, 3, 0, 1,
+					1, 2, 3, 0, 3, 3, 1,
+					2, 2, 2, 3, 2, 2, 3 ],
+				'b': [
+					1, 2, 0, 2, 0, 3, 1,
+					2, 1, 3, 1, 3, 2, 1,
+					1, 2, 1, 2, 1, 1, 1,
+					0, 3, 2, 3, 0, 3, 1,
+					2, 0, 3, 1, 3, 2, 3,
+					1, 3, 1, 2, 2, 2, 1,
+					2, 2, 2, 2, 3, 2, 3 ],
+				'c': [
+					1, 2, 2, 1, 2, 2, 1,
+					0, 2, 3, 1, 2, 2, 1,
+					1, 1, 2, 2, 3, 1, 3,
+					1, 1, 1, 2, 2, 2, 1,
+					3, 1, 2, 1, 2, 1, 1,
+					0, 2, 3, 1, 1, 1, 3,
+					3, 2, 2, 3, 2, 2, 3 ],
+				'd': [
+					1, 2, 2, 1, 2, 0, 3,
+					2, 0, 3, 0, 3, 1, 1,
+					1, 1, 2, 3, 2, 1, 1,
+					1, 2, 3, 2, 1, 3, 1,
+					2, 0, 2, 3, 1, 2, 1,
+					1, 3, 0, 1, 1, 1, 1,
+					2, 2, 3, 3, 2, 3, 3 ],
+				'e': [
+					2, 2, 2, 0, 3, 0, 1,
+					1, 0, 3, 1, 2, 3, 1,
+					2, 1, 1, 3, 1, 1, 1,
+					1, 1, 0, 2, 1, 1, 3,
+					1, 3, 3, 1, 3, 2, 1,
+					1, 0, 3, 2, 0, 3, 1,
+					2, 3, 2, 2, 3, 2, 3 ],
+				'f': [
+					0, 3, 2, 0, 3, 2, 1,
+					2, 2, 1, 1, 0, 2, 3,
+					0, 1, 1, 1, 2, 3, 1,
+					1, 3, 3, 1, 2, 2, 1,
+					1, 2, 1, 3, 0, 3, 1,
+					1, 1, 2, 2, 3, 1, 1,
+					3, 2, 2, 2, 2, 3, 3 ]
+			};
+
+			var mazes = [ ];
+			var offsetChangeIndices = [ 0, 1, 2 ];
+			var updatingPosition = false;
+			var toolbarButtons = [ ];
+			var showBox, switchButton;
+			window.addEventListener('load', e => {
+				var divs = document.getElementsByClassName('rgbMaze');
+				mazes.push(new Maze(divs[0], 'red'));
+				mazes.push(new Maze(divs[1], 'lime'));
+				mazes.push(new Maze(divs[2], 'royalblue'));
+				var i = 0;
+				for (var maze of mazes) {
+					maze.index = i++;
+					maze.onMouseMove = Maze_onMouseMove;
+					maze.onMouseOut = maze => Maze_onMouseMove(maze, -1, -1);
+					maze.onPositionChange = maze => {
+
+						if (!updatingPosition && maze.posX >= 0 && maze.posY >= 0) {
+							updatingPosition = true;
+							maze.active = true;
+
+							if (clickMode == ClickModes.PositionMeasure) {
+								var index = mazes.indexOf(maze) - 1;
+								if (index < 0) index = mazes.length - 1;
+								if (mazes[index].posX >= 0 && mazes[index].posY >= 0) {
+									// When using this button to set a position when the previous maze already has one set,
+									// automatically set offsets accordingly.
+									mazes[index].xBox.value = maze.posX - mazes[index].posX;
+									mazes[index].yBox.value = maze.posY - mazes[index].posY;
+									if (mazes[index].onOffsetChange) mazes[index].onOffsetChange(mazes[index]);
+								}
+							}
+
+							// Set position on other mazes.
+							var index = maze.index, x = maze.posX, y = maze.posY;
+							while (true) {
+								var maze2 = mazes[index];
+
+								++index;
+								if (index >= mazes.length) index = 0;
+								if (index == maze.index) break;
+
+								x += parseInt(maze2.xBox.value);
+								if (x < 0) x += mazeSize;
+								else if (x >= mazeSize) x -= mazeSize;
+								y += parseInt(maze2.yBox.value);
+								if (y < 0) y += mazeSize;
+								else if (y >= mazeSize) y -= mazeSize;
+
+								maze2 = mazes[index];
+								maze2.active = false;
+								maze2.posX = x;
+								maze2.posY = y;
+								maze2.redraw();
+								if (maze2.onPositionChange) maze2.onPositionChange(maze2);
+							}
+							updatingPosition = false;
+						}
+						if (maze.faultSelect.value != '0') {
+							if (maze.active && maze.posX >= 0 && maze.posY >= 0) {
+								maze.faultMarks = new PointSet();
+								switch (maze.faultSelect.value) {
+									case '9':
+										for (var x = 0; x < mazeSize; ++x) maze.faultMarks.add(x, maze.posY);
+										break;
+									case 'd':
+										for (var y = 0; y < mazeSize; ++y) maze.faultMarks.add(maze.posX, y);
+										break;
+									case 'b':
+										for (var y = 0; y < mazeSize; ++y) {
+											for (var x = 0; x < mazeSize; ++x) {
+												if (Math.abs(x - maze.posX) + Math.abs(y - maze.posY) > 3) maze.faultMarks.add(x, y);
+											}
+										}
+										break;
+								}
+							} else {
+								for (var y = 0; y < mazeSize; ++y) {
+									for (var x = 0; x < mazeSize; ++x) {
+										maze.faultMarks.add(x, y);
+									}
+								}
+							}
+							maze.redraw();
+						}
+					}
+					maze.onOffsetChange = maze => {
+						// If two maze offsets are set by the user (either directly or with the measure tool),
+						// automatically set the third maze offset to maintain a zero sum (mod 7).
+						var index = offsetChangeIndices.indexOf(maze.index);
+						if (index >= 0) offsetChangeIndices.splice(index, 1);
+						offsetChangeIndices.unshift(maze.index);
+						if (offsetChangeIndices.length >= 2) {
+							for (var maze2 of mazes) {
+								if (offsetChangeIndices[0] != maze2.index && offsetChangeIndices[1] != maze2.index) {
+									var xSum = parseInt(mazes[offsetChangeIndices[0]].xBox.value) + parseInt(mazes[offsetChangeIndices[1]].xBox.value);
+									var ySum = parseInt(mazes[offsetChangeIndices[0]].yBox.value) + parseInt(mazes[offsetChangeIndices[1]].yBox.value);
+									maze2.xBox.value = -(xSum % mazeSize);
+									maze2.yBox.value = -(ySum % mazeSize);
+								}
+							}
+						}
+					};
+				}
+
+				var toolbar = document.getElementById('toolbar');
+				for (var button of toolbar.getElementsByTagName('button')) {
+					button.value = toolbarButtons.length;
+					toolbarButtons.push(button);
+					button.addEventListener('click', (function(e) {
+						toolbarButtons[clickMode].setAttribute('aria-checked', 'false');
+						clickMode = parseInt(this.value);
+						toolbarButtons[clickMode].setAttribute('aria-checked', 'true');
+					}).bind(button));
+				}
+				toolbarButtons[1].setAttribute('aria-checked', 'true');
+				document.getElementById('clearGoalButton').addEventListener('click', e => {
+					for (var maze of mazes) {
+						maze.keyX = -1;
+						maze.keyY = -1;
+						maze.goalMarks = new PointSet();
+						maze.redraw();
+					}
+				});
+				document.getElementById('clearAllButton').addEventListener('click', e => {
+					for (var maze of mazes) {
+						maze.keyX = -1;
+						maze.keyY = -1;
+						maze.posX = -1;
+						maze.posY = -1;
+						maze.faultMarks = new PointSet();
+						maze.goalMarks = new PointSet();
+						maze.redraw();
+					}
+				});
+				document.addEventListener('keydown', e => {
+					var newClickMode;
+					switch (e.key) {
+						case 'h': newClickMode = 0; break;
+						case 'k': newClickMode = ClickModes.Key; break;
+						case 'f':
+							switch (clickMode) {
+								case ClickModes.Fault: newClickMode = ClickModes.FaultRow; break;
+								case ClickModes.FaultRow: newClickMode = ClickModes.FaultColumn; break;
+								case ClickModes.FaultColumn: newClickMode = ClickModes.FaultDiagonal; break;
+								default: newClickMode = ClickModes.Fault; break;
+							}
+							break;
+						case 'g': newClickMode = ClickModes.Goal; break;
+						case 'p': newClickMode = clickMode == ClickModes.Position ? ClickModes.PositionMeasure : ClickModes.Position; break;
+						case ' ':
+							e.preventDefault();
+							switchMazes();
+							return;
+						case 'ArrowUp': case 'ArrowDown': case 'ArrowLeft': case 'ArrowRight':
+							// If the active maze is not shown, make the visible maze active.
+							if (!mazes.some(m => m.active && m.Visible)) {
+								for (var maze of mazes) maze.active = maze.Visible;
+							}
+							var activeMaze = mazes.find(m => m.active);
+							if (activeMaze.posX >= 0 && activeMaze.posY >= 0) {
+								e.preventDefault();
+								switch (e.key) {
+									case 'ArrowUp': if (activeMaze.posY > 0) --activeMaze.posY; break;
+									case 'ArrowDown': if (activeMaze.posY < mazeSize - 1) ++activeMaze.posY; break;
+									case 'ArrowLeft': if (activeMaze.posX > 0) --activeMaze.posX; break;
+									case 'ArrowRight': if (activeMaze.posX < mazeSize - 1) ++activeMaze.posX; break;
+								}
+								activeMaze.redraw();
+								if (activeMaze.onPositionChange) activeMaze.onPositionChange(activeMaze);
+							}
+							return;
+						default: return;
+					}
+					e.preventDefault();
+					toolbarButtons[clickMode].setAttribute('aria-checked', 'false');
+					clickMode = newClickMode;
+					toolbarButtons[clickMode].setAttribute('aria-checked', 'true');
+				});
+
+				switchButton = document.getElementById('switchButton');
+				switchButton.addEventListener('click', switchMazes);
+
+				showBox = document.getElementById('showBox');
+				showBox.addEventListener('input', showBox_input);
+				if (showBox.value != 'all') showBox.value = '0';
+				showBox_input();
+
+			});
+
+			function addOption(select, value, text) {
+				var option = document.createElement('option');
+				option.value = value;
+				option.innerText = text;
+				select.appendChild(option);
+				return option;
+			}
+
+			function Maze_onMouseMove(maze, x, y) {
+				var startIndex = maze.index;
+				var index = startIndex;
+				while (true) {
+					var maze = mazes[index];
+					maze.mouseX = x;
+					maze.mouseY = y;
+					maze.redraw();
+					++index;
+					if (index >= mazes.length) index = 0;
+					if (index == startIndex) break;
+					if (x >= 0 && y >= 0) {
+						x += parseInt(maze.xBox.value);
+						if (x < 0) x += mazeSize;
+						else if (x >= mazeSize) x -= mazeSize;
+						y += parseInt(maze.yBox.value);
+						if (y < 0) y += mazeSize;
+						else if (y >= mazeSize) y -= mazeSize;
+					}
+				}
+			}
+
+			function showBox_input() {
+				if (showBox.value == 'all') {
+					switchButton.setAttribute('disabled', '');
+					for (var maze of mazes) maze.Visible = true;
+				} else {
+					switchButton.removeAttribute('disabled');
+					var index = parseInt(showBox.value);
+					for (var maze of mazes) maze.Visible = maze.index == index;
+				}
+			}
+
+			function switchMazes() {
+				if (showBox.value == '2') showBox.value = '0';
+				else if (showBox.value != 'all')
+					showBox.value = String.fromCharCode(showBox.value.charCodeAt(0) + 1);
+				showBox_input();
+			}
+		</script>
+	</head>
+	<body>
+		<div class="section">
+			<div class="page page-bg-01">
+				<div class="page-header">
+					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+					<span class="page-header-section-title">Faulty RGB Maze</span>
+				</div>
+				<div class="page-content">
+					<img src="img/Component/Faulty RGB Maze.svg" class="diagram">
+					<h2>On the Subject of Faulty RGB Mazes</h2>
+					<p class="flavour-text">Now you too can experience... wait, where am I?</p>
+
+					<h3>Maze Templates</h3>
+					<p style='margin-bottom: 0;'>See the following pages for instructions.</p>
+					<label for='showBox'>Show</label>
+					<select id='showBox'>
+						<option value='all'>All mazes</option>
+						<option value='0'>Red maze</option>
+						<option value='1'>Green maze</option>
+						<option value='2'>Blue maze</option>
+					</select>
+					<button id='switchButton' disabled>Switch (Space)</button>
+
+					<figure id='mazes'>
+						<div id='mazeGroup'>
+							<div class='rgbMaze'></div>
+							<div class='rgbMaze'></div>
+							<div class='rgbMaze'></div>
+						</div>
+						<div id='toolbarGroup'>
+							<div id='toolbar' role='radiogroup'>
+								<button id='highlightButton' role='radio' aria-checked='false' title='Highlight only (H)'><div style='background-position: 0 0;'></div></button>
+								<button id='keyButton' role='radio' aria-checked='false' title='Mark key (K)'><div style='background-position: -2em 0;'></div></button>
+								<button id='faultButton' role='radio' aria-checked='false' title='Mark fault (F)'><div style='background-position: -4em 0;'></div></button>
+								<button id='faultRowButton' role='radio' aria-checked='false' title='Mark fault row (F)'><div style='background-position: -6em 0;'></div></button>
+								<button id='faultColumnButton' role='radio' aria-checked='false' title='Mark fault column (F)'><div style='background-position: -8em 0;'></div></button>
+								<button id='faultDiagonalButton' role='radio' aria-checked='false' title='Mark fault diagonal (F)'><div style='background-position: -10em 0;'></div></button>
+								<button id='goalButton' role='radio' aria-checked='false' title='Mark goal (G)'><div style='background-position: -12em 0;'></div></button>
+								<button id='positionButton' role='radio' aria-checked='false' title='Mark current position (P)'><div style='background-position: -14em 0;'></div></button>
+								<button id='positionMeasureButton' role='radio' aria-checked='false' title='Mark current position and measure offset (P)'><div style='background-position: -16em 0;'></div></button>
+							</div>
+							<div id='clearToolbar'>
+								<button id='clearGoalButton' title='Clear goal marks'><div style='background-position: -18em 0;'></div></button>
+								<button id='clearAllButton' title='Clear all marks'><div style='background-position: -20em 0;'></div></button>
+							</div>
+						</div>
+					</figure>
+
+					<h3>Maze Defects</h3>
+					<table style='font-size: smaller;'>
+						<tr><th>Flashes</th><th>Hex</th><th>Defective spaces</th></tr>
+						<tr><th>1000</th><th>1</th><th>lie on odd columns.</th></tr>
+						<tr><th>0100</th><th>2</th><th>are either 0, 3, or 6 spaces from the center of the grid.</th></tr>
+						<tr><th>1100</th><th>3</th><th>have two odd or two even coordinates.</th></tr>
+						<tr><th>0010</th><th>4</th><th>are either 1 or 4 spaces from the center of the grid.</th></tr>
+						<tr><th>1010</th><th>5</th><th>lie on even rows.</th></tr>
+						<tr><th>0110</th><th>6</th><th>are either 2 or 5 spaces from the center of the grid.</th></tr>
+						<tr><th>1110</th><th>7</th><th>lie on the edge of the grid.</th></tr>
+						<tr><th>0001</th><th>8</th><th>lie on odd rows.</th></tr>
+						<tr><th>1001</th><th>9</th><th>lie on the same row as the location the maze was entered from.</th></tr>
+						<tr><th>0101</th><th>a</th><th>have one odd and one even coordinate.</th></tr>
+						<tr><th>1101</th><th>b</th><th>are more than 3 spaces from the location the maze was entered from.</th></tr>
+						<tr><th>0011</th><th>c</th><th>lie on even columns.</th></tr>
+						<tr><th>1011</th><th>d</th><th>lie on the same column as the location the maze was entered from.</th></tr>
+						<tr><th>0111</th><th>e</th><th>lie on the center row or column.</th></tr>
+					</table>
+				</div>
+				<div class="page-footer relative-footer">Page 1 of 3</div>
+			</div>
+			<div class="page page-bg-02">
+				<div class="page-header">
+					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+					<span class="page-header-section-title">Faulty RGB Maze</span>
+				</div>
+				<div class="page-content">
+					<h3>How to use the template</h3>
+					<ol>
+						<li>The 7×7 grid on the module initially shows the position of three keys:
+							one of each colour. Use the 'Mark key' (K) mode to mark the position
+							of each key in its respective template.</li>
+						<li>The seven-segment display shows three numbers, one in each colour,
+							superimposed over each other using additive colour mixing.
+							For each maze, select the corresponding number in the Maze field.</li>
+						<li>The indicator LEDs in the corners of the maze show the orientation of each maze.
+							There is an indicator for each colour, superimposed over each other.
+							Use the '↔' and '↕' buttons to mirror each maze so that the indicators on the template
+							match those on the module.</li>
+						<li>The keys will flicker, giving a sequence of four bits each.
+							For each of the four bits, if the key is visible, the bit is 1;
+							if the key is not visible, the bit is 0.
+							Each sequence corresponds to a set of defective spaces for its maze,
+							according to the table above.
+							Use the 'Mark fault' (F) mode to mark the defective spaces.<br/>
+							To mark a row, hold Shift and click any space on it.<br/>
+							To mark a column, hold Ctrl and click any space on it.<br/>
+							To mark a diagonal, hold Alt and click the two end points.<br/>
+							If the defective spaces are not fixed, select the appropriate fault in the 'Fault' field.</li>
+						<li>Press any of the LEDs to enter the red maze.
+							Use the 'Mark position' (P) mode to mark the starting position.</li>
+						<li>Press an adjacent grey LED to move. Avoid hitting the walls of the mazes.
+							Move to any non-defective space and mark the new position on the template.</li>
+						<li>Press the white LED to switch to the green maze. You cannot switch mazes if the white LED is defective.<br/>
+							The white LEDs in each maze are offset from each other by a fixed number of spaces in each direction.
+							Use the 'Mark position and measure' (P) mode to mark the new position in the green maze.
+							This will fill in the offset for the red maze.</li>
+						<li>Repeat the previous two steps to move to the blue maze and find the remaining offsets.</li>
+						<li>Use the 'Highlight' (H) mode or move your mouse pointer over each maze
+							to see the corresponding positions in the other mazes.<br/>
+							For each key, you may use the 'Mark goal' (G) mode to mark positions in the previous maze
+							that will allow you to reach the key after switching to its own maze.</li>
+					</ol>
+				</div>
+				<div class="page-footer relative-footer">Page 2 of 3</div>
+			</div>
+			<div class="page page-bg-03">
+				<div class="page-header">
+					<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+					<span class="page-header-section-title">Faulty RGB Maze</span>
+				</div>
+				<div class="page-content">
+					<ol start='10'>
+						<li>Once all three keys are collected, the seven segment display will change.
+							Press the 'Clear goal marks' button to clear the key and goal marks.</li>
+						<li>The three components of the seven-segment display will change.<br/>
+							One of the components is a number. This gives the row the exit lies in.<br/>
+							One of the other components is a letter. This gives the column the exit lies in.<br/>
+							The remaining component is a random pattern that is neither a number or a letter.
+							The exit lies in the maze that is the same colour as this component.<br/>
+							Use the 'Mark key' (K) mode to mark the position of the exit.</li>
+					</ol>
+
+					<h3>Seven-segment display reference</h3>
+					<p>Each component may be shown normally or inverted: segments that would normally be on are off and vice versa.
+						The digits a-f are always lowercase.</p>
+					<figure id='mazeDisplays' class='displays'>
+						<div style='background-position:   0       0  ;'></div>
+						<div style='background-position:  -60px    0  ;'></div>
+						<div style='background-position: -120px    0  ;'></div>
+						<div style='background-position: -180px    0  ;'></div>
+						<div style='background-position:   0     -48px;'></div>
+						<div style='background-position:  -60px  -48px;'></div>
+						<div style='background-position: -120px  -48px;'></div>
+						<div style='background-position: -180px  -48px;'></div>
+						<div style='background-position:   0     -96px;'></div>
+						<div style='background-position:  -60px  -96px;'></div>
+						<div style='background-position: -120px  -96px;'></div>
+						<div style='background-position: -180px  -96px;'></div>
+						<div style='background-position:   0    -144px;'></div>
+						<div style='background-position:  -60px -144px;'></div>
+						<div style='background-position: -120px -144px;'></div>
+						<div style='background-position: -180px -144px;'></div>
+					</figure>
+					<p>Columns B and D are shown in lowercase to disambiguate them from 8 and 0; the rest of the columns are uppercase letters.</p>
+					<figure id='columnDisplays' class='displays'>
+						<div style='background-position:    0   -192px;'></div>
+						<div style='background-position:  -30px -192px;'></div>
+						<div style='background-position:  -60px -192px;'></div>
+						<div style='background-position:  -90px -192px;'></div>
+						<div style='background-position: -120px -192px;'></div>
+						<div style='background-position: -150px -192px;'></div>
+						<div style='background-position: -180px -192px;'></div>
+					</figure>
+				</div>
+				<div class="page-footer relative-footer">Page 3 of 3</div>
+			</div>
+		</div>
+	</body>
+</html>
