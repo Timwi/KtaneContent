@@ -1250,6 +1250,20 @@ $(function() {
 						}
 					},
 					{
+						regex: /Day of the week: (\(colors(?: not)? enabled\)) (.+) (.+-.+-.+) (\(\w{2}\/\w{2}\))/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Day of the Week: ${matches[3]} ${matches[4]} Color: ${matches[2]} ${matches[1]}`);
+							bomb.DayTimeWidgets.push(["DayoftheWeek", matches[3], matches[2], matches[1] == "(colors enabled)", matches[4]]);
+						}
+					},
+					{
+						regex: /Manufacture Date: (.+-.+)/,
+						handler: function(matches) {
+							bomb.ModdedWidgetInfo.push(`Manufacture Date: ${matches[1]}`);
+							bomb.DayTimeWidgets.push(["ManufactureDate", matches[1]]);
+						}
+					},
+					{
 						regex: /Chosen time: (\d{2}:\d{2})(MIL|PM|AM)/,
 						handler: function(matches) {
 							bomb.ModdedWidgetInfo.push(`Randomized Time: ${matches[1]} ${matches[2]}`);
