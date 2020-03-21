@@ -1574,6 +1574,11 @@ $(function() {
 				moduleID: "PercentageGreyModule",
 			},
 			{
+				displayName: "1000 Words",
+				loggingTag: "1000 Words",
+				moduleID: "OneThousandWordAdvertisement",
+			},
+			{
 				displayName: "101 Dalmatians",
 				loggingTag: "101 Dalmatians",
 				moduleID: "OneHundredAndOneDalmatiansModule",
@@ -1767,6 +1772,11 @@ $(function() {
 				moduleID: "alphaBits",
 				loggingTag: "Alpha-Bits",
 				displayName: "Alpha-Bits"
+			},
+			{
+				moduleID: "answerTo",
+				loggingTag: "The Answer to ...",
+				displayName: "Answer to..."
 			},
 			{
 				moduleID: "spwizAstrology",
@@ -2235,6 +2245,11 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				moduleID: "kataCheatCheckout",
+				loggingTag: "Cheat Checkout",
+				displayName: "Cheat Checkout"
 			},
 			{
 				moduleID: "ChessModule",
@@ -2863,6 +2878,11 @@ $(function() {
 				loggingTag: "Digital Dials"
 			},
 			{
+				displayName: "Dungeon 2nd Floor",
+				moduleID: "dungeon2",
+				loggingTag: "Dungeon 2nd Floor"
+			},
+			{
 				displayName: "egg",
 				moduleID: "bigegg",
 				loggingTag: "egg"
@@ -2953,6 +2973,11 @@ $(function() {
 				displayName: "Find The Date",
 				moduleID: "DateFinder",
 				loggingTag: "Date Finder"
+			},
+			{
+				displayName: "Five Letter Words",
+				moduleID: "FiveLetterWordsAgain",
+				loggingTag: "Five Letter Words"
 			},
 			{
 				displayName: "FizzBuzz",
@@ -3443,6 +3468,11 @@ $(function() {
 				displayName: "Going Backwards",
 				moduleID: "GoingBackwardsModule",
 				loggingTag: "Going Backwards",
+			},
+			{
+				displayName: "Guess Who?",
+				moduleID: "GuessWhoThisIs",
+				loggingTag: "Guess Who?",
 			},
 			{
 				displayName: "Hereditary Base Notation",
@@ -6106,6 +6136,11 @@ $(function() {
 				loggingTag: "Shapes Bombs"
 			},
 			{
+				displayName: "Shifting Maze",
+				moduleID: "MazeShifting",
+				loggingTag: "Shifting Maze"
+			},
+			{
 				moduleID: "shikaku",
 				loggingTag: "Shikaku",
 				matches: [
@@ -6834,6 +6869,10 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Vcrcs",
+				moduleID: "VCRCS",
+			},
+			{
 				displayName: "Venting Gas",
 				moduleID: "NeedyVentGas",
 				loggingTag: "NeedyVentComponent",
@@ -6913,6 +6952,11 @@ $(function() {
 						}
 					}
 				]
+			},
+			{
+				displayName: "Wire Ordering",
+				moduleID: "kataWireOrdering",
+				loggingTag: "Wire Ordering",
 			},
 			{
 				moduleID: "WireSequence",
