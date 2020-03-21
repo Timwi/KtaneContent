@@ -3127,10 +3127,10 @@ $(function() {
 									${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
 										<th style='text-align: right'>${stage + 1}</th>
 										${
-	inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-		inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-			`<td colspan='6' style='color: #888'>(not valid)</td>`
-}
+											inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+												inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+													`<td colspan='6' style='color: #888'>(not valid)</td>`
+										}
 									</tr>`).join('')}
 									<tr><th colspan='5'>FINAL ANSWER</th><td>${arr.map(i => `<span class='digit'>${module.ForgetEverythingNumber.substr(i, 1)}</span>`).join('')}</td></tr>
 								</table>`)
@@ -5929,6 +5929,42 @@ $(function() {
 				displayName: "Safety Square",
 				moduleID: "safetySquare",
 				loggingTag: "Safety Square"
+			},
+			{
+				displayName: "The Samsung",
+				moduleID: "theSamsung",
+				loggingTag: "The Samsung",
+				matches: [
+					{
+						regex: /(DUOLINGO|GOOGLE MAPS|KINDLE|GOOGLE AUTHENTICATOR|PHOTOMATH|SPOTIFY|GOOGLE ARTS & CULTURE|DISCORD):/,
+						handler: function(matches, module) {
+							if (!module.Things)
+								module.Things = [];
+							module.Things.push([matches[1], []]);
+							return true;
+						}
+					},
+					{
+						regex: /SETTINGS:/,
+						handler: function(matches, module) {
+							for (let thing of module.Things)
+								module.push(thing);
+							module.push(["SETTINGS", readMultiple(3).split('\n').map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
+							module.Things = false;
+							return true;
+						}
+					},
+					{
+						regex: /.+/,
+						handler: function(matches, module) {
+							if (module.Things) {
+								module.Things[module.Things.length - 1][1].push(matches.input);
+							} else {
+								module.push(matches.input);
+							}
+						}
+					}
+				]
 			},
 			{
 				displayName: "Schlag den Bomb",
