@@ -5781,6 +5781,12 @@ $(function() {
 				]
 			},
 			{
+				displayName: "Recolored Switches",
+				moduleID: "R4YRecoloredSwitches",
+				loggingTag: "Recolored Switches",
+				icon: "Recolored Switches"
+			},
+			{
 				displayName: "Red Buttons",
 				moduleID: "SamRedButtons",
 				loggingTag: "Red Buttons"
