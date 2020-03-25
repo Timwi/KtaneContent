@@ -1576,7 +1576,7 @@ $(function() {
 			{
 				displayName: "1000 Words",
 				loggingTag: "1000 Words",
-				moduleID: "OneThousandWordAdvertisement",
+				moduleID: "OneThousandWords",
 			},
 			{
 				displayName: "101 Dalmatians",
