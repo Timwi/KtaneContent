@@ -1747,6 +1747,12 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "AppreciateArt",
+				displayName: "Art Appreciation",
+				loggingTag: "Art Appreciation",
+				icon: "Art Appreciation"
+			},
+			{
 				moduleID: "AtbashCipherModule",
 				loggingTag: "Atbash Cipher",
 				displayName: "Atbash Cipher"
@@ -5165,6 +5171,12 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				moduleID: "osu",
+				displayName: "osu!",
+				loggingTag: "osu!",
+				icon: "osu!"
 			},
 			{
 				moduleID: "xtrpasscodes",
