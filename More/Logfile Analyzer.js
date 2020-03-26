@@ -1596,6 +1596,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "OneDimensionalMaze",
+				loggingTag: "1D Maze",
+				displayName: "1D Maze"
+			},
+			{
 				displayName: "14",
 				moduleID: "14",
 				loggingTag: "14",
