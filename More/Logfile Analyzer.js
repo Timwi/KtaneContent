@@ -103,6 +103,7 @@ $(function() {
 	var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1");
 	var linen = 0;
 	var lines = [];
+	let websiteParseData;
 
 	function makeExpandable(parent, label) {
 		parent
@@ -1569,16 +1570,6 @@ $(function() {
 			// ** MODULES START HERE ** //
 
 			{
-				displayName: "% Grey",
-				loggingTag: "% Grey",
-				moduleID: "PercentageGreyModule",
-			},
-			{
-				displayName: "1000 Words",
-				loggingTag: "1000 Words",
-				moduleID: "OneThousandWords",
-			},
-			{
 				displayName: "101 Dalmatians",
 				loggingTag: "101 Dalmatians",
 				moduleID: "OneHundredAndOneDalmatiansModule",
@@ -1689,11 +1680,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "AdditionModule",
-				loggingTag: "Addition",
-				displayName: "Addition"
-			},
-			{
 				moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 				loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
 				displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
@@ -1711,11 +1697,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				moduleID: "JuckAlchemy",
-				displayName: "Alchemy",
-				loggingTag: "Alchemy"
 			},
 			{
 				moduleID: "algebra",
@@ -1747,22 +1728,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "AppreciateArt",
-				displayName: "Art Appreciation",
-				loggingTag: "Art Appreciation",
-				icon: "Art Appreciation"
-			},
-			{
-				moduleID: "AtbashCipherModule",
-				loggingTag: "Atbash Cipher",
-				displayName: "Atbash Cipher"
-			},
-			{
-				displayName: "A-maze-ing Buttons",
-				moduleID: "ksmAmazeingButtons",
-				loggingTag: "A-maze-ing Buttons"
-			},
-			{
 				moduleID: "Keypad",
 				loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
 				matches: [
@@ -1775,28 +1740,14 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "alphaBits",
-				loggingTag: "Alpha-Bits",
-				displayName: "Alpha-Bits"
-			},
-			{
 				moduleID: "answerTo",
 				loggingTag: "The Answer to ...",
 				displayName: "Answer to..."
 			},
 			{
-				moduleID: "spwizAstrology",
-				loggingTag: "Astrology"
-			},
-			{
 				moduleID: "babaIsWho",
 				displayName: "Baba Is Who",
 				loggingTag: "Baba Is Who?"
-			},
-			{
-				moduleID: "bananaNeedy",
-				displayName: "Banana",
-				loggingTag: "Banana"
 			},
 			{
 				moduleID: "BattleshipModule",
@@ -1865,10 +1816,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				moduleID: "BinaryLeds",
-				loggingTag: "Binary LEDs"
 			},
 			{
 				displayName: "Binary Puzzle",
@@ -1948,20 +1895,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Binary Grid",
-				moduleID: "binaryGrid",
-				loggingTag: "Binary Grid"
-			},
-			{
-				moduleID: "BlindAlleyModule",
-				loggingTag: "Blind Alley"
-			},
-			{
-				displayName: "Blackjack",
-				moduleID: "KritBlackjack",
-				loggingTag: "Blackjack"
-			},
-			{
 				displayName: "Bob Barks",
 				moduleID: "ksmBobBarks",
 				loggingTag: "Bob Barks",
@@ -2034,11 +1967,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				displayName: "Boolean Wires",
-				moduleID: "booleanWires",
-				loggingTag: "Boolean Wires"
 			},
 			{
 				moduleID: "BrokenButtonsModule",
@@ -2171,12 +2099,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Brainf---",
-				moduleID: "brainf",
-				loggingTag: "Brainf---"
-			},
-
-			{
 				displayName: "Button Grid",
 				moduleID: "buttonGrid",
 				loggingTag: "Button Grids"
@@ -2214,10 +2136,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "buzzfizz",
-				loggingTag: "BuzzFizz"
-			},
-			{
 				moduleID: "CaesarCipherModule",
 				loggingTag: "CaesarCipher"
 			},
@@ -2225,11 +2143,6 @@ $(function() {
 				displayName: "Calculus",
 				moduleID: "calcModule",
 				loggingTag: "Calc"
-			},
-			{
-				displayName: "Challenge & Contact",
-				moduleID: "challengeAndContact",
-				loggingTag: "Challenge & Contact"
 			},
 			{
 				displayName: "Character Codes",
@@ -2251,11 +2164,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				moduleID: "kataCheatCheckout",
-				loggingTag: "Cheat Checkout",
-				displayName: "Cheat Checkout"
 			},
 			{
 				moduleID: "ChessModule",
@@ -2318,19 +2226,9 @@ $(function() {
 				loggingTag: "ChordQualities"
 			},
 			{
-				moduleID: "lgndColoredKeys",
-				loggingTag: "Colored Keys",
-				displayName: "Colored Keys"
-			},
-			{
 				displayName: "Color Morse",
 				moduleID: "ColorMorseModule",
 				loggingTag: "ColorMorse"
-			},
-			{
-				moduleID: "coloredMaze",
-				loggingTag: "The Colored Maze",
-				displayName: "The Colored Maze"
 			},
 			{
 				moduleID: "ColoredSwitchesModule",
@@ -2483,21 +2381,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Colo(u)r Talk",
-				moduleID: "colourTalk",
-				loggingTag:"Colo(u)r Talk"
-			},
-			{
-				moduleID: "lgndColorMatch",
-				loggingTag: "Color Match",
-				displayName: "Color Match"
-			},
-			{
-				moduleID: "colourcode",
-				loggingTag: "Colour Code",
-				displayName: "Colour Code"
-			},
-			{
 				moduleID: "complexKeypad",
 				loggingTag: "Complex Keypad",
 				matches: [
@@ -2566,16 +2449,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				displayName: "Connection Check",
-				moduleID: "graphModule",
-				loggingTag: "Connection Check"
-			},
-			{
-				displayName: "Connection Device",
-				moduleID: "KritConnectionDev",
-				loggingTag: "Connection Device"
 			},
 			{
 				moduleID: "cooking",
@@ -2674,11 +2547,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Cruel Boolean Maze",
-				moduleID: "boolMazeCruel",
-				loggingTag: "Cruel Boolean Maze"
-			},
-			{
 				displayName: "The cRule",
 				moduleID: "the_cRule",
 				loggingTag: "The cRule",
@@ -2695,11 +2563,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "The Crystal Maze",
-				moduleID: "crystalMaze",
-				loggingTag: "The Crystal Maze"
 			},
 			{
 				displayName: "The Cube",
@@ -2854,44 +2717,9 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Cursed Double-Oh",
-				moduleID: "CursedDoubleOhModule",
-				loggingTag: "Cursed Double-Oh"
-			},
-			{
 				displayName: "The Dealmaker",
 				moduleID: "thedealmaker",
 				loggingTag: "TheDealmaker"
-			},
-			{
-				displayName: "The Deck of Many Things",
-				moduleID: "deckOfManyThings",
-				loggingTag: "The Deck of Many Things"
-			},
-			{
-				displayName: "Desert Bus",
-				moduleID: "desertBus",
-				loggingTag:"Desert Bus"
-			},
-			{
-				displayName: "DetoNATO",
-				moduleID: "Detonato",
-				loggingTag: "DetoNATO"
-			},
-			{
-				displayName: "Digital Dials",
-				moduleID: "digitalDials",
-				loggingTag: "Digital Dials"
-			},
-			{
-				displayName: "Dungeon 2nd Floor",
-				moduleID: "dungeon2",
-				loggingTag: "Dungeon 2nd Floor"
-			},
-			{
-				displayName: "egg",
-				moduleID: "bigegg",
-				loggingTag: "egg"
 			},
 			{
 				displayName: "Echolocation",
@@ -2981,11 +2809,6 @@ $(function() {
 				loggingTag: "Date Finder"
 			},
 			{
-				displayName: "Five Letter Words",
-				moduleID: "FiveLetterWordsAgain",
-				loggingTag: "Five Letter Words"
-			},
-			{
 				displayName: "FizzBuzz",
 				moduleID: "fizzBuzzModule",
 				loggingTag: "FizzBuzz",
@@ -3022,16 +2845,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				displayName: "Flip The Coin",
-				moduleID: "KritFlipTheCoin",
-				loggingTag: "Flip The Coin"
-			},
-			{
-				displayName: "Flavor Text EX",
-				moduleID: "FlavorTextCruel",
-				loggingTag: "Flavor Text EX"
 			},
 			{
 				displayName: "Follow the Leader",
@@ -3182,11 +2995,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Forget Me Not",
-				moduleID: "MemoryV2",
-				loggingTag: "Forget Me Not"
-			},
-			{
 				displayName: "Forget This",
 				moduleID: "forgetThis",
 				loggingTag: "Forget This",
@@ -3205,16 +3013,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Forget Perspective",
-				moduleID: "qkForgetPerspective",
-				loggingTag: "Forget Perspective"
-			},
-			{
-				displayName: "Four-Card Monte",
-				moduleID: "Krit4CardMonte",
-				loggingTag: "Four-Card Monte"
 			},
 			{
 				moduleID: "FriendshipModule",
@@ -3326,16 +3124,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Functions",
-				moduleID: "qFunctions",
-				loggingTag: "Functions"
-			},
-			{
-				displayName: "Gadgetron Vendor",
-				moduleID: "lgndGadgetronVendor",
-				loggingTag: "Gadgetron Vendor"
 			},
 			{
 				moduleID: ["GameOfLifeCruel", "GameOfLifeSimple"],
@@ -3471,16 +3259,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Going Backwards",
-				moduleID: "GoingBackwardsModule",
-				loggingTag: "Going Backwards",
-			},
-			{
-				displayName: "Guess Who?",
-				moduleID: "GuessWhoThisIs",
-				loggingTag: "Guess Who?",
-			},
-			{
 				displayName: "Hereditary Base Notation",
 				moduleID: "hereditaryBaseNotationModule",
 				loggingTag: "Hereditary Base Notation",
@@ -3505,10 +3283,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				moduleID: "hexabutton",
-				displayName: "The Hexabutton"
 			},
 			{
 				moduleID: "HexamazeModule",
@@ -3555,11 +3329,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "The High Score",
-				moduleID: "ksmHighScore",
-				loggingTag: "The High Score"
 			},
 			{
 				displayName: "HTTP Response",
@@ -3610,11 +3379,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "The Hyperlink",
-				moduleID: "hyperlink",
-				loggingTag: "The Hyperlink"
-			},
-			{
 				moduleID: "iceCreamModule",
 				loggingTag: "Ice Cream",
 				matches: [
@@ -3629,16 +3393,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "IKEA",
-				moduleID: "qSwedishMaze",
-				loggingTag: "IKEA"
-			},
-			{
-				displayName: "Insane Talk",
-				moduleID: "insanetalk",
-				loggingTag: "Insane Talk"
 			},
 			{
 				moduleID: "Maze",
@@ -3770,11 +3524,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "LED Encryption",
-				moduleID: "LEDEnc",
-				loggingTag: "LED Encryption"
-			},
-			{
 				displayName: "LED Grid",
 				moduleID: "ledGrid",
 				loggingTag: "LED Grid",
@@ -3807,16 +3556,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "LED Math",
-				moduleID: "lgndLEDMath",
-				loggingTag: "LED Math"
-			},
-			{
-				displayName: "Left and Right",
-				moduleID: "leftandRight",
-				loggingTag: "Left and Right"
 			},
 			{
 				displayName: "The Legendre Symbol",
@@ -4064,11 +3803,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				moduleID: "lgndLombaxCubes",
-				loggingTag: "Lombax Cubes",
-				displayName: "Lombax Cubes"
 			},
 			{
 				moduleID: "MafiaModule",
@@ -4413,11 +4147,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "The Matrix",
-				moduleID: "matrix",
-				loggingTag: "The Matrix"
-			},
-			{
 				displayName: "Maze³",
 				moduleID: "maze3",
 				loggingTag: "Maze³",
@@ -4472,16 +4201,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "A Message",
-				moduleID: "AMessageForTheReader",
-				loggingTag: "A Message"
-			},
-			{
-				displayName: "Micro-Modules",
-				moduleID: "KritMicroModules",
-				loggingTag: "Micro-Modules"
 			},
 			{
 				displayName: "Mega Man 2",
@@ -4576,16 +4295,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "The Modkit",
-				moduleID: "modkit",
-				loggingTag: "The Modkit"
-			},
-			{
-				displayName: "Module Homework",
-				moduleID: "KritHomework",
-				loggingTag: "Module Homework"
 			},
 			{
 				moduleID: "ModuleMaze",
@@ -4783,11 +4492,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Morsematics",
-				moduleID: "MorseV2",
-				loggingTag: "Morsematics"
-			},
-			{
 				displayName: "Morse-A-Maze",
 				moduleID: "MorseAMaze",
 				loggingTag: "Morse-A-Maze",
@@ -4964,11 +4668,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "Transposition",
-				loggingTag: "Musical Transposition",
-				displayName: "Musical Transposition"
-			},
-			{
 				moduleID: "MysticSquareModule",
 				loggingTag: "Mystic Square",
 				matches: [
@@ -4982,16 +4681,6 @@ $(function() {
 						regex: /Last serial digit|Skull path/
 					}
 				]
-			},
-			{
-				moduleID: "mcdNatures",
-				loggingTag: "Natures",
-				displayName: "Natures"
-			},
-			{
-				moduleID: "necronomicon",
-				loggingTag: "The Necronomicon",
-				displayName: "The Necronomicon"
 			},
 			{
 				moduleID: "neutralization",
@@ -5020,11 +4709,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "NandMs",
-				loggingTag: "N&Ms",
-				displayName: "N&Ms"
-			},
-			{
 				moduleID: "NonogramModule",
 				loggingTag: "Nonogram",
 				matches: [
@@ -5044,74 +4728,9 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "nonverbalSimon",
-				loggingTag: "❖",
-				displayName: "❖"
-			},
-			{
-				moduleID: "NotButton",
-				loggingTag: "Not the Button",
-				displayName: "Not the Button"
-			},
-			{
-				moduleID: "NotCapacitorDischarge",
-				loggingTag: "Not Capacitor Discharge",
-				displayName: "Not Capacitor Discharge"
-			},
-			{
-				moduleID: "NotComplicatedWires",
-				loggingTag: "Not Complicated Wires",
-				displayName: "Not Complicated Wires"
-			},
-			{
-				moduleID: "NotKeypad",
-				loggingTag: "Not Keypad",
-				displayName: "Not Keypad"
-			},
-			{
-				moduleID: "NotMaze",
-				loggingTag: "Not Maze",
-				displayName: "Not Maze"
-			},
-			{
-				moduleID: "NotMemory",
-				loggingTag: "Not Memory",
-				displayName: "Not Memory"
-			},
-			{
-				moduleID: "NotMorseCode",
-				loggingTag: "Not Morse Code",
-				displayName: "Not Morse Code"
-			},
-			{
-				moduleID: "NotPassword",
-				loggingTag: "Not Password",
-				displayName: "Not Password"
-			},
-			{
-				moduleID: "NotSimaze",
-				loggingTag: "Not Simaze",
-				displayName: "Not Simaze"
-			},
-			{
 				moduleID: "NotWhosOnFirst",
 				loggingTag: "Not Who's on First",
 				displayName: "Not Who’s on First"
-			},
-			{
-				moduleID: "NotWireSequence",
-				loggingTag: "Not Wire Sequence",
-				displayName: "Not Wire Sequence"
-			},
-			{
-				moduleID: "NotWiresword",
-				loggingTag: "Not Wiresword",
-				displayName: "Not Wiresword"
-			},
-			{
-				moduleID: "numberCipher",
-				loggingTag: "The Number Cipher",
-				displayName: "The Number Cipher"
 			},
 			{
 				moduleID: "NumberPad",
@@ -5173,24 +4792,8 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "osu",
-				displayName: "osu!",
-				loggingTag: "osu!",
-				icon: "osu!"
-			},
-			{
-				moduleID: "xtrpasscodes",
-				displayName: "Passcodes",
-				loggingtag: "Passcodes"
-			},
-			{
 				moduleID: "Password",
 				loggingTag: "PasswordComponent"
-			},
-			{
-				moduleID: "pwGenerator",
-				displayName: "Password Generator",
-				loggingtag: "Password Generator"
 			},
 			{
 				moduleID: "Painting",
@@ -5244,11 +4847,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				moduleID: "lgndPayRespects",
-				loggingTag: "Pay Respects",
-				displayName: "Pay Respects"
 			},
 			{
 				moduleID: "spwizPerspectivePegs",
@@ -5509,11 +5107,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "The Plunger Button",
-				moduleID: "plungerButton",
-				loggingTag: "The Plunger Button"
-			},
-			{
 				moduleID: "poetry",
 				loggingTag: "Poetry",
 				matches: [
@@ -5582,11 +5175,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Question Mark",
-				moduleID: "Questionmark",
-				loggingTag: "Question Mark"
 			},
 			{
 				displayName: "Quintuples",
@@ -5755,11 +5343,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "The Radio",
-				moduleID: "KritRadio",
-				loggingTag: "The Radio"
-			},
-			{
 				displayName: "Rainbow Arrows",
 				moduleID: "ksmRainbowArrows",
 				loggingTag: "Rainbow Arrows",
@@ -5791,17 +5374,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Recolored Switches",
-				moduleID: "R4YRecoloredSwitches",
-				loggingTag: "Recolored Switches",
-				icon: "Recolored Switches"
-			},
-			{
-				displayName: "Red Buttons",
-				moduleID: "SamRedButtons",
-				loggingTag: "Red Buttons"
 			},
 			{
 				moduleID: "resistors",
@@ -5845,11 +5417,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Rhythms",
-				moduleID: "MusicRhythms",
-				loggingTag: "Rhythms"
 			},
 			{
 				displayName: "Round Keypad",
@@ -5974,11 +5541,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Safety Square",
-				moduleID: "safetySquare",
-				loggingTag: "Safety Square"
-			},
-			{
 				displayName: "The Samsung",
 				moduleID: "theSamsung",
 				loggingTag: "The Samsung",
@@ -6015,11 +5577,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Schlag den Bomb",
-				moduleID: "qSchlagDenBomb",
-				loggingTag: "Schlag den Bomb"
-			},
-			{
 				displayName: "The Screw",
 				moduleID: "screw",
 				loggingTag: "Screw",
@@ -6039,11 +5596,6 @@ $(function() {
 						}
 					}
 				]
-			},
-			{
-				displayName: "Scripting",
-				moduleID: "KritScripts",
-				loggingTag: "Scripting"
 			},
 			{
 				moduleID: "Semaphore",
@@ -6154,11 +5706,6 @@ $(function() {
 				loggingTag: "Shapes Bombs"
 			},
 			{
-				displayName: "Shifting Maze",
-				moduleID: "MazeShifting",
-				loggingTag: "Shifting Maze"
-			},
-			{
 				moduleID: "shikaku",
 				loggingTag: "Shikaku",
 				matches: [
@@ -6221,11 +5768,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Simon Literally Says",
-				moduleID: "ksmSimonLitSays",
-				loggingTag: "Simon Literally Says"
 			},
 			{
 				displayName: "Simon’s On First",
@@ -6309,11 +5851,6 @@ $(function() {
 				displayName: "Simon’s Star",
 				moduleID: "simonsStar",
 				loggingTag: "Simon's Star"
-			},
-			{
-				displayName: "Simon States",
-				moduleID: "SimonV2",
-				loggingTag: "Simon States"
 			},
 			{
 				moduleID: "SkewedSlotsModule",
@@ -6435,15 +5972,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Snap!",
-				moduleID: "lgndSnap"
-			},
-			{
-				displayName: "Sonic & Knuckles",
-				moduleID: "sonicKnuckles",
-				loggingTag: "Sonic & Knuckles"
-			},
-			{
 				displayName: "Sonic the Hedgehog",
 				moduleID: "sonic",
 				loggingTag: "Sonic the Hedgehog",
@@ -6487,11 +6015,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				moduleID: "sphere",
-				loggingTag: "The Sphere",
-				displayName: "The Sphere"
 			},
 			{
 				moduleID: "spinningButtons",
@@ -6583,34 +6106,9 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Square Button",
-				moduleID: "ButtonV2",
-				loggingTag: "Square Button"
-			},
-			{
 				displayName: "Stack’em",
 				moduleID: "stackem",
 				loggingTag: "Stack'em"
-			},
-			{
-				displayName: "The Stare",
-				moduleID: "StareModule",
-				loggingTag: "The Stare"
-			},
-			{
-				displayName: "The Stock Market",
-				moduleID: "stockMarket",
-				loggingTag: "The Stock Market"
-			},
-			{
-				displayName: "Subscribe to Pewdiepie",
-				moduleID: "subscribeToPewdiepie",
-				loggingTag: "Subscribe to Pewdiepie"
-			},
-			{
-				displayName: "The Switch",
-				moduleID: "BigSwitch",
-				loggingTag: "The Switch"
 			},
 			{
 				moduleID: "SymbolCycleModule",
@@ -6714,16 +6212,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Ten-Button Color Code",
-				moduleID: "TenButtonColorCode",
-				loggingTag: "Ten-Button Color Code"
-			},
-			{
-				displayName: "Ternary Converter",
-				moduleID: "qkTernaryConverter",
-				loggingTag: "Ternary Converter"
-			},
-			{
 				displayName: "TetraVex",
 				moduleID: "ksmTetraVex",
 				loggingTag: "TetraVex",
@@ -6778,11 +6266,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Timing is Everything",
-				moduleID: "timingIsEverything",
-				loggingTag: "Timing is Everything"
-			},
-			{
 				displayName: "The Button",
 				moduleID: "BigButton",
 				loggingTag: "ButtonComponent"
@@ -6791,16 +6274,6 @@ $(function() {
 				displayName: "The Time Keeper",
 				moduleID: "timeKeeper",
 				loggingTag: "TimeKeeper"
-			},
-			{
-				displayName: "T-Words",
-				moduleID: "tWords",
-				loggingTag: "T-Words"
-			},
-			{
-				displayName: "The Triangle",
-				moduleID: "triangle",
-				loggingTag: "The Triangle"
 			},
 			{
 				displayName: "Tennis",
@@ -6840,36 +6313,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "troll",
-				displayName: "The Troll",
-				loggingTag: "The Troll"
-			},
-			{
-				displayName: "Ultimate Custom Night",
-				moduleID: "qkUCN",
-				loggingTag: "Ultimate Custom Night"
-			},
-			{
-				displayName: "UNO",
-				moduleID: "UNO",
-				loggingTag: "UNO"
-			},
-			{
-				displayName: "UltraStores",
-				moduleID: "UltraStores",
-				loggingTag: "UltraStores"
-			},
-			{
-				displayName: "USA Maze",
-				moduleID: "USA",
-				loggingTag: "USA Maze",
-			},
-			{
-				displayName: "V",
-				moduleID: "V",
-				loggingTag: "V"
-			},
-			{
 				displayName: "Valves",
 				moduleID: "valves",
 				loggingTag: "Valves",
@@ -6887,18 +6330,9 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Vcrcs",
-				moduleID: "VCRCS",
-			},
-			{
 				displayName: "Venting Gas",
 				moduleID: "NeedyVentGas",
 				loggingTag: "NeedyVentComponent",
-			},
-			{
-				displayName: "The Very Annoying Button",
-				moduleID: "veryAnnoyingButton",
-				loggingTag: "The Very Annoying Button"
 			},
 			{
 				moduleID: "webDesign",
@@ -6924,11 +6358,6 @@ $(function() {
 						regex: /.+/
 					}
 				]
-			},
-			{
-				displayName: "Vigenère Cipher",
-				moduleID: "vigenereCipher",
-				loggingTag: "Vigenère Cipher",
 			},
 			{
 				displayName: "Visual Impairment",
@@ -6972,11 +6401,6 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Wire Ordering",
-				moduleID: "kataWireOrdering",
-				loggingTag: "Wire Ordering",
-			},
-			{
 				moduleID: "WireSequence",
 				loggingTag: "WireSequencePage",
 				matches: [
@@ -7010,16 +6434,6 @@ $(function() {
 						regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
 					}
 				]
-			},
-			{
-				displayName: "Who’s on First",
-				moduleID: "WhosOnFirst",
-				loggingTag: "WhosOnFirstComponent",
-			},
-			{
-				moduleID: "thewitness",
-				loggingTag: "The Witness",
-				displayName: "The Witness"
 			},
 			{
 				moduleID: "WordSearchModule",
@@ -7094,11 +6508,6 @@ $(function() {
 				]
 			},
 			{
-				moduleID: "Yoinkingmodule",
-				loggingTag: "Yoinking E-Bucks",
-				displayName: "Yoinking E-Bucks"
-			},
-			{
 				matches: [
 					{
 						regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
@@ -7143,39 +6552,9 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Zoni",
-				moduleID: "lgndZoni",
-				loggingTag: "Zoni"
-			},
-			{
-				displayName: "Übermodule",
-				moduleID: "ubermodule",
-				loggingTag: "Übermodule"
-			},
-			{
-				displayName: "The Button",
-				moduleID: "BigButton"
-			},
-			{
-				displayName: "Morse Code",
-				moduleID: "Morse"
-			},
-			{
 				displayName: "Simon Says",
 				moduleID: "Simon",
 				hasLogging: false
-			},
-			{
-				displayName: "Venting Gas",
-				moduleID: "NeedyVentGas"
-			},
-			{
-				displayName: "Capacitor Discharge",
-				moduleID: "NeedyCapacitor"
-			},
-			{
-				displayName: "Knob",
-				moduleID: "NeedyKnob"
 			},
 			{
 				displayName: "Switches",
@@ -7183,17 +6562,9 @@ $(function() {
 				hasLogging: false
 			},
 			{
-				displayName: "Cryptography",
-				moduleID: "CryptModule"
-			},
-			{
 				displayName: "Shape Shift",
 				moduleID: "shapeshift",
 				hasLogging: false
-			},
-			{
-				displayName: "Double-Oh",
-				moduleID: "DoubleOhModule"
 			},
 			{
 				displayName: "Letter Keys",
@@ -7201,102 +6572,14 @@ $(function() {
 				hasLogging: false
 			},
 			{
-				displayName: "Color Math",
-				moduleID: "colormath"
-			},
-			{
-				displayName: "Rubik’s Cube",
-				moduleID: "RubiksCubeModule"
-			},
-			{
-				displayName: "Rock-Paper-Scissors-Lizard-Spock",
-				moduleID: "RockPaperScissorsLizardSpockModule"
-			},
-			{
 				displayName: "Turn The Keys",
 				moduleID: "TurnTheKeyAdvanced",
 				hasLogging: false
 			},
 			{
-				displayName: "Hex To Decimal",
-				moduleID: "EternitySDec"
-			},
-			{
 				displayName: "Timezone",
 				moduleID: "timezone",
 				loggingTag: "Timezones"
-			},
-			{
-				displayName: "The Jukebox",
-				moduleID: "jukebox"
-			},
-			{
-				displayName: "The Festive Jukebox",
-				moduleID: "festiveJukebox"
-			},
-			{
-				displayName: "The Labyrinth",
-				moduleID: "labyrinth"
-			},
-			{
-				displayName: "The Hangover",
-				moduleID: "hangover"
-			},
-			{
-				displayName: "Button Masher",
-				moduleID: "buttonMasherNeedy"
-			},
-			{
-				displayName: "Refill that Beer!",
-				moduleID: "NeedyBeer"
-			},
-			{
-				displayName: "Random Number Generator",
-				moduleID: "rng"
-			},
-			{
-				displayName: "Radiator",
-				moduleID: "radiatorInova"
-			},
-			{
-				displayName: "Modern Cipher",
-				moduleID: "caesarCipher"
-			},
-			{
-				displayName: "Waste Management",
-				moduleID: "wastemanagement"
-			},
-			{
-				displayName: "The Stopwatch",
-				moduleID: "stopwatch"
-			},
-			{
-				displayName: "The London Underground",
-				moduleID: "londonUnderground"
-			},
-			{
-				displayName: "The Wire",
-				moduleID: "wire"
-			},
-			{
-				displayName: "The Sun",
-				moduleID: "sun"
-			},
-			{
-				displayName: "The Moon",
-				moduleID: "moon"
-			},
-			{
-				displayName: "Dr. Doctor",
-				moduleID: "DrDoctorModule"
-			},
-			{
-				displayName: "Rotary Phone",
-				moduleID: "NeedyKnobV2"
-			},
-			{
-				displayName: "Answering Questions",
-				moduleID: "NeedyVentV2"
 			},
 			{
 				displayName: "Prime Checker",
@@ -7370,32 +6653,41 @@ $(function() {
 				hasLogging: false
 			},
 			{
-				moduleID: "OrientationCube"
-			},
-			{
 				displayName: "複雑漢字",
 				moduleID: "複雑漢字Module",
 				loggingTag: "複雑漢字"
 			}
 		];
 
-		$.get("https://ktane.timwi.de/json/raw", function(data) {
-			for (const module of data.KtaneModules) {
-				const matches = parseData.filter(data => data.moduleID == module.ModuleID);
-				if (matches.length === 0) {
-					parseData.push({
-						moduleID: module.ModuleID,
-						displayName: module.Name,
-						loggingTag: module.Name
-					});
-				} else if (matches.length === 1) {
-					const match = matches[0];
-					if (match.displayName == module.Name && (match.loggingTag == module.Name || match.loggingTag == null) && match.matches == null) {
-						console.log(`Unnecessary module: ${module.Name}`);
+		function getWebsiteData(opt) {
+			websiteParseData = [];
+
+			$.get("https://ktane.timwi.de/json/raw", function(data) {
+				for (const module of data.KtaneModules) {
+					const matches = parseData.filter(data => data.moduleID == module.ModuleID);
+					if (matches.length === 0) {
+						websiteParseData.push({
+							moduleID: module.ModuleID,
+							displayName: module.Name,
+							loggingTag: module.Name
+						});
+					} else if (matches.length === 1) {
+						const match = matches[0];
+						if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
+							console.warn(`Unnecessary module: ${module.Name}`);
+						}
 					}
 				}
-			}
-		}, "json");
+			}, "json")
+				.always(() => parseLog(opt));
+		}
+
+		if (websiteParseData == null) {
+			getWebsiteData(opt);
+			return;
+		} else {
+			parseData = parseData.concat(websiteParseData);
+		}
 
 		function getModuleName(moduleID) {
 			const moduleData = getModuleData(moduleID, "moduleID");
