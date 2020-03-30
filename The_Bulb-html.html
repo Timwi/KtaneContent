@@ -1,0 +1,590 @@
+<html><head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>The Bulb — Keep Talking and Nobody Explodes Module</title>
+    <meta content="initial-scale=1" name="viewport">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link href="css/normalize.css" rel="stylesheet" type="text/css">
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <script src="js/ktane-utils.js"></script><script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        p {
+            margin: .7em 0;
+        }
+
+        ul {
+            padding-left: 2em;
+            margin: 0;
+        }
+
+        strong {
+            white-space: nowrap;
+        }
+
+        table.layout {
+            border: none;
+        }
+
+            table.layout td, table.layout th {
+                border: none;
+                vertical-align: top;
+                padding: .5em 0;
+            }
+
+            table.layout th {
+                white-space: nowrap;
+            }
+
+        .ruleseed-active .bulb-page-2 {
+            font-size: 10.5pt;
+        }
+    </style>
+    <script>
+
+        var _colors = ['blue', 'red', 'green', 'yellow', 'white', 'purple'];
+
+        var _conditions = [
+            ["the bulb is see-through"],
+            ["the I button is on the left"],
+            [
+                [
+                    "the last digit of the serial number is even",
+                    "the third character of the serial number is an even digit",
+                    "the first character of the serial number is a letter",
+                    "the second character of the serial number is a letter",
+                    "the serial number contains a vowel",
+                    "the serial number contains an even digit",
+                    "the serial number contains a duplicated character",
+                    "the serial number contains three letters and three digits"
+                ],
+                [
+                    "the bomb has a parallel port",
+                    "the bomb has a serial port",
+                    "the bomb has a PS/2 port",
+                    "the bomb has a Stereo RCA port",
+                    "the bomb has an RJ-45 port",
+                    "the bomb has a DVI-D port",
+                    "the bomb has a duplicate port",
+                    "the bomb has an empty port plate",
+                    "the bomb has an even number of ports",
+                    "the bomb has an odd number of ports",
+                    "the bomb has an even number of port plates",
+                    "the bomb has an odd number of port plates",
+                    "the bomb has an even number of distinct port types",
+                    "the bomb has an odd number of distinct port types"
+                ],
+                [
+                    "the bomb has a lit indicator",
+                    "the bomb has an unlit indicator",
+                    "the bomb has an indicator with a vowel",
+                    "the bomb has an even number of indicators",
+                    "the bomb has an odd number of indicators",
+                    "the bomb has an even number of lit indicators",
+                    "the bomb has an odd number of lit indicators",
+                    "the bomb has an even number of unlit indicators",
+                    "the bomb has an odd number of unlit indicators",
+                    "the bomb has a BOB indicator",
+                    "the bomb has a CAR indicator",
+                    "the bomb has a CLR indicator",
+                    "the bomb has an FRK indicator",
+                    "the bomb has an FRQ indicator",
+                    "the bomb has an IND indicator",
+                    "the bomb has an MSA indicator",
+                    "the bomb has an NSA indicator",
+                    "the bomb has an SIG indicator",
+                    "the bomb has an SND indicator",
+                    "the bomb has a TRN indicator"
+                ],
+                [
+                    "the bomb has any AA batteries",
+                    "the bomb has any D batteries",
+                    "the bomb has an even number of batteries",
+                    "the bomb has an odd number of batteries",
+                    "the bomb has an even number of battery holders",
+                    "the bomb has an odd number of battery holders"
+                ]
+            ]
+        ];
+
+        function deepCopy(arr)
+        {
+            return Array.isArray(arr) ? arr.map(x => deepCopy(x)) : arr;
+        }
+
+        function getRandom(rnd, arr, extra)
+        {
+            if (extra && rnd.next(0, 2))
+                return [extra === 'now' ? "the light is now on" : "the light was still on after step 1", extra];
+            var ix = rnd.next(0, arr.length);
+            if (Array.isArray(arr[ix]))
+            {
+                var res = getRandom(rnd, arr[ix]);
+                if (arr[ix].length === 0)
+                    arr.splice(ix, 1);
+                res[1] = `${ix}/${res[1]}`;
+                return res;
+            }
+            return [arr.splice(ix, 1)[0], ix];
+        }
+
+        var _defaultRules = null;
+
+        function ensureDefaultRules()
+        {
+            if (_defaultRules !== null)
+                return _defaultRules;
+
+            _defaultRules = {};
+            for (var i = 0; i < 15; i++)
+                _defaultRules[i] = document.getElementById(`step-${i+1}`).innerHTML;
+
+            return _defaultRules;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultRules();
+            for (var i = 0; i < 15; i++)
+                document.getElementById(`step-${i+1}`).innerHTML = _defaultRules[i];
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultRules();
+
+            var conditions = deepCopy(_conditions);
+            var stepsTypes = new Array(16); // we’re numbering the steps from 1, so index [0] will remain unused
+            var stepsConds = new Array(16);
+            var ths = document.getElementsByClassName('rule');
+
+            var colors1 = rnd.shuffleFisherYates(deepCopy(_colors));
+            var colors2_3 = [rnd.shuffleFisherYates(deepCopy(_colors)), rnd.shuffleFisherYates(deepCopy(_colors))];
+
+
+            // *** START LEFT HALF (steps 1-3, 5-8)
+
+            stepsTypes[1] = rnd.next(0, 2);
+            if (stepsTypes[1] === 0)
+            {
+                // Boolean condition
+                stepsConds[1] = getRandom(rnd, conditions);
+                document.getElementById('step-1').innerHTML = `
+                    <li>If the light is off, unscrew the bulb and go to <strong>Step 4</strong>.</li>
+                    <li>If the light is on and ${stepsConds[1][0]}, press <strong>I</strong> and go to <strong>Step 2</strong>.</li>
+                    <li>Otherwise, press <strong>O</strong> and go to <strong>Step 3</strong>.</li>
+                `;
+            }
+            else
+            {
+                // Colors
+                stepsConds[1] = [null, 'colors'];
+                document.getElementById('step-1').innerHTML = `
+                    <li>If the light is off, unscrew the bulb and go to <strong>Step 4</strong>.</li>
+                    <li>If the light is on and the bulb is ${colors1[0]}, ${colors1[1]} or ${colors1[2]}, press <strong>I</strong> and go to <strong>Step 2</strong>.</li>
+                    <li>Otherwise, press <strong>O</strong> and go to <strong>Step 3</strong>.</li>
+                `;
+            }
+
+            // Take a copy of the remaining conditions so that the right half can re-use them
+            var rightConditions = deepCopy(conditions);
+
+            for (var step = 2; step <= 3; step++)
+            {
+                stepsTypes[step] = stepsTypes[1] === 1 ? 2 : rnd.next(0, 2);
+                if (stepsTypes[step] === 0)
+                {
+                    // All colors
+                    stepsConds[step] = [null, 'colors'];
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If the bulb is ${colors2_3[step-2][0]}, press <strong>I</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 5 : 6}</strong>.</li>
+                        <li>If the bulb is ${colors2_3[step-2][1]}, press <strong>O</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 6 : 5}</strong>.</li>
+                        <li>Otherwise, unscrew the bulb and go to <strong>Step ${step === 2 ? 7 : 8}</strong>.</li>
+                    `;
+                }
+                else if (stepsTypes[step] === 1)
+                {
+                    // 4 colors + a boolean
+                    stepsConds[step] = getRandom(rnd, conditions, 'now');
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If the bulb is ${colors2_3[step-2][2]}, ${colors2_3[step-2][3]}, ${colors2_3[step-2][4]} or ${colors2_3[step-2][5]}, unscrew the bulb and go to <strong>Step ${step === 2 ? 7 : 8}</strong>.</li>
+                        <li>If ${stepsConds[step][0]}, press <strong>I</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 6 : 5}</strong>.</li>
+                        <li>Otherwise, press <strong>O</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 5 : 6}</strong>.</li>
+                    `;
+                }
+                else if (stepsTypes[step] === 2)
+                {
+                    // 2 colors + a boolean
+                    stepsConds[step] = getRandom(rnd, conditions, 'now');
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If the bulb is ${colors1[step*3 - 5]} or ${colors1[step*3 - 4]}, unscrew the bulb and go to <strong>Step ${step === 2 ? 7 : 8}</strong>.</li>
+                        <li>If ${stepsConds[step][0]}, press <strong>I</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 6 : 5}</strong>.</li>
+                        <li>Otherwise, press <strong>O</strong>, then unscrew it and go to <strong>Step ${step === 2 ? 5 : 6}</strong>.</li>
+                    `;
+                }
+            }
+
+            for (var step = 5; step <= 6; step++)
+            {
+                var condStr;
+                // Check if steps 5 & 6 can use the bulb color, and if so, use it with 90% likelihood
+                if (stepsTypes[2] === 1 && stepsTypes[3] === 1 && rnd.next(0, 10) != 0)
+                {
+                    var c21 = colors2_3[0][0];
+                    var c22 = colors2_3[0][1];
+                    var c31 = colors2_3[1][0];
+                    var c32 = colors2_3[1][1];
+
+                    if (c21 === c32 || c22 === c31)
+                    {
+                        var t = c31;
+                        c31 = c32;
+                        c32 = t;
+                    }
+
+                    var c1 = c21 === c31 ? c21 : `${c21} or ${c31}`;
+                    var c2 = c22 === c32 ? c22 : `${c22} or ${c32}`;
+                    condStr = `the bulb is ${step === 5 ? c1 : c2}`;
+                }
+                else
+                {
+                    stepsConds[step] = getRandom(rnd, conditions, (stepsConds[2][1] !== 'now' && stepsConds[3][1] !== 'now') ? 'step1' : false);
+                    condStr = stepsConds[step][0];
+                }
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>If ${condStr}, press <strong>I</strong>, then screw the bulb back in.</li>
+                    <li>Otherwise, press <strong>O</strong>, then screw the bulb back in.</li>
+                `;
+            }
+
+            for (var step = 7; step <= 8; step++)
+            {
+                var cond1 = getRandom(rnd, conditions)[0];
+                var cond2 = getRandom(rnd, conditions)[0];
+                if (stepsTypes[step-5] !== 2)
+                {
+                    // Must use up all four of the remaining colors
+                    stepsTypes[step] = 2;
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If the bulb is ${colors2_3[step-7][2]}, press <strong>I</strong>, remember whether ${cond1} and go to <strong>Step 11</strong>.</li>
+                        <li>If the bulb is ${colors2_3[step-7][3]}, press <strong>I</strong>, screw it back in and go to <strong>Step 12</strong>.</li>
+                        <li>If the bulb is ${colors2_3[step-7][4]}, press <strong>O</strong>, remember whether ${cond2} and go to <strong>Step 11</strong>.</li>
+                        <li>Otherwise, press <strong>O</strong>, screw the bulb back in and go to <strong>Step 13</strong>.</li>
+                    `;
+                }
+                else
+                {
+                    stepsTypes[step] = rnd.next(0, 2);
+                    var b2 = getRandom(rnd, conditions)[0], b1;
+                    if (stepsTypes[step] === 0)
+                    {
+                        // Two colors and a boolean
+                        b1 = `the bulb is ${colors1[step*3 - 20]}`;
+                    }
+                    else
+                    {
+                        // Two booleans
+                        b1 = getRandom(rnd, conditions)[0];
+                    }
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If ${b1}:
+                            <ul>
+                                <li>If ${b2}, press <strong>I</strong>, remember whether ${cond1} and go to <strong>Step 11</strong>.</li>
+                                <li>Otherwise, press <strong>I</strong>, screw it back in and go to <strong>Step 12</strong>.</li>
+                            </ul>
+                        </li>
+                        <li>Otherwise:
+                            <ul>
+                                <li>If ${b2}, press <strong>O</strong>, remember whether ${cond2} and go to <strong>Step 11</strong>.</li>
+                                <li>Otherwise, press <strong>O</strong>, screw the bulb back in and go to <strong>Step 13</strong>.</li>
+                            </ul>
+                        </li>
+                    `;
+                }
+            }
+
+            // Step 11 is always the same; it relies on a condition “remembered” by a previous step
+            document.getElementById(`step-11`).innerHTML = `
+                <li>If the remembered rule is true, press <strong>I</strong>, then screw the bulb back in.</li>
+                <li>Otherwise, press <strong>O</strong>, then screw the bulb back in.</li>
+            `;
+
+
+            // *** START RIGHT HALF (steps 4, 9-10)
+            stepsTypes[4] = rnd.next(0, 2);
+            if (stepsTypes[4] === 0)
+            {
+                // Step 4 is a boolean, steps 9 and 10 use the colors
+                var colors9_10 = [rnd.shuffleFisherYates(deepCopy(_colors)), rnd.shuffleFisherYates(deepCopy(_colors))];
+                stepsConds[4] = getRandom(rnd, rightConditions);
+                document.getElementById(`step-4`).innerHTML = `
+                    <li>If ${stepsConds[4][0]}, press <strong>I</strong> and go to <strong>Step 9</strong>.</li>
+                    <li>Otherwise, press <strong>O</strong> and go to <strong>Step 10</strong>.</li>
+                `;
+
+                for (var step = 9; step <= 10; step++)
+                {
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If the bulb is ${colors9_10[step-9][0]}, press <strong>I</strong> and go to <strong>Step 14</strong>.</li>
+                        <li>If the bulb is ${colors9_10[step-9][1]}, press <strong>I</strong>, screw it back in and go to <strong>Step 12</strong>.</li>
+                        <li>If the bulb is ${colors9_10[step-9][2]}, press <strong>O</strong> and go to <strong>Step 15</strong>.</li>
+                        <li>If the bulb is ${colors9_10[step-9][3]}, press <strong>O</strong>, screw it back in and go to <strong>Step 13</strong>.</li>
+                        <li>If the bulb is ${colors9_10[step-9][4]}, screw it back in, press <strong>I</strong> and go to <strong>Step 12</strong>.</li>
+                        <li>Otherwise, screw the bulb back in, press <strong>O</strong> and go to <strong>Step 13</strong>.</li>
+                    `;
+                }
+            }
+            else
+            {
+                // Step 4 uses colors and 9/10 are colors combined with a boolean
+                var colors4 = rnd.shuffleFisherYates(deepCopy(_colors));
+                document.getElementById(`step-4`).innerHTML = `
+                    <li>If the bulb is ${colors4[0]}, ${colors4[1]} or ${colors4[2]}, press <strong>I</strong> and go to <strong>Step 9</strong>.</li>
+                    <li>Otherwise, press <strong>O</strong> and go to <strong>Step 10</strong>.</li>
+                `;
+
+                for (var step = 9; step <= 10; step++)
+                {
+                    stepsConds[step] = getRandom(rnd, rightConditions);
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>If ${stepsConds[step][0]}:
+                            <ul>
+                                <li>If the bulb is ${colors4[step*3 - 27]}, press <strong>I</strong> and go to <strong>Step 14</strong>.</li>
+                                <li>If the bulb is ${colors4[step*3 - 27 + 1]}, press <strong>I</strong>, screw it back in and go to <strong>Step ${step + 3}</strong>.</li>
+                                <li>Otherwise, press <strong>O</strong> and go to <strong>Step 15</strong>.</li>
+                            </ul>
+                        </li>
+                        <li>Otherwise:
+                            <ul>
+                                <li>If the bulb is ${colors4[step*3 - 27]}, press <strong>O</strong>, screw it back in and go to <strong>Step ${step === 9 ? 13 : 12}</strong>.</li>
+                                <li>If the bulb is ${colors4[step*3 - 27 + 1]}, screw it back in, press <strong>I</strong> and go to <strong>Step ${step === 9 ? 12 : 13}</strong>.</li>
+                                <li>Otherwise, screw the bulb back in, press <strong>O</strong> and go to <strong>Step ${step === 9 ? 13 : 12}</strong>.</li>
+                            </ul>
+                        </li>
+                    `;
+                }
+            }
+
+            stepsConds[14] = getRandom(rnd, rightConditions);
+            for (var step = 14; step <= 15; step++)
+            {
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>If ${stepsConds[14][0]}, press <strong>${step === 14 ? 'I' : 'O'}</strong>, then screw the bulb back in.</li>
+                    <li>Otherwise, press <strong>${step === 14 ? 'O' : 'I'}</strong>, then screw the bulb back in.</li>
+                `;
+            }
+
+            // Steps 12 and 13 are the only ones shared by both left and right halves.
+            // Not a big deal if this one rarely re-uses a condition already used by the right half.
+            // Also, they can safely use the current lit state regardless of earlier stages.
+            stepsConds[12] = getRandom(rnd, conditions, 'now');
+            for (var step = 12; step <= 13; step++)
+            {
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>If ${stepsConds[12][0]}, press <strong>${step === 12 ? 'I' : 'O'}</strong>.</li>
+                    <li>Otherwise, press <strong>${step === 12 ? 'O' : 'I'}</strong>.</li>
+                `;
+            }
+        }
+
+    </script>
+</head>
+<body>
+    <div class="section"><div class="ruleseed-header"></div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">KTaNE Mod, wersja PL, tłumaczenie: gaddemytx</span>
+                <span class="page-header-section-title">Żarówka</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/The Bulb.svg">
+                <h2>Odnośnie Żarówki</h2>
+
+                <p class="flavour-text">Ilu saperów potrzeba do wkręcenia żarówki?</p>
+
+                <p>
+                    Ten moduł posiada dwa przyciski <strong>I</strong> oraz <strong>O</strong> oraz żarówkę,
+                    która jest przezroczysta lub nieprzezroczysta oraz w jednym z 6 kolorów:
+                    niebieski, zielony, fioletowy, czerwony, biały lub zółty.
+                </p>
+                <p>
+                    Jeśli popełnisz błąd poprzez naciśnięcie złego przycisku, zignoruj to i kontynuuj.
+                    Jeśli popełnisz błąd, bo odkręcisz lub przykręcisz żarówkę w niewłaściwym czasie,
+                    to <em>musisz</em> cofnąć to zanim kontynuujesz.
+                </p>
+                <p>Zacznij od <em>Kroku 1</em> poniżej.</p>
+                <p>
+                    Gdy żarówka jest wkręcona, dłuższe przytrzymanie któregokolwiek przycisku zresetuje moduł do Kroku 1.
+                    Zrobienie tego, gdy żarówka jest odkręcona spowoduje odnotowanie pomyłki.
+                </p>
+
+                <table class="layout">
+                    <tbody><tr>
+                        <th>Krok 1</th>
+                        <td>
+                            <ul id="step-1">
+                                <li>Jeśli żarówka świeci się i jest przezroczysta, wciśnij <strong>I</strong> i przejdź do <strong>Kroku 2</strong>.</li>
+                                <li>Jeśli żarówka świeci się i jest nieprzezroczysta, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 3</strong>.</li>
+                                <li>W przeciwnym razie, odkręć żarówkę i przejdź do <strong>Kroku 4</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 2</th>
+                        <td>
+                            <ul id="step-2">
+                                <li>Jeśli żarówka jest czerwona, wciśnij <strong>I</strong>, a następnie odkręć ją i przejdź do <strong>Kroku 5</strong>.</li>
+                                <li>Jeśli żarówka jest biała, wciśnij <strong>O</strong>, a następnie odkręć ją i przejdź do <strong>Kroku 6</strong>.</li>
+                                <li>W przeciwnym razie, odkręć żarówkę i przejdź do <strong>Kroku 7</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 3</th>
+                        <td>
+                            <ul id="step-3">
+                                <li>Jeśli żarówka jest zielona, wciśnij <strong>I</strong>, a następnie odkręć ją i przejdź do <strong>Kroku 6</strong>.</li>
+                                <li>Jeśli żarówka jest fioletowa, wciśnij <strong>O</strong>, a następnie odkręć ją i przejdź do <strong>Kroku 5</strong>.</li>
+                                <li>W przeciwnym razie, odkręć żarówkę i przejdź do <strong>Kroku 8</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 4</th>
+                        <td>
+                            <ul id="step-4">
+                                <li>Jeśli bomba posiada którykolwiek z tych wskaźników: CAR, IND, MSA lub SND, to wciśnij <strong>I</strong> i przejdź do <strong>Kroku 9</strong>.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 10</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 5</th>
+                        <td>
+                            <ul id="step-5">
+                                <li>Jeśli żarówka zgasła w Kroku 1, wciśnij ten sam przycisk ponownie, a następnie wkręć żarówkę.</li>
+                                <li>W przeciwnym razie, wciśnij przycisk, którego jeszcze nie wciskałeś, a następnie wkręć żarówkę.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 6</th>
+                        <td>
+                            <ul id="step-6">
+                                <li>Jeśli żarówka zgasła, gdy wcisnąłeś <strong>I</strong>, wciśnij przycisk, który wcisnąłeś w Kroku 1, a następnie wkręć żarówkę.</li>
+                                <li>W przeciwnym razie, wciśnij przycisk, który wcisnąłeś w Kroku 2 lub 3, a nastpęnie wkręć żarówkę.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </div>
+            <div class="page-footer relative-footer">Strona 1 z 2</div>
+        </div>
+        <div class="page page-bg-04 bulb-page-2">
+            <div class="page-header">
+                <span class="page-header-doc-title">KTaNE Mod, wersja PL, tłumaczenie: gaddemytx</span>
+                <span class="page-header-section-title">Żarówka</span>
+            </div>
+            <div class="page-content">
+                <table class="layout">
+                    <tbody><tr>
+                        <th>Krok 7</th>
+                        <td>
+                            <ul id="step-7">
+                                <li>Jeśli żarówka jest zielona, wciśnij <strong>I</strong>, zapamiętaj <u>SIG</u> i przejdź do <strong>Kroku 11</strong>.</li>
+                                <li>Jeśli żarówka jest fioletowa, wciśnij <strong>I</strong>, wkręć ją i przejdź do <strong>Kroku 12</strong>.</li>
+                                <li>Jeśli żarówka jest niebieska, wciśnij <strong>O</strong>, zapamiętaj <u>CLR</u> i przejdź do <strong>Kroku 11</strong>.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>, wkręć żarówkę i przejdź do <strong>Kroku 13</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 8</th>
+                        <td>
+                            <ul id="step-8">
+                                <li>Jeśli żarówka jest biała, wciśnij <strong>I</strong>, zapamiętaj <u>FRQ</u> i przejdź do <strong>Kroku 11</strong>.</li>
+                                <li>Jeśli żarówka jest czerwona, wciśnij <strong>I</strong>, wkręć ją i przejdź do <strong>Kroku 13</strong>.</li>
+                                <li>Jeśli żarówka jest żółta, wciśnij <strong>O</strong>, zapamiętaj <u>FRK</u> i przejdź do <strong>Kroku 11</strong>.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>, wkręć żarówkę i przejdź do <strong>Kroku 12</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 9</th>
+                        <td>
+                            <ul id="step-9">
+                                <li>Jeśli żarówka jest niebieska, wciśnij <strong>I</strong> i przejdź do <strong>Kroku 14</strong>.</li>
+                                <li>Jeśli żarówka jest zielona, wciśnij <strong>I</strong>, wkręć ją i przejdź do <strong>Kroku 12</strong>.</li>
+                                <li>Jeśli żarówka jest żółta, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 15</strong>.</li>
+                                <li>Jeśli żarówka jest biała, wciśnij <strong>O</strong>, wkręć ją i przejdź do <strong>Kroku 13</strong>.</li>
+                                <li>Jeśli żarówka jest fioletowa, wkręć ją, wciśnij <strong>I</strong> i przejdź do <strong>Kroku 12</strong>.</li>
+                                <li>W przeciwnym razie, wkręć żarówkę, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 13</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 10</th>
+                        <td>
+                            <ul id="step-10">
+                                <li>Jeśli żarówka jest fioletowa, wciśnij <strong>I</strong> i przejdź do <strong>Kroku 14</strong>.</li>
+                                <li>Jeśli żarówka jest czerwona, wciśnij <strong>I</strong>, wkręć ją i przejdź do <strong>Kroku 13</strong>.</li>
+                                <li>Jeśli żarówka jest niebieska, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 15</strong>.</li>
+                                <li>Jeśli żarówka jest żółta, wciśnij <strong>O</strong>, wkręć ją i przejdź do <strong>Kroku 12</strong>.</li>
+                                <li>Jeśli żarówka jest zielona, wkręć ją, wciśnij <strong>I</strong> i przejdź do <strong>Kroku 13</strong>.</li>
+                                <li>W przeciwnym razie, wkręć żarówkę, wciśnij <strong>O</strong> i przejdź do <strong>Kroku 12</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 11</th>
+                        <td>
+                            <ul id="step-11">
+                                <li>Jeśli bomba posiada zapamiętany wskaźnik, wciśnij <strong>I</strong>, a następnie wkręć żarówkę.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>, a następnie wkręć żarówkę.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 12</th>
+                        <td>
+                            <ul id="step-12">
+                                <li>Jeśli żarówka świeci się, wciśnij <strong>I</strong>.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 13</th>
+                        <td>
+                            <ul id="step-13">
+                                <li>Jeśli żarówka świeci się, wciśnij <strong>O</strong>.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>I</strong>.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 14</th>
+                        <td>
+                            <ul id="step-14">
+                                <li>Jeśli żarówka jest nieprzezroczysta, wciśnij <strong>I</strong>, a następnie wkręć ją.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>, a następnie wkręć żarówkę.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Krok 15</th>
+                        <td>
+                            <ul id="step-15">
+                                <li>Jeśli żarówka jest przezroczysta, wciśnij <strong>I</strong>, a następnie wkręć ją.</li>
+                                <li>W przeciwnym razie, wciśnij <strong>O</strong>, a następnie wkręć żarówkę.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </div>
+            <div class="page-footer relative-footer">Strona 2 z 2</div>
+        </div>
+    <div class="ruleseed-header"></div></div>
+</body></html>
