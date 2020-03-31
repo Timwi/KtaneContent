@@ -299,16 +299,17 @@
 		};
 
 		class Mod {
-			constructor(name, sortKey, id, type, published = "1970-1-1") {
+			constructor(name, sortKey, fileName, id, type, published = "1970-1-1") {
 				this.Name = name;
 				this.SortKey = sortKey;
+				this.FileName = fileName;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
 			}
 		}
 
-		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published));
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.name.replace(/ \((Translated|Russian)\)$/, ''), mod.id, mod.type, mod.published));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -331,7 +332,7 @@
 				}
 
 				if (module.Origin == "Mods") {
-					vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published));
+					vueData.mods.push(new Mod(module.Name, module.SortKey, module.FileName, module.ModuleID, module.Type, module.Published));
 				}
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
@@ -433,7 +434,7 @@
 					const mod = vueData.mods.find(mod => mod.ID == modID);
 
 					if (!mod) {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular"))
+						vueData.mods.push(new Mod(modID, modID.toUpperCase(), null, modID, "Regular"))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -618,7 +619,7 @@
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
 						<button @click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.ID) }">
-                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + encodeURI(mod.Name.replace(/ \((Translated|Russian)\)$/, '')) + '.png'">
+                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + encodeURI(mod.FileName || mod.Name) + '.png'">
                             <div class="mod-info">
                                 <div>{{ mod.Name }}</div>
                                 <div class="mod-id">{{ mod.ID.replace(/\(Clone\)$/, "") }}</div>
