@@ -131,6 +131,9 @@
 		img.mod-icon {
 			float: left;
 			margin-right: 10px;
+			height: 32px;
+			width: 32px;
+			object-fit: none;
 		}
 
 		div.mod-info {
@@ -189,12 +192,15 @@
 		/// MOD DATA ///
 		var mods = [
             { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", published: "2017-01-25" },
-            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "WhosOnFirstTranslated", name: "Who’s on First (Translated)", type: "Regular", published: "2017-01-25" },
             { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", published: "2017-01-25" },
             { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", published: "2017-01-25" },
             { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy", published: "2017-01-25" },
             
             { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular", published: "2019-01-09" },
+			{ id: "ColourFlashPL", name: "Colour Flash (Polish)", type: "Regular" },
+            { id: "insanetalkPL", name: "Insane Talk (Polish)", type: "Regular" },
+            { id: "WordSearchModulePL", name: "Word Search (Polish)", type: "Regular" },
 		];
 		/// MOD DATA ///
 
@@ -257,9 +263,10 @@
 		};
 
 		class Mod {
-			constructor(name, sortkey, id, type, published = "1970-1-1", value, perModuleValue) {
+			constructor(name, sortKey, icon, id, type, published = "1970-1-1", value, perModuleValue) {
 				this.Name = name;
-				this.SortKey = sortkey;
+				this.SortKey = sortKey;
+				this.Icon = icon;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
@@ -270,7 +277,7 @@
 			}
 		}
 
-		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published, mod.score));
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.toUpperCase().replace(/^THE |[^0-9A-Z]/g, ""), { X: 0, Y: 0 }, mod.id, mod.type, mod.published, mod.score));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -285,6 +292,20 @@
 		// Load mod data from ktane.timwi.de
 		makeRequest("https://ktane.timwi.de/json/raw").then(async responseText => {
 			const websiteJSON = JSON.parse(responseText);
+
+			for (const mod of vueData.mods) {
+				const icon = mod.Icon;
+				if (icon.X !== 0 || icon.Y !== 0)
+					continue;
+
+				const targetName = mod.Name.replace(/ \((Translated|Russian|Polish)\)$/, '');
+				const matches = websiteJSON.KtaneModules.filter(module => module.Name == targetName);
+				if (matches.length === 1) {
+					const match = matches[0];
+					icon.X = match.X;
+					icon.Y = match.Y;
+				}
+			}
 
 			let defaultScores = {};
 			let perModuleValues = {};
@@ -308,11 +329,9 @@
 					return;
 				}
 
-				vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published, defaultScores[module.ModuleID], perModuleValues[module.ModuleID]));
+				vueData.mods.push(new Mod(module.Name, module.SortKey, { X: module.X, Y: module.Y }, module.ModuleID, module.Type, module.Published, defaultScores[module.ModuleID], perModuleValues[module.ModuleID]));
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
-
-		const fallbackImage = "../Icons/blank.png";
 
 		/* global Vue */
 		const devMode = (window.location.protocol == "file:");
@@ -368,12 +387,14 @@
 					var counts = {
 						Centurion: 101,
 						Quadruple: 47,
-						Double: 23
+						Double: 23,
+						"Big Ring Case": 81,
+						"Small Ring Case": 79
 					};
 
 					var found = false;
 
-					var name = caseMod.name;
+					var name = caseMod.Name;
 					for (var str in counts) {
 						if (name.includes(str)) {
 							caseMod.moduleCount = counts[str];
@@ -384,7 +405,7 @@
 
 					var matches = name.match(/(\d+)x(\d+)/);
 					if (matches) {
-						caseMod.moduleCount = parseInt(matches[1]) * parseInt(matches[2]);
+						caseMod.moduleCount = parseInt(matches[1]) * parseInt(matches[2]) * 2 - 1;
 						found = true;
 					}
 
@@ -503,7 +524,7 @@
 					if (mod) {
 						mod.Value = vm.settings.ComponentValues[modID];
 					} else {
-						vm.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular", vm.settings.ComponentValues[modID]))
+						vm.mods.push(new Mod(modID, modID.toUpperCase(), { X: 0, Y: 0 }, modID, "Regular", vm.settings.ComponentValues[modID]))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -586,14 +607,6 @@
 					const value = vm.perModule ? mod.PerModuleValue : mod.Value;
 					const defaultValue = vm.perModule ? mod.DefaultPerModuleValue : mod.DefaultValue;
 
-					function fallbackToBlank(event) {
-						if (event.target.src == fallbackImage) {
-							return;
-						}
-
-						event.target.src = fallbackImage;
-					}
-
 					function onChange(event) {
 						const value = parseInt(event.target.value);
 
@@ -623,7 +636,7 @@
 						}
 					},
 					[
-						createElement("img", { class: "mod-icon", on: { error: fallbackToBlank }, attrs: { src: '../Icons/' + encodeURIComponent(mod.Name.replace(/ \((Translated|Russian)\)$/, '')) + '.png', alt: mod.Name + " Icon" } }),
+						createElement("img", { class: "mod-icon", attrs: { src: "https://ktane.timwi.de/iconsprite", alt: mod.Name + " Icon" }, style: { 'object-position': `${mod.Icon.X * -32}px ${mod.Icon.Y * -32}px` }}),
 						createElement("div", { class: "mod-info" }, [
 							createElement("div", mod.Name),
 							createElement("div", { class: "mod-id" }, mod.ID)
