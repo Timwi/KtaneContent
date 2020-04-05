@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Mod Selector Profile Editor</title>
@@ -163,13 +164,13 @@
 	<script>
 		/// MOD DATA ///
 		var mods = [
-            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
-            { id: "WhosOnFirstTranslated", name: "Who’s on First (Translated)", type: "Regular" },
-            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
-            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
-            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
-
-            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular" },
+			{ id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "WhosOnFirstTranslated", name: "Who’s on First (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy", published: "2017-01-25" },
+            
+            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular", published: "2019-01-09" },
             { id: "ColourFlashPL", name: "Colour Flash (Polish)", type: "Regular" },
             { id: "insanetalkPL", name: "Insane Talk (Polish)", type: "Regular" },
             { id: "WordSearchModulePL", name: "Word Search (Polish)", type: "Regular" },
@@ -357,14 +358,79 @@
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
 
-		const fallbackImage = "../Icons/blank.png";
-
 		/* global Vue */
 		const devMode = (window.location.protocol == "file:");
 		Vue.config.devtools = devMode;
 
 		window.onload = function() {
 			var toastr = this.toastr; // A Vue version of toastr.
+			let vm = new Vue({
+				el: "#editor",
+				data: vueData,
+				methods: {
+					toggleMod: function(mod, event) {
+						var index = this.profile.indexOf(mod.ID);
+						if (index > -1) {
+							this.profile.splice(index, 1);
+						} else {
+							this.profile.push(mod.ID);
+						}
+
+						if (event)
+							event.preventDefault();
+					},
+					getJSON: function() {
+						return JSON.stringify({
+							"DisabledList": this.profile,
+							"Operation": this.operation
+						});
+					},
+					onFileUploaded: function(event) {
+						uploadProfile(event.target.files)
+					},
+					startRenaming: function() {
+						this.isRenaming = true;
+						setTimeout((function() {
+							this.$refs.renameField.focus();
+						}).bind(this), 0);
+					},
+					handleRenaming: function(event) {
+						if ((event.type == "keydown" && event.key == "Enter") || event.type == "blur") {
+							this.isRenaming = false;
+							event.type == "keydown" && event.target.blur();
+						}
+					},
+					fallbackDownload: function(event) {
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
+							event.preventDefault();
+						}
+					},
+					getMods: getMods,
+					toggleType: function(type) {
+						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					},
+					setAllMods: function(type, state) {
+						getMods(type).forEach(mod => {
+							const id = mod.ID;
+							const profileIndex = this.profile.indexOf(id);
+							if (!state && profileIndex == -1) {
+								this.profile.push(id);
+							} else if (state && profileIndex != -1) {
+								this.profile.splice(profileIndex, 1);
+							}
+						});
+					},
+					toggleAllMods: function(type) {
+						getMods(type).forEach(mod => {
+							const id = mod.ID;
+							const profileIndex = this.profile.indexOf(id);
+							if (profileIndex == -1) this.profile.push(id);
+							else this.profile.splice(profileIndex, 1);
+						});
+					}
+				}
+			});
 
 			function getModuleCount(caseMod) {
 				if (!caseMod.moduleCount) {
@@ -402,11 +468,11 @@
 			}
 
 			function getMods(type) {
-				var mods = vueData.mods.filter(mod => mod.Type == type);
-				const sortingMethod = sortingMethods[vueData.sortingMethodIndex].Compare;
+				var mods = this.mods.filter(mod => mod.Type == type);
+				const sortingMethod = sortingMethods[this.sortingMethodIndex].Compare;
 
 				if (type == "case") {
-					mods.sort(function(mod1, mod2) {
+					mods.sort((mod1, mod2) => {
 						var count1 = getModuleCount(mod1);
 						var count2 = getModuleCount(mod2);
 
@@ -445,16 +511,16 @@
 					return false;
 				}
 
-				vueData.profileName = name.replace(/\.json$/, "");
-				vueData.profile = profile.DisabledList;
-				vueData.operation = profile.Operation;
+				vm.profileName = name.replace(/\.json$/, "");
+				vm.profile = profile.DisabledList;
+				vm.operation = profile.Operation;
 
 				// Check if we support all the IDs in the profile.
-				for (var modID of vueData.profile) {
-					const mod = vueData.mods.find(mod => mod.ID == modID);
+				for (var modID of vm.profile) {
+					const mod = vm.mods.find(mod => mod.ID == modID);
 
 					if (!mod) {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), { X: 0, Y: 0 }, modID, "Regular"))
+						vm.mods.push(new Mod(modID, modID.toUpperCase(), { X: 0, Y: 0 }, modID, "Regular"))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -491,16 +557,16 @@
 					toastr.error("Unable to find any imported files", "File Import Error");
 				}
 
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			}
 
 			window.addEventListener("dragover", function(e) {
-				vueData.isHovering = true;
+				vm.isHovering = true;
 				e.preventDefault();
 			});
 
 			window.addEventListener("dragleave", function() {
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			});
 
 			window.addEventListener("drop", function(e) {
@@ -508,7 +574,7 @@
 				if (!text) {
 					uploadProfile(e.dataTransfer.files);
 				} else {
-					vueData.isHovering = false;
+					vm.isHovering = false;
 					if (!downloadProfile(text)) {
 						toastr.warning("Unable to read URL for profile.");
 					}
@@ -527,81 +593,6 @@
 
 				if (!downloadProfile(clipText)) {
 					toastr.warning("Unable to read URL from paste.");
-				}
-			});
-
-			new Vue({
-				el: "#editor",
-				data: vueData,
-				methods: {
-					toggleMod: function(mod, event) {
-						var index = this.profile.indexOf(mod.ID);
-						if (index > -1) {
-							this.profile.splice(index, 1);
-						} else {
-							this.profile.push(mod.ID);
-						}
-
-						if (event)
-							event.preventDefault();
-					},
-					getJSON: function() {
-						return JSON.stringify({
-							"DisabledList": this.profile,
-							"Operation": this.operation
-						});
-					},
-					onFileUploaded: function(event) {
-						uploadProfile(event.target.files)
-					},
-					startRenaming: function() {
-						this.isRenaming = true;
-						setTimeout((function() {
-							this.$refs.renameField.focus();
-						}).bind(this), 0);
-					},
-					handleRenaming: function(event) {
-						if ((event.type == "keydown" && event.key == "Enter") || event.type == "blur") {
-							this.isRenaming = false;
-							event.type == "keydown" && event.target.blur();
-						}
-					},
-					fallbackToBlank: function(event) {
-						if (event.target.src == fallbackImage) {
-							return;
-						}
-
-						event.target.src = fallbackImage;
-					},
-					fallbackDownload: function(event) {
-						if (navigator.msSaveBlob) {
-							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
-							event.preventDefault();
-						}
-					},
-					getMods: getMods,
-					toggleType: function(type) {
-						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
-					},
-					setAllMods: function(type, state) {
-						getMods(type).forEach(mod => {
-							const id = mod.ID;
-							const profileIndex = this.profile.indexOf(id);
-							if (!state && profileIndex == -1) {
-								this.profile.push(id);
-							} else if (state && profileIndex != -1) {
-								this.profile.splice(profileIndex, 1);
-							}
-						});
-					},
-					toggleAllMods: function(type) {
-						getMods(type).forEach(mod => {
-							const id = mod.ID;
-							const profileIndex = this.profile.indexOf(id);
-							if (profileIndex == -1) this.profile.push(id);
-							else this.profile.splice(profileIndex, 1);
-						});
-					}
 				}
 			});
 		};
@@ -651,3 +642,4 @@
 		</div>
 	</div>
 </body>
+</html>
