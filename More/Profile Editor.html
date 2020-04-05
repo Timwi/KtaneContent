@@ -124,6 +124,9 @@
 		img.mod-icon {
 			float: left;
 			margin-right: 10px;
+			height: 32px;
+			width: 32px;
+			object-fit: none;
 		}
 
 		div.mod-info {
@@ -161,7 +164,7 @@
 		/// MOD DATA ///
 		var mods = [
             { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
-            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular" },
+            { id: "WhosOnFirstTranslated", name: "Who’s on First (Translated)", type: "Regular" },
             { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
             { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
             { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
@@ -302,17 +305,17 @@
 		};
 
 		class Mod {
-			constructor(name, sortKey, fileName, id, type, published = "1970-1-1") {
+			constructor(name, sortKey, icon, id, type, published = "1970-1-1") {
 				this.Name = name;
 				this.SortKey = sortKey;
-				this.FileName = fileName;
+				this.Icon = icon;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
 			}
 		}
 
-		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The| /g, "").toUpperCase(), mod.name.replace(/ \((Translated|Russian|Polish)\)$/, ''), mod.id, mod.type, mod.published));
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.toUpperCase().replace(/^THE |[^0-9A-Z]/g, ""), { X: 0, Y: 0 }, mod.id, mod.type, mod.published));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -328,6 +331,20 @@
 		makeRequest("https://ktane.timwi.de/json/raw").then(responseText => {
 			const websiteJSON = JSON.parse(responseText);
 
+			for (const mod of vueData.mods) {
+				const icon = mod.Icon;
+				if (icon.X !== 0 || icon.Y !== 0)
+					continue;
+
+				const targetName = mod.Name.replace(/ \((Translated|Russian|Polish)\)$/, '');
+				const matches = websiteJSON.KtaneModules.filter(module => module.Name == targetName);
+				if (matches.length === 1) {
+					const match = matches[0];
+					icon.X = match.X;
+					icon.Y = match.Y;
+				}
+			}
+
 			websiteJSON.KtaneModules.forEach(function(module) {
 				if (!module.ModuleID) {
 					console.warn("Skipping " + module.Name + " because it lacks an ID.");
@@ -335,7 +352,7 @@
 				}
 
 				if (module.Origin == "Mods") {
-					vueData.mods.push(new Mod(module.Name, module.SortKey, module.FileName, module.ModuleID, module.Type, module.Published));
+					vueData.mods.push(new Mod(module.Name, module.SortKey, { X: module.X, Y: module.Y }, module.ModuleID, module.Type, module.Published));
 				}
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
@@ -437,7 +454,7 @@
 					const mod = vueData.mods.find(mod => mod.ID == modID);
 
 					if (!mod) {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), null, modID, "Regular"))
+						vueData.mods.push(new Mod(modID, modID.toUpperCase(), { X: 0, Y: 0 }, modID, "Regular"))
 						console.warn("Can't find mod for " + modID);
 					}
 				}
@@ -622,7 +639,7 @@
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
 						<button @click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.ID) }">
-                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + encodeURI(mod.FileName || mod.Name) + '.png'">
+                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" src="https://ktane.timwi.de/iconsprite" :style="{ 'object-position': `${mod.Icon.X * -32}px ${mod.Icon.Y * -32}px` }">
                             <div class="mod-info">
                                 <div>{{ mod.Name }}</div>
                                 <div class="mod-id">{{ mod.ID.replace(/\(Clone\)$/, "") }}</div>
