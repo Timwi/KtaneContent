@@ -853,18 +853,38 @@ $(function() {
 					.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
 					.appendTo(modListing);
 
-				const eventSymbols = {
-					"PASS": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 270" height="30px"><path stroke="rgb(16, 229, 60)" stroke-width="60" fill="none" d="M30 170l80 60L245 20"></path></svg>',
-					"STRIKE": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 100 100" height="30px"><path d="M96 14L82 0 48 34 14 0 0 14l34 34L0 82l14 14 34-34 34 34 14-14-34-34z" fill="red"/></svg>'
+				const eventData = {
+					"STRIKE": {
+						symbol: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 100 100" height="30px"><path d="M96 14L82 0 48 34 14 0 0 14l34 34L0 82l14 14 34-34 34 34 14-14-34-34z" fill="red"/></svg>',
+						color: "rgb(100, 0, 0)",
+						scale: 1
+					},
+					"PASS": {
+						symbol: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 270" height="30px"><path stroke="rgb(16, 229, 60)" stroke-width="60" fill="none" d="M30 170l80 60L245 20"></path></svg>',
+						color: "rgb(0, 110, 20)",
+						scale: 2.7
+					}
 				};
 
 				const eventIndicator = $("<div class='event-indicators'>").appendTo(buttonGrid);
 				let moduleColor = 0;
-				for (const event of parseData.events) {
-					eventIndicator.append($SVG(eventSymbols[event.type]));
+				for (const eventType in eventData) {
+					const eventTotal = parseData.events.filter(event => event.type === eventType).length;
+					const data = eventData[eventType];
+					if (eventTotal < 4) {
+						for (let i = 0; i < eventTotal; i++) {
+							eventIndicator.append($SVG(data.symbol));
+						}
+					} else {
+						eventIndicator.append(
+							$SVG(data.symbol).append(
+								$SVG('<text dominant-baseline="middle" text-anchor="middle" stroke="white" stroke-width="12">').text(eventTotal).css({ "paint-order": "stroke", "font-weight": "bold", "font-size": "57px", "transform": `translate(50%, 50%) scale(${data.scale})`, fill: data.color })
+							)
+						);
+					}
 
-					if (event.type == "PASS")
-						moduleColor++;
+					if (eventType == "PASS")
+						moduleColor += eventTotal;
 				}
 
 				if (parseData.events.length > 0) {
