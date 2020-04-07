@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>Follow The Leader — Keep Talking and Nobody Explodes Module</title>
+    <meta content="initial-scale=1" name="viewport">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src='js/ktane-utils.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.repeaters-table th { white-space: nowrap; }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var ports = ["un port parallèle", "un port série", "un port RJ-45", "un port PS/2", "un port DVI-D", "un port Stereo RCA"];
+            document.getElementById('rule-port').innerText = ports [ rnd.next(0, ports.length) ];
+
+            var startingPlugConditions = [
+                "le nombre d'indicateurs sur la bombe",
+                "le nombre d'indicateurs allumés sur la bombe",
+                "le nombre d'indicateurs éteints sur la bombe",
+                "le nombre de piles sur la bombe",
+                "le nombre de supports de piles sur la bombe",
+                "le nombre de piles AA sur la bombe",
+                "le nombre de piles D sur la bombe",
+                "le nombre de ports sur la bombe",
+                "le nombre de plaques de ports sur la bombe",
+                "le nombre de types de ports différents sur la bombe",
+                "le nombre de modules sur la bombe",
+                "le nombre de modules non-needy sur la bombe",
+                "la position alphabétique de la première lettre du numéro de série",
+                "la position alphabétique de la deuxième lettre du numéro de série",
+                "la position alphabétique de la dernière lettre du numéro de série",
+                "la position alphabétique de l'avant-dernière lettre du numéro de série",
+                "le dernier chiffre du numéro de série",
+                "le deuxième chiffre du numéro de série",
+                "le premier chiffre du numéro de série"
+            ];
+
+            var startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            var startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            var startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `prise ${startPlug}`;
+
+            var indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            var indicator = indicators [ rnd.next(0, indicators.length) ];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            var endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `prise ${endPlug}`;
+
+            var litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? 'allumé' : 'éteint';
+
+            var startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `dans le sens des aiguilles d'une montre après la prise ${startAt}` : 'le plus tôt dans l'ordre numérique';
+
+            var startingRuleConditions = [
+                [ "première lettre alphabétique dans n'importe quel indicateur", "S'il n'y a pas d'indicateurs" ],
+                [ "dernière lettre alphabétique dans n'importe quel indicateur", "S'il n'y a pas d'indicateurs" ],
+                [ "deuxième lettre du numéro de série", "Si le numéro de série ne contient pas de lettres" ],
+                [ "avant-dernière lettre du numéro de série", "Si le numéro de série ne contient pas de lettres" ],
+                [ "dernière lettre du numéro de série", "Si le numéro de série ne contient pas de lettres" ],
+                [ "première lettre du numéro de série, "Si le numéro de série ne contient pas de lettres" ],
+            ];
+            var startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            var colors = ["rouge", "vert", "bleu", "blanc", "noir", "jaune"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]} or ${colors[2]}`;
+
+            var tableRules = [
+                "Coupez ce fil.",
+                "Ne coupez pas ce fil.",
+                "Le fil précédent mène à une prise avec un nombre pair.",
+                "Le fil précédent mène à une prise avec un nombre impair.",
+                "Le fil précédent mène à une prise avec un nombre premier.",
+                "Le fil précédent ne mène pas à une prise avec un nombre premier.",
+                "Le fil précédent doit être coupé.",
+                "Le fil précédent ne doit pas être coupé.",
+                "Les deux fils précédents sont de la même couleur.",
+                "Les deux fils précédents sont d'une couleur différente.",
+                "Deux des trois fils précédents sont de la même couleur.",
+                "Les trois fils précédents sont d'une couleur différente.",
+                "Les trois fils précédents sont de la même couleur.",
+                "Le fil précédent et ce fil sont de la même couleur.",
+                "Le fil précédent et ce fil sont d'une couleur différente.",
+                "Aucun des deux fils précédents n'est de la même couleur que ce fil.",
+                "Un seul des deux fils précédents est de la même couleur que ce fil.",
+                "Les deux fils précédents sont de la même couleur que ce fil.",
+                "Un seul ou aucun des deux fils précédents est de la même couleur que ce fil.",
+                "Au moins un des deux fils précédents est de la même couleur que ce fil.",
+                "Aucun ou chacun des deux fils précédents est de la même couleur que ce fil.",
+                "Le fil précédent saute une prise.",
+                "Le fil précédent ne saute pas de prise.",
+                "Auncun des deux fils précédents ne saute de prise.",
+                "Un seul des deux fils précédents saute une prise.",
+                "Les deux fils précédents sautent une prise.",
+                "Un seul ou aucun des deux fils précédents saute une prise.",
+                "Au moins un des deux fils précédents saute une prise.",
+                ['n12', n => `Le fil précédent mène à une position numérotée ${n} ou moins.`],
+                ['n12', n => `Le fil précédent ne mène pas à une position numérotée ${n} ou moins.`],
+                ['n12', n => `Le fil précédent mène à une position numérotée ${n} ou plus.`],
+                ['n12', n => `Le fil précédent ne mène pas à une position numérotée ${n} ou plus.`],
+                ['n6', n => `Il y a ${n} fils ou plus sur le module en tout.`],
+                ['n6', n => `Il y a ${n} fils ou moins sur le module en tout.`],
+                ['c', c => `Le fil précédent est ${c[0]} ou ${c[1]} ou ${c[2]}.`],
+                ['c', c => `Le fil précédent n'est ni ${c[0]} ni ${c[1]} ni ${c[2]}.`],
+                ['c', c => `Le fil avant le précédent est ${c[0]} ou ${c[1]} ou ${c[2]}.`],
+                ['c', c => `Le fil avant le précédent n'est ni ${c[0]} ni ${c[1]} ni ${c[2]}.`],
+                ['c', c => `Aucun des deux fils précédents n'est ${c[0]} ou ${c[1]}.`],
+                ['c', c => `Un seul des deux fils précédents est ${c[0]} ou ${c[1]}.`],
+                ['c', c => `Les deux fils précédents sont ${c[0]}s ou ${c[1]}s.`],
+                ['c', c => `Un seul ou aucun des deux fils précédents est ${c[0]} ou ${c[1]}.`],
+                ['c', c => `Au moins un des deux fils précédents est ${c[0]} ou ${c[1]}.`],
+                ['c', c => `Aucun ou chacun des deux fils précédents est ${c[0]} ou ${c[1]}.`],
+                ['c', c => `Chacun des fils ${c[0]}s précédents après le fil de départ doit être coupé.`],
+                ['c', c => `Chacun des fils ${c[0]}s précédents après le fil de départ ne doit pas être coupé.`],
+                "Plus de la moitié des fils jusque là (le fil de départ inclus) doit être coupé.",
+                "Moins de la moitié des fils jusque là (le fil de départ inclus) doit être coupé.",
+                "Plus de la moitié des fils jusque là (le fil de départ non inclus) doit être coupé.",
+                "Moins de la moitié des fils jusque là (le fil de départ non inclus) doit être coupé.",
+                "Le fil précédent et le fil de départ sont de la même couleur.",
+                "Le fil précédent et le fil de départ sont d'une couleur différente.",
+            ];
+            var list = document.getElementsByClassName('table-rule');
+            if (rnd.seed === 1)
+            {
+                list[ 0].innerText = tableRules[35][1](['jaune', 'bleu', 'vert']);
+                list[ 1].innerText = tableRules[2];
+                list[ 2].innerText = tableRules[6];
+                list[ 3].innerText = tableRules[34][1](['rouge', 'bleu', 'noir']);
+                list[ 4].innerText = tableRules[10];
+                list[ 5].innerText = tableRules[16];
+                list[ 6].innerText = tableRules[34][1](['jaune', 'blanc', 'vert']);
+                list[ 7].innerText = tableRules[7];
+                list[ 8].innerText = tableRules[21];
+                list[ 9].innerText = tableRules[35][1](['blanc', 'noir', 'rouge']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['blanc', 'noir']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (var i = 0; i < 13; i++)
+                {
+                    var str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="ManualContent">
+        <div class="section">
+            <div class="page">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Suivez le Guide</span>
+                </div>
+                <div class="page-content">
+                    <img class="diagram" src="img/Component/Follow the Leader.svg">
+                    <h2>Au Sujet de Suivez le Guide</h2>
+
+                    <p class="flavour-text">Un jeu d'enfant. Suivez le guide. Mais si vous n'arrivez pas à suivre, la pénalité n'en sera que plus explosive.
+
+                    <p>Ce module contient entre 8 et 12 fils qui connectent des
+                    prises numérotées dans une séquence en boucle.  Chaque fil connecte une prise à une autre prise
+                    qui contient un autre fil dans un ordre numérique croissant. Le fil qui part de la prise 1 est considéré comme le “fil 1”.
+
+                    <p>Progressez dans le module en déterminant d'abord le
+                    fil de départ, puis en vérifiant s'il faut couper chaque fil dans la séquence.
+                    Chaque fil devra être coupé ou laissé non coupé
+                    en fonction de l'état du ou des fil(s) précédent(s) dans la séquence.
+
+                    <h3>Déterminer la Position de Départ</h3>
+
+                    <p>Suivez la première règle qui s'applique ci-dessous :
+
+                    <ol>
+                        <li>Si <span class='rule' id='rule-port'>un port RJ-45</span> est présent et s'il y a un fil
+                            connectant la <span class='rule' id='rule-plug-start'>prise 4</span> <em>directement</em> à la <span class='rule' id='rule-plug-end'>prise 5</span>, commencez par ce fil.
+                        <li>Sinon, s'il y a un fil qui commence à une prise
+						    correspondant <span class='rule' id='rule-start-2'>au nombre de piles sur la bombe</span>, commencez
+						    par ce fil.
+                        <li>Sinon, s'il y a un fil qui commence à une prise
+						    correspondant <span class='rule' id='rule-start-3'>au premier chiffre du numéro de série</span>,
+						    commencez par ce fil.
+                        <li>Sinon, s'il y a un indicateur <span class='rule' id='rule-indicator-lit'>allumé</span> avec la
+						    mention <span class='rule' id='rule-indicator'>CLR</span>, ignorez toutes les autres instructions et
+						    coupez tous les fils présents sur le module dans l'ordre
+						    numérique décroissant.
+                        <li>Si aucune de ces conditions ne s'applique, la position de départ est
+						    la première prise contenant un fil <span class='rule' id='rule-else'>dans l'ordre numérique</span>.
+                    </ol>
+                </div>
+                <div class="page-footer relative-footer">Page 1 sur 2</div>
+            </div>
+            <div class="page">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Suivez le Guide</span>
+                </div>
+                <div class="page-content">
+                    <h3>Couper les Fils</h3>
+                    <ul>
+                        <li><u>Toujours</u> couper le fil de la prise de départ.
+						    Puis passez au fil suivant.
+                        <li>À partir de cette position, coupez les fils comme indiqué
+						    dans les étapes du tableau ci-dessous.  L'étape de départ
+						    correspond à la <span class='rule' id='rule-starting-step'>première lettre du numéro de
+						    série</span>. <span id='rule-starting-step-fallback'>Si le numéro de série ne contient pas de lettres</span>,
+						    commencez à l'étape <span class='rule' id='rule-starting-step-fallback-step'>A</span>.
+                        <li>Lorsque vous passez au fil suivant, passez aussi à
+						    l'étape suivante du tableau dans l'ordre alphabétique pour déterminer
+						    s'il faut couper le fil.
+                        <li>“Fil(s) précédent(s)” peut faire référence à des fils situés avant la
+						    position de départ dans la séquence.
+                        <li>Si le fil de la prise de départ est <span class='rule' id='rule-reverse-colors'>rouge, vert, ou
+						    blanc</span>, suivez les étapes du tableau dans le sens inverse de l'ordre
+						    alphabétique à la place.
+                    </ul>
+                    <table class="repeaters-table">
+                        <tr>
+                            <th>Étape
+                            <th>Coupez le fil si :
+                        </tr>
+                        <tr>
+                            <th>A ou N</th>
+                            <td class='table-rule'>Le fil précédent n'est ni jaune ni bleu ni vert.</td>
+                        </tr>
+                        <tr>
+                            <th>B ou O</th>
+                            <td class='table-rule'>Le fil précédent mène à une prise avec un nombre pair.</td>
+                        </tr>
+                        <tr>
+                            <th>C ou P</th>
+                            <td class='table-rule'>Le fil précédent doit être coupé.</td>
+                        </tr>
+                        <tr>
+                            <th>D ou Q</th>
+                            <td class='table-rule'>Le fil précédent est rouge ou bleu ou noir.</td>
+                        </tr>
+                        <tr>
+                            <th>E ou R</th>
+                            <td class='table-rule'>Deux des trois fils précédents sont de la même couleur.</td>
+                        </tr>
+                        <tr>
+                            <th>F ou S</th>
+                            <td class='table-rule'>Un seul des deux fils précédents est de la même couleur que ce fil.</td>
+                        </tr>
+                        <tr>
+                            <th>G ou T</th>
+                            <td class='table-rule'>Le fil précédent est jaune ou blanc ou vert.</td>
+                        </tr>
+                        <tr>
+                            <th>H ou U</th>
+                            <td class='table-rule'>Le fil précédent ne doit pas être coupé.</td>
+                        </tr>
+                        <tr>
+                            <th>I ou V</th>
+                            <td class='table-rule'>Le fil précédent saute une prise.</td>
+                        </tr>
+                        <tr>
+                            <th>J ou W</th>
+                            <td class='table-rule'>Le fil précédent n'est ni blanc ni noir ni rouge.</td>
+                        </tr>
+                        <tr>
+                            <th>K ou X</th>
+                            <td class='table-rule'>Les deux fils précédents sont d'une couleur différente.</td>
+                        </tr>
+                        <tr>
+                            <th>L ou Y</th>
+                            <td class='table-rule'>Le fil précédent ne mène pas à une prise numérotée 6 ou moins.</td>
+                        </tr>
+                        <tr>
+                            <th>M ou Z</th>
+                            <td class='table-rule'>Un seul ou aucun des deux fils précédents est blanc ou noir.</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="page-footer relative-footer">Page 2 sur 2</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
