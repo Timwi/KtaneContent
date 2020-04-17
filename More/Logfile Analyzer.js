@@ -2172,6 +2172,11 @@ $(function() {
 				loggingTag: "CaesarCipher"
 			},
 			{
+				moduleID: "caesarsMaths",
+				loggingTag: "caesarsMaths",
+				displayName: "Caesar’s Maths"
+			},
+			{
 				displayName: "Calculus",
 				moduleID: "calcModule",
 				loggingTag: "Calc"
