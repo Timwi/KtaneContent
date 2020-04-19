@@ -460,8 +460,10 @@ $(function() {
 
 		this.LoggingIDs = {};
 
-		this.GetMod = function(name) {
-			return this.Modules[name];
+		this.GetMod = function(name, id) {
+			var mod = this.Modules[name];
+
+			return mod != null && (id == undefined || mod.IDs.some(mod => mod[0] == "#" + id)) ? mod : null;
 		};
 		this.GetModule = function(name) {
 			var mod = this.GetMod(name);
@@ -1504,15 +1506,25 @@ $(function() {
 									if (targetBomb == bombgroup.Bombs[0]) continue;
 
 									// See if the module type got put on the first bomb by default.
-									const modInfo = bombgroup.Bombs[0].GetMod(moduleType);
+									let modInfo;
+									for (const bomb of bombgroup.Bombs) {
+										if (bomb == targetBomb) continue;
+
+										modInfo = bomb.GetMod(moduleType);
+										if (modInfo != undefined)
+											break;
+									}
+
 									if (!modInfo) continue;
 
 									// See if it has the ID we're looking at
 									for (const mod of modInfo.IDs) {
 										if (mod[0] == "#" + id) {
-											// Transfer over the already parsed information and groups.
-											newModInfo.push(...mod[1]);
-											newModInfo.groups = mod[1].groups;
+											// Transfer over any properties.
+											for (const prop in mod[1]) {
+												if (mod[1].hasOwnProperty(prop))
+													newModInfo[prop] = mod[1][prop];
+											}
 
 											// Remove it from the first bomb.
 											modInfo.IDs.splice(modInfo.IDs.indexOf(mod), 1);
@@ -1541,7 +1553,7 @@ $(function() {
 							switch (eventInfo.type) {
 								case "STRIKE":
 								case "PASS": {
-									const mod = lastBombGroup.GetMod(eventInfo.moduleID);
+									const mod = lastBombGroup.GetMod(eventInfo.moduleID, eventInfo.loggingID);
 									mod.Events.push(eventInfo);
 
 									const text = [
