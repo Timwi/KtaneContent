@@ -3485,6 +3485,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "JukeboxWAV",
+				loggingTag: "Jukebox.WAV",
+				displayName: "Jukebox.WAV."
+			},
+			{
 				moduleID: "Keypad",
 				loggingTag: "KeypadComponent"
 			},
