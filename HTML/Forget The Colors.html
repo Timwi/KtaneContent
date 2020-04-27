@@ -9,69 +9,174 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
 </head>
 <style>
-        .top {
-            background-color: #DDDDDD;
-			border-bottom: 4px solid #000;
-			border-top: 4px solid #000;
-        }
+    .top {
+        background-color: #DDDDDD;
+    }
 
-		.red {
-            background-color: #FF7777;
-        }
+    .red {
+        background-color: #FF7777;
+    }
 
-		.orange {
-            background-color: #FFCC77;
-			border-bottom: 4px solid #000;
-        }
+    .orange {
+        background-color: #FFCC77;
+    }
 
-		.yellow {
-            background-color: #FFFF77;
-        }
+    .yellow {
+        background-color: #FFFF77;
+    }
 
-		.green {
-            background-color: #77FF77;
-			border-bottom: 4px solid #000;
-        }
+    .green {
+        background-color: #77FF77;
+    }
 
-		.cyan {
-            background-color: #77FFFF;
-        }
+    .cyan {
+        background-color: #77FFFF;
+    }
 
-		.blue {
-            background-color: #5070FF;
-			border-bottom: 4px solid #000;
-        }
+    .blue {
+        background-color: #5070FF;
+    }
 
-		.purple {
-            background-color: #CC55FF;
-        }
+    .purple {
+        background-color: #CC55FF;
+    }
 
-		.pink {
-            background-color: #FFCCFF;
-			border-bottom: 4px solid #000;
-        }
+    .pink {
+        background-color: #FFCCFF;
+    }
 
-		.maroon {
-            background-color: #CC5555;
-        }
-		
-		.white {
-            background-color: #F8F8F8;
-			border-bottom: 4px solid #000;
-        }
-		
-		@media screen and (min-width: 800px) {
-			.right {
-			text-align: right;
-			}
-		}
+    .maroon {
+        background-color: #CC5555;
+    }
 
-		.padding {
-			padding-top: 15px;
-		}
+    .white {
+        background-color: #F8F8F8;
+    }
+
+    @media screen and (min-width: 800px) {
+        .right {
+            text-align: right;
+        }
+    }
+    
+    #showPDF {
+      display:none;
+    }
+    
+    @media print {
+      #showPDF {
+        display:inline;
+      }
+      #hidePDF {
+        display:none;
+      }
+    }
+
+    .padding {
+        padding-top: 15px;
+    }
+
+    div > input {
+        float: left;
+        height: 15px;
+        margin-left: 80px;
+        transform: scale(1.5);
+        text-align: center;
+    }
 </style>
+<script>
+    function update() {
+        var sin = parseInt(document.getElementById("sin").value) ? parseInt(document.getElementById("sin").value) : 0;
+        var cos = parseInt(document.getElementById("cos").value) ? parseInt(document.getElementById("cos").value) : 0;
+        var acos = parseFloat(document.getElementById("acos").value) ? parseFloat(document.getElementById("acos").value) : 0;
+
+        document.getElementById("sinAns").value = Math.floor(Math.sin(sin * Math.PI / 180) * 100000) / 100000;
+        document.getElementById("cosAns").value = Math.floor(Math.abs(Math.cos(cos * Math.PI / 180)) * 100000) / 100000;
+        document.getElementById("acosAns").value = Math.floor(Math.acos(acos) / Math.PI * 180);
+    }
+    setInterval(update, 100);
+
+    var defaultRules = null;
+
+    function getDefaultRules() {
+        if (defaultRules !== null)
+            return;
+
+        defaultRules = {};
+        for (var instruction = 1; instruction <= 10; instruction++)
+            defaultRules[`rule-2-${instruction}`] = document.getElementById(`rule-2-${instruction}`).innerText;
+    }
+
+    function setDefaultRules() {
+        getDefaultRules();
+		document.getElementById(`rule-extra-1`).innerText = "";
+        for (var instruction = 1; instruction <= 10; instruction++)
+            document.getElementById(`rule-2-${instruction}`).innerText = defaultRules[`rule-2-${instruction}`];
+    }
+
+    function setRules(rnd) {
+        getDefaultRules();
+
+        var action = ['Add', 'Subtract', 'Multiply', 'Divide', "Modulo"];
+        document.getElementById(`rule-extra-1`).innerText = " from left to right. When using either table, don't record decimals and ignore divisions (/) or modulo (%) 0";
+        var actionShort = ['+', '-', '*', '/', "%"];
+
+        for (var instruction = 0; instruction < 20; instruction++) {
+            var span = document.getElementById(`rule-1-${instruction + 1}`);
+            var rule = { type: rnd.nextMax(10), parameter: rnd.nextMax(5) };
+
+            switch (rule.type) {
+                case 0: span.innerText = `${actionShort[rule.parameter]}0`; break;
+                case 1: span.innerText = `${actionShort[rule.parameter]}1`; break;
+                case 2: span.innerText = `${actionShort[rule.parameter]}2`; break;
+                case 3: span.innerText = `${actionShort[rule.parameter]}3`; break;
+                case 4: span.innerText = `${actionShort[rule.parameter]}4`; break;
+                case 5: span.innerText = `${actionShort[rule.parameter]}5`; break;
+                case 6: span.innerText = `${actionShort[rule.parameter]}6`; break;
+                case 7: span.innerText = `${actionShort[rule.parameter]}7`; break;
+                case 8: span.innerText = `${actionShort[rule.parameter]}8`; break;
+                case 9: span.innerText = `${actionShort[rule.parameter]}9`; break;
+            }
+        }
+
+        for (var instruction = 0; instruction < 10; instruction++) {
+            var span = document.getElementById(`rule-2-${instruction + 1}`);
+            var rule = { type: rnd.nextMax(21), parameter: rnd.nextMax(5) };
+
+            switch (rule.type) {
+                case 0: span.innerText = `${action[rule.parameter]} # of batteries.`; break;
+                case 1: span.innerText = `${action[rule.parameter]} # of AA batteries.`; break;
+                case 2: span.innerText = `${action[rule.parameter]} # of D batteries.`; break;
+                case 3: span.innerText = `${action[rule.parameter]} # of battery holders.`; break;
+
+                case 4: span.innerText = `${action[rule.parameter]} # of total indicators.`; break;
+                case 5: span.innerText = `${action[rule.parameter]} # of lit indicators.`; break;
+                case 6: span.innerText = `${action[rule.parameter]} # of unlit indicators.`; break;
+
+                case 7: span.innerText = `${action[rule.parameter]} # of port plates.`; break;
+                case 8: span.innerText = `${action[rule.parameter]} # of unique ports.`; break;
+                case 9: span.innerText = `${action[rule.parameter]} # of duplicate ports.`; break;
+                case 10: span.innerText = `${action[rule.parameter]} # of total ports.`; break;
+
+                case 11: span.innerText = `${action[rule.parameter]} first digit in serial.`; break;
+                case 12: span.innerText = `${action[rule.parameter]} last digit in serial.`; break;
+                case 13: span.innerText = `${action[rule.parameter]} # of digits in serial.`; break;
+                case 14: span.innerText = `${action[rule.parameter]} # of letters in serial.`; break;
+
+                case 15: span.innerText = `${action[rule.parameter]} # of solved modules.`; break;
+                case 16: span.innerText = `${action[rule.parameter]} # of solvable modules.`; break;
+                case 17: span.innerText = `${action[rule.parameter]} # of total modules.`; break;
+                case 18: span.innerText = `${action[rule.parameter]} # of unsolved modules.`; break;
+                case 19: span.innerText = `${action[rule.parameter]} # of ignored modules.`; break;
+
+                case 20: span.innerText = `${action[rule.parameter]} the two-digit display.`; break;
+            }
+        }
+    }
+</script>
 <body>
     <div id="ManualContent">
         <div class="section">
@@ -85,41 +190,120 @@
                     <h2>On the Subject of Forget The Colors</h2>
                     <p class="flavour-text">Since when was trigonometry relevant to colors?</p>
 
-                    <p>Forget The Colors has 2 displays, a gear with an LED and number, 2 nixie tubes, 3 colored cylinders, and a key.</br>
-					Do not interact with the module until it's ready to be solved.</p>
+                    <p>
+                        Forget The Colors has 2 displays, a gear with an LED and number, 2 nixie tubes (numbers at the bottom-left), 3 colored cylinders, and a key.
+                        Do not interact with the module until it's ready to be solved.
+                    </p>
 
-					<p>To solve this module, take note of everything it shows you at the start, as well as after every solve* and get every stage's calculated number.</p>
+                    <p>In Colorblind mode, keep in mind that "I" refers to Pink, and "P" refers to Purple.</p>
 
-					<p><i>*Some modules are ignored by Forget The Colors.</i></p>
+                    <p>Take note of everything it shows you at the start, as well as after every solve* and get every stage's calculated number.</p>
 
-					<h3 class="padding">Apply the following for every stage:</h3>
+                    <p><i>*Some modules are ignored by Forget The Colors.</i></p>
 
-					<p>Refer to the second page to get the <strong>CALCULATED GEAR NUMBER</strong>. Do both steps 1 & 2.</p>
+                    <h3 class="padding">For every stage:</h3>
 
-					<ul>
-						<li>Take the 2 calculated nixie tubes as well as the <strong>CALCULATED GEAR NUMBER</strong> and merge them into a 3-digit number in the order mentioned.</li>
-						</br>
-						<li>Get the Sine (degrees) of that number, and take only the first 5 decimals, discarding the decimal point. This number can be negative.</li>
-						</br>
-						<li>Add the Sine number above to the <strong>STAGE NUMBER</strong> calculated previously.</li>
-					</ul>
-					
-					<p><strong>This number is now the calculated number for that stage, hold onto it.</strong></p>
+                    <p>Using the first table, modify both nixies based on the colors of each cylinder<strong><span class='rule' id='rule-extra-1'> from left to right. When using either table, don't record decimals and ignore divisions (/) or modulo (%) 0</span></strong>.</p>
 
-					<h3 class="padding">After every solvable module is solved**:</h3>
+                    <table style="margin-left:-40px;">
+                        <tr>
+                            <th class="top">If...</th>
+                            <td class="red">Red</td>
+                            <td class="orange">Orange</td>
+                            <td class="yellow">Yellow</td>
+                            <td class="green">Green</td>
+                            <td class="cyan">Cyan</td>
+                            <td class="blue">Blue</td>
+                            <td class="purple">Purple</td>
+                            <td class="pink">Pink</td>
+                            <td class="maroon">Maroon</td>
+                            <td class="white">White</td>
+                        </tr>
+                        <tr>
+                            <th class="top">Left Nixie</th>
+                            <td class="red"><span class='rule' id='rule-1-1'>+5</span></td>
+                            <td class="orange"><span class='rule' id='rule-1-2'>-1</span></td>
+                            <td class="yellow"><span class='rule' id='rule-1-3'>+3</span></td>
+                            <td class="green"><span class='rule' id='rule-1-4'>+7</span></td>
+                            <td class="cyan"><span class='rule' id='rule-1-5'>-7</span></td>
+                            <td class="blue"><span class='rule' id='rule-1-6'>+8</span></td>
+                            <td class="purple"><span class='rule' id='rule-1-7'>+5</span></td>
+                            <td class="pink"><span class='rule' id='rule-1-8'>-9</span></td>
+                            <td class="maroon"><span class='rule' id='rule-1-9'>+0</span></td>
+                            <td class="white"><span class='rule' id='rule-1-10'>-3</span></td>
+                        </tr>
+                        <tr>
+                            <th class="top">Right Nixie</th>
+                            <td class="red"><span class='rule' id='rule-1-11'>-1</span></td>
+                            <td class="orange"><span class='rule' id='rule-1-12'>-6</span></td>
+                            <td class="yellow"><span class='rule' id='rule-1-13'>+0</span></td>
+                            <td class="green"><span class='rule' id='rule-1-14'>-4</span></td>
+                            <td class="cyan"><span class='rule' id='rule-1-15'>-5</span></td>
+                            <td class="blue"><span class='rule' id='rule-1-16'>+9</span></td>
+                            <td class="purple"><span class='rule' id='rule-1-17'>-9</span></td>
+                            <td class="pink"><span class='rule' id='rule-1-18'>+4</span></td>
+                            <td class="maroon"><span class='rule' id='rule-1-19'>+7</span></td>
+                            <td class="white"><span class='rule' id='rule-1-20'>+5</span></td>
+                        </tr>
+                    </table>
+                    <p></p>
+                    
+                    <table class="padding" align="left">
+                        <tr class="top">
+                            <th>If...</th>
+                            <th>Then... (# = number)</th>
+                        </tr>
+                        <tr class="red">
+                            <td>Red</td>
+                            <td><span class='rule' id='rule-2-1'>Add # of batteries.</span></td>
+                        </tr>
+                        <tr class="orange">
+                            <td>Orange</td>
+                            <td><span class='rule' id='rule-2-2'>Subtract # of total ports.</span></td>
+                        </tr>
+                        <tr class="yellow">
+                            <td>Yellow</td>
+                            <td><span class='rule' id='rule-2-3'>Add the last digit in serial.</span></td>
+                        </tr>
+                        <tr class="green">
+                            <td>Green</td>
+                            <td><span class='rule' id='rule-2-4'>Subtract # of solved modules.</span></td>
+                        </tr>
+                        <tr class="cyan">
+                            <td>Cyan</td>
+                            <td><span class='rule' id='rule-2-5'>Add # of port plates.</span></td>
+                        </tr>
+                        <tr class="blue">
+                            <td>Blue</td>
+                            <td><span class='rule' id='rule-2-6'>Subtract # of total modules.</span></td>
+                        </tr>
+                        <tr class="purple">
+                            <td>Purple</td>
+                            <td><span class='rule' id='rule-2-7'>Add # of battery holders.</span></td>
+                        </tr>
+                        <tr class="pink">
+                            <td>Pink</td>
+                            <td><span class='rule' id='rule-2-8'>Subtract # of lit indicators.</span></td>
+                        </tr>
+                        <tr class="maroon">
+                            <td>Maroon</td>
+                            <td><span class='rule' id='rule-2-9'>Add # of total indicators.</span></td>
+                        </tr>
+                        <tr class="white">
+                            <td>White</td>
+                            <td><span class='rule' id='rule-2-10'>Subtract # of unlit indicators.</span></td>
+                        </tr>
+                    </table>
 
-					<p>Add all of the calculated stage numbers together, even if negative.</p>
+                    <div class="right">
+						<p>Add/Subtract 10 to keep both a single-digit positive number. Any future mention of nixie tubes refer to ones that have been modified.</p>
 
-					<ul>
-						<li>If the number has more than 5 digits, remove the leftmost digit(s).</li>
-						</br>
-						<li>If the number has less than 5 digits, add 0's to the leftmost position.</li>
-					</ul>
-					<p>Add a 0 and a decimal point before the first digit and make it a positive number.</br>Use Cos<sup>-1</sup> to receive a degree from 0 to 90. <strong>Floor ALL decimals</strong>.</p>
+                        <p>Look at the table to the left, start on the color from the LED on the gear.</p>
 
-					<p>Input the final number by clicking the 2 Nixie tubes to change their values.</br>Proceed to turn the key to submit your number.</p>
-					
-					<p><i>**BUT if there are exactly 0 solvable modules on your bomb, ignore all other rules. The module did the work for you. Just throw a 90. Thanks module.</i></p>
+                        <p>Move up <strong>[Left Nixie]</strong> and move down <strong>[Right Nixie]</strong>, wrapping if needed.</p>
+
+                        <p>Apply the rule to the sum of the nixies and gear number, only taking note of the least significant digit.</p>
+                    </div>
                 </div>
                 <div class="page-footer relative-footer">Page 1 of 2</div>
             </div>
@@ -129,135 +313,37 @@
                     <span class="page-header-section-title">Forget The Colors</span>
                 </div>
                 <div class="page-content">
-					<table align="right">
-                        <tr class="top">
-                            <th>If...</th>
-                            <th>First Nixie</br>Tube</th>
-							<th>Second Nixie</br>Tube</th>
-                        </tr>
-                        <tr class="red">
-                            <td>Red</td>
-							<td>Add 5</td>
-							<td>Remove 1</td>
-                        </tr>
-                        <tr class="orange">
-                            <td>Orange</td>
-							<td>Remove 1</td>
-							<td>Remove 6</td>
-                        </tr>
-                        <tr class="yellow">
-                            <td>Yellow</td>
-							<td>Add 3</td>
-							<td>Do Nothing</td>
-                        </tr>
-                        <tr class="green">
-                            <td>Green</td>
-							<td>Add 7</td>
-							<td>Remove 4</td>
-                        </tr>
-                        <tr class="cyan">
-                            <td>Cyan</td>
-							<td>Remove 7</td>
-							<td>Remove 5</td>
-                        </tr>
-                        <tr class="blue">
-                            <td>Blue</td>
-							<td>Add 8</td>
-							<td>Add 9</td>
-                        </tr>
-                        <tr class="purple">
-                            <td>Purple</td>
-							<td>Add 5</td>
-							<td>Remove 9</td>
-                        </tr>
-                        <tr class="pink">
-                            <td>Pink</td>
-							<td>Remove 9</td>
-							<td>Add 4</td>
-                        </tr>
-                        <tr class="maroon">
-                            <td>Maroon</td>
-							<td>Do Nothing</td>
-							<td>Add 7</td>
-                        </tr>
-                        <tr class="white">
-                            <td>White</td>
-							<td>Remove 3</td>
-							<td>Add 5</td>
-                        </tr>
-					</table>
-
-					<h3>Step 1</h3>
-
-					<p>Take the large display and Cosine it using degrees. Keep it a positive number.</br>
-					Only keep the first 5 decimals, and</br>remove the decimal point.</br>That is the <strong>STAGE NUMBER</strong>.</p>
-					<p>Take the 3 colors from the cylinders and the 2 nixie tubes, then apply them with the table to the right.</p>
-
-					<p>Add/Remove 10 to have it remain a positive single digit number.</p>
-
-					<p>Add the nixie tubes and the gear number together, then modulo the sum by 10, that number is the <strong>TOTAL NUMBER</strong>.</p>
-
-					</br></br>
-
-					<table align="left" class="padding">
-                        <tr class="top">
-                            <th>If...</th>
-                            <th>Then...</th>
-                        </tr>
-                        <tr class="red">
-                            <td>Red</td>
-							<td>Add # of batteries.</td>
-                        </tr>
-                        <tr class="orange">
-                            <td>Orange</td>
-							<td>Remove # of total ports.</td>
-                        </tr>
-                        <tr class="yellow">
-                            <td>Yellow</td>
-							<td>Add the last digit in serial.</td>
-                        </tr>
-                        <tr class="green">
-                            <td>Green</td>
-							<td>Remove # of solved modules.</td>
-                        </tr>
-                        <tr class="cyan">
-                            <td>Cyan</td>
-							<td>Add # of port plates.</td>
-                        </tr>
-                        <tr class="blue">
-                            <td>Blue</td>
-							<td>Remove # of total modules.</td>
-                        </tr>
-                        <tr class="purple">
-                            <td>Purple</td>
-							<td>Add # of battery holders.</td>
-                        </tr>
-                        <tr class="pink">
-                            <td>Pink</td>
-							<td>Remove # of lit indicators.</td>
-                        </tr>
-                        <tr class="maroon">
-                            <td>Maroon</td>
-							<td>Add # of total indicators.</td>
-                        </tr>
-                        <tr class="white">
-                            <td>White</td>
-							<td>Remove # of unlit indicators.</td>
-                        </tr>
-					</table>
-
-					<div class="right">
-						<h3>Step 2</h3>
-
-						<p>Look at the table to the left, start on the color from the LED on the gear.</p>
 					
-						<p>Before applying the condition,</br>move up <strong>[Calculated Nixie tube 1]</strong> and</br>move down <strong>[Calculated Nixie tube 2]</strong></br>through the left table (wrapping if necessary), then apply the rule in which you landed on.</p>
+					<p>Construct a 3-digit number using the left nixie, then the right nixie, and then the number obtained above.</p>
+                    <p><span id="showPDF">Get the Sine (sin) of that 3-digit number and take the first five digits of the sine past the decimal point. This number can be negative.</span> <div id="hidePDF">Write this 3-digit number below to get the first five decimals of sine. This number can be negative.</p>
 
-						<p>Apply it to the <strong>TOTAL NUMBER</strong>.</br>Modulo it by 10.</p>
+                    <input type="text" id="sin" class="top" style="width:30px">
+                    <input type="text" id="sinAns" class="top" style="width:60px" readonly></br>
 
-						<p>That is the <strong>CALCULATED GEAR NUMBER</strong>. You can now return to the first page.</p>
-					</div>
-				</div>
+                    <p></p></div>
+                    <p><span id="showPDF">Take the three-digit display and get the first five digits of Cosine (cos) past the decimal point. Drop any negative signs so that this value is always positive.</span><div id="hidePDF"> Take the three-digit display and write it below to get the absolute of the first five decimals of cosine. This number will always be positive.</p>
+
+                    <input type="text" id="cos" class="top" style="width:30px">
+                    <input type="text" id="cosAns" class="top" style="width:60px" readonly></br>
+
+                    <p></p></div>
+                    <p><strong>The sum of both numbers are the calculated number for that stage, hold onto it.</strong></p>
+
+                    <h3 class="padding">After all modules are solved**:</h3>
+
+					<p>When the module's cylinders and gear number turn gray, this is an indication that it is ready to be solved.</p>
+                    <p>Add all of the calculated stage numbers, taking only the first five decimals.</p>
+
+                    <p><span id="showPDF">Take this value and apply a Cos<sup>-1</sup> to it. This will require at least a scientific calculator. Floor the given value and drop all of the decimal values to get a number from 0 and 90.</span><div id="hidePDF">Keep the number positive and use floored Cos<sup>-1</sup> below to get a number from 0 to 90.</p>
+
+                    <input type="text" id="acos" class="top" style="width:60px">
+                    <input type="text" id="acosAns" class="top" style="width:30px" readonly></br>
+
+                    <p></p></div>
+                    <p>Input the final number by clicking the 2 nixie tubes to change their values. Proceed to turn the key to submit your number.</p>
+
+                    <p><i>**BUT if there are exactly 0 solvable modules on your bomb, ignore all other rules. The module did the work for you. Just throw a 90. Thanks module.</i></p>
+                </div>
                 <div class="page-footer relative-footer">Page 2 of 2</div>
             </div>
         </div>
