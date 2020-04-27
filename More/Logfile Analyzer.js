@@ -5224,6 +5224,7 @@ $(function() {
 				displayName: "...?",
 				moduleID: "punctuationMarks",
 				loggingTag: "...?",
+				icon: "Punctuation Marks",
 			},
 			{
 				displayName: "QR Code",
