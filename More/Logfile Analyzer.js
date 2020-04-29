@@ -834,7 +834,7 @@ $(function() {
 				if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
 					makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
 				} else if (parseData.moduleData.hasLogging === false) {
-					$("<p>").text("No information logged.").appendTo(moduleInfo);
+					$("<p>").text("Doesn't have logging.").appendTo(moduleInfo);
 				} else {
 					$("<p>")
 						.html("Please check the ")
@@ -890,7 +890,10 @@ $(function() {
 				}
 
 				if (parseData.events.length > 0) {
-					modListing.css("border-right", `5px solid hsla(${moduleColor / parseData.events.length * 120}, 100%, 50%)`);
+					const strikes = parseData.events.length - moduleColor;
+					modListing.css("border-right", `5px solid hsla(${moduleColor / parseData.events.length * 120}, 100%, 50%)`).attr("title", `(${moduleColor} solve${moduleColor == 1 ? "" : "s"}, ${strikes} strike${strikes == 1 ? "" : "s"})`);
+				} else if (!(parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0))) {
+					modListing.css("border-right", "5px solid rgba(127, 127, 127, 0.25)").attr("title", "(No logging was parsed)");
 				} else {
 					modListing.css("padding-right", "10px");
 				}
@@ -1190,6 +1193,7 @@ $(function() {
 								bomb.Needies++;
 							}
 
+							moduleData.needy = matches[2].includes("Needy");
 						}
 					},
 					{
@@ -1566,7 +1570,7 @@ $(function() {
 									if (bombgroup != null) bombgroup.Events.push(text);
 									else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
 
-									if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb)
+									if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb && !mod.moduleData.needy)
 										bombgroup.loggedBombs[0].Solved++;
 
 									break;
