@@ -1788,6 +1788,11 @@ $(function() {
 				loggingTag: "The Answer to ...",
 				displayName: "Answer to..."
 			},
+      {
+        moduleID: "lgndAudioMorse",
+        loggingTag: "Audio Morse",
+        displayName: "Audio Morse"
+      },
 			{
 				moduleID: "babaIsWho",
 				displayName: "Baba Is Who",
