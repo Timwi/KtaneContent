@@ -6305,7 +6305,7 @@ $(function() {
 				]
 			},
 			{
-				displayName: "Tic-Tac-Toe",
+				displayName: "Tic Tac Toe",
 				moduleID: "TicTacToeModule",
 				loggingTag: "TicTacToe",
 				matches: [
