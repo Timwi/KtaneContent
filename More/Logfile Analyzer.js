@@ -6382,6 +6382,25 @@ $(function() {
 				]
 			},
 			{
+				displayName: "The Twin",
+				moduleID: "TheTwinModule",
+				loggingTag: "The Twin",
+				matches: [
+					{
+						regex: /(The final sequence is (?:now )?)(\d+)/,
+						handler: function(matches, module) {
+							var div = $('<div>');
+							div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll "});
+							module.push ({ label: matches[1], obj: div });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Valves",
 				moduleID: "valves",
 				loggingTag: "Valves",
