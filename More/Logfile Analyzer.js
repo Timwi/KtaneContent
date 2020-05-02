@@ -1792,14 +1792,14 @@ $(function() {
 				loggingTag: "The Answer to ...",
 				displayName: "Answer to..."
 			},
-      {
-        moduleID: "lgndAudioMorse",
-        loggingTag: "Audio Morse",
-        displayName: "Audio Morse"
-      },
+			{
+				moduleID: "lgndAudioMorse",
+				loggingTag: "Audio Morse",
+				displayName: "Audio Morse"
+			},
 			{
 				moduleID: "babaIsWho",
-				displayName: "Baba Is Who",
+				displayName: "Baba Is Who?",
 				loggingTag: "Baba Is Who?"
 			},
 			{
@@ -3315,6 +3315,12 @@ $(function() {
 						regex: /.+/
 					}
 				]
+			},
+			{
+				displayName: "Guess Who?",
+				moduleID: "GuessWho",
+				loggingTag: "Guess Who?",
+				icon: "Guess Who",
 			},
 			{
 				displayName: "Hereditary Base Notation",
