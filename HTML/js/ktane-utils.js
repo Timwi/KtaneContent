@@ -185,11 +185,34 @@ e.onload = function()
         function setPosition(highlight)
         {
             let a = highlight.data('obj-a'), b = highlight.data('obj-b');
-            highlight.outerWidth(a.outerWidth());
-            highlight.outerHeight(b.outerHeight());
-            highlight.css("left", a.offset().left + "px");
-            highlight.css("top", b.offset().top + "px");
-            highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
+            // Check to see if we're parented to any overflow elements.
+            const overflowElement = a.parents().filter((_, element) => {
+                const jqueryElement = $(element);
+                const overflows = [jqueryElement.css("overflow-x"), jqueryElement.css("overflow-y")];
+                return ["hidden", "scroll", "auto", "overlay"].some(value => overflows.includes(value));
+            });
+
+            // If we have no overflow elements faster path.
+            // We also don't support more than one overflow element so fallback if that happens.
+            if (overflowElement.length !== 1) {
+                highlight.outerWidth(a.outerWidth());
+                highlight.outerHeight(b.outerHeight());
+                highlight.css("left", a.offset().left + "px");
+                highlight.css("top", b.offset().top + "px");
+                highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
+                return;
+            }
+            
+            // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of it's overflow element.
+            const outerClipBox = overflowElement[0].getBoundingClientRect();
+            const left = Math.max(a.offset().left, scrollX + outerClipBox.left);
+            const top = Math.max(b.offset().top, scrollY + outerClipBox.top);
+            
+            highlight.css("left", left + "px");
+            highlight.css("top", top + "px");
+            highlight.css("transform-origin", -left + "px " + -top + "px");
+            highlight.outerWidth(Math.min(a.outerWidth() - Math.max(0, scrollX + outerClipBox.left - a.offset().left), scrollX + outerClipBox.right - left));
+            highlight.outerHeight(Math.min(b.outerHeight() - Math.max(0, scrollY + outerClipBox.top - b.offset().top), scrollY + outerClipBox.bottom - top));
         }
 
         $("td, th, li, .highlightable").each(function()
@@ -303,6 +326,16 @@ e.onload = function()
                 setPosition($(e));
             });
         });
+
+        document.body.addEventListener('scroll', event => {
+            $('.ktane-highlight').each(function(_, _e)
+            {
+                const e = $(_e);
+                if (event.target.contains(e.data('obj-a')[0]) || event.target.contains(e.data('obj-b')[0])) {
+                    setPosition(e);
+                }
+            });
+        }, true);
 
         // Read current preferences from local storage
         let highlighterEnabled = localStorage.getItem('ktane-highlighter-enabled');
