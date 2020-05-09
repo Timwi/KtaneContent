@@ -1052,25 +1052,42 @@ $(function() {
 			return lines;
 		}
 
+		// (Store keys for the below function so it doesn't need to search through the entire parseData every time.)
+		parseKeys = [];
+		function generateParseDataKeys(field)
+		{
+			parseKeys[field] = [];
+			parseData.forEach((moduleData, index) => {
+				if (parseKeys[field][moduleData[field]] !== undefined) {
+					return;
+				} else if (Array.isArray(moduleData[field])) {
+					moduleData[field].forEach((individual, secondIndex) => parseKeys[field][individual] = [index, secondIndex]);
+				} else if (moduleData[field] !== undefined) {
+					parseKeys[field][moduleData[field]] = index;
+				}
+			});
+		}
+
 		// Get module data based on a field.
 		// Also changes fields that have multiple values into the one relevant to the field.
 		function getModuleData(value, field = "loggingTag") {
-			for (const moduleData of parseData) {
-				if (Array.isArray(moduleData[field]) && moduleData[field].includes(value)) {
-					const singleModuleData = Object.assign({}, moduleData);
-					const index = moduleData[field].indexOf(value);
-					const fields = ["loggingTag", "moduleID", "displayName", "icon"];
+			if (parseKeys[field] === undefined)
+				generateParseDataKeys(field);
 
-					for (const field of fields) {
-						if (!Array.isArray(singleModuleData[field])) continue;
 
-						singleModuleData[field] = singleModuleData[field][index];
-					}
+			if (Array.isArray(parseKeys[field][value])) {
+				const singleModuleData = Object.assign({}, parseData[parseKeys[field][value][0]]);
+				const index = parseKeys[field][value][1];
+				const fields = ["loggingTag", "moduleID", "displayName", "icon"];
 
-					return singleModuleData;
-				} else if (moduleData[field] == value) {
-					return Object.assign({}, moduleData);
+				for (const field of fields) {
+					if (!Array.isArray(singleModuleData[field])) continue;
+
+					singleModuleData[field] = singleModuleData[field][index];
 				}
+				return singleModuleData;
+			} else if (parseKeys[field][value] !== undefined) {
+				return Object.assign({}, parseData[parseKeys[field][value]]);
 			}
 
 			return null;
