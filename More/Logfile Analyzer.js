@@ -3737,6 +3737,11 @@ $(function() {
 				]
 			},
 			{
+				moduleID: "MandNs",
+				loggingTag: "M&Ns",
+				displayName: "M&Ns"
+			},
+			{
 				displayName: "Matrices",
 				moduleID: "MatrixQuiz",
 				loggingTag: "Linear Algebra Matrix Quiz",
