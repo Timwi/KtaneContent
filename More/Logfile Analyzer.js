@@ -2797,6 +2797,24 @@ $(function() {
 				loggingTag: "TheDealmaker"
 			},
 			{
+				displayName: "Dreamcipher",
+				moduleID: "ksmDreamcipher",
+				loggingTag: "Dreamcipher",
+				matches: [
+					{
+						regex: /Glyph alphabet translation table:/,
+						handler: function(matches, module) {
+							var glyphTable = readMultiple(8).replace(/\[Dreamcipher #\d+\] \* /g, '');
+							module.push({ label: matches.input, obj: pre(glyphTable) });
+							return true;
+						}
+					},
+					{
+						regex: /.+/
+					}
+				]
+			},
+			{
 				displayName: "Echolocation",
 				moduleID: "echolocation",
 				loggingTag: "Echolocation",
