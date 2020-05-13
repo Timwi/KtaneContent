@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -48,7 +48,8 @@
         vertical-align: middle;
     }
     .icon {
-        image-rendering: crisp-edges;
+        image-rendering: crisp-edges; /* Firefox */
+        image-rendering: pixelated; /* Chrome */
         width: 320px;
         height: 320px;
         text-align: center;
@@ -85,7 +86,7 @@
 
             if (module_icons[name] === undefined)
             {
-                var cleanname = name.replace("'", "’").replace("?", "")
+                var cleanname = name.replace("'", "’").replace("?", "").replace("/", "");
                 module_icons[name] = cleanname + ".png";
             }
 
@@ -97,7 +98,7 @@
     function updateIcon(element) {
         var modname = element.value;
         if (module_icons[modname] !== undefined) {
-            document.getElementById("icon").src = "https://ktane.timwi.de/Icons/" + module_icons[modname];
+            document.getElementById("icon").src = "https://ktane.timwi.de/Icons/" + encodeURI(module_icons[modname]);
         } else {
             document.getElementById("icon").src = "https://ktane.timwi.de/Icons/Blank.png";
         }
@@ -105,13 +106,12 @@
 
     function clickedIcon(event) {
         var icon = document.getElementById("icon");
-        var x = Math.floor(((event.pageX - icon.x) - 1) / 10);
-        var y = Math.floor(((event.pageY - icon.y) - 2) / 10) + 1;
-        if (x < 0) x = 0;
-        if (x > 31) x = 31;
-        if (y < 1) y = 1;
-        if (y > 32) y = 32;
-        document.getElementById("result").innerHTML = alpha_positions[x] + y;
+        var bounds = icon.getBoundingClientRect();
+        var x = Math.floor(((event.clientX - 1) - Math.round(bounds.left)) / 10);
+        var y = Math.floor(((event.clientY - 1) - Math.round(bounds.top)) / 10);
+        if (x < 0 || x > 31 || y < 0 || y > 31)
+        	return;
+        document.getElementById("result").innerHTML = alpha_positions[x] + (y + 1);
     }
 
     function addEventHandlers() {
