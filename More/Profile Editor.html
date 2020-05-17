@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Mod Selector Profile Editor</title>
@@ -100,7 +101,7 @@
 		.mod {
 			display: flex;
 			background: white;
-			padding: 8px;
+			padding: 3px;
 			margin: 3px;
 			transition: background 0.4s;
 			user-select: none;
@@ -108,7 +109,12 @@
 			align-content: center;
 			cursor: pointer;
 			color: black;
-            text-decoration: none;
+			text-decoration: none;
+			position: relative;
+		}
+
+		.mod > div {
+			padding: 5px;
 		}
 
 		.mod.disabled {
@@ -124,10 +130,26 @@
 		img.mod-icon {
 			float: left;
 			margin-right: 10px;
+			height: 32px;
+			width: 32px;
+			object-fit: none;
 		}
 
 		div.mod-info {
 			float: right;
+		}
+
+		a.mod-delete {
+			color: white;
+			background: red;
+			border-radius: 5px;
+			padding: 1px 3px;
+			border: 1px solid black;
+			font-weight: bold;
+			line-height: 1;
+			font-size: 85%;
+			margin-left: auto;
+			height: max-content;
 		}
 
 		input[type="file"] {
@@ -160,13 +182,16 @@
 	<script>
 		/// MOD DATA ///
 		var mods = [
-            { id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular" },
-            { id: "WhosOnFirstTranslated", name: "Who’s On First (Translated)", type: "Regular" },
-            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular" },
-            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular" },
-            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy" },
+			{ id: "BigButtonTranslated", name: "The Button (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "WhosOnFirstTranslated", name: "Who’s on First (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "MorseCodeTranslated", name: "Morse Code (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "PasswordsTranslated", name: "Password (Translated)", type: "Regular", published: "2017-01-25" },
+            { id: "VentGasTranslated", name: "Venting Gas (Translated)", type: "Needy", published: "2017-01-25" },
             
-            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular" },
+            { id: "AdjacentLettersModule_Rus", name: "Adjacent Letters (Russian)", type: "Regular", published: "2019-01-09" },
+            { id: "ColourFlashPL", name: "Colour Flash (Polish)", type: "Regular", published: "2020-03-21" },
+            { id: "insanetalkPL", name: "Insane Talk (Polish)", type: "Regular", published: "2020-03-30" },
+            { id: "WordSearchModulePL", name: "Word Search (Polish)", type: "Regular", published: "2020-03-22" },
 
             { name: "10x10 Casing (199 modules)", id: "10x10 Casing (199 modules)", type: "case" },
             { name: "11x11 Casing (241 modules)", id: "11x11 Casing (241 modules)", type: "case" },
@@ -276,18 +301,17 @@
 		];
 
 		const vueData = {
-			profile: [],
-			profileName: "Profile",
+			profileName: undefined,
 			operation: 0,
 			mods: mods,
 
 			modTypes: {
 				Regular: "Solvable Modules",
 				Needy: "Needy Modules",
+				Widget: "Widgets",
 				service: "Services",
 				case: "Bomb Cases",
 				Room: "Gameplay Rooms",
-				Widget: "Widgets",
 			},
 			visibleTypes: {Regular: true, Needy: true},
 
@@ -299,16 +323,19 @@
 		};
 
 		class Mod {
-			constructor(name, sortKey, id, type, published = "1970-1-1") {
+			constructor(name, sortKey, icon, id, type, published = "_") {
 				this.Name = name;
 				this.SortKey = sortKey;
+				this.Icon = icon;
 				this.ID = id;
 				this.Type = type;
 				this.Published = published;
+				this.Enabled = true;
+				this.Unknown = false;
 			}
 		}
 
-		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.replace(/^The /, "").toUpperCase(), mod.id, mod.type, mod.published));
+		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.toUpperCase().replace(/^THE |[^0-9A-Z]/g, ""), { X: 0, Y: 0 }, mod.id, mod.type, mod.published));
 
 		function makeRequest(url) {
 			return new Promise(function(resolve, reject) {
@@ -324,6 +351,20 @@
 		makeRequest("https://ktane.timwi.de/json/raw").then(responseText => {
 			const websiteJSON = JSON.parse(responseText);
 
+			for (const mod of vueData.mods) {
+				const icon = mod.Icon;
+				if (icon.X !== 0 || icon.Y !== 0)
+					continue;
+
+				const targetName = mod.Name.replace(/ \((Translated|Russian|Polish)\)$/, '');
+				const matches = websiteJSON.KtaneModules.filter(module => module.Name == targetName);
+				if (matches.length === 1) {
+					const match = matches[0];
+					icon.X = match.X;
+					icon.Y = match.Y;
+				}
+			}
+
 			websiteJSON.KtaneModules.forEach(function(module) {
 				if (!module.ModuleID) {
 					console.warn("Skipping " + module.Name + " because it lacks an ID.");
@@ -331,12 +372,10 @@
 				}
 
 				if (module.Origin == "Mods") {
-					vueData.mods.push(new Mod(module.Name, module.SortKey, module.ModuleID, module.Type, module.Published));
+					vueData.mods.push(new Mod(module.Name, module.SortKey, { X: module.X, Y: module.Y }, module.ModuleID, module.Type, module.Published));
 				}
 			});
 		}).catch(errorCode => console.error(`Failed to load JSON data! Error: ${errorCode}`));
-
-		const fallbackImage = "../Icons/blank.png";
 
 		/* global Vue */
 		const devMode = (window.location.protocol == "file:");
@@ -344,6 +383,79 @@
 
 		window.onload = function() {
 			var toastr = this.toastr; // A Vue version of toastr.
+			let vm = new Vue({
+				el: "#editor",
+				data: vueData,
+				methods: {
+					toggleMod: function(mod, event) {
+						mod.Enabled = !mod.Enabled;
+
+						if (event)
+							event.preventDefault();
+					},
+					getJSON: function() {
+						const availableMods = this.operation === 1 ? this.mods : this.mods.filter(mod => ["Regular", "Needy", "Widget"].includes(mod.Type));
+
+						const newJSON = {
+							"DisabledList": availableMods.filter(mod => !mod.Enabled).map(mod => mod.ID),
+							"EnabledList": availableMods.filter(mod => mod.Enabled).map(mod => mod.ID),
+							"Operation": this.operation
+						};
+
+						if (this.operation === 1) {
+							delete newJSON.EnabledList;
+						}
+
+						return JSON.stringify(newJSON, null, 2);
+					},
+					onFileUploaded: function(event) {
+						uploadProfile(event.target.files)
+					},
+					startRenaming: function() {
+						this.isRenaming = true;
+						setTimeout((function() {
+							this.$refs.renameField.focus();
+						}).bind(this), 0);
+					},
+					handleRenaming: function(event) {
+						if ((event.type == "keydown" && event.key == "Enter") || event.type == "blur") {
+							this.isRenaming = false;
+							event.type == "keydown" && event.target.blur();
+						}
+					},
+					handleDownload: function(event) {
+						if (this.profileName == undefined) {
+							const name = prompt("Enter a profile name to download the profile:");
+							if (name !== null) {
+								this.profileName = name;
+								Vue.nextTick(() => event.target.click());
+							}
+							
+							event.preventDefault();
+						}
+
+						if (navigator.msSaveBlob) {
+							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
+							event.preventDefault();
+						}
+					},
+					getMods: getMods,
+					toggleType: function(type) {
+						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
+					},
+					setAllMods: function(type, state) {
+						getMods(type).forEach(mod => {
+							mod.Enabled = state;
+						});
+					},
+					toggleAllMods: function(type) {
+						getMods(type).forEach(mod => this.toggleMod(mod));
+					},
+					deleteMod: function(mod) {
+						this.mods.splice(this.mods.indexOf(mod), 1);
+					}
+				}
+			});
 
 			function getModuleCount(caseMod) {
 				if (!caseMod.moduleCount) {
@@ -385,7 +497,7 @@
 				const sortingMethod = sortingMethods[vueData.sortingMethodIndex].Compare;
 
 				if (type == "case") {
-					mods.sort(function(mod1, mod2) {
+					mods.sort((mod1, mod2) => {
 						var count1 = getModuleCount(mod1);
 						var count2 = getModuleCount(mod2);
 
@@ -413,28 +525,43 @@
 			}
 
 			function handleProfile(profileData, name) {
-				var profile = parseJSON(profileData);
+				const profile = parseJSON(profileData);
 				if (!profile) {
 					toastr.error("Only valid JSON profiles are allowed", "Profile Error");
 					return false;
 				}
 
-				if (!Array.isArray(profile.DisabledList) || typeof(profile.Operation) != "number") {
+				if (!Array.isArray(profile.DisabledList) || typeof(profile.Operation) != "number" || (!Array.isArray(profile.EnabledList) && profile.EnabledList != undefined)) {
 					toastr.error("Invalid profile detected", "Profile Error");
 					return false;
 				}
 
-				vueData.profileName = name.replace(/\.json$/, "");
-				vueData.profile = profile.DisabledList;
-				vueData.operation = profile.Operation;
+				vm.profileName = name.replace(/\.json$/, "");
+				vm.operation = profile.Operation;
+
+				const disabled = profile.DisabledList;
+				const enabled = profile.EnabledList || vm.mods.filter(mod => !disabled.includes(mod.ID)).map(mod => mod.ID);
+				const combined = disabled.concat(enabled);
 
 				// Check if we support all the IDs in the profile.
-				for (var modID of vueData.profile) {
-					const mod = vueData.mods.find(mod => mod.ID == modID);
-
+				for (const modID of combined) {
+					const mod = vm.mods.find(mod => mod.ID == modID);
+					
 					if (!mod) {
-						vueData.mods.push(new Mod(modID, modID.toUpperCase(), modID, "Regular"))
+						const newMod = new Mod(modID, modID.toUpperCase(), { X: 0, Y: 0 }, modID, "Regular");
+						newMod.Unknown = true;
+						vm.mods.push(newMod);
 						console.warn("Can't find mod for " + modID);
+					}
+				}
+
+				for (const mod of vm.mods) {
+					if (disabled.includes(mod.ID) && enabled.includes(mod.ID)) {
+						mod.Enabled = true;
+					} else if (!disabled.includes(mod.ID) && !enabled.includes(mod.ID)) {
+						mod.Enabled = false;
+					} else {
+						mod.Enabled = enabled.includes(mod.ID);
 					}
 				}
 			}
@@ -470,16 +597,16 @@
 					toastr.error("Unable to find any imported files", "File Import Error");
 				}
 
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			}
 
 			window.addEventListener("dragover", function(e) {
-				vueData.isHovering = true;
+				vm.isHovering = true;
 				e.preventDefault();
 			});
 
 			window.addEventListener("dragleave", function() {
-				vueData.isHovering = false;
+				vm.isHovering = false;
 			});
 
 			window.addEventListener("drop", function(e) {
@@ -487,7 +614,7 @@
 				if (!text) {
 					uploadProfile(e.dataTransfer.files);
 				} else {
-					vueData.isHovering = false;
+					vm.isHovering = false;
 					if (!downloadProfile(text)) {
 						toastr.warning("Unable to read URL for profile.");
 					}
@@ -508,81 +635,6 @@
 					toastr.warning("Unable to read URL from paste.");
 				}
 			});
-
-			new Vue({
-				el: "#editor",
-				data: vueData,
-				methods: {
-					toggleMod: function(mod, event) {
-						var index = this.profile.indexOf(mod.ID);
-						if (index > -1) {
-							this.profile.splice(index, 1);
-						} else {
-							this.profile.push(mod.ID);
-						}
-
-						if (event)
-							event.preventDefault();
-					},
-					getJSON: function() {
-						return JSON.stringify({
-							"DisabledList": this.profile,
-							"Operation": this.operation
-						});
-					},
-					onFileUploaded: function(event) {
-						uploadProfile(event.target.files)
-					},
-					startRenaming: function() {
-						this.isRenaming = true;
-						setTimeout((function() {
-							this.$refs.renameField.focus();
-						}).bind(this), 0);
-					},
-					handleRenaming: function(event) {
-						if ((event.type == "keydown" && event.key == "Enter") || event.type == "blur") {
-							this.isRenaming = false;
-							event.type == "keydown" && event.target.blur();
-						}
-					},
-					fallbackToBlank: function(event) {
-						if (event.target.src == fallbackImage) {
-							return;
-						}
-
-						event.target.src = fallbackImage;
-					},
-					fallbackDownload: function(event) {
-						if (navigator.msSaveBlob) {
-							navigator.msSaveBlob(new Blob([this.getJSON()]), this.profileName + '.json');
-							event.preventDefault();
-						}
-					},
-					getMods: getMods,
-					toggleType: function(type) {
-						Vue.set(this.visibleTypes, type, !this.visibleTypes[type]);
-					},
-					setAllMods: function(type, state) {
-						getMods(type).forEach(mod => {
-							const id = mod.ID;
-							const profileIndex = this.profile.indexOf(id);
-							if (!state && profileIndex == -1) {
-								this.profile.push(id);
-							} else if (state && profileIndex != -1) {
-								this.profile.splice(profileIndex, 1);
-							}
-						});
-					},
-					toggleAllMods: function(type) {
-						getMods(type).forEach(mod => {
-							const id = mod.ID;
-							const profileIndex = this.profile.indexOf(id);
-							if (profileIndex == -1) this.profile.push(id);
-							else this.profile.splice(profileIndex, 1);
-						});
-					}
-				}
-			});
 		};
 	</script>
 </head>
@@ -597,16 +649,16 @@
 			<div class="title">Profile Editor</div>
 			<div class="header">
 				<label class="clickable" for="file-upload" accesskey="i">Import</label>
-				<div v-if="!isRenaming" @click="startRenaming">{{ profileName }}.json <button class="clickable" accesskey="r">Rename</button></div>
+				<div v-if="!isRenaming" @click="startRenaming">{{ profileName ? `${profileName}.json` : "(Unnamed)" }} <button class="clickable" accesskey="r">Rename</button></div>
 				<input v-if="isRenaming" @keydown="handleRenaming" @blur="handleRenaming" @paste.stop v-model="profileName" ref="renameField" placeholder="Profile Name">
 				<div>Type: <button class="clickable" @click="operation = 1 - operation" accesskey="o">{{ operation ? "Defuser" : "Expert" }}</button></div>
 				<div>Sort By: <button class="clickable" @click="sortingMethodIndex++; sortingMethodIndex %= sortingMethods.length;" accesskey="s">{{ sortingMethods[sortingMethodIndex].Name }}</button></div>
-				<div><a @click="fallbackDownload" :download="profileName + '.json'" :href="'data:application/json,' + encodeURIComponent(getJSON())" accesskey="d">Download</a></div>
+				<div><a @click="handleDownload" :download="profileName + '.json'" :href="'data:application/json,' + encodeURIComponent(getJSON())" :style="{ color: profileName == undefined ? 'gray' : null }" :title="profileName == undefined ? 'Enter a profile name to download the profile.' : null" accesskey="d">Download</a></div>
 			</div>
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).map(mod => mod.ID).filter(id => profile.includes(id)).length }}/{{ getMods(type).length }})</span></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).filter(mod => !mod.Enabled).length }}/{{ getMods(type).length }})</span></h3>
 				<div class="toggleMods" v-if="visibleTypes[type]">
 					<button @click="setAllMods(type, true)" class="clickable">Enable</button>
 					/
@@ -617,12 +669,15 @@
 				</div>
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
-						<button @click="toggleMod(mod, $event)" class="mod" :class="{ disabled: profile.includes(mod.ID) }">
-                            <img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" @error="fallbackToBlank" :src="'../Icons/' + encodeURI(mod.Name.replace(/ \((Translated|Russian)\)$/, '')) + '.png'">
-                            <div class="mod-info">
-                                <div>{{ mod.Name }}</div>
-                                <div class="mod-id">{{ mod.ID.replace(/\(Clone\)$/, "") }}</div>
-                            </div>
+						<button @click="toggleMod(mod, $event)" class="mod" :class="{ disabled: !mod.Enabled }">
+							<div>
+								<img v-if="['Regular', 'Needy', 'Widget'].includes(type)" class="mod-icon" src="https://ktane.timwi.de/iconsprite" :style="{ 'object-position': `${mod.Icon.X * -32}px ${mod.Icon.Y * -32}px` }">
+								<div class="mod-info">
+									<div>{{ mod.Name }}</div>
+									<div class="mod-id">{{ mod.ID.replace(/\(Clone\)$/, "") }}</div>
+								</div>
+							</div>
+							<a class="mod-delete" v-if="mod.Unknown" @click="deleteMod(mod)" title="Unknown module. Delete?">✕</a>
 						</button>
 					</template>
 				</div>
@@ -630,3 +685,4 @@
 		</div>
 	</div>
 </body>
+</html>

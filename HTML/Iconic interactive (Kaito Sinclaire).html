@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>Iconic — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <script src="js/ktane-utils.js"></script>
+</head>
+<style>
+    .containers {
+        display: flex;
+    }
+    .input-container {
+        border: 10px inset;
+        border-color: #E0E0E0;
+        background: #C8C8C8;
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    .input-box {
+        margin-top: 8px;
+    }
+    .location-box {
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+    }
+    .result {
+        font-size: 72pt;
+    }
+    .icon-container {
+        border: 10px outset;
+        border-color: #E0E0E0;
+        background: #F8F8F8;
+        width: 340px;
+        height: 340px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .icon-container span {
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+    }
+    .icon {
+        image-rendering: crisp-edges; /* Firefox */
+        image-rendering: pixelated; /* Chrome */
+        width: 320px;
+        height: 320px;
+        text-align: center;
+        margin: auto;
+    }
+    input {
+        width: 96%;
+        font-family: 'Special Elite', 'Courier New', monospace;
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+</style>
+<script>
+    alpha_positions = [
+        "A", "B", "C", "D", "E", "F", "G", "H",
+        "I", "J", "K", "L", "M", "N", "O", "P",
+        "Q", "R", "S", "T", "U", "V", "W", "X",
+        "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF",
+    ];
+    module_icons = {
+        "...?": "Punctuation Marks.png",
+    };
+    async function fetchRepoInformation() {
+        var request = await fetch("https://ktane.timwi.de/json/raw");
+        var repo_json = await request.text();
+        var all_modules = JSON.parse(repo_json);
+
+        var datalist = document.getElementById("modules");
+        all_modules["KtaneModules"].forEach(mod => {
+            var name = mod["Name"].replace("’", "'");
+            var newopt = document.createElement("option");
+            newopt.value = name;
+            datalist.appendChild(newopt);
+
+            if (module_icons[name] === undefined)
+            {
+                var cleanname = name.replace("'", "’").replace("?", "").replace("/", "");
+                module_icons[name] = cleanname + ".png";
+            }
+
+            updateIcon(document.getElementById("modinput"));
+        });
+    }
+    fetchRepoInformation();
+
+    function updateIcon(element) {
+        var modname = element.value;
+        if (module_icons[modname] !== undefined) {
+            document.getElementById("icon").src = "https://ktane.timwi.de/Icons/" + encodeURI(module_icons[modname]);
+        } else {
+            document.getElementById("icon").src = "https://ktane.timwi.de/Icons/Blank.png";
+        }
+    }
+
+    function clickedIcon(event) {
+        var icon = document.getElementById("icon");
+        var bounds = icon.getBoundingClientRect();
+        var x = Math.floor(((event.clientX - 1) - Math.round(bounds.left)) / 10);
+        var y = Math.floor(((event.clientY - 1) - Math.round(bounds.top)) / 10);
+        if (x < 0 || x > 31 || y < 0 || y > 31)
+        	return;
+        document.getElementById("result").innerHTML = alpha_positions[x] + (y + 1);
+    }
+
+    function addEventHandlers() {
+        document.getElementById("icon").addEventListener("click", clickedIcon);
+    }
+
+</script>
+<body onload="addEventHandlers()">
+    <div id="ManualContent">
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Iconic</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Iconic.svg" class="diagram">
+                    <h2>On the Subject of Doing Iconic on TP</h2>
+                    <p class="flavour-text">Because pixel hunts got old ages ago.</p>
+                    <p>See the original manual for the original instructions.</p>
+                    <p>Input the module's name in the following box to pull up its icon. Click a pixel to show the coordinate of that pixel.</p>
+
+                    <div class="containers">
+                        <div class="input-container">
+                            <div class="input-box">
+                                <input list="modules" id="modinput" oninput="updateIcon(this)">
+                                <datalist id="modules">
+                                </datalist>
+                            </div>
+                            <div class="location-box">
+                                <div>Location:</div>
+                                <div id="result" class="result">-</div>
+                            </div>
+                        </div>
+                        <div class="icon-container">
+                            <span></span>
+                            <img src="https://ktane.timwi.de/Icons/Blank.png" id="icon" class="icon">
+                            <span></span>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="page-footer relative-footer">Page NaN of &infin;</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
