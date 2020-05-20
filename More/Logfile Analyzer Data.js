@@ -2340,6 +2340,12 @@ const parseData = [
 		loggingTag: "Hexamaze",
 		matches: [
 			{
+				regex: /Using rule seed: (\d+)/,
+				handler: function(matches, module) {
+					module.Ruleseed = parseInt(matches[1]);
+				}
+			},
+			{
 				regex: /Moving from|Walking out|There’s an|However, we wanted/,
 				handler: function(matches, module) {
 					if (!module.Moves) {
@@ -2362,6 +2368,8 @@ const parseData = [
 						color: matches[6],
 						markings: []
 					};
+					if (module.Ruleseed)
+						module.JSON.ruleseed = module.Ruleseed;
 
 					module.push(module.Link);
 				}
@@ -2373,7 +2381,7 @@ const parseData = [
 						pos: [parseInt(matches[1]), parseInt(matches[2])],
 						type: matches[3]
 					});
-					module.Link.label = "Click <a href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>here</a> to view the solution interactively.";
+					module.Link.label = "<a href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>View the solution interactively</a>";
 				}
 			},
 			{
