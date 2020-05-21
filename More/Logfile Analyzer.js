@@ -952,7 +952,7 @@ function getModuleData(value, field = "loggingTag") {
 	if (Array.isArray(parseKeys[field][value])) {
 		const singleModuleData = Object.assign({}, parseData[parseKeys[field][value][0]]);
 		const index = parseKeys[field][value][1];
-		const fields = ["loggingTag", "moduleID", "displayName", "icon"];
+		const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
 
 		for (const field of fields) {
 			if (!Array.isArray(singleModuleData[field])) continue;
@@ -1076,7 +1076,14 @@ function parseLog(opt) {
 						console.warn(`Unnecessary module: ${module.Name}`);
 					}
 
-					match.iconPosition = { X: module.X, Y: module.Y };
+					if (Array.isArray(match.moduleID)) {
+						if (match.iconPosition == null)
+							match.iconPosition = [];
+
+						match.iconPosition[match.moduleID.indexOf(module.ModuleID)] = { X: module.X, Y: module.Y };
+					} else {
+						match.iconPosition = { X: module.X, Y: module.Y };
+					}
 				}
 			}
 		}, "json")
