@@ -2049,7 +2049,7 @@ const parseData = [
 				handler: function(matches, module) {
 					module.push({
 						label: matches.input,
-						obj: pre(readMultiple(2, removeTag))
+						obj: pre(readMultiple(2, str => str.replace(/^[ \t]*\[.+?\] /, '')))
 					});
 					return true;
 				}
