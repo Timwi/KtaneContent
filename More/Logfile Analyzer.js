@@ -1043,10 +1043,6 @@ function parseLog(opt) {
 		return false;
 	}
 
-	function removeTag(str) {
-		return str.replace(/^[ \t]*\[.+?\] /, '');
-	}
-
 	bombgroup = null;
 	lastBombGroup = null;
 	bomb = null;
