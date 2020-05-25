@@ -5557,6 +5557,12 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Word Search (PL)",
+		moduleID: "WordSearchModulePL",
+		icon: "Word Search",
+		loggingTag: "Word Search PL"
+	},	
+	{
 		displayName: "The World's Largest Button",
 		moduleID: "WorldsLargestButton",
 		icon: "The World’s Largest Button",
