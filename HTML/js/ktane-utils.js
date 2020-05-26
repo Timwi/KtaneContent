@@ -85,8 +85,8 @@ e.onload = function()
 
         $(document).keydown(function(event)
         {
-            // Only accept shortcuts with Alt
-            if (!event.altKey || event.shiftKey || event.ctrlKey)
+            // Only accept shortcuts with Alt or Ctrl+Shift
+            if (!event.altKey && !(event.shiftKey && event.ctrlKey))
                 return;
 
             // Alt-O: Open options menu
