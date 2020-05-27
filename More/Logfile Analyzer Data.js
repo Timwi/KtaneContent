@@ -2171,8 +2171,8 @@ const parseData = [
 		]
 	},
 	{
-		moduleID: ["GameOfLifeCruel", "GameOfLifeSimple"],
-		loggingTag: ["Game of Life Cruel", "Game of Life Simple"],
+		moduleID: ["GameOfLifeCruel", "GameOfLifeSimple", "LifeIteration"],
+		loggingTag: ["Game of Life Cruel", "Game of Life Simple", "Life Iteration"],
 		matches: [
 			{
 				regex: /Cell color reference:/,
