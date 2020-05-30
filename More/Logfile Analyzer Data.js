@@ -617,9 +617,92 @@ const parseData = [
 		moduleID: "14",
 		loggingTag: "14",
 		matches: [
+            {
+                regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
+                handler: function(matches, module) {
+                    console.log(matches[0]);
+                    if (!module.TableData) {
+                        module.TableData = [];
+                        module.CorrectValues = {};
+                        module.CorrectValuesFull = {};
+                        module.ListObject = { label: 'Module information:', obj: $(`<table style='border-collapse: collapse; text-align: center'>
+                            <tr>
+                                <th colspan='2'>Stages</th>
+                                <td class='sep' rowspan='2'></td>
+                                <th colspan='3'>Display</th>
+                                <td class='sep' rowspan='2'></td>
+                                <th colspan='3'>Calculation</th>
+                            </tr>
+                            <tr>
+                                <th>#</th>
+                                <th>LED</th>
+                                <th style='background: #f99'>R</th>
+                                <th style='background: #8f8'>G</th>
+                                <th style='background: #aaf'>B</th>
+                                <th style='background: #f99'>R</th>
+                                <th style='background: #8f8'>G</th>
+                                <th style='background: #aaf'>B</th>
+                            </tr>
+                        </table>`) };
+                        module.push(module.ListObject);
+                        module.SetCss = function() {
+                            module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
+                            module.ListObject.obj.find('.sep').get().forEach(x => { x.setAttribute('rowspan', 2 + module.TableData.length); x.style.border = 'none'; });
+                        };
+                    }
+                    while (module.TableData.length <= matches[1])
+                        module.TableData.push({});
+                    module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+                    if (matches[2] === 'B')
+                    {
+                        let ledColors = {
+                            K: '#888',
+                            B: '#88f',
+                            G: '#8f8',
+                            C: '#8ff',
+                            R: '#f88',
+                            M: '#f8f',
+                            Y: '#ff8',
+                            W: '#fff',
+                        };
+                        let ix = +matches[1];
+                        module.ListObject.obj.append($(`<tr>
+                            <td>${ix}</td><td style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
+                            <td style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
+                            <td style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
+                            <td style='background: #ccf' title='${module.TableData[ix].B.fulldisplay}'>${module.TableData[ix].B.display}</td>
+                            <td style='background: #fbb' title='${module.TableData[ix].R.full}'>${module.TableData[ix].R.result}</td>
+                            <td style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
+                            <td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
+                        </tr>`));
+                        module.SetCss();
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
+                handler: function(matches, module) {
+                    console.log(matches[0]);
+                    module.CorrectValuesFull[matches[1]] = matches[2];
+                    module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
+                    if (matches[1] === 'B')
+                    {
+                        module.ListObject.obj.append($(`<tr>
+                            <th colspan='7' style='text-align: right'>Final answer</th>
+                            <td style='border: 1px solid black; background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
+                            <td style='border: 1px solid black; background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
+                            <td style='border: 1px solid black; background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
+                        </tr>`));
+                        module.SetCss();
+                    }
+                    return true;
+                }
+            },
 			{
 				regex: /The correct submission is:|Incorrect Submission:/,
-				handler: function(matches, module){
+				handler: function(matches, module) {
+                    console.log(matches[0]);
 					var colorList = {
 						R: '#FF0000',
 						G: '#00FF00',
@@ -631,24 +714,24 @@ const parseData = [
 						K: '#000000'
 					};
 					var pathList = [
-						"M 8.1096029,8.1096358 16.06242,16.062435 c 47.178457,0 32.125547,0 79.304027,0 L 103.31926,8.1096358 95.366447,0.15681581 c -47.17848,0 -32.12557,0 -79.304027,0 L 8.1096029,8.1096358",
-						"m 8.1096189,68.595748 7.9528011,-7.95281 c 0,-14.86016 0,-29.720333 0,-44.580503 L 8.1096179,8.1096358 0.15681581,16.062435 c 0,14.86017 0,29.720343 0,44.580503 l 7.95280009,7.95281",
-						"m 27.30938,16.062445 -11.24696,-10e-6 v 11.24696 l 20.467477,33.333543 11.24696,2e-5 v -11.24696 z",
-						"m 55.729667,68.595768 7.9528,-7.95281 V 16.062435 h -15.90561 v 44.580523 l 7.95281,7.95281",
-						"m 84.149967,16.062445 11.24696,-10e-6 v 11.24696 l -20.46749,33.333543 -11.24697,2e-5 v -11.24696 z",
-						"m 103.34974,68.595748 7.95279,-7.95282 c 0,-14.86016 0,-29.720323 0,-44.580493 l -7.95279,-7.9527992 -7.952813,7.9527992 c 0,14.86017 0,29.720333 0,44.580493 l 7.952813,7.95282",
-						"m 47.776857,76.548538 7.95281,-7.95281 -7.95281,-7.95279 H 16.06242 l -7.9528161,7.95279 7.9528161,7.95281 z",
-						"m 95.396907,76.548558 7.952823,-7.95281 -7.952823,-7.95279 h -31.71444 l -7.95281,7.95279 7.95281,7.95281 z",
-						"M 8.1096199,129.08184 16.06242,121.12905 V 98.838788 76.548538 l -7.9528011,-7.95281 -7.95280209,7.95281 v 22.29025 22.290262 l 7.95280109,7.95279",
-						"m 36.529897,76.548548 11.24696,-1e-5 v 11.24696 l -20.467477,33.333532 -11.246959,3e-5 v -11.24698 z",
-						"m 55.729667,68.595738 7.9528,7.95282 V 121.12906 H 47.776857 V 76.548558 l 7.95281,-7.95282",
-						"m 74.929437,76.548578 -11.24697,-2e-5 v 11.24696 l 20.46749,33.333542 11.24697,2e-5 v -11.24696 z",
-						"m 103.34972,68.595738 -7.952813,7.95282 v 22.29022 22.290262 l 7.952813,7.9528 7.9528,-7.9528 V 98.838778 76.548558 l -7.9528,-7.95282",
-						"m 8.1400989,129.08188 7.9528171,7.95281 h 22.290241 22.29025 -9.85698 22.29024 22.29026 l 7.952803,-7.95281 -7.952803,-7.9528 h -22.29026 -22.29024 9.85698 -22.29025 -22.290241 l -7.9528171,7.9528"
+                        "M 11,1 7,5 11,9 H 47 L 51,5 47,1 Z",
+                        "m 5,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
+                        "m 11,11 h 4 l 8,10 v 6 H 19 L 11,17 Z",
+                        "m 25,11 h 8 v 16 l -4,4 -4,-4 z",
+                        "m 35,27 v -6 l 8,-10 h 4 v 6 l -8,10 z",
+                        "m 53,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
+                        "m 7,33 4,-4 h 12 l 4,4 -4,4 H 11 Z",
+                        "m 31,33 4,-4 h 12 l 4,4 -4,4 H 35 Z",
+                        "m 5,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
+                        "m 11,55 h 4 l 8,-10 v -6 h -4 l -8,10 z",
+                        "m 25,55 h 8 V 39 l -4,-4 -4,4 z",
+                        "m 35,39 v 6 l 8,10 h 4 V 49 L 39,39 Z",
+                        "m 53,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
+                        "m 11,57 -4,4 4,4 h 36 l 4,-4 -4,-4 z",
 					];
 					var display = readMultiple(5).replace(/\[14 #\d+\] |\r|\n|-/g, '');
 					var div = $('<div>');
-					var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 111.45934 137.19151" width="30%">').appendTo(div);
+					var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 66" width="30%">').appendTo(div);
 					for (let i = 0; i < 14; i++) {
 						$SVG(`<path d="${pathList[i]}" stroke = "#000000" stroke-width = ".314" fill = "${colorList[display[i]]}"/>`).appendTo(svg);
 					}
@@ -5561,7 +5644,7 @@ const parseData = [
 		moduleID: "WordSearchModulePL",
 		icon: "Word Search",
 		loggingTag: "Word Search PL"
-	},	
+	},
 	{
 		displayName: "The World's Largest Button",
 		moduleID: "WorldsLargestButton",
