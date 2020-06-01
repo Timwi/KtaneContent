@@ -582,6 +582,11 @@ const parseData = [
 	// ** MODULES START HERE ** //
 
 	{
+		moduleID: "100LevelsOfDefusal",
+		loggingTag: "100 Levels of Defusal",
+		displayName: "100 Levels of Defusal"
+	},
+	{
 		displayName: "101 Dalmatians",
 		loggingTag: "101 Dalmatians",
 		moduleID: "OneHundredAndOneDalmatiansModule",
