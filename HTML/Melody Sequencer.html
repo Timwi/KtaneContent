@@ -1,167 +1,167 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <meta charset="utf-8">
-        <title>Melody Sequencer — Keep Talking and Nobody Explodes Module</title>
-        <meta name="viewport" content="initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="css/normalize.css">
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-        <link rel="stylesheet" type="text/css" href="css/font.css">
-        <script src="js/ktane-utils.js"></script>
-        <script src="js/ruleseed.js"></script>
-        <script>
-            var noteNames = ["C4", "C♯4", "D4", "D♯4", "E4", "F4", "F♯4", "G4", "G♯4", "A4", "A♯4", "B4", "C5", "C♯5", "D5", "D♯5", "E5", "F5", "F♯5", "G5", "G♯5", "A5", "A♯5", "B5"];
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>Melody Sequencer — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var noteNames = ["C4", "C♯4", "D4", "D♯4", "E4", "F4", "F♯4", "G4", "G♯4", "A4", "A♯4", "B4", "C5", "C♯5", "D5", "D♯5", "E5", "F5", "F♯5", "G5", "G♯5", "A5", "A♯5", "B5"];
 
-            function setDefaultRules()
+        function setDefaultRules()
+        {
+            var melody = [
+                "D4, F4, A4, F4, A♯4, F4, A4, F4",
+                "D4, F4, A4, C5, D5, A4, D5, C5",
+                "F5, D5, F5, A5, A♯5, F5, A♯5, A5",
+                "G5, E5, G5, E5, C5, E5, C5, A4",
+                "G4, E4, G4, E4, A4, E4, A4, F4",
+                "A♯4, F4, A♯4, G4, C5, G4, C5, A4",
+                "D5, A4, D5, G4, C5, G4, C5, F4",
+                "A♯4, F4, A♯4, E4, A4, E4, A4, C4"
+            ];
+            var list = document.getElementsByClassName('part');
+            for (var i = 0; i < melody.length; i++)
+                list[i].innerHTML = melody[i];
+        }
+
+        function setRules(rnd)
+        {
+            // Decide on the key of the first part. The rest of the parts are in specific keys relative to each previous one
+            var keys = [ rnd.next(0, 12) ];
+            for (var partIx = 1; partIx < 8; partIx++)
             {
-                var melody = [
-                    "D4, F4, A4, F4, A♯4, F4, A4, F4",
-                    "D4, F4, A4, C5, D5, A4, D5, C5",
-                    "F5, D5, F5, A5, A♯5, F5, A♯5, A5",
-                    "G5, E5, G5, E5, C5, E5, C5, A4",
-                    "G4, E4, G4, E4, A4, E4, A4, F4",
-                    "A♯4, F4, A♯4, G4, C5, G4, C5, A4",
-                    "D5, A4, D5, G4, C5, G4, C5, F4",
-                    "A♯4, F4, A♯4, E4, A4, E4, A4, C4"
-                ];
-                var list = document.getElementsByClassName('part');
-                for (var i = 0; i < melody.length; i++)
-                    list[i].innerHTML = melody[i];
+                var eligibleKeys = [ 5, 7, -5, -7 ].map(jump => keys[partIx - 1] + jump).filter(key => key >= 0 && key < 12);
+                keys.push(eligibleKeys[rnd.next(0, eligibleKeys.length)]);
             }
 
-            function setRules(rnd)
+            var list = document.getElementsByClassName('part');
+
+            // Generate a new melody at random!
+            parts = [];
+            for (var partIx = 0; partIx < 8; partIx++)
             {
-                // Decide on the key of the first part. The rest of the parts are in specific keys relative to each previous one
-                var keys = [ rnd.next(0, 12) ];
-                for (var partIx = 1; partIx < 8; partIx++)
+                var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
+                var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
+                var newPart, isIdentical;
+
+                do
                 {
-                    var eligibleKeys = [ 5, 7, -5, -7 ].map(jump => keys[partIx - 1] + jump).filter(key => key >= 0 && key < 12);
-                    keys.push(eligibleKeys[rnd.next(0, eligibleKeys.length)]);
-                }
-
-                var list = document.getElementsByClassName('part');
-
-                // Generate a new melody at random!
-                parts = [];
-                for (var partIx = 0; partIx < 8; partIx++)
-                {
-                    var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
-                    var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
-                    var newPart, isIdentical;
-
-                    do
+                    newPart = [];
+                    for (var note = 0; note < 8; note++)
                     {
-                        newPart = [];
-                        for (var note = 0; note < 8; note++)
+                        var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
+                        if (note > 0)
+                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - newPart[note - 1]) < 7);
+                        else if (partIx > 0)
+                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
+                        if (note > 1 && newPart[note - 1] === newPart[note - 2])
                         {
-                            var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
-                            if (note > 0)
-                                eligibleNotes = eligibleNotes.filter(n => Math.abs(n - newPart[note - 1]) < 7);
-                            else if (partIx > 0)
-                                eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
-                            if (note > 1 && newPart[note - 1] === newPart[note - 2])
-                            {
-                                var ix = eligibleNotes.indexOf(newPart[note - 1]);
-                                if (ix !== -1)
-                                    eligibleNotes.splice(ix, 1);
-                            }
-                            newPart.push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
+                            var ix = eligibleNotes.indexOf(newPart[note - 1]);
+                            if (ix !== -1)
+                                eligibleNotes.splice(ix, 1);
                         }
-
-                        isIdentical = false;
-                        for (var p = 0; p < partIx && !isIdentical; p++)
-                        {
-                            var identical = true;
-                            for (var q = 0; q < parts[p].length && identical; q++)
-                                identical = identical && (parts[p][q] === newPart[q]);
-                            isIdentical = isIdentical || identical;
-                        }
+                        newPart.push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
                     }
-                    while (isIdentical);
 
-                    parts.push(newPart);
-
-                    list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
+                    isIdentical = false;
+                    for (var p = 0; p < partIx && !isIdentical; p++)
+                    {
+                        var identical = true;
+                        for (var q = 0; q < parts[p].length && identical; q++)
+                            identical = identical && (parts[p][q] === newPart[q]);
+                        isIdentical = isIdentical || identical;
+                    }
                 }
+                while (isIdentical);
+
+                parts.push(newPart);
+
+                list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
             }
-        </script>
-    </head>
-    <body>
-        <div class="section">
-            <div class="page page-bg-01">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                    <span class="page-header-section-title">Melody Sequencer</span>
-                </div>
-                <div class="page-content">
-                    <img src="img/Component/Melody Sequencer.svg" class="diagram">
-                    <h2>On the Subject of Melody Sequencer</h2>
-                    <p class="flavour-text">Harmony and melody... creating both is the musician’s greatest feat.</p>
-
-                    <table style='float: right; clear: right; margin-left: 1em; margin-top: 1em;'>
-                    <tr>
-                        <th>Part 1</th>
-                        <td class='part'>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
-                    </tr>
-                    <tr>
-                        <th>Part 2</th>
-                        <td class='part'>D4, F4, A4, C5, D5, A4, D5, C5</td>
-                    </tr>
-                    <tr>
-                        <th>Part 3</th>
-                        <td class='part'>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
-                    </tr>
-                    <tr>
-                        <th>Part 4</th>
-                        <td class='part'>G5, E5, G5, E5, C5, E5, C5, A4</td>
-                    </tr>
-                    <tr>
-                        <th>Part 5</th>
-                        <td class='part'>G4, E4, G4, E4, A4, E4, A4, F4</td>
-                    </tr>
-                    <tr>
-                        <th>Part 6</th>
-                        <td class='part'>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
-                    </tr>
-                    <tr>
-                        <th>Part 7</th>
-                        <td class='part'>D5, A4, D5, G4, C5, G4, C5, F4</td>
-                    </tr>
-                    <tr>
-                        <th>Part 8</th>
-                        <td class='part'>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
-                    </tr>
-                    </table>
-
-                    <p>To disarm this module, listen to 4 given parts of a melody, arrange them in the correct order, and fill in the 4 missing parts. The table on the side shows the correct order of the parts and the correct sequence of notes for every part.</p>
-
-                    <h3>Selecting a part</h3>
-                    <ul>
-                        <li>Use the up and down arrows to select a part to listen to.</li>
-                    </ul>
-                    <h3>Listening to a part</h3>
-                    <ul>
-                        <li>Press the green button to listen to the selected part.</li>
-                        <li>The upper screen displays the notes as they are played.</li>
-                    </ul>
-                    <h3>Moving a part</h3>
-                    <ul>
-                        <li>To move a part to another position, press the yellow button while you are at the part you want to move. The screen tells you that you selected that part.</li>
-                        <li>Use the up and down arrows to move to the part you want your selected part to move to and press the yellow button again.</li>
-                        <li><strong>If the moved part is in the incorrect position this will incur a strike.</strong></li>
-                    </ul>
-                    <h3>Creating a part</h3>
-                    <ul>
-                        <li>Select a part you want to create and press the red button. The upper screen will say “Record”.</li>
-                        <li>Use the 24 black and white buttons to input the correct sequence of notes for that part.</li>
-                        <li><strong>Pressing an incorrect note will incur a strike.</strong></li>
-                        <li>If your input is correct, that part is saved.</li>
-                    </ul>
-                    <p>The module is solved once all parts are created and in the correct positions.</p>
-                </div>
-               <div class="page-footer relative-footer">Page 1 of 1</div>
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Melody Sequencer</span>
             </div>
+            <div class="page-content">
+                <img src="img/Component/Melody Sequencer.svg" class="diagram">
+                <h2>On the Subject of Melody Sequencer</h2>
+                <p class="flavour-text">Harmony and melody... creating both is the musician’s greatest feat.</p>
+
+                <table style='float: right; clear: right; margin-left: 1em; margin-top: 1em;'>
+                <tr>
+                    <th>Part 1</th>
+                    <td class='part'>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
+                </tr>
+                <tr>
+                    <th>Part 2</th>
+                    <td class='part'>D4, F4, A4, C5, D5, A4, D5, C5</td>
+                </tr>
+                <tr>
+                    <th>Part 3</th>
+                    <td class='part'>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
+                </tr>
+                <tr>
+                    <th>Part 4</th>
+                    <td class='part'>G5, E5, G5, E5, C5, E5, C5, A4</td>
+                </tr>
+                <tr>
+                    <th>Part 5</th>
+                    <td class='part'>G4, E4, G4, E4, A4, E4, A4, F4</td>
+                </tr>
+                <tr>
+                    <th>Part 6</th>
+                    <td class='part'>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
+                </tr>
+                <tr>
+                    <th>Part 7</th>
+                    <td class='part'>D5, A4, D5, G4, C5, G4, C5, F4</td>
+                </tr>
+                <tr>
+                    <th>Part 8</th>
+                    <td class='part'>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
+                </tr>
+                </table>
+
+                <p>To disarm this module, listen to 4 given parts of a melody, arrange them in the correct order, and fill in the 4 missing parts. The table on the side shows the correct order of the parts and the correct sequence of notes for every part.</p>
+
+                <h3>Selecting a part</h3>
+                <ul>
+                    <li>Use the up and down arrows to select a part to listen to.</li>
+                </ul>
+                <h3>Listening to a part</h3>
+                <ul>
+                    <li>Press the green button to listen to the selected part.</li>
+                    <li>The upper screen displays the notes as they are played.</li>
+                </ul>
+                <h3>Moving a part</h3>
+                <ul>
+                    <li>To move a part to another position, press the yellow button while you are at the part you want to move. The screen tells you that you selected that part.</li>
+                    <li>Use the up and down arrows to move to the part you want your selected part to move to and press the yellow button again.</li>
+                    <li><strong>If the moved part is in the incorrect position this will incur a strike.</strong></li>
+                </ul>
+                <h3>Creating a part</h3>
+                <ul>
+                    <li>Select a part you want to create and press the red button. The upper screen will say “Record”.</li>
+                    <li>Use the 24 black and white buttons to input the correct sequence of notes for that part.</li>
+                    <li><strong>Pressing an incorrect note will incur a strike.</strong></li>
+                    <li>If your input is correct, that part is saved.</li>
+                </ul>
+                <p>The module is solved once all parts are created and in the correct positions.</p>
+            </div>
+           <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
-    </body>
+    </div>
+</body>
 </html>

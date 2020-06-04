@@ -1,448 +1,448 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Gridlock — Keep Talking and Nobody Explodes Mod</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="css/normalize.css">
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-        <link rel="stylesheet" type="text/css" href="css/font.css">
-        <script src='js/ktane-utils.js'></script>
-        <style>
-            li {
-                margin: .5em 0;
-            }
+<head>
+    <title>Gridlock — Keep Talking and Nobody Explodes Mod</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <script src='js/ktane-utils.js'></script>
+    <style>
+        li {
+            margin: .5em 0;
+        }
 
-            table.gridlock-1 {
-                margin: 1em auto;
-                font-size: 18pt;
-            }
-                table.gridlock-1 td, table.gridlock-1 th {
-                    text-align: center;
-                }
-
-            table.gridlock-2 {
-                margin: 1.5em auto;
-            }
-        </style>
-        <!-- Interactive -->
-        <script src="../More/js/vue.min.js"></script>
-        <style>
-            :root {
-                --square-size: 60px;
-            }
-
-            .diagram {
-                width: 5em;
-            }
-
-            .interactive {
-                display: flex;
-                justify-content: space-between;
-            }
-
-            table.interactions {
-                margin: auto 0;
-                font-size: 14px;
-                max-width: 55%;
-            }
-
-            .grid {
-                border-collapse: collapse;
-                border-spacing: 0px;
-                font-family: sans-serif;
-                user-select: none;
-                -moz-user-select: none;
-            }
-
-            .grid td {
-                position: relative;
-                width: var(--square-size);
-                height: var(--square-size);
-                padding: 0;
-                border: 2px black solid;
+        table.gridlock-1 {
+            margin: 1em auto;
+            font-size: 18pt;
+        }
+            table.gridlock-1 td, table.gridlock-1 th {
                 text-align: center;
-                font-size: 250%;
-                color: white;
-                cursor: pointer;
-                background-clip: padding-box;
-                text-shadow:
-                    -1px -1px 0 #000,
-                    1px -1px 0 #000,
-                    -1px 1px 0 #000,
-                    1px 1px 0 #000;
             }
 
-            .grid td .reference {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: calc(var(--square-size) / 5);
-                height: calc(var(--square-size) / 5);
-                border-bottom: 1px black solid;
-                border-right: 1px black solid;
-                border-bottom-right-radius: calc(var(--square-size) / 5 / 3);
+        table.gridlock-2 {
+            margin: 1.5em auto;
+        }
+    </style>
+    <!-- Interactive -->
+    <script src="../More/js/vue.min.js"></script>
+    <style>
+        :root {
+            --square-size: 60px;
+        }
+
+        .diagram {
+            width: 5em;
+        }
+
+        .interactive {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        table.interactions {
+            margin: auto 0;
+            font-size: 14px;
+            max-width: 55%;
+        }
+
+        .grid {
+            border-collapse: collapse;
+            border-spacing: 0px;
+            font-family: sans-serif;
+            user-select: none;
+            -moz-user-select: none;
+        }
+
+        .grid td {
+            position: relative;
+            width: var(--square-size);
+            height: var(--square-size);
+            padding: 0;
+            border: 2px black solid;
+            text-align: center;
+            font-size: 250%;
+            color: white;
+            cursor: pointer;
+            background-clip: padding-box;
+            text-shadow:
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000;
+        }
+
+        .grid td .reference {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(var(--square-size) / 5);
+            height: calc(var(--square-size) / 5);
+            border-bottom: 1px black solid;
+            border-right: 1px black solid;
+            border-bottom-right-radius: calc(var(--square-size) / 5 / 3);
+        }
+
+        .blue {
+            background: rgb(127, 127, 255);
+        }
+
+        .green {
+            background: rgb(127, 255, 127);
+        }
+
+        .yellow {
+            background: rgb(255, 255, 127);
+        }
+
+        .red {
+            background: rgb(255, 127, 127);
+        }
+
+        .buttons {
+            margin: 6px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        button {
+            pointer-events: all;
+            float: right;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+    </style>
+    <script>
+        /* global Vue */
+        Vue.config.devtools = (window.location.protocol == "file:");
+
+        var colors = ["blue", "green", "yellow", "red"];
+        var undoHistory = [];
+        var stateIndex = 0;
+        var gridState = {
+            gridSquares: [],
+            lastNumber: 1,
+            globalColorIndex: 0
+        };
+
+        function saveState() {
+            if (stateIndex > 0) {
+                for (var i = 0; i < stateIndex; i++) {
+                    undoHistory.shift();
+                }
+
+                stateIndex = 0;
             }
 
-            .blue {
-                background: rgb(127, 127, 255);
-            }
+            var squareClone = [];
+            gridState.gridSquares.forEach(function(sqr) {
+                squareClone.push(Object.assign({}, sqr));
+            });
 
-            .green {
-                background: rgb(127, 255, 127);
-            }
+            undoHistory.unshift({
+                gridSquares: squareClone,
+                lastNumber: gridState.lastNumber,
+                globalColorIndex: gridState.globalColorIndex
+            });
+        }
 
-            .yellow {
-                background: rgb(255, 255, 127);
-            }
+        function loadState(index) {
+            stateIndex = index;
 
-            .red {
-                background: rgb(255, 127, 127);
-            }
+            var state = undoHistory[index];
+            gridState.lastNumber = state.lastNumber;
+            gridState.globalColorIndex = state.globalColorIndex;
 
-            .buttons {
-                margin: 6px;
-                display: flex;
-                justify-content: space-around;
-            }
+            state.gridSquares.forEach(function(sqr, index) {
+                Object.assign(gridState.gridSquares[index], sqr);
+            });
+        }
 
-            button {
-                pointer-events: all;
-                float: right;
-                border: black 2px solid;
-                border-radius: 3px;
-                transition: color 1s, background-color 1s;
-            }
-
-            button:hover {
-                color: white;
-                background-color: black;
-            }
-        </style>
-        <script>
-            /* global Vue */
-            Vue.config.devtools = (window.location.protocol == "file:");
-
-            var colors = ["blue", "green", "yellow", "red"];
-            var undoHistory = [];
-            var stateIndex = 0;
-            var gridState = {
-                gridSquares: [],
-                lastNumber: 1,
-                globalColorIndex: 0
-            };
-
-            function saveState() {
+        var Methods = {
+            Undo: function() {
+                if (undoHistory.length - 1 > stateIndex) {
+                    loadState(stateIndex + 1);
+                }
+            },
+            Redo: function() {
                 if (stateIndex > 0) {
-                    for (var i = 0; i < stateIndex; i++) {
-                        undoHistory.shift();
-                    }
-
-                    stateIndex = 0;
+                    loadState(stateIndex - 1);
                 }
-
-                var squareClone = [];
-                gridState.gridSquares.forEach(function(sqr) {
-                    squareClone.push(Object.assign({}, sqr));
-                });
-
-                undoHistory.unshift({
-                    gridSquares: squareClone,
-                    lastNumber: gridState.lastNumber,
-                    globalColorIndex: gridState.globalColorIndex
-                });
+            },
+            Reset: function() {
+                undoHistory = [undoHistory[undoHistory.length - 1]];
+                loadState(0);
             }
+        };
 
-            function loadState(index) {
-                stateIndex = index;
-
-                var state = undoHistory[index];
-                gridState.lastNumber = state.lastNumber;
-                gridState.globalColorIndex = state.globalColorIndex;
-
-                state.gridSquares.forEach(function(sqr, index) {
-                    Object.assign(gridState.gridSquares[index], sqr);
-                });
-            }
-
-            var Methods = {
-                Undo: function() {
-                    if (undoHistory.length - 1 > stateIndex) {
-                        loadState(stateIndex + 1);
-                    }
-                },
-                Redo: function() {
-                    if (stateIndex > 0) {
-                        loadState(stateIndex - 1);
-                    }
-                },
-                Reset: function() {
-                    undoHistory = [undoHistory[undoHistory.length - 1]];
-                    loadState(0);
+        window.addEventListener("keydown", function(event) {
+            if (event.ctrlKey) {
+                if (event.key == "z") {
+                    Methods.Undo();
+                } else if (event.key == "y") {
+                    Methods.Redo();
                 }
-            };
+            }
+        });
 
-            window.addEventListener("keydown", function(event) {
-                if (event.ctrlKey) {
-                    if (event.key == "z") {
-                        Methods.Undo();
-                    } else if (event.key == "y") {
-                        Methods.Redo();
+        window.onload = function() {
+            Vue.component("grid-square", {
+                template: `<td @click.left="leftClick" @contextmenu.prevent="rightClick" :class="colors[colorIndex]">
+                    {{ number }}
+                    <div v-if="markerIndex > -1" class="reference" :style="'background: ' + colors[markerIndex]"></div>
+                </td>`,
+                data: function() {
+                    var square = {
+                        number: undefined,
+                        colorIndex: undefined,
+                        markerIndex: -1
+                    };
+
+                    gridState.gridSquares.push(square);
+                    if (gridState.gridSquares.length == 16) {
+                        saveState();
+                    }
+
+                    return square;
+                },
+                methods: {
+                    leftClick: function() {
+                        var square = this.$data;
+                        if (square.number == undefined) {
+                            square.number = gridState.lastNumber++;
+                        } else {
+                            gridState.globalColorIndex++;
+                            gridState.globalColorIndex %= colors.length;
+                        }
+
+                        square.colorIndex = gridState.globalColorIndex;
+
+                        saveState();
+                    },
+                    rightClick: function() {
+                        var square = this.$data;
+                        square.markerIndex = square.markerIndex > -1 ? -1 : gridState.globalColorIndex;
+
+                        saveState();
                     }
                 }
             });
 
-            window.onload = function() {
-                Vue.component("grid-square", {
-                    template: `<td @click.left="leftClick" @contextmenu.prevent="rightClick" :class="colors[colorIndex]">
-                        {{ number }}
-                        <div v-if="markerIndex > -1" class="reference" :style="'background: ' + colors[markerIndex]"></div>
-                    </td>`,
-                    data: function() {
-                        var square = {
-                            number: undefined,
-                            colorIndex: undefined,
-                            markerIndex: -1
-                        };
+            new Vue({
+                el: ".grid-container"
+            });
+        };
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Gridlock</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Gridlock.svg" class="diagram">
+                <h2>On the Subject of Gridding Gridlock</h2>
+                <p class="flavour-text">Thankfully I brought a grid for this exact situation.</p>
 
-                        gridState.gridSquares.push(square);
-                        if (gridState.gridSquares.length == 16) {
-                            saveState();
-                        }
+                <p>See the original manual for instructions related to the module.</p>
 
-                        return square;
-                    },
-                    methods: {
-                        leftClick: function() {
-                            var square = this.$data;
-                            if (square.number == undefined) {
-                                square.number = gridState.lastNumber++;
-                            } else {
-                                gridState.globalColorIndex++;
-                                gridState.globalColorIndex %= colors.length;
-                            }
-
-                            square.colorIndex = gridState.globalColorIndex;
-
-                            saveState();
-                        },
-                        rightClick: function() {
-                            var square = this.$data;
-                            square.markerIndex = square.markerIndex > -1 ? -1 : gridState.globalColorIndex;
-
-                            saveState();
-                        }
-                    }
-                });
-
-                new Vue({
-                    el: ".grid-container"
-                });
-            };
-        </script>
-    </head>
-    <body>
-        <div class="section">
-            <div class="page">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                    <span class="page-header-section-title">Gridlock</span>
-                </div>
-                <div class="page-content">
-                    <img src="img/Component/Gridlock.svg" class="diagram">
-                    <h2>On the Subject of Gridding Gridlock</h2>
-                    <p class="flavour-text">Thankfully I brought a grid for this exact situation.</p>
-
-                    <p>See the original manual for instructions related to the module.</p>
-
-                    <div class="interactive">
-                        <div class="grid-container">
-                            <table class="grid">
-                                <tr v-for="y in 4">
-                                    <td is="grid-square" v-for="x in 4"></td>
-                                </tr>
-                            </table>
-                            <div class="buttons">
-                                <button v-for="(func, name) in Methods" @click="func">{{ name }}</button>
-                            </div>
-                        </div>
-                        <table class="interactions">
-                            <tr>
-                                <th>Interaction</th>
-                                <th>Action</th>
-                            </tr>
-                            <tr>
-                                <th>Click a cell</th>
-                                <td>To mark it with a number<br>and the latest color</td>
-                            </tr>
-                            <tr>
-                                <th>Click multiple times</th>
-                                <td>To change the cell color</td>
-                            </tr>
-                            <tr>
-                                <th>Right-click a cell</th>
-                                <td>To mark it with the latest color</td>
-                            </tr>
-                            <tr>
-                                <th>CTRL-Z</th>
-                                <td>To undo a change to the grid</td>
-                            </tr>
-                            <tr>
-                                <th>CTRL-Y</th>
-                                <td>To redo a change to the grid</td>
+                <div class="interactive">
+                    <div class="grid-container">
+                        <table class="grid">
+                            <tr v-for="y in 4">
+                                <td is="grid-square" v-for="x in 4"></td>
                             </tr>
                         </table>
+                        <div class="buttons">
+                            <button v-for="(func, name) in Methods" @click="func">{{ name }}</button>
+                        </div>
                     </div>
-                    <table class='gridlock-1'>
-                    <tr><th>Movement
-                        <th>Blue
-                        <th>Green
-                        <th>Yellow
-                        <th>Red
-                    <tr><td>△
-                        <td>↙
-                        <td>↗
-                        <td>↓
-                        <td>→
-                    <tr><td>◇
-                        <td>↙
-                        <td>↑
-                        <td>←
-                        <td>↖
-                    <tr><td>⎔
-                        <td>↑
-                        <td>↖
-                        <td>↓
-                        <td>←
-                    <tr><td>☆
-                        <td>↗
-                        <td>↘
-                        <td>↘
-                        <td>→
-                    </table>
-
-                    <table class='gridlock-2'>
+                    <table class="interactions">
                         <tr>
-                            <td>
-                                <table class='gridlock-1'>
-                                <tr><th>BLUE
-                                    <th>A
-                                    <th>B
-                                    <th>C
-                                    <th>D
-                                <tr><td>1
-                                    <td>←
-                                    <td>↙
-                                    <td>↑
-                                    <td>↖
-                                <tr><td>2
-                                    <td>↑
-                                    <td>↓
-                                    <td>↖
-                                    <td>←
-                                <tr><td>3
-                                    <td>↘
-                                    <td>→
-                                    <td>↗
-                                    <td>↘
-                                <tr><td>4
-                                    <td>→
-                                    <td>↓
-                                    <td>↗
-                                    <td>↙
-                                </table>
-                            <td>
-                                <table class='gridlock-1'>
-                                <tr><th>GREEN
-                                    <th>A
-                                    <th>B
-                                    <th>C
-                                    <th>D
-                                <tr><td>1
-                                    <td>→
-                                    <td>↓
-                                    <td>↗
-                                    <td>↙
-                                <tr><td>2
-                                    <td>←
-                                    <td>↙
-                                    <td>↑
-                                    <td>↖
-                                <tr><td>3
-                                    <td>↑
-                                    <td>↓
-                                    <td>↖
-                                    <td>←
-                                <tr><td>4
-                                    <td>↘
-                                    <td>→
-                                    <td>↗
-                                    <td>↘
-                                </table>
+                            <th>Interaction</th>
+                            <th>Action</th>
                         </tr>
                         <tr>
-                            <td>
-                                <table class='gridlock-1'>
-                                <tr><th>YELLOW
-                                    <th>A
-                                    <th>B
-                                    <th>C
-                                    <th>D
-                                <tr><td>1
-                                    <td>←
-                                    <td>↑
-                                    <td>↓
-                                    <td>↖
-                                <tr><td>2
-                                    <td>↘
-                                    <td>↘
-                                    <td>→
-                                    <td>↗
-                                <tr><td>3
-                                    <td>↙
-                                    <td>→
-                                    <td>↓
-                                    <td>↗
-                                <tr><td>4
-                                    <td>↖
-                                    <td>←
-                                    <td>↙
-                                    <td>↑
-                                </table>
-                            <td>
-                                <table class='gridlock-1'>
-                                <tr><th>RED
-                                    <th>A
-                                    <th>B
-                                    <th>C
-                                    <th>D
-                                <tr><td>1
-                                    <td>↑
-                                    <td>↖
-                                    <td>←
-                                    <td>↙
-                                <tr><td>2
-                                    <td>↖
-                                    <td>←
-                                    <td>↑
-                                    <td>↓
-                                <tr><td>3
-                                    <td>↗
-                                    <td>↘
-                                    <td>↘
-                                    <td>→
-                                <tr><td>4
-                                    <td>↗
-                                    <td>↙
-                                    <td>→
-                                    <td>↓
-                                </table>
+                            <th>Click a cell</th>
+                            <td>To mark it with a number<br>and the latest color</td>
+                        </tr>
+                        <tr>
+                            <th>Click multiple times</th>
+                            <td>To change the cell color</td>
+                        </tr>
+                        <tr>
+                            <th>Right-click a cell</th>
+                            <td>To mark it with the latest color</td>
+                        </tr>
+                        <tr>
+                            <th>CTRL-Z</th>
+                            <td>To undo a change to the grid</td>
+                        </tr>
+                        <tr>
+                            <th>CTRL-Y</th>
+                            <td>To redo a change to the grid</td>
                         </tr>
                     </table>
                 </div>
-                <div class="page-footer relative-footer">Page 1 of 1</div>
+                <table class='gridlock-1'>
+                <tr><th>Movement
+                    <th>Blue
+                    <th>Green
+                    <th>Yellow
+                    <th>Red
+                <tr><td>△
+                    <td>↙
+                    <td>↗
+                    <td>↓
+                    <td>→
+                <tr><td>◇
+                    <td>↙
+                    <td>↑
+                    <td>←
+                    <td>↖
+                <tr><td>⎔
+                    <td>↑
+                    <td>↖
+                    <td>↓
+                    <td>←
+                <tr><td>☆
+                    <td>↗
+                    <td>↘
+                    <td>↘
+                    <td>→
+                </table>
+
+                <table class='gridlock-2'>
+                    <tr>
+                        <td>
+                            <table class='gridlock-1'>
+                            <tr><th>BLUE
+                                <th>A
+                                <th>B
+                                <th>C
+                                <th>D
+                            <tr><td>1
+                                <td>←
+                                <td>↙
+                                <td>↑
+                                <td>↖
+                            <tr><td>2
+                                <td>↑
+                                <td>↓
+                                <td>↖
+                                <td>←
+                            <tr><td>3
+                                <td>↘
+                                <td>→
+                                <td>↗
+                                <td>↘
+                            <tr><td>4
+                                <td>→
+                                <td>↓
+                                <td>↗
+                                <td>↙
+                            </table>
+                        <td>
+                            <table class='gridlock-1'>
+                            <tr><th>GREEN
+                                <th>A
+                                <th>B
+                                <th>C
+                                <th>D
+                            <tr><td>1
+                                <td>→
+                                <td>↓
+                                <td>↗
+                                <td>↙
+                            <tr><td>2
+                                <td>←
+                                <td>↙
+                                <td>↑
+                                <td>↖
+                            <tr><td>3
+                                <td>↑
+                                <td>↓
+                                <td>↖
+                                <td>←
+                            <tr><td>4
+                                <td>↘
+                                <td>→
+                                <td>↗
+                                <td>↘
+                            </table>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class='gridlock-1'>
+                            <tr><th>YELLOW
+                                <th>A
+                                <th>B
+                                <th>C
+                                <th>D
+                            <tr><td>1
+                                <td>←
+                                <td>↑
+                                <td>↓
+                                <td>↖
+                            <tr><td>2
+                                <td>↘
+                                <td>↘
+                                <td>→
+                                <td>↗
+                            <tr><td>3
+                                <td>↙
+                                <td>→
+                                <td>↓
+                                <td>↗
+                            <tr><td>4
+                                <td>↖
+                                <td>←
+                                <td>↙
+                                <td>↑
+                            </table>
+                        <td>
+                            <table class='gridlock-1'>
+                            <tr><th>RED
+                                <th>A
+                                <th>B
+                                <th>C
+                                <th>D
+                            <tr><td>1
+                                <td>↑
+                                <td>↖
+                                <td>←
+                                <td>↙
+                            <tr><td>2
+                                <td>↖
+                                <td>←
+                                <td>↑
+                                <td>↓
+                            <tr><td>3
+                                <td>↗
+                                <td>↘
+                                <td>↘
+                                <td>→
+                            <tr><td>4
+                                <td>↗
+                                <td>↙
+                                <td>→
+                                <td>↓
+                            </table>
+                    </tr>
+                </table>
             </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
-    </body>
+    </div>
+</body>
 </html>
