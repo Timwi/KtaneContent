@@ -211,9 +211,19 @@
 			},
 			{
 				Name: "Value",
-				Compare: (mod1, mod2) => vueData.perModule ?
-				-((mod1.PerModuleValue || mod1.DefaultPerModuleValue || 0) - (mod2.PerModuleValue || mod2.DefaultPerModuleValue || 0)) :
-				(mod1.Value || mod1.DefaultValue || 10) - (mod2.Value || mod2.DefaultValue || 10)
+				Compare: (mod1, mod2) => {
+					if (!vueData.perModule) {
+						var mod1NoDefault = mod1.defaultValue(vueData.perModule) === undefined;
+						var mod2NoDefault = mod2.defaultValue(vueData.perModule) === undefined;
+
+						if (mod1NoDefault && !mod2NoDefault) return -1;
+						else if (!mod1NoDefault && mod2NoDefault) return 1;
+					}
+
+					return vueData.perModule ?
+						-(mod1.currentValue(vueData.perModule) - mod2.currentValue(vueData.perModule)) :
+						mod1.currentValue(vueData.perModule) - mod2.currentValue(vueData.perModule);
+				}
 			},
 			{
 				Name: "Publish Date",
@@ -275,6 +285,18 @@
 				this.PerModuleValue = undefined;
 				this.DefaultPerModuleValue = perModuleValue;
 			}
+
+			defaultValue(perModule) {
+				return perModule ? this.DefaultPerModuleValue : this.DefaultValue;
+			}
+
+			value(perModule) {
+				return perModule ? this.PerModuleValue : this.Value;
+			}
+
+			currentValue(perModule) {
+				return this.value(perModule) || this.defaultValue(perModule) || (perModule ? 0 : 10);
+			}
 		}
 
 		vueData.mods = mods.map(mod => new Mod(mod.name, mod.name.toUpperCase().replace(/^THE |[^0-9A-Z]/g, ""), { X: 0, Y: 0 }, mod.id, mod.type, mod.published, mod.score));
@@ -321,6 +343,14 @@
 				}
 			} catch (exception) {
 				console.error(exception);
+			}
+
+			for (const mod of vueData.mods) {
+				if (defaultScores.hasOwnProperty(mod.ID))
+					mod.DefaultValue = defaultScores[mod.ID];
+
+				if (perModuleValues.hasOwnProperty(mod.ID))
+					mod.DefaultPerModuleValue = perModuleValues[mod.ID];
 			}
 
 			websiteJSON.KtaneModules.forEach(function(module) {
@@ -604,8 +634,8 @@
 				props: ["mod"],
 				render: function(createElement) {
 					const mod = this.mod;
-					const value = vm.perModule ? mod.PerModuleValue : mod.Value;
-					const defaultValue = vm.perModule ? mod.DefaultPerModuleValue : mod.DefaultValue;
+					const value = mod.value(vm.perModule);
+					const defaultValue = mod.defaultValue(vm.perModule);
 
 					function onChange(event) {
 						const value = parseInt(event.target.value);
@@ -651,8 +681,8 @@
 				props: ["mod"],
 				render: function(createElement) {
 					const mod = this.mod;
-					const value = vm.perModule ? mod.PerModuleValue : mod.Value;
-					const defaultValue = vm.perModule ? mod.DefaultPerModuleValue : mod.DefaultValue;
+					const value = mod.value(vm.perModule);
+					const defaultValue = mod.defaultValue(vm.perModule);
 
 					const difference = (value !== undefined ? value : defaultValue) - defaultValue;
 					let differenceText = "?";
