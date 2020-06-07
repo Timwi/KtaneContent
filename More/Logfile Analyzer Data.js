@@ -2340,6 +2340,11 @@ const parseData = [
 		displayName: "The Giant’s Drink"
 	},
 	{
+		displayName: "Gnomish Puzzle",
+		moduleID: "qkGnomishPuzzle",
+		loggingTag: "Gnomish Puzzle"
+	},
+	{
 		displayName: "Grid Matching",
 		moduleID: "GridMatching",
 		loggingTag: "Grid Matching",
