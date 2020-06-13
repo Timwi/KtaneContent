@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>Вслед за главарём — Keep Talking and Nobody Explodes Module</title>
+    <meta content="initial-scale=1" name="viewport">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link href="css/normalize.css" rel="stylesheet" type="text/css">
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table.repeaters-table th { white-space: nowrap; }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var ports = ["параллельный порт", "последовательный порт", "порт RJ-45", "порт PS/2", "порт DVI-D", "двухканальный порт RCA"];
+            document.getElementById('rule-port').innerText = ports [ rnd.next(0, ports.length) ];
+
+            var startingPlugConditions = [
+                "количеству индикаторов на бомбе",
+                "количеству горящих индикаторов на бомбе",
+                "количеству негорящих индикаторов на бомбе",
+                "количеству элементов питания на бомбе",
+                "количеству держателей для элементов питания на бомбе",
+                "количеству элементов питания типа AA на бомбе",
+                "количеству элементов питания типа D на бомбе",
+                "количеству портов на бомбе",
+                "количеству пластин для портов на бомбе",
+                "количеству отдельных типов портов на бомбе",
+                "количеству модулей на бомбе",
+                "количеству стабильных модулей на бомбе",
+                "алфавитной позиции первой буквы в серийном номере",
+                "алфавитной позиции второй буквы в серийном номере",
+                "алфавитной позиции последней буквы в серийном номере",
+                "алфавитной позиции предпоследней буквы в серийном номере",
+                "последней цифре серийного номера",
+                "второй цифре серийного номера",
+                "первой цифре серийного номера"
+            ];
+
+            var startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            var startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            var startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `${startPlug}-ой пробки`;
+
+            var indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            var indicator = indicators [ rnd.next(0, indicators.length) ];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            var endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `${endPlug}-ой пробке`;
+
+            var litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? 'горящий' : 'негорящий';
+
+            var startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `clockwise after plug ${startAt}` : 'самый первый в числовом порядке';
+
+            var startingRuleConditions = [
+                [ "alphabetically first letter in any indicator", "Если индикаторы отсутствуют" ],
+                [ "alphabetically last letter in any indicator", "Если индикаторы отсутствуют" ],
+                [ "второй буквой в серийном номере", "Если в серийном номере отсутствуют буквы" ],
+                [ "предпоследней буквой в серийном номере", "Если в серийном номере отсутствуют буквы" ],
+                [ "последней буквой в серийном номере", "Если в серийном номере отсутствуют буквы" ],
+                [ "первой буквой в серийном номере", "Если в серийном номере отсутствуют буквы" ],
+            ];
+            var startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            var colors = ["красного", "зелёного", "синего", "белого", "чёрного", "жёлтого"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]} или ${colors[2]}`;
+
+            var tableRules = [
+                "Никаких если. Режьте этот провод!",
+                "Никаких если. Не режьте этот провод!",
+                "Предыдущий провод ведёт к чётной пробке.",
+                "Предыдущий провод ведёт к нечётной пробке.",
+                "Предыдущий провод ведёт к пробке с простым числом.",
+                "Предыдущий провод не ведёт к пробке с простым числом.",
+                "Предыдущий провод должен быть порезан.",
+                "Предыдущий провод не должен был быть порезан.",
+                "Предыдущие два провода одинаковых цветов.",
+                "Предыдущие два провода разных цветов.",
+                "Два из трёх предыдущих проводов одного и того же цвета.",
+                "Три предыдущих провода разных цветов.",
+                "Все три предыдущих провода одного и того же цвета.",
+                "Предыдущий провод такого же цвета, как и этот.",
+                "Предыдущий провод не такого же цвета, как и этот.",
+                "Ни один из двух предыдущих проводов такого же цвета, как и этот.",
+                "Только один из двух предыдущих проводов такого же цвета, как и этот.",
+                "Оба предыдущих провода такого же цвета, как и этот.",
+                "Только один или ни один из двух предыдущих проводов такого же цвета, как и этот.",
+                "Только один или оба предыдущих провода такого же цвета, как и этот.",
+                "Ни один или оба предыдущих провода такого же цвета, как и этот.",
+                "Предыдущий провод пропустил пробку.",
+                "Предыдущий провод не пропустил пробку.",
+                "Ни один из двух предыдущих проводов не пропустил пробку",
+                "Только один из двух предыдущих проводов пропустил пробку",
+                "Оба предыдущих провода пропустили пробку.",
+                "Только один или не один из двух предыдущих проводов пропустил пробку.",
+                "Только один или оба предыдущих проводов пропустили пробку.",
+                ['n12', n => `Предыдущий провод ведет к позиции под номером ${n} или меньше.`],
+                ['n12', n => `Предыдущий провод не ведет к позиции под номером ${n} или меньше.`],
+                ['n12', n => `Предыдущий провод ведет к позиции под номером ${n} или больше.`],
+                ['n12', n => `Предыдущий провод не ведет к позиции под номером ${n} или больше.`],
+                ['n6', n => `В сумме на модуле ${n} и более проводов.`],
+                ['n6', n => `В сумме на модуле ${n} и меньше проводов.`],
+                ['c', c => `Предыдущий провод ${c[0]}, ${c[1]} или ${c[2]} цвета.`],
+                ['c', c => `Предыдущий провод не ${c[0]}, не ${c[1]} и не ${c[2]} цвета.`],
+                ['c', c => `Провод перед предыдущим ${c[0]}, ${c[1]} или ${c[2]} цвета.`],
+                ['c', c => `Провод перед предыдущим не ${c[0]}, не ${c[1]} и не ${c[2]} цвета.`],
+                ['c', c => `Ни один из двух предыдущих проводов ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Только один из двух предыдущих проводов ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Оба предыдущих провода ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Только один или ни один из двух предыдущих проводов ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Только один или оба предыдущих провода ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Ни один или оба предыдущих провода ${c[0]} или ${c[1]} цвета.`],
+                ['c', c => `Все предыдущие ${c[0]} провода(-ов) после стартового должны быть порезаны.`],
+                ['c', c => `Все предыдущие ${c[0]} провода(-ов) после стартового не должны быть порезаны.`],
+                "Больше половины проводов до этого (включая начальный) должны быть порезанными.",
+                "Меньше половины проводов до этого (включая начальный) должны быть порезанными.",
+                "Больше половины проводов до этого (не включая начальный) должны быть порезанными.",
+                "Меньше половины проводов до этого (не включая начальный) должны быть порезанными.",
+                "У предыдущего провода такой же цвет, как и у стартового.",
+                "Предыдущий провод отличается цветом от стартового провода.",
+            ];
+            var list = document.getElementsByClassName('table-rule');
+            if (rnd.seed === 1)
+            {
+                list[ 0].innerText = tableRules[35][1](['жёлтого', 'синего', 'зелёного']);
+                list[ 1].innerText = tableRules[2];
+                list[ 2].innerText = tableRules[6];
+                list[ 3].innerText = tableRules[34][1](['красного', 'синего', 'чёрного']);
+                list[ 4].innerText = tableRules[10];
+                list[ 5].innerText = tableRules[16];
+                list[ 6].innerText = tableRules[34][1](['жёлтого', 'белого', 'зелёного']);
+                list[ 7].innerText = tableRules[7];
+                list[ 8].innerText = tableRules[21];
+                list[ 9].innerText = tableRules[35][1](['белого', 'чёрного', 'красного']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['белого', 'чёрного']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (var i = 0; i < 13; i++)
+                {
+                    var str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="ManualContent">
+        <div class="section"><div class="ruleseed-header"></div>
+            <div class="page">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Вслед за главарём</span>
+                </div>
+                <div class="page-content">
+                    <img class="diagram" src="img/Component/Follow the Leader.svg">
+                    <h2>О модуле «Вслед за главарём»</h2>
+
+                    <p class="flavour-text">Игра из детства. Просто беги за главарём. Только если здесь ты оплошаешь, в наказание будет следовать взрыв.
+
+                    </p><p>Данный модуль включает в себя 8-12 проводов, соединяющих пронумерованные пробки в циклической последовательности. Каждый из проводов идёт от одной пробки к другой, где также содержится провод, в порядке возрастания. Провод, идущий из первой пробки, считается «проводом 1».
+
+                    </p><p>Продвигайтесь по модулю в следующем порядке: сначала определите стартовый провод, затем проверяйте, необходимо ли резать тот или иной провод в последовательности. Каждый провод необходимо порезать или оставить нетронутым, исходя из состояния предыдущих проводов в последовательности.
+
+                    </p><h3>Определение стартовой позиции</h3>
+
+                    <p>Следуйте первому применимому правилу:
+
+                    </p><ol>
+                        <li>Если на бомбе имеется <span class="rule" id="rule-port">порт RJ-45</span>, и присутствует провод, идущий из <span class="rule" id="rule-plug-start">4-ой пробки</span> <em>напрямую</em> к <span class="rule" id="rule-plug-end">5-ой пробке</span>, начните с этого провода.
+                        </li><li>Иначе, если присутствует провод, который идёт из пробки, чей номер равен <span class="rule" id="rule-start-2">количеству элементов питания на бомбе</span>, начните с этого провода.
+                        </li><li>Иначе, если присутствует провод, который идёт из пробки, чей номер равен <span class="rule" id="rule-start-3">первой цифре серийного номера</span>, начните с этого провода.
+                        </li><li>Иначе, если на бомбе имеется <span class="rule" id="rule-indicator-lit">горящий</span> индикатор <span class="rule" id="rule-indicator">CLR</span>, проигнорируйте все дальнейшие инструкции и перережьте все имеющиеся на этом модуле провода в порядке убывания.
+                        </li><li>Если ни одно из правил выше нельзя применить, стартовая позиция находится на месте пробки, содержащей <span class="rule" id="rule-else">самый первый в числовом порядке</span> провод.
+                    </li></ol>
+                </div>
+                <div class="page-footer relative-footer">Стр. 1 из 2</div>
+            </div>
+            <div class="page">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Вслед за главарём</span>
+                </div>
+                <div class="page-content">
+                    <h3>Режем провода</h3>
+                    <ul>
+                        <li><u>Всегда</u> режьте провод на стартовой пробке. Затем перейдите к следующему проводу.
+                        </li><li>Начиная с этой позиции, режьте провода как указано в следующей таблице. Первый шаг взаимосвязан с <span class="rule" id="rule-starting-step">первой буквой в серийном номере</span>. <span id="rule-starting-step-fallback">Если в серийном номере отсутствуют буквы</span>, начните с шага <span class="rule" id="rule-starting-step-fallback-step">A</span>.
+                        </li><li>Когда переходите к следующему проводу, вместе с этим переходите к шагу, который идёт следующим в алфавитном порядке в таблице, чтобы определить, резать ли провод.
+                        </li><li>«Предыдущий(е) провод(а)» могут также относиться к проводам, которые находятся за исходной стартовой позицией в последовательности.
+                        </li><li>Если провод в стартовой пробке <span class="rule" id="rule-reverse-colors">красного, зелёного или белого</span> цвета, переходите по шагам в обратном алфавитном порядке.
+                    </li></ul>
+                    <table class="repeaters-table">
+                        <tbody><tr>
+                            <th>Шаг
+                            </th><th>Режьте этот провод, если:
+                        </th></tr>
+                        <tr>
+                            <th>A или N</th>
+                            <td class="table-rule">The previous wire is not жёлтого или blue или green.</td>
+                        </tr>
+                        <tr>
+                            <th>B или O</th>
+                            <td class="table-rule">The previous wire leads to an even numbered plug.</td>
+                        </tr>
+                        <tr>
+                            <th>C или P</th>
+                            <td class="table-rule">Предыдущий провод должен быть порезан.</td>
+                        </tr>
+                        <tr>
+                            <th>D или Q</th>
+                            <td class="table-rule">The previous wire is red или blue или чёрного.</td>
+                        </tr>
+                        <tr>
+                            <th>E или R</th>
+                            <td class="table-rule">Two of the previous three wires share a color.</td>
+                        </tr>
+                        <tr>
+                            <th>F или S</th>
+                            <td class="table-rule">Exactly one of the previous two wires is the same color as this wire.</td>
+                        </tr>
+                        <tr>
+                            <th>G или T</th>
+                            <td class="table-rule">The previous wire is жёлтого или white или green.</td>
+                        </tr>
+                        <tr>
+                            <th>H или U</th>
+                            <td class="table-rule">The previous wire should not be cut.</td>
+                        </tr>
+                        <tr>
+                            <th>I или V</th>
+                            <td class="table-rule">The previous wire skips a plug.</td>
+                        </tr>
+                        <tr>
+                            <th>J или W</th>
+                            <td class="table-rule">The previous wire is not white или чёрного или red.</td>
+                        </tr>
+                        <tr>
+                            <th>K или X</th>
+                            <td class="table-rule">Предыдущие два провода разных цветов.</td>
+                        </tr>
+                        <tr>
+                            <th>L или Y</th>
+                            <td class="table-rule">The previous wire does not lead to a position labeled 6 или less.</td>
+                        </tr>
+                        <tr>
+                            <th>M или Z</th>
+                            <td class="table-rule">Exactly one или neither of the previous two wires are white или чёрного.</td>
+                        </tr>
+                    </tbody></table>
+                </div>
+                <div class="page-footer relative-footer">Стр. 2 из 2</div>
+            </div>
+        <div class="ruleseed-header"></div></div>
+    </div>
+</body></html>
