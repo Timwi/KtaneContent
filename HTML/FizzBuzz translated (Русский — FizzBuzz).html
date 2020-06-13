@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>FizzBuzz — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link href="css/normalize.css" rel="stylesheet" type="text/css">
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <script src="js/ktane-utils.js"></script><script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table.fizz-buzz {
+            border: none;
+        }
+        table.fizz-buzz th {
+            text-align: right;
+        }
+        table.fizz-buzz td, table.fizz-buzz th.corner {
+            text-align: center;
+        }
+        table.fizz-buzz tr.rotated > th {
+            position: relative;
+            text-align: left;
+            height: 4em;
+            min-width: 30px;
+        }
+        table.fizz-buzz tr.rotated > th > span.text {
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%) rotate(-50deg);
+            transform-origin: middle center;
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        @media screen and (max-width: 900px) {
+            table.fizz-buzz {
+                font-size: 80%;
+            }
+        }
+    </style>
+    <script>
+        var DefaultTable = [
+            [7, 3, 2, 4, 5], // ≥ 3 battery holders present
+            [3, 4, 9, 2, 8], // Serial & parallel ports present
+            [4, 5, 8, 8, 2], // 3 letters & 3 digits in serial number
+            [2, 3, 7, 9, 1], // DVI & Stereo RCA ports present
+            [1, 2, 2, 5, 3], // ≥ 5 batteries present
+            [3, 1, 8, 3, 4], // None of the above
+            [6, 6, 1, 2, 8] // ≥ 2 strikes
+        ];
+        
+        function GenerateOffsetTable(rnd) {
+            if (rnd.seed === 1) {
+                return DefaultTable.slice(0);
+            }
+            var rules = [];
+            for (var i = 0; i < 7; i++) {
+                rules.push([]);
+            }
+            for (var i = 0; i < 5; i++) {
+                let list = generateIntList(1, 10);
+                list = rnd.shuffleFisherYates(list);
+                list.splice(0, 3);
+                list.push(list[rnd.next(0, 6)]);
+                for (var j = 0; j < 7; j++) {
+                    rules[j][i] = list[j];
+                }
+            }
+            return rules;
+        }
+
+        function generateIntList(min, max) {
+            var result = [];
+            for (var i = min; i < max; i++) {
+                result.push(i);
+            }
+            return result;
+        }
+
+        var divisibilityRules = [
+            [ 2, 4, 5, 8 ],
+            [ 3, 7, 9, 11 ]
+        ];
+        var NumNames = [null, "one", "two", "три", "four", "пять", "six", "seven", "eight", "nine", "ten", "eleven"]
+
+        function GenerateDivisibilityRules(rnd) {
+            if (rnd.seed === 1) {
+                return [ 3, 5 ];
+            }
+            var result = [
+                divisibilityRules[0][rnd.next(0, divisibilityRules[0].length)],
+                divisibilityRules[1][rnd.next(0, divisibilityRules[1].length)]
+            ];
+            result.sort((a, b) => a - b);
+            return result;
+        }
+
+        var ports = ["PS/2", "DVI-D", "Stereo RCA", "RJ-45"];
+        var indicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+
+        var ruleSet1 = [
+            {
+                Id: "AtLeast2Strikes",
+                RuleText: "Было совершено 2 и более ошибок."
+            },
+            {
+                Id: "LessThanOneThirdStartingTime",
+                RuleText: "Less than one third of the bomb's starting time remains on the timer."
+            },
+            {
+                Id: "MoreThanTwoThirdsModulesSolved",
+                RuleText: "More than two thirds of the modules present on the bomb have been solved."
+            }
+        ];
+
+        var ruleSet2 = [
+            {
+                Id: "SerialAndParallelPortPresent",
+                RuleText: "На бомбе имеется хотя бы один<br>последовательный <u>и</u> параллельный порт."
+            },
+            {
+                Id: "ThreeLettersAndThreeDigitsInSerialNumber",
+                RuleText: "Серийный номер содержит 3 буквы и 3 цифры."
+            },
+            {
+                Id: "SerialNumberHasVowel",
+                RuleText: "A vowel is present in the serial number."
+            },
+            {
+                Id: "GreenNumberPresent",
+                RuleText: "A green number is present on the module."
+            }
+        ];
+
+        var ruleSet3 = [
+            {
+                Id: "AtLeastXBatteryHoldersPresent",
+                RuleText: a => `На бомбе имеется ${a} и более<br>держателей для элементов питания.`,
+                GenRule: rnd => [ rnd.next(2, 4) ],
+            },
+            {
+                Id: "AtLeastXBatteriesPresent",
+                RuleText: a => `На бомбе имеется ${a} и более элементов питания.`,
+                GenRule: rnd => [ rnd.next(4, 6) ],
+            },
+            {
+                Id: "XAndYPortsPresent",
+                RuleText: (a, b) => `На бомбе имеется хотя бы один порт ${a} <u>и</u> ${b} .`,
+                GenRule: rnd => {
+                    var port1Index = rnd.next(0, 4);
+                    var port2Index;
+                    do { port2Index = rnd.next(0, 4); } while (port2Index === port1Index);
+                    var port1 = ports[port1Index];
+                    var port2 = ports[port2Index];
+                    return [
+                        port1, port2
+                    ]
+                },
+            },
+            {
+                Id: "IndicatorXPresent",
+                RuleText: (a, b) => `A${a} ${b} indicator is present on the bomb.`,
+                GenRule: rnd => {
+                    var label = indicators[rnd.next(0, indicators.length)];
+                    var lit = rnd.next(0, 2) === 0;
+                    return [lit ? " lit" : "n unlit", label]
+                },
+            },
+        ];
+
+        function GenerateRuleSet(rnd) {
+            if (rnd.seed === 1) {
+                return [
+                    ruleSet3[0].RuleText(3),
+                    ruleSet2[0].RuleText,
+                    ruleSet2[1].RuleText,
+                    ruleSet3[2].RuleText("DVI-D", "двухканальный порт RCA"),
+                    ruleSet3[1].RuleText(5),
+                    "Ни одно из условий выше не подошло.",
+                    ruleSet1[0].RuleText
+                ];
+            }
+            var result = [];
+
+            var ix1 = rnd.next(0, ruleSet2.length);
+            var ix2;
+            do { ix2 = rnd.next(0, ruleSet2.length); } while (ix2 === ix1);
+            result.push(ruleSet2[ix1].RuleText);
+            result.push(ruleSet2[ix2].RuleText);
+
+            var ix1 = rnd.next(0, ruleSet3.length);
+            var ix2, ix3;
+            do { ix2 = rnd.next(0, ruleSet3.length); } while (ix2 === ix1);
+            do { ix3 = rnd.next(0, ruleSet3.length); } while (ix3 === ix1 || ix3 === ix2);
+            var rs3Rule1 = ruleSet3[ix1];
+            var rs3Rule2 = ruleSet3[ix2];
+            var rs3Rule3 = ruleSet3[ix3];
+            var rs3Rule1Configs = rs3Rule1.GenRule(rnd);
+            var rs3Rule2Configs = rs3Rule2.GenRule(rnd);
+            var rs3Rule3Configs = rs3Rule3.GenRule(rnd);
+            result.push(rs3Rule1.RuleText(rs3Rule1Configs[0], rs3Rule1Configs[1]));
+            result.push(rs3Rule2.RuleText(rs3Rule2Configs[0], rs3Rule2Configs[1]));
+            result.push(rs3Rule3.RuleText(rs3Rule3Configs[0], rs3Rule3Configs[1]));
+
+            result = rnd.shuffleFisherYates(result); // After this, they are in the same order as C#
+
+            result.push("Ни одно из условий выше не подошло.");
+            result.push(ruleSet1[rnd.next(0, ruleSet1.length)].RuleText);
+
+            return result;
+        }
+
+        function setRules(rnd) {
+            var nums = document.getElementsByClassName("rule-num");
+            var conditions = document.getElementsByClassName("rule-condition");
+            var table = GenerateOffsetTable(rnd);
+            var ruleSet = GenerateRuleSet(rnd);
+
+            var divisibilityRules = GenerateDivisibilityRules(rnd);
+            for (var el of document.getElementsByClassName("rule-div-1")) el.innerHTML = NumNames[divisibilityRules[0]];
+            for (var el of document.getElementsByClassName("rule-div-2")) el.innerHTML = NumNames[divisibilityRules[1]];
+
+            var ix = ruleSet.indexOf("Ни одно из условий выше не подошло.");
+            var noneRule = ruleSet.splice(ix, 1)[0];
+            var noneNums = table.splice(ix, 1)[0];
+
+            var newRuleSet = [];
+            var newTable = [];
+            var indices;
+            if (rnd.seed === 1) {
+                indices = [0, 1, 2, 3, 5, 4];   
+            } else {
+                indices = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(indices);
+            }
+            for (var i = 0; i < 6; i++) {
+                newRuleSet.push(ruleSet[indices[i]]);
+                newTable.push(table[indices[i]]);
+            }
+
+            newRuleSet.push(noneRule);
+            newTable.push(noneNums);
+            
+            for (var i = 0; i < 7; i++) {
+                conditions[i].innerHTML = newRuleSet[i];
+                for (var j = 0; j < 5; j++) {
+                    nums[i * 5 + j].innerHTML = newTable[i][j];
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
+</head>
+<body>
+<div class="section"><div class="ruleseed-header"></div>
+    <div class="page page-bg-01">
+        <div class="page-header">
+			<span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+			<span class="page-header-section-title">FizzBuzz</span>
+		</div>
+        <div class="page-content">
+    	    <img src="img/Component/FizzBuzz.svg" class="diagram">
+            <h2>О модуле “FizzBuzz”</h2>
+            <p class="flavour-text">
+                Зачем запихивать обычную школьную игру в бомбу? Погоди... это странно...
+
+            </p><ul>
+                <li>
+                    На данном модуле находятся три цифровых экрана с семизначным числом на каждом.
+                </li><li>
+                    Для каждого из этих чисел найдите в таблице столбец, соответствующий по цвету числа. Пройдитесь по столбцу и отметьте все цифры, чьи условия соблюдены.
+                </li><li>
+                    Просуммируйте все эти цифры. Получившуюся сумму прибавьте к каждой цифре числа на экране, чтобы получить новое семизначное (впереди числа могут стоять незначащие нули) число. <b>При выполнении данной операции отбросьте все значения переноса</b>.
+                </li><li>
+                    Если новое число не делится нацело на <span class="rule-div-1">три</span> или <span class="rule-div-2">пять</span>, ничего не делайте.<br>
+                    Если новое число делится нацело на <span class="rule-div-1">три</span>, но не делится нацело на <span class="rule-div-2">пять</span>, нажмите на кнопку, чтобы поменять число на слово “FIZZ”.<br>
+					Если новое число делится нацело на <span class="rule-div-2">пять</span>, но не делится нацело на <span class="rule-div-1">три</span>, нажмите на кнопку, чтобы поменять число на слово “BUZZ”.<br>
+					Если новое число делится нацело и на <span class="rule-div-1">три</span>, и на <span class="rule-div-2">пять</span>, нажмите на кнопку, чтобы поменять число на слово “FIZZBUZZ”.
+				</li><li>
+					Наконец, повторите выше описанные действия к оставшимся числам и нажмите кнопку “SUBMIT”, когда все цифровые экраны будут верны.
+            </li></ul>
+
+            <table class="fizz-buzz">
+                <tbody><tr class="rotated">
+					<th class="corner">Условие
+                    </th><th><span class="text">красный</span>
+                    </th><th><span class="text">зелёный</span>
+                    </th><th><span class="text">синий</span>
+                    </th><th><span class="text">жёлтый</span>
+                    </th><th><span class="text">белый</span>
+                </th></tr>
+
+                <tr><th><span class="rule-condition">На бомбе имеется 3 и более держателей для элементов питания.</span></th><td class="rule-num">7</td><td class="rule-num">3</td><td class="rule-num">2</td><td class="rule-num">4</td><td class="rule-num">5</td></tr>
+                <tr><th><span class="rule-condition">At least one Serial <u>and</u> Parallel port are present on the bomb.</span></th><td class="rule-num">3</td><td class="rule-num">4</td><td class="rule-num">9</td><td class="rule-num">2</td><td class="rule-num">8</td></tr>
+                <tr><th><span class="rule-condition">3 letters and 3 digits are present in the serial number.</span></th><td class="rule-num">4</td><td class="rule-num">5</td><td class="rule-num">8</td><td class="rule-num">8</td><td class="rule-num">2</td></tr>
+                <tr><th><span class="rule-condition">At least one DVI-D <u>and</u> Stereo RCA port are present on the bomb.</span></th><td class="rule-num">2</td><td class="rule-num">3</td><td class="rule-num">7</td><td class="rule-num">9</td><td class="rule-num">1</td></tr>
+                <tr><th><span class="rule-condition">2 or more strikes are present on the bomb.</span></th><td class="rule-num">6</td><td class="rule-num">6</td><td class="rule-num">1</td><td class="rule-num">2</td><td class="rule-num">8</td></tr>
+                <tr><th><span class="rule-condition">5 or more batteries are present on the bomb.</span></th><td class="rule-num">1</td><td class="rule-num">2</td><td class="rule-num">2</td><td class="rule-num">5</td><td class="rule-num">3</td></tr>
+				<tr><th><span class="rule-condition">Ни одно из условий выше не подошло.</span></th><td class="rule-num">3</td><td class="rule-num">1</td><td class="rule-num">8</td><td class="rule-num">3</td><td class="rule-num">4</td></tr>
+            </tbody></table>
+		</div>
+	</div>
+<div class="ruleseed-header"></div></div>
+</body></html>
