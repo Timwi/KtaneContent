@@ -4544,6 +4544,22 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Remote Math",
+		moduleID: "remotemath",
+		loggingTag: "Remote Math",
+		matches: [
+			{
+				regex: /Server message: ([0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}\/[A-Z]{6}\/[A-Z0-9]{8})/,
+				handler: function(matches, module) {
+					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q='+matches[1]+'">Open server\'s logfile</a>'))
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "resistors",
 		loggingTag: "Resistors",
 		matches: [
