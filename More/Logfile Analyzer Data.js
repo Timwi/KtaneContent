@@ -2615,6 +2615,30 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "kyudoku",
+		displayName: "Kyudoku",
+		loggingTag: "Kyudoku",
+		matches: [
+			{
+				regex: /^(Puzzle|Solution):$/,
+				handler: function(matches, module) {
+					var lines = readMultiple(6).split('\n').map(line => line.replace(/^\[Kyudoku #\d+\] /, ''));
+					module.push({ label: matches.input, obj: $(`
+                        <table style='border-collapse: collapse'>
+                            ${lines.map(row => `<tr>${[...Array(6).keys()].map(ix => `
+                                <td style='${row[3*ix] === '[' ? `background:url(&#39;data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 2 2"><circle cx="0" cy="0" r=".7" stroke-width=".2" stroke="%23080" fill="none"/></svg>&#39;)` :
+                                             row[3*ix + 1] === '#'? `background:#aaa` : ''}'>${row[3*ix + 1] === '#' ? '' : row[3*ix + 1]}</td>
+                            `).join('')}</tr>`).join('')}
+                        </table>`).find('td').css({ border: '1px solid black', width: '1.5cm', height: '1.5cm', textAlign: 'center', verticalAlign: 'middle', fontSize: '18pt' }).end() });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Knob",
 		moduleID: "NeedyKnob",
 		loggingTag: "NeedyKnobComponent"
