@@ -4584,6 +4584,11 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Repo Selector",
+		moduleID: "qkRepoSelector",
+		loggingTag: "Repo Selector"
+	},
+	{
 		moduleID: "resistors",
 		loggingTag: "Resistors",
 		matches: [
