@@ -4579,6 +4579,12 @@ const parseData = [
 				}
 			},
 			{
+				regex: /Puzzle Code: ([A-Z]{6})/,
+				handler:function(matches,module) {
+					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q=*/*/*/'+matches[1]+'">Search for server logfile matching puzzle code</a>'))
+				}
+			},
+			{
 				regex: /.+/
 			}
 		]
