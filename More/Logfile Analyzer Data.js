@@ -4616,6 +4616,88 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "RGB Arithmetic",
+		moduleID: "rgbArithmetic",
+		loggingTag: "RGB Arithmetic",
+		matches: [
+			{
+				regex: /The left grid displays:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The left grid displays:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The right grid displays:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The right grid displays:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The center grid should display:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The center grid should display:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The transformed left grid is:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The transformed left grid is:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The transformed right grid is:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The transformed right grid is:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The submitted grid was:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 3; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+
+					module.push({ label: "The submitted grid was:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "RGB Maze",
 		moduleID: "rgbMaze",
 		loggingTag: "RGB Maze",
