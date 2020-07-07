@@ -1,496 +1,567 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title>RGB Maze — Keep Talking and Nobody Explodes Module</title>
-  <meta name="viewport" content="initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="css/normalize.css">
-  <link rel="stylesheet" type="text/css" href="css/main.css">
-  <link rel="stylesheet" type="text/css" href="css/font.css">
-  <script src="js/ktane-utils.js"></script>
-  <script src="js/jquery.3.1.1.min.js"></script>
-  <script>
-  $(function() {
-    var row;
-    var maze = $(".maze");
-    var mazeDiv = $(".tableDiv");
-    var mazeIndex = [0, 0, 0];
-    var selectedMaze = 0;
-    var borderColor = "rgb(255, 0, 0)";
-    var coordinate = [0, 0];
-    //orientation contains flipX and flipY
-    var orientation = ['00', '00', '00'];
-    var keyChosen = [false, false, false];
-    var keyLocation = [[0, 0], [0, 0], [0, 0]];
-    var dotClassName = ["dot-red", "dot-green", "dot-blue"];
-    var currentDotMode = 0;
-    var exitSet = false;
-    var exitLocation = [0,0];
-    var deletionMode = 0;
-    //Maze Date: Even-indexed elements represent right wall and Odd-indexed elements represent bottom wall under normal orientation
-    var mazeData = ['00011101011000111101100110111010001101110111111010010011010011101110110011111011011001111001011110110110010111100101110111010111',
-                    '01010111011001100011010110011110100001111100111111111010011100111001100011011110001111110001111011100110111010100101110111011111',
-                    '10010011011001100011110110011110110101100111101101001111011001101011010110101011100011101111011010100011001110111111110111010111',
-                    '01100100110001111001111110110011100110011001111001110111110011100110010110100111100111101111001100111001101001111101011111010111',
-                    '10000111010110101011010101111110011100111010011110011100110011100110101110110011101100110110111000111110101101101101011101011111',
-                    '10010110010110100101111100101110100001111111011110111001001110101001011111001110111010001111011110011110000111100101111111010111',
-                    '00110100111000100111101110101111100101111001111000110110011101101100110111011011011110100110011110101001101001100111011111110111',
-                    '01101010100011101010100111100011101101111011111010001101011101101110100101101011101101101011011001011111100110110101011101110111',
-                    '00111001001101100111011011100111000111111001101011101001011111100011011000011110110110111101101100110111101001110111010111010111',
-                    '01011010100001110010111010110110111110100111101010101011100011110111011110110110101001100111101001111001111010110101110101110111'];
-    function createMaze(){
-      $("<div>").addClass("dot-white").appendTo(mazeDiv);
-      for (let y = 0; y < 8; y++){
-        row = $("<tr>").addClass("maze-row").appendTo(maze);
-        for (let x = 0; x < 8; x++){
-          var cell = $("<td>").addClass("square").css("border-color", borderColor).appendTo(row);
-          if (orientation[selectedMaze][0] == 0){
-            if (orientation[selectedMaze][1] == 0) {
-              if (mazeData[mazeIndex[selectedMaze]][16*y+2*x] == 0)
-                cell.css({"border-right-width": "0px"});
-              if (mazeData[mazeIndex[selectedMaze]][16*y+2*x + 1] == 0)
-                cell.css({"border-bottom-width": "0px"});
-              if (x != 0 ? mazeData[mazeIndex[selectedMaze]][16*y + 2*x - 2] == 0 : false)
-                cell.css({"border-left-width": "0px"});
-              if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16*y + 2*x - 15] == 0 : false)
-                cell.css({"border-top-width": "0px"});
-            }
-            else {
-              if (mazeData[mazeIndex[selectedMaze]][128 - 16*y + 2*x - 16] == 0)
-                cell.css({"border-right-width": "0px"});
-              if (mazeData[mazeIndex[selectedMaze]][128 - 16*y + 2*x - 15] == 0)
-                cell.css({"border-top-width": "0px"});
-              if (x != 0 ? mazeData[mazeIndex[selectedMaze]][128 - 16*y + 2*x - 18] == 0 : false)
-                cell.css({"border-left-width": "0px"});
-              if (y != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16*y + 2*x - 15 - 16] == 0 : false)
-                cell.css({"border-bottom-width": "0px"});
-            }
-          }
-          else {
-            if (orientation[selectedMaze][1] == 0) {
-              if (mazeData[mazeIndex[selectedMaze]][16*y - 2*x + 14] == 0)
-                cell.css({"border-left-width": "0px"});
-              if (mazeData[mazeIndex[selectedMaze]][16*y - 2*x + 15] == 0)
-                cell.css({"border-bottom-width": "0px"});
-              if (x != 7 ? mazeData[mazeIndex[selectedMaze]][16*y - 2*x + 12] == 0 : false)
-                cell.css({"border-right-width": "0px"});
-              if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16*y - 2*x - 1] == 0 : false)
-                cell.css({"border-top-width": "0px"});
-            }
-            else {
-              if (mazeData[mazeIndex[selectedMaze]][128 - 16*y - 2*x - 2] == 0)
-                cell.css({"border-left-width": "0px"});
-              if (mazeData[mazeIndex[selectedMaze]][128 - 16*y - 2*x - 1] == 0)
-                cell.css({"border-top-width": "0px"});
-              if (x != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16*y - 2*x - 4] == 0 : false)
-                cell.css({"border-right-width": "0px"});
-              if (y != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16*y - 2*x - 1 - 16] == 0 : false)
-                cell.css({"border-bottom-width": "0px"});
-            }
-          }
-          cell.click(() => {
-            if (currentDotMode >= 0 && currentDotMode <= 2) {
-              if (keyChosen[currentDotMode] == false){
-                  $("<div>").addClass(`${dotClassName[currentDotMode]}`).appendTo(mazeDiv);
-                  keyChosen[currentDotMode] = true;
-              }
-              $(`.${dotClassName[currentDotMode]}`).css({"top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)`});
-              keyLocation[currentDotMode][0] = x;
-              keyLocation[currentDotMode][1] = y;
-            }
-            else if (currentDotMode == 3) {
-              $(".dot-white").css({"top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)`});
-              coordinate[0] = x;
-              coordinate[1] = y;
-            }
-            else {
-              if (exitSet == false){
-                  $("<div>").addClass("dot-yellow").appendTo(mazeDiv);
-                  exitSet = true;
-              }
-              $(".dot-yellow").css({"top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)`});
-              exitLocation[0] = x;
-              exitLocation[1] = y;
-            }
-          });
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>RGB Maze — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function()
+        {
+            var row;
+            var maze = $(".maze");
+            var mazeDiv = $(".tableDiv");
+            var mazeIndex = [0, 0, 0];
+            var selectedMaze = 0;
+            var borderColor = "rgb(255, 0, 0)";
+            var coordinate = [0, 0];
+            //orientation contains flipX and flipY
+            var orientation = ['00', '00', '00'];
+            var keyChosen = [false, false, false];
+            var keyLocation = [[0, 0], [0, 0], [0, 0]];
+            var dotClassName = ["dot-red", "dot-green", "dot-blue"];
+            var currentDotMode = 0;
+            var exitSet = false;
+            var exitLocation = [0, 0];
+            var deletionMode = 0;
+            //Maze Date: Even-indexed elements represent right wall and Odd-indexed elements represent bottom wall under normal orientation
+            var mazeData = ['00011101011000111101100110111010001101110111111010010011010011101110110011111011011001111001011110110110010111100101110111010111',
+                '01010111011001100011010110011110100001111100111111111010011100111001100011011110001111110001111011100110111010100101110111011111',
+                '10010011011001100011110110011110110101100111101101001111011001101011010110101011100011101111011010100011001110111111110111010111',
+                '01100100110001111001111110110011100110011001111001110111110011100110010110100111100111101111001100111001101001111101011111010111',
+                '10000111010110101011010101111110011100111010011110011100110011100110101110110011101100110110111000111110101101101101011101011111',
+                '10010110010110100101111100101110100001111111011110111001001110101001011111001110111010001111011110011110000111100101111111010111',
+                '00110100111000100111101110101111100101111001111000110110011101101100110111011011011110100110011110101001101001100111011111110111',
+                '01101010100011101010100111100011101101111011111010001101011101101110100101101011101101101011011001011111100110110101011101110111',
+                '00111001001101100111011011100111000111111001101011101001011111100011011000011110110110111101101100110111101001110111010111010111',
+                '01011010100001110010111010110110111110100111101010101011100011110111011110110110101001100111101001111001111010110101110101110111'];
+            function createMaze()
+            {
+                $("<div>").addClass("dot-white").appendTo(mazeDiv);
+                for (let y = 0; y < 8; y++)
+                {
+                    row = $("<tr>").addClass("maze-row").appendTo(maze);
+                    for (let x = 0; x < 8; x++)
+                    {
+                        var cell = $("<td>").addClass("square").css("border-color", borderColor).appendTo(row);
+                        if (orientation[selectedMaze][0] == 0)
+                        {
+                            if (orientation[selectedMaze][1] == 0)
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][16 * y + 2 * x] == 0)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][16 * y + 2 * x + 1] == 0)
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][16 * y + 2 * x - 2] == 0 : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16 * y + 2 * x - 15] == 0 : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                            else
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][128 - 16 * y + 2 * x - 16] == 0)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][128 - 16 * y + 2 * x - 15] == 0)
+                                    cell.css({ "border-top-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][128 - 16 * y + 2 * x - 18] == 0 : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16 * y + 2 * x - 15 - 16] == 0 : false)
+                                    cell.css({ "border-bottom-width": "0px" });
+                            }
+                        }
+                        else
+                        {
+                            if (orientation[selectedMaze][1] == 0)
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][16 * y - 2 * x + 14] == 0)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][16 * y - 2 * x + 15] == 0)
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 7 ? mazeData[mazeIndex[selectedMaze]][16 * y - 2 * x + 12] == 0 : false)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16 * y - 2 * x - 1] == 0 : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                            else
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][128 - 16 * y - 2 * x - 2] == 0)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][128 - 16 * y - 2 * x - 1] == 0)
+                                    cell.css({ "border-top-width": "0px" });
+                                if (x != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16 * y - 2 * x - 4] == 0 : false)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (y != 7 ? mazeData[mazeIndex[selectedMaze]][128 - 16 * y - 2 * x - 1 - 16] == 0 : false)
+                                    cell.css({ "border-bottom-width": "0px" });
+                            }
+                        }
+                        cell.click(() =>
+                        {
+                            if (currentDotMode >= 0 && currentDotMode <= 2)
+                            {
+                                if (keyChosen[currentDotMode] == false)
+                                {
+                                    $("<div>").addClass(`${dotClassName[currentDotMode]}`).appendTo(mazeDiv);
+                                    keyChosen[currentDotMode] = true;
+                                }
+                                $(`.${dotClassName[currentDotMode]}`).css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                keyLocation[currentDotMode][0] = x;
+                                keyLocation[currentDotMode][1] = y;
+                            }
+                            else if (currentDotMode == 3)
+                            {
+                                $(".dot-white").css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                coordinate[0] = x;
+                                coordinate[1] = y;
+                            }
+                            else
+                            {
+                                if (exitSet == false)
+                                {
+                                    $("<div>").addClass("dot-yellow").appendTo(mazeDiv);
+                                    exitSet = true;
+                                }
+                                $(".dot-yellow").css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                exitLocation[0] = x;
+                                exitLocation[1] = y;
+                            }
+                        });
+                    }
+                }
+            };
+            createMaze();
+            $(".mazeR").change(function()
+            {
+                mazeIndex[0] = $(this).val();
+                if (selectedMaze == 0)
+                    updateMaze();
+            });
+            $(".mazeG").change(function()
+            {
+                mazeIndex[1] = $(this).val();
+                if (selectedMaze == 1)
+                    updateMaze();
+            });
+            $(".mazeB").change(function()
+            {
+                mazeIndex[2] = $(this).val();
+                if (selectedMaze == 2)
+                    updateMaze();
+            });
+            $(".mazeColor").click(function()
+            {
+                selectedMaze = (selectedMaze + 1) % 3;
+                if (selectedMaze == 0)
+                {
+                    $(".mazeColor").text("Red");
+                    borderColor = "rgb(255, 0, 0)";
+                }
+                else if (selectedMaze == 1)
+                {
+                    $(".mazeColor").text("Green");
+                    borderColor = "rgb(0, 255, 0)";
+                }
+                else
+                {
+                    $(".mazeColor").text("Blue");
+                    borderColor = "rgb(0, 0, 255)";
+                }
+                $(".mazeColor").css("background", `${borderColor}`);
+                updateMaze();
+            });
+            $(".mazeRRotate").change(function()
+            {
+                orientation[0] = $(this).val();
+                if (selectedMaze == 0)
+                    updateMaze();
+            });
+            $(".mazeGRotate").change(function()
+            {
+                orientation[1] = $(this).children("option:selected").val();
+                if (selectedMaze == 1)
+                    updateMaze();
+            });
+            $(".mazeBRotate").change(function()
+            {
+                orientation[2] = $(this).children("option:selected").val();
+                if (selectedMaze == 2)
+                    updateMaze();
+            });
+            $(".dotMode").change(function()
+            {
+                currentDotMode = $(this).children("option:selected").val();
+            });
+            $(".deleteSelector").change(function()
+            {
+                deletionMode = $(this).children("option:selected").val();
+            });
+            $(".deleteSelectorButton").click(function()
+            {
+                if (deletionMode >= 0 && deletionMode <= 2)
+                {
+                    $(`.${dotClassName[deletionMode]}`).remove();
+                    keyChosen[deletionMode] = false;
+                }
+                else
+                {
+                    $(".dot-yellow").remove();
+                    exitSet = false;
+                }
+            });
+            $(".upButton").click(function()
+            {
+                if (coordinate[1] == 0) return;
+                coordinate[1]--;
+                updatePosition();
+            });
+            $(".downButton").click(function()
+            {
+                if (coordinate[1] == 7) return;
+                coordinate[1]++;
+                updatePosition();
+            });
+            $(".leftButton").click(function()
+            {
+                if (coordinate[0] == 0) return;
+                coordinate[0]--;
+                updatePosition();
+            });
+            $(".rightButton").click(function()
+            {
+                if (coordinate[0] == 7) return;
+                coordinate[0]++;
+                updatePosition();
+            });
+            function updateMaze()
+            {
+                $(".maze").empty();
+                createMaze();
+                for (let i = 0; i < 3; i++)
+                {
+                    if (keyChosen[i] == true)
+                    {
+                        $("<div>").addClass(`${dotClassName[i]}`).css({ "top": `calc(4px + 32 * ${keyLocation[i][1]}px)`, "left": `calc(4px + 32 * ${keyLocation[i][0]}px)` }).appendTo(mazeDiv);
+                    }
+                }
+                if (exitSet == true)
+                {
+                    $("<div>").addClass("dot-yellow").css({ "top": `calc(4px + 32 * ${exitLocation[1]}px)`, "left": `calc(4px + 32 * ${exitLocation[0]}px)` }).appendTo(mazeDiv);
+                }
+                updatePosition();
+            };
+            function updatePosition()
+            {
+                $(".dot-white").css({ 'top': 'calc(4px + 32 *' + coordinate[1] + 'px)', 'left': 'calc(4px + 32 *' + coordinate[0] + 'px)' });
+            };
+        });
+    </script>
+    <style>
+        .tableDiv {
+            position: relative;
+            margin: 0 auto;
+            width: 258px;
+            height: 258px;
         }
-      }
-    };
-    createMaze();
-    $(".mazeR").change(function(){
-      mazeIndex[0] = $(this).val();
-      if (selectedMaze == 0)
-      updateMaze();
-    });
-    $(".mazeG").change(function(){
-      mazeIndex[1] = $(this).val();
-      if (selectedMaze == 1)
-      updateMaze();
-    });
-    $(".mazeB").change(function(){
-      mazeIndex[2] = $(this).val();
-      if (selectedMaze == 2)
-      updateMaze();
-    });
-    $(".mazeColor").click(function(){
-      selectedMaze = (selectedMaze + 1) % 3;
-      if (selectedMaze == 0) {
-        $(".mazeColor").text("Red");
-        borderColor = "rgb(255, 0, 0)";
-      }
-      else if (selectedMaze == 1) {
-          $(".mazeColor").text("Green");
-          borderColor = "rgb(0, 255, 0)";
-      }
-      else {
-          $(".mazeColor").text("Blue");
-          borderColor ="rgb(0, 0, 255)";
-      }
-      $(".mazeColor").css("background", `${borderColor}`);
-      updateMaze();
-    });
-    $(".mazeRRotate").change(function(){
-      orientation[0] = $(this).val();
-      if (selectedMaze == 0)
-      updateMaze();
-    });
-    $(".mazeGRotate").change(function(){
-      orientation[1] = $(this).children("option:selected").val();
-      if (selectedMaze == 1)
-      updateMaze();
-    });
-    $(".mazeBRotate").change(function(){
-      orientation[2] = $(this).children("option:selected").val();
-      if (selectedMaze == 2)
-      updateMaze();
-    });
-    $(".dotMode").change(function(){
-      currentDotMode = $(this).children("option:selected").val();
-    });
-    $(".deleteSelector").change(function(){
-      deletionMode = $(this).children("option:selected").val();
-    });
-    $(".deleteSelectorButton").click(function(){
-      if (deletionMode >= 0 && deletionMode <= 2) {
-        $(`.${dotClassName[deletionMode]}`).remove();
-        keyChosen[deletionMode] = false;
-      }
-      else {
-        $(".dot-yellow").remove();
-        exitSet = false;
-      }
-    });
-    $(".upButton").click(function(){
-      if (coordinate[1] == 0) return;
-      coordinate[1]--;
-      updatePosition();
-    });
-    $(".downButton").click(function(){
-      if (coordinate[1] == 7) return;
-      coordinate[1]++;
-      updatePosition();
-    });
-    $(".leftButton").click(function(){
-      if (coordinate[0] == 0) return;
-      coordinate[0]--;
-      updatePosition();
-    });
-    $(".rightButton").click(function(){
-      if (coordinate[0] == 7) return;
-      coordinate[0]++;
-      updatePosition();
-    });
-    function updateMaze(){
-      $(".maze").empty();
-      createMaze();
-      for (let i = 0; i < 3; i++){
-        if (keyChosen[i] == true){
-          $("<div>").addClass(`${dotClassName[i]}`).css({"top": `calc(4px + 32 * ${keyLocation[i][1]}px)`, "left": `calc(4px + 32 * ${keyLocation[i][0]}px)`}).appendTo(mazeDiv);
+
+        .maze {
+            table-layout: fixed;
+            margin: 0 auto;
+            width: 258px;
+            height: 258px;
+            overflow: hidden;
+            background-color: rgb(0, 0, 0);
         }
-      }
-      if (exitSet == true){
-          $("<div>").addClass("dot-yellow").css({"top": `calc(4px + 32 * ${exitLocation[1]}px)`, "left": `calc(4px + 32 * ${exitLocation[0]}px)`}).appendTo(mazeDiv);
-      }
-      updatePosition();
-    };
-    function updatePosition(){
-      $(".dot-white").css({'top': 'calc(4px + 32 *' + coordinate[1] + 'px)', 'left': 'calc(4px + 32 *' + coordinate[0] + 'px)'});
-    };
-  });
-  </script>
-  <style>
-  .tableDiv {
-    position: relative;
-    margin: 0 auto;
-    width: 258px;
-    height: 258px;
-  }
-  .maze {
-    table-layout: fixed;
-    margin: 0 auto;
-    width: 258px;
-    height: 258px;
-    overflow: hidden;
-    background-color: rgb(0, 0, 0);
-  }
-  .maze-row {
-    height: 32px;
-  }
-  .square, .square:not(:hover) {
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    width: 32px;
-    height: 32px;
-    border: 2px solid;
-    color: black;
-    transition: background-color 0.2s;
-  }
-  .square:hover {
-    background-color: rgb(0, 255, 255);
-    transition: background-color 0.2s;
-  }
-  .dot-white, .dot-red, .dot-green, .dot-blue, .dot-yellow {
-    float: left;
-    position: absolute;
-    height: 26px;
-    width: 26px;
-    border-radius: 50%;
-    display: block;
-    pointer-events: none;
-    top: 4px;
-    left: 4px;
-  }
-  .dot-white {
-    background-color: rgb(255, 255, 255);
-    z-index: 100;
-  }
-  .dot-red {
-    background-color: rgb(255, 0, 0);
-    z-index: 50;
-  }
-  .dot-green {
-    background-color: rgb(0, 255, 0);
-    z-index: 50;
-  }
-  .dot-blue {
-    background-color: rgb(0, 0, 255);
-    z-index: 50;
-  }
-  .dot-yellow {
-    background-color: rgb(255, 255, 0);
-    z-index: 25;
-  }
-  .mazeColor, .deleteSelectorButton {
-    width: auto;
-    border: 2px solid black;
-    padding-top:  5px;
-  }
-  .mazeColor, .mazeColor:hover, .mazeColor:not(:hover)  {
-    background: red;
-    color: white;
-  }
-  .deleteSelectorButton, .deleteSelectorButton:hover, .deleteSelectorButton:not(:hover) {
-    background: rgb(255, 255, 255);
-    color: black;
-  }
-  .deleteSelector {
-    background-color: rgb(255, 255, 255);
-    color: rgb(0, 0, 0);
-    border: 2px solid black;
-  }
-  .dotMode {
-    background-color: rgb(255, 255, 0);
-    color: rgb(0, 0, 0);
-    border: 2px solid black;
-  }
-  .mazeR, .mazeRRotate {
-    background-color: rgb(255, 0, 0);
-    color: rgb(255, 255, 255);
-    border: 2px solid black;
-  }
-  .mazeG, .mazeGRotate {
-    background-color: rgb(0, 255, 0);
-    color: rgb(255, 255, 255);
-    border: 2px solid black;
-  }
-  .mazeB, .mazeBRotate {
-    background-color: rgb(0, 0, 255);
-    color: rgb(255, 255, 255);
-    border: 2px solid black;
-  }
-  .grid {
-    position: relative;
-    top: 5px;
-    width: 150px;
-    height: 150px;
-    margin: auto;
-  }
-  .grid div {
-    width: 50px;
-    height: 50px;
-    float: left;
-  }
-  .upButton, .downButton, .leftButton, .rightButton {
-    width: 50px;
-    height: 50px;
-    border: 2px solid black;
-  }
-  </style>
+
+        .maze-row {
+            height: 32px;
+        }
+
+        .square, .square:not(:hover) {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            width: 32px;
+            height: 32px;
+            border: 2px solid;
+            color: black;
+            transition: background-color 0.2s;
+        }
+
+            .square:hover {
+                background-color: rgb(0, 255, 255);
+                transition: background-color 0.2s;
+            }
+
+        .dot-white, .dot-red, .dot-green, .dot-blue, .dot-yellow {
+            float: left;
+            position: absolute;
+            height: 26px;
+            width: 26px;
+            border-radius: 50%;
+            display: block;
+            pointer-events: none;
+            top: 4px;
+            left: 4px;
+        }
+
+        .dot-white {
+            background-color: rgb(255, 255, 255);
+            z-index: 100;
+        }
+
+        .dot-red {
+            background-color: rgb(255, 0, 0);
+            z-index: 50;
+        }
+
+        .dot-green {
+            background-color: rgb(0, 255, 0);
+            z-index: 50;
+        }
+
+        .dot-blue {
+            background-color: rgb(0, 0, 255);
+            z-index: 50;
+        }
+
+        .dot-yellow {
+            background-color: rgb(255, 255, 0);
+            z-index: 25;
+        }
+
+        .mazeColor, .deleteSelectorButton {
+            width: auto;
+            border: 2px solid black;
+            padding-top: 5px;
+        }
+
+            .mazeColor, .mazeColor:hover, .mazeColor:not(:hover) {
+                background: red;
+                color: white;
+            }
+
+            .deleteSelectorButton, .deleteSelectorButton:hover, .deleteSelectorButton:not(:hover) {
+                background: rgb(255, 255, 255);
+                color: black;
+            }
+
+        .deleteSelector {
+            background-color: rgb(255, 255, 255);
+            color: rgb(0, 0, 0);
+            border: 2px solid black;
+        }
+
+        .dotMode {
+            background-color: rgb(255, 255, 0);
+            color: rgb(0, 0, 0);
+            border: 2px solid black;
+        }
+
+        .mazeR, .mazeRRotate {
+            background-color: rgb(255, 0, 0);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .mazeG, .mazeGRotate {
+            background-color: rgb(0, 255, 0);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .mazeB, .mazeBRotate {
+            background-color: rgb(0, 0, 255);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .grid {
+            position: relative;
+            top: 5px;
+            width: 150px;
+            height: 150px;
+            margin: auto;
+        }
+
+            .grid div {
+                width: 50px;
+                height: 50px;
+                float: left;
+            }
+
+        .upButton, .downButton, .leftButton, .rightButton {
+            width: 50px;
+            height: 50px;
+            border: 2px solid black;
+        }
+    </style>
 </head>
 <body>
-<div class="section">
-  <div class="page page-bg-01">
-    <div class="page-header">
-      <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-      <span class="page-header-section-title">RGB Maze</span>
-    </div>
-    <div class="page-content">
-      <img src="img/Component/RGB Maze.svg" class="diagram">
-      <h2>On the Subject of RGB Mazes</h2>
-      <p class="flavour-text">Now you too can experience getting lost three times simultaneously!</p>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RGB Maze.svg" class="diagram">
+                <h2>On the Subject of RGB Mazes</h2>
+                <p class="flavour-text">Now you too can experience getting lost three times simultaneously!</p>
 
-      <p>This module consists of an 8x8 grid of LEDs and a seven segment display.</p>
-      <p>On this 8x8 grid are three mazes:<br>one with red walls, one with green, and one with blue.<br>
-        Each of these mazes contains a key. All three of these keys are initially shown on the grid.</p>
-      <p>The seven segment display shows three numbers that correspond to each of the mazes, which also overlap and mix additively.</p>
-      <p>Pressing any of the LEDs will reveal the starting location, a white LED, somewhere within the red maze. The keys are then hidden but will not be moved from their original locations.</p>
-      <p>Press an adjacent grey LED to move. Attempting to move to a space where:<ul>
-        <li>there is a wall between the white and selected grey LEDs...</li>
-        <li>a key belonging to a different maze lies...</li></ul>
-        will cause a strike.</p>
-      <p>Press the white LED to switch between mazes. This can always be done and will never result in a strike.</p>
-      <p>Once all three keys are collected, the seven segment display will change.<br>
-         Each of the three colour components give a coordinate of the location of the exit:
-         <ul><li>One of the components is a number. This gives the row the exit lies in.</li>
-             <li>One of the other components is a letter. This gives the column the exit lies in.</li>
-             <li>The remaining component is a random pattern that is neither a number or a letter.<br> The exit lies in the maze that is the same colour as this component.</li></ul>
-         Note: B and D are shown in lowercase to disambiguate them from 8 and 0; the rest of the letters are uppercase.</p>
-      <p>In a similar fashion as the keys, the exit can only be used from the maze it lies in. A strike will be incurred if an exit is attempted from a different maze.</p>
-      </div>
-      <div class="page-footer relative-footer">Page 1 of 2</div>
-    </div>
-    <div class="page page-bg-02">
-      <div class="page-header">
-        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-        <span class="page-header-section-title">RGB Maze</span>
-      </div>
-      <div class="page-content">
-        <h3>Maze Layouts</h3>
-        <p>Each colour component of the seven segment display is a number corresponding to one of the mazes below.</p>
-        <p>Each of the mazes has an LED at one of its corners that is the same colour as the maze itself, identifying the orientation of that maze.<br>
-           The mazes may have been flipped horizontally and/or vertically such that the LEDs are flipped onto the appropriate corners of the grid.<br>
-           The colours of the LEDs mix additively if their respective mazes have the same orientation.</p>
-        <div class="tableDiv">
-          <table class="maze"></table>
-          <div class="dot-white"></div>
+                <p>This module consists of an 8x8 grid of LEDs and a seven segment display.</p>
+                <p>
+                    On this 8x8 grid are three mazes:<br>one with red walls, one with green, and one with blue.<br>
+                    Each of these mazes contains a key. All three of these keys are initially shown on the grid.
+                </p>
+                <p>The seven segment display shows three numbers that correspond to each of the mazes, which also overlap and mix additively.</p>
+                <p>Pressing any of the LEDs will reveal the starting location, a white LED, somewhere within the red maze. The keys are then hidden but will not be moved from their original locations.</p>
+                <p>
+                    Press an adjacent grey LED to move. Attempting to move to a space where:<ul>
+                        <li>there is a wall between the white and selected grey LEDs...</li>
+                        <li>a key belonging to a different maze lies...</li>
+                    </ul>
+                    will cause a strike.
+                </p>
+                <p>Press the white LED to switch between mazes. This can always be done and will never result in a strike.</p>
+                <p>
+                    Once all three keys are collected, the seven segment display will change.<br>
+                    Each of the three colour components give a coordinate of the location of the exit:
+                    <ul>
+                        <li>One of the components is a number. This gives the row the exit lies in.</li>
+                        <li>One of the other components is a letter. This gives the column the exit lies in.</li>
+                        <li>The remaining component is a random pattern that is neither a number or a letter.<br> The exit lies in the maze that is the same colour as this component.</li>
+                    </ul>
+                    Note: B and D are shown in lowercase to disambiguate them from 8 and 0; the rest of the letters are uppercase.
+                </p>
+                <p>In a similar fashion as the keys, the exit can only be used from the maze it lies in. A strike will be incurred if an exit is attempted from a different maze.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
-        <div>
-          <div class="grid">
-            <div></div>
-            <div><button class="upButton">&#8593;</button></div>
-            <div></div>
-            <div><button class="leftButton">&#8592;</button></div>
-            <div></div>
-            <div><button class="rightButton">&#8594;</button></div>
-            <div></div>
-            <div><button class="downButton">&#8595;</button></div>
-            <div></div>
-          </div>
-          <br>
-          <div>
-            <label for="mazeColor"> Selected Maze: </label>
-            <button class="mazeColor">Red</button>
-            <label for="dotMode">Placing Option:</label>
-            <select class="dotMode">
-              <option value=0>Red Key</option>
-              <option value=1>Green Key</option>
-              <option value=2>Blue Key</option>
-              <option value=3>Current Position</option>
-              <option value=4>Maze Exit</option>
-            </select>
-          </div>
-          <div>
-            <label for="deleteSelector">Delete Option:</label>
-            <select class="deleteSelector">
-              <option value=0>Red Key</option>
-              <option value=1>Green Key</option>
-              <option value=2>Blue Key</option>
-              <option value=3>Maze Exit</option>
-            </select>
-            <button class="deleteSelectorButton">Delete</button>
-          </div>
-          <div>
-            <label for="mazeR"> Red Maze: </label>
-            <select class="mazeR">
-              <option value=0>0</option>
-              <option value=1>1</option>
-              <option value=2>2</option>
-              <option value=3>3</option>
-              <option value=4>4</option>
-              <option value=5>5</option>
-              <option value=6>6</option>
-              <option value=7>7</option>
-              <option value=8>8</option>
-              <option value=9>9</option>
-            </select>
-            <label for="mazeRRotate"> Selected Rotation: </label>
-            <select class="mazeRRotate">
-              <option value="00">Top Left</option>
-              <option value="10">Top Right</option>
-              <option value="01">Bottom Left</option>
-              <option value="11">Bottom Right</option>
-            </select>
-          </div>
-          <div>
-            <label for="mazeG"> Green Maze: </label>
-            <select class="mazeG">
-              <option value=0>0</option>
-              <option value=1>1</option>
-              <option value=2>2</option>
-              <option value=3>3</option>
-              <option value=4>4</option>
-              <option value=5>5</option>
-              <option value=6>6</option>
-              <option value=7>7</option>
-              <option value=8>8</option>
-              <option value=9>9</option>
-            </select>
-            <label for="mazeGRotate"> Selected Rotation: </label>
-            <select class="mazeGRotate">
-              <option value="00">Top Left</option>
-              <option value="10">Top Right</option>
-              <option value="01">Bottom Left</option>
-              <option value="11">Bottom Right</option>
-            </select>
-          </div>
-          <div>
-            <label for="mazeB"> Blue Maze: </label>
-            <select class="mazeB">
-              <option value=0>0</option>
-              <option value=1>1</option>
-              <option value=2>2</option>
-              <option value=3>3</option>
-              <option value=4>4</option>
-              <option value=5>5</option>
-              <option value=6>6</option>
-              <option value=7>7</option>
-              <option value=8>8</option>
-              <option value=9>9</option>
-            </select>
-            <label for="mazeBRotate"> Selected Rotation: </label>
-            <select class="mazeBRotate">
-              <option value="00">Top Left</option>
-              <option value="10">Top Right</option>
-              <option value="01">Bottom Left</option>
-              <option value="11">Bottom Right</option>
-            </select>
-          </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Maze Layouts</h3>
+                <p>Each colour component of the seven segment display is a number corresponding to one of the mazes below.</p>
+                <p>
+                    Each of the mazes has an LED at one of its corners that is the same colour as the maze itself, identifying the orientation of that maze.<br>
+                    The mazes may have been flipped horizontally and/or vertically such that the LEDs are flipped onto the appropriate corners of the grid.<br>
+                    The colours of the LEDs mix additively if their respective mazes have the same orientation.
+                </p>
+                <div class="tableDiv">
+                    <table class="maze"></table>
+                    <div class="dot-white"></div>
+                </div>
+                <div>
+                    <div class="grid">
+                        <div></div>
+                        <div><button class="upButton">&#8593;</button></div>
+                        <div></div>
+                        <div><button class="leftButton">&#8592;</button></div>
+                        <div></div>
+                        <div><button class="rightButton">&#8594;</button></div>
+                        <div></div>
+                        <div><button class="downButton">&#8595;</button></div>
+                        <div></div>
+                    </div>
+                    <br>
+                    <div>
+                        <label for="mazeColor"> Selected Maze: </label>
+                        <button class="mazeColor">Red</button>
+                        <label for="dotMode">Placing Option:</label>
+                        <select class="dotMode">
+                            <option value=0>Red Key</option>
+                            <option value=1>Green Key</option>
+                            <option value=2>Blue Key</option>
+                            <option value=3>Current Position</option>
+                            <option value=4>Maze Exit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="deleteSelector">Delete Option:</label>
+                        <select class="deleteSelector">
+                            <option value=0>Red Key</option>
+                            <option value=1>Green Key</option>
+                            <option value=2>Blue Key</option>
+                            <option value=3>Maze Exit</option>
+                        </select>
+                        <button class="deleteSelectorButton">Delete</button>
+                    </div>
+                    <div>
+                        <label for="mazeR"> Red Maze: </label>
+                        <select class="mazeR">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeRRotate"> Selected Rotation: </label>
+                        <select class="mazeRRotate">
+                            <option value="00">Top Left</option>
+                            <option value="10">Top Right</option>
+                            <option value="01">Bottom Left</option>
+                            <option value="11">Bottom Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mazeG"> Green Maze: </label>
+                        <select class="mazeG">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeGRotate"> Selected Rotation: </label>
+                        <select class="mazeGRotate">
+                            <option value="00">Top Left</option>
+                            <option value="10">Top Right</option>
+                            <option value="01">Bottom Left</option>
+                            <option value="11">Bottom Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mazeB"> Blue Maze: </label>
+                        <select class="mazeB">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeBRotate"> Selected Rotation: </label>
+                        <select class="mazeBRotate">
+                            <option value="00">Top Left</option>
+                            <option value="10">Top Right</option>
+                            <option value="01">Bottom Left</option>
+                            <option value="11">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
-      </div>
-      <div class="page-footer relative-footer">Page 2 of 2</div>
     </div>
-  </div>
-</div>
 </body>
 </html>
