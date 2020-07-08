@@ -5154,6 +5154,11 @@ const parseData = [
 		loggingTag: "Simon's Star"
 	},
 	{
+		displayName: "Simon’s Ultimate Showdown",
+		moduleID: "simonsUltimateShowdownModule",
+		loggingTag: "Simon's Ultimate Showdown"
+	},
+	{
 		moduleID: "SkewedSlotsModule",
 		loggingTag: "Skewed Slots",
 		matches: [
