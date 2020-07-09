@@ -459,7 +459,18 @@ const parseData = [
 					// Set the display names for all the modules we got.
 					for (const moduleType in targetBomb.Modules) {
 						if (bombInfo.displayNames[moduleType] == undefined) continue;
-						targetBomb.Modules[moduleType].moduleData.displayName = bombInfo.displayNames[moduleType];
+						var data = targetBomb.Modules[moduleType].moduleData;
+						var name = bombInfo.displayNames[moduleType];
+
+						if (data.loggingTag == data.displayName) {
+							parseKeys.loggingTag[name] = parseKeys.loggingTag[data.loggingTag];
+							data.loggingTag = name;
+						}
+
+						if (parseKeys.hasOwnProperty("displayName"))
+							parseKeys.displayName[name] = parseKeys.displayName[data.displayName];
+
+						data.displayName = name;
 					}
 
 					// Pass along the case information
@@ -5152,11 +5163,6 @@ const parseData = [
 		displayName: "Simon’s Star",
 		moduleID: "simonsStar",
 		loggingTag: "Simon's Star"
-	},
-	{
-		displayName: "Simon’s Ultimate Showdown",
-		moduleID: "simonsUltimateShowdownModule",
-		loggingTag: "Simon's Ultimate Showdown"
 	},
 	{
 		moduleID: "SkewedSlotsModule",
