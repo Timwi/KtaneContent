@@ -1967,12 +1967,21 @@ const parseData = [
 			{
 				regex: /The grid:/,
 				handler: function(matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 14; i++) {
-						lines += `\n${readTaggedLine()}`;
+					let line = readTaggedLine().replace(/WWWWWWWWWWWWWWW/g, "•——•——•——•——•——•——•——•");
+					let finalLine = " A  B  C  D  E  F  G      A  B  C  D  E  F  G      A  B  C  D  E  F  G \n" + line + "   " + line + "   " + line;
+					for (let i = 1; i < 8; i++) {
+						line = `${readTaggedLine()}`;
+						let line2 = `${readTaggedLine()}`;
+						let redMazevert = `${line.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						let greenMazevert = `${line.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						let blueMazevert =  `${line.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let blueMazehoriz =  `${line2.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						finalLine += "\n" + redMazevert + " " + i + " " + greenMazevert + " " + i + " " + blueMazevert+ "\n" + redMazehoriz + "   " + greenMazehoriz + "   " + blueMazehoriz;
 					}
-
-					module.push({ label: "The grid:", obj: pre(lines) });
+					finalLine += "\n         Red                      Green                    Blue";
+					module.push({ label: "The grid:", obj: pre(finalLine)});
 					return true;
 				}
 			},
@@ -4750,12 +4759,21 @@ const parseData = [
 			{
 				regex: /The grid:/,
 				handler: function(matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 16; i++) {
-						lines += `\n${readTaggedLine()}`;
+					let line = readTaggedLine().replace(/WWWWWWWWWWWWWWWWW/g, "•——•——•——•——•——•——•——•——•");
+					let finalLine = " A  B  C  D  E  F  G  H      A  B  C  D  E  F  G  H      A  B  C  D  E  F  G  H \n" + line + "   " + line + "   " + line;
+					for (let i = 1; i < 9; i++) {
+						line = `${readTaggedLine()}`;
+						let line2 = `${readTaggedLine()}`;
+						let redMazevert = `${line.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						let greenMazevert = `${line.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						let blueMazevert =  `${line.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
+						let blueMazehoriz =  `${line2.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
+						finalLine += "\n" + redMazevert + " " + i + " "+ greenMazevert + " " + i + " " + blueMazevert+ "\n" + redMazehoriz + "   "  + greenMazehoriz + "   " + blueMazehoriz;
 					}
-
-					module.push({ label: "The grid:", obj: pre(lines) });
+					finalLine += "\n           Red                        Green                        Blue";
+					module.push({ label: "The grid:", obj: pre(finalLine)});
 					return true;
 				}
 			},
