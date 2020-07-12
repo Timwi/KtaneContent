@@ -861,6 +861,40 @@ const parseData = [
 		displayName: "Answer to..."
 	},
 	{
+		displayName: "ASCII Maze",
+		moduleID: "asciiMaze",
+		loggingTag: "ASCII Maze",
+		matches: [
+			{
+				regex: /The decoded bits form the maze:/,
+				handler: function(matches, module) {
+					let lines = " A  B  C  D  E  F  G \n"+ readTaggedLine().replace(/■■■■■■■■■■■■■■■/g, "•——•——•——•——•——•——•——•");
+					for (let i = 1; i < 8; i++) {
+						lines += `\n${readTaggedLine().replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")} ${i} \n${readTaggedLine().replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")} `;
+					}
+					lines = lines.replace(/E/g, "Ex").replace(/S/g, "St").replace(/Ex/, "E");
+					module.push({ label: "The decoded bits form the maze:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /The corresponding string of bits is:/,
+				handler: function(matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 2; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+					
+					module.push({ label: "The corresponding string of bits is:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "lgndAudioMorse",
 		loggingTag: "Audio Morse",
 		displayName: "Audio Morse"
