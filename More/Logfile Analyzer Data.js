@@ -1254,6 +1254,23 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Brainf---",
+		moduleID: "brainf",
+		loggingTag: "Brainf---",
+		matches: [
+			{
+				regex: /The program is (\W+)/,
+				handler: function(matches, module) {
+					module.push({ label: "The program is:", obj: pre(matches[1]) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Button Grid",
 		moduleID: "buttonGrid",
 		loggingTag: "Button Grids"
