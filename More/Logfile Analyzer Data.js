@@ -5782,6 +5782,106 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Wavetapping",
+		moduleID: "Wavetapping",
+		loggingTag: "Wavetapping",
+		matches: [
+			{
+				regex: /:?Stage colors are: (\w+), (\w+), (\w+)/,
+				handler: function(matches, module) {
+					var stageColorIndex = [];
+					for (var i = 0; i < 3; i++) {
+						stageColorIndex[i] = matches[i+1]
+							.replace(/Red/g, "0")
+							.replace(/Orange-Yellow/g, "2")
+							.replace(/Orange/g, "1")
+							.replace(/Chartreuse/g, "3")
+							.replace(/Lime/g, "4")
+							.replace(/Green/g, "5")
+							.replace(/Seafoam Green/g, "6")
+							.replace(/Cyan-Green/g, "7")
+							.replace(/Dark Blue/g, "8")
+							.replace(/Purple-Magenta/g, "9")
+							.replace(/Turquoise/g, "10")
+							.replace(/Indigo/g, "11")
+							.replace(/Purple/g, "12")
+							.replace(/Magenta/g, "13")
+							.replace(/Pink/g, "14")
+							.replace(/Grey/g, "15")
+					};
+					var litColors = [
+						'#fc4d40', //'Red': 
+						'#ff9533', //'Orange': 
+						'#ffd131', //'Orange-Yellow': 
+						'#d8ec2f', //'Chartreuse': 
+						'#85e836', //'Lime': 
+						'#2ddf34', //'Green': 
+						'#2ee38e', //'Seafoam Green': 
+						'#29e9ce', //'Cyan-Green': 
+						'#3888ff', //'Dark Blue': 
+						'#d852f1', //'Purple-Magenta':
+						'#2dcdfe', //'Turquoise': 
+						'#3848ff', //'Indigo': 
+						'#8e4fff', //'Purple': 
+						'#fc54e1', //'Magenta': 
+						'#fd5287', //'Pink': 
+						'#a9a9a9'  //'Grey': 
+					]; 
+					var unlitColors = [
+						'#6c190e', //'Red': 
+						'#6c3610', //'Orange': 
+						'#68530f', //'Orange-Yellow': 
+						'#91a01c', //'Chartreuse': 
+						'#335c0e', //'Lime': 
+						'#0c5a0d', //'Green': 
+						'#0a5c30', //'Seafoam Green': 
+						'#0a5d55', //'Cyan-Green': 
+						'#0c3368', //'Dark Blue': 
+						'#591c67', //'Purple-Magenta': 
+						'#0a5169', //'Turquoise':
+						'#a0a669', //'Indigo': 
+						'#351a69', //'Purple': 
+						'#6d1d56', //'Magenta': 
+						'#6c1b33', //'Pink': 
+						'#424242'  //'Grey': 
+					];
+					module.push({ label: "Stage colors are: "+ matches[1] + ", " + matches[2] + ", " + matches[3] });
+					for (var st = 1; st < 4; st++) {
+						var table = $('<table>')
+							.css('background-color', 'black')
+							.css('font-size', '30px')
+							.css('color', 'white');
+						var correctPat = readTaggedLine().replace(/Correct pattern for stage (1|2|3) is: /, "");
+						for (var r = 0; r < 11; r++) {
+							var tr = $('<tr>').css('border', '0').appendTo(table);
+							var curLine = readTaggedLine();
+							for (var c = 0; c < 12; c++) {
+								if (curLine[c] == "0") $('<td>')
+								.text(" ")
+								.css('background-color', litColors[stageColorIndex[st-1]])
+								.css('text-align', 'center')
+								.css('width', '20px')
+								.css('height', '20px')
+								.appendTo(tr);
+								else if (curLine[c] == "X") $('<td>')
+								.text(" ")
+								.css('background-color', unlitColors[stageColorIndex[st-1]])
+								.css('text-align', 'center')
+								.css('width', '20px')
+								.css('height', '20px').appendTo(tr);
+							}
+						}
+						module.push({ label: "Solution for Stage "+ st + " ("+ matches[st] + ") is: " + correctPat, obj: table });
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Who’s on First",
 		moduleID: "WhosOnFirst",
 		loggingTag: "WhosOnFirstComponent",
