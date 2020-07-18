@@ -5180,7 +5180,133 @@ const parseData = [
 	{
 		displayName: "Shapes And Bombs",
 		moduleID: "ShapesBombs",
-		loggingTag: "Shapes Bombs"
+		loggingTag: "Shapes Bombs",
+		matches: [
+			{
+				regex: /Color for the squares is: (\w+)/,
+				handler: function(matches, module) {
+					var color = matches[1]
+					.replace(/Green/g, "0")
+					.replace(/Blue/g, "1")
+					.replace(/Yellow/g, "2")
+					.replace(/Cyan/g, "3")
+					.replace(/Purple/g, "4")
+					.replace(/White/g, "5");
+					var colors = [
+						'#00ff00', // Green
+						'#0000ff', // Blue
+						'#ffff00', // Yellow
+						'#00FFFF', // Cyan
+						'#ff00ff', // Purple(Magenta)
+						'#ffffff', // White
+						'#48453e', // Grey
+					];
+					var directions = readTaggedLine().replace(/[0-9]/g, "").replace(/Arrow sequence is: /g, "00. ");
+						for (var i = 1; i < 10; i++) {
+							directions = directions.replace(/\(/, '\n0\#').replace(/\#/, i).replace(/\)/, ".");
+						};
+						for (var i = 10; i < 16; i++) {
+							directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
+						};
+					var unused1 = readTaggedLine();
+					var unused2 = readTaggedLine();
+
+					var letterTable = readTaggedLine().replace(/Letter table is:/, "");
+					var ltable = $('<table>').css('border', '1px solid black').css('border-collapse', 'collapse')
+					for (var r = 0; r < 5; r++) {
+						var tr = $('<tr>').css('border', '1px solid black').appendTo(ltable);
+						ltablerow = readTaggedLine().replace(/ /g, "");
+						for (var c = 0; c < 3; c++) {
+							$('<td>')
+							.text(ltablerow[c])
+							.css('border', '1px solid black')
+							.css('text-align', 'center')
+							.css('width', '25px')
+							.css('height', '25px')
+							.appendTo(tr);
+						}
+					}
+					var unused3 = readTaggedLine();
+					var unused4 = readTaggedLine();
+					var unused5 = readTaggedLine();
+					var unused6 = readTaggedLine() + readTaggedLine();
+					unused6 = unused6.replace(/Counting lit squares/, "");
+
+					var table1 = $('<table>')
+					.css('background-color', '#48453e')
+					.css('font-size', '30px')
+					.css('color', 'white');
+					
+					var currentRow = readTaggedLine().replace(/Even solved modules final shape is:/, "").replace(/ /, "");
+					for (var r = 0; r < 8; r++) {
+						var tr = $('<tr>').appendTo(table1);
+						currentRow = readTaggedLine().replace(/ /g, "");
+						for (var c = 0; c < 5; c++) {
+							if (currentRow[c] == "0") {
+								$('<td>')
+								.css('background-color', colors[color])
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+							else {	
+								$('<td>')
+								.css('background-color', '#48453e')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+						}
+					}
+
+					var table2 = $('<table>')
+					.css('background-color', '#48453e')
+					.css('font-size', '30px')
+					.css('color', 'white');
+					
+					currentRow = readTaggedLine().replace(/Odd solved modules final shape is:/, "").replace(/ /, "");
+					for (var r = 0; r < 8; r++) {
+						var tr2= $('<tr>').appendTo(table2);
+						currentRow = readTaggedLine().replace(/ /g, "");
+						for (var c = 0; c < 5; c++) {
+							if (currentRow[c] == "0") {
+								$('<td>')
+								.css('background-color', colors[color])
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr2);
+							}
+							else {	
+								$('<td>')
+								.css('background-color', '#48453e')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr2);
+							}
+						}
+					}
+					module.push({ label: "Color of the square is: ", obj: matches[1] });
+					module.push({ label: "Arrow Sequence are: ", obj: pre(directions) });
+					module.push({ obj: unused1 });
+					module.push({ obj: unused2 });
+					module.push({ label: "The Letter Table is: ", obj: ltable });
+					module.push({ obj: unused3 });
+					module.push({ obj: unused4 });
+					module.push({ obj: unused5 });
+					module.push({ obj: unused6 });
+					module.push({ label: "Even solved modules final shape is: ", obj: table1 });
+					module.push({ label: "Odd solved modules final shape is: ", obj: table2 });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+			}
+		]
 	},
 	{
 		moduleID: "shikaku",
