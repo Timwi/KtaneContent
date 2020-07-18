@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src='js/ktane-utils.js'></script>
+    <script src='js/ruleseed.js'></script>
     <style>
         .heading {
             font-weight: bold;
@@ -58,6 +59,391 @@
             text-anchor: end;
         }
     </style>
+    <script>
+        function setRules(rnd)
+        {
+            let WIDTH = 8, NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
+            let mazeLabels = "ABC,ABD,ABH,ACD,ACH,ADH,BCD,BCH,BDH,CDH".split(',');
+            let tds = document.getElementsByClassName('tmaze-td');
+
+            function neighbor(cell, dir)
+            {
+                switch (dir)
+                {
+                    case NORTH: return { x: cell.x, y: (cell.y + WIDTH - 1) % WIDTH };
+                    case EAST: return { x: (cell.x + 1) % WIDTH, y: cell.y };
+                    case SOUTH: return { x: cell.x, y: (cell.y + 1) % WIDTH };
+                    default: return { x: (cell.x + WIDTH - 1) % WIDTH, y: cell.y };
+                }
+            }
+
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels = mazeLabels[mapIndex];
+                let mapData = [...Array(WIDTH).keys()].map(col => [...Array(WIDTH).keys()].map(cell => ({ label: ' ', n_wall: true, w_wall: true })));
+                let todo = [...Array(WIDTH * WIDTH).keys()].map(ix => ({ x: ix % WIDTH, y: (ix / WIDTH)|0 }));
+                let visited = [];
+                let done = [];
+
+                // Choose a random square to start from
+                let startIx = rnd.next(0, todo.length);
+                visited.push(todo[startIx]);
+                todo.splice(startIx, 1);
+
+                // Generate a maze
+                while (todo.length > 0)
+                {
+                    let cellIx = rnd.next(0, visited.length);
+                    let cell = visited[cellIx];
+
+                    let validWalls = [ NORTH, EAST, SOUTH, WEST ].map(dir => ({ dir: dir, cell: neighbor(cell, dir) })).filter(c => todo.some(t => t.x === c.cell.x && t.y === c.cell.y));
+                    if (validWalls.length == 0)
+                    {
+                        visited.splice(cellIx, 1);
+                        done.push(cell);
+                        continue;
+                    }
+
+                    let wallIx = rnd.next(0, validWalls.length);
+                    let wall = validWalls[wallIx];
+                    switch (wall.dir)
+                    {
+                        case NORTH: mapData[cell.x][cell.y].n_wall = false; break;
+                        case WEST: mapData[cell.x][cell.y].w_wall = false; break;
+                        case SOUTH: mapData[wall.cell.x][wall.cell.y].n_wall = false; break;
+                        default: mapData[wall.cell.x][wall.cell.y].w_wall = false; break;
+                    }
+                    todo = todo.filter(t => t.x !== wall.cell.x || t.y !== wall.cell.y);
+                    visited.push(wall.cell);
+                }
+
+                // Remove 20–35% of the remaining walls to make the maze more spacious
+                let remainingWalls = [];
+                for (let x = 0; x < WIDTH; x++)
+                    for (let y = 0; y < WIDTH; y++)
+                    {
+                        if (mapData[x][y].n_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2);
+                        if (mapData[x][y].w_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2 + 1);
+                    }
+                let percentage = (rnd.nextDouble() * .15) + .2;
+                let removeWalls = (remainingWalls.length * percentage)|0;
+                while (removeWalls > 0)
+                {
+                    let wallIx = rnd.next(0, remainingWalls.length);
+                    let wall = remainingWalls[wallIx];
+                    remainingWalls.splice(wallIx, 1);
+                    let x = (wall >> 1) % WIDTH;
+                    let y = ((wall >> 1) / WIDTH)|0;
+
+                    if (wall % 2 === 1)
+                    {
+                        // Make sure not to remove a wall that would leave an entire row devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(xx => mapData[xx][y].w_wall).length === 1)
+                            continue;
+                        mapData[x][y].w_wall = false;
+                    }
+                    else
+                    {
+                        // Make sure not to remove a wall that would leave an entire column devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(yy => mapData[x][yy].n_wall).length === 1)
+                            continue;
+                        mapData[x][y].n_wall = false;
+                    }
+                    removeWalls--;
+                }
+
+                // Select 33 random cells for the labels (letters and cardinals)
+                done.push(...visited);
+                rnd.shuffleFisherYates(done);
+                // Add the labels (5 of each letter)
+                for (let letterIx = 0; letterIx < labels.length; letterIx++)
+                    for (let i = 0; i < 5; i++)
+                        mapData[done[5 * letterIx + i].x][done[5 * letterIx + i].y].label = labels[letterIx];
+                // Add the 3 asterisks
+                for (let i = 0; i < 3; i++)
+                    mapData[done[30 + i].x][done[30 + i].y].label = '*';
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${create2DMazeSvg(
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].n_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].w_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].label).join('')),
+                    false, false, '')}</div>`;
+            }
+
+            let phrases = [
+                "MAZE GAMER",
+                "MAZE TRAVELER",
+                "MAZE CORRIDOR",
+                "MAZE SOJOURNER",
+                "MAZE VOYAGER",
+                "HELP IM LOST",
+                "WINDING MAZE",
+                "TWISTY PASSAGES",
+                "ADVENTURING",
+                "FIND THE EXIT",
+                "WHERES THE EXIT",
+                "GO TO THE EXIT",
+                "FIND THE WALL",
+                "UPON DISCOVERY",
+                "ON A JOURNEY",
+                "SOS WHERE AM I",
+                "SHOW ME AROUND",
+                "I NEED ASSISTANCE",
+                "LABYRINTHIAN",
+                "PATH FINDER",
+                "CARDINAL DIRECTION",
+                "WHAT IS THIS PLACE",
+                "GO IN CIRCLES",
+                "DEAD END",
+                "TURN AROUND"
+            ];
+            let ix = rnd.next(0, phrases.length);
+            document.getElementById('row-phrase').innerText = phrases[ix];
+            phrases.splice(ix, 1);
+            document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+        }
+
+        function setDefaultRules()
+        {
+            let tds = document.getElementsByClassName('tmaze-td');
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels, nWalls, wWalls;
+
+                switch (mapIndex)
+                {
+                    // ABC
+                    case 0:
+                        labels = [ "     A  ", " *A    B", "A  B C  ", " C  *  B", "    A   ", " B C  B ", "* C     ", "    A C " ];
+                        nWalls = [ "11000110", "00001000", "01011100", "00100011", "10011001", "00000100", "00110010", "11000001" ];
+                        wWalls = [ "10101001", "10100100", "00010001", "01010110", "01010001", "01100100", "01001101", "00101100" ];
+                        break;
+
+                    // ABD
+                    case 1:
+                        labels = [ "A  B  A*", "  D     ", "     D B", " A B    ", "  *   A ", "D   A   ", "  B  D  ", " D  *  B" ];
+                        nWalls = [ "10100011", "01100100", "00011010", "00100000", "11100110", "00010100", "10100001", "00011000" ];
+                        wWalls = [ "10000010", "11000100", "00010001", "01000100", "10010001", "00010100", "01000101", "00010100" ];
+                        break;
+
+                    // ABH
+                    case 2:
+                        labels = [ "B    A H", "* H     ", "B   B   ", "    * HA", " A H    ", "    A B ", " B   *  ", "A  H    " ];
+                        nWalls = [ "11101011", "01011000", "10001101", "01010000", "00001000", "00110100", "00101110", "01100000" ];
+                        wWalls = [ "10010000", "01000001", "00110011", "11010101", "11010010", "11100000", "00010101", "00000001" ];
+                        break;
+
+                    // ACD
+                    case 3:
+                        labels = [ "D       ", "  C D* C", " *   C  ", " A      ", "D  C D  ", "  A  * A", "   A  D ", "A    C  " ];
+                        nWalls = [ "10111011", "01100110", "00000111", "01000000", "11101110", "01100100", "00010110", "01101100" ];
+                        wWalls = [ "00001000", "11001100", "01110010", "10011001", "10001001", "01100101", "01010000", "10000010" ];
+                        break;
+
+                    // ACH
+                    case 4:
+                        labels = [ "H C   A ", "*   H   ", "      *C", " A   H  ", "C H C A ", " *     A", "   C H  ", "  A     " ];
+                        nWalls = [ "00111100", "11010000", "01100110", "00000000", "01000100", "00000001", "11100010", "01011011" ];
+                        wWalls = [ "10000110", "10010001", "01010101", "10000001", "11000000", "01010101", "10010000", "01000010" ];
+                        break;
+
+                    // ADH
+                    case 5:
+                        labels = [ "D D  *  ", "    H  A", " *H   A ", "A  D    ", "    HD  ", "* H    A", "D       ", "   A H  " ];
+                        nWalls = [ "01110101", "00001110", "00000111", "01001100", "00110101", "11100000", "01100000", "11001000" ];
+                        wWalls = [ "10100100", "11110000", "11011000", "01110000", "10000101", "10001110", "00011111", "10000101" ];
+                        break;
+
+                    // BCD
+                    case 6:
+                        labels = [ "     B  ", "C D   * ", " * B  C ", " C    B ", "    C  D", "B    D  ", " C  * D ", "D  B    " ];
+                        nWalls = [ "01011110", "01101011", "01100100", "10000111", "10110011", "10011001", "01100010", "10111001" ];
+                        wWalls = [ "10010000", "00001010", "11101000", "00001000", "00100010", "00010001", "00000110", "00100001" ];
+                        break;
+
+                    // BCH
+                    case 7:
+                        labels = [ "C   H   ", "  C    H", "  * B   ", "B  H*   ", " H   B C", "   *    ", "  B C   ", " C   H B" ];
+                        nWalls = [ "10110011", "01010111", "10101100", "00000110", "01111110", "00100010", "10010100", "00000110" ];
+                        wWalls = [ "10000100", "01001000", "01111001", "10001000", "10001000", "01101101", "01101001", "00010010" ];
+                        break;
+
+                    // BDH
+                    case 8:
+                        labels = [ "  D B  H", "   *  D ", "  H *  B", "D    B  ", "    D  H", "  B     ", "   H  H*", "D    B  " ];
+                        nWalls = [ "00100001", "00010001", "11011000", "11011011", "00010011", "10000000", "01101100", "01001111" ];
+                        wWalls = [ "01101000", "11010111", "00000110", "00100000", "00110100", "10001110", "11000000", "00011010" ];
+                        break;
+
+                    // CDH
+                    default:
+                        labels = [ "  H  D  ", "    C*  ", "   H   D", "H    D  ", "  C     ", "C  D C H", "*D  H * ", "       C" ];
+                        nWalls = [ "01011010", "00100100", "00000000", "01000010", "01000010", "01100110", "01011010", "10100101" ];
+                        wWalls = [ "11001001", "11110111", "00100010", "00011100", "10011100", "10001000", "11000001", "00101010" ];
+                        break;
+                }
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${create2DMazeSvg(
+                    nWalls.map(row => row.split('').map(ch => ch === '1')),
+                    wWalls.map(row => row.split('').map(ch => ch === '1')),
+                    labels, false, false, '')}</div>`;
+            }
+            document.getElementById('col-phrase').innerText = 'HELP IM LOST';
+            document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+        }
+
+        function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
+        {
+            let ySize = nWalls.length;
+            let xSize = nWalls[0].length;
+
+            function n(x, y) { return frame && y % ySize == 0 ? true : nWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+            function w(x, y) { return frame && x % xSize == 0 ? true : wWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+
+            function isCell(x, y) { return x % 2 != 0 && y % 2 != 0; }
+            function isOn(x, y) {
+                return (x % 2 == 0)
+                    ? (y % 2 == 0)
+                        ? (x != 0 && n((x >> 1) - 1, y >> 1)) || (x != xSize * 2 && n(x >> 1, y >> 1)) || (y != 0 && w(x >> 1, (y >> 1) - 1)) || (y != ySize * 2 && w(x >> 1, y >> 1))
+                        : w(x >> 1, y >> 1)
+                    : (y % 2 == 0)
+                        ? n(x >> 1, y >> 1)
+                        : false;
+            }
+
+            function getX(gridX) { return (gridX >> 1) * 25 + (gridX % 2) * 5; }
+            function getY(gridY) { return (gridY >> 1) * 25 + (gridY % 2) * 5; }
+            function getCoord(p) { return `${getX(p.X)},${getY(p.Y)}`; }
+
+            let offset = omitAxes ? 0 : 14;
+            return `<svg viewBox='${-offset} ${-offset} ${25 * xSize + 5 + offset} ${25 * ySize + 5 + offset}' class='tmaze'>${
+                extra +
+                // Polygons
+                `<path d='${BoolsToPaths([...Array(2 * xSize + 1).keys()].map(x => [...Array(2 * ySize + 1).keys()].map(y => isOn(x, y)))).map(poly => poly.map((p, ix) => (ix === 0 ? "M" : ix === 1 ? "L" : "") + getCoord(p)).join(" ") + "z").join(" ")}' />` +
+                // Column headers
+                (omitAxes ? '' : [...Array(xSize).keys()].map(colIx => `<text x='${colIx * 25 + 15}' y='-4' class='x-label'>${colIx}</text>`).join('')) +
+                // Row headers
+                (omitAxes ? '' : [...Array(ySize).keys()].map(rowIx => `<text x='-4' y='${rowIx * 25 + 20}' class='y-label'>${rowIx}</text>`).join('')) +
+                // Text objects
+                (labels === null ? '' : [...Array(8).keys()].map(rowIx =>
+                    [...Array(8).keys()].map(colIx =>
+                        labels[rowIx][colIx] !== ' ' ? `<text class='cell' x='${25 * colIx + 15}' y='${25 * rowIx + (labels[rowIx][colIx] === '*' ? 25 : 22)}'>${labels[rowIx][colIx]}</text>` : '')
+                        .join(''))
+                    .join(''))
+            }</svg>`;
+        }
+
+        function BoolsToPaths(input)
+        {
+            let width = input.length;
+            let height = input[0].length;
+
+            let results = [];
+            let visitedUpArrow = [...Array(width).keys()].map(col => [...Array(height).keys()].map(row => false));
+
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                    // every region must have at least one up arrow (left edge)
+                    if (!visitedUpArrow[i][j] && get(input, i, j) && !get(input, i - 1, j))
+                        results.push(tracePolygon(input, i, j, visitedUpArrow));
+
+            return results;
+        }
+
+        function get(arr, i, j)
+        {
+            return i < 0 || i >= arr.length ? false :
+                   j < 0 || j >= arr[i].length ? false : arr[i][j];
+        }
+
+        let Up = 0, Down = 1, Left = 2, Right = 3;
+
+        function tracePolygon(input, i, j, visitedUpArrow)
+        {
+            let result = [];
+            let dir = Up;
+
+            while (true)
+            {
+                // In each iteration of this loop, we move from the current edge to the next one.
+                // We have to prioritise right-turns so that the diagonal-adjacent case is handled correctly.
+                // Every time we take a 90° turn, we add the corner coordinate to the result list.
+                // When we get back to the original edge, the polygon is complete.
+                switch (dir)
+                {
+                    case Up:
+                        // If we’re back at the beginning, we’re done with this polygon
+                        if (visitedUpArrow[i][j])
+                            return result;
+
+                        visitedUpArrow[i][j] = true;
+
+                        if (!get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        else if (get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else
+                            j--;
+                        break;
+
+                    case Down:
+                        j++;
+                        if (!get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else if (get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        break;
+
+                    case Left:
+                        if (!get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        else if (get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else
+                            i--;
+                        break;
+
+                    case Right:
+                        i++;
+                        if (!get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else if (get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        break;
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -84,14 +470,14 @@
                 <p class='heading'>Řádka:
                 <ul>
                     <li>Začněte s <strong>prvním číslem</strong> sériového čísla.
-                    <li>Přičtěte 1 za všechny nerozsvícené indikátory s písmenem ve slovním spojení <strong>“MAZE GAMER”</strong>, což jsou indikátory <strong>CAR, CLR, FRK, FRQ, MSA, NSA, SIG, TRN</strong>.
+                    <li>Přičtěte 1 za všechny nerozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
                     <li>Pokud je číslo řádky větší než 7, tak odečtěte 8.
                 </ul>
 
                 <p class='heading'>Sloupec:
                 <ul>
                     <li>Začněte s <strong>posledním číslem</strong> sériového čísla.
-                    <li>Přičtěte 1 za všechny rozsvícené indikátory s písmenem ve slovním spojení <strong>“HELP IM LOST”</strong>, což jsou indikátory <strong>BOB, CLR, IND, MSA, NLL, NSA, SIG, SND, TRN</strong>.
+                    <li>Přičtěte 1 za všechny rozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
                     <li>Pokud je číslo sloupce větší než 7, tak odečtěte 8.
                 </ul>
 
@@ -113,9 +499,9 @@
 
 <!-- ##[## -->
 <table class='mazes-table'>
-<tr><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L55,0 55,55 25,55 25,50 50,50 50,5 5,5 5,55 0,55z M0,100 L25,100 25,75 30,75 30,175 55,175 55,205 0,205 0,200 50,200 50,180 0,180 0,175 25,175 25,105 0,105z M50,75 L75,75 75,50 125,50 125,30 100,30 100,0 105,0 105,25 130,25 130,50 155,50 155,55 80,55 80,100 125,100 125,75 130,75 130,105 80,105 80,130 75,130 75,80 50,80z M50,125 L55,125 55,150 105,150 105,205 100,205 100,155 50,155z M125,0 L180,0 180,30 175,30 175,5 125,5z M125,125 L155,125 155,130 130,130 130,200 180,200 180,205 125,205z M150,75 L175,75 175,50 180,50 180,75 205,75 205,80 155,80 155,105 150,105z M150,150 L180,150 180,175 205,175 205,180 175,180 175,155 150,155z M175,100 L205,100 205,105 180,105 180,130 175,130z M200,0 L205,0 205,55 200,55z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='140' y='22'>A</text><text class='cell' x='40' y='50'>*</text><text class='cell' x='65' y='47'>A</text><text class='cell' x='190' y='47'>B</text><text class='cell' x='15' y='72'>A</text><text class='cell' x='90' y='72'>B</text><text class='cell' x='140' y='72'>C</text><text class='cell' x='40' y='97'>C</text><text class='cell' x='115' y='100'>*</text><text class='cell' x='190' y='97'>B</text><text class='cell' x='115' y='122'>A</text><text class='cell' x='40' y='147'>B</text><text class='cell' x='90' y='147'>C</text><text class='cell' x='165' y='147'>B</text><text class='cell' x='15' y='175'>*</text><text class='cell' x='65' y='172'>C</text><text class='cell' x='115' y='197'>A</text><text class='cell' x='165' y='197'>C</text></svg></div></td><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L30,0 30,5 5,5 5,55 0,55z M0,100 L25,100 25,75 30,75 30,100 80,100 80,125 105,125 105,130 80,130 80,155 50,155 50,150 75,150 75,105 5,105 5,130 0,130z M0,150 L30,150 30,180 25,180 25,155 0,155z M0,200 L30,200 30,205 0,205z M25,25 L80,25 80,30 30,30 30,55 25,55z M50,0 L80,0 80,5 50,5z M50,75 L75,75 75,50 125,50 125,25 150,25 150,0 205,0 205,55 200,55 200,5 155,5 155,30 130,30 130,55 80,55 80,80 50,80z M50,200 L75,200 75,175 125,175 125,125 155,125 155,130 130,130 130,205 125,205 125,180 80,180 80,205 50,205z M125,75 L130,75 130,100 180,100 180,130 175,130 175,105 125,105z M150,50 L180,50 180,80 175,80 175,55 150,55z M150,200 L205,200 205,205 150,205z M175,150 L205,150 205,155 180,155 180,180 175,180z M200,100 L205,100 205,130 200,130z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>A</text><text class='cell' x='90' y='22'>B</text><text class='cell' x='165' y='22'>A</text><text class='cell' x='190' y='25'>*</text><text class='cell' x='65' y='47'>D</text><text class='cell' x='140' y='72'>D</text><text class='cell' x='190' y='72'>B</text><text class='cell' x='40' y='97'>A</text><text class='cell' x='90' y='97'>B</text><text class='cell' x='65' y='125'>*</text><text class='cell' x='165' y='122'>A</text><text class='cell' x='15' y='147'>D</text><text class='cell' x='115' y='147'>A</text><text class='cell' x='65' y='172'>B</text><text class='cell' x='140' y='172'>D</text><text class='cell' x='40' y='197'>D</text><text class='cell' x='115' y='200'>*</text><text class='cell' x='190' y='197'>B</text></svg></div></td></tr>
-<tr><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L80,0 80,25 130,25 130,30 75,30 75,5 5,5 5,30 0,30z M0,50 L25,50 25,25 55,25 55,30 30,30 30,55 0,55z M0,75 L5,75 5,155 0,155z M0,200 L80,200 80,205 0,205z M25,75 L50,75 50,50 55,50 55,80 30,80 30,155 25,155z M25,175 L75,175 75,155 50,155 50,125 75,125 75,50 80,50 80,75 105,75 105,80 80,80 80,125 105,125 105,130 55,130 55,150 80,150 80,180 25,180z M100,0 L130,0 130,5 100,5z M100,50 L155,50 155,80 150,80 150,55 100,55z M100,100 L125,100 125,75 130,75 130,105 100,105z M100,150 L180,150 180,200 205,200 205,205 150,205 150,200 175,200 175,155 130,155 130,180 125,180 125,155 100,155z M100,200 L130,200 130,205 100,205z M125,125 L150,125 150,100 155,100 155,130 125,130z M150,0 L205,0 205,30 200,30 200,5 150,5z M175,25 L180,25 180,50 205,50 205,55 180,55 180,105 175,105z M200,75 L205,75 205,155 200,155z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>B</text><text class='cell' x='140' y='22'>A</text><text class='cell' x='190' y='22'>H</text><text class='cell' x='15' y='50'>*</text><text class='cell' x='65' y='47'>H</text><text class='cell' x='15' y='72'>B</text><text class='cell' x='115' y='72'>B</text><text class='cell' x='115' y='100'>*</text><text class='cell' x='165' y='97'>H</text><text class='cell' x='190' y='97'>A</text><text class='cell' x='40' y='122'>A</text><text class='cell' x='90' y='122'>H</text><text class='cell' x='115' y='147'>A</text><text class='cell' x='165' y='147'>B</text><text class='cell' x='40' y='172'>B</text><text class='cell' x='140' y='175'>*</text><text class='cell' x='15' y='197'>A</text><text class='cell' x='90' y='197'>H</text></svg></div></td><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L30,0 30,5 0,5z M0,25 L5,25 5,55 0,55z M0,75 L5,75 5,100 75,100 75,50 80,50 80,105 5,105 5,130 0,130z M0,175 L5,175 5,200 30,200 30,205 0,205z M25,25 L80,25 80,30 30,30 30,75 50,75 50,50 55,50 55,80 25,80z M25,125 L80,125 80,130 55,130 55,155 50,155 50,130 30,130 30,175 75,175 75,150 105,150 105,155 80,155 80,180 25,180z M50,0 L130,0 130,5 105,5 105,55 100,55 100,5 50,5z M50,200 L130,200 130,205 50,205z M100,75 L105,75 105,100 175,100 175,75 180,75 180,155 125,155 125,125 155,125 155,130 130,130 130,150 175,150 175,105 105,105 105,130 100,130z M100,175 L155,175 155,200 200,200 200,175 205,175 205,205 150,205 150,180 100,180z M125,25 L180,25 180,30 130,30 130,50 200,50 200,25 205,25 205,55 155,55 155,80 150,80 150,55 125,55z M150,0 L205,0 205,5 150,5z M200,75 L205,75 205,130 200,130z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>D</text><text class='cell' x='65' y='47'>C</text><text class='cell' x='115' y='47'>D</text><text class='cell' x='140' y='50'>*</text><text class='cell' x='190' y='47'>C</text><text class='cell' x='40' y='75'>*</text><text class='cell' x='140' y='72'>C</text><text class='cell' x='40' y='97'>A</text><text class='cell' x='15' y='122'>D</text><text class='cell' x='90' y='122'>C</text><text class='cell' x='140' y='122'>D</text><text class='cell' x='65' y='147'>A</text><text class='cell' x='140' y='150'>*</text><text class='cell' x='190' y='147'>A</text><text class='cell' x='90' y='172'>A</text><text class='cell' x='165' y='172'>D</text><text class='cell' x='15' y='197'>A</text><text class='cell' x='140' y='197'>C</text></svg></div></td></tr>
-<tr><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L5,0 5,25 55,25 55,30 5,30 5,55 0,55z M0,75 L5,75 5,130 0,130z M0,150 L25,150 25,100 55,100 55,105 30,105 30,150 75,150 75,125 80,125 80,175 130,175 130,180 75,180 75,155 5,155 5,180 0,180z M25,50 L75,50 75,25 105,25 105,30 80,30 80,80 75,80 75,55 30,55 30,80 25,80z M25,175 L55,175 55,180 30,180 30,205 25,205z M50,0 L155,0 155,30 150,30 150,5 130,5 130,30 125,30 125,5 50,5z M50,200 L150,200 150,175 200,175 200,150 205,150 205,180 155,180 155,205 50,205z M125,50 L175,50 175,25 180,25 180,105 175,105 175,55 130,55 130,80 125,80z M125,100 L155,100 155,105 125,105z M125,125 L130,125 130,155 125,155z M150,150 L175,150 175,125 200,125 200,75 205,75 205,130 180,130 180,155 150,155z M200,0 L205,0 205,55 200,55z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>H</text><text class='cell' x='65' y='22'>C</text><text class='cell' x='165' y='22'>A</text><text class='cell' x='15' y='50'>*</text><text class='cell' x='115' y='47'>H</text><text class='cell' x='165' y='75'>*</text><text class='cell' x='190' y='72'>C</text><text class='cell' x='40' y='97'>A</text><text class='cell' x='140' y='97'>H</text><text class='cell' x='15' y='122'>C</text><text class='cell' x='65' y='122'>H</text><text class='cell' x='115' y='122'>C</text><text class='cell' x='165' y='122'>A</text><text class='cell' x='40' y='150'>*</text><text class='cell' x='190' y='147'>A</text><text class='cell' x='90' y='172'>C</text><text class='cell' x='140' y='172'>H</text><text class='cell' x='65' y='197'>A</text></svg></div></td><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L5,0 5,80 0,80z M0,100 L5,100 5,125 80,125 80,130 5,130 5,155 0,155z M0,175 L55,175 55,180 5,180 5,205 0,205z M25,0 L105,0 105,5 55,5 55,55 50,55 50,5 25,5z M25,25 L30,25 30,75 55,75 55,100 75,100 75,25 80,25 80,100 105,100 105,105 50,105 50,80 30,80 30,105 25,105z M25,150 L80,150 80,180 75,180 75,155 25,155z M25,200 L105,200 105,205 25,205z M100,25 L125,25 125,0 155,0 155,5 130,5 130,25 180,25 180,30 100,30z M100,50 L105,50 105,75 155,75 155,80 100,80z M100,125 L105,125 105,175 125,175 125,100 155,100 155,105 130,105 130,200 155,200 155,205 125,205 125,180 100,180z M125,50 L200,50 200,5 175,5 175,0 205,0 205,80 200,80 200,55 125,55z M150,125 L155,125 155,180 150,180z M175,100 L205,100 205,155 200,155 200,105 180,105 180,130 175,130z M175,150 L180,150 180,200 200,200 200,175 205,175 205,205 175,205z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>D</text><text class='cell' x='65' y='22'>D</text><text class='cell' x='140' y='25'>*</text><text class='cell' x='115' y='47'>H</text><text class='cell' x='190' y='47'>A</text><text class='cell' x='40' y='75'>*</text><text class='cell' x='65' y='72'>H</text><text class='cell' x='165' y='72'>A</text><text class='cell' x='15' y='97'>A</text><text class='cell' x='90' y='97'>D</text><text class='cell' x='115' y='122'>H</text><text class='cell' x='140' y='122'>D</text><text class='cell' x='15' y='150'>*</text><text class='cell' x='65' y='147'>H</text><text class='cell' x='190' y='147'>A</text><text class='cell' x='15' y='172'>D</text><text class='cell' x='90' y='197'>A</text><text class='cell' x='140' y='197'>H</text></svg></div></td></tr>
+<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
+<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
+<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
 </table>
 <!-- ##]## -->
             </div>
@@ -129,8 +515,8 @@
             <div class="page-content">
 <!-- ###[### -->
 <table class='mazes-table'>
-<tr><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L5,0 5,30 0,30z M0,50 L5,50 5,75 25,75 25,50 80,50 80,55 55,55 55,80 50,80 50,55 30,55 30,80 0,80z M0,100 L30,100 30,105 0,105z M0,125 L30,125 30,130 0,130z M0,175 L30,175 30,180 0,180z M25,0 L55,0 55,5 25,5z M25,25 L75,25 75,0 180,0 180,5 80,5 80,30 25,30z M25,150 L75,150 75,125 130,125 130,130 80,130 80,155 25,155z M25,200 L50,200 50,175 125,175 125,150 130,150 130,180 55,180 55,205 25,205z M50,100 L100,100 100,25 130,25 130,30 105,30 105,105 55,105 55,130 50,130z M75,200 L175,200 175,175 205,175 205,180 180,180 180,205 75,205z M125,50 L150,50 150,25 200,25 200,0 205,0 205,30 155,30 155,55 125,55z M125,75 L200,75 200,50 205,50 205,80 125,80z M150,100 L205,100 205,105 155,105 155,130 150,130z M150,150 L175,150 175,125 205,125 205,130 180,130 180,155 155,155 155,180 150,180z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='140' y='22'>B</text><text class='cell' x='15' y='47'>C</text><text class='cell' x='65' y='47'>D</text><text class='cell' x='165' y='50'>*</text><text class='cell' x='40' y='75'>*</text><text class='cell' x='90' y='72'>B</text><text class='cell' x='165' y='72'>C</text><text class='cell' x='40' y='97'>C</text><text class='cell' x='165' y='97'>B</text><text class='cell' x='115' y='122'>C</text><text class='cell' x='190' y='122'>D</text><text class='cell' x='15' y='147'>B</text><text class='cell' x='140' y='147'>D</text><text class='cell' x='40' y='172'>C</text><text class='cell' x='115' y='175'>*</text><text class='cell' x='165' y='172'>D</text><text class='cell' x='15' y='197'>D</text><text class='cell' x='90' y='197'>B</text></svg></div></td><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L30,0 30,5 5,5 5,30 0,30z M0,50 L25,50 25,25 55,25 55,30 30,30 30,80 25,80 25,55 0,55z M0,75 L5,75 5,130 0,130z M0,150 L25,150 25,125 30,125 30,180 25,180 25,155 0,155z M0,200 L30,200 30,205 0,205z M25,100 L100,100 100,30 75,30 75,25 105,25 105,50 155,50 155,55 105,55 105,100 180,100 180,105 105,105 105,180 100,180 100,155 75,155 75,150 100,150 100,105 25,105z M50,0 L105,0 105,5 50,5z M50,50 L80,50 80,80 75,80 75,55 55,55 55,80 50,80z M50,125 L80,125 80,130 55,130 55,180 50,180z M50,200 L75,200 75,175 80,175 80,200 105,200 105,205 50,205z M125,0 L130,0 130,25 200,25 200,5 150,5 150,0 205,0 205,30 125,30z M125,75 L175,75 175,50 180,50 180,80 125,80z M125,125 L130,125 130,150 155,150 155,155 125,155z M125,175 L175,175 175,130 150,130 150,125 180,125 180,180 155,180 155,200 205,200 205,205 150,205 150,180 125,180z M200,75 L205,75 205,130 200,130z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='15' y='22'>C</text><text class='cell' x='115' y='22'>H</text><text class='cell' x='65' y='47'>C</text><text class='cell' x='190' y='47'>H</text><text class='cell' x='65' y='75'>*</text><text class='cell' x='115' y='72'>B</text><text class='cell' x='15' y='97'>B</text><text class='cell' x='90' y='97'>H</text><text class='cell' x='115' y='100'>*</text><text class='cell' x='40' y='122'>H</text><text class='cell' x='140' y='122'>B</text><text class='cell' x='190' y='122'>C</text><text class='cell' x='90' y='150'>*</text><text class='cell' x='65' y='172'>B</text><text class='cell' x='115' y='172'>C</text><text class='cell' x='40' y='197'>C</text><text class='cell' x='140' y='197'>H</text><text class='cell' x='190' y='197'>B</text></svg></div></td></tr>
-<tr><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,25 L5,25 5,50 25,50 25,0 30,0 30,50 55,50 55,55 0,55z M0,75 L55,75 55,130 50,130 50,80 0,80z M0,125 L30,125 30,130 5,130 5,180 0,180z M25,150 L80,150 80,155 30,155 30,175 55,175 55,180 25,180z M50,0 L80,0 80,5 55,5 55,30 50,30z M50,200 L75,200 75,175 80,175 80,205 50,205z M75,25 L100,25 100,0 105,0 105,30 80,30 80,50 125,50 125,25 130,25 130,80 75,80 75,75 125,75 125,55 75,55z M75,100 L105,100 105,105 80,105 80,130 75,130z M100,125 L105,125 105,150 125,150 125,100 130,100 130,150 150,150 150,125 155,125 155,155 100,155z M100,175 L200,175 200,125 205,125 205,180 155,180 155,205 150,205 150,180 105,180 105,205 100,205z M150,25 L155,25 155,75 205,75 205,80 150,80z M150,100 L205,100 205,105 150,105z M175,0 L205,0 205,5 175,5z M175,25 L205,25 205,55 200,55 200,30 180,30 180,55 175,55z M175,200 L205,200 205,205 175,205z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='65' y='22'>D</text><text class='cell' x='115' y='22'>B</text><text class='cell' x='190' y='22'>H</text><text class='cell' x='90' y='50'>*</text><text class='cell' x='165' y='47'>D</text><text class='cell' x='65' y='72'>H</text><text class='cell' x='115' y='75'>*</text><text class='cell' x='190' y='72'>B</text><text class='cell' x='15' y='97'>D</text><text class='cell' x='140' y='97'>B</text><text class='cell' x='115' y='122'>D</text><text class='cell' x='190' y='122'>H</text><text class='cell' x='65' y='147'>B</text><text class='cell' x='90' y='172'>H</text><text class='cell' x='165' y='172'>H</text><text class='cell' x='190' y='175'>*</text><text class='cell' x='15' y='197'>D</text><text class='cell' x='140' y='197'>B</text></svg></div></td><td><div class='tmaze-outer'><svg viewBox='-14 -14 219 219' class='tmaze'><path d='M0,0 L5,0 5,55 0,55z M0,100 L5,100 5,175 25,175 25,150 55,150 55,155 30,155 30,180 0,180z M25,0 L55,0 55,5 30,5 30,55 25,55z M25,75 L50,75 50,25 80,25 80,55 75,55 75,30 55,30 55,80 25,80z M25,100 L55,100 55,105 25,105z M25,125 L75,125 75,75 80,75 80,130 25,130z M25,200 L50,200 50,175 80,175 80,180 55,180 55,205 25,205z M75,0 L130,0 130,5 105,5 105,30 100,30 100,5 75,5z M75,150 L100,150 100,75 105,75 105,150 130,150 130,155 75,155z M75,200 L100,200 100,175 105,175 105,200 130,200 130,205 75,205z M125,25 L155,25 155,75 180,75 180,80 150,80 150,30 130,30 130,55 125,55z M125,75 L130,75 130,125 180,125 180,130 125,130z M125,175 L155,175 155,200 180,200 180,205 150,205 150,180 125,180z M150,0 L180,0 180,55 175,55 175,5 150,5z M150,100 L180,100 180,105 150,105z M150,150 L180,150 180,175 200,175 200,100 205,100 205,180 175,180 175,155 150,155z M200,0 L205,0 205,55 200,55z' /><text x='15' y='-4' class='x-label'>0</text><text x='40' y='-4' class='x-label'>1</text><text x='65' y='-4' class='x-label'>2</text><text x='90' y='-4' class='x-label'>3</text><text x='115' y='-4' class='x-label'>4</text><text x='140' y='-4' class='x-label'>5</text><text x='165' y='-4' class='x-label'>6</text><text x='190' y='-4' class='x-label'>7</text><text x='-4' y='20' class='y-label'>0</text><text x='-4' y='45' class='y-label'>1</text><text x='-4' y='70' class='y-label'>2</text><text x='-4' y='95' class='y-label'>3</text><text x='-4' y='120' class='y-label'>4</text><text x='-4' y='145' class='y-label'>5</text><text x='-4' y='170' class='y-label'>6</text><text x='-4' y='195' class='y-label'>7</text><text class='cell' x='65' y='22'>H</text><text class='cell' x='140' y='22'>D</text><text class='cell' x='115' y='47'>C</text><text class='cell' x='140' y='50'>*</text><text class='cell' x='90' y='72'>H</text><text class='cell' x='190' y='72'>D</text><text class='cell' x='15' y='97'>H</text><text class='cell' x='140' y='97'>D</text><text class='cell' x='65' y='122'>C</text><text class='cell' x='15' y='147'>C</text><text class='cell' x='90' y='147'>D</text><text class='cell' x='140' y='147'>C</text><text class='cell' x='190' y='147'>H</text><text class='cell' x='15' y='175'>*</text><text class='cell' x='40' y='172'>D</text><text class='cell' x='115' y='172'>H</text><text class='cell' x='165' y='175'>*</text><text class='cell' x='190' y='197'>C</text></svg></div></td></tr>
+<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
+<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
 </table>
 <!-- ###]### -->
             </div>
