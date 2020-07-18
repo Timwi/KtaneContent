@@ -1702,6 +1702,102 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "CrackboxModule",
+		loggingTag: "Crackbox",
+		matches: [
+			{
+				regex: /One possible solution:/,
+				handler: function(matches, module) {
+					var table = $('<table>')
+					.css('font-size', '20px')
+					let gridfinal = "";
+					let gridinitial = "";
+					for (var r = 0; r < 4; r++) {
+						gridfinal += readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+					}
+					gridfinal += readTaggedLine().replace(/Initial grid:/, "");
+					for (var r = 0; r < 4; r++) {
+						gridinitial += readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+					}
+
+					for (var r = 0; r < 4; r++) {
+						var tr = $('<tr>').appendTo(table)
+						for (var c = 0 ; c < 4; c++) {
+							if (gridinitial[c + 4*r] === "B") {
+								$('<td>')
+								.text(' ')
+								.css('background-color', '#000000')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px').appendTo(tr);							
+							}
+							else if (gridinitial[c + 4*r] === gridfinal[c + 4*r]) {
+								if (gridfinal[c + 4*r] === "0")
+								$('<td>')
+								.text('10')
+								.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+								else $('<td>')
+								.text(gridfinal[c + 4*r])
+								.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+							}
+							else {
+								if (gridfinal[c + 4*r] === "0") $('<td>').text('10')
+								.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);							
+								else $('<td>').text(gridfinal[c + 4*r])
+								.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);							
+							}
+						}
+					};
+					module.push({ label: "Possible solution:", obj: table });
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution:/,
+				handler: function(matches, module) {
+					var table = $('<table>')
+					.css('font-size', '20px')
+					for (var r = 0; r < 4; r++) {
+						var tr = $('<tr>').appendTo(table);
+						var grid = readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+						for (var c = 0; c < 4; c++) {
+							if (grid[c] === "B") {
+								$('<td>')
+								.text(' ')
+								.css('background-color', '#000000')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px').appendTo(tr);							
+							}
+							else if (grid[c] === "*") {
+								$('<td>')
+								.text(' ')
+								.css('width', '30px')
+								.css('height', '30px').appendTo(tr);							
+							}
+							else if (grid[c] === "0") {
+								$('<td>')
+								.text('10')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px').appendTo(tr);							
+							}
+							else {
+								$('<td>')
+								.text(grid[c])
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px').appendTo(tr);							
+							}
+						}
+					};
+					module.push({ label: "Possible Solution:", obj: table });
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "CreationModule",
 		loggingTag: "Creation",
 		matches: [
