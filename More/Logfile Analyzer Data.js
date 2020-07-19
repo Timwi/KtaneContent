@@ -3163,6 +3163,23 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "lousyChess",
+		loggingTag: "Lousy Chess",
+		matches: [
+			{
+				regex: /Full game: (.+)/,
+				handler: function(matches, module) {
+					var moves = matches[1].replace(/(\d) (\d)/g, "$1\n$2" );
+					module.push({ label: "Full game:", obj: pre(moves) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "MafiaModule",
 		loggingTag: "Mafia",
 		matches: [
