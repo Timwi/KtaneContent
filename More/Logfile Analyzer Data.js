@@ -1399,6 +1399,11 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Chinese Strokes",
+		moduleID: "zhStrokes",
+		loggingTag: "Chinese Strokes"
+	},
+	{
 		moduleID: "ChordQualities",
 		loggingTag: "ChordQualities"
 	},
