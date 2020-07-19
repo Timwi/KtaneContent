@@ -2300,6 +2300,52 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Forget Perspective",
+		moduleID: "qkForgetPerspective",
+		loggingTag: "Forget Perspective",
+		matches: [
+			{
+				regex: /------Stage (\d+) ------/,
+				handler: function (matches, module) {
+					if (matches[1] == 1) {
+						module.push({ label: "Stages Displayed: " });
+						module.push({ obj: pre("  St |  Face  | Time(min) | Rules | Orders | Shifts | Ans  ").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
+						module.push({ obj: pre(" ————+————————+———————————+———————+————————+————————+————— ").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
+					}
+					var line0 = matches[1];
+					if (line0 < 10) line0 = "  " + matches[1];
+					else if (line0 < 100) line0 = " " + matches[1];
+					var line1 = readTaggedLine()
+						.replace(/The faces for Stage (\d+) are:(.+)/, "$2")
+						.replace(/,/g, "") //faces
+						.replace(/ /g, "") //faces
+						.replace(/\./g, "") //faces	
+						.replace(/[a-z]/g, "") //faces
+					var line2 = readTaggedLine().replace(/Time you got the stage on: /, ""); //time
+					if (line2 < 10) line2 = "00" + line2;
+					else if (line2 < 100) line2 = "0" + line2;
+					var line3 = readTaggedLine().replace(/Applied starting rule /, "F").replace(/ and net rule /, ",N").replace(/\./, ""); //rule
+					var line4 = readTaggedLine().replace(/Order made: /, "").replace(/ /g, "") + readTaggedLine().replace(/Character Shift rule = (\d+), X = (\d+), Y = (\d+)/, ""); //order
+					var line5 = readTaggedLine().replace(/Shifted order: /, "").replace(/ /g, ""); //order after caesar
+					var line6 = readTaggedLine().replace(/Added value: /, ""); //value
+					module.push({ obj: pre(" " + line0 + " | " + line1 + " |    " + line2 + "    | " + line3 + " | " + line4 + " | " + line5 + " |  " + line6 + "   \n").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /------Final------/,
+				handler: function (matches, module) {
+					var answer = readTaggedLine().replace(/Answer:/, "").replace(/ /g, "").replace(/(\w)(\w)(\w)(\w)(\w)/g, "$1$2$3$4$5 ")
+					module.push({ label: "Final Answer:", obj: pre(answer) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Forget This",
 		moduleID: "forgetThis",
 		loggingTag: "Forget This",
