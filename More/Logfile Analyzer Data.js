@@ -4493,6 +4493,26 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: ["playfairCycle", "jumbleCycle"],
+		loggingTag: ["Playfair Cycle", "Jumble Cycle"],
+		matches: [
+			{
+				regex: /(?:The keysquare was:|The keysquare used for Playfair encryption was:)/,
+				handler: function (matches, module) {
+					let table = readTaggedLine();
+					for (var i = 0; i < 4; i++) {
+						table += "\n" + readTaggedLine().replace(/ /, "");
+					}
+					module.push({label: "The Keysquare was:", obj: pre(table).css('display', 'table')});
+					return true;
+				}
+			},
+			{
+				regex: /(.+)/
+			}
+		]
+	},
+	{
 		displayName: "Plumbing",
 		moduleID: "MazeV2",
 		loggingTag: "Plumbing",
