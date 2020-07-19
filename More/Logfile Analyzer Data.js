@@ -52,13 +52,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Enter GameplayState/,
-				handler: function() {
+				handler: function () {
 					bombgroup = undefined;
 				}
 			},
 			{
 				regex: /OnRoundEnd\(\)/,
-				handler: function() {
+				handler: function () {
 					bombgroup.FilterLines();
 					bombgroup = undefined;
 				}
@@ -70,7 +70,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Strike from (?:.+)! (\d+) \/ \d+ strikes/,
-				handler: function(matches) {
+				handler: function (matches) {
 					if (bombgroup.isSingleBomb) {
 						bomb.Strikes = parseInt(matches[1]);
 
@@ -82,7 +82,7 @@ const parseData = [
 			},
 			{
 				regex: /Boom/,
-				handler: function() {
+				handler: function () {
 					if (GetBomb().State == "Unsolved") {
 						GetBomb().State = "Exploded";
 
@@ -95,7 +95,7 @@ const parseData = [
 			},
 			{
 				regex: /A winner is you!!/,
-				handler: function() {
+				handler: function () {
 					if (bombgroup.isSingleBomb) {
 						bomb.State = "Solved";
 						bomb.Solved = bomb.TotalModules;
@@ -109,7 +109,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generating bomb with seed (-?\d+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb = new Bomb(parseInt(matches[1]));
 
 					if (!bombgroup) {
@@ -128,7 +128,7 @@ const parseData = [
 			},
 			{
 				regex: /Generator settings: Time: (\d+), NumStrikes: (\d+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.Time = parseInt(matches[1]);
 					bomb.TimeLeft = bomb.Time;
 					bomb.TotalStrikes = parseInt(matches[2]);
@@ -136,7 +136,7 @@ const parseData = [
 			},
 			{
 				regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var tree = [];
 					tree.groups = new Groups();
 					bomb.Modules[matches[1]] = {
@@ -167,7 +167,7 @@ const parseData = [
 			},
 			{
 				regex: /Instantiated CryptModule on face/,
-				handler: function() {
+				handler: function () {
 					var mod = bomb.GetModule("CryptModule");
 					mod.push("Phrase: " + lines[linen - 2]);
 					mod.push("Answer: " + lines[linen - 1]);
@@ -180,7 +180,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Added widget: (.+) at/,
-				handler: function(matches) {
+				handler: function (matches) {
 					if (matches[1] == "ModWidget") {
 						bomb.ModdedWidgets++;
 					}
@@ -193,7 +193,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Randomizing Battery Widget: (\d)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.Batteries.push(parseInt(matches[1]));
 				}
 			}
@@ -204,7 +204,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Randomizing Port Widget: (.+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					if (matches[1] != "0") {
 						bomb.PortPlates.push(matches[1].split(", "));
 					} else {
@@ -219,7 +219,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Randomizing Indicator Widget: (unlit|lit) ([A-Z]{3})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.Indicators.push([matches[1], matches[2]]);
 				}
 			}
@@ -230,7 +230,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Randomizing Serial Number: ([A-Z0-9]{6})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					// Workaround because the serial numbers for multiple bombs are all listed after the edgework for all of the bombs.
 					if (bombgroup)
 						bombgroup.Bombs[bombSerialIndex++].Serial = matches[1];
@@ -245,7 +245,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Day of the week: (\(colors(?: not)? enabled\)) (.+) (.+-.+-.+) (\(\w{2}\/\w{2}\)) \/ Manufacture Date: (.+-.+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Day of the Week: ${matches[3]} ${matches[4]} Color: ${matches[2]} ${matches[1]}`);
 					bomb.DayTimeWidgets.push(["DayoftheWeek", matches[3], matches[2], matches[1] == "(colors enabled)", matches[4]]);
 					bomb.ModdedWidgetInfo.push(`Manufacture Date: ${matches[5]}`);
@@ -254,21 +254,21 @@ const parseData = [
 			},
 			{
 				regex: /Day of the week: (\(colors(?: not)? enabled\)) (.+) (.+-.+-.+) (\(\w{2}\/\w{2}\))/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Day of the Week: ${matches[3]} ${matches[4]} Color: ${matches[2]} ${matches[1]}`);
 					bomb.DayTimeWidgets.push(["DayoftheWeek", matches[3], matches[2], matches[1] == "(colors enabled)", matches[4]]);
 				}
 			},
 			{
 				regex: /Manufacture Date: (.+-.+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Manufacture Date: ${matches[1]}`);
 					bomb.DayTimeWidgets.push(["ManufactureDate", matches[1]]);
 				}
 			},
 			{
 				regex: /Chosen time: (\d{2}:\d{2})(MIL|PM|AM)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Randomized Time: ${matches[1]} ${matches[2]}`);
 					bomb.DayTimeWidgets.push(["RandomizedTime", matches[1], matches[2]]);
 				}
@@ -280,14 +280,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /Randomizing: ((?:un)?lit) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:un)?lit ([A-Z]{3})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
 					bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
 				}
 			},
 			{
 				regex: /Randomizing: ((?:un)?lit) ([A-Z]{3})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`Encrypted Indicator: ${matches[1]} ${matches[2]}`);
 					bomb.ModdedIndicators.push(["EncryptedIndicatorWidget", matches[1], matches[2]]);
 				}
@@ -299,35 +299,35 @@ const parseData = [
 		matches: [
 			{
 				regex: /Widget #[12] = TwoFactor/,
-				handler: function() {
+				handler: function () {
 					bomb.ModdedWidgetInfo.push(`MultipleWidgets: Two Factor`);
 					bomb.ModdedTwoFactor.push(`MultipleWidgets:TwoFactor`);
 				}
 			},
 			{
 				regex: /Encrypted Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([ԒใɮʖฬนÞฏѨԈดลЖ]{3}) acting as (?:(?:un)?lit|Black|White|Gray|Red|Ornage|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`MultipleWidgets: Encrypted Indicator: ${matches[1]} ${matches[2]} (${matches[3]})`);
 					bomb.ModdedIndicators.push(["MultipleWidgets:EncryptedIndicator", matches[1], matches[2]]);
 				}
 			},
 			{
 				regex: /Indicator ((?:un)?lit|Black|White|Gray|Red|Orange|Yellow|Green|Blue|Purple|Magenta) ([A-Z]{3})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`MultipleWidgets: Indicator: ${matches[1]} ${matches[2]}`);
 					bomb.ModdedIndicators.push(["MultipleWidgets:Indicator", matches[1], matches[2]]);
 				}
 			},
 			{
 				regex: /Putting ([0-4]) batter(?:ies|y) into a holder that fits ([1-4]) batter(?:ies|y)./,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`MultipleWidgets: Batteries: ${matches[1]} in ${matches[2]}`);
 					bomb.ModdedBatteries.push(["MultipleWidgets:Batteries", parseInt(matches[1]), parseInt(matches[2])]);
 				}
 			},
 			{
 				regex: /Ports \((Vanilla 1|Vanilla 2|New Ports|TV\/Monitor Ports|Computer Ports|Everything)\): (.*)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					bomb.ModdedWidgetInfo.push(`MultipleWidgets: Ports (${matches[1]}): ${matches[2]}`);
 					if (matches[2] != "None") {
 						bomb.ModdedPortPlates.push(["MultipleWidgets:Ports", matches[2].split(", ")]);
@@ -343,7 +343,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Two Factor present/,
-				handler: function() {
+				handler: function () {
 					bomb.ModdedWidgetInfo.push(`Two Factor`);
 					bomb.ModdedTwoFactor.push(`TwoFactorWidget`);
 				}
@@ -355,7 +355,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /All bombs solved, what a winner!/,
-				handler: function() {
+				handler: function () {
 					var currentBomb = GetBomb();
 					currentBomb.State = "Solved";
 					currentBomb.Solved = currentBomb.TotalModules;
@@ -368,7 +368,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Added ((?:UN)?LIT) ([A-Z]{3}), display is (\w{3}), color is ([A-Z]+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					matches[1] = matches[1].toLowerCase();
 					matches[4] = matches[4].toLowerCase();
 					bomb.ModdedWidgetInfo.push(`Numbered Indicator: ${matches[1]} ${matches[4]} ${matches[2]}. Display: ${matches[3]}`);
@@ -382,7 +382,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /PlayerSuccessRating: .+ \(Factors: solved: (.+), strikes: (.+), time: (.+)\)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					if (bombgroup !== undefined && bombgroup.isSingleBomb) {
 						const num2 = parseFloat(matches[1]);
 						if (num2 != 1) bomb.Solved = Math.round(num2 * 2 * (bomb.TotalModules - 1));
@@ -397,7 +397,7 @@ const parseData = [
 			},
 			{
 				regex: /Round start! Mission: (.+) Pacing Enabled: /,
-				handler: function(matches) {
+				handler: function (matches) {
 					GetBomb().MissionName = matches[1];
 				}
 			}
@@ -408,7 +408,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /ReturnToSetupRoom/,
-				handler: function() {
+				handler: function () {
 					bombgroup.FilterLines();
 				}
 			}
@@ -419,7 +419,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generating Rules based on Seed (\d+)/,
-				handler: function(m) {
+				handler: function (m) {
 					ruleseed = m[1];
 				}
 			}
@@ -430,7 +430,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The Seed is (\d+)/,
-				handler: function(m) {
+				handler: function (m) {
 					bombgroup.RuleSeed = m[1];
 				}
 			}
@@ -441,7 +441,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /LFABombInfo (\d+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					// Parse the JSON based on the number of lines specified in the log message.
 					const bombInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
 
@@ -531,7 +531,7 @@ const parseData = [
 			},
 			{
 				regex: /LFAEvent (\d+)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					// Parse the JSON based on the number of lines specified in the log message.
 					const eventInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
 					switch (eventInfo.type) {
@@ -541,7 +541,7 @@ const parseData = [
 							mod.Events.push(eventInfo);
 
 							const text = [
-								`${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck" } at ${formatTime(eventInfo.realTime)}.`,
+								`${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck"} at ${formatTime(eventInfo.realTime)}.`,
 								[
 									`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
 									eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
@@ -604,7 +604,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Showing fur pattern (\d+) rotated (\d+)° clockwise/,
-				handler: function(m, module) {
+				handler: function (m, module) {
 					module.push({
 						label: 'Fur pattern shown on module:', obj: $(`<div style="
 							border-radius: 100%;
@@ -633,15 +633,16 @@ const parseData = [
 		moduleID: "14",
 		loggingTag: "14",
 		matches: [
-            {
-                regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
-                handler: function(matches, module) {
-                    console.log(matches[0]);
-                    if (!module.TableData) {
-                        module.TableData = [];
-                        module.CorrectValues = {};
-                        module.CorrectValuesFull = {};
-                        module.ListObject = { label: 'Module information:', obj: $(`<table style='border-collapse: collapse; text-align: center'>
+			{
+				regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
+				handler: function (matches, module) {
+					console.log(matches[0]);
+					if (!module.TableData) {
+						module.TableData = [];
+						module.CorrectValues = {};
+						module.CorrectValuesFull = {};
+						module.ListObject = {
+							label: 'Module information:', obj: $(`<table style='border-collapse: collapse; text-align: center'>
                             <tr>
                                 <th colspan='2'>Stages</th>
                                 <td class='sep' rowspan='2'></td>
@@ -659,30 +660,30 @@ const parseData = [
                                 <th style='background: #8f8'>G</th>
                                 <th style='background: #aaf'>B</th>
                             </tr>
-                        </table>`) };
-                        module.push(module.ListObject);
-                        module.SetCss = function() {
-                            module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
-                            module.ListObject.obj.find('.sep').get().forEach(x => { x.setAttribute('rowspan', 2 + module.TableData.length); x.style.border = 'none'; });
-                        };
-                    }
-                    while (module.TableData.length <= matches[1])
-                        module.TableData.push({});
-                    module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
-                    if (matches[2] === 'B')
-                    {
-                        let ledColors = {
-                            K: '#888',
-                            B: '#88f',
-                            G: '#8f8',
-                            C: '#8ff',
-                            R: '#f88',
-                            M: '#f8f',
-                            Y: '#ff8',
-                            W: '#fff',
-                        };
-                        let ix = +matches[1];
-                        module.ListObject.obj.append($(`<tr>
+                        </table>`)
+						};
+						module.push(module.ListObject);
+						module.SetCss = function () {
+							module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
+							module.ListObject.obj.find('.sep').get().forEach(x => { x.setAttribute('rowspan', 2 + module.TableData.length); x.style.border = 'none'; });
+						};
+					}
+					while (module.TableData.length <= matches[1])
+						module.TableData.push({});
+					module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+					if (matches[2] === 'B') {
+						let ledColors = {
+							K: '#888',
+							B: '#88f',
+							G: '#8f8',
+							C: '#8ff',
+							R: '#f88',
+							M: '#f8f',
+							Y: '#ff8',
+							W: '#fff',
+						};
+						let ix = +matches[1];
+						module.ListObject.obj.append($(`<tr>
                             <td>${ix}</td><td style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
                             <td style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
                             <td style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
@@ -691,34 +692,33 @@ const parseData = [
                             <td style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
                             <td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
                         </tr>`));
-                        module.SetCss();
-                    }
-                    return true;
-                }
-            },
-            {
-                regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
-                handler: function(matches, module) {
-                    console.log(matches[0]);
-                    module.CorrectValuesFull[matches[1]] = matches[2];
-                    module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
-                    if (matches[1] === 'B')
-                    {
-                        module.ListObject.obj.append($(`<tr>
+						module.SetCss();
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
+				handler: function (matches, module) {
+					console.log(matches[0]);
+					module.CorrectValuesFull[matches[1]] = matches[2];
+					module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
+					if (matches[1] === 'B') {
+						module.ListObject.obj.append($(`<tr>
                             <th colspan='7' style='text-align: right'>Final answer</th>
                             <td style='border: 1px solid black; background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
                             <td style='border: 1px solid black; background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
                             <td style='border: 1px solid black; background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
                         </tr>`));
-                        module.SetCss();
-                    }
-                    return true;
-                }
-            },
+						module.SetCss();
+					}
+					return true;
+				}
+			},
 			{
 				regex: /The correct submission is:|Incorrect Submission:/,
-				handler: function(matches, module) {
-                    console.log(matches[0]);
+				handler: function (matches, module) {
+					console.log(matches[0]);
 					var colorList = {
 						R: '#FF0000',
 						G: '#00FF00',
@@ -730,20 +730,20 @@ const parseData = [
 						K: '#000000'
 					};
 					var pathList = [
-                        "M 11,1 7,5 11,9 H 47 L 51,5 47,1 Z",
-                        "m 5,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
-                        "m 11,11 h 4 l 8,10 v 6 H 19 L 11,17 Z",
-                        "m 25,11 h 8 v 16 l -4,4 -4,-4 z",
-                        "m 35,27 v -6 l 8,-10 h 4 v 6 l -8,10 z",
-                        "m 53,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
-                        "m 7,33 4,-4 h 12 l 4,4 -4,4 H 11 Z",
-                        "m 31,33 4,-4 h 12 l 4,4 -4,4 H 35 Z",
-                        "m 5,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
-                        "m 11,55 h 4 l 8,-10 v -6 h -4 l -8,10 z",
-                        "m 25,55 h 8 V 39 l -4,-4 -4,4 z",
-                        "m 35,39 v 6 l 8,10 h 4 V 49 L 39,39 Z",
-                        "m 53,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
-                        "m 11,57 -4,4 4,4 h 36 l 4,-4 -4,-4 z",
+						"M 11,1 7,5 11,9 H 47 L 51,5 47,1 Z",
+						"m 5,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
+						"m 11,11 h 4 l 8,10 v 6 H 19 L 11,17 Z",
+						"m 25,11 h 8 v 16 l -4,4 -4,-4 z",
+						"m 35,27 v -6 l 8,-10 h 4 v 6 l -8,10 z",
+						"m 53,7 -4,4 v 16 l 4,4 4,-4 V 11 Z",
+						"m 7,33 4,-4 h 12 l 4,4 -4,4 H 11 Z",
+						"m 31,33 4,-4 h 12 l 4,4 -4,4 H 35 Z",
+						"m 5,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
+						"m 11,55 h 4 l 8,-10 v -6 h -4 l -8,10 z",
+						"m 25,55 h 8 V 39 l -4,-4 -4,4 z",
+						"m 35,39 v 6 l 8,10 h 4 V 49 L 39,39 Z",
+						"m 53,35 -4,4 v 16 l 4,4 4,-4 V 39 Z",
+						"m 11,57 -4,4 4,4 h 36 l 4,-4 -4,-4 z",
 					];
 					var display = readMultiple(5).replace(/\[14 #\d+\] |\r|\n|-/g, '');
 					var div = $('<div>');
@@ -767,9 +767,9 @@ const parseData = [
 		matches: [
 			{
 				regex: /Light states generated are:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var board = readMultiple(4);
-					module.push({ label: matches.input, obj: pre(board)});
+					module.push({ label: matches.input, obj: pre(board) });
 					return true;
 				}
 			},
@@ -785,7 +785,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /You walked into a wrong wall:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(18)) });
 					return true;
 				}
@@ -802,13 +802,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solution:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
 				}
 			},
 			{
 				regex: /You submitted:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
 				}
 			}
@@ -820,7 +820,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(Equation \d+) is (.*)\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: matches[1] + ':',
 						obj: $('<div>').append(
@@ -837,7 +837,7 @@ const parseData = [
 			},
 			{
 				regex: /The (?:true )?value of [CZ] is/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ linebreak: true });
 				}
 			}
@@ -849,7 +849,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Keypad button (\d) symbol (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Keypad button " + (parseInt(matches[1]) + 1) + " symbol " + matches[2]);
 				}
 			}
@@ -867,10 +867,10 @@ const parseData = [
 		matches: [
 			{
 				regex: /The decoded bits form the maze:/,
-				handler: function(matches, module) {
-					let lines = " A  B  C  D  E  F  G \n"+ readTaggedLine().replace(/■■■■■■■■■■■■■■■/g, "•——•——•——•——•——•——•——•");
+				handler: function (matches, module) {
+					let lines = " A  B  C  D  E  F  G \n" + readTaggedLine().replace(/■■■■■■■■■■■■■■■/g, "•——•——•——•——•——•——•——•");
 					for (let i = 1; i < 8; i++) {
-						lines += `\n${readTaggedLine().replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")} ${i} \n${readTaggedLine().replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")} `;
+						lines += `\n${readTaggedLine().replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")} ${i} \n${readTaggedLine().replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")} `;
 					}
 					lines = lines.replace(/E/g, "Ex").replace(/S/g, "St").replace(/Ex/, "E");
 					module.push({ label: "The decoded bits form the maze:", obj: pre(lines) });
@@ -879,12 +879,12 @@ const parseData = [
 			},
 			{
 				regex: /The corresponding string of bits is:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 2; i++) {
 						lines += `\n${readTaggedLine()}`;
 					}
-					
+
 					module.push({ label: "The corresponding string of bits is:", obj: pre(lines) });
 					return true;
 				}
@@ -913,7 +913,7 @@ const parseData = [
 			},
 			{
 				regex: /Ships: .+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 
 					var fieldStr = readMultiple(6);
 					var field = fieldStr.replace('\r', '').split('\n');
@@ -979,7 +979,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(Puzzle:|Solution:) ([01?]{36})$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var arr = [];
 					for (var i = 0; i < 6; i++)
 						arr.push(i);
@@ -1002,10 +1002,10 @@ const parseData = [
 		matches: [
 			{
 				regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: matches.input,
-						obj: pre(readMultiple(9, function(str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+						obj: pre(readMultiple(9, function (str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
 							.css('color', matches[1] === 'red' ? '#800' :
 								matches[1] === 'green' ? '#080' :
 									matches[1] === 'blue' ? '#008' :
@@ -1031,7 +1031,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(?:Getting|Updating) solution/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Group = [matches.input.replace(/(?:Getting|Updating) solution for /, ""), []];
 					module.push(module.Group);
 					return true;
@@ -1039,7 +1039,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.Group) {
 						module.Group[1].push(matches.input);
 					} else {
@@ -1056,7 +1056,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!matches[0].startsWith("Receive") && !matches[0].startsWith("Yielding")) module.push(matches.input);
 				}
 			}
@@ -1079,13 +1079,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Expression|button pressed|Module Solved!/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 				}
 			},
 			{
 				regex: /Expression/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					readLine();
 
 					var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
@@ -1099,7 +1099,7 @@ const parseData = [
 						"C": "translate(254px, 275px)"
 					};
 
-					readMultiple(16).match(/[UL]/g).forEach(function(letter, index) {
+					readMultiple(16).match(/[UL]/g).forEach(function (letter, index) {
 						var elem = svg.find("path, circle").eq(index);
 						elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
 
@@ -1129,7 +1129,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Buttons:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					var step = module.Step || module;
 
 					step.push({ label: "Buttons:", obj: pre(readMultiple(4)) });
@@ -1137,7 +1137,7 @@ const parseData = [
 			},
 			{
 				regex: /Step: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Steps = (module.Steps || 0) + 1;
 					module.Step = [matches[1]];
 					module.push(["Step #" + module.Steps, module.Step]);
@@ -1145,7 +1145,7 @@ const parseData = [
 			},
 			{
 				regex: /Press: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var step = module.Step;
 					step.push("Press: " + matches[1]);
 
@@ -1169,24 +1169,24 @@ const parseData = [
 		matches: [
 			{
 				regex: /(Braille patterns (on module|after flips):) (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var div = $("<div>");
 
 					if (matches[2] == "on module") {
 						module.braille = [];
 					}
 
-					matches[3].split("; ").forEach(function(spots, i) {
+					matches[3].split("; ").forEach(function (spots, i) {
 						var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
 
-						spots.split("-").forEach(function(posStr) {
+						spots.split("-").forEach(function (posStr) {
 							var pos = parseInt(posStr) - 1;
 							$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 						});
 
 						if (matches[2] == "on module") {
 							if (module.flipped) {
-								module.flipped.forEach(function(pos) {
+								module.flipped.forEach(function (pos) {
 									var char = Math.floor(pos / 6);
 									if (char != i) return;
 
@@ -1208,10 +1208,10 @@ const parseData = [
 			},
 			{
 				regex: /Flipped positions in order: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.flipped = [];
 					module.flippedSVG = [];
-					matches[1].split(", ").forEach(function(posStr, flipNumber) {
+					matches[1].split(", ").forEach(function (posStr, flipNumber) {
 						var pos = parseInt(posStr) - 1;
 						module.flipped.push(pos);
 
@@ -1232,7 +1232,7 @@ const parseData = [
 							text = svg[1];
 						}
 
-						var noDot = module.braille[char].children("circle").filter(function(_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
+						var noDot = module.braille[char].children("circle").filter(function (_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 						if (noDot) {
 							text.attr("fill", "black");
 						}
@@ -1241,13 +1241,13 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			},
 			{
 				regex: /Wrong letter pressed:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.addGroup();
 				}
 			}
@@ -1260,7 +1260,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The program is (\W+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "The program is:", obj: pre(matches[1]) });
 					return true;
 				}
@@ -1282,26 +1282,26 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solution:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push(["Solution", module.Solution = [], true]);
 					module.push(["Actions", module.Actions = []]);
 				}
 			},
 			{
 				regex: /Panel [2-4] Button 1 \(/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Solution.push({ linebreak: true });
 				}
 			},
 			{
 				regex: /Panel \d Button \d \(/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Solution.push(matches.input);
 				}
 			},
 			{
 				regex: /Panel \d (?:Button \d (?:is being|released at|held successfully)|completed successfully)|Module Solved\.|Strike: /,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Actions.push(matches.input);
 				}
 			}
@@ -1332,7 +1332,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(Receipt|Recibo)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches[1] + ':', obj: pre(readMultiple(10)) });
 					return true;
 				}
@@ -1348,7 +1348,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Selected Solution: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var locations = matches[1].split(", ");
 					var solution = locations[locations.length - 1];
 					locations.splice(locations.length - 1, 1);
@@ -1418,14 +1418,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /(Initial state of the switches:|Valid transition made. Switches now:|Three valid transitions made. LEDs show:) ([▲▼]{5})/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('SwitchInfo' in module)) {
 						module.SwitchInfo = {
 							y: 0, svg: "", prevState: null,
 							dom: { label: 'Progression', obj: null },
 							lightColors: ['{L0}', '{L1}', '{L2}', '{L3}', '{L4}'],
 							darkColors: ['{D0}', '{D1}', '{D2}', '{D3}', '{D4}'],
-							set: function() {
+							set: function () {
 								module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50 * module.SwitchInfo.y + 5) + "'>" + module.SwitchInfo.svg + "</svg>")
 									.css({ width: '300px', display: 'block' });
 							}
@@ -1484,7 +1484,7 @@ const parseData = [
 			},
 			{
 				regex: /Toggling switch #(\d) is invalid here/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('SwitchInfo' in module))
 						return;
 
@@ -1500,7 +1500,7 @@ const parseData = [
 			},
 			{
 				regex: /Colors of the switches: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('SwitchInfo' in module))
 						return;
 
@@ -1529,7 +1529,7 @@ const parseData = [
 						module.SwitchInfo.lightColors[i] = lightColors[cols[i].trim()];
 						module.SwitchInfo.darkColors[i] = darkColors[cols[i].trim()];
 					}
-					module.SwitchInfo.svg = module.SwitchInfo.svg.replace(/\{[LD]\d\}/g, function(m) { return module.SwitchInfo[m[1] === 'L' ? 'lightColors' : 'darkColors'][parseInt(m[2])]; });
+					module.SwitchInfo.svg = module.SwitchInfo.svg.replace(/\{[LD]\d\}/g, function (m) { return module.SwitchInfo[m[1] === 'L' ? 'lightColors' : 'darkColors'][parseInt(m[2])]; });
 					module.SwitchInfo.set();
 					return true;
 				}
@@ -1546,7 +1546,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Module generated/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: "Color Sequence:",
 						obj: pre(readMultiple(10))
@@ -1568,7 +1568,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(.+: .+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push($("<span style='direction: ltr;'>").text(matches[1]));
 				}
 			},
@@ -1584,7 +1584,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Wire (\d) (should(?: not)?) be snipped\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const rules = {
 						Cut: "Cut",
 						DoNotCut: "Don't\nCut",
@@ -1626,7 +1626,7 @@ const parseData = [
 			},
 			{
 				regex: /Wire snipped ((?:in)?correctly): (\d)!/i,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(`Wire ${parseInt(matches[2]) + 1} snipped ${matches[1].toLowerCase()}`);
 				}
 			}
@@ -1638,7 +1638,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(Solution|Submitted):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches[1], module.items = []]);
 
 					return true;
@@ -1646,7 +1646,7 @@ const parseData = [
 			},
 			{
 				regex: /- (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.items.push(matches[1]);
 					return true;
 				}
@@ -1662,7 +1662,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(\d)×(\d)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Width = parseInt(matches[1]);
 					module.Height = parseInt(matches[2]);
 					module.Coordinates = {};
@@ -1670,7 +1670,7 @@ const parseData = [
 			},
 			{
 				regex: /(illegal|correct) coordinate .=([A-Z]\d+) as (.+?)( \(.+\))?$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var key = matches[2];
 					if (key in module.Coordinates)
 						module.Coordinates[key].Text += '\n' + matches[3];
@@ -1681,7 +1681,7 @@ const parseData = [
 			},
 			{
 				regex: /Grid:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					var x;
 
 					var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
@@ -1712,44 +1712,44 @@ const parseData = [
 		matches: [
 			{
 				regex: /One possible solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var table = $('<table>')
-					.css('font-size', '20px')
+						.css('font-size', '20px')
 					let gridfinal = "";
 					let gridinitial = "";
 					for (var r = 0; r < 4; r++) {
-						gridfinal += readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+						gridfinal += readTaggedLine().replace(/10/g, "0").replace(/,/g, "").replace(/ /g, "");
 					}
 					gridfinal += readTaggedLine().replace(/Initial grid:/, "");
 					for (var r = 0; r < 4; r++) {
-						gridinitial += readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+						gridinitial += readTaggedLine().replace(/10/g, "0").replace(/,/g, "").replace(/ /g, "");
 					}
 
 					for (var r = 0; r < 4; r++) {
 						var tr = $('<tr>').appendTo(table)
-						for (var c = 0 ; c < 4; c++) {
-							if (gridinitial[c + 4*r] === "B") {
+						for (var c = 0; c < 4; c++) {
+							if (gridinitial[c + 4 * r] === "B") {
 								$('<td>')
-								.text(' ')
-								.css('background-color', '#000000')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px').appendTo(tr);							
+									.text(' ')
+									.css('background-color', '#000000')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px').appendTo(tr);
 							}
-							else if (gridinitial[c + 4*r] === gridfinal[c + 4*r]) {
-								if (gridfinal[c + 4*r] === "0")
-								$('<td>')
-								.text('10')
-								.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+							else if (gridinitial[c + 4 * r] === gridfinal[c + 4 * r]) {
+								if (gridfinal[c + 4 * r] === "0")
+									$('<td>')
+										.text('10')
+										.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
 								else $('<td>')
-								.text(gridfinal[c + 4*r])
-								.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+									.text(gridfinal[c + 4 * r])
+									.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
 							}
 							else {
-								if (gridfinal[c + 4*r] === "0") $('<td>').text('10')
-								.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);							
-								else $('<td>').text(gridfinal[c + 4*r])
-								.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);							
+								if (gridfinal[c + 4 * r] === "0") $('<td>').text('10')
+									.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+								else $('<td>').text(gridfinal[c + 4 * r])
+									.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
 							}
 						}
 					};
@@ -1759,40 +1759,40 @@ const parseData = [
 			},
 			{
 				regex: /One possible solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var table = $('<table>')
-					.css('font-size', '20px')
+						.css('font-size', '20px')
 					for (var r = 0; r < 4; r++) {
 						var tr = $('<tr>').appendTo(table);
-						var grid = readTaggedLine().replace(/10/g, "0" ).replace(/,/g, "").replace(/ /g, "");
+						var grid = readTaggedLine().replace(/10/g, "0").replace(/,/g, "").replace(/ /g, "");
 						for (var c = 0; c < 4; c++) {
 							if (grid[c] === "B") {
 								$('<td>')
-								.text(' ')
-								.css('background-color', '#000000')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px').appendTo(tr);							
+									.text(' ')
+									.css('background-color', '#000000')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px').appendTo(tr);
 							}
 							else if (grid[c] === "*") {
 								$('<td>')
-								.text(' ')
-								.css('width', '30px')
-								.css('height', '30px').appendTo(tr);							
+									.text(' ')
+									.css('width', '30px')
+									.css('height', '30px').appendTo(tr);
 							}
 							else if (grid[c] === "0") {
 								$('<td>')
-								.text('10')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px').appendTo(tr);							
+									.text('10')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px').appendTo(tr);
 							}
 							else {
 								$('<td>')
-								.text(grid[c])
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px').appendTo(tr);							
+									.text(grid[c])
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px').appendTo(tr);
 							}
 						}
 					};
@@ -1808,7 +1808,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.length === 0) {
 						module.push(["Initial attempt", [], true]);
 					}
@@ -1818,7 +1818,7 @@ const parseData = [
 			},
 			{
 				regex: /Restarting module.../,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(["Restart #" + module.length, []]);
 				}
 			}
@@ -1831,7 +1831,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /One possible solution is:|Submitted the following states:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var grid = readMultiple(4);
 					module.push({ label: matches.input, obj: pre(grid) });
 					return true;
@@ -1849,21 +1849,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /Cube movements: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Rotations = matches.slice(1, 7);
 					return true;
 				}
 			},
 			{
 				regex: /Cube faces: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\. #5 is (.+)\. #6 is (.+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Faces = matches.slice(1, 7);
 					return true;
 				}
 			},
 			{
 				regex: /Buttons: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var result = new RegExp(`The execute button is (\\w+?) and says (.)\\.`).exec(matches[1]);
 					module.SubmitButton = { color: result[1], label: result[2] };
 					module.Buttons = new Array(8);
@@ -1876,35 +1876,35 @@ const parseData = [
 			},
 			{
 				regex: /Wires: #1 is (.+)\. #2 is (.+)\. #3 is (.+)\. #4 is (.+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Wires = matches.slice(1, 5);
 					return true;
 				}
 			},
 			{
 				regex: /Screens: #1 says (.{8})\. #2 says (.{8})\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Screens = matches.slice(1, 3);
 					return true;
 				}
 			},
 			{
 				regex: /The rotation codes are (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.RotationCodes = matches.slice(1, 7);
 					return true;
 				}
 			},
 			{
 				regex: /The wire codes are (\d+), (\d+), (\d+), (\d+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.WireCodes = matches.slice(1, 5);
 					return true;
 				}
 			},
 			{
 				regex: /(The (final) cipher|Cipher ([123])) is (\d+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					function many(num, fnc) {
 						var str = '';
 						for (var i = 0; i < num; i++)
@@ -1970,7 +1970,7 @@ const parseData = [
 			},
 			{
 				regex: /((Stage \d+) button presses:|Strike! At stage \d+, your buttons were:) #1 is (True|False)\. #2 is (True|False)\. #3 is (True|False)\. #4 is (True|False)\. #5 is (True|False)\. #6 is (True|False)\. #7 is (True|False)\. #8 is (True|False)\.(.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					function many(num, fnc) {
 						var str = '';
 						for (var i = 0; i < num; i++)
@@ -2006,7 +2006,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Glyph alphabet translation table:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var glyphTable = readMultiple(8).replace(/\[Dreamcipher #\d+\] \* /g, '');
 					module.push({ label: matches.input, obj: pre(glyphTable) });
 					return true;
@@ -2024,7 +2024,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Maze:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var maze = readMultiple(13).replace(/\[Echolocation #\d+\] /g, '');
 					module.push({ label: matches.input, obj: pre(maze) });
 					return true;
@@ -2041,7 +2041,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Equation:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Equation:", obj: pre(readMultiple(19)) });
 				}
 			}
@@ -2053,7 +2053,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Operand:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Operand:", obj: pre(readMultiple(2)) });
 				}
 			}
@@ -2065,7 +2065,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(<Stage (\d+)> (.+)|Pressed GO! Let the madness begin!)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.length == 0 || !(module[module.length - 1] instanceof Array) || (matches[2] && module[module.length - 1][0] !== "Stage " + matches[2]))
 						module.push(["Stage " + matches[2], []]);
 					module[module.length - 1][1].push(matches[3] || matches.input);
@@ -2084,22 +2084,22 @@ const parseData = [
 		matches: [
 			{
 				regex: /The grid:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let line = readTaggedLine().replace(/WWWWWWWWWWWWWWW/g, "•——•——•——•——•——•——•——•");
 					let finalLine = " A  B  C  D  E  F  G      A  B  C  D  E  F  G      A  B  C  D  E  F  G \n" + line + "   " + line + "   " + line;
 					for (let i = 1; i < 8; i++) {
 						line = `${readTaggedLine()}`;
 						let line2 = `${readTaggedLine()}`;
-						let redMazevert = `${line.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						let greenMazevert = `${line.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						let blueMazevert =  `${line.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let blueMazehoriz =  `${line2.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						finalLine += "\n" + redMazevert + " " + i + " " + greenMazevert + " " + i + " " + blueMazevert+ "\n" + redMazehoriz + "   " + greenMazehoriz + "   " + blueMazehoriz;
+						let redMazevert = `${line.replace(/(R|Y|M|W)/g, "■").replace(/(G|B|C|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g, "■").replace(/(G|B|C|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						let greenMazevert = `${line.replace(/(G|Y|C|W)/g, "■").replace(/(R|B|M|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g, "■").replace(/(R|B|M|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						let blueMazevert = `${line.replace(/(B|C|M|W)/g, "■").replace(/(R|G|Y|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let blueMazehoriz = `${line2.replace(/(B|C|M|W)/g, "■").replace(/(R|G|Y|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						finalLine += "\n" + redMazevert + " " + i + " " + greenMazevert + " " + i + " " + blueMazevert + "\n" + redMazehoriz + "   " + greenMazehoriz + "   " + blueMazehoriz;
 					}
 					finalLine += "\n         Red                      Green                    Blue";
-					module.push({ label: "The grid:", obj: pre(finalLine)});
+					module.push({ label: "The grid:", obj: pre(finalLine) });
 					return true;
 				}
 			},
@@ -2120,20 +2120,20 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Button 1 \(\w+\), < 2 strikes:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ linebreak: true });
 				}
 			},
 			{
 				regex: /^Button \d/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input, []]);
 					return true;
 				}
 			},
 			{
 				regex: /^— (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module[module.length - 1][1].push(matches[1]);
 					if (matches[1].startsWith("original number is"))
 						module[module.length - 1][0] += matches[1].substr("original number is".length);
@@ -2145,7 +2145,7 @@ const parseData = [
 			},
 			{
 				regex: /Solution for /,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ linebreak: true });
 				}
 			}
@@ -2161,7 +2161,7 @@ const parseData = [
 			},
 			{
 				regex: /Wire state:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					var states = [];
 
 					var line = readLine();
@@ -2176,7 +2176,7 @@ const parseData = [
 			},
 			{
 				regex: /Expectation/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (matches.input.match(/Expectation now is that you’re done./)) {
 						module.push(matches.input);
 					} else {
@@ -2201,7 +2201,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The maze generated as such, where '\.' represents a safe tile and '\*' represents a trapped tile:\s*/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var board = readMultiple(5);
 					module.push({ label: matches.input.replace(/'/g, ''), obj: pre(board) });
 					return true;
@@ -2219,7 +2219,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Initial answer \(stage 1 display\): (\d+)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.ForgetEverything = [{
 						Display: matches[1],
 						Tubes: null,
@@ -2235,7 +2235,7 @@ const parseData = [
 			},
 			{
 				regex: /Stage (\d+) - Display: (\d+), Tubes: (\d\d), (?:Colours: ([RGBY]{3}) (Red|Green|Blue|Yellow) *\((.*?)\) +\(.*?\), New answer: (\d+)|(Not important\.))\s*$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var digits = matches[2].split('');
 					var ix = (parseInt(matches[1]) - 1) % 10;
 					var c = digits[ix];
@@ -2259,7 +2259,7 @@ const parseData = [
 			},
 			{
 				regex: /Total important stages: \d+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var arr = [];
 					for (var i = 0; i < 10; i++)
 						arr.push(i);
@@ -2276,10 +2276,10 @@ const parseData = [
 							${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
 								<th style='text-align: right'>${stage + 1}</th>
 								${
-									inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-										inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-											`<td colspan='6' style='color: #888'>(not valid)</td>`
-								}
+							inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+								inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+									`<td colspan='6' style='color: #888'>(not valid)</td>`
+							}
 							</tr>`).join('')}
 							<tr><th colspan='5'>FINAL ANSWER</th><td>${arr.map(i => `<span class='digit'>${module.ForgetEverythingNumber.substr(i, 1)}</span>`).join('')}</td></tr>
 						</table>`)
@@ -2292,7 +2292,7 @@ const parseData = [
 			},
 			{
 				regex: /Final answer: \d+$/,
-				handler: function() { return true; }
+				handler: function () { return true; }
 			},
 			{
 				regex: /.+/
@@ -2306,7 +2306,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Stages \d+ to \d+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: matches.input,
 						obj: pre(readMultiple(2, str => str.replace(/^[ \t]*\[.+?\] /, '')))
@@ -2325,7 +2325,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Friendship symbol/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.SymbolsText) {
 						module.SymbolsText = [];
 						module.push(["Symbols", module.SymbolsText]);
@@ -2367,7 +2367,7 @@ const parseData = [
 			},
 			{
 				regex: /^Disregard (column|row) symbol (.*), leaving/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Symbols || module.SkipSvg)
 						return false;
 
@@ -2394,7 +2394,7 @@ const parseData = [
 			},
 			{
 				regex: /^The potential Elements of Harmony are/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.SkipSvg)
 						return false;
 
@@ -2436,7 +2436,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Cell color reference:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.reference = {};
 
 					while (linen < lines.length) {
@@ -2450,13 +2450,13 @@ const parseData = [
 			},
 			{
 				regex: /((?:Answer for|Submitted at) .+):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches[1], module.answer = []]);
 				}
 			},
 			{
 				regex: /(Initial state|Solution|Colored square states|Submitted):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
 					readMultiple(8).split("\n").map(row => row.split("")).forEach((row, y) => {
 						row.forEach((cell, x) => {
@@ -2488,7 +2488,7 @@ const parseData = [
 			},
 			{
 				regex: /Found errors? at squares? ([A-Z0-9, ]+). Strike/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const errors = matches[1].split(", ").map(pair => { return { x: pair.charCodeAt(0) - 65, y: parseInt(pair[1]) - 1 }; });
 					const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
 					for (var x = 0; x < 6; x++) {
@@ -2523,7 +2523,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(.*:) (\d+) +(.*:) ([A-Z])$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var label = matches[1];
 					var extra = matches[3];
 					var letter = matches[4];
@@ -2580,8 +2580,8 @@ const parseData = [
 		loggingTag: "Hereditary Base Notation",
 		matches: [
 			{
-				regex:/(The initial number|The number after incrementing its base and subtracting 1,) in hereditary base-\d,? is:/,
-				handler: function(matches, module){
+				regex: /(The initial number|The number after incrementing its base and subtracting 1,) in hereditary base-\d,? is:/,
+				handler: function (matches, module) {
 					readLine();
 					var equation = readLine();
 					var style = $("<style> .heredExponent { vertical-align: super; font-size: smaller; } .heredExponent .heredExponent { font-size: 100%; } </style>");
@@ -2606,13 +2606,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Using rule seed: (\d+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Ruleseed = parseInt(matches[1]);
 				}
 			},
 			{
 				regex: /Moving from|Walking out|There’s an|However, we wanted/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Moves) {
 						module.Moves = [];
 						module.push(["Moves", module.Moves]);
@@ -2624,7 +2624,7 @@ const parseData = [
 			},
 			{
 				regex: /Submaze center: \((\d+), (\d+)\), submaze rotation: (\d+)° clockwise, pawn: \(\d+, \d+\) \(maze\)\/\((\d+), (\d+)\) \(screen\), pawn color: (\w+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Link = { label: "" };
 					module.JSON = {
 						stencil: [parseInt(matches[1]), parseInt(matches[2])],
@@ -2641,7 +2641,7 @@ const parseData = [
 			},
 			{
 				regex: /Marking at \((\d), (\d)\) \(screen\)\/\(\d+, \d+\) \(maze\): \w+, after rotation: (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.JSON.markings.push({
 						pos: [parseInt(matches[1]), parseInt(matches[2])],
 						type: matches[3]
@@ -2670,7 +2670,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Stage (\d+), Clues: ([A-Za-z]) & ([A-Za-z]), Buttons:((?: [A-Za-z])+), Decoys:((?: [A-Za-z])+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					function addImg(span, str) {
 						span.append($('<img>')
 							.attr({ src: '../HTML/img/Hunting/' + str + (str.charCodeAt(0) >= 96 ? '_' : '') + '.png', width: 50 })
@@ -2708,7 +2708,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Stage \d/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input, readMultiple(3).split("\n")]);
 					return true;
 				}
@@ -2729,7 +2729,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(Angry Birds: The chosen Angry Birds images are|Angry Birds: The correct image is|Photos: The chosen photos are|Photos: The correct image is) (.*?)(| \((Top|Bottom) (Left|Right)\))\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(`${matches[1]}${matches[3]}:`);
 					var div = $('<div>');
 					var photos = matches[2].split(', ');
@@ -2775,7 +2775,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(Solution|Codings|New codings):$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var lines = readMultiple(4).split('\n').map(l => l.split(' '));
 					module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
 					return true;
@@ -2793,15 +2793,17 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(Puzzle|Solution):$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var lines = readMultiple(6).split('\n').map(line => line.replace(/^\[Kyudoku #\d+\] /, ''));
-					module.push({ label: matches.input, obj: $(`
+					module.push({
+						label: matches.input, obj: $(`
                         <table style='border-collapse: collapse'>
                             ${lines.map(row => `<tr>${[...Array(6).keys()].map(ix => `
-                                <td style='${row[3*ix] === '[' ? `background:url(&#39;data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 2 2"><circle cx="0" cy="0" r=".7" stroke-width=".2" stroke="%23080" fill="none"/></svg>&#39;)` :
-                                             row[3*ix + 1] === '#'? `background:#aaa` : ''}'>${row[3*ix + 1] === '#' ? '' : row[3*ix + 1]}</td>
+                                <td style='${row[3 * ix] === '[' ? `background:url(&#39;data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 2 2"><circle cx="0" cy="0" r=".7" stroke-width=".2" stroke="%23080" fill="none"/></svg>&#39;)` :
+								row[3 * ix + 1] === '#' ? `background:#aaa` : ''}'>${row[3 * ix + 1] === '#' ? '' : row[3 * ix + 1]}</td>
                             `).join('')}</tr>`).join('')}
-                        </table>`).find('td').css({ border: '1px solid black', width: '1.5cm', height: '1.5cm', textAlign: 'center', verticalAlign: 'middle', fontSize: '18pt' }).end() });
+                        </table>`).find('td').css({ border: '1px solid black', width: '1.5cm', height: '1.5cm', textAlign: 'center', verticalAlign: 'middle', fontSize: '18pt' }).end()
+					});
 					return true;
 				}
 			},
@@ -2822,15 +2824,15 @@ const parseData = [
 		matches: [
 			{
 				regex: /Expected solution: \[([0-9/]+)\]./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var tiles = matches[1].split("/");
 
 					const span = $('<span style="display: flex; flex-direction: column">')
 						.append($('<span>').text("Expected solution:"));
 
-					for(var i = 0; i < 5; i++) {
+					for (var i = 0; i < 5; i++) {
 						var row = $('<span style="height: 20px;">');
-						for(var j = 0; j < 5; j++) {
+						for (var j = 0; j < 5; j++) {
 							row.append($("<img src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png' width='20' />"));
 						}
 						span.append(row);
@@ -2842,7 +2844,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add($('<li>').text(matches[0]));
 					return true;
 				}
@@ -2855,7 +2857,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solution values for (\d) solved modules/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var lines = [];
 					for (var i = 0; i < 4; i++) {
 						var line = readLine();
@@ -2883,7 +2885,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The chosen LED colours are (.*)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var colorCodes = {
 						black: ["#000000", 'white'],
 						blue: ["#0000FF", 'white'],
@@ -2922,7 +2924,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Piece #\d: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Pieces) module.push(["Pieces", module.Pieces = []]);
 					module.Pieces.push(matches[1]);
 					return true;
@@ -2930,7 +2932,7 @@ const parseData = [
 			},
 			{
 				regex: /(Manual Page (\d+)) w\/(o)?|(Solution:|Submitting:)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
 					const board = readMultiple(8).split("\n");
 					const colors = {
@@ -2967,7 +2969,7 @@ const parseData = [
 						var oldSvg = module.LegoManualPages[matches[2]].obj;
 						module.LegoManualPages[matches[2]].obj = $('<div>').append(oldSvg).append(svg);
 						var which = false;
-						window.setInterval(function() {
+						window.setInterval(function () {
 							which = !which;
 							if (which) {
 								oldSvg.hide();
@@ -3000,7 +3002,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Start sequence: ([A-Z]{6})/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Presses = [];
 					module.push("Starting Seq: " + matches[1]);
 					module.push(["Buttons:", module.Presses]);
@@ -3008,13 +3010,13 @@ const parseData = [
 			},
 			{
 				regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push($("<span>").css({ "font-family": "monospace", "font-size": "16px" }).text("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]));
 				}
 			},
 			{
 				regex: /Pressed button/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Presses.push(matches.input);
 				}
 			}
@@ -3032,7 +3034,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generated question (\d+): Matrix:\[(-?\d+) (-?\d+) (-?\d+) \]\[(-?\d+) (-?\d+) (-?\d+) \]\[(-?\d+) (-?\d+) (-?\d+) \] Answer:(.*)Question:(.*)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					//CSS style from https://stackoverflow.com/a/11561235
 					var style = $("<style>.matrix {position: relative;} body {padding: 20px;} .matrix:before, .matrix:after {content: \"\"; position: absolute; top: 0; border: 2px solid #000; width: 6px; height: 100%;} .matrix:before { left: 0px; border-right: 0px;} .matrix:after { right: -8px; border-left: 0px;} .matrix td {padding: 5px; text-align: center;</style>");
 					if (module.styleIsPush == null) {
@@ -3041,8 +3043,8 @@ const parseData = [
 					}
 					var table = $('<table>').addClass("matrix");
 					$(`<tr><td></td><td>${matches[2]}</td><td>${matches[3]}</td><td>${matches[4]}</td></tr><tr><td></td><td>${matches[5]}</td><td>${matches[6]}</td><td>${matches[7]}</td></tr><tr><td></td><td>${matches[8]}</td><td>${matches[9]}</td><td>${matches[10]}</td></tr></table>`).appendTo(table);
-					var div = $("<div>").css({"paddingBottom": "5px"}).append(table).append("</div>");
-					module.push({label: `Generated Question ${matches[1]}: Matrix A is`, obj: div, expanded: true});
+					var div = $("<div>").css({ "paddingBottom": "5px" }).append(table).append("</div>");
+					module.push({ label: `Generated Question ${matches[1]}: Matrix A is`, obj: div, expanded: true });
 					module.push(`Question: ${matches[12]}`);
 					module.push(`Answer: ${matches[11]}`);
 					return true;
@@ -3060,7 +3062,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Lions present: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var list = matches[1].split(',');
 					module.LionInfo = {};
 					for (var i = 0; i < list.length; i++) {
@@ -3072,7 +3074,7 @@ const parseData = [
 			},
 			{
 				regex: /Apportion prey to (\d+) lions:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					readMultiple(3);
 					var rows = [];
 					for (var i = 0; i < +matches[1]; i++) {
@@ -3116,7 +3118,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /STAGE: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1], []];
 					module.push(module.Stage);
 					return true;
@@ -3124,20 +3126,20 @@ const parseData = [
 			},
 			{
 				regex: /Completed stage/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
 			{
 				regex: /All 3 stages/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					// Stage[0] is the label, Stage[1] is the list of subitems
 					module.Stage[1].push(matches.input);
 				}
@@ -3150,13 +3152,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, "")) });
 					return true;
 				}
 			},
 			{
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 				}
 			}
@@ -3168,8 +3170,8 @@ const parseData = [
 		matches: [
 			{
 				regex: /Full game: (.+)/,
-				handler: function(matches, module) {
-					var moves = matches[1].replace(/(\d) (\d)/g, "$1\n$2" );
+				handler: function (matches, module) {
+					var moves = matches[1].replace(/(\d) (\d)/g, "$1\n$2");
 					module.push({ label: "Full game:", obj: pre(moves) });
 					return true;
 				}
@@ -3185,13 +3187,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			},
 			{
 				regex: /Clicked \w+: wrong./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.addGroup();
 				}
 			}
@@ -3203,9 +3205,9 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Colors: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.data = { colors: matches[1].split(', ') };
-					module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function() {
+					module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function () {
 						var data = $(this).data('data'), div = $(this).parent(), i, sel;
 
 						var imgDiv = $(`<div style='position: relative; width: 420px; height: 420px'>`).appendTo(div);
@@ -3252,22 +3254,22 @@ const parseData = [
 								`)
 									.appendTo(controlsDiv)
 									.css('background', bgNoHover)
-									.mouseover(function() { $(this).css('background', bgOnHover); })
-									.mouseout(function() { $(this).css('background', bgNoHover); })
-									.click(function(ix, rotBefore, rotAfter, marbleBefore, marbleAfter) {
-										return function() {
+									.mouseover(function () { $(this).css('background', bgOnHover); })
+									.mouseout(function () { $(this).css('background', bgNoHover); })
+									.click(function (ix, rotBefore, rotAfter, marbleBefore, marbleAfter) {
+										return function () {
 											for (var i = 0; i < 5; i++)
 												imgs[i].css('transition', '');
 											setRotations(rotBefore);
 											setMarble(rotBefore, marbleBefore);
-											window.setTimeout(function() {
+											window.setTimeout(function () {
 												for (var i = 0; i < 5; i++)
 													imgs[i].css('transition', 'transform linear 1s');
 												marbleOuter.css('transition', 'transform linear 1s');
-												window.setTimeout(function() {
+												window.setTimeout(function () {
 													setRotations(rotAfter);
 													setMarble(rotAfter, marbleBefore);
-													window.setTimeout(function() {
+													window.setTimeout(function () {
 														for (var i = 0; i < 5; i++)
 															imgs[i].css('transition', '');
 														marbleOuter.css('transition', '');
@@ -3285,10 +3287,10 @@ const parseData = [
 
 							var nextDiv = $(`<div class='nx' style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; border: 1px solid black; margin: .5em .25em'></div>`)
 								.appendTo(controlsDiv)
-								.mouseover(function(ix) { return function() { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
-								.mouseout(function(ix) { return function() { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
-								.click(function(ix, rot, marble) {
-									return function() {
+								.mouseover(function (ix) { return function () { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
+								.mouseout(function (ix) { return function () { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
+								.click(function (ix, rot, marble) {
+									return function () {
 										setRotations(rot);
 										setMarble(rot, marble);
 										sel = ix;
@@ -3324,14 +3326,14 @@ const parseData = [
 			},
 			{
 				regex: /^Traps: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.data.traps = matches[1].split(', ');
 					return true;
 				}
 			},
 			{
 				regex: /^Rotations: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('states' in module.data))
 						module.data.states = [{ rotations: matches[1].split(', ') }];
 					else
@@ -3342,7 +3344,7 @@ const parseData = [
 			},
 			{
 				regex: /^Rotations after strike: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.data.states.push({ rotations: matches[1].split(', '), clicked: '✗' });
 					module.obj.find('button').data('data', module.data);
 					return true;
@@ -3350,14 +3352,14 @@ const parseData = [
 			},
 			{
 				regex: /^Clicked when last seconds digit was: (\d)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.data.states.push({ clicked: matches[1] });
 					return true;
 				}
 			},
 			{
 				regex: /^Marble falls into (gap|trap) at level (\d)\.( Module solved\.| Strike!)?$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.data.states[module.data.states.length - 1][matches[1]] = matches[2];
 					if (matches[3] && matches[3] !== ' Strike!')
 						module.data.states[module.data.states.length - 1].solved = true;
@@ -3374,21 +3376,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /Query:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input, module.GroupLines = []]);
 					return true;
 				}
 			},
 			{
 				regex: /Submit:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					(module.GroupLines || module).push(matches.input);
 				}
 			}
@@ -3400,7 +3402,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Query:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.LastInput == matches.input) return true;
 					module.LastInput = matches.input;
 
@@ -3413,21 +3415,21 @@ const parseData = [
 			},
 			{
 				regex: /Submit:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /Query result: A=(\d+), B=(\d+), C=(\d+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.LastResult = matches;
 					return true;
 				}
 			},
 			{
 				regex: /Display shows: (\d+) (\w+), (\d+) (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const row = $("<tr>").appendTo(module.Table);
 					for (let i = 1; i <= 4; i++) {
 						$("<td>").text(matches[i]).appendTo(row);
@@ -3455,7 +3457,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The dots\/circles are in the following pattern, where 0=blank,1=white,2=black.../,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var board = readMultiple(8).replace(/\[Masyu #\d+\] /g, "");
 					var row = board.replace(/\r/g, '').split('\n');
 					var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
@@ -3471,7 +3473,7 @@ const parseData = [
 						for (let j = 0; j < row[i].length; j++) {
 							const xPosition = j * 118 + 61.5;
 							const yPosition = i * 118 + 103.5;
-							switch(row[i][j]) {
+							switch (row[i][j]) {
 								case '1':
 									$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
 									break;
@@ -3492,7 +3494,7 @@ const parseData = [
 			},
 			{
 				regex: /^(\d{40}|\d{42})$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var svg = module.MasyuSvg[1].obj;
 					switch (matches[1].length) {
 						case 40: //Drawing horizontal lines
@@ -3528,7 +3530,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Node mapping for logging purposes:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: "Node mapping:",
 						obj: $("<img src='img/Maze³/mazeLog.png' width='200' style='margin: 1em; display: block;'/>")
@@ -3552,7 +3554,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(?:([ABCDEFGJKLPQ]), ([ABCDEFGJKLPQ]), ([ABCDEFGJKLPQ]) & ([ABCDEFGJKLPQ]))|(?:s | d)([ABCDEFGJKLPQ]+)|([ABCDEFGJKLPQ])(?:\.)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var span = $('<span>');
 					var text = matches.input.substring(1);
 					var str1 = "<span style=\"font-family: 'kra'; font-size: 28pt\">";
@@ -3588,7 +3590,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Desired Bomb is (\d+|\d\D)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Desired Bomb is "))
 						.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
@@ -3599,7 +3601,7 @@ const parseData = [
 			},
 			{
 				regex: /Bomb shown is (\d+|\d\D)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Bomb shown is "))
 						.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
@@ -3619,7 +3621,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Board:|Legend:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 5)) });
 					return true;
 				}
@@ -3645,7 +3647,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /<(Stage \d)> START/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Stages) module.Stages = [];
 					module.push([matches[1], module.Stage = []]);
 
@@ -3654,7 +3656,7 @@ const parseData = [
 			},
 			{
 				regex: /<Stage ?\d> /,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage.push(matches.input);
 
 					return true;
@@ -3662,7 +3664,7 @@ const parseData = [
 			},
 			{
 				regex: /^(Pressed OK|totalWords = 0)$/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
@@ -3677,7 +3679,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Shown icon is (.+)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Shown icon is "))
 						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").css({ "vertical-align": "baseline;" }))
@@ -3699,7 +3701,7 @@ const parseData = [
 			},
 			{
 				regex: /Strike obtained, showing solution icon.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>').append($('<span>').text(matches[0]));
 					module.Info.push(span);
 					module.iStrike = true;
@@ -3708,7 +3710,7 @@ const parseData = [
 			},
 			{
 				regex: /Expected icon is (.+)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Expected icon is "))
 						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").css({ "vertical-align": "baseline;" }))
@@ -3719,7 +3721,7 @@ const parseData = [
 			},
 			{
 				regex: /Wall detected to the (\w+) from (.+)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Wall detected to the " + matches[1] + " from "))
 						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").css({ "vertical-align": "baseline;" }))
@@ -3731,7 +3733,7 @@ const parseData = [
 			},
 			{
 				regex: /Moved (\w+) from icon \[(.+)\] to \[(.+)\]$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Moved " + matches[1] + " from icon "))
 						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").css({ "vertical-align": "baseline;" }))
@@ -3759,7 +3761,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Modules:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var lines = readMultiple(11);
 					while (/ {2}\|/.test(lines) && !/[^ ] \|/.test(lines))
 						lines = lines.replace(/ \|/g, '|');
@@ -3787,20 +3789,20 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generating the/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(module.Bullet = [matches.input, module.CardGen = []]);
 				}
 			},
 			{
 				regex: /Wrong! Deck card|Keeping your cards|You did the right trade!|Wrong! All of your cards|Value of (?:deck|offered) card/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var monsplode = matches.input.match(/^Monsplode: ([^]+) \|/);
 					if (monsplode) {
 						module.Bullet[0] += ` (${monsplode[1]})`;
@@ -3818,13 +3820,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Opponent/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.MoveInfo = null;
 				}
 			},
 			{
 				regex: /Move name/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input.replace(/\(\d\)/, ""), module.MoveInfo]);
 					module.MoveInfo = [];
 					return true;
@@ -3832,7 +3834,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.MoveInfo) {
 						module.MoveInfo.push(matches.input);
 					} else {
@@ -3860,7 +3862,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generated random values:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(3)) });
 				}
 			}
@@ -3873,14 +3875,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solved - Turning off the Status light Kappa/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push("Module Solved");
 					return true;
 				}
 			},
 			{
 				regex: /Moving from|Tried to move from/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Group.Moves) {
 						module.GroupLines.push(["Moves", module.Group.Moves = []]);
 					}
@@ -3894,7 +3896,7 @@ const parseData = [
 			},
 			{
 				regex: /(Updating the maze for rule \w+|Playing Morse code word: .+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Group) {
 						matches[1] = "Initial solution";
 					}
@@ -3905,20 +3907,20 @@ const parseData = [
 			},
 			{
 				regex: /(?:Maze updated for (\d+ [\w ]+|Two Factor 2nd least significant digit sum of \d+))/,
-				handler: function(matches, module) {
-					module.Group[0] = matches[1].replace(/Unsolved|Solved/, function(str) { return str.toLowerCase(); });
+				handler: function (matches, module) {
+					module.Group[0] = matches[1].replace(/Unsolved|Solved/, function (str) { return str.toLowerCase(); });
 					return true;
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					(module.GroupLines || module).push(matches.input);
 				}
 			},
 			{
 				regex: /Maze Solution from ([A-F])([1-6]) to ([A-F])([1-6]) in maze "(\d{1,2})/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.GroupLines) {
 						module.push(module.Group = [matches[1], module.GroupLines = []]);
 					}
@@ -3959,13 +3961,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			},
 			{
 				regex: /^Strike!/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.addGroup(true);
 				}
 			}
@@ -3986,7 +3988,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Number of batteries/,
-				handler: function() {
+				handler: function () {
 					var id = GetBomb().GetMod("murder").IDs.length + 1;
 					var mod = GetBomb().GetModuleID("murder", id);
 					mod.BombInfo = [];
@@ -3996,33 +3998,33 @@ const parseData = [
 			},
 			{
 				regex: /Number of|Has/,
-				handler: function(matches) {
+				handler: function (matches) {
 					GetBomb().GetModuleID("murder").BombInfo.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /row/,
-				handler: function(matches) {
+				handler: function (matches) {
 					GetBomb().GetModuleID("murder").Rows.push(matches.input);
 				}
 			},
 			{
 				regex: /Body found in/,
-				handler: function(matches) {
+				handler: function (matches) {
 					GetBomb().GetModuleID("murder").Body = matches.input;
 				}
 			},
 			{
 				regex: /Actual solution:/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var mod = GetBomb().GetModuleID("murder");
 					mod.Suspects = ["Professor Plum", "Reverend Green", "Colonel Mustard", "Miss Scarlett", "Mrs Peacock", "Mrs White"];
 					mod.push(["Suspects", mod.Suspects]);
 					mod.Weapons = ["Rope", "Candlestick", "Dagger", "Spanner", "Lead Pipe", "Revolver"];
 					mod.push(["Weapons", mod.Weapons]);
 					mod.push(mod.Body);
-					mod.Rows.forEach(function(row) {
+					mod.Rows.forEach(function (row) {
 						mod.push(row);
 					});
 					mod.push(matches.input);
@@ -4030,7 +4032,7 @@ const parseData = [
 			},
 			{
 				regex: /Eliminating (.+) to re/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var mod = GetBomb().GetModuleID("murder");
 					var index = mod.Suspects.indexOf(matches[1]);
 					if (index > -1) {
@@ -4048,8 +4050,8 @@ const parseData = [
 		matches: [
 			{
 				regex: /Field:/,
-				handler: function(matches, module) {
-					module.push({ label: "Field:", obj: pre(readMultiple(3, function(str) { return str.replace('0', ' '); })) });
+				handler: function (matches, module) {
+					module.push({ label: "Field:", obj: pre(readMultiple(3, function (str) { return str.replace('0', ' '); })) });
 				}
 			},
 			{
@@ -4063,21 +4065,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /Begin detailed calculation report:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push(["Detailed Calculation Report", module.Report = []]);
 					return true;
 				}
 			},
 			{
 				regex: /End detailed calculation report\./,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.Report = undefined;
 					return true;
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					(module.Report || module).push(matches.input);
 				}
 			}
@@ -4089,7 +4091,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(Submitted (?:in)?correct answer:|Generated solution (?:is|was):)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: matches[1],
 						obj: pre(readMultiple(11))
@@ -4113,7 +4115,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Button colors are: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var colors = matches[1].split(', ');
 					if (colors.length === 10) {
 						var buttonToIndex = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
@@ -4153,10 +4155,10 @@ const parseData = [
 		matches: [
 			{
 				regex: /Hieroglyph +Position +Serial# +Ports +num/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						label: 'Egyptian Hieroglyphs:',
-						obj: pre([matches[0]].concat(readMultiple(6, function(str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+						obj: pre([matches[0]].concat(readMultiple(6, function (str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
 					});
 					return true;
 				}
@@ -4176,7 +4178,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Generating painting/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push(["Initial State", module.Cells = []],
 						["Determining color-blind set", module.Rule = [], true],
 						["Answer", module.Swaps = []],
@@ -4186,35 +4188,35 @@ const parseData = [
 			},
 			{
 				regex: /Cell #(\d) => (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Cells.push(`Cell ${matches[1]} is ${matches[2]}`);
 					return true;
 				}
 			},
 			{
 				regex: /Cell #\d must (swap|remain)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Swaps.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /rule \w/i,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Rule.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /paint(ing)? cell #\d with/i,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Input.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /Determining active color-blind set/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
@@ -4229,7 +4231,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Pegs:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var colors = {
 						R: '#E51537',
 						G: '#257A1C',
@@ -4256,14 +4258,14 @@ const parseData = [
 					for (var peg = 0; peg < 5; peg++) {
 						for (var side = 0; side < 5; side++) {
 							const fmt = str => str
-								.replace(/‹[01][io][xy]›/g, function(m) {
+								.replace(/‹[01][io][xy]›/g, function (m) {
 									var angle1 = (72 * (side + (+m[1])) - 126) / 180 * Math.PI;
 									var coord1 = (m[2] === 'i' ? .5 : 1) * (m[3] === 'x' ? Math.cos(angle1) : Math.sin(angle1));
 									var angle2 = (72 * peg - 90) / 180 * Math.PI;
 									var coord2 = 3 * (m[3] === 'x' ? Math.cos(angle2) : Math.sin(angle2));
 									return coord1 + coord2;
 								})
-								.replace(/‹f›/g, function() {
+								.replace(/‹f›/g, function () {
 									return colors[ascii[pegCoords[peg][1] + sideCoords[side][1]][pegCoords[peg][0] + sideCoords[side][0]]];
 								});
 							svg1 += fmt("<path d='M‹0ix› ‹0iy› ‹1ix› ‹1iy› ‹1ox› ‹1oy› ‹0ox› ‹0oy›z' fill='‹f›' stroke='none' />");
@@ -4282,14 +4284,14 @@ const parseData = [
 			},
 			{
 				regex: /^Sequence:.*/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.SequenceLine = matches.input;
 					return true;
 				}
 			},
 			{
 				regex: /^Look from ((?:top|bottom)-(?:left|right)|top). Correct solution: ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top), ((?:top|bottom)-(?:left|right)|top)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var indexes = {
 						'top': 0,
 						'top-right': 1,
@@ -4331,7 +4333,7 @@ const parseData = [
 			},
 			{
 				regex: /The correct rule is the following/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var input = [];
 					module.Input = input;
 					module.push(matches.input);
@@ -4346,7 +4348,7 @@ const parseData = [
 			},
 			{
 				regex: /Input .+ was received|The current valid sequence/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Input.push(matches.input);
 				}
 			}
@@ -4358,60 +4360,60 @@ const parseData = [
 		matches: [
 			{
 				regex: /In reading order the order is:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let color = readTaggedLine()
 						.replace(/White./g, "0")
 						.replace(/Red./g, "1")
-						.replace(/ /g, "" );
+						.replace(/ /g, "");
 					for (var i = 0; i < 23; i++) {
 						color += readTaggedLine()
-						.replace(/White./g, "0")
-						.replace(/Red./g, "1")
-						.replace(/ /g, "" );
+							.replace(/White./g, "0")
+							.replace(/Red./g, "1")
+							.replace(/ /g, "");
 					};
 					var table = $('<table>')
-					.css('background-color', '#48453e')
-					.css('font-size', '30px')
-					.css('color', 'white');
+						.css('background-color', '#48453e')
+						.css('font-size', '30px')
+						.css('color', 'white');
 
-						//1st row
-						var tr = $('<tr>').appendTo(table);
-						for (var c = 0; c < 4; c++) {
-							if (color[c] == "0") {
-								$('<td>')
+					//1st row
+					var tr = $('<tr>').appendTo(table);
+					for (var c = 0; c < 4; c++) {
+						if (color[c] == "0") {
+							$('<td>')
 								.css('background-color', '#ffffff')
 								.css('text-align', 'center')
 								.css('width', '30px')
 								.css('height', '30px')
 								.appendTo(tr);
-							}
-							else {	
-								$('<td>')
+						}
+						else {
+							$('<td>')
 								.css('background-color', '#ff0000')
 								.css('text-align', 'center')
 								.css('width', '30px')
 								.css('height', '30px')
 								.appendTo(tr);
-							}
 						}
+					}
 					for (var r = 0; r < 4; r++) {
 						var tr = $('<tr>').appendTo(table);
 						for (var c = 0; c < 5; c++) {
-							if (color[c + 4 + 5*r] == "0") {
+							if (color[c + 4 + 5 * r] == "0") {
 								$('<td>')
-								.css('background-color', '#ffffff')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr);
+									.css('background-color', '#ffffff')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
 							}
-							else {	
+							else {
 								$('<td>')
-								.css('background-color', '#ff0000')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr);
+									.css('background-color', '#ff0000')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
 							}
 						}
 					}
@@ -4427,7 +4429,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^: Beginning of Matrix/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const matrix = readMultiple(6).split("\n").map(line => line.replace(/^\[playFair #\d+\]: /, ""));
 					matrix.splice(5, 1);
 
@@ -4437,7 +4439,7 @@ const parseData = [
 			},
 			{
 				regex: /^:\s*(.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches[1]);
 					return true;
 				}
@@ -4451,13 +4453,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /Module solved/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
 			{
 				regex: /\[[A-Z]{3}[-+]\].*/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Conditions) {
 						module.Conditions = [];
 					}
@@ -4469,7 +4471,7 @@ const parseData = [
 			},
 			{
 				regex: /^[A-Z]+ (?:IN|OUT)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.Conditions) {
 						module.push([matches.input, module.Conditions]);
 					} else {
@@ -4482,7 +4484,7 @@ const parseData = [
 			},
 			{
 				regex: /:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Pipes = [];
 					module.Title = matches.input;
 
@@ -4491,7 +4493,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Pipes.push(matches.input.replace(/┼/g, " "));
 
 					if (module.Pipes.length == 6) {
@@ -4555,7 +4557,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Picked girl/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.stageNumber = 1;
 					module.correctSolves = 1;
 					module.push(["Stage 1", module.stage = []]);
@@ -4563,13 +4565,13 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.stage.push(matches.input);
 				}
 			},
 			{
 				regex: /(Correct|Wrong) Word!/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.correctSolves == 3) return;
 					if (matches[1] == "Correct") module.correctSolves++;
 
@@ -4585,7 +4587,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var span = $("<span>").text(matches.input);
 					span.html(span.html().replace(/([♥♦])/g, "<span style='color: red'>$1</span>"));
 					module.push({ label: "", obj: span });
@@ -4599,7 +4601,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Wire values:/i,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(2)) });
 					return true;
 				}
@@ -4632,7 +4634,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Position (\d+) numbers: (\d+)\. Position (\d+) colours: (.*)\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var colours = matches[4].split(', ');
 					if (matches[1] !== matches[3] || matches[2].length !== 5 || colours.length !== 5) {
 						console.error("Quintuples logfile has unexpected format.");
@@ -4642,26 +4644,26 @@ const parseData = [
 						module.Quintuples = { numbers: new Array(25), colours: new Array(25), op: new Array(25), rowInf: new Array(5), solution: new Array(5) };
 					var c = parseInt(matches[1]) - 1;
 					for (var r = 0; r < 5; r++) {
-						module.Quintuples.numbers[c + 5*r] = parseInt(matches[2].substr(r, 1));
-						if (module.Quintuples.numbers[c + 5*r] === 0)
-							module.Quintuples.numbers[c + 5*r] = 10;
-						module.Quintuples.colours[c + 5*r] = colours[r];
+						module.Quintuples.numbers[c + 5 * r] = parseInt(matches[2].substr(r, 1));
+						if (module.Quintuples.numbers[c + 5 * r] === 0)
+							module.Quintuples.numbers[c + 5 * r] = 10;
+						module.Quintuples.colours[c + 5 * r] = colours[r];
 					}
 					return true;
 				}
 			},
 			{
 				regex: /Iteration (\d+), position (\d+) \(\d+\) is affected\. (.*)\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var r = parseInt(matches[1]) - 1;
 					var c = parseInt(matches[2]) - 1;
-					module.Quintuples.op[c + 5*r] = matches[3].replace(/x/g, '×').replace('Half and round down', '/2');
+					module.Quintuples.op[c + 5 * r] = matches[3].replace(/x/g, '×').replace('Half and round down', '/2');
 					return true;
 				}
 			},
 			{
 				regex: /The sum of the modified (.*) iteration numbers \((\d+)\), modulo (\(.*\))(?:, modulo 10)?,? is (\d+)\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var r = "first,second,third,fourth".split(',').indexOf(matches[1]);
 					var inf = `(${matches[2]} % ${matches[3]}) % 10 =`;
 					module.Quintuples.rowInf[r] = inf;
@@ -4671,7 +4673,7 @@ const parseData = [
 			},
 			{
 				regex: /The tens column of the sum of the modified fifth iteration numbers \((\d+)\), (\+ \(.*\)), modulo 10 is (\d+)\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Quintuples.rowInf[4] = `${matches[1]} ${matches[2]} % 10 =`;
 					module.Quintuples.solution[4] = matches[3];
 					return true;
@@ -4679,33 +4681,33 @@ const parseData = [
 			},
 			{
 				regex: /The correct number to input is \d+\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var arr = [0, 1, 2, 3, 4];
 					var bgColours = {
-						'red':      '#f88',
-						'blue':     '#88f',
-						'orange':   '#f80',
-						'green':    '#8f8',
-						'pink':     '#fae'
+						'red': '#f88',
+						'blue': '#88f',
+						'orange': '#f80',
+						'green': '#8f8',
+						'pink': '#fae'
 					};
 					var txColours = {
-						'red':      '#a00',
-						'blue':     '#00a',
-						'orange':   '#f80',
-						'green':    '#0a0',
-						'pink':     '#f6d'
+						'red': '#a00',
+						'blue': '#00a',
+						'orange': '#f80',
+						'green': '#0a0',
+						'pink': '#f6d'
 					};
 					module.push({
 						label: 'Solution:',
 						obj: $(`<table style='border-collapse: collapse;'>${arr.map(r => `<tr>${arr.map(c => {
 							var tdStyle = '';
-							if (module.Quintuples.op[c + 5*r])
-								tdStyle = ` style='background:${bgColours[module.Quintuples.colours[c + 5*r]]}'`;
+							if (module.Quintuples.op[c + 5 * r])
+								tdStyle = ` style='background:${bgColours[module.Quintuples.colours[c + 5 * r]]}'`;
 							else
-								tdStyle = ` style='color:${txColours[module.Quintuples.colours[c + 5*r]]}'`;
+								tdStyle = ` style='color:${txColours[module.Quintuples.colours[c + 5 * r]]}'`;
 							return `<td class='n'${tdStyle}>
-								<div style='font-size: 15pt'>${module.Quintuples.numbers[c + 5*r]}${module.Quintuples.op[c + 5*r] || ''}</div>
-								<div style='font-size: 10pt'>${module.Quintuples.colours[c + 5*r]}</div>
+								<div style='font-size: 15pt'>${module.Quintuples.numbers[c + 5 * r]}${module.Quintuples.op[c + 5 * r] || ''}</div>
+								<div style='font-size: 10pt'>${module.Quintuples.colours[c + 5 * r]}</div>
 							</td>`;
 						}).join('')}<td>${module.Quintuples.rowInf[r]}</td><td>${module.Quintuples.solution[r]}</td></tr>`).join('')}</table>`)
 							.find('td').css({ border: '1px solid black', padding: '.3em .7em' }).end()
@@ -4726,7 +4728,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Successfully placed ([a-z0-9_]+) at ([A-Z][0-9])./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Successfully placed "))
 						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
@@ -4737,7 +4739,7 @@ const parseData = [
 			},
 			{
 				regex: /Strike! Tried to place ([a-z0-9_]+) at ([A-Z][0-9]), which violates placement rules./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Strike! Tried to place "))
 						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
@@ -4748,7 +4750,7 @@ const parseData = [
 			},
 			{
 				regex: /Available pieces for stage ([0-9]) are ([a-z0-9_]+) ([a-z0-9_]+) ([a-z0-9_]+) ([a-z0-9_]+) . ([a-z0-9_]+) is guaranteed valid for ([A-Z][0-9])./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Available pieces for stage " + matches[1] + " are "))
 						.append($("<img src='../HTML/img/Qwirkle/" + matches[2] + ".png' width='20' />"))
@@ -4764,15 +4766,15 @@ const parseData = [
 			},
 			{
 				regex: /Stage ([0-9]) board: ([a-z0-9_ ]+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var tiles = matches[2].split(" ");
 
 					const span = $('<span style="display: flex; flex-direction: column">')
 						.append($('<span>').text("Stage " + matches[1] + " board:"));
 
-					for(var i = 0; i < 7; i++) {
+					for (var i = 0; i < 7; i++) {
 						var row = $('<span style="height: 20px;">');
-						for(var j = 0; j < 7; j++) {
+						for (var j = 0; j < 7; j++) {
 							row.append($("<img src='../HTML/img/Qwirkle/" + tiles[i * 7 + j] + ".png' width='20' />"));
 						}
 						span.append(row);
@@ -4784,7 +4786,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add($('<li>').text(matches[0]));
 					return true;
 				}
@@ -4798,24 +4800,24 @@ const parseData = [
 		matches: [
 			{
 				regex: /^\((.+?)\) (.+)/,
-				handler: function(matches, module) {
-					if (module.length === 0 || module[module.length-1][0] !== matches[1]) {
+				handler: function (matches, module) {
+					if (module.length === 0 || module[module.length - 1][0] !== matches[1]) {
 						module.push([matches[1], [], false]);
 					}
-					module[module.length-1][1].push(matches[2]);
+					module[module.length - 1][1].push(matches[2]);
 					return true;
 				}
 			},
 			{
 				regex: /The above rule returned (.+), which wasn't unique. The closest unique arrow was (.+)./,
-				handler: function(matches, module) {
-					module[module.length-1][1].push("…but " + matches[1] + " was already pressed; the closest unpressed button is " + matches[2] + ".");
+				handler: function (matches, module) {
+					module[module.length - 1][1].push("…but " + matches[1] + " was already pressed; the closest unpressed button is " + matches[2] + ".");
 					return true;
 				}
 			},
 			{
 				regex: /^-+$/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
@@ -4831,14 +4833,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /Server message: ([0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}\/[A-Z]{6}\/[A-Z0-9]{8})/,
-				handler: function(matches, module) {
-					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q='+matches[1]+'">Open server\'s logfile</a>'))
+				handler: function (matches, module) {
+					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q=' + matches[1] + '">Open server\'s logfile</a>'))
 				}
 			},
 			{
 				regex: /Puzzle Code: ([A-Z]{6})/,
-				handler:function(matches,module) {
-					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q=*/*/*/'+matches[1]+'">Search for server logfile matching puzzle code</a>'))
+				handler: function (matches, module) {
+					module.groups.add($('<a target="_blank" href="https://remote-math.onpointcoding.net/logs/?q=*/*/*/' + matches[1] + '">Search for server logfile matching puzzle code</a>'))
 				}
 			},
 			{
@@ -4857,13 +4859,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /batteries/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Bomb Info: " + matches.input);
 				}
 			},
 			{
 				regex: /Already placed/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
@@ -4879,7 +4881,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /The left grid displays:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4891,7 +4893,7 @@ const parseData = [
 			},
 			{
 				regex: /The right grid displays:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4903,7 +4905,7 @@ const parseData = [
 			},
 			{
 				regex: /The center grid should display:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4915,7 +4917,7 @@ const parseData = [
 			},
 			{
 				regex: /The transformed left grid is:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4927,7 +4929,7 @@ const parseData = [
 			},
 			{
 				regex: /The transformed right grid is:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4939,7 +4941,7 @@ const parseData = [
 			},
 			{
 				regex: /The submitted grid was:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let lines = readTaggedLine();
 					for (let i = 0; i < 3; i++) {
 						lines += `\n${readTaggedLine()}`;
@@ -4961,22 +4963,22 @@ const parseData = [
 		matches: [
 			{
 				regex: /The grid:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					let line = readTaggedLine().replace(/WWWWWWWWWWWWWWWWW/g, "•——•——•——•——•——•——•——•——•");
 					let finalLine = " A  B  C  D  E  F  G  H      A  B  C  D  E  F  G  H      A  B  C  D  E  F  G  H \n" + line + "   " + line + "   " + line;
 					for (let i = 1; i < 9; i++) {
 						line = `${readTaggedLine()}`;
 						let line2 = `${readTaggedLine()}`;
-						let redMazevert = `${line.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g,"■").replace(/(G|B|C|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						let greenMazevert = `${line.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g,"■").replace(/(R|B|M|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						let blueMazevert =  `${line.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g,"|")}`;
-						let blueMazehoriz =  `${line2.replace(/(B|C|M|W)/g,"■").replace(/(R|G|Y|K)/g,"□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g,"•")}`;
-						finalLine += "\n" + redMazevert + " " + i + " "+ greenMazevert + " " + i + " " + blueMazevert+ "\n" + redMazehoriz + "   "  + greenMazehoriz + "   " + blueMazehoriz;
+						let redMazevert = `${line.replace(/(R|Y|M|W)/g, "■").replace(/(G|B|C|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let redMazehoriz = `${line2.replace(/(R|Y|M|W)/g, "■").replace(/(G|B|C|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						let greenMazevert = `${line.replace(/(G|Y|C|W)/g, "■").replace(/(R|B|M|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let greenMazehoriz = `${line2.replace(/(G|Y|C|W)/g, "■").replace(/(R|B|M|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						let blueMazevert = `${line.replace(/(B|C|M|W)/g, "■").replace(/(R|G|Y|K)/g, "□").replace(/■/, "|").replace(/□□/g, "   ").replace(/□■/g, "  |").replace(/■/g, "|")}`;
+						let blueMazehoriz = `${line2.replace(/(B|C|M|W)/g, "■").replace(/(R|G|Y|K)/g, "□").replace(/■/, "•").replace(/□■/g, "  •").replace(/■■/g, "——•").replace(/■/g, "•")}`;
+						finalLine += "\n" + redMazevert + " " + i + " " + greenMazevert + " " + i + " " + blueMazevert + "\n" + redMazehoriz + "   " + greenMazehoriz + "   " + blueMazehoriz;
 					}
 					finalLine += "\n           Red                        Green                        Blue";
-					module.push({ label: "The grid:", obj: pre(finalLine)});
+					module.push({ label: "The grid:", obj: pre(finalLine) });
 					return true;
 				}
 			},
@@ -4992,7 +4994,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches[0].replace(/,/g, " "));
 				}
 			}
@@ -5005,21 +5007,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /Moves to solve, move \d+:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input, readMultiple(4).replace(/^\[.*?\] - /mg, '').split('\n')]);
 					return true;
 				}
 			},
 			{
 				regex: /Actions performed (to solve|before bomb exploded|before reset):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push([matches.input.replace(/None\./, ''), module.RCActions = []]);
 					return true;
 				}
 			},
 			{
 				regex: /^- (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.RCActions.push(matches[1]);
 					return true;
 				}
@@ -5036,7 +5038,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Solution is:|Submitted the following:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					readLine();
 					var grid = readMultiple(4);
 					module.push({ label: matches.input, obj: pre(grid) });
@@ -5053,7 +5055,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Getting solution index for component (.+)Component\(Clone\)/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var line = readLine();
 					var allLines = line;
 
@@ -5083,7 +5085,7 @@ const parseData = [
 			},
 			{
 				regex: /Top precedence label is (.+) \(button index \d\)\. Button pushed was \d\. Result: (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Top precedence label is " + matches[1] + ". Result: " + matches[2]);
 				}
 			}
@@ -5101,7 +5103,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /offset|Answer|Input|solved/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input.replace(/,/g, ", "));
 				}
 			}
@@ -5114,7 +5116,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(DUOLINGO|GOOGLE MAPS|KINDLE|GOOGLE AUTHENTICATOR|PHOTOMATH|SPOTIFY|GOOGLE ARTS & CULTURE|DISCORD):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.Things)
 						module.Things = [];
 					module.Things.push([matches[1], []]);
@@ -5123,7 +5125,7 @@ const parseData = [
 			},
 			{
 				regex: /SETTINGS:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					for (let thing of module.Things)
 						module.push(thing);
 					module.push(["SETTINGS", readMultiple(3).split('\n').map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
@@ -5133,7 +5135,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (module.Things) {
 						module.Things[module.Things.length - 1][1].push(matches.input);
 					} else {
@@ -5150,7 +5152,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Stage \d of \d/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage = [matches.input, []];
 					module.push(module.Stage);
 					return true;
@@ -5158,7 +5160,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					(module.Stage ? module.Stage[1] : module).push(matches.input);
 				}
 			}
@@ -5170,7 +5172,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Module generated/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Flags", obj: pre(readMultiple(8)) });
 					return true;
 				}
@@ -5187,13 +5189,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Icon at \(module\) ([ABC][123]) is \(manual\) ([ABC][123]), (filled|wavy|empty), (\d) dots\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('SetInfo' in module)) {
 						module.SetInfo = {
 							Symbols: [null, null, null, null, null, null, null, null, null],
 							WavyId: Math.floor(Math.random() * 2147483647),
 							Node: { label: 'Module:', obj: null },
-							XY: function(str) { return { X: str.charCodeAt(0) - "A".charCodeAt(0), Y: str.charCodeAt(1) - "1".charCodeAt(0) }; }
+							XY: function (str) { return { X: str.charCodeAt(0) - "A".charCodeAt(0), Y: str.charCodeAt(1) - "1".charCodeAt(0) }; }
 						};
 						module.push(module.SetInfo.Node);
 					}
@@ -5242,7 +5244,7 @@ const parseData = [
 			},
 			{
 				regex: /^Solution: ([ABC][123]), ([ABC][123]), ([ABC][123])/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 
 					var framesSvg = '';
 					for (var i = 1; i <= 3; i++) {
@@ -5274,14 +5276,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /Color for the squares is: (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var color = matches[1]
-					.replace(/Green/g, "0")
-					.replace(/Blue/g, "1")
-					.replace(/Yellow/g, "2")
-					.replace(/Cyan/g, "3")
-					.replace(/Purple/g, "4")
-					.replace(/White/g, "5");
+						.replace(/Green/g, "0")
+						.replace(/Blue/g, "1")
+						.replace(/Yellow/g, "2")
+						.replace(/Cyan/g, "3")
+						.replace(/Purple/g, "4")
+						.replace(/White/g, "5");
 					var colors = [
 						'#00ff00', // Green
 						'#0000ff', // Blue
@@ -5292,12 +5294,12 @@ const parseData = [
 						'#48453e', // Grey
 					];
 					var directions = readTaggedLine().replace(/[0-9]/g, "").replace(/Arrow sequence is: /g, "00. ");
-						for (var i = 1; i < 10; i++) {
-							directions = directions.replace(/\(/, '\n0\#').replace(/\#/, i).replace(/\)/, ".");
-						};
-						for (var i = 10; i < 16; i++) {
-							directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
-						};
+					for (var i = 1; i < 10; i++) {
+						directions = directions.replace(/\(/, '\n0\#').replace(/\#/, i).replace(/\)/, ".");
+					};
+					for (var i = 10; i < 16; i++) {
+						directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
+					};
 					var unused1 = readTaggedLine();
 					var unused2 = readTaggedLine();
 
@@ -5308,12 +5310,12 @@ const parseData = [
 						ltablerow = readTaggedLine().replace(/ /g, "");
 						for (var c = 0; c < 3; c++) {
 							$('<td>')
-							.text(ltablerow[c])
-							.css('border', '1px solid black')
-							.css('text-align', 'center')
-							.css('width', '25px')
-							.css('height', '25px')
-							.appendTo(tr);
+								.text(ltablerow[c])
+								.css('border', '1px solid black')
+								.css('text-align', 'center')
+								.css('width', '25px')
+								.css('height', '25px')
+								.appendTo(tr);
 						}
 					}
 					var unused3 = readTaggedLine();
@@ -5323,10 +5325,10 @@ const parseData = [
 					unused6 = unused6.replace(/Counting lit squares/, "");
 
 					var table1 = $('<table>')
-					.css('background-color', '#48453e')
-					.css('font-size', '30px')
-					.css('color', 'white');
-					
+						.css('background-color', '#48453e')
+						.css('font-size', '30px')
+						.css('color', 'white');
+
 					var currentRow = readTaggedLine().replace(/Even solved modules final shape is:/, "").replace(/ /, "");
 					for (var r = 0; r < 8; r++) {
 						var tr = $('<tr>').appendTo(table1);
@@ -5334,48 +5336,48 @@ const parseData = [
 						for (var c = 0; c < 5; c++) {
 							if (currentRow[c] == "0") {
 								$('<td>')
-								.css('background-color', colors[color])
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr);
+									.css('background-color', colors[color])
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
 							}
-							else {	
+							else {
 								$('<td>')
-								.css('background-color', '#48453e')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr);
+									.css('background-color', '#48453e')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
 							}
 						}
 					}
 
 					var table2 = $('<table>')
-					.css('background-color', '#48453e')
-					.css('font-size', '30px')
-					.css('color', 'white');
-					
+						.css('background-color', '#48453e')
+						.css('font-size', '30px')
+						.css('color', 'white');
+
 					currentRow = readTaggedLine().replace(/Odd solved modules final shape is:/, "").replace(/ /, "");
 					for (var r = 0; r < 8; r++) {
-						var tr2= $('<tr>').appendTo(table2);
+						var tr2 = $('<tr>').appendTo(table2);
 						currentRow = readTaggedLine().replace(/ /g, "");
 						for (var c = 0; c < 5; c++) {
 							if (currentRow[c] == "0") {
 								$('<td>')
-								.css('background-color', colors[color])
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr2);
+									.css('background-color', colors[color])
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr2);
 							}
-							else {	
+							else {
 								$('<td>')
-								.css('background-color', '#48453e')
-								.css('text-align', 'center')
-								.css('width', '30px')
-								.css('height', '30px')
-								.appendTo(tr2);
+									.css('background-color', '#48453e')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr2);
 							}
 						}
 					}
@@ -5404,7 +5406,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Possible solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var grid = readMultiple(7).replace(/\[Shikaku #\d+\] /g, "");
 					var lines = grid.replace(/\r/g, '').split('\n');
 					var shapes = lines[6].replace('Shape data for Logfile Analyzer: ', '');
@@ -5442,7 +5444,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function() { }
+				handler: function () { }
 			}
 		]
 	},
@@ -5452,7 +5454,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Stage/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(2)) });
 					return true;
 				}
@@ -5473,21 +5475,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /Colors in|Small table/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /Stage (.) sequence/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1], []];
 					module.push(module.Stage);
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage[1].push(matches.input);
 				}
 			}
@@ -5505,14 +5507,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /There are no more|Inputs correct|Strike!/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
 				}
 			},
 			{
 				regex: /STAGE #(.+):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1], []];
 					module.push(module.Stage);
 
@@ -5521,7 +5523,7 @@ const parseData = [
 			},
 			{
 				regex: /STAGE (.+) RESPONSE/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1] + " Response", []];
 					module.push(module.Stage);
 
@@ -5530,7 +5532,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if ('Stage' in module)
 						module.Stage[1].push(matches.input);
 					else
@@ -5551,7 +5553,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Rule Log/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push(readLine()); // Initial
 
 					for (var i = 0; i < 3; i++) {
@@ -5584,7 +5586,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^The chosen shouts are (.*?)( \(.*\)), (.*?)( \(.*\)), (.*?)( \(.*\))\.$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var div = $('<div>');
 					div.append($('<span>').text('The chosen shouts are:'));
 					div.append($('<ul>')
@@ -5604,7 +5606,7 @@ const parseData = [
 			},
 			{
 				regex: /^(The correct shout is |Strike! You selected .*? & )(.*?)( \(.*?\)\.|\.)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var span = $('<span>');
 					span.text(matches[1]);
 					span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
@@ -5622,37 +5624,37 @@ const parseData = [
 		displayName: "Snakes and Ladders",
 		moduleID: "snakesAndLadders",
 		loggingTag: "Snakes and Ladders",
-		matches:[
+		matches: [
 			{
 				regex: /^board: ([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/([0-9]{10})\/$/,
-				handler: function(matches, module) {
-					var span=$('<span>');
-					var svg=$('<svg viewBox="-4 -4 54 54" width="270" height="270"></svg>').appendTo(span);
-					var rows=matches.slice(1,11).reverse();
-					for(var i=0;i<rows.length;i++) {
-						if(i%2==0)rows[i]=rows[i].split("").reverse().join("");
+				handler: function (matches, module) {
+					var span = $('<span>');
+					var svg = $('<svg viewBox="-4 -4 54 54" width="270" height="270"></svg>').appendTo(span);
+					var rows = matches.slice(1, 11).reverse();
+					for (var i = 0; i < rows.length; i++) {
+						if (i % 2 == 0) rows[i] = rows[i].split("").reverse().join("");
 					}
-					var numOrder=[
-						100,99,98,97,96,95,94,93,92,91,
-						81,82,83,84,85,86,87,88,89,90,
-						80,79,78,77,76,75,74,73,72,71,
-						61,62,63,64,65,66,67,68,69,70,
-						60,59,58,57,56,55,54,53,52,51,
-						41,42,43,44,45,46,47,48,49,50,
-						40,39,38,37,36,35,34,33,32,31,
-						21,22,23,24,25,26,27,28,29,30,
-						20,19,18,17,16,15,14,13,12,11,
-						1,2,3,4,5,6,7,8,9,10
+					var numOrder = [
+						100, 99, 98, 97, 96, 95, 94, 93, 92, 91,
+						81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+						80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
+						61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
+						60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
+						41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+						40, 39, 38, 37, 36, 35, 34, 33, 32, 31,
+						21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+						20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
+						1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 					];
-					for(var r=0;r<10;r++) {
-						for(var c=0;c<10;c++) {
-							var col=rows[r][c]==0?"red":rows[r][c]==1?"blue":rows[r][c]==2?"green":"yellow";
-							if(c==0&&r==0) {
+					for (var r = 0; r < 10; r++) {
+						for (var c = 0; c < 10; c++) {
+							var col = rows[r][c] == 0 ? "red" : rows[r][c] == 1 ? "blue" : rows[r][c] == 2 ? "green" : "yellow";
+							if (c == 0 && r == 0) {
 								$SVG(`<circle cx='0' cy='0' r='4' fill='#222'>`).appendTo(svg);
 								continue;
 							}
-							$SVG(`<rect x='${c*5}' y='${r*5}' width='5' height='5' fill='${col}' />`).appendTo(svg);
-							$SVG(`<text x="${c*5+2.5}" y="${r*5+3}" fill="${col=="yellow"?"black":"white"}" font-size="3px" dominant-baseline="middle" text-anchor="middle">${numOrder[r*10+c]}</text>`).appendTo(svg);
+							$SVG(`<rect x='${c * 5}' y='${r * 5}' width='5' height='5' fill='${col}' />`).appendTo(svg);
+							$SVG(`<text x="${c * 5 + 2.5}" y="${r * 5 + 3}" fill="${col == "yellow" ? "black" : "white"}" font-size="3px" dominant-baseline="middle" text-anchor="middle">${numOrder[r * 10 + c]}</text>`).appendTo(svg);
 						}
 					}
 					module.push(span);
@@ -5671,13 +5673,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /The boots monitor plays:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.groups.addGroup(true);
 				}
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			}
@@ -5689,9 +5691,9 @@ const parseData = [
 		matches: [
 			{
 				regex: /Asking question: (.+) — (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var answers = $("<div>").css({ margin: '.5em 0' });
-					matches[2].split(" | ").forEach(function(answer) {
+					matches[2].split(" | ").forEach(function (answer) {
 						var answerSpan = $("<span>");
 						if (answer.substr(0, 2) == "[_") {
 							answer = answer.substr(2, answer.length - 4);
@@ -5715,7 +5717,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /((?:Button #\d is \w+ and|(?:Strike! )?You pressed the \w+ button that) says )(\w)(\. (?:Its value is \d+\.|That is (?:in)?correct\.))/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const span = $("<span>").append(
 						document.createTextNode(matches[1]),
 						$(`<span style="font-family: 'cyrillic'">`).text(matches[2]),
@@ -5726,7 +5728,7 @@ const parseData = [
 			},
 			{
 				regex: /Strike!/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					module.push({ linebreak: true });
 				}
 			},
@@ -5741,7 +5743,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^\t{2}\w{2}\(\d{1,2}\)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					const bagData = [];
 					linen--;
 					for (let i = 0; i < 3; i++) {
@@ -5782,13 +5784,13 @@ const parseData = [
 			},
 			{
 				regex: /^Solutions:$/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
 			{
 				regex: /^(Found solutions to:|Submitted:)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.LastLabel = matches[1];
 					return true;
 				}
@@ -5809,7 +5811,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^((Left|Right) cycle|Solution:|Wrong solution entered:.*,|Displayed symbols:).*/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var span = $('<span>');
 					var txt = matches[0];
 					var data;
@@ -5827,7 +5829,7 @@ const parseData = [
 			},
 			{
 				regex: /Wrong solution entered:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!matches.input.includes(",")) {
 						module.groups.add(matches.input);
 					}
@@ -5839,7 +5841,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			}
@@ -5851,7 +5853,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /(The .+ display is) ([PLACE ]+)\. The LEDs are (.+), (.+) & (.+)\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var conversion = {
 						P: 'Stain',
 						L: 'Vortex',
@@ -5877,7 +5879,7 @@ const parseData = [
 			},
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.groups.add(matches.input);
 				}
 			}
@@ -5894,7 +5896,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Light speeds:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Light speeds", obj: pre(readMultiple(3)) });
 					return true;
 				}
@@ -5911,14 +5913,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /Intended solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Solution:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
 					return true;
 				}
 			},
 			{
 				regex: /Submitted solution:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: "Submitted:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
 					return true;
 				}
@@ -5935,7 +5937,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Keypad is now/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var step = [];
 					module.Step = step;
 
@@ -5949,7 +5951,7 @@ const parseData = [
 			},
 			{
 				regex: /Next expectation is|Clicked/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.Step.push(matches.input);
 				}
 			},
@@ -5975,21 +5977,21 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Initial score: (.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: 'Initial score:', obj: $('<pre>').text(`        ${matches[1]}`) });
 					return true;
 				}
 			},
 			{
 				regex: /^. = [01]{5}$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.TennisLastHeading = matches.input;
 					return true;
 				}
 			},
 			{
 				regex: /→/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!('TennisLines' in module))
 						module.TennisLines = [];
 					module.TennisLines.push(matches.input);
@@ -6012,10 +6014,10 @@ const parseData = [
 		matches: [
 			{
 				regex: /(The final sequence is (?:now )?)(\d+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var div = $('<div>');
-					div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll "});
-					module.push ({ label: matches[1], obj: div });
+					div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
+					module.push({ label: matches[1], obj: div });
 					return true;
 				}
 			},
@@ -6031,7 +6033,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^(.*)([01]{3})(.*)$/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push(matches[1] + matches[2].replace(/0/g, '○').replace(/1/g, '●') + matches[3]);
 					return true;
 				}
@@ -6052,7 +6054,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /For reference purpose/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var lines = "";
 					var line = readLine();
 					while (!line.match("}") && line) {
@@ -6078,7 +6080,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({
 						obj: $(`<table>
 							<tr><th>Original</th><th>On the module</th></tr>
@@ -6100,10 +6102,10 @@ const parseData = [
 		matches: [
 			{
 				regex: /:?Stage colors are: (\w+), (\w+), (\w+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var stageColorIndex = [];
 					for (var i = 0; i < 3; i++) {
-						stageColorIndex[i] = matches[i+1]
+						stageColorIndex[i] = matches[i + 1]
 							.replace(/Red/g, "0")
 							.replace(/Orange-Yellow/g, "2")
 							.replace(/Orange/g, "1")
@@ -6138,7 +6140,7 @@ const parseData = [
 						'#fc54e1', //'Magenta': 
 						'#fd5287', //'Pink': 
 						'#a9a9a9'  //'Grey': 
-					]; 
+					];
 					var unlitColors = [
 						'#6c190e', //'Red': 
 						'#6c3610', //'Orange': 
@@ -6157,7 +6159,7 @@ const parseData = [
 						'#6c1b33', //'Pink': 
 						'#424242'  //'Grey': 
 					];
-					module.push({ label: "Stage colors are: "+ matches[1] + ", " + matches[2] + ", " + matches[3] });
+					module.push({ label: "Stage colors are: " + matches[1] + ", " + matches[2] + ", " + matches[3] });
 					for (var st = 1; st < 4; st++) {
 						var table = $('<table>')
 							.css('background-color', 'black')
@@ -6169,21 +6171,21 @@ const parseData = [
 							var curLine = readTaggedLine();
 							for (var c = 0; c < 12; c++) {
 								if (curLine[c] == "0") $('<td>')
-								.text(" ")
-								.css('background-color', litColors[stageColorIndex[st-1]])
-								.css('text-align', 'center')
-								.css('width', '20px')
-								.css('height', '20px')
-								.appendTo(tr);
+									.text(" ")
+									.css('background-color', litColors[stageColorIndex[st - 1]])
+									.css('text-align', 'center')
+									.css('width', '20px')
+									.css('height', '20px')
+									.appendTo(tr);
 								else if (curLine[c] == "X") $('<td>')
-								.text(" ")
-								.css('background-color', unlitColors[stageColorIndex[st-1]])
-								.css('text-align', 'center')
-								.css('width', '20px')
-								.css('height', '20px').appendTo(tr);
+									.text(" ")
+									.css('background-color', unlitColors[stageColorIndex[st - 1]])
+									.css('text-align', 'center')
+									.css('width', '20px')
+									.css('height', '20px').appendTo(tr);
 							}
 						}
-						module.push({ label: "Solution for Stage "+ st + " ("+ matches[st] + ") is: " + correctPat, obj: table });
+						module.push({ label: "Solution for Stage " + st + " (" + matches[st] + ") is: " + correctPat, obj: table });
 					}
 					return true;
 				}
@@ -6200,13 +6202,13 @@ const parseData = [
 		matches: [
 			{
 				regex: /State randomized: Phase: (\d), Keypads: (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Current state: Phase: " + (parseInt(matches[1]) + 1) + " Keypads: " + matches[2].split(",").splice(0, 6).toString().replace(/,/g, ", "));
 				}
 			},
 			{
 				regex: /State randomized: Display word: (.+), DisplayWordIndex: \d+, Phase: \d/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Displayed word: " + matches[1]);
 				}
 			}
@@ -6218,7 +6220,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Snipped wire of color (\w+) of number (\d+) to index (\d+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Snipped " + matches[1] + " wire #" + (parseInt(matches[2]) + 1) + " connected to " + "ABC"[parseInt(matches[3])]);
 				}
 			}
@@ -6230,7 +6232,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Wires.Count is now (\d)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("There are " + matches[1] + " wires");
 				}
 			}
@@ -6253,19 +6255,19 @@ const parseData = [
 		matches: [
 			{
 				regex: /Correct word is (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Solution: " + matches[1]);
 				}
 			},
 			{
 				regex: /Wrong words are (.+)/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push("Wrong Words: " + matches[1]);
 				}
 			},
 			{
 				regex: /Field:/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ label: 'Field:', obj: pre(readMultiple(6)) });
 				}
 			},
@@ -6293,14 +6295,14 @@ const parseData = [
 		matches: [
 			{
 				regex: /.+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					var m, span = null, txt = matches[0];
 					while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt)) {
 						if (span === null)
 							span = $('<span>');
 						span
 							.append($('<span>').text(m[1]))
-							.append($(`<div style='display: inline-block; width: 20px; height: 20px; background-image: url(img/X-Ray/Icons.svg); background-size: 220px 200px; background-repeat: no-repeat; background-position: ${-20*(m[2] % 11)}px ${-20*Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
+							.append($(`<div style='display: inline-block; width: 20px; height: 20px; background-image: url(img/X-Ray/Icons.svg); background-size: 220px 200px; background-repeat: no-repeat; background-position: ${-20 * (m[2] % 11)}px ${-20 * Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
 						txt = txt.substr(m[0].length);
 					}
 					module.groups.add(span === null ? matches.input : span.append($('<span>').text(txt)));
@@ -6316,7 +6318,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /rerolling \d./,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					module.push({ linebreak: true });
 				}
 			},
@@ -6329,7 +6331,7 @@ const parseData = [
 		matches: [
 			{
 				regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var id = GetBomb().GetMod("TwoBits").IDs.length;
 					if (matches[1] == "Lookups") {
 						id = GetBomb().GetMod("TwoBits").IDs.length + 1;
@@ -6344,7 +6346,7 @@ const parseData = [
 			},
 			{
 				regex: /^rule([1-6])$/,
-				handler: function(matches) {
+				handler: function (matches) {
 					const orientationCubeRules = [
 						"If the serial number on the bomb contains the letter R",
 						"Otherwise, if the bomb has a lit indicator with the label TRN OR it has a lit/unlit indicator with the label CAR",
@@ -6359,7 +6361,7 @@ const parseData = [
 			},
 			{
 				regex: /^[689HINOSXZ]{4}$/,
-				handler: function(matches) {
+				handler: function (matches) {
 					var mod = GetBomb().GetModule("ThirdBase");
 					mod.groups.addGroup(true);
 					mod.groups.add("Display: " + matches[0]);
