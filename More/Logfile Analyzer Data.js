@@ -5542,6 +5542,57 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "simonStores",
+		loggingTag: "Simon Stores",
+		matches: [
+			{
+				regex: /^(D)(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: matches[1] + matches[2] });
+					return true;
+				}
+			},
+			{
+				regex: /^(R|G|B|C|M|Y)\((.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: pre( " " + matches[1] + "(" + matches[2]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /a0(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: "Stage 1:"});
+					module.push({ obj: "a0" + matches[1], nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /b0(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: "Stage 2:"});
+					module.push({ obj: "b0" + matches[1], nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /c0(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: "Stage 3:"});
+					module.push({ obj: "c0" + matches[1], nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: matches[1], nobullet: true });
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "Simon Squawks",
 		moduleID: "simonSquawks",
 		loggingTag: "Simons Squawks"
@@ -6069,6 +6120,51 @@ const parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "UltraStores",
+		loggingTag: "UltraStores",
+		displayName: "UltraStores",
+		matches: [
+			{
+				regex: /^(D)(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: matches[1] + matches[2] });
+					return true;
+				}
+			},
+			{
+				regex: /^(X|Y|Z|W|V|U)(X|Y|Z|W|V|U)\((.+)/, 
+				handler: function (matches, module) {
+					module.push({ obj: pre( " " + matches[1] + matches[2] + "(" + matches[3]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /The rotations for stage (\d) are:(.+)/,
+				handler: function (matches, module) {
+					if (matches[1] == 0) {
+						module.push({ obj: "Stage 1:" + matches[2] });
+						return true;
+					}
+					else if (matches[1] == 1) {
+						module.push({ obj: "Stage 2:" + matches[2] });
+						return true;
+					}
+					else {
+						module.push({ obj: "Stage 3:" + matches[2] });
+						return true;
+					}
+				}
+			},
+			{
+				regex: /(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: matches[1], nobullet: true });
+					return true;
+				}
 			}
 		]
 	},
