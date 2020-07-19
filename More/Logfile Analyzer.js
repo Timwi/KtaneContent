@@ -1163,7 +1163,7 @@ function parseLog(opt) {
 
 					const parsed = bombgroup.Bombs.some(function(bomb) {
 						for (var modID in bomb.Modules) {
-							if (getModuleName(modID) == modName) {
+							if (getModuleName(modID) == modName || bomb.Modules[modID].moduleData.displayName == modName) {
 								readDirectly(match[2], modID, id);
 								return true;
 							}
