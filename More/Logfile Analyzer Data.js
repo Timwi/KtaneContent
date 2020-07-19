@@ -4353,6 +4353,74 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: ["PixelArt"],
+		loggingTag: ["Pixel Art"],
+		matches: [
+			{
+				regex: /In reading order the order is:/,
+				handler: function(matches, module) {
+					let color = readTaggedLine()
+						.replace(/White./g, "0")
+						.replace(/Red./g, "1")
+						.replace(/ /g, "" );
+					for (var i = 0; i < 23; i++) {
+						color += readTaggedLine()
+						.replace(/White./g, "0")
+						.replace(/Red./g, "1")
+						.replace(/ /g, "" );
+					};
+					var table = $('<table>')
+					.css('background-color', '#48453e')
+					.css('font-size', '30px')
+					.css('color', 'white');
+
+						//1st row
+						var tr = $('<tr>').appendTo(table);
+						for (var c = 0; c < 4; c++) {
+							if (color[c] == "0") {
+								$('<td>')
+								.css('background-color', '#ffffff')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+							else {	
+								$('<td>')
+								.css('background-color', '#ff0000')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+						}
+					for (var r = 0; r < 4; r++) {
+						var tr = $('<tr>').appendTo(table);
+						for (var c = 0; c < 5; c++) {
+							if (color[c + 4 + 5*r] == "0") {
+								$('<td>')
+								.css('background-color', '#ffffff')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+							else {	
+								$('<td>')
+								.css('background-color', '#ff0000')
+								.css('text-align', 'center')
+								.css('width', '30px')
+								.css('height', '30px')
+								.appendTo(tr);
+							}
+						}
+					}
+					module.push({ label: "Solution: ", obj: table });
+				}
+			}
+		]
+	},
+	{
 		displayName: "Playfair Cipher",
 		moduleID: "Playfair",
 		loggingTag: "playFair",
