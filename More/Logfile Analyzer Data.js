@@ -2692,7 +2692,7 @@ const parseData = [
 						pos: [parseInt(matches[1]), parseInt(matches[2])],
 						type: matches[3]
 					});
-					module.Link.label = "<a href='../HTML/Hexamaze interactive (samfun123).html#" + JSON.stringify(module.JSON) + "'>View the solution interactively</a>";
+					module.Link.label = "<a href='../HTML/Hexamaze interactive (samfundev).html#" + JSON.stringify(module.JSON) + "'>View the solution interactively</a>";
 				}
 			},
 			{
