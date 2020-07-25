@@ -1633,6 +1633,195 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "ConnectedMonitorsModule",
+		loggingTag: "Connected Monitors",
+		matches: [
+			{
+				regex: /(?:Monitor: (\d+) \| Number: (\d+) \| Color: (\w+) \| Indicators: (.+) \| Display color: (\w+))/,
+				handler: function (matches, module) {
+					var tableHead = $('<table>')
+						.css('font-size', '12px')
+						.css('border-collapse', 'collapse')
+						.css('border-style', 'solid')
+						.css('border-width', '1px');
+					var table = $('<table>')
+						.css('font-size', '12px')
+						.css('border-collapse', 'collapse')
+						.css('border-style', 'solid')
+						.css('border-width', '1px');
+					var moniPos = matches[1];
+					var moniNum = matches[2];
+					var moniCol = matches[3];
+					var moniInd = matches[4].replace(/Index: (\d): Color: /g, "").replace(/, It is /g, " ").replace(/;/g, ", ");
+					var moniDispCol = matches[5];
+					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
+					var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(tableHead);
+					$('<th>')
+						.text("Monitor")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("Number")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("Color")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("Indicator Color(s)")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '300px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("Display Color")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(trHead);
+
+					$('<td>')
+						.text(moniPos)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(tr);
+					$('<td>')
+						.text(moniNum)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(tr);
+					$('<td>')
+						.text(moniCol)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(tr);
+					$('<td>')
+						.text(moniInd)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '300px')
+						.appendTo(tr);
+					$('<td>')
+						.text(moniDispCol)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(tr);
+					if (matches[1] == 1) {
+						module.push({ label: "Monitors Information:", obj: tableHead });
+						module.push({ obj: table, nobullet: true });
+					}
+					else module.push({ obj: table, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /Monitor: (\d+):/,
+				handler: function (matches, module) {
+					var tableHead = $('<table>')
+						.css('font-size', '12px')
+						.css('border-collapse', 'collapse')
+						.css('border-style', 'solid')
+						.css('border-width', '1px');
+					var table = $('<table>')
+						.css('font-size', '12px')
+						.css('border-collapse', 'collapse')
+						.css('border-style', 'solid')
+						.css('border-width', '1px');
+					var Monitor = matches[1];
+					var Sec1 = readTaggedLine().replace(/Monitor: (\d+), Section: 1, Score: /, "");
+					var Sec2 = readTaggedLine().replace(/Monitor: (\d+), Section: 2, Score: /, "");
+					var Sec3 = readTaggedLine().replace(/Monitor: (\d+), Section: 3, Score: /, "");
+					var Sec4 = readTaggedLine().replace(/Monitor: (\d+), Section: 4, Score: /, "");
+					var Sec5 = readTaggedLine().replace(/Monitor: (\d+), Section: 5, Score: /, "");
+					var TScr = readTaggedLine().replace(/Monitor: (\d+), Total score: /, "");
+					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
+					var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(tableHead);
+					$('<th>')
+						.text("Monitor")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("S1")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("S2")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("S3")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("S4")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("S5")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(trHead);
+					$('<th>')
+						.text("Final")
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '80px')
+						.appendTo(trHead);
+
+					$('<td>')
+						.text(Monitor)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '60px')
+						.appendTo(tr);
+					$('<td>')
+						.text(Sec1)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(tr);
+					$('<td>')
+						.text(Sec2)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(tr);
+					$('<td>')
+						.text(Sec3)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(tr);
+					$('<td>')
+						.text(Sec4)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(tr);
+					$('<td>')
+						.text(Sec5)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '40px')
+						.appendTo(tr);
+					$('<th>')
+						.text(TScr)
+						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+						.css('width', '80px')
+						.appendTo(tr);
+					if (matches[1] == 1) {
+						module.push({ label: "Calculation:", obj: tableHead });
+						module.push({ obj: table, nobullet: true });
+					}
+					else module.push({ obj: table, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "cooking",
 		loggingTag: "Cooking",
 		matches: [
@@ -4502,7 +4691,7 @@ const parseData = [
 					for (var i = 0; i < 4; i++) {
 						table += "\n" + readTaggedLine().replace(/ /, "");
 					}
-					module.push({label: "The Keysquare was:", obj: pre(table).css('display', 'table')});
+					module.push({ label: "The Keysquare was:", obj: pre(table).css('display', 'table') });
 					return true;
 				}
 			},
@@ -5574,14 +5763,14 @@ const parseData = [
 			{
 				regex: /^(R|G|B|C|M|Y)\((.+)/,
 				handler: function (matches, module) {
-					module.push({ obj: pre( " " + matches[1] + "(" + matches[2]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
+					module.push({ obj: pre(" " + matches[1] + "(" + matches[2]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
 					return true;
 				}
 			},
 			{
 				regex: /a0(.+)/,
 				handler: function (matches, module) {
-					module.push({ obj: "Stage 1:"});
+					module.push({ obj: "Stage 1:" });
 					module.push({ obj: "a0" + matches[1], nobullet: true });
 					return true;
 				}
@@ -5589,7 +5778,7 @@ const parseData = [
 			{
 				regex: /b0(.+)/,
 				handler: function (matches, module) {
-					module.push({ obj: "Stage 2:"});
+					module.push({ obj: "Stage 2:" });
 					module.push({ obj: "b0" + matches[1], nobullet: true });
 					return true;
 				}
@@ -5597,7 +5786,7 @@ const parseData = [
 			{
 				regex: /c0(.+)/,
 				handler: function (matches, module) {
-					module.push({ obj: "Stage 3:"});
+					module.push({ obj: "Stage 3:" });
 					module.push({ obj: "c0" + matches[1], nobullet: true });
 					return true;
 				}
@@ -6155,9 +6344,9 @@ const parseData = [
 				}
 			},
 			{
-				regex: /^(X|Y|Z|W|V|U)(X|Y|Z|W|V|U)\((.+)/, 
+				regex: /^(X|Y|Z|W|V|U)(X|Y|Z|W|V|U)\((.+)/,
 				handler: function (matches, module) {
-					module.push({ obj: pre( " " + matches[1] + matches[2] + "(" + matches[3]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
+					module.push({ obj: pre(" " + matches[1] + matches[2] + "(" + matches[3]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
 					return true;
 				}
 			},
