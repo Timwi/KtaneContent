@@ -2508,7 +2508,7 @@ const parseData = [
 						.replace(/The faces for Stage (\d+) are:(.+)/, "$2")
 						.replace(/,/g, "") //faces
 						.replace(/ /g, "") //faces
-						.replace(/\./g, "") //faces	
+						.replace(/\./g, "") //faces
 						.replace(/[a-z]/g, "") //faces
 					var line2 = readTaggedLine().replace(/Time you got the stage on: /, ""); //time
 					if (line2 < 10) line2 = "00" + line2;
@@ -6245,19 +6245,22 @@ const parseData = [
 				handler: function (matches, module) {
 					var step = [];
 					module.Step = step;
+                    module.StepCount = (module.StepCount || 0) + 1;
 
-					module.push(["Step " + module.length + ":", step]);
+					module.push(["Step " + module.StepCount + ":", step]);
 
 					step.push({ label: matches.input, obj: pre(readMultiple(3)) });
 
 					step.push(readLine()); // up next
 					step.push(readLine()); // current row
+                    return true;
 				}
 			},
 			{
 				regex: /Next expectation is|Clicked/,
 				handler: function (matches, module) {
 					module.Step.push(matches.input);
+                    return true;
 				}
 			},
 			{
@@ -6474,40 +6477,40 @@ const parseData = [
 							.replace(/Grey/g, "15")
 					};
 					var litColors = [
-						'#fc4d40', //'Red': 
-						'#ff9533', //'Orange': 
-						'#ffd131', //'Orange-Yellow': 
-						'#d8ec2f', //'Chartreuse': 
-						'#85e836', //'Lime': 
-						'#2ddf34', //'Green': 
-						'#2ee38e', //'Seafoam Green': 
-						'#29e9ce', //'Cyan-Green': 
-						'#3888ff', //'Dark Blue': 
+						'#fc4d40', //'Red':
+						'#ff9533', //'Orange':
+						'#ffd131', //'Orange-Yellow':
+						'#d8ec2f', //'Chartreuse':
+						'#85e836', //'Lime':
+						'#2ddf34', //'Green':
+						'#2ee38e', //'Seafoam Green':
+						'#29e9ce', //'Cyan-Green':
+						'#3888ff', //'Dark Blue':
 						'#d852f1', //'Purple-Magenta':
-						'#2dcdfe', //'Turquoise': 
-						'#3848ff', //'Indigo': 
-						'#8e4fff', //'Purple': 
-						'#fc54e1', //'Magenta': 
-						'#fd5287', //'Pink': 
-						'#a9a9a9'  //'Grey': 
+						'#2dcdfe', //'Turquoise':
+						'#3848ff', //'Indigo':
+						'#8e4fff', //'Purple':
+						'#fc54e1', //'Magenta':
+						'#fd5287', //'Pink':
+						'#a9a9a9'  //'Grey':
 					];
 					var unlitColors = [
-						'#6c190e', //'Red': 
-						'#6c3610', //'Orange': 
-						'#68530f', //'Orange-Yellow': 
-						'#91a01c', //'Chartreuse': 
-						'#335c0e', //'Lime': 
-						'#0c5a0d', //'Green': 
-						'#0a5c30', //'Seafoam Green': 
-						'#0a5d55', //'Cyan-Green': 
-						'#0c3368', //'Dark Blue': 
-						'#591c67', //'Purple-Magenta': 
+						'#6c190e', //'Red':
+						'#6c3610', //'Orange':
+						'#68530f', //'Orange-Yellow':
+						'#91a01c', //'Chartreuse':
+						'#335c0e', //'Lime':
+						'#0c5a0d', //'Green':
+						'#0a5c30', //'Seafoam Green':
+						'#0a5d55', //'Cyan-Green':
+						'#0c3368', //'Dark Blue':
+						'#591c67', //'Purple-Magenta':
 						'#0a5169', //'Turquoise':
-						'#a0a669', //'Indigo': 
-						'#351a69', //'Purple': 
-						'#6d1d56', //'Magenta': 
-						'#6c1b33', //'Pink': 
-						'#424242'  //'Grey': 
+						'#a0a669', //'Indigo':
+						'#351a69', //'Purple':
+						'#6d1d56', //'Magenta':
+						'#6c1b33', //'Pink':
+						'#424242'  //'Grey':
 					];
 					module.push({ label: "Stage colors are: " + matches[1] + ", " + matches[2] + ", " + matches[3] });
 					for (var st = 1; st < 4; st++) {
