@@ -4279,6 +4279,45 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Mystic Maze",
+		moduleID: "mysticmaze",
+		loggingTag: "Mystic Maze",
+		matches: [
+			{
+				regex: /Generated Maze is/,
+				handler: function (matches, module) {
+					var table = $('<table>').css({'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto"});
+					var maze = readMultiple(17).split('\n');
+					for (var i = 0; i < 8; i++)
+					{
+						var row = $('<tr>').appendTo(table);
+						for (var j = 0; j < 8; j++)
+						{
+							var width = "";
+							width += maze[2*i][2*j + 1] !== "■" ? "0px" : "5px";
+							width += maze[2*i + 1][2*j + 2] !== "■" ? " 0px" : " 5px";
+							width += maze[2*i + 2][2*j + 1] !== "■" ? " 0px" : " 5px";
+							width += maze[2*i + 1][2*j] !== "■" ? " 0px" : " 5px";
+							var cell = $('<td>').css({"border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%"}).appendTo(row);
+							var cellValue = /[IKYE]/.exec(maze[2*i + 1][2*j + 1]);
+							if (cellValue !== null)
+							{
+								cell.css("padding-bottom", "0%");
+								$('<div>').text(cellValue.input).css({"margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%"}).appendTo(cell);
+							}
+						}
+					}
+					module.push({ label: matches.input, obj: table });
+					module.push(readLine());
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "MysticSquareModule",
 		loggingTag: "Mystic Square",
 		matches: [
