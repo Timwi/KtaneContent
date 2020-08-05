@@ -6493,11 +6493,6 @@ const parseData = [
 		]
 	},
 	{
-		displayName: "Wack Game of Life"
-		moduleID: "wackGameOfLife",
-		loggingTag: "Wack Game of Life"
-	},
-	{
 		displayName: "Wavetapping",
 		moduleID: "Wavetapping",
 		loggingTag: "Wavetapping",
