@@ -2392,6 +2392,26 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Forget Enigma",
+		moduleID: "forgetEnigma",
+		loggingTag: "Forget Enigma",
+		matches: [
+			{
+				regex: /Generated Answer: (.+)/,
+				handler: function (matches, module) {
+					module.push({
+						label: "Generated Answer: ",
+						obj: pre(matches[1])
+					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Forget Everything",
 		moduleID: "HexiEvilFMN",
 		loggingTag: "Forget Everything",
@@ -2535,6 +2555,26 @@ const parseData = [
 					module.push({
 						label: matches.input,
 						obj: pre(readMultiple(2, str => str.replace(/^[ \t]*\[.+?\] /, '')))
+					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		displayName: "Forget Us Not",
+		moduleID: "forgetUsNot",
+		loggingTag: "Forget Us Not",
+		matches: [
+			{
+				regex: /Stage order:(.+)/,
+				handler: function (matches, module) {
+					module.push({
+						label: "Stage order:",
+						obj: pre(matches[1])
 					});
 					return true;
 				}
