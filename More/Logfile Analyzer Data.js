@@ -183,6 +183,8 @@ const parseData = [
 				handler: function (matches) {
 					if (matches[1] == "ModWidget") {
 						bomb.ModdedWidgets++;
+					} else if (matches[1] == "BatteryWidget") {
+						bomb.BatteryWidgets++;
 					}
 				}
 			}
