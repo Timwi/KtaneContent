@@ -593,11 +593,6 @@ const parseData = [
 	// ** MODULES START HERE ** //
 
 	{
-		moduleID: "100LevelsOfDefusal",
-		loggingTag: "100 Levels of Defusal",
-		displayName: "100 Levels of Defusal"
-	},
-	{
 		displayName: "101 Dalmatians",
 		loggingTag: "101 Dalmatians",
 		moduleID: "OneHundredAndOneDalmatiansModule",
@@ -617,16 +612,11 @@ const parseData = [
 					});
 					return true;
 				}
-			},
+			},	
 			{
 				regex: /.+/
 			}
 		]
-	},
-	{
-		moduleID: "OneDimensionalMaze",
-		loggingTag: "1D Maze",
-		displayName: "1D Maze"
 	},
 	{
 		displayName: "14",
@@ -893,16 +883,6 @@ const parseData = [
 				regex: /.+/
 			}
 		]
-	},
-	{
-		moduleID: "lgndAudioMorse",
-		loggingTag: "Audio Morse",
-		displayName: "Audio Morse"
-	},
-	{
-		moduleID: "babaIsWho",
-		displayName: "Baba Is Who?",
-		loggingTag: "Baba Is Who?"
 	},
 	{
 		moduleID: "BattleshipModule",
@@ -1397,11 +1377,6 @@ const parseData = [
 				regex: /Entered answer/
 			}
 		]
-	},
-	{
-		displayName: "Chinese Strokes",
-		moduleID: "zhStrokes",
-		loggingTag: "Chinese Strokes"
 	},
 	{
 		moduleID: "ChordQualities",
@@ -2775,12 +2750,7 @@ const parseData = [
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
-	},
-	{
-		displayName: "Gnomish Puzzle",
-		moduleID: "qkGnomishPuzzle",
-		loggingTag: "Gnomish Puzzle"
-	},
+	},	
 	{
 		displayName: "Grid Matching",
 		moduleID: "GridMatching",
@@ -3286,11 +3256,6 @@ const parseData = [
 				}
 			}
 		]
-	},
-	{
-		moduleID: "MandNs",
-		loggingTag: "M&Ns",
-		displayName: "M&Ns"
 	},
 	{
 		displayName: "Matrices",
@@ -4243,10 +4208,6 @@ const parseData = [
 		loggingTag: "Mouse in the Maze"
 	},
 	{
-		moduleID: "R4YMultiColoredSwitches",
-		loggingTag: "Multicolored Switches"
-	},
-	{
 		moduleID: "murder",
 		loggingTag: "Murder",
 		matches: [
@@ -5170,11 +5131,6 @@ const parseData = [
 				regex: /.+/
 			}
 		]
-	},
-	{
-		displayName: "Repo Selector",
-		moduleID: "qkRepoSelector",
-		loggingTag: "Repo Selector"
 	},
 	{
 		moduleID: "resistors",
