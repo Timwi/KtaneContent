@@ -1639,48 +1639,48 @@ const parseData = [
 			{
 				regex: /(?:Monitor: (\d+) \| Number: (\d+) \| Color: (\w+) \| Indicators: (.+) \| Display color: (\w+))/,
 				handler: function (matches, module) {
-					var tableHead = $('<table>')
-						.css('font-size', '12px')
-						.css('border-collapse', 'collapse')
-						.css('border-style', 'solid')
-						.css('border-width', '1px');
-					var table = $('<table>')
-						.css('font-size', '12px')
-						.css('border-collapse', 'collapse')
-						.css('border-style', 'solid')
-						.css('border-width', '1px');
+					if (!('infoTable' in module))
+					{
+						var table = $('<table>')
+							.css('font-size', '12px')
+							.css('border-collapse', 'collapse')
+							.css('border-style', 'solid')
+							.css('border-width', '1px');
+						module.infoTable = table;
+						var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
+						$('<th>')
+							.text("Monitor")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '60px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("Number")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '60px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("Color")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '60px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("Indicator Color(s)")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '300px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("Display Color")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '60px')
+							.appendTo(trHead);
+						module.push({ label: "Monitors Information:", obj: table });
+					}
 					var moniPos = matches[1];
 					var moniNum = matches[2];
 					var moniCol = matches[3];
 					var moniInd = matches[4].replace(/Index: (\d): Color: /g, "").replace(/, It is /g, " ").replace(/;/g, ", ");
 					var moniDispCol = matches[5];
-					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
-					var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(tableHead);
-					$('<th>')
-						.text("Monitor")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("Number")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("Color")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("Indicator Color(s)")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '300px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("Display Color")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(trHead);
+					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(module.infoTable);
 
 					$('<td>')
 						.text(moniPos)
@@ -1707,27 +1707,58 @@ const parseData = [
 						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
 						.css('width', '60px')
 						.appendTo(tr);
-					if (matches[1] == 1) {
-						module.push({ label: "Monitors Information:", obj: tableHead });
-						module.push({ obj: table, nobullet: true });
-					}
-					else module.push({ obj: table, nobullet: true });
 					return true;
 				}
 			},
 			{
 				regex: /Monitor: (\d+):/,
 				handler: function (matches, module) {
-					var tableHead = $('<table>')
-						.css('font-size', '12px')
-						.css('border-collapse', 'collapse')
-						.css('border-style', 'solid')
-						.css('border-width', '1px');
-					var table = $('<table>')
-						.css('font-size', '12px')
-						.css('border-collapse', 'collapse')
-						.css('border-style', 'solid')
-						.css('border-width', '1px');
+					if (!('calculationTable' in module))
+					{
+						var table = $('<table>')
+							.css('font-size', '12px')
+							.css('border-collapse', 'collapse')
+							.css('border-style', 'solid')
+							.css('border-width', '1px');
+						module.calculationTable = table;
+						var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
+						$('<th>')
+							.text("Monitor")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '60px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("S1")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '40px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("S2")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '40px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("S3")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '40px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("S4")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '40px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("S5")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '40px')
+							.appendTo(trHead);
+						$('<th>')
+							.text("Final")
+							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
+							.css('width', '80px')
+							.appendTo(trHead);
+						module.push({ label: "Calculation:", obj: table });
+					}
 					var Monitor = matches[1];
 					var Sec1 = readTaggedLine().replace(/Monitor: (\d+), Section: 1, Score: /, "");
 					var Sec2 = readTaggedLine().replace(/Monitor: (\d+), Section: 2, Score: /, "");
@@ -1735,43 +1766,7 @@ const parseData = [
 					var Sec4 = readTaggedLine().replace(/Monitor: (\d+), Section: 4, Score: /, "");
 					var Sec5 = readTaggedLine().replace(/Monitor: (\d+), Section: 5, Score: /, "");
 					var TScr = readTaggedLine().replace(/Monitor: (\d+), Total score: /, "");
-					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
-					var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(tableHead);
-					$('<th>')
-						.text("Monitor")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("S1")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("S2")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("S3")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("S4")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("S5")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(trHead);
-					$('<th>')
-						.text("Final")
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '80px')
-						.appendTo(trHead);
+					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(module.calculationTable);
 
 					$('<td>')
 						.text(Monitor)
@@ -1808,11 +1803,6 @@ const parseData = [
 						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
 						.css('width', '80px')
 						.appendTo(tr);
-					if (matches[1] == 1) {
-						module.push({ label: "Calculation:", obj: tableHead });
-						module.push({ obj: table, nobullet: true });
-					}
-					else module.push({ obj: table, nobullet: true });
 					return true;
 				}
 			},
@@ -2402,6 +2392,26 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Forget Enigma",
+		moduleID: "forgetEnigma",
+		loggingTag: "Forget Enigma",
+		matches: [
+			{
+				regex: /Generated Answer: (.+)/,
+				handler: function (matches, module) {
+					module.push({
+						label: "Generated Answer: ",
+						obj: pre(matches[1])
+					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Forget Everything",
 		moduleID: "HexiEvilFMN",
 		loggingTag: "Forget Everything",
@@ -2545,6 +2555,26 @@ const parseData = [
 					module.push({
 						label: matches.input,
 						obj: pre(readMultiple(2, str => str.replace(/^[ \t]*\[.+?\] /, '')))
+					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		displayName: "Forget Us Not",
+		moduleID: "forgetUsNot",
+		loggingTag: "Forget Us Not",
+		matches: [
+			{
+				regex: /Stage order:(.+)/,
+				handler: function (matches, module) {
+					module.push({
+						label: "Stage order:",
+						obj: pre(matches[1])
 					});
 					return true;
 				}
