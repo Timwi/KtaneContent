@@ -5762,6 +5762,11 @@ const parseData = [
 		moduleID: "simonsOnFirst",
 		loggingTag: "Simon's On First"
 	},
+    {
+        displayName: "Simon’s Ultimate Showdown",
+        moduleID: "simonsUltimateShowdownModule",
+        loggingTag: "Simon's Ultimate Showdown"
+    },
 	{
 		moduleID: "SimonScreamsModule",
 		loggingTag: "Simon Screams",
