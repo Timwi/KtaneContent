@@ -1,7 +1,7 @@
 The licensing for the files in this folder are as follows:
 
 * `Logfile Analyzer.css`, `Logfile Analyzer.html` and `Logfile Analyzer.js`:
-    * Copyright: _samfun123_ and _Timwi_
+    * Copyright: _samfundev_ and _Timwi_
     * MIT License [1]
 
 * `img` folder:
@@ -9,7 +9,7 @@ The licensing for the files in this folder are as follows:
     * The Keep Talking and Nobody Explodes ModKit License [2]
 
 * `Template manual.zip`:
-    * Copyright: _Steel Crate Games_ and _samfun123_
+    * Copyright: _Steel Crate Games_ and _samfundev_
     * The Keep Talking and Nobody Explodes ModKit License [2]
 
 ═══════════════════════════════════════════════════════════════════════════════
