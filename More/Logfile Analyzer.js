@@ -386,6 +386,7 @@ function Bomb(seed) {
 	this.Needies = 0;
 	this.Indicators = [];
 	this.Batteries = [];
+	this.BatteryWidgets = 0;
 	this.ModdedWidgets = 0;
 	this.ModdedWidgetInfo = [];
 	this.PortPlates = [];
@@ -503,8 +504,10 @@ function Bomb(seed) {
 			edgeworkSeparator = true;
 			edgework.append("<div class='widget separator'>");
 
-			this.Batteries.sort().reverse();
-			this.Batteries.forEach(function(val) {
+			// The game will log out batteries that don't actually exist on the bomb. 
+			var actualBatteries = this.Batteries.slice(0, this.BatteryWidgets);
+			actualBatteries.sort().reverse();
+			actualBatteries.forEach(function(val) {
 				$("<div class='widget battery'>")
 					.addClass(val == 1 ? "d" : "aa")
 					.appendTo(edgework);
