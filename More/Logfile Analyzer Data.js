@@ -6286,6 +6286,23 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Tax Returns",
+		moduleID: "taxReturns",
+		loggingTag: "Tax Returns",
+		matches: [
+			{
+				regex: /Your (have|must)(.+)/,
+				handler: function (matches, module) {
+					module.push({ obj: "You " + matches[1] + " " + matches[2] });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "TetraVex",
 		moduleID: "ksmTetraVex",
 		loggingTag: "TetraVex",
