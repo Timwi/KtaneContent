@@ -42,63 +42,102 @@
     <script>
         $(function()
         {
-            var saveState = [];
+            const colors = ["red", "lime", "blue", "cyan", "magenta", "yellow", "white", "black"];
+            var stateNames = ["Mixed", "Red", "Green", "Blue"];
+            var states = {};
+            var selectedState = "Mixed";
             var circles = [];
+            var selectedColor = "red";
+
+            const palette = $(".palette");
+            for (const color of colors) {
+                const paletteColor = $("<div>").css("background-color", color).appendTo(palette).click(() => {
+                    $(".palette div").css("opacity", "");
+                    selectedColor = color;
+                    paletteColor.css("opacity", 0.5);
+                });
+
+                if (color == "white")
+                    paletteColor.css("border", "1px solid black");
+                else if (color == "red")
+                    paletteColor.css("opacity", 0.5);
+            }
+
+            const stateSelector = $(".states");
+            for (const state of stateNames)
+            {
+                $("<button>").text(state).appendTo(stateSelector).click(() => {
+                    for (var i = 0; i < circles.length; i++) {
+                        circles[i].css("background-color", states[state][i] || "white");
+                    }
+
+                    selectedState = state;
+                });
+
+                states[state] = [];
+            }
 
             const interactive = $("table.interactive");
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 5; i++)
             {
                 for (var y = 0; y < 3; y++)
                 {
                     var row = interactive.find("tr").eq(y);
                     for (var x = 0; x < 2; x++)
                     {
-                        let state = false;
+                        let index = i * 6 + y * 2 + x;
                         let circle = $("<div>").appendTo(
                             $("<td>").click(function()
                             {
-                                circle.toggleClass("filled");
+                                circle.css("background-color", selectedColor);
+                                states[selectedState][index] = selectedColor;
                             }).appendTo(row)
                         );
 
                         circles.push(circle);
                     }
-                    if (i < 3) $("<td>").addClass("borderless").css("width", "30px").appendTo(row);
+                    if (i < 4) $("<td>").addClass("borderless").css("width", "30px").appendTo(row);
                 }
             }
-
-            $(".save-button").click(function()
-            {
-                if (saveState.length == 0)
-                {
-                    for (var circle of circles)
-                    {
-                        saveState.push(circle.hasClass("filled"));
-                    }
-                } else
-                {
-                    for (var i = 0; i < saveState.length; i++)
-                    {
-                        circles[i].toggleClass("filled", saveState[i]);
-                    }
-                    saveState = [];
-                }
-
-                $(this).text(saveState.length == 0 ? "Save" : "Load");
-            });
-
-            $(".cheatsheet-setting input").on("change", function()
-            {
-                var cheatsheetEnabled = $(this).prop("checked");
-                localStorage.setItem("braille-cheatsheet", cheatsheetEnabled);
-                $(".normal").toggle(!cheatsheetEnabled);
-                $(".cheatsheet").toggle(cheatsheetEnabled);
-            }).prop("checked", localStorage.getItem("braille-cheatsheet") == "true").change();
         });
     </script>
     <style>
         .borderless {
             border: none;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin-bottom: 10px;
+        }
+
+        .palette, .states {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .palette {
+            justify-content: center;
+        }
+
+        .states {
+            justify-content: space-evenly;
+        }
+
+        .palette div {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+        }
+
+        .palette div:hover {
+            filter: invert(0.15);
+        }
+
+        .palette div:active {
+            filter: invert(0.3);
         }
 
         .interactive {
@@ -120,10 +159,6 @@
                     transition: background-color 0.25s;
                 }
 
-                    .interactive td div.filled {
-                        background: black;
-                    }
-
         .buttons {
             display: flex;
             justify-content: space-around;
@@ -135,7 +170,7 @@
             float: right;
             border: black 2px solid;
             border-radius: 3px;
-            transition: color 1s, background-color 1s;
+            transition: color 0.2s, background-color 0.2s;
         }
 
             button:hover {
@@ -174,23 +209,10 @@
 
                 <p>This module will show 30 colored dots. Each dot is in a color that is composed of a red, green, and blue component according to additive color mixing (see Appendix 1). Decompose the colors into their red, green and blue channels to obtain three words written in Unified English Braille (see Appendix 2).</p>
 
-                <table class="interactive borderless">
-                    <tr></tr>
-                    <tr></tr>
-                    <tr></tr>
-                </table>
-
-                <table class="interactive borderless">
-                    <tr></tr>
-                    <tr></tr>
-                    <tr></tr>
-                </table>
-
-                <table class="interactive borderless">
-                    <tr></tr>
-                    <tr></tr>
-                    <tr></tr>
-                </table>
+                <div class="controls">
+                    <div class="palette"></div>
+                    <div class="states"></div>
+                </div>
 
                 <table class="interactive borderless">
                     <tr></tr>
