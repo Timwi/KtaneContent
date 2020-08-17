@@ -1517,9 +1517,10 @@ const parseData = [
 		]
 	},
 	{
-		displayName: "Colour Flash",
-		moduleID: "ColourFlash",
-		loggingTag: "Colour Flash",
+		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
+		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES"],
+		icon: ["Colour Flash", "Colour Flash (Pl)", "Colour Flash (Es)"],
+		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
 		matches: [
 			{
 				regex: /Module generated/,
