@@ -778,6 +778,7 @@ function Bomb(seed) {
 			// Information
 			var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 			$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
+			$("<a>").text("Manual").attr("href", `../HTML/${parseData.moduleData.displayName.replace("'", "’").replace(/[<>:"/\\|?*]/g, "")}.html`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
 			if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
 				makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
 			} else if (parseData.moduleData.hasLogging === false) {
