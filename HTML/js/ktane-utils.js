@@ -215,9 +215,8 @@ e.onload = function()
             highlight.outerHeight(Math.min(b.outerHeight() - Math.max(0, scrollY + outerClipBox.top - b.offset().top), scrollY + outerClipBox.bottom - top));
         }
 
-        $("td, th, li, .highlightable").each(function()
+        function makeHighlightable(element)
         {
-            let element = $(this);
             let highlights = [];
 
             function findHighlight(h)
@@ -317,7 +316,20 @@ e.onload = function()
                     return false;
                 }
             });
+        };
+
+        $("td, th, li, .highlightable").each(function() {
+            makeHighlightable($(this));
         });
+
+        new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                for (const node of mutation.addedNodes) {
+                    if (node instanceof Element && node.matches("td, th, li, .highlightable"))
+                        makeHighlightable($(node));
+                }
+            }
+        }).observe(document.body, { subtree: true, childList: true })
 
         $(window).resize(function()
         {
