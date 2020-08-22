@@ -773,12 +773,31 @@ function Bomb(seed) {
 			return 0;
 		});
 
+		function GetManual(parseData) {
+			let manual = parseData.moduleData.displayName
+				.replace("'", "’")
+				.replace(/[<>:"/\\|?*]/g, "");
+
+			if (parseData.tree && parseData.tree.length != 0 && typeof parseData.tree[0] === "string" && parseData.tree[0].startsWith("Language is ")) {
+				manual += ` (${parseData.tree[0].split(" ")[2]} — *)`;
+
+				manual = manual
+					.replace("Big Button", "The Button")
+					.replace("Vent Gas", "Venting Gas")
+					.replace("Passwords", "Password")
+					.replace("Who's on First", "Who’s on First")
+					.replace(" Translated", " translated");
+			}
+
+			return manual;
+		}
+
 		// Display modules
 		mods.forEach(function(parseData) {
 			// Information
 			var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 			$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
-			$("<a>").text("Manual").attr("href", `../HTML/${parseData.moduleData.displayName.replace("'", "’").replace(/[<>:"/\\|?*]/g, "")}.html`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
+			$("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}.html`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
 			if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
 				makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
 			} else if (parseData.moduleData.hasLogging === false) {
