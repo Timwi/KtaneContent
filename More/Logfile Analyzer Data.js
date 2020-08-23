@@ -853,6 +853,11 @@ const parseData = [
 		displayName: "Answer to..."
 	},
 	{
+		moduleID: "asciiArt",
+		loggingTag: "Ascii Art",
+		displayName: "ASCII Art"
+	},
+	{
 		displayName: "ASCII Maze",
 		moduleID: "asciiMaze",
 		loggingTag: "ASCII Maze",
