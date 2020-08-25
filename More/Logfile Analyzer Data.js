@@ -850,11 +850,6 @@ const parseData = [
 		]
 	},
 	{
-		moduleID: "answerTo",
-		loggingTag: "The Answer to ...",
-		displayName: "Answer to..."
-	},
-	{
 		moduleID: "asciiArt",
 		loggingTag: "Ascii Art",
 		displayName: "ASCII Art"
@@ -1050,11 +1045,6 @@ const parseData = [
 				}
 			}
 		]
-	},
-	{
-		displayName: "Book of Mario",
-		moduleID: "BookOfMarioModule",
-		loggingTag: "Book of Mario",
 	},
 	{
 		displayName: "Boolean Maze",
@@ -6882,9 +6872,4 @@ const parseData = [
 		moduleID: "ForeignExchangeRates",
 		hasLogging: false
 	},
-	{
-		displayName: "複雑漢字",
-		moduleID: "複雑漢字Module",
-		loggingTag: "複雑漢字"
-	}
 ];
