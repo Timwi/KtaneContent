@@ -54,6 +54,7 @@ const parseData = [
 				regex: /Enter GameplayState/,
 				handler: function () {
 					bombgroup = undefined;
+					bomb = undefined;
 				}
 			},
 			{
@@ -61,6 +62,7 @@ const parseData = [
 				handler: function () {
 					bombgroup.FilterLines();
 					bombgroup = undefined;
+					bomb = undefined;
 				}
 			}
 		]
