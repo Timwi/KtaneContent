@@ -1005,7 +1005,7 @@ var ruleseed;
 let websiteParseData;
 
 function GetBomb() {
-	return bombgroup || bomb;
+	return bombgroup || lastBombGroup || bomb;
 }
 
 function pre(line) {
