@@ -790,6 +790,11 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "3D Tunnels",
+		loggingTag: "3d Tunnels",
+		moduleID: "3dTunnels",
+	},
+	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 		loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
 		displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
