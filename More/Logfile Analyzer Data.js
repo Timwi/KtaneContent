@@ -2159,6 +2159,11 @@ const parseData = [
 		loggingTag: "TheDealmaker"
 	},
 	{
+		displayName: "Determinants",
+		moduleID: "determinant",
+		loggingTag: "Needy Determinants"
+	},
+	{
 		displayName: "Dreamcipher",
 		moduleID: "ksmDreamcipher",
 		loggingTag: "Dreamcipher",
