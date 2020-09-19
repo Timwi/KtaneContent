@@ -3784,6 +3784,23 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Mazery",
+		moduleID: "Mazery",
+		loggingTag: "Mazery",
+		matches: [
+			{
+				regex: /The maze is/,
+				handler: function (matches, module) {
+					module.push({ label: matches.input, obj: pre(readMultiple(11)) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Memory",
 		moduleID: "Memory",
 		loggingTag: "MemoryComponent"

@@ -8,6 +8,91 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaults = null;
+        
+        function getDefaults()
+        {
+            if(defaults !== null)
+                return;
+                
+            defaults = {};
+            
+            for(var i = 1; i <= 3; i++)
+                defaults[`cond-${i}`] = document.getElementById(`cond-${i}`).innerText;
+        }
+        
+        function setDefaultRules()
+        {
+            getDefaults();
+            for(var i = 1; i <= 3; i++)
+                document.getElementById(`cond-${i}`).innerText = defaults[`cond-${i}`];
+        }
+        
+        function setRules(rnd)
+        {
+            getDefaults();
+            
+            var soundNames = ["Arcade","Ballpoint Pen Writing","Beach","Book Page Turning","Car Engine","Casino","Censorship Bleep","Chainsaw","Compressed Air","Cow","Dialup Internet","Door Closing","Extractor Fan","Firework Exploding","Glass Shattering","Helicopter","Marimba","Medieval Weapons","Oboe","Phone Ringing","Police Radio Scanner",
+    "Rattling Iron Chain","Reloading Glock 19","Saxophone","Servo Motor","Sewing Machine","Soccer Match","Squeaky Toy","Supermarket","Table Tennis","Tawny Owl","Taxi Dispatch","Tearing Fabric","Throat Singing","Thrush Nightingale","Tibetan Nuns","Train Station","Tuba","Vacuum Cleaner","Waterfall","Zipper"];
+            var indicatorNames = ["BOB", "CAR", "CLR", "FRK", "FRQ", "IND", "MSA", "NSA", "SIG", "SND", "TRN"];
+            var portNames = ["Parallel", "Serial", "PS/2", "RJ-45", "DVI-D", "Stereo RCA"];
+            
+            var conditionIndicesUsed = new Array(3);
+            
+            for(var i = 0; i < 3; i++)
+            {
+                var condIndex = -1;
+                while(condIndex == -1 || conditionIndicesUsed.includes(condIndex))
+                    condIndex = rnd.nextMax(7);
+            
+                var condType = condIndex;
+                conditionIndicesUsed[i] = condIndex;
+                var parameter;
+
+                if(condIndex < 2)
+                    parameter = rnd.nextMax(11);
+                else
+                    parameter = rnd.nextMax(6);
+
+                var soundCondition = "";
+                var otherwiseCondition = "";
+                var condition;
+                var span = document.getElementById(`cond-${i+1}`);
+                
+                if(i == 0)
+                {
+                    var soundArr = new Array();
+                    soundArr.push(rnd.nextMax(41));
+                    soundArr.push(-1);
+                    while(soundArr[1] == -1 || soundArr[1] == soundArr[0])
+                        soundArr[1] = rnd.nextMax(41);
+                        
+                    condition = {type: condType, conditionParam: parameter};
+                    soundCondition = ` and at least one of the sounds was ${soundNames[soundArr[0]]} or ${soundNames[soundArr[1]]}`;
+                    otherwiseCondition = `I`;
+                }
+                else
+                {
+                    condition = {type: condType, conditionParam: parameter};
+                    otherwiseCondition = `Otherwise, i`;
+                    soundCondition = ``;
+                }
+                
+                switch(condition.type)
+                {
+                    case 0: span.innerText = `${otherwiseCondition}f the bomb has a lit ${indicatorNames[condition.conditionParam]} indicator${soundCondition}`;break;
+                    case 1: span.innerText = `${otherwiseCondition}f the bomb has an unlit ${indicatorNames[condition.conditionParam]} indicator${soundCondition}`;break;
+                    case 2: span.innerText = `${otherwiseCondition}f the bomb has a ${portNames[condition.conditionParam]} port${soundCondition}`;break;
+                    case 3: span.innerText = `${otherwiseCondition}f the bomb has an empty port plate${soundCondition}`;break;
+                    case 4: span.innerText = `${otherwiseCondition}f the bomb has at least ${(condition.conditionParam % 3) + 2} batteries${soundCondition}`;break;
+                    case 5: span.innerText = `${otherwiseCondition}f the last digit of the bomb\'s serial number is ${(condition.parameter % 2 == 0) ? "even" : "odd"}${soundCondition}`;break;
+                    case 6: span.innerText = `${otherwiseCondition}f the bomb\'s serial number ${(condition.parameter % 2 == 0) ? "does not contain" : "contains"} a vowel${soundCondition}`
+                }
+            }
+        }
+    </script>
     <style>
         @media print {
             a[href]:after {
@@ -49,15 +134,15 @@
                         <th>*</th>
                     </tr>
                     <tr>
-                        <th style="text-align:left">If the bomb has at least 3 batteries and at least one of the sounds was Beach or Waterfall</th>
+                        <th style="text-align:left"><span class='condition' id='cond-1'>If the bomb has at least 3 batteries and at least one of the sounds was Beach or Waterfall</span></th>
                         <td>0</td><td>0</td><td>1</td><td>1</td>
                     </tr>
                     <tr>
-                        <th style="text-align:left;width:60%">Otherwise, if the bomb has an empty port plate</th>
+                        <th style="text-align:left;width:60%"><span class='condition' id='cond-2'>Otherwise, if the bomb has an empty port plate</span></th>
                         <td>0</td><td>1</td><td>0</td><td>1</td>
                     </tr>
                     <tr>
-                        <th style="text-align:left">Otherwise, if the last digit of the bomb's serial number is odd</th>
+                        <th style="text-align:left"><span class='condition' id='cond-3'>Otherwise, if the last digit of the bomb's serial number is odd</span></th>
                         <td>1</td><td>0</td><td>1</td><td>0</td>
                     </tr>
                     <tr>
