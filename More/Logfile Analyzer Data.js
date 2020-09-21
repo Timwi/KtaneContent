@@ -796,8 +796,8 @@ const parseData = [
 	},
 	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
-		loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
-		displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
+		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
+		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
 		matches: [
 			{
 				regex: /Solution:/,
@@ -1521,7 +1521,7 @@ const parseData = [
 	{
 		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
 		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES"],
-		icon: ["Colour Flash", "Colour Flash (Pl)", "Colour Flash (Es)"],
+		icon: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
 		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
 		matches: [
 			{
