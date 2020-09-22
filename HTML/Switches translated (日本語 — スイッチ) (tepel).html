@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>スイッチ — Keep Talking and Nobody Explodes Mod</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        svg {
+            width: 14mm;
+        }
+        table.switches {
+            margin: 1em auto;
+        }
+        table.switches td {
+            padding: 0;
+            border: .5mm solid black;
+        }
+        table.switches td > svg {
+            display: block;
+        }
+        html { 
+            font-family: "Special Elite Local", "Special Elite", "Courier New", "Yu Gothic", monospace; 
+            font-weight: 500; 
+        }
+        @font-face { 
+            font-family: "Yu Gothic"; 
+            font-weight: 500; 
+            font-style: normal; 
+            src: local("Yu Gothic Medium"), url(font/YuGothic-Medium.ttf); 
+        }
+        @font-face { 
+            font-family: "Yu Gothic"; 
+            font-weight: bold; 
+            font-style: normal; 
+            src: local("Yu Gothic Bold"), url(font/YuGothic-Bold.ttf); 
+        }
+    </style>
+    <script>
+        let switchUp = 'M44 67h12l6-57H38z';
+        let switchDn = 'M44 67h12l6 57H38z';
+        let _numSwitches = 5;
+        let _numForbiddenConfigurations = 10;
+
+        function setDefaultRules()
+        {
+            setSwitches([ 4, 26, 30, 9, 25, 29, 3, 11, 7, 15 ]);
+        }
+
+        function setRules(rnd)
+        {
+            let startPoint = rnd.next(0, 1 << _numSwitches);
+            let visitedConfigurations = visitConfigurations(startPoint, rnd);
+            let forbidden = [];
+            for (var i = 0; i < (1 << _numSwitches); i++)
+                if (!visitedConfigurations.some(c => c === i))
+                    forbidden.push(i);
+            setSwitches(forbidden);
+        }
+
+        function visitConfigurations(startConfiguration, rnd)
+        {
+            let visitedConfigurations = [];
+            let visitStack = [];
+            visitStack.push(startConfiguration);
+
+            while (true)
+            {
+                if (visitedConfigurations.length >= (1 << _numSwitches) - _numForbiddenConfigurations)
+                    return visitedConfigurations;
+
+                let configToVisit = visitStack.pop();
+                if (visitedConfigurations.some(v => v === configToVisit))
+                    continue;
+                visitedConfigurations.push(configToVisit);
+
+                let adjacentConfigurations = getAdjacentConfigurations(configToVisit);
+                while (adjacentConfigurations.length > 0)
+                {
+                    let ix = rnd.next(0, adjacentConfigurations.length);
+                    visitStack.push(adjacentConfigurations[ix]);
+                    adjacentConfigurations.splice(ix, 1);
+                }
+            }
+        }
+
+        function getAdjacentConfigurations(configuration)
+        {
+            let ret = [];
+            for (let i = 0; i < _numSwitches; i++)
+                ret.push(configuration ^ (1 << i));
+            return ret;
+        }
+
+        function setSwitches(switches)
+        {
+            var tds = document.getElementsByClassName('switch');
+            for (let i = 0; i < _numForbiddenConfigurations; i++)
+                for (let sw = 0; sw < _numSwitches; sw++)
+                    tds[5*i + sw].innerHTML = `<svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="${(switches[i] & (1 << sw)) ? switchUp : switchDn}" stroke="#000" fill="#fff"/></svg>`;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">スイッチ</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Switches.svg">
+                <h2>モジュール詳細：スイッチ</h2>
+                <p class="flavour-text">はいかいいえの選択は難しくない｡残念なことに､それが5つもありそのいずれもが最後の選択となりうるかもしれない｡</p>
+
+                <p>それぞれのスイッチを､上下のどちらかにある点灯したインジケーターと一致する状態にする｡</p>
+                <p>以下のスイッチの状態を回避する:</p>
+
+                <table class="switches">
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"/></svg></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
