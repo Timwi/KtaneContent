@@ -1519,19 +1519,27 @@ const parseData = [
 		]
 	},
 	{
-		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
-		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES"],
-		icon: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
-		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
+		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash (Translated)"],
+		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES", "TranslatedColourFlash"],
+		icon: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash"],
+		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash (Translated)"],
 		matches: [
 			{
 				regex: /Module generated/,
 				handler: function (matches, module) {
+					let lines = "";
+					for (let i = 0; i < 10; i++) {
+						const line = readLine();
+						if (line.trim() == "")
+							break;
+
+						lines += line + "\n"
+					}
+
 					module.push({
 						label: "Color Sequence:",
-						obj: pre(readMultiple(10))
+						obj: pre(lines)
 					});
-					readLine();
 					for (var i = 0; i < 3; i++) {
 						module.push(readLine());
 					}
