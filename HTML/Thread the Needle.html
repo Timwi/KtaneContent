@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Thread the Needle — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+	<script src="js/ktane-utils.js"></script>
+	<style>
+		table {
+			margin-left: auto; 
+			margin-right: auto;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+    <div class="section">
+        <!-- Start the pages! -->
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Thread the Needle.svg" class="diagram">
+                <h2>On the Subject of Threading the Needle</h2>
+                <p class="flavour-text">It's wheely sew much fun!</p>
+
+                <ul>
+                    <li>The five code wheels on the module can each be set to one of 8 positions. Each symbol on
+                        the code wheels has a slot for a hole under it. These holes are hidden inside the module so
+                        the defuser can't see them.</li>
+                    <li>A hole may be solid, circular, or triangular.</li>
+                    <li>Fortunately, each possible code wheel has a unique pattern of symbols on it. Use this to
+                        identify which code wheels are on the module.</li>
+                    <li>Rotate the code wheels so there is at least one continuous row of circular holes without any
+                        continuous rows of triangular holes, and press the submit button.</li>
+                    <li>In addition, there is one wheel that cannot be manually turned hidden inside the module (the
+                        "bonus wheel"). It otherwise acts like the normal wheels, and you must align the rest of the
+                        wheels to agree with it.</li>
+                </ul>
+
+                <h3>Possible Code Wheels</h3>
+                <br />
+                <table>
+                    <tbody id="codeWheels"></tbody>
+                    <!-- This table gets filled by JS! -->
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining the Bonus Wheel</h3>
+                <ul>
+                    <li>Let <strong>U</strong> be equal to the number of odd digits in the serial number plus double
+                        the number of vowels in the serial number.</li>
+                    <li>Let <strong>W</strong> be equal to the number of batteries on the bomb, minus the number of
+                        lit indicators.</li>
+                </ul>
+                <table class="repeaters-table">
+                    <tbody>
+                        <tr>
+                            <td class="repeaters-spacer"></td>
+                            <th>U = 1, 3</th>
+                            <th>U = 2, 4, 5</th>
+                            <th>U >= 6 or 0</th>
+                        </tr>
+                        <tr>
+                            <th>W <= 0</th>
+                            <td id="bonus-1-1"></td>
+                            <td id="bonus-1-2"></td>
+                            <td id="bonus-1-3"></td>
+                        </tr>
+                        <tr>
+                            <th>W = 1, 2</th>
+                            <td id="bonus-2-1"></td>
+                            <td id="bonus-2-2"></td>
+                            <td id="bonus-2-3"></td>
+                        </tr>
+                        <tr>
+                            <th>W = 3</th>
+                            <td id="bonus-3-1"></td>
+                            <td id="bonus-3-2"></td>
+                            <td id="bonus-3-3"></td>
+                        </tr>
+                        <tr>
+                            <th>W >= 4</th>
+                            <td id="bonus-4-1"></td>
+                            <td id="bonus-4-2"></td>
+                            <td id="bonus-4-3"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <ul><li>The bonus wheel will turn counter-clockwise one position after each strike and clockwise one
+                    position each time a module is solved. It starts in the position printed above.</li></ul>
+            </div>
+			<div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const table = document.getElementById("codeWheels");
+
+    const ROW_WIDTH = 4;
+
+    const CANVAS_UPSCALE = 8.0; // Make it 8x as sharp
+    const CIRCLE_RADIUS = 0.75;
+    const LABEL_RADIUS = 0.9;
+    const HOLE_RADIUS = 0.6;
+    const SPINDLE_RADIUS = 0.1;
+    const RING_RADIUS = 0.15;
+
+    const PI = Math.PI;
+    const TAU = 2 * Math.PI;
+
+    const wheels = [
+        ["+-]!<0#<", "O.^^^.OO"],
+        ["$)2=*/>!", "^.^.O^O."],
+        ["78/?(-7~", "O.O..^.^"],
+        ["96394?#!", "O^..^^OO"],
+
+        ["+!2#!@*@", "^^O..OO."],
+        ["%*&50$52", "^..O^O.."],
+        ["%*!%~*+$", "O^.^O.^^"],
+        ["[%?/1{]}", "OO.^..^."],
+
+        ["1@3!2312", "O^..^^.O"],
+        ["%^O<#>^(", ".^.^OOO."],
+        ["->-~>@<%", ".O...^.^"],
+        ["{]}[%?/$", ".^..OOO."]
+    ];
+
+    const bonus_wheels = [
+        ["..O..^^O", "..^O..^^", "..^^.^.O"],
+        ["^^.O.^^^", "....OOOO", "..^OO..."],
+        ["^...OOOO", ".^^O..^^", "...^O^^."],
+        [".^O^O^.O", ".O^.^.O^", "..^^.OOO"]
+    ];
+
+    /**
+     * this is to make VS code know what type it is
+     * @param {CanvasRenderingContext2D} ctx the drawing context
+     * @param {Number} size the size of the enclosing square in pixels
+     * @param {Array<String>} wheel the wheel data. [0] is the labels, [1] is the holes.
+     */
+    function doWheel(ctx, size, wheel) {
+        // Draw the circle
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 * CIRCLE_RADIUS, 0, TAU);
+        ctx.stroke();
+        // Spindle
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 * SPINDLE_RADIUS, 0, TAU);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 * RING_RADIUS, 0, TAU);
+        ctx.stroke();
+
+        // Draw the text & holes
+        ctx.font = `bold 16px Special Elite, monospace`;
+        ctx.textAlign = `center`;
+        ctx.textBaseline = `middle`;
+        const triangle = (x, y) => {
+            const triSide = 12;
+            const triHeight = triSide * 0.5 * Math.sqrt(3);
+            ctx.beginPath();
+            ctx.moveTo(x - triSide / 2, y + triHeight / 2);
+            // 3 sides, 3 lineTos
+            ctx.lineTo(x + triSide / 2, y + triHeight / 2);
+            ctx.lineTo(x, y - triHeight / 2);
+            ctx.lineTo(x - triSide / 2, y + triHeight / 2);
+            ctx.stroke();
+        };
+        const circle = (x, y) => {
+            const radius = 6;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, TAU);
+            ctx.stroke();
+        };
+
+        ctx.fillStyle = "white";
+        const length = wheel[0].length;
+        for (let i = 0; i < length; i++) {
+            const theta = (i / length) * TAU - TAU / 4;
+
+            const label = wheel[0][i];
+            const hole = wheel[1][i];
+
+            const vX = Math.cos(theta);
+            const vY = Math.sin(theta);
+
+            // Draw the outer label
+            ctx.fillStyle = "black";
+            const textX = vX * size * LABEL_RADIUS / 2 + size / 2;
+            const textY = vY * size * LABEL_RADIUS / 2 + size / 1.95;
+            ctx.fillText(label, textX, textY);
+
+            // Draw the inner holes
+            ctx.fillStyle = "white";
+            const holeX = vX * size * HOLE_RADIUS / 2 + size / 2;
+            const holeY = vY * size * HOLE_RADIUS / 2 + size / 2;
+            if (hole == 'O') circle(holeX, holeY);
+            else if (hole == '^') triangle(holeX, holeY);
+        }
+    }
+
+    // Main!
+    const cellSize = (
+        document.getElementsByClassName("page-content")[0].clientWidth
+        - Number(
+            window.getComputedStyle(
+                document.getElementsByClassName("page-content")[0]
+            ).marginLeft.replace(/[^\d\.]/g, '')
+        ) * 1.5)
+        / ROW_WIDTH;
+
+    let row;
+    for (let c = 0; c < wheels.length; c++) {
+        if (c % ROW_WIDTH == 0) {
+            row = document.createElement("tr");
+            table.appendChild(row);
+        }
+        let wheel = wheels[c];
+
+        const cell = document.createElement("td");
+        row.appendChild(cell);
+
+        const canvas = document.createElement("canvas");
+        cell.appendChild(canvas);
+        canvas.width = cellSize * CANVAS_UPSCALE;
+        canvas.height = cellSize * CANVAS_UPSCALE;
+        canvas.style.width = `${cellSize}px`;
+        canvas.style.height = `${cellSize}px`;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(CANVAS_UPSCALE, CANVAS_UPSCALE);
+        doWheel(ctx, cellSize, wheel);
+    }
+
+    // Bonus wheels!
+    for (let u = 0; u < 3; u++) {
+        for (let w = 0; w < 4; w++) {
+            const cell = document.getElementById(`bonus-${w + 1}-${u + 1}`);
+            const canvas = document.createElement("canvas");
+            cell.appendChild(canvas);
+            canvas.width = cellSize * CANVAS_UPSCALE;
+            canvas.height = cellSize * CANVAS_UPSCALE;
+            canvas.style.width = `${cellSize}px`;
+            canvas.style.height = `${cellSize}px`;
+            const ctx = canvas.getContext("2d");
+            ctx.scale(CANVAS_UPSCALE, CANVAS_UPSCALE);
+            doWheel(ctx, cellSize, ["·".repeat(8), bonus_wheels[w][u]]);
+        }
+    }
+</script>
+</html>
