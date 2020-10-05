@@ -6337,6 +6337,23 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Thread the Needle",
+		moduleID: "threadTheNeedle",
+		loggingTag: "Thread the Needle",
+		matches: [
+			{
+				regex: /(Wheel #(\d)( \(Bonus\))?:) (.+)/,
+				handler: function (matches, module) {
+					module.push({label: matches[1], obj: pre(matches[4])})
+                    return true;
+				}
+			},
+			{
+				regex: /.+/,
+			}
+		]
+	},
+	{
 		displayName: "Tic Tac Toe",
 		moduleID: "TicTacToeModule",
 		loggingTag: "TicTacToe",
