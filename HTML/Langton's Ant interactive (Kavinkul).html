@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Langton’s Ant — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        body{
+            -webkit-print-color-adjust:exact;
+        }
+
+        table {
+            border: none;
+            margin: 1em auto;
+        }
+
+        .empty {
+            border: none;
+        }
+    </style>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function(){
+            var selectedTable = $(".selectedTable");
+            var antGrid = $(".antGridTable");
+            var directions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            var colorArray = ["#8A8A8A", "red", "lime", "white", "yellow", "blue", "SaddleBrown", "darkgreen", "orange", "black", "cyan", "magenta", "purple"];
+            var selectedColor = 0;
+            function generateSelectedGrid(){
+                directions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                selectedColor = 0;
+                for (let i = 0; i < 6; i++){
+                    var row = $("<tr>").appendTo(selectedTable);
+                    if (i === 0 || i === 5){
+                        row.addClass("selectedRowLED");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").appendTo(row);
+                        if (i === 0) {
+                            var deleteCell = $("<td>").css({"width": "30px", "background-color": "#8A8A8A", "border-left": "2px solid black"}).attr("rowspan", "6").appendTo(row);
+                            $("<td>").css({"width": "10px", "background-color": "green"}).attr("rowspan", "6").appendTo(row);
+                            deleteCell.hover(
+                                function(){
+                                    if (selectedColor === 0) return;
+                                    deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "yellow"});
+                                },
+                                function(){
+                                    if (selectedColor === 0) return;
+                                    deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "white"});
+                                }
+                            );
+                            deleteCell.click(() => {
+                                if (selectedColor === 0) return;
+                                for (let l = 0; l < 2; l++)
+                                    for (let m = 0; m < 6; m++)
+                                        deleteCell.parent().parent().children().eq(5 * l).children().eq(m).css({"background-color": "white"});
+                                deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "green"});
+                                selectedColor = 0;
+                            });
+                        }
+                    }
+                    else if (i === 1 || i === 4){
+                        row.addClass("selectedRowNote");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").addClass("selectedRowNoteCell").appendTo(row).each(function(_,e){
+                                var element3 = $(e);
+                                element3.on("contextmenu", function(e){
+                                    return false;
+                                });
+                                element3.mousedown(function(event){
+                                    switch (event.which){
+                                        case 1:
+                                            switch (directions[(i - 1)/3 + k]){
+                                                case 0:
+                                                    element3.empty();
+                                                    element3.append('<img style="width: 25px; height: 25px; margin-left: 2px; margin-top: 1px;" src="img/Langton Ant/Clockwise Arrow.svg">');
+                                                    break;
+                                                case 1:
+                                                    element3.empty();
+                                                    element3.append('<img style="width: 25px; height: 25px; margin-left: 2px; margin-top: 1px;" src="img/Langton Ant/Anticlockwise Arrow.svg">');
+                                                    break;
+                                                case 2:
+                                                    element3.empty();
+                                                    element3.css({"background-color": "black"});
+                                                    break;
+                                                default:
+                                                    element3.css({"background-color": "#8A8A8A"});
+                                            }
+                                            directions[(i - 1)/3 + k] = (directions[(i - 1)/3 + k] + 1) % 4;
+                                            break;
+                                        case 3:
+                                            directions[(i - 1)/3 + k] = 0;
+                                            element3.empty();
+                                            element3.css({"background-color": "#8A8A8A"});
+                                            break;
+                                    }
+                                });
+                            });
+                    }
+                    else {
+                        row.addClass("selectedRow");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").addClass("selectedSquare").css({"background-color": colorArray[6 * (i - 2) + k + 1]}).appendTo(row).each(function(_,e){
+                                var element = $(e);
+                                if (k === 6)
+                                    element.css({"border-right-width": "2px"});
+                                element.hover(
+                                    function(){
+                                        if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                        element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "yellow"});
+                                    },
+                                    function(){
+                                        if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                        element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "white"});
+                                    }
+                                );
+                                element.click(() => {
+                                    if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                    for (let l = 0; l < 2; l++)
+                                        element.parent().parent().children().eq(5 * l).children().each(function(index, e2){
+                                            var element2 = $(e2);
+                                            if (index !== 6)
+                                                element2.css({"background-color": "white"});
+                                        });
+                                    element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "green"});
+                                    selectedColor = 6 * (i - 2) + k + 1;
+                                });
+                            });
+                    }
+                }
+            }
+            generateSelectedGrid();
+            function generateAntGrid(){
+                for (let i = 0; i < 5; i++){
+                    var antRow = $("<tr>").addClass("antGridRow").appendTo(antGrid);
+                    for (let j = 0; j < 5; j++){
+                        $("<td>").addClass("antGridCell").appendTo(antRow).each(function(_,e){
+                            var element4 = $(e);
+                                element4.on("contextmenu", function(e){
+                                    return false;
+                                });
+                                element4.mousedown(function(event) {
+                                    switch(event.which){
+                                        case 1:
+                                            element4.css({"background-color": colorArray[selectedColor]});
+                                            break;
+                                        case 3:
+                                            element4.css({"background-color": colorArray[0]});
+                                            break;
+                                    }
+                                });
+                        })
+                    }
+                }
+            }
+            generateAntGrid();
+            $(".selectedDivButton").click(() => {
+                selectedTable.empty();
+                antGrid.empty();
+                generateSelectedGrid();
+                generateAntGrid();
+            });
+        });
+    </script>
+    <style>
+        .selectedDiv {
+            float: left;
+            margin: auto;
+        }
+        @media screen and (max-width: 559px) {
+            .selectedDiv {
+              float: none;
+              position: relative;
+              padding-bottom: 10%;
+            }
+            .selectedDivButton {
+              display: block;
+              margin-left: auto;
+              margin-right: auto;
+            }
+        }
+        .selectedDivButton, .selectedDivButton:not(:hover) {
+            font-family: "Special Elite";
+            font-size: 20px;
+            padding-top: 5px;
+            border: 2px solid black;
+            background-color: white;
+        }
+        .selectedDivButton:hover {
+            background-color: yellow;
+        }
+        .selectedTable {
+            table-layout: fixed;
+            width: 220px;
+            height: 130px;
+            border: 2px solid black;
+        }
+        .selectedRowLED {
+            height: 10px;
+            font-size: 0px;
+        }
+        .selectedRowNote {
+            height: 30px;
+            background-color: #8A8A8A;
+        }
+        .selectedRowNoteCell {
+            font-size: 0px;
+        }
+        .selectedRow {
+            height: 30px;
+            font-size: 0px;
+        }
+        .selectedSquare {
+            width: 30px;
+            height: 30px;
+            font-size: 0px;
+        }
+        .antGridTable {
+            table-layout: fixed;
+            float: middle;
+            width: 250px;
+            height: 250px;
+            font-size: 0px;
+            border: 4px solid black;
+        }
+        .antGridRow {
+            height: 50px;
+        }
+        .antGridCell {
+            width: 50px;
+            background-color: #8A8A8A;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Langton’s Ant</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Langton's Ant.svg" class="diagram">
+                <h2>On the Subject of Langton’s Ant</h2>
+                <p class="flavour-text" style="font-size: 5px">As an ant, you wouldn’t have to alter the text to read this.</p>
+
+                <p class="appendix-reference" id="appendix-reference">See Appendix A for indicator identification reference.<br>See Appendix B for battery identification reference.<br>See Appendix C for port identification reference.</p>
+
+                <p>This module shows a 5×5 grid of grey squares with an ant in the center, a color palette and a button with an ant label.</p>
+                <p>Clicking each space on the module will change the color of the square to the color currently selected in the color palette. The twelve possible color variations are <span style="color: red">red</span>, <span style="color: lime">lime</span>, <span style="color: lightgray">white</span>, <span style="color: yellow">yellow</span>, <span style="color: blue">blue</span>, <span style="color: chocolate">brown</span>, <span style="color: darkgreen">forest</span>, <span style="color: orangered">orange</span>, black, <span style="color: cyan">cyan</span>, <span style="color: magenta">magenta</span> and <span style="color: purple">purple</span>. This is also the order of the coloring sequence.</p>
+
+                <p>To solve the module, color each square in the ant’s path with its last attributed color and then press the ant button.</p>
+
+                <p>The ant will move until it leaves the grid. Each of the ant’s movements consists in changing the color of its current square to the valid color that comes after the square’s current color in the sequence (or Red if it was not painted). The coloring sequence loops around. Then, the ant will rotate clockwise or counter-clockwise according to the current square’s color, and move one space forward in the direction it is facing.</p>
+
+                <p>Use the table below to identify what colors are valid and what rotation they apply to the ant.</p>
+
+                <table>
+                    <tr>
+                        <td style="font-size: 9pt; background-color: red; color: white; width: 16%;">Always valid.<br><br>CCW if there is exactly one battery. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: lime; color: black; width: 16%;">Valid if there is a prime nº of solved modules.<br><br>CW if there are at least 5 batteries. Else, CCW.</td>
+                        <td style="font-size: 9pt; background-color: white; color: black; width: 16%;">Valid if there are three or more port plates.<br><br>CW if there is a modded port present. Else, CCW.</td>
+                        <td style="font-size: 9pt; background-color: yellow; color: black; width: 16%;">Valid if there is at least one empty port plate.<br><br>CCW if there is an odd nº of port plates. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: blue; color: white; width: 16%;">Valid if there is an FRK indicator.<br><br>CCW if there are less than three indicators. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: SaddleBrown ; color: white; width: 16%;">Valid if there is an equal nº of odd and even digits in the serial number.<br><br>CW if there is an even nº of battery holders. Else, CCW.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 9pt; background-color: darkgreen; color: white;">Valid if there are at least two vowels in the serial number.<br><br>CW if there is an even number of batteries. Else, CCW.</td>
+                        <td style="font-size: 9pt; background-color: orange; color: black;">Valid if there is a prime nº of unsolved modules.<br><br>CCW if there is an NLL indicator. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: black; color: white;">Valid if the nº of ports is equal to the nº of batteries or indicators.<br><br>CCW if there are at least three digits in the SN. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: cyan; color: black;">Valid if there are five or less solved modules.<br><br>CCW if there are exactly three indicators. Else, CW.</td>
+                        <td style="font-size: 9pt; background-color: magenta; color: black;">Valid if there is a BOB indicator.<br><br>CW if there is no DVI-D port. Else, CCW.</td>
+                        <td style="font-size: 9pt; background-color: purple; color: white;">Always valid.<br><br>CCW if no other valid color goes CCW. Else, CW.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Langton’s Ant</span>
+            </div>
+            <div class="page-content">
+                <h2>The Ant Grid</h2>
+                <ul>
+                    <li>The table on the left is the color selector. Click on any square in the thrid and fourth row to pick a color.</li>
+                    <li>The first and sixth rows shows the curently chosen color. Each cell is white if the color corresponding to that cell is not picked. The cell turns yellow when cursor hovers on its color square unless its color is chosen. In which case, the square turns green.</li>
+                    <li>The second and fifth rows contain the cells to note the direction of each color. There are 4 states available: default, clockwise, counterclockwise, and invalid.</li>
+                    <li>To the right of this table are two vertical cells. The first such cell from the left is the default color for removing any misplaced color. The second such cell is the selection indicator which behaves the same as cells in the first and sixth rows.</li>
+                    <li>The table to the right is the Ant Grid. Use this table to trace down the ant's path starting from the center of the board. To color any cell, simply choose a color and click any cell to paint it. To erase any cell, choose the default color or use right-click on that cell.</li>
+                    <li>Right below the left table is the reset button. Click this button to reset the entire board to the initial state.</li>
+                </ul>
+                <div class="selectedDiv">
+                    <table class="selectedTable"></table>
+                    <button class="selectedDivButton">Reset Board</button>
+                </div>
+                <table class="antGridTable"></table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>

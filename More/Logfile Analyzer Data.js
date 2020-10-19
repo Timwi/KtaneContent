@@ -137,7 +137,7 @@ const parseData = [
 				}
 			},
 			{
-				regex: /Selected ([\w ]+) \(.+ \((.+)\)\)/,
+				regex: /Selected (.+) \(.+ \((.+)\)\)/,
 				handler: function (matches) {
 					var tree = [];
 					tree.groups = new Groups();
@@ -796,8 +796,8 @@ const parseData = [
 	},
 	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
-		loggingTag: ["AdjacentLetters", "AdjacentLetters (Rus)"],
-		displayName: ["Adjacent Letters", "Adjacent Letters (Rus)"],
+		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
+		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
 		matches: [
 			{
 				regex: /Solution:/,
@@ -1519,26 +1519,53 @@ const parseData = [
 		]
 	},
 	{
-		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
-		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES"],
-		icon: ["Colour Flash", "Colour Flash (Pl)", "Colour Flash (Es)"],
-		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES"],
+		displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash Translated"],
+		moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES", "TranslatedColourFlash"],
+		icon: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash"],
+		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash Translated"],
 		matches: [
 			{
 				regex: /Module generated/,
 				handler: function (matches, module) {
+					let table = $('<table>').css({'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto'});
+					let rowHeader = $('<tr>').appendTo(table);
+					$('<th>').text("#").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+					$('<th>').text("Word").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+					$('<th>').text("Color").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+					$('<th>').text("Valid Response").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+					let count = 0;
+					let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? (.+)\b\s+(?:\||,)(?: Color)? (.+)\b\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
+					for (let i = 0; i < 15; i++)
+					{
+						let line = readLine();
+						if (exp.test(line))
+						{
+							count++;
+							let tr = $('<tr>').appendTo(table);
+							let match = exp.exec(line);
+							for (let j = 1; j <= 4; j++)
+							{
+								let td = $('<td>').text(match[j]).css({'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(tr);
+								if (j == 4)
+									td.css('text-align', 'center');
+							}
+						}
+						if (count == 8)
+							break;
+					}
 					module.push({
 						label: "Color Sequence:",
-						obj: pre(readMultiple(10))
+						obj: table
 					});
 					readLine();
-					for (var i = 0; i < 3; i++) {
-						module.push(readLine());
+					for (let i = 0; i < 3; i++) {
+						module.push(readLine().replace(/\[Colour Flash Translated #\d+\] /, ""));
 					}
+					return true;
 				}
 			},
 			{
-				regex: /.+ button was pressed|.+ answer!/
+				regex: /.+/
 			}
 		]
 	},
@@ -6306,6 +6333,23 @@ const parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		displayName: "Thread the Needle",
+		moduleID: "threadTheNeedle",
+		loggingTag: "Thread the Needle",
+		matches: [
+			{
+				regex: /(Wheel #(\d)( \(Bonus\))?:) (.+)/,
+				handler: function (matches, module) {
+					module.push({label: matches[1], obj: pre(matches[4])})
+                    return true;
+				}
+			},
+			{
+				regex: /.+/,
 			}
 		]
 	},

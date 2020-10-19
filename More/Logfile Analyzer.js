@@ -1301,6 +1301,13 @@ $(function() {
 
 	function uploadFiles(files) {
 		if (files.length === 1) {
+			if ($("#upload-to-server").prop('checked'))
+			{
+				$('#upload')[0].files = files;
+				$('#upload-form').submit();
+				return;
+			}
+
 			var fr = new FileReader();
 			fr.onload = function() {
 				dropMsg.removeClass("hovering");
@@ -1361,10 +1368,7 @@ $(function() {
 	});
 
 	$("#upload").change(function() {
-		if ($("#upload-to-server").prop('checked'))
-			$('#upload-form').submit();
-		else
-			uploadFiles(this.files);
+		uploadFiles(this.files);
 	});
 
 	window.onhashchange = function() {
