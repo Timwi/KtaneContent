@@ -6572,7 +6572,7 @@ const parseData = [
 		loggingTag: "Wavetapping",
 		matches: [
 			{
-				regex: /:?Stage colors are: (\w+), (\w+), (\w+)/,
+				regex: /:?Stage colors are: (.+), (.+), (.+)/,
 				handler: function (matches, module) {
 					var stageColorIndex = [];
 					for (var i = 0; i < 3; i++) {
@@ -6582,9 +6582,9 @@ const parseData = [
 							.replace(/Orange/g, "1")
 							.replace(/Chartreuse/g, "3")
 							.replace(/Lime/g, "4")
-							.replace(/Green/g, "5")
 							.replace(/Seafoam Green/g, "6")
 							.replace(/Cyan-Green/g, "7")
+							.replace(/Green/g, "5")
 							.replace(/Dark Blue/g, "8")
 							.replace(/Purple-Magenta/g, "9")
 							.replace(/Turquoise/g, "10")
