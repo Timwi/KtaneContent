@@ -4456,7 +4456,7 @@ const parseData = [
 							$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(buttonToLabel[i]).appendTo(svg);
 						}
 
-						module.push({ label: "Button Colors:", obj: svg });
+						module.push({ label: "Button Colors:", obj: svg.css('width', '50%') });
 
 						return true;
 					}
