@@ -286,8 +286,8 @@ class BombGroup {
 			.appendTo(modules)
 			.addCardClick(eventInfo);
 
-		this.loggedBombs.forEach(function(bomb) {
-			bomb.ToHTML(filteredTab).appendTo(bombGroupHTML);
+		this.loggedBombs.forEach((bomb) => {
+			bomb.ToHTML(filteredTab, this.RuleSeed).appendTo(bombGroupHTML);
 		});
 
 		$("<hr color=#ccc size=1>").appendTo(bombGroupHTML);
@@ -448,7 +448,7 @@ function Bomb(seed) {
 
 		return info[1];
 	};
-	this.ToHTML = function(filteredTab) {
+	this.ToHTML = function(filteredTab, ruleSeed) {
 		var serial = this.Serial;
 		var info = $("<div class='bomb-info' id='bomb-" + serial + "'>");
 
@@ -789,6 +789,11 @@ function Bomb(seed) {
 					.replace(" Translated", " translated");
 			}
 
+			manual += ".html";
+
+			if (ruleSeed != 1)
+				manual += "#" + ruleSeed;
+
 			return manual;
 		}
 
@@ -797,7 +802,7 @@ function Bomb(seed) {
 			// Information
 			var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 			$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
-			$("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}.html`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
+			$("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
 			if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
 				makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
 			} else if (parseData.moduleData.hasLogging === false) {
