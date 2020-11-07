@@ -4890,6 +4890,23 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "pocketPlanesModule",
+		loggingTag: "Pocket Planes",
+		matches: [
+			{
+				regex: /(The displayed BitBook posts are as follows:)|The values of the planes are as follows:|The displayed items are as follows:|(The item that should be loaded with top priority is:)/,
+				handler: function (matches, module) {
+					var numberOfLines = matches[1] ? 3 : matches[2] ? 1 : 4;
+					module.push({ label: matches.input, obj: pre(readMultiple(numberOfLines))})
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "poetry",
 		loggingTag: "Poetry",
 		matches: [
