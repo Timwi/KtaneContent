@@ -5815,6 +5815,63 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "Shoddy Chess",
+		moduleID: "ShoddyChessModule",
+		loggingTag: "Shoddy Chess",
+		matches: [
+			{
+				regex: /movequeue/,
+				handler: function (matches, module) {
+					module.push(matches.input);
+					return true;
+				}	
+			},
+			{
+				regex: /Module is now in the solve phase, good luck!/,
+				handler: function (matches, module) {
+					module.push({obj: matches.input, nobullet: true});
+					return true;
+				}	
+			},
+			{
+				regex: /----------Stage (.+):----------/,
+				handler: function (matches, module) {
+					module.Stage = ["Stage " + matches[1], []];
+					module.push(module.Stage);
+
+					return true;
+				}
+			},
+			{
+				regex: /The submitted answer was:/,
+				handler: function (matches, module) {
+					module.Stage = ["Submitted answer", []];
+					module.push(module.Stage);
+
+					return true;
+				}
+			},
+			{
+				regex: /Board:/,
+				handler: function (matches, module) {
+					module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true});
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if ('Stage' in module)
+						module.Stage[1].push(matches.input);
+					else
+						// Any messages logged before the start
+						module.push(matches.input);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SillySlots",
 		loggingTag: "Silly Slots",
 		matches: [
