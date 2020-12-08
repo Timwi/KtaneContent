@@ -3037,6 +3037,22 @@ const parseData = [
 		displayName: "Jukebox.WAV."
 	},
 	{
+		moduleID: "keepClicking",
+		loggingTag: "Keep Clicking",
+		matches: [
+			{
+				regex: /^Symbols \(left-to-right, top-to-bottom\):$/,
+				handler: function (matches, module) {
+					module.push({ label: "Symbols (left-to-right, top-to-bottom):", obj: pre(readMultiple(3))})
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "Keypad",
 		loggingTag: "KeypadComponent"
 	},
