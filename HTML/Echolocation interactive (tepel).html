@@ -1,0 +1,505 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Echolocation — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .click-box {
+            fill-opacity: 0;
+        }
+        
+        .click-box:hover {
+            fill-opacity: 0.3;
+        }
+        
+        .canvas {
+            margin-top: 32px;
+        }
+        
+        .line {
+            stroke: #222;
+            stroke-width: 0.5;
+            stroke-dasharray: 0.1 1;
+            stroke-linecap: round;
+        }
+        
+        .line.solid {
+            stroke-dasharray: none;
+        }
+    </style>
+
+    <script>
+        const VIEW_WIDTH = 100;
+        const BOX_WIDTH = 2;
+
+        let vert = Array.from({
+            length: 8
+        }, () => Array.from({
+            length: 9
+        }, () => 0));
+        let horiz = Array.from({
+            length: 9
+        }, () => Array.from({
+            length: 8
+        }, () => 0));
+        let $vertline = Array.from({
+            length: 8
+        }, () => Array.from({
+            length: 9
+        }));
+        let $horizline = Array.from({
+            length: 9
+        }, () => Array.from({
+            length: 8
+        }));
+
+        function shift(dx, dy) {
+            vert = Array.from({
+                length: 8
+            }, (_, i) => Array.from({
+                length: 9
+            }, (_, j) => {
+                if (i + dy < 0 || i + dy >= 8 || j + dx < 0 || j + dx >= 9) return 0;
+                return vert[i + dy][j + dx];
+            }));
+            horiz = Array.from({
+                length: 9
+            }, (_, i) => Array.from({
+                length: 8
+            }, (_, j) => {
+                if (i + dy < 0 || i + dy >= 9 || j + dx < 0 || j + dx >= 8) return 0;
+                return horiz[i + dy][j + dx];
+            }));
+            draw();
+        }
+
+        function toggleVert(y, x) {
+            vert[x][y] = 1 - vert[x][y];
+            draw();
+        }
+
+        function toggleHoriz(y, x) {
+            horiz[x][y] = 1 - horiz[x][y];
+            draw();
+        }
+
+        function draw() {
+            for (let i = 0; i < vert.length; i++) {
+                for (let j = 0; j < vert[i].length; j++) {
+                    if (vert[i][j]) {
+                        $vertline[i][j].setAttribute("class", "line solid");
+                    } else {
+                        $vertline[i][j].setAttribute("class", "line");
+                    }
+                }
+            }
+            for (let i = 0; i < horiz.length; i++) {
+                for (let j = 0; j < horiz[i].length; j++) {
+                    if (horiz[i][j]) {
+                        $horizline[i][j].setAttribute("class", "line solid");
+                    } else {
+                        $horizline[i][j].setAttribute("class", "line");
+                    }
+                }
+            }
+        }
+
+        function reset() {
+            vert = Array.from({
+                length: 8
+            }, () => Array.from({
+                length: 9
+            }, () => 0));
+            horiz = Array.from({
+                length: 9
+            }, () => Array.from({
+                length: 8
+            }, () => 0));
+            draw();
+        }
+
+        window.addEventListener("load", () => {
+            const $left = document.getElementById("left-button");
+            const $right = document.getElementById("right-button");
+            const $up = document.getElementById("up-button");
+            const $down = document.getElementById("down-button");
+            const $reset = document.getElementById("reset-button");
+
+            $left.addEventListener("click", () => shift(1, 0));
+            $right.addEventListener("click", () => shift(-1, 0));
+            $up.addEventListener("click", () => shift(0, 1));
+            $down.addEventListener("click", () => shift(0, -1));
+            $reset.addEventListener("click", () => reset());
+
+
+            for (let i = 0; i < vert.length; i++) {
+                for (let j = 0; j < vert[i].length; j++) {
+                    $vertline[i][j] = document.getElementById(`vertline-${i}-${j}`);
+                    document.getElementById(`vert-${i}-${j}`).addEventListener("click", () => toggleVert(j, i));
+                }
+            }
+            for (let i = 0; i < horiz.length; i++) {
+                for (let j = 0; j < horiz[i].length; j++) {
+                    $horizline[i][j] = document.getElementById(`horizline-${i}-${j}`);
+                    document.getElementById(`horiz-${i}-${j}`).addEventListener("click", () => toggleHoriz(j, i));
+                }
+            }
+
+            draw();
+        });
+    </script>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Echolocation</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Echolocation.svg" class="diagram">
+                <h2>On the Subject of Echolocation</h2>
+                <p class="flavour-text">Close your eyes and open your mind...</p>
+
+                <ul>
+                    <li>This module is completely black, however there are five invisible buttons.</li>
+                    <li>In each cardinal direction there is an “arrow” that when pressed will turn you in that direction, and the one north will move you in that direction.</li>
+                    <li>The button in the center is used to make a high pitched noise.</li>
+                    <li>The noise will bounce off of the object and come back to you.</li>
+                    <li>The key will make a 'ping' sound, the exit will make a 'ding' sound, any walls will make a 'sonar wave' sound.</li>
+                    <li>The noise takes one second to go one space forward. Once you press the button, the “timer” for the ping starts.</li>
+                    <li>The maze has a key and an exit, both of which return distinct noises when a pitch is played in that direction.</li>
+                    <li>To pick up the key, go to where it is and hold the center button.</li>
+                    <li>Once you have the key, simply go to where the hatch is and hold the center button to unlock it and solve the module. Doing this without the key will result in a strike as well as doing it anywhere else. A strike will also be received
+                        if you try to pick up the key in the wrong place or walk into a wall.</li>
+                </ul>
+
+                <h3>Maze Specifications</h3>
+                <ul>
+                    <li>The maze is a 6x6, with the outer edges of the maze being covered completely by walls.</li>
+                    <li>The walls, keys, and exit locations are completely randomized.</li>
+                    <li>A wall can separate two spaces orthogonally.</li>
+                    <li>You, the key and the exit are always in the center of a square, thus the key and the exit will only make sounds an integer number of seconds after you make a sound. Walls on the other hand are on the edge of squares, and thus will
+                        be played half a second more than an integer number of seconds.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Echolocation</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <button id="reset-button">Reset</button>
+                    <button id="left-button">Shift Left</button>
+                    <button id="right-button">Shift Right</button>
+                    <button id="up-button">Shift Up</button>
+                    <button id="down-button">Shift Down</button>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="canvas">
+                    <line x1="1" y1="1" x2="1" y2="13.25" class="line" id="vertline-0-0"/>
+                    <line y1="1" x1="1" y2="1" x2="13.25" class="line" id="horizline-0-0"/>
+                    <line x1="13.25" y1="1" x2="13.25" y2="13.25" class="line" id="vertline-0-1"/>
+                    <line y1="13.25" x1="1" y2="13.25" x2="13.25" class="line" id="horizline-1-0"/>
+                    <line x1="25.5" y1="1" x2="25.5" y2="13.25" class="line" id="vertline-0-2"/>
+                    <line y1="25.5" x1="1" y2="25.5" x2="13.25" class="line" id="horizline-2-0"/>
+                    <line x1="37.75" y1="1" x2="37.75" y2="13.25" class="line" id="vertline-0-3"/>
+                    <line y1="37.75" x1="1" y2="37.75" x2="13.25" class="line" id="horizline-3-0"/>
+                    <line x1="50" y1="1" x2="50" y2="13.25" class="line" id="vertline-0-4"/>
+                    <line y1="50" x1="1" y2="50" x2="13.25" class="line" id="horizline-4-0"/>
+                    <line x1="62.25" y1="1" x2="62.25" y2="13.25" class="line" id="vertline-0-5"/>
+                    <line y1="62.25" x1="1" y2="62.25" x2="13.25" class="line" id="horizline-5-0"/>
+                    <line x1="74.5" y1="1" x2="74.5" y2="13.25" class="line" id="vertline-0-6"/>
+                    <line y1="74.5" x1="1" y2="74.5" x2="13.25" class="line" id="horizline-6-0"/>
+                    <line x1="86.75" y1="1" x2="86.75" y2="13.25" class="line" id="vertline-0-7"/>
+                    <line y1="86.75" x1="1" y2="86.75" x2="13.25" class="line" id="horizline-7-0"/>
+                    <line x1="99" y1="1" x2="99" y2="13.25" class="line" id="vertline-0-8"/>
+                    <line y1="99" x1="1" y2="99" x2="13.25" class="line" id="horizline-8-0"/>
+                    <line x1="1" y1="13.25" x2="1" y2="25.5" class="line" id="vertline-1-0"/>
+                    <line y1="1" x1="13.25" y2="1" x2="25.5" class="line" id="horizline-0-1"/>
+                    <line x1="13.25" y1="13.25" x2="13.25" y2="25.5" class="line" id="vertline-1-1"/>
+                    <line y1="13.25" x1="13.25" y2="13.25" x2="25.5" class="line" id="horizline-1-1"/>
+                    <line x1="25.5" y1="13.25" x2="25.5" y2="25.5" class="line" id="vertline-1-2"/>
+                    <line y1="25.5" x1="13.25" y2="25.5" x2="25.5" class="line" id="horizline-2-1"/>
+                    <line x1="37.75" y1="13.25" x2="37.75" y2="25.5" class="line" id="vertline-1-3"/>
+                    <line y1="37.75" x1="13.25" y2="37.75" x2="25.5" class="line" id="horizline-3-1"/>
+                    <line x1="50" y1="13.25" x2="50" y2="25.5" class="line" id="vertline-1-4"/>
+                    <line y1="50" x1="13.25" y2="50" x2="25.5" class="line" id="horizline-4-1"/>
+                    <line x1="62.25" y1="13.25" x2="62.25" y2="25.5" class="line" id="vertline-1-5"/>
+                    <line y1="62.25" x1="13.25" y2="62.25" x2="25.5" class="line" id="horizline-5-1"/>
+                    <line x1="74.5" y1="13.25" x2="74.5" y2="25.5" class="line" id="vertline-1-6"/>
+                    <line y1="74.5" x1="13.25" y2="74.5" x2="25.5" class="line" id="horizline-6-1"/>
+                    <line x1="86.75" y1="13.25" x2="86.75" y2="25.5" class="line" id="vertline-1-7"/>
+                    <line y1="86.75" x1="13.25" y2="86.75" x2="25.5" class="line" id="horizline-7-1"/>
+                    <line x1="99" y1="13.25" x2="99" y2="25.5" class="line" id="vertline-1-8"/>
+                    <line y1="99" x1="13.25" y2="99" x2="25.5" class="line" id="horizline-8-1"/>
+                    <line x1="1" y1="25.5" x2="1" y2="37.75" class="line" id="vertline-2-0"/>
+                    <line y1="1" x1="25.5" y2="1" x2="37.75" class="line" id="horizline-0-2"/>
+                    <line x1="13.25" y1="25.5" x2="13.25" y2="37.75" class="line" id="vertline-2-1"/>
+                    <line y1="13.25" x1="25.5" y2="13.25" x2="37.75" class="line" id="horizline-1-2"/>
+                    <line x1="25.5" y1="25.5" x2="25.5" y2="37.75" class="line" id="vertline-2-2"/>
+                    <line y1="25.5" x1="25.5" y2="25.5" x2="37.75" class="line" id="horizline-2-2"/>
+                    <line x1="37.75" y1="25.5" x2="37.75" y2="37.75" class="line" id="vertline-2-3"/>
+                    <line y1="37.75" x1="25.5" y2="37.75" x2="37.75" class="line" id="horizline-3-2"/>
+                    <line x1="50" y1="25.5" x2="50" y2="37.75" class="line" id="vertline-2-4"/>
+                    <line y1="50" x1="25.5" y2="50" x2="37.75" class="line" id="horizline-4-2"/>
+                    <line x1="62.25" y1="25.5" x2="62.25" y2="37.75" class="line" id="vertline-2-5"/>
+                    <line y1="62.25" x1="25.5" y2="62.25" x2="37.75" class="line" id="horizline-5-2"/>
+                    <line x1="74.5" y1="25.5" x2="74.5" y2="37.75" class="line" id="vertline-2-6"/>
+                    <line y1="74.5" x1="25.5" y2="74.5" x2="37.75" class="line" id="horizline-6-2"/>
+                    <line x1="86.75" y1="25.5" x2="86.75" y2="37.75" class="line" id="vertline-2-7"/>
+                    <line y1="86.75" x1="25.5" y2="86.75" x2="37.75" class="line" id="horizline-7-2"/>
+                    <line x1="99" y1="25.5" x2="99" y2="37.75" class="line" id="vertline-2-8"/>
+                    <line y1="99" x1="25.5" y2="99" x2="37.75" class="line" id="horizline-8-2"/>
+                    <line x1="1" y1="37.75" x2="1" y2="50" class="line" id="vertline-3-0"/>
+                    <line y1="1" x1="37.75" y2="1" x2="50" class="line" id="horizline-0-3"/>
+                    <line x1="13.25" y1="37.75" x2="13.25" y2="50" class="line" id="vertline-3-1"/>
+                    <line y1="13.25" x1="37.75" y2="13.25" x2="50" class="line" id="horizline-1-3"/>
+                    <line x1="25.5" y1="37.75" x2="25.5" y2="50" class="line" id="vertline-3-2"/>
+                    <line y1="25.5" x1="37.75" y2="25.5" x2="50" class="line" id="horizline-2-3"/>
+                    <line x1="37.75" y1="37.75" x2="37.75" y2="50" class="line" id="vertline-3-3"/>
+                    <line y1="37.75" x1="37.75" y2="37.75" x2="50" class="line" id="horizline-3-3"/>
+                    <line x1="50" y1="37.75" x2="50" y2="50" class="line" id="vertline-3-4"/>
+                    <line y1="50" x1="37.75" y2="50" x2="50" class="line" id="horizline-4-3"/>
+                    <line x1="62.25" y1="37.75" x2="62.25" y2="50" class="line" id="vertline-3-5"/>
+                    <line y1="62.25" x1="37.75" y2="62.25" x2="50" class="line" id="horizline-5-3"/>
+                    <line x1="74.5" y1="37.75" x2="74.5" y2="50" class="line" id="vertline-3-6"/>
+                    <line y1="74.5" x1="37.75" y2="74.5" x2="50" class="line" id="horizline-6-3"/>
+                    <line x1="86.75" y1="37.75" x2="86.75" y2="50" class="line" id="vertline-3-7"/>
+                    <line y1="86.75" x1="37.75" y2="86.75" x2="50" class="line" id="horizline-7-3"/>
+                    <line x1="99" y1="37.75" x2="99" y2="50" class="line" id="vertline-3-8"/>
+                    <line y1="99" x1="37.75" y2="99" x2="50" class="line" id="horizline-8-3"/>
+                    <line x1="1" y1="50" x2="1" y2="62.25" class="line" id="vertline-4-0"/>
+                    <line y1="1" x1="50" y2="1" x2="62.25" class="line" id="horizline-0-4"/>
+                    <line x1="13.25" y1="50" x2="13.25" y2="62.25" class="line" id="vertline-4-1"/>
+                    <line y1="13.25" x1="50" y2="13.25" x2="62.25" class="line" id="horizline-1-4"/>
+                    <line x1="25.5" y1="50" x2="25.5" y2="62.25" class="line" id="vertline-4-2"/>
+                    <line y1="25.5" x1="50" y2="25.5" x2="62.25" class="line" id="horizline-2-4"/>
+                    <line x1="37.75" y1="50" x2="37.75" y2="62.25" class="line" id="vertline-4-3"/>
+                    <line y1="37.75" x1="50" y2="37.75" x2="62.25" class="line" id="horizline-3-4"/>
+                    <line x1="50" y1="50" x2="50" y2="62.25" class="line" id="vertline-4-4"/>
+                    <line y1="50" x1="50" y2="50" x2="62.25" class="line" id="horizline-4-4"/>
+                    <line x1="62.25" y1="50" x2="62.25" y2="62.25" class="line" id="vertline-4-5"/>
+                    <line y1="62.25" x1="50" y2="62.25" x2="62.25" class="line" id="horizline-5-4"/>
+                    <line x1="74.5" y1="50" x2="74.5" y2="62.25" class="line" id="vertline-4-6"/>
+                    <line y1="74.5" x1="50" y2="74.5" x2="62.25" class="line" id="horizline-6-4"/>
+                    <line x1="86.75" y1="50" x2="86.75" y2="62.25" class="line" id="vertline-4-7"/>
+                    <line y1="86.75" x1="50" y2="86.75" x2="62.25" class="line" id="horizline-7-4"/>
+                    <line x1="99" y1="50" x2="99" y2="62.25" class="line" id="vertline-4-8"/>
+                    <line y1="99" x1="50" y2="99" x2="62.25" class="line" id="horizline-8-4"/>
+                    <line x1="1" y1="62.25" x2="1" y2="74.5" class="line" id="vertline-5-0"/>
+                    <line y1="1" x1="62.25" y2="1" x2="74.5" class="line" id="horizline-0-5"/>
+                    <line x1="13.25" y1="62.25" x2="13.25" y2="74.5" class="line" id="vertline-5-1"/>
+                    <line y1="13.25" x1="62.25" y2="13.25" x2="74.5" class="line" id="horizline-1-5"/>
+                    <line x1="25.5" y1="62.25" x2="25.5" y2="74.5" class="line" id="vertline-5-2"/>
+                    <line y1="25.5" x1="62.25" y2="25.5" x2="74.5" class="line" id="horizline-2-5"/>
+                    <line x1="37.75" y1="62.25" x2="37.75" y2="74.5" class="line" id="vertline-5-3"/>
+                    <line y1="37.75" x1="62.25" y2="37.75" x2="74.5" class="line" id="horizline-3-5"/>
+                    <line x1="50" y1="62.25" x2="50" y2="74.5" class="line" id="vertline-5-4"/>
+                    <line y1="50" x1="62.25" y2="50" x2="74.5" class="line" id="horizline-4-5"/>
+                    <line x1="62.25" y1="62.25" x2="62.25" y2="74.5" class="line" id="vertline-5-5"/>
+                    <line y1="62.25" x1="62.25" y2="62.25" x2="74.5" class="line" id="horizline-5-5"/>
+                    <line x1="74.5" y1="62.25" x2="74.5" y2="74.5" class="line" id="vertline-5-6"/>
+                    <line y1="74.5" x1="62.25" y2="74.5" x2="74.5" class="line" id="horizline-6-5"/>
+                    <line x1="86.75" y1="62.25" x2="86.75" y2="74.5" class="line" id="vertline-5-7"/>
+                    <line y1="86.75" x1="62.25" y2="86.75" x2="74.5" class="line" id="horizline-7-5"/>
+                    <line x1="99" y1="62.25" x2="99" y2="74.5" class="line" id="vertline-5-8"/>
+                    <line y1="99" x1="62.25" y2="99" x2="74.5" class="line" id="horizline-8-5"/>
+                    <line x1="1" y1="74.5" x2="1" y2="86.75" class="line" id="vertline-6-0"/>
+                    <line y1="1" x1="74.5" y2="1" x2="86.75" class="line" id="horizline-0-6"/>
+                    <line x1="13.25" y1="74.5" x2="13.25" y2="86.75" class="line" id="vertline-6-1"/>
+                    <line y1="13.25" x1="74.5" y2="13.25" x2="86.75" class="line" id="horizline-1-6"/>
+                    <line x1="25.5" y1="74.5" x2="25.5" y2="86.75" class="line" id="vertline-6-2"/>
+                    <line y1="25.5" x1="74.5" y2="25.5" x2="86.75" class="line" id="horizline-2-6"/>
+                    <line x1="37.75" y1="74.5" x2="37.75" y2="86.75" class="line" id="vertline-6-3"/>
+                    <line y1="37.75" x1="74.5" y2="37.75" x2="86.75" class="line" id="horizline-3-6"/>
+                    <line x1="50" y1="74.5" x2="50" y2="86.75" class="line" id="vertline-6-4"/>
+                    <line y1="50" x1="74.5" y2="50" x2="86.75" class="line" id="horizline-4-6"/>
+                    <line x1="62.25" y1="74.5" x2="62.25" y2="86.75" class="line" id="vertline-6-5"/>
+                    <line y1="62.25" x1="74.5" y2="62.25" x2="86.75" class="line" id="horizline-5-6"/>
+                    <line x1="74.5" y1="74.5" x2="74.5" y2="86.75" class="line" id="vertline-6-6"/>
+                    <line y1="74.5" x1="74.5" y2="74.5" x2="86.75" class="line" id="horizline-6-6"/>
+                    <line x1="86.75" y1="74.5" x2="86.75" y2="86.75" class="line" id="vertline-6-7"/>
+                    <line y1="86.75" x1="74.5" y2="86.75" x2="86.75" class="line" id="horizline-7-6"/>
+                    <line x1="99" y1="74.5" x2="99" y2="86.75" class="line" id="vertline-6-8"/>
+                    <line y1="99" x1="74.5" y2="99" x2="86.75" class="line" id="horizline-8-6"/>
+                    <line x1="1" y1="86.75" x2="1" y2="99" class="line" id="vertline-7-0"/>
+                    <line y1="1" x1="86.75" y2="1" x2="99" class="line" id="horizline-0-7"/>
+                    <line x1="13.25" y1="86.75" x2="13.25" y2="99" class="line" id="vertline-7-1"/>
+                    <line y1="13.25" x1="86.75" y2="13.25" x2="99" class="line" id="horizline-1-7"/>
+                    <line x1="25.5" y1="86.75" x2="25.5" y2="99" class="line" id="vertline-7-2"/>
+                    <line y1="25.5" x1="86.75" y2="25.5" x2="99" class="line" id="horizline-2-7"/>
+                    <line x1="37.75" y1="86.75" x2="37.75" y2="99" class="line" id="vertline-7-3"/>
+                    <line y1="37.75" x1="86.75" y2="37.75" x2="99" class="line" id="horizline-3-7"/>
+                    <line x1="50" y1="86.75" x2="50" y2="99" class="line" id="vertline-7-4"/>
+                    <line y1="50" x1="86.75" y2="50" x2="99" class="line" id="horizline-4-7"/>
+                    <line x1="62.25" y1="86.75" x2="62.25" y2="99" class="line" id="vertline-7-5"/>
+                    <line y1="62.25" x1="86.75" y2="62.25" x2="99" class="line" id="horizline-5-7"/>
+                    <line x1="74.5" y1="86.75" x2="74.5" y2="99" class="line" id="vertline-7-6"/>
+                    <line y1="74.5" x1="86.75" y2="74.5" x2="99" class="line" id="horizline-6-7"/>
+                    <line x1="86.75" y1="86.75" x2="86.75" y2="99" class="line" id="vertline-7-7"/>
+                    <line y1="86.75" x1="86.75" y2="86.75" x2="99" class="line" id="horizline-7-7"/>
+                    <line x1="99" y1="86.75" x2="99" y2="99" class="line" id="vertline-7-8"/>
+                    <line y1="99" x1="86.75" y2="99" x2="99" class="line" id="horizline-8-7"/>
+                    <rect y="0" x="0" height="2" width="14.25" class="click-box" id="horiz-0-0"/> 
+                    <rect x="0" y="0" width="2" height="14.25" class="click-box" id="vert-0-0"/>
+                    <rect y="12.25" x="0" height="2" width="14.25" class="click-box" id="horiz-1-0"/>
+                    <rect x="12.25" y="0" width="2" height="14.25" class="click-box" id="vert-0-1"/>
+                    <rect y="24.5" x="0" height="2" width="14.25" class="click-box" id="horiz-2-0"/>
+                    <rect x="24.5" y="0" width="2" height="14.25" class="click-box" id="vert-0-2"/>
+                    <rect y="36.75" x="0" height="2" width="14.25" class="click-box" id="horiz-3-0"/>
+                    <rect x="36.75" y="0" width="2" height="14.25" class="click-box" id="vert-0-3"/>
+                    <rect y="49" x="0" height="2" width="14.25" class="click-box" id="horiz-4-0"/>
+                    <rect x="49" y="0" width="2" height="14.25" class="click-box" id="vert-0-4"/>
+                    <rect y="61.25" x="0" height="2" width="14.25" class="click-box" id="horiz-5-0"/>
+                    <rect x="61.25" y="0" width="2" height="14.25" class="click-box" id="vert-0-5"/>
+                    <rect y="73.5" x="0" height="2" width="14.25" class="click-box" id="horiz-6-0"/>
+                    <rect x="73.5" y="0" width="2" height="14.25" class="click-box" id="vert-0-6"/>
+                    <rect y="85.75" x="0" height="2" width="14.25" class="click-box" id="horiz-7-0"/>
+                    <rect x="85.75" y="0" width="2" height="14.25" class="click-box" id="vert-0-7"/>
+                    <rect y="98" x="0" height="2" width="14.25" class="click-box" id="horiz-8-0"/>
+                    <rect x="98" y="0" width="2" height="14.25" class="click-box" id="vert-0-8"/>
+                    <rect y="0" x="12.25" height="2" width="14.25" class="click-box" id="horiz-0-1"/>
+                    <rect x="0" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-0"/>
+                    <rect y="12.25" x="12.25" height="2" width="14.25" class="click-box" id="horiz-1-1"/>
+                    <rect x="12.25" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-1"/>
+                    <rect y="24.5" x="12.25" height="2" width="14.25" class="click-box" id="horiz-2-1"/>
+                    <rect x="24.5" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-2"/>
+                    <rect y="36.75" x="12.25" height="2" width="14.25" class="click-box" id="horiz-3-1"/>
+                    <rect x="36.75" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-3"/>
+                    <rect y="49" x="12.25" height="2" width="14.25" class="click-box" id="horiz-4-1"/>
+                    <rect x="49" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-4"/>
+                    <rect y="61.25" x="12.25" height="2" width="14.25" class="click-box" id="horiz-5-1"/>
+                    <rect x="61.25" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-5"/>
+                    <rect y="73.5" x="12.25" height="2" width="14.25" class="click-box" id="horiz-6-1"/>
+                    <rect x="73.5" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-6"/>
+                    <rect y="85.75" x="12.25" height="2" width="14.25" class="click-box" id="horiz-7-1"/>
+                    <rect x="85.75" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-7"/>
+                    <rect y="98" x="12.25" height="2" width="14.25" class="click-box" id="horiz-8-1"/>
+                    <rect x="98" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-8"/>
+                    <rect y="0" x="24.5" height="2" width="14.25" class="click-box" id="horiz-0-2"/>
+                    <rect x="0" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-0"/>
+                    <rect y="12.25" x="24.5" height="2" width="14.25" class="click-box" id="horiz-1-2"/>
+                    <rect x="12.25" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-1"/>
+                    <rect y="24.5" x="24.5" height="2" width="14.25" class="click-box" id="horiz-2-2"/>
+                    <rect x="24.5" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-2"/>
+                    <rect y="36.75" x="24.5" height="2" width="14.25" class="click-box" id="horiz-3-2"/>
+                    <rect x="36.75" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-3"/>
+                    <rect y="49" x="24.5" height="2" width="14.25" class="click-box" id="horiz-4-2"/>
+                    <rect x="49" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-4"/>
+                    <rect y="61.25" x="24.5" height="2" width="14.25" class="click-box" id="horiz-5-2"/>
+                    <rect x="61.25" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-5"/>
+                    <rect y="73.5" x="24.5" height="2" width="14.25" class="click-box" id="horiz-6-2"/>
+                    <rect x="73.5" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-6"/>
+                    <rect y="85.75" x="24.5" height="2" width="14.25" class="click-box" id="horiz-7-2"/>
+                    <rect x="85.75" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-7"/>
+                    <rect y="98" x="24.5" height="2" width="14.25" class="click-box" id="horiz-8-2"/>
+                    <rect x="98" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-8"/>
+                    <rect y="0" x="36.75" height="2" width="14.25" class="click-box" id="horiz-0-3"/>
+                    <rect x="0" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-0"/>
+                    <rect y="12.25" x="36.75" height="2" width="14.25" class="click-box" id="horiz-1-3"/>
+                    <rect x="12.25" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-1"/>
+                    <rect y="24.5" x="36.75" height="2" width="14.25" class="click-box" id="horiz-2-3"/>
+                    <rect x="24.5" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-2"/>
+                    <rect y="36.75" x="36.75" height="2" width="14.25" class="click-box" id="horiz-3-3"/>
+                    <rect x="36.75" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-3"/>
+                    <rect y="49" x="36.75" height="2" width="14.25" class="click-box" id="horiz-4-3"/>
+                    <rect x="49" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-4"/>
+                    <rect y="61.25" x="36.75" height="2" width="14.25" class="click-box" id="horiz-5-3"/>
+                    <rect x="61.25" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-5"/>
+                    <rect y="73.5" x="36.75" height="2" width="14.25" class="click-box" id="horiz-6-3"/>
+                    <rect x="73.5" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-6"/>
+                    <rect y="85.75" x="36.75" height="2" width="14.25" class="click-box" id="horiz-7-3"/>
+                    <rect x="85.75" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-7"/>
+                    <rect y="98" x="36.75" height="2" width="14.25" class="click-box" id="horiz-8-3"/>
+                    <rect x="98" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-8"/>
+                    <rect y="0" x="49" height="2" width="14.25" class="click-box" id="horiz-0-4"/>
+                    <rect x="0" y="49" width="2" height="14.25" class="click-box" id="vert-4-0"/>
+                    <rect y="12.25" x="49" height="2" width="14.25" class="click-box" id="horiz-1-4"/>
+                    <rect x="12.25" y="49" width="2" height="14.25" class="click-box" id="vert-4-1"/>
+                    <rect y="24.5" x="49" height="2" width="14.25" class="click-box" id="horiz-2-4"/>
+                    <rect x="24.5" y="49" width="2" height="14.25" class="click-box" id="vert-4-2"/>
+                    <rect y="36.75" x="49" height="2" width="14.25" class="click-box" id="horiz-3-4"/>
+                    <rect x="36.75" y="49" width="2" height="14.25" class="click-box" id="vert-4-3"/>
+                    <rect y="49" x="49" height="2" width="14.25" class="click-box" id="horiz-4-4"/>
+                    <rect x="49" y="49" width="2" height="14.25" class="click-box" id="vert-4-4"/>
+                    <rect y="61.25" x="49" height="2" width="14.25" class="click-box" id="horiz-5-4"/>
+                    <rect x="61.25" y="49" width="2" height="14.25" class="click-box" id="vert-4-5"/>
+                    <rect y="73.5" x="49" height="2" width="14.25" class="click-box" id="horiz-6-4"/>
+                    <rect x="73.5" y="49" width="2" height="14.25" class="click-box" id="vert-4-6"/>
+                    <rect y="85.75" x="49" height="2" width="14.25" class="click-box" id="horiz-7-4"/>
+                    <rect x="85.75" y="49" width="2" height="14.25" class="click-box" id="vert-4-7"/>
+                    <rect y="98" x="49" height="2" width="14.25" class="click-box" id="horiz-8-4"/>
+                    <rect x="98" y="49" width="2" height="14.25" class="click-box" id="vert-4-8"/>
+                    <rect y="0" x="61.25" height="2" width="14.25" class="click-box" id="horiz-0-5"/>
+                    <rect x="0" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-0"/>
+                    <rect y="12.25" x="61.25" height="2" width="14.25" class="click-box" id="horiz-1-5"/>
+                    <rect x="12.25" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-1"/>
+                    <rect y="24.5" x="61.25" height="2" width="14.25" class="click-box" id="horiz-2-5"/>
+                    <rect x="24.5" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-2"/>
+                    <rect y="36.75" x="61.25" height="2" width="14.25" class="click-box" id="horiz-3-5"/>
+                    <rect x="36.75" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-3"/>
+                    <rect y="49" x="61.25" height="2" width="14.25" class="click-box" id="horiz-4-5"/>
+                    <rect x="49" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-4"/>
+                    <rect y="61.25" x="61.25" height="2" width="14.25" class="click-box" id="horiz-5-5"/>
+                    <rect x="61.25" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-5"/>
+                    <rect y="73.5" x="61.25" height="2" width="14.25" class="click-box" id="horiz-6-5"/>
+                    <rect x="73.5" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-6"/>
+                    <rect y="85.75" x="61.25" height="2" width="14.25" class="click-box" id="horiz-7-5"/>
+                    <rect x="85.75" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-7"/>
+                    <rect y="98" x="61.25" height="2" width="14.25" class="click-box" id="horiz-8-5"/>
+                    <rect x="98" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-8"/>
+                    <rect y="0" x="73.5" height="2" width="14.25" class="click-box" id="horiz-0-6"/>
+                    <rect x="0" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-0"/>
+                    <rect y="12.25" x="73.5" height="2" width="14.25" class="click-box" id="horiz-1-6"/>
+                    <rect x="12.25" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-1"/>
+                    <rect y="24.5" x="73.5" height="2" width="14.25" class="click-box" id="horiz-2-6"/>
+                    <rect x="24.5" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-2"/>
+                    <rect y="36.75" x="73.5" height="2" width="14.25" class="click-box" id="horiz-3-6"/>
+                    <rect x="36.75" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-3"/>
+                    <rect y="49" x="73.5" height="2" width="14.25" class="click-box" id="horiz-4-6"/>
+                    <rect x="49" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-4"/>
+                    <rect y="61.25" x="73.5" height="2" width="14.25" class="click-box" id="horiz-5-6"/>
+                    <rect x="61.25" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-5"/>
+                    <rect y="73.5" x="73.5" height="2" width="14.25" class="click-box" id="horiz-6-6"/>
+                    <rect x="73.5" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-6"/>
+                    <rect y="85.75" x="73.5" height="2" width="14.25" class="click-box" id="horiz-7-6"/>
+                    <rect x="85.75" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-7"/>
+                    <rect y="98" x="73.5" height="2" width="14.25" class="click-box" id="horiz-8-6"/>
+                    <rect x="98" y="73.5" width="2" height="14.25" class="click-box" id="vert-6-8"/>
+                    <rect y="0" x="85.75" height="2" width="14.25" class="click-box" id="horiz-0-7"/>
+                    <rect x="0" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-0"/>
+                    <rect y="12.25" x="85.75" height="2" width="14.25" class="click-box" id="horiz-1-7"/>
+                    <rect x="12.25" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-1"/>
+                    <rect y="24.5" x="85.75" height="2" width="14.25" class="click-box" id="horiz-2-7"/>
+                    <rect x="24.5" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-2"/>
+                    <rect y="36.75" x="85.75" height="2" width="14.25" class="click-box" id="horiz-3-7"/>
+                    <rect x="36.75" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-3"/>
+                    <rect y="49" x="85.75" height="2" width="14.25" class="click-box" id="horiz-4-7"/>
+                    <rect x="49" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-4"/>
+                    <rect y="61.25" x="85.75" height="2" width="14.25" class="click-box" id="horiz-5-7"/>
+                    <rect x="61.25" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-5"/>
+                    <rect y="73.5" x="85.75" height="2" width="14.25" class="click-box" id="horiz-6-7"/>
+                    <rect x="73.5" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-6"/>
+                    <rect y="85.75" x="85.75" height="2" width="14.25" class="click-box" id="horiz-7-7"/>
+                    <rect x="85.75" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-7"/>
+                    <rect y="98" x="85.75" height="2" width="14.25" class="click-box" id="horiz-8-7"/>
+                    <rect x="98" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-8"/>
+
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+
+</html>
