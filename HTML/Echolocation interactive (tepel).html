@@ -10,11 +10,13 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <style>
-        .click-box {
+        .click-box,
+        .grid-box {
             fill-opacity: 0;
         }
         
-        .click-box:hover {
+        .click-box:hover,
+        .grid-box:hover {
             fill-opacity: 0.3;
         }
         
@@ -31,6 +33,23 @@
         
         .line.solid {
             stroke-dasharray: none;
+        }
+        
+        .select-button {
+            border: #222 solid 1px;
+            width: 64px;
+            height: 64px;
+            margin-right: 16px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+        
+        .select-button img {
+            width: 100%;
+        }
+        
+        .select-button.selected {
+            border-width: 4px;
         }
     </style>
 
@@ -58,6 +77,18 @@
         }, () => Array.from({
             length: 8
         }));
+
+        let $blankButton;
+        let $keyButton;
+        let $exitButton;
+        let $blank;
+        let $key;
+        let $exit;
+        let mode;
+
+        let blankPos = [-1, -1];
+        let keyPos = [-1, -1];
+        let exitPos = [-1, -1];
 
         function shift(dx, dy) {
             vert = Array.from({
@@ -121,7 +152,69 @@
             }, () => Array.from({
                 length: 8
             }, () => 0));
+            blankPos = [-1, -1];
+            $blank.setAttribute("visibility", "hidden");
+            keyPos = [-1, -1];
+            $key.setAttribute("visibility", "hidden");
+            exitPos = [-1, -1];
+            $exit.setAttribute("visibility", "hidden");
             draw();
+            setMode("blank");
+        }
+
+        function setMode(str) {
+            mode = str;
+            if (str === "blank") {
+                $blankButton.setAttribute("class", "select-button selected");
+            } else {
+                $blankButton.setAttribute("class", "select-button");
+            }
+            if (str === "key") {
+                $keyButton.setAttribute("class", "select-button selected");
+            } else {
+                $keyButton.setAttribute("class", "select-button");
+            }
+            if (str === "exit") {
+                $exitButton.setAttribute("class", "select-button selected");
+            } else {
+                $exitButton.setAttribute("class", "select-button");
+            }
+        }
+
+        function setPos(x, y) {
+            removeIcon(x, y);
+            const $el = mode === "blank" ? $blank :
+                mode === "key" ? $key :
+                mode === "exit" ? $exit :
+                undefined;
+            if (!$el) return;
+
+            $el.setAttribute("x", x * 12.25 + 2);
+            $el.setAttribute("y", y * 12.25 + 2);
+
+            $el.setAttribute("visibility", "visible");
+
+
+            if (mode === "blank") blankPos = [x, y];
+            if (mode === "key") keyPos = [x, y];
+            if (mode === "exit") exitPos = [x, y];
+
+        }
+
+        function removeIcon(x, y) {
+            if (blankPos && (blankPos[0] === x && blankPos[1] === y)) {
+                blankPos = [-1, -1];
+                $blank.setAttribute("visibility", "hidden");
+            }
+            if (keyPos[0] === x && keyPos[1] === y) {
+                keyPos = [-1, -1];
+                $key.setAttribute("visibility", "hidden");
+            }
+            if (exitPos[0] === x && exitPos[1] === y) {
+                exitPos = [-1, -1];
+                $exit.setAttribute("visibility", "hidden");
+            }
+
         }
 
         window.addEventListener("load", () => {
@@ -137,6 +230,17 @@
             $down.addEventListener("click", () => shift(0, -1));
             $reset.addEventListener("click", () => reset());
 
+            $blankButton = document.getElementById("blank-select");
+            $keyButton = document.getElementById("key-select");
+            $exitButton = document.getElementById("exit-select");
+            $blank = document.getElementById("img-blank");
+            $key = document.getElementById("img-key");
+            $exit = document.getElementById("img-exit");
+
+            $blankButton.addEventListener("click", () => setMode("blank"));
+            $keyButton.addEventListener("click", () => setMode("key"));
+            $exitButton.addEventListener("click", () => setMode("exit"));
+
 
             for (let i = 0; i < vert.length; i++) {
                 for (let j = 0; j < vert[i].length; j++) {
@@ -151,7 +255,21 @@
                 }
             }
 
+            for (let i = 0; i < horiz.length - 1; i++) {
+                for (let j = 0; j < vert.length - 1; j++) {
+                    document.getElementById(`box-${i}-${j}`).addEventListener("click", () => setPos(j, i));
+                }
+            }
+            for (let i = 0; i < horiz.length - 1; i++) {
+                for (let j = 0; j < vert.length - 1; j++) {
+                    document.getElementById(`box-${i}-${j}`).addEventListener("contextmenu", e => {
+                        e.preventDefault();
+                        removeIcon(j, i);
+                    });
+                }
+            }
             draw();
+            setMode("blank");
         });
     </script>
 </head>
@@ -199,6 +317,11 @@
             </div>
             <div class="page-content">
                 <div>
+                    <button id="blank-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/marker.png"></button>
+                    <button id="key-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/key.png"></button>
+                    <button id="exit-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/exit.png"></button>
+                </div>
+                <div>
                     <button id="reset-button">Reset</button>
                     <button id="left-button">Shift Left</button>
                     <button id="right-button">Shift Right</button>
@@ -206,6 +329,9 @@
                     <button id="down-button">Shift Down</button>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="canvas">
+                    <image visibility="hidden" height="10.25" width="10.25" id="img-blank" href="img/Mystic Maze interactive (VFlyer)/marker.png" />
+                    <image visibility="hidden" height="10.25" width="10.25" id="img-exit" href="img/Mystic Maze interactive (VFlyer)/exit.png" />
+                    <image visibility="hidden" height="10.25" width="10.25" id="img-key" href="img/Mystic Maze interactive (VFlyer)/key.png" />
                     <line x1="1" y1="1" x2="1" y2="13.25" class="line" id="vertline-0-0"/>
                     <line y1="1" x1="1" y2="1" x2="13.25" class="line" id="horizline-0-0"/>
                     <line x1="13.25" y1="1" x2="13.25" y2="13.25" class="line" id="vertline-0-1"/>
@@ -494,7 +620,70 @@
                     <rect x="85.75" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-7"/>
                     <rect y="98" x="85.75" height="2" width="14.25" class="click-box" id="horiz-8-7"/>
                     <rect x="98" y="85.75" width="2" height="14.25" class="click-box" id="vert-7-8"/>
-
+                    <rect x="2" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-0" />
+                    <rect x="2" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-0" />
+                    <rect x="2" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-0" />
+                    <rect x="2" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-0" />
+                    <rect x="2" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-0" />
+                    <rect x="2" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-0" />
+                    <rect x="2" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-0" />
+                    <rect x="2" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-0" />
+                    <rect x="14.25" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-1" />
+                    <rect x="14.25" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-1" />
+                    <rect x="14.25" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-1" />
+                    <rect x="14.25" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-1" />
+                    <rect x="14.25" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-1" />
+                    <rect x="14.25" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-1" />
+                    <rect x="14.25" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-1" />
+                    <rect x="14.25" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-1" />
+                    <rect x="26.5" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-2" />
+                    <rect x="26.5" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-2" />
+                    <rect x="26.5" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-2" />
+                    <rect x="26.5" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-2" />
+                    <rect x="26.5" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-2" />
+                    <rect x="26.5" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-2" />
+                    <rect x="26.5" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-2" />
+                    <rect x="26.5" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-2" />
+                    <rect x="38.75" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-3" />
+                    <rect x="38.75" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-3" />
+                    <rect x="38.75" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-3" />
+                    <rect x="38.75" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-3" />
+                    <rect x="38.75" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-3" />
+                    <rect x="38.75" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-3" />
+                    <rect x="38.75" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-3" />
+                    <rect x="38.75" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-3" />
+                    <rect x="51" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-4" />
+                    <rect x="51" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-4" />
+                    <rect x="51" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-4" />
+                    <rect x="51" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-4" />
+                    <rect x="51" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-4" />
+                    <rect x="51" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-4" />
+                    <rect x="51" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-4" />
+                    <rect x="51" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-4" />
+                    <rect x="63.25" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-5" />
+                    <rect x="63.25" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-5" />
+                    <rect x="63.25" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-5" />
+                    <rect x="63.25" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-5" />
+                    <rect x="63.25" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-5" />
+                    <rect x="63.25" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-5" />
+                    <rect x="63.25" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-5" />
+                    <rect x="63.25" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-5" />
+                    <rect x="75.5" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-6" />
+                    <rect x="75.5" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-6" />
+                    <rect x="75.5" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-6" />
+                    <rect x="75.5" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-6" />
+                    <rect x="75.5" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-6" />
+                    <rect x="75.5" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-6" />
+                    <rect x="75.5" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-6" />
+                    <rect x="75.5" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-6" />
+                    <rect x="87.75" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-7" />
+                    <rect x="87.75" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-7" />
+                    <rect x="87.75" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-7" />
+                    <rect x="87.75" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-7" />
+                    <rect x="87.75" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-7" />
+                    <rect x="87.75" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-7" />
+                    <rect x="87.75" y="75.5" height="10.25" width="10.25" class="grid-box" id="box-6-7" />
+                    <rect x="87.75" y="87.75" height="10.25" width="10.25" class="grid-box" id="box-7-7" />
                 </svg>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
