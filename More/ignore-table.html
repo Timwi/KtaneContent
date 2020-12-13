@@ -1,0 +1,235 @@
+﻿<html>
+<head>
+    <title>Ignore list table</title>
+    <link href="../HTML/css/font.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            font-family: "Trebuchet MS";
+        }
+        #ignore-table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            table-layout: fixed;
+            margin-bottom: 64px;
+        }
+        #ignore-table td {
+            border: 1px solid #acf;
+            overflow:visible;
+            padding: 0;
+        }
+        #ignore-table td.corner {
+            border: none;
+        }
+        #ignore-table td.ignored {
+            background: #cdf;
+        }
+        #ignore-table th img {
+            display: block;
+        }
+
+        #ignore-table th {
+            background-color: white;
+        }
+        #ignore-table thead th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        #ignore-table thead th::before{
+            content : "" ;
+            position : absolute ;
+            top : 0 ;
+            left : 0 ;
+            width : 100% ;
+            height : 100% ;
+            border-bottom: 1px #acf solid;
+        }
+        #ignore-table th:first-child {
+            position: -webkit-sticky;
+            position: sticky;
+            left: 0;
+        }
+
+        #ignore-table th:first-child::before{
+            content : "" ;
+            position : absolute ;
+            top : 0 ;
+            left : 0 ;
+            width : 100% ;
+            height : 100% ;
+            border-right: 1px #acf solid;
+        }
+
+        #ignore-table .hover {
+            background-color: #d9d9d9;
+        }
+
+        #ignore-table .ignored.hover {
+            background-color: #a6c4ff;
+        }
+
+        #tooltip {
+            position: absolute;
+            font-size: 0.8em;
+            color: white;
+            background-color: #333;
+            padding: 4px;
+            z-index: 999;
+            white-space: nowrap;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 1px solid #888;
+        }
+    </style>
+    <script>
+        const JSON_URL = "https://ktane.timwi.de/json/raw";
+
+        function elApplyArg($el, arg) {
+            if (arg instanceof HTMLElement) {
+                $el.appendChild(arg);
+            } else if (typeof arg !== "object") {
+                $el.appendChild(document.createTextNode(arg));
+            } else if (Array.isArray(arg)) {
+                for(const a of arg) {
+                    elApplyArg($el, a);
+                }
+            } else {
+                for (const attr in arg) {
+                    if (typeof arg[attr] === "function") $el[attr] = arg[attr];
+                    else if (arg[attr] !== undefined && arg[attr] !== null)
+                        $el.setAttribute(attr, arg[attr]);
+                }
+            }
+
+        }
+        function el(tagName, className, ...args) {
+            const $el = document.createElement(tagName);
+            if (className) $el.className = className;
+            for (const arg of args) {
+                elApplyArg($el, arg);
+            }
+            return $el;
+        }
+
+        function fetchJSON() {
+            return fetch(JSON_URL)
+            .then((v) => v.json())
+            .then((json) => {
+                const ignorers = json.KtaneModules.filter(
+                    (module) => module.IgnoreProcessed || module.Ignore
+                );
+                const ignoreesNames = ignorers.flatMap(
+                    (module) => module.IgnoreProcessed || module.Ignore
+                );
+                // Ignoree should include non-boss after filtering is implemented.
+                // const ignorees = json.KtaneModules.filter(module => ignoreesNames.includes(module.DisplayName || module.Name));
+                const ignorees = json.KtaneModules.filter(
+                    (module) => module.IsFullBoss || module.IsSemiBoss
+                );
+                ignorees.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
+                ignorers.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
+                return {
+                    ignorers: ignorers,
+                    ignorees: ignorees,
+                };
+            });
+        }
+            
+        function createTable(json, $table) {
+            let elIgnorees = [];
+            const $thead = el("thead", null, 
+                el("tr", null, el("th", "corner"),
+                    json.ignorees.map((ignoree, i) => {
+                        elIgnorees[i] = el("th", null, 
+                            el("img", null, 
+                                {
+                                    src: `../Icons/${ignoree.FileName ?? ignoree.Name}.png`,
+                                    title: ignoree.DisplayName || ignoree.Name,
+                                },
+                            ),
+                        );
+                        return elIgnorees[i];
+                    })
+                )
+            );
+
+            let elCells = [];
+            let elIgnorers = [];
+            let $tooltip = document.getElementById("tooltip");
+            const $tbody = el("tbody", null,
+                json.ignorers.map((ignorer, i) => {
+                    elCells[i] = [];
+                    elIgnorers[i] = el("th", null, 
+                        el("img", null, 
+                            {
+                                src: `../Icons/${ignorer.FileName ?? ignorer.Name}.png`,
+                                title: ignorer.DisplayName || ignorer.Name,
+                            },
+                        ),
+                    );
+
+                    return el("tr", null, elIgnorers[i],
+                        json.ignorees.map((ignoree, j) => {
+                            const isIgnored = (ignorer.IgnoreProcessed || ignorer.Ignore).includes(ignoree.DisplayName || ignoree.Name);
+                            
+                            const $el = el("td", isIgnored ? "ignored" : null);
+
+                            elCells[i][j] = $el;
+
+                            $el.addEventListener("mousemove", e => {
+                                elIgnorers[i].classList.add("hover");
+                                elIgnorees[j].classList.add("hover");
+                                for(let di = 0; di < json.ignorers.length; di++) {
+                                    elCells[di][j].classList.add("hover");
+                                }
+                                for(let dj = 0; dj < json.ignorees.length; dj++) {
+                                    elCells[i][dj].classList.add("hover");
+                                }
+                                if(!isIgnored) {
+                                    $tooltip.style.display = "none";
+                                } else {
+                                    $tooltip.style.display = "block";
+                                }
+                                $tooltip.textContent = `${ignorer.DisplayName || ignorer.Name} ignores ${ignoree.DisplayName || ignoree.Name}`;
+                                $tooltip.style.top = e.pageY + 16;
+                                $tooltip.style.left = Math.min(e.pageX + 16, window.scrollX + window.screen.width - $tooltip.offsetWidth - 32);
+                            });
+                            
+
+                            $el.addEventListener("mouseout", e => {
+                                elIgnorers[i].classList.remove("hover");
+                                elIgnorees[j].classList.remove("hover");
+                                for(let di = 0; di < json.ignorers.length; di++) {
+                                    elCells[di][j].classList.remove("hover");
+                                }
+                                for(let dj = 0; dj < json.ignorees.length; dj++) {
+                                    elCells[i][dj].classList.remove("hover");
+                                }
+                            })
+                            return $el;
+                        })
+                    );
+                })
+            );
+            
+            $table.appendChild($thead);
+            $table.appendChild($tbody);
+        }
+
+        window.addEventListener("load", () => {
+            fetchJSON().then((json) => {
+                createTable(json, document.getElementById("ignore-table"));
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Table of modules that ignore one another</h1>
+    <table id="ignore-table"></table>
+    <div id="tooltip"></div>
+    <!--V1-->
+</body>
+</html>
