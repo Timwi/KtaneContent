@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Floor Lights — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            const interactive = $("table.interactive");
+            let saveStates = [];
+            let currentState = 0;
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            for (let y = 0; y < 11; y++) {
+                const row = $("<tr>").appendTo(interactive);
+                for (let x = 0; x < 11; x++) {
+                    if (x == 0 && y == 0) {
+                        $("<th>").appendTo(row);
+                    } else if (y == 0 && x > 0) {
+                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                    } else if (y > 0 && x == 0) {
+                        $("<th>").text(y).appendTo(row);
+                    } else {
+                        $("<td>").click(function() {
+                            $(this).toggleClass("white");
+                            removeFutureSaves();
+                        }).contextmenu(function() {
+                            $(this).toggleClass("dot");
+                            removeFutureSaves();
+                            return false;
+                        }).append('<div class="box"></div>').appendTo(row);
+                    }
+                }
+            }
+
+            $("button.reset").click(function() {
+                $("table.interactive td").removeClass("white dot");
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.reset-grid").click(function() {
+                $("table.interactive td").removeClass("white dot");
+            });
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                }).appendTo(".saves");
+
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .interactive-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+            border: none;
+            background: none;
+        }
+
+        table.interactive td {
+            border: rgb(99, 99, 99) 8px solid;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+        }
+
+        table.interactive td > .box {
+            background: black;
+            transition: background 0.2s;
+
+            position: relative;
+            width: 35px;
+            height: 35px;
+        }
+
+        table.interactive td.white > .box {
+            background: white;
+        }
+
+        table.interactive td > .box::after {
+            position: absolute;
+            top: 17.5px;
+            left: 17.5px;
+
+            content: '';
+            width: 0px;
+            height: 0px;
+            background: white;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+
+        table.interactive td.dot > .box::after {
+            top: 12.5px;
+            left: 12.5px;
+
+            width: 10px;
+            height: 10px;
+        }
+
+        table.interactive td.white.dot > .box::after {
+            background: black;
+        }
+
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Floor Lights</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Floor Lights.svg" class="diagram">
+                <h2>On the Subject of Floor Lights</h2>
+                <p class="flavour-text">There are lights on the floor.</p>
+                <p>See the original manual for the original instructions.</p>
+
+                <table style="font-size: 14px">
+                <tr>
+                    <th>Color</th>
+                    <th>Effect</th>
+                </tr>
+                <tr>
+                    <th style="background-color: #ff0000"></th>
+                    <td>The tile that is lit and tiles that are <u>adjacent</u> to it are toggled. This effect does not loop.</td>
+                </tr>
+                <tr>
+                    <th style="background-color: #00ff00"></th>
+                    <td>The tile that is lit and tiles that are <u>diagonal</u> to it are toggled.  This effect does not loop.</td>
+                </tr>
+                <tr>
+                    <th style="background-color: #0000ff"></th>
+                    <td>The tile that is lit and the tiles that <u>surround</u> it are toggled. This effect does not loop.</td>
+                </tr>
+                <tr>
+                    <th style="background-color: #ffff00"></th>
+                    <td>This tile will only show up after all modules have been solved. The tile will indicate that the toggle state of the tile is on.</td>
+                </tr>
+                </table>
+                <br>
+                <div class="interactive-container">
+                    <table class="interactive"></table>
+                    <div class="buttons">
+                        <button class="reset">Reset</button>
+                        <button class="reset-grid">Reset Grid</button>
+                    </div>
+                    <div class="saves buttons">
+                        <button class="save">Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
