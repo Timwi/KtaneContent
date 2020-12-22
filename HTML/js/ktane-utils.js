@@ -35,13 +35,7 @@ e.onload = function()
             <div class='option-group'>
                 <h3>Highlighter</h3>
                 <div><input type='checkbox' id='highlighter-enabled'>&nbsp;<label for='highlighter-enabled' accesskey='h'>Enabled</label> (Alt-H)</div>
-                <div>Color:</div>
-                <blockquote>
-                    <div><input type='radio' name='highlighter-color' class='highlighter-color' id='highlighter-color-blue' data-color='0' checked>&nbsp;<label for='highlighter-color-blue' accesskey='1'>Blue</label> (Alt-1)</div>
-                    <div><input type='radio' name='highlighter-color' class='highlighter-color' id='highlighter-color-red' data-color='1'>&nbsp;<label for='highlighter-color-red' accesskey='2'>Red</label> (Alt-2)</div>
-                    <div><input type='radio' name='highlighter-color' class='highlighter-color' id='highlighter-color-green' data-color='2'>&nbsp;<label for='highlighter-color-green' accesskey='3'>Green</label> (Alt-3)</div>
-                    <div><input type='radio' name='highlighter-color' class='highlighter-color' id='highlighter-color-yellow' data-color='3'>&nbsp;<label for='highlighter-color-yellow' accesskey='4'>Yellow</label> (Alt-4)</div>
-                </blockquote>
+                <div>Color: <select id='highlighter-color'></select> (Alt-<span id='highlighter-color-index'>1</span>)</div>
             </div>
             <div class='option-group'>
                 <h3>Page layout</h3>
@@ -69,18 +63,30 @@ e.onload = function()
 
         // HIGHLIGHTER
         let colors = [
-            { color: "rgba(68, 130, 255, 0.4)", name: 'blue' },
-            { color: "rgba(223, 32, 32, 0.4)", name: 'red' },
-            { color: "rgba(34, 195, 34, 0.4)", name: 'green' },
-            { color: "rgba(223, 223, 32, 0.4)", name: 'yellow' }];
-        let currentColor = 0;
+            { color: "rgba(128, 128, 128, 0.4)", name: 'Gray' },
+            { color: "rgba(68, 130, 255, 0.4)", name: 'Blue' },
+            { color: "rgba(223, 32, 32, 0.4)", name: 'Red' },
+            { color: "rgba(34, 195, 34, 0.4)", name: 'Green' },
+            { color: "rgba(223, 223, 32, 0.4)", name: 'Yellow' },
+            { color: "rgba(223, 0, 223, 0.4)", name: 'Magenta' },
+            { color: "rgba(223, 128, 0, 0.4)", name: 'Orange' },
+            { color: "rgba(0, 223, 223, 0.4)", name: 'Cyan' },
+            { color: "rgba(255, 255, 255, 0.4)", name: 'White' },
+            { color: "rgba(0, 0, 0, 0.4)", name: 'Black' }];
+        let currentColor = 1;
         let setColor = function(color) { currentColor = color; };   // The mobile UI overrides this function
 
         $('#highlighter-enabled').click(function() { localStorage.setItem('ktane-highlighter-enabled', $('#highlighter-enabled').prop('checked')); });
-        $('.highlighter-color').click(function(e)
+        const colorSelect = $('#highlighter-color')
+        for (const [index, color] of colors.entries()) {
+            $(`<option value="${index}">`).attr("selected", index == currentColor ? "" : undefined).text(color.name).appendTo(colorSelect);
+        }
+
+        colorSelect.on("change", function(e)
         {
-            setColor($(this).data('color'));
-            showNotification(`Highlighter color: ${colors[currentColor].name}`, colors[currentColor].color);
+            setColor(parseInt(colorSelect.val()));
+            $("#highlighter-color-index").text(currentColor);
+            showNotification(`Highlighter color: ${colors[currentColor].name.toLowerCase()}`, colors[currentColor].color);
         });
 
         $(document).keydown(function(event)
@@ -94,9 +100,9 @@ e.onload = function()
             {
                 options.toggleClass('open');
             }
-            else if (event.keyCode >= 49 && event.keyCode <= 52)
+            else if (event.keyCode >= 48 && event.keyCode <= 57)
             {
-                $('.highlighter-color').eq(event.keyCode - 49).click();
+                colorSelect.val(event.keyCode - 48).change();
             }
         });
 
