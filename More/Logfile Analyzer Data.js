@@ -1039,6 +1039,19 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "bloxx",
+		loggingTag: "Bloxx",
+		matches: [
+			{
+				regex: /Grid:/,
+				handler: function (matches, module) {
+					module.push({ label: "Grid", obj: pre(readMultiple(11).replace(/-/g, " ")) });
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "Bob Barks",
 		moduleID: "ksmBobBarks",
 		loggingTag: "Bob Barks",
