@@ -1308,7 +1308,7 @@ $(function() {
 		if (files.length === 1) {
 			if ($("#upload-to-server").prop('checked'))
 			{
-				$('#upload')[0].files = files;
+				$('#upload')[0].files[0] = files[0];
 				$('#upload-form').submit();
 				return;
 			}
