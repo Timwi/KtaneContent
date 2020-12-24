@@ -6974,7 +6974,24 @@ const parseData = [
 	{
 		displayName: "Simon Says",
 		moduleID: "Simon",
-		hasLogging: false
+		loggingTag: "SimonComponent",
+		matches: [
+			{
+				regex: /Button Pressed: (\d)/,
+				handler: function (matches, module) {
+					const colors = ["red", "blue", "green", "yellow"];
+					module.push(`Pushed ${colors[parseInt(matches[1])]}.`)
+					return true;
+				}
+			},
+			{
+				regex: /Solve Progress: (\d)/,
+				handler: function (matches, module) {
+					module.push(`Pushed correct color #${parseInt(matches[1]) + 1}.`);
+					return true;
+				}
+			}
+		]
 	},
 	{
 		displayName: "Switches",
