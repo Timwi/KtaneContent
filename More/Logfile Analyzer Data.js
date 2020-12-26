@@ -6835,6 +6835,21 @@ const parseData = [
 				handler: function (matches, module) {
 					module.push("There are " + matches[1] + " wires");
 				}
+			},
+			{
+				regex: /Wrong wire snipped: (\d) but solution is (\d)!/,
+				handler: function (matches, module) {
+					module.push(`Incorrectly cut wire #${parseInt(matches[1]) + 1}, should have cut wire #${parseInt(matches[2]) + 1}`);
+				}
+			},
+			{
+				regex: /Correct wire snipped: (\d)!/,
+				handler: function (matches, module) {
+					module.push(`Correctly cut wire #${parseInt(matches[1]) + 1}`);
+				}
+			},
+			{
+				regex: /Wire colors:/
 			}
 		]
 	},
