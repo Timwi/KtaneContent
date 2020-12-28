@@ -3857,6 +3857,49 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "MazeScrambler",
+		loggingTag: "Maze Scrambler",
+		matches: [
+			{
+				regex: /Current sequence is:/,
+				handler: function (matches, module) {
+					var table = $("<table>").addClass("standard");
+					var row = $("<tr>");
+					for (const header of ["Selected", "New Pos", "Red", "Blue", "Yellow", "Green"]) {
+						$("<th>").text(header).appendTo(row);
+					}
+					row.appendTo(table);
+
+					module.push({ label: matches.input, obj: table });
+					module.Table = table;
+
+					readLine(); // Skip the line with the headers on it.
+					return true;
+				}
+			},
+			{
+				regex: /(.+) \| (.+) \| (.+) \| (.+) \| (.+) \| (.+)/,
+				handler: function (matches, module) {
+					var row = $("<tr>");
+					for (let i = 0; i < 6; i++) {
+						$("<td>").text(matches[i + 1]).appendTo(row);
+					}
+					row.appendTo(module.Table);
+					return true;
+				}
+			},
+			{
+				regex: /--------------------------------------------------/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Memory",
 		moduleID: "Memory",
 		loggingTag: "MemoryComponent",
