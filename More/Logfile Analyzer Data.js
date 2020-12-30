@@ -4247,6 +4247,12 @@ const parseData = [
 				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readMultiple(3)) });
 				}
+			},
+			{
+				regex: /Answer submitted:/,
+				handler: function (matches, module) {
+					module.push({ label: matches.input, obj: pre(readMultiple(2)) });
+				}
 			}
 		]
 	},
