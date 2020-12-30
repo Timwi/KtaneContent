@@ -3453,6 +3453,20 @@ const parseData = [
 		loggingTag: "Logic Gates",
 		matches: [
 			{
+				regex: /Inputs = /,
+				handler: function (matches, module) {
+					if (module.Inputs == null)
+					{
+						module.Inputs = [];
+						module.push(["Inputs", module.Inputs]);
+					}
+
+					module.Inputs.push(matches.input);
+
+					return true;
+				}
+			},
+			{
 				regex: /Solution:/,
 				handler: function (matches, module) {
 					module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, "")) });
