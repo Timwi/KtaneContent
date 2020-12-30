@@ -986,6 +986,71 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "binaryTree",
+		loggingTag: "Binary Tree",
+		matches: [
+			{
+				regex: /Tree Structure:/,
+				handler: function (matches, module) {
+					readLine();
+
+					const tree = $('<svg viewBox="-2.5 -0.5 5 3">').css({ "width": "50%", "display": "block" });
+					const colors = {
+						"R": "red",
+						"G": "green",
+						"B": "blue",
+						"M": "magenta",
+						"C": "cyan",
+						"Y": "yellow",
+						"O": "orange",
+						"A": "gray",
+						"S": "silver",
+						"K": "black"
+					};
+					const positions = [
+						[0, 0],
+						[-1.25, 1], [1.25, 1],
+						[-2, 2], [-0.5, 2], [0.5, 2], [2, 2],
+					];
+					const lines = [
+						[0, 1], [0, 2],
+						[1, 3], [1, 4],
+						[2, 5], [2, 6]
+					];
+
+					// Make lines
+					for (const linePair of lines) {
+						const start = positions[linePair[0]];
+						const end = positions[linePair[1]];
+						$SVG(`<line x1=${start[0]} y1=${start[1]} x2=${end[0]} y2=${end[1]} stroke=black stroke-width=0.1>`).appendTo(tree);
+					}
+
+					// Make nodes
+					const characters = readMultiple(10).replace(/[^\w]/g, "");
+					for (let i = 0; i < 21; i += 3)
+					{
+						const buttonColor = colors[characters[i]];
+						const text = characters[i + 1];
+						const textColor = colors[characters[i + 2]];
+						const position = positions[i / 3];
+
+						$SVG(`<circle cx=${position[0]} cy=${position[1]} fill=${buttonColor} r=0.45>`).appendTo(tree);
+						$SVG(`<text x=${position[0]} y=${position[1]} fill=${textColor} font-size=0.9 text-anchor=middle dominant-baseline=central>`)
+							.text(text)
+							.appendTo(tree);
+					}
+
+
+					module.push({ label: "Tree:", obj: tree });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "BitmapsModule",
 		loggingTag: "Bitmaps",
 		matches: [
