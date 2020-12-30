@@ -3176,6 +3176,12 @@ const parseData = [
 						module.push({ linebreak: true });
 					}
 				}
+			},
+			{
+				regex: /Coin pressed at \d+ modules solved/,
+				handler: function(matches, module) {
+					module.push({ label: matches.input + ":", obj: pre(readMultiple(2)) });
+				}
 			}
 		]
 	},
