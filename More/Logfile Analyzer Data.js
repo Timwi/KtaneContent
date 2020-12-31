@@ -5496,6 +5496,37 @@ const parseData = [
 		]
 	},
 	{
+		displayName: "RGB Hypermaze",
+		moduleID: "rgbhypermaze",
+		loggingTag: "RGB Hypermaze",
+		matches: [
+			{
+				regex: /ASCII1:/,
+				handler: function (matches, module) {
+					module.push({ label: "The colors are as follows:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					return true;
+				}
+			},
+			{
+				regex: /ASCII2:/,
+				handler: function (matches, module) {
+					module.push({ label: "The colored cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					return true;
+				}
+			},
+			{
+				regex: /ASCII3:/,
+				handler: function (matches, module) {
+					module.push({ label: "The input cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "RGB Maze",
 		moduleID: "rgbMaze",
 		loggingTag: "RGB Maze",
