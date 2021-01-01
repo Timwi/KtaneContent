@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Blind Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+
+    <script>
+        var cells = [];
+        var cardinal = [ "N", "E", "W", "S" ];
+        var locations = [ [ -1, 0, 0, 1 ], [ 0, 1, -1, 0 ] ];
+
+        var rules = document.getElementsByClassName("rules");
+        var colorNames = [ "red", "green", "blue", "gray", "yellow" ];
+        var indicatorNames = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+        var rulesCount = [ "red buttons", "batteries", "yellow buttons", "red buttons", "other distinct maze-based modules present on the bomb", "port types", "green buttons", "blue buttons", "gray buttons", "AA batteries", "D batteries", "battery holders", "ports", "port plates", "indicators", "lit indicators", "unlit indicators" ];
+        var rulesCountCopy;
+        var conditionCount = [ 2, 5, 1, 1, 1 ];
+        var conditionCountCopy;
+        var conditionIndicator = 3;
+        var mazeRotation = [ 1, 1, 2, 1, 2, 1 ];
+        var mazeRotationCopy;
+        var clockwise = [ true, true, true, false, true, false ];
+        var clockwiseCopy;
+        var calculate = [ false, true, false, false, true, true ];
+        var calculateCopy;
+        var generated;
+        var pass;
+
+        var rng;
+
+        //Cell class
+        function Cell() {
+            this.visited = false;
+            this.directions = { N: true, E: true, W: true, S: true };
+        }
+
+        //Initializing maze cells
+        function InitializeCells() {
+            for (var i = 0; i < 10; i++) {
+                cells[i] = [];
+
+                for (var j = 0; j < 5; j++) {
+                    cells[i][j] = [];
+
+                    for (var k = 0; k < 5; k++)
+                        cells[i][j][k] = new Cell();
+                }
+            }
+        }
+
+        //Default rules
+        function setDefaultRules() {
+            InitializeCells();
+            var mazes = [
+                [ "UL", "U", "NDR", "LU", "UR",
+                  "LR", "DL", "U", "DR", "LR",
+                  "LD", "UR", "LD", "UR", "LDR",
+                  "LU", "R", "LUR", "DL", "UR",
+                  "DLR", "LD", "DR", "DUL", "RD" ],
+
+                [ "UDL", "UR", "NRL", "UL", "UR",
+                  "UL", "D", "RD", "RL", "RDL",
+                  "L", "U", "UD", "D", "UR",
+                  "RL", "RDL", "URL", "UDL", "R",
+                  "DL", "UD", "RD", "UDL", "RD" ],
+
+                [ "UL", "URD", "GL", "URD", "LUR",
+                  "LD", "UD", "D", "UD", "R",
+                  "LUD", "U", "U", "U", "DR",
+                  "LUR", "RL", "RL", "LD", "UR",
+                  "DL", "DR", "LD", "UDR", "LRD" ],
+
+                [ "ULD", "UR", "GLD", "U", "UR",
+                  "LU", "D", "DU", "DR", "LR",
+                  "L", "UR", "UL", "U", "RD",
+                  "LDR", "LRD", "RL", "L", "UR",
+                  "DLU", "DU", "DR", "LDR", "LDR" ],
+
+                [ "UL", "U", "ND", "UR", "LUR",
+                  "LDR", "LR", "LUR", "LD", "R",
+                  "LU", "D", "DR", "LU", "DR",
+                  "LR", "UDL", "RU", "DL", "RU",
+                  "DL", "UDR", "DL", "UD", "RD" ],
+
+                [ "UL", "UR", "GLD", "UD", "UR",
+                  "LR", "L", "URD", "UL", "DR",
+                  "LR", "L", "UD", "", "UR",
+                  "LRD", "LR", "UL", "RD", "LR",
+                  "DLU", "RD", "DL", "DUR", "LRD" ],
+
+                [ "UL", "U", "GD", "UD", "UR",
+                  "LR", "LDR", "LU", "UR", "LR",
+                  "LR", "UDL", "DR", "L", "R",
+                  "LD", "UR", "UDL", "RD", "LR",
+                  "DLU", "D", "DRU", "DLU", "RD" ],
+
+                [ "ULD", "UR", "GRL", "ULR", "LUR",
+                  "LU", "R", "RL", "L", "DR",
+                  "LR", "LD", "R", "LD", "UR",
+                  "LR", "LRU", "LD", "UR", "LR",
+                  "DLR", "LD", "UD", "D", "RD" ],
+
+                [ "UL", "UD", "GR", "UL", "URD",
+                  "LR", "UL", "D", "D", "UR",
+                  "LR", "LD", "URD", "ULD", "R",
+                  "LD", "URD", "UL", "UR", "LR",
+                  "DLU", "UD", "DR", "LD", "RD" ],
+
+                [ "ULR", "LUD", "GR", "LU", "UR",
+                  "LD", "UR", "LR", "LR", "LRD",
+                  "LUR", "DL", "D", "", "DR",
+                  "L", "UR", "UL", "", "UDR",
+                  "DLR", "DL", "DR", "D", "URD" ]
+            ];
+
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 5; j++) {
+                    for (var k = 0; k < 5; k++) {
+                        cells[i][j][k].directions.N = !mazes[i][5 * j + k].includes("U");
+                        cells[i][j][k].directions.E = !mazes[i][5 * j + k].includes("R");
+                        cells[i][j][k].directions.W = !mazes[i][5 * j + k].includes("L");
+                        cells[i][j][k].directions.S = !mazes[i][5 * j + k].includes("D");
+                    }
+                }
+            }
+
+            var colorTable = [ 1, 5, 2, 2, 3, 3, 1, 5, 5, 2, 3, 2, 4, 3, 2, 2, 5, 3, 1, 4 ];
+            for (var i = 0; i < 4; i++) {
+                Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
+            }
+            handleRules(true);
+            if (!pass)
+                generateSVG();
+        }
+
+        //Rule Seed rules
+        function setRules(rnd) {
+            rng = rnd;
+
+            pass = true;
+            setDefaultRules();
+            pass = false;
+
+            for (var i = 0; i < 10; i++)
+                checkCell(i, rng.nextMax(4), rng.nextMax(4));
+
+            var colorTable = [];
+
+            for (var i = 0; i < 20; i++)
+                colorTable.push(rng.next(1, 5));
+
+            for (var i = 0; i < 5; i++) {
+                Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
+            }
+            rulesCountCopy = rng.shuffleFisherYates(rulesCountCopy).slice(0, 7);
+            conditionIndicator = rng.nextMax(11);
+
+            for (var i = 0; i < 6; i++) {
+                if (i < 5) conditionCountCopy[i] = rng.next(1, 5);
+
+                mazeRotationCopy[i] = rng.next(1, 4);
+                clockwiseCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+                calculateCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+            }
+
+            handleRules(rng.seed == 1);
+            generateSVG();
+        }
+
+        //Recursive algorithm for the maze generation
+        function checkCell(maze, row, col, prevDir = -1) {
+            if (!inRange(row, 0, 4) || !inRange(col, 0, 4) || cells[maze][row][col].visited) return false;
+
+            cells[maze][row][col].visited = true;
+            var start = rng.nextMax(4);
+
+            for (var i = 0; i < 4; i++) {
+                var point = (start + i) % 4;
+                cells[maze][row][col].directions[cardinal[point]] = checkCell(maze, row + locations[0][point], col + locations[1][point], point);
+            }
+
+            if (prevDir != -1) cells[maze][row][col].directions[cardinal[3 - prevDir]] = true;
+
+            return true;
+        }
+
+        function inRange(value, min, max) { return (value >= min && value <= max); }
+
+        //Handle for the text of the rules and actions
+        function handleRules(original) {
+            var countRule = 0;
+            var countCondition = 0;
+            if (!rulesCountCopy || original) {
+                rulesCountCopy = rulesCount.slice();
+                conditionCountCopy = conditionCount.slice();
+                clockwiseCopy = clockwise.slice();
+                mazeRotationCopy = mazeRotation.slice();
+                calculateCopy = calculate.slice();
+            }
+
+            var ruleTemplates = [
+                "If there are at least {c} {r}, {m}.",
+                "Otherwise, if there are at least {c} {r}, {m}.",
+                "Otherwise, if there is an {i} indicator, {m}.",
+                "Otherwise, if there are no {r1} and at least {c} {r2}, {m}.",
+                "Otherwise, if there is at least {c} {r}, {m}.",
+                "Otherwise, if there is at most {c} {r}, {m}.",
+                "Otherwise, keep the maze as it is."];
+
+            for (var i = 0; i < rules.length; i++) {
+                var ruleText = ruleTemplates[i];
+                if (i != 2) {
+                    if (conditionCount[countCondition] == 1) {
+                        if (countCondition != 2) {
+                            ruleText = ruleText.replace("there are", "there is");
+                            rulesCountCopy[countRule] = makeSingular(rulesCountCopy[countRule]);
+                        } else {
+                            rulesCountCopy[countRule + 1] = makeSingular(rulesCountCopy[countRule + 1]);
+                        }
+                    } else {
+                        ruleText = ruleText.replace("there is", "there are");
+                    }
+
+                    if (i == 3) ruleText = ruleText.replace("{r1}", rulesCountCopy[countRule++]).replace("{c}", conditionCountCopy[countCondition++]).replace("{r2}", rulesCountCopy[countRule++]);
+                    else ruleText = ruleText.replace("{c}", conditionCountCopy[countCondition++]).replace("{r}", rulesCountCopy[countRule++]);
+                } else {
+                    if (conditionIndicator != 3) ruleText = ruleText.replace("an", "a");
+
+                    ruleText = ruleText.replace("{i}", indicatorNames[conditionIndicator]);
+                }
+
+                if (calculateCopy[i]) ruleText = ruleText.replace("{m}", `calculate the starting position, then rotate the maze ${mazeRotationCopy[i] * 90} degrees ${clockwiseCopy[i] ? "clockwise": "counter-clockwise"}`);
+                else ruleText = ruleText.replace("{m}", `rotate the maze ${mazeRotationCopy[i] * 90} degrees ${clockwiseCopy[i] ? "clockwise": "counter-clockwise"}, then calculate the starting position`);
+                rules[i].innerHTML = ruleText;
+            }
+        }
+
+        function makeSingular(text) {
+            if (text.includes("batteries")) text = text.replace("batteries", "battery");
+            else if (text.includes("modules")) text = text.replace("modules", "module");
+            else text = text.substring(0, text.length - 1);
+            return text;
+        }
+
+        const mazeGroups = [];
+        function generateSVG() {
+
+            var svg = document.getElementsByClassName("mazes")[0].getElementsByTagName("svg")[0];
+            if (!generated)
+            {
+                var mazes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                svg.appendChild(mazes);
+            }
+            generated = true;
+            mazes = svg.firstChild;
+            mazes.innerHTML = '';
+
+            for (let i = 0; i < 10; i++) {
+                var text = document.createTextNode(i.toString());
+                var textElement = setElement(document.createElementNS("http://www.w3.org/2000/svg", "text"),
+                [ "x",                     "y" ],
+                [ `${59 + 145 * (i % 5)}`, `${15 + 150 * Math.floor(i / 5)}` ]);
+                textElement.appendChild(text);
+                mazes.appendChild(textElement);
+
+                var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "class",         "x",                     "y",                                "width", "height", "fill" ],
+                [ "highlightable", `${-9 + 145 * (i % 5)}`, `${1.5 + 150 * Math.floor(i / 5)}`, "145",   "18",     "transparent" ]);
+                mazes.appendChild(highlight);
+
+                const maze = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                maze.addEventListener("click", () => clickMaze(i));
+                maze.classList.add("maze");
+                maze.style.transformOrigin = `${2 + 145 * (i % 5) + 62.5}px ${21 + 150 * Math.floor(i / 5) + 62.5}px`
+                mazes.appendChild(maze);
+                mazeGroups[i] = maze;
+                mazeRotations[i] = 0;
+
+                var square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "x",                    "y",                               "width", "height", "fill",        "stroke", "stroke-width" ],
+                [ `${2 + 145 * (i % 5)}`, `${21 + 150 * Math.floor(i / 5)}`, "125",   "125",    "transparent", "black",  "2" ]);
+                maze.appendChild(square);
+
+                var exit = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "x",                     "y",                               "width", "height", "fill" ],
+                [ `${52 + 145 * (i % 5)}`, `${18 + 150 * Math.floor(i / 5)}`, "25",    "6",      "white" ]);
+                maze.appendChild(exit);
+            }
+
+            for (var i = 0; i < 10; i++) {
+                const maze = mazeGroups[i];
+                for (var j = 0; j < 5; j++) {
+                    for (var k = 0; k < 5; k++) {
+                        var x = 2 + 25 * k + 145 * (i % 5);
+                        var y = 21 + 25 * j + 150 * Math.floor(i / 5);
+                        var small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        [ "x",          "y",          "width", "height", "fill" ],
+                        [ `${x + 9.5}`, `${y + 9.5}`, "5",     "5",      "black" ]);
+                        maze.appendChild(small);
+
+                        if (k < 4 && !cells[i][j][k].directions.E) {
+                            var e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            [ "x1",        "y1",   "x2",        "y2",        "stroke", "stroke-width" ],
+                            [ `${x + 25}`, `${y}`, `${x + 25}`, `${y + 25}`, "black",  "2" ]);
+                            maze.appendChild(e);
+                        }
+
+                        if (j < 4 && !cells[i][j][k].directions.S) {
+                            var s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            [ "x1",   "y1",        "x2",        "y2",        "stroke", "stroke-width" ],
+                            [ `${x}`, `${y + 25}`, `${x + 25}`, `${y + 25}`, "black", "2" ]);
+                            maze.appendChild(s);
+                        }
+                        var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        [ "class",         "x",        "y",    "width", "height", "fill" ],
+                        [ "highlightable", `${x - 1}`, `${y}`, "25",    "25",     "transparent" ]);
+                        maze.appendChild(highlight);
+                    }
+                }
+            }
+        }
+
+        function setElement(element, names, values) {
+            if (names.length <= 0 || values.length <= 0) return null;
+
+            for (var i = 0; i < names.length; i++)
+                element.setAttribute(names[i], values[i]);
+
+            return element;
+        }
+
+        const mazeRotations = {};
+        function clickMaze(index) {
+            if (document.querySelector("#rotate-left").checked) {
+                mazeRotations[index]--;
+            } else {
+                mazeRotations[index]++;
+            }
+
+            const maze = mazeGroups[index];
+            maze.style.transform = `rotate(${mazeRotations[index] * 90}deg)`;
+            console.log(maze.style.transform, mazeRotations[index]);
+        }
+    </script>
+
+    <style>
+        table {
+            border: none;
+            text-align: center;
+        }
+
+        td.corner {
+            border: none;
+        }
+
+        div.mazes {
+            text-align: center;
+        }
+            div.mazes > img {
+                width:90%;
+            }
+
+        div.footnotes {
+            position: relative;
+            left: 0;
+            bottom: 0;
+            font-size: smaller;
+            margin: 0 0 1em;
+        }
+
+            div.footnotes p {
+                margin: .3em 0;
+            }
+        @media screen and (max-width: 900px) {
+            div.footnotes {
+                position: relative;
+            }
+                div.footnotes p {
+                    margin: .3em 0;
+                }
+        }
+
+        g.maze {
+            transition: transform 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Blind Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Blind Maze.svg" class="diagram">
+                <h2>On the Subject of Blind Maze</h2>
+                <p class="flavour-text">Not only do you have to find the exit, you have to find the beginning!</p>
+                <p>
+                    This module has four buttons labeled N for North, E for East, S for South, and W for West. The defuser must use these buttons to navigate through a maze they cannot see. Use the following steps to discover what the maze looks like, where you are in the maze, and which side of the maze the exit is on.
+                </p>
+                <h3>Step 1: Finding the Maze</h3>
+                <ul>
+                    <li>Take the last digit of the serial number and add the number of solved modules.
+                    <li>If the number is above nine, subtract 10 until it is between 0 and 9.
+                    <li>Locate the maze below with the same number as the result. This is your maze, but it may be rotated.
+                </ul>
+                <div>Controls:</div>
+                <div>
+                    <input type="radio" id="rotate-left" name="rotate" value="left" checked>
+                    <label for="rotate-left">Rotate 90° to the left</label>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-right" name="rotate" value="right">
+                    <label for="rotate-right">Rotate 90° to the right</label>
+                </div>
+                <div class="mazes">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 1.5 725 300"></svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Blind Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 2: Finding the Rotation</h3>
+                <p>
+                    Use the first conditional that applies out of the following list to determine what rotation the maze has.
+                </p>
+                <ul>
+                    <li class="rules">If there are at least {c} {r}, {m}.
+                    <li class="rules">Otherwise, if there are at least {c} {r}, {m}.
+                    <li class="rules">Otherwise, if there is an {i} indicator, {m}.
+                    <li class="rules">Otherwise, if there are no {r1} and at least {c} {r2}, {m}.
+                    <li class="rules">Otherwise, if there is at least {c} {r}, {m}.
+                    <li class="rules">Otherwise, if there is at most {c} {r}, {m}.
+                    <li class="rules">Otherwise, keep the maze as it is.
+                </ul>
+                <h3>Step 3: Finding the Starting Location</h3>
+                <p>
+                    Look at each button and use the table below to determine it's value. Then, use these rules to determine the starting location in the maze:
+                </p>
+                <ul>
+                    <li>X Position: Add the values of the North and South buttons together.
+                    <li>Y Position: Add the values of the East and West buttons together.
+                    <li>If the sum is above 5, subtract 5 until the number is between 1 and 5.
+                    <li>Column X moves from left to right and Row Y moves from top to bottom. The top left coordinate of the maze is [1,1].
+                </ul>
+                <table>
+                    <col width="80px">
+                    <col width="80px">
+                    <col width="80px">
+                    <col width="80px">
+                    <col width="80px">
+                    <col width="80px">
+                    <tr>
+                        <td class="corner"></td>
+                        <th>Red</th>
+                        <th>Green</th>
+                        <th>Blue</th>
+                        <th>Gray</th>
+                        <th>Yellow</th>
+                    </tr>
+                    <tr>
+                        <th>North</th>
+                        <td class="colorTable1">1</td>
+                        <td class="colorTable1">5</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">3</td>
+                    </tr>
+                    <tr>
+                        <th>East</th>
+                        <td class="colorTable2">3</td>
+                        <td class="colorTable2">1</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">2</td>
+                    </tr>
+                    <tr>
+                        <th>West</th>
+                        <td class="colorTable4">2</td>
+                        <td class="colorTable4">5</td>
+                        <td class="colorTable4">3</td>
+                        <td class="colorTable4">1</td>
+                        <td class="colorTable4">4</td>
+                    </tr>
+                    <tr>
+                        <th>South</th>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
+                        <td class="colorTable3">4</td>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="footnotes">
+                    <p>Modules detected as "maze-based" only include 3D Maze, A-maze-ing Buttons, Boolean Maze, Colored Maze, The Crystal Maze, Factory Maze, Faulty RGB Maze, Hexamaze, Mazes, Mazematics, Maze Scrambler, Maze³, Module Maze, Morse-A-Maze, Mouse In The Maze, Polyhedral Maze, RGB Maze, and USA Maze</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
