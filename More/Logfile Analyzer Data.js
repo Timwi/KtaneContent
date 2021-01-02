@@ -5338,6 +5338,38 @@ const parseData = [
 		]
 	},
 	{
+		moduleID: "radiator",
+		loggingTag: "Radiator",
+		matches: [
+			{
+				regex: /Serial occurrences:/,
+				handler: function (matches, module) {
+					module.Group = [];
+					module.push(["Calculation", module.Group]);
+				}
+			},
+			{
+				regex: /Temperature:/,
+				handler: function (matches, module) {
+					module.Group = [];
+					module.push(["Submitted Answer", module.Group]);
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if (module.Group == undefined)
+					{
+						module.push(matches.input);
+						return;
+					}
+
+					module.Group.push(matches.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Rainbow Arrows",
 		moduleID: "ksmRainbowArrows",
 		loggingTag: "Rainbow Arrows",
