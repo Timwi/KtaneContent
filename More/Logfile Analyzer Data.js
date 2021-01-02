@@ -4932,12 +4932,12 @@ const parseData = [
 	{
 		displayName: "Playfair Cipher",
 		moduleID: "Playfair",
-		loggingTag: "playFair",
+		loggingTag: "Playfair Cipher",
 		matches: [
 			{
-				regex: /^: Beginning of Matrix/,
+				regex: /^Beginning of Matrix/,
 				handler: function (matches, module) {
-					const matrix = readMultiple(6).split("\n").map(line => line.replace(/^\[playFair #\d+\]: /, ""));
+					const matrix = readMultiple(6).split("\n").map(line => line.replace(/^\[Playfair Cipher #\d+\] /, ""));
 					matrix.splice(5, 1);
 
 					module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
@@ -4945,7 +4945,7 @@ const parseData = [
 				}
 			},
 			{
-				regex: /^:\s*(.+)/,
+				regex: /^\s*(.+)/,
 				handler: function (matches, module) {
 					module.push(matches[1]);
 					return true;
