@@ -5902,27 +5902,32 @@ const parseData = [
 					for (var i = 10; i < 16; i++) {
 						directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
 					};
-					var unused1 = readTaggedLine();
-					var unused2 = readTaggedLine();
 
-					var letterTable = readTaggedLine().replace(/Letter table is:/, "");
-					var ltable = $('<table>').css('border', '1px solid black').css('border-collapse', 'collapse')
-					for (var r = 0; r < 5; r++) {
-						var tr = $('<tr>').css('border', '1px solid black').appendTo(ltable);
-						ltablerow = readTaggedLine().replace(/ /g, "");
-						for (var c = 0; c < 3; c++) {
-							$('<td>')
-								.text(ltablerow[c])
-								.css('border', '1px solid black')
-								.css('text-align', 'center')
-								.css('width', '25px')
-								.css('height', '25px')
-								.appendTo(tr);
+					if (color != "5")
+					{
+						var unused1 = readTaggedLine();
+						var unused2 = readTaggedLine();
+	
+						var letterTable = readTaggedLine().replace(/Letter table is:/, "");
+						var ltable = $('<table>').css('border', '1px solid black').css('border-collapse', 'collapse')
+						for (var r = 0; r < 5; r++) {
+							var tr = $('<tr>').css('border', '1px solid black').appendTo(ltable);
+							ltablerow = readTaggedLine().replace(/ /g, "");
+							for (var c = 0; c < 3; c++) {
+								$('<td>')
+									.text(ltablerow[c])
+									.css('border', '1px solid black')
+									.css('text-align', 'center')
+									.css('width', '25px')
+									.css('height', '25px')
+									.appendTo(tr);
+							}
 						}
+						var unused3 = readTaggedLine();
+						var unused4 = readTaggedLine();
+						var unused5 = readTaggedLine();
 					}
-					var unused3 = readTaggedLine();
-					var unused4 = readTaggedLine();
-					var unused5 = readTaggedLine();
+
 					var unused6 = readTaggedLine() + readTaggedLine();
 					unused6 = unused6.replace(/Counting lit squares/, "");
 
@@ -5985,15 +5990,55 @@ const parseData = [
 					}
 					module.push({ label: "Color of the square is: ", obj: matches[1] });
 					module.push({ label: "Arrow Sequence are: ", obj: pre(directions) });
-					module.push({ obj: unused1 });
-					module.push({ obj: unused2 });
-					module.push({ label: "The Letter Table is: ", obj: ltable });
-					module.push({ obj: unused3 });
-					module.push({ obj: unused4 });
-					module.push({ obj: unused5 });
+					if (color != "5")
+					{
+						module.push({ obj: unused1 });
+						module.push({ obj: unused2 });
+						module.push({ label: "The Letter Table is: ", obj: ltable });
+						module.push({ obj: unused3 });
+						module.push({ obj: unused4 });
+						module.push({ obj: unused5 });
+					}
 					module.push({ obj: unused6 });
 					module.push({ label: "Even solved modules final shape is: ", obj: table1 });
 					module.push({ label: "Odd solved modules final shape is: ", obj: table2 });
+
+					module.Color = colors[color];
+					return true;
+				}
+			},
+			{
+				regex: /Current shape:/,
+				handler: function (matches, module) {
+					var table = $('<table>')
+						.css('background-color', '#48453e')
+						.css('font-size', '30px')
+						.css('color', 'white');
+
+					for (var r = 0; r < 8; r++) {
+						var tr = $('<tr>').appendTo(table);
+						var currentRow = readTaggedLine().replace(/ /g, "");
+						for (var c = 0; c < 5; c++) {
+							if (currentRow[c] == "0") {
+								$('<td>')
+									.css('background-color', module.Color)
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
+							}
+							else {
+								$('<td>')
+									.css('background-color', '#48453e')
+									.css('text-align', 'center')
+									.css('width', '30px')
+									.css('height', '30px')
+									.appendTo(tr);
+							}
+						}
+					}
+
+					module.push({ label: matches.input, obj: table });
 					return true;
 				}
 			},
