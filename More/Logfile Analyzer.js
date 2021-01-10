@@ -698,6 +698,7 @@ function Bomb(seed) {
 		});
 
 		var caseHTML = $("<span>").text("Unknown");
+		var rendererHTML = $("<span>").text("Unknown");
 
 		var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
 		$("<h3>").text("Edgework").appendTo(edgeworkInfo);
@@ -710,7 +711,8 @@ function Bomb(seed) {
 			"Port Plates: " + this.PortPlates.length,
 			"Widgets: " + (this.Batteries.length + indicators.length + this.PortPlates.length + this.ModdedWidgets),
 			this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
-			{ label: "Case: ", obj: caseHTML }
+            { label: "Case:", obj: caseHTML },
+            { label: "Approximate case render:", obj: rendererHTML },
 		], $("<ul>").appendTo(edgeworkInfo));
 
 		$("<button class='module'>")
@@ -800,7 +802,7 @@ function Bomb(seed) {
 		// Display modules
 		mods.forEach(function(parseData) {
 			// Information
-			var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
+            var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 			$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
 			$("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
 			if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
@@ -821,7 +823,8 @@ function Bomb(seed) {
 			// Listing
 			var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
 				.appendTo(modules)
-				.addCardClick(moduleInfo);
+                .addCardClick(moduleInfo);
+            parseData.modListing = modListing; // for TDSBombRenderer
 
 			var buttonGrid = $("<div>")
 				.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
@@ -882,9 +885,9 @@ function Bomb(seed) {
 				const position = parseData.moduleData.iconPosition;
 				icon.attr("src", "https://ktane.timwi.de/iconsprite").css({ "object-position": `${position.X * -32}px ${position.Y * -32}px`, "object-fit": "none" });
 			}
-		});
-
-		// Case representation
+        });
+        
+        // Case representation
 		if (this.Anchors != null && this.ModuleOrder != null) {
 			const viewBox = [0, 0, 0, 0];
 
@@ -947,7 +950,51 @@ function Bomb(seed) {
 				const degrees = currentFace ? 180 : 0;
 				frontFace.css("transform", `rotateY(${degrees}deg)`);
 				backFace.css("transform", `rotateY(${180 - degrees}deg)`);
-			}).after("(Click to flip)");
+            }).after("(Click to flip)");
+            
+
+            //4.5 / number
+            //3.16205534 / number
+            //Renderer representation (TheDarkSid3r Bomb Renderer)
+
+            const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+            rendererHTML.replaceWith(rendererParent);
+            
+            var rendererEdgework = [
+                {type: "serial", number: this.Serial}
+            ];
+            this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
+            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", name: i[1]}));
+            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b == 1 ? "D" : "AA", count: b}));
+
+            var rendererModules = [];
+            var rendererWidth = Math.round(4.54545455 * (Math.abs(viewBox[0]) + viewBox[2]));
+            var rendererHeight = Math.round(4.54545455 * (Math.abs(viewBox[1]) + viewBox[3]));
+            console.log(this.ModuleOrder.length, (Math.abs(viewBox[0]) + viewBox[2]), rendererHeight);
+
+			for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+				var face = moduleIndex >= this.ModuleOrder.length / 2 ? "rear" : "front";
+
+				if (this.ModuleOrder[moduleIndex] == null)
+					continue;
+
+				const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+				const ID = moduleSplit.splice(moduleSplit.length - 1);
+				const moduleID = moduleSplit.join(" ");
+
+                const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
+                const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+                console.log(matchingModules[0]);
+				const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.TotalStrikes} : {type: "empty"}, {face, index: moduleFaceIndex});
+
+				rendererModules.push(module);
+            }
+            
+            console.log(rendererModules);
+            
+            var renderer = new BombRenderer(rendererParent, rendererWidth, rendererHeight);
+            renderer.addModules(rendererModules);
+            renderer.addEdgework(rendererEdgework);
 		}
 
 		return info;
@@ -1092,7 +1139,8 @@ function parseLog(opt) {
 						moduleID: module.ModuleID,
 						displayName: module.Name,
 						loggingTag: module.Name,
-						iconPosition: { X: module.X, Y: module.Y }
+                        iconPosition: { X: module.X, Y: module.Y },
+                        repo: module
 					});
 				} else if (matches.length === 1) {
 					const match = matches[0];
@@ -1100,6 +1148,7 @@ function parseLog(opt) {
 						console.warn(`Unnecessary module: ${module.Name}`);
 					}
 
+                    match.repo = module;
 					if (Array.isArray(match.moduleID)) {
 						if (match.iconPosition == null)
 							match.iconPosition = [];
