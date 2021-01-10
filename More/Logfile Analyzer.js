@@ -201,6 +201,7 @@ class BombGroup {
         this.ParseAgain = []; // Lines that might be for a module but couldn't be matched by name. If Tweaks is installed, it'll try to parse these again once the LFABombInfo is logged.
         this.LoggedSerials = [];
         this.Events = [];
+        this.RuleSeed = 1;
     }
 
     get loggedBombs() {
