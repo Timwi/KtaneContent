@@ -250,6 +250,28 @@ var BombRenderer = class {
                     console.log(data);
                     setIcon(encodeURIComponent(data.icon || data.displayName));
                 }
+                var hov = null;
+                var setHovPos = (ev) => hov.css({
+                    top: ev.pageY,
+                    left: ev.pageX
+                });
+                e.on("mouseenter", (ev) => {
+                    var s = module.data.displayName;
+                    if (module.parsed && module.parsed.displayCounter) s += " " + module.parsed.counter;
+                    if (module.data.repo) {
+                        var ex = ["by " + module.data.repo.Author].join("<br/>");
+                        s += "<br/>"+ex;
+                    }
+                    hov = $("<div/>").addClass("bomb-module-hover-label").html(s).appendTo(document.body);
+                    setHovPos(ev);
+                }).on("mousemove", (ev) => {
+                    if (!hov) return;
+                    setHovPos(ev);
+                }).on("mouseleave", () => {
+                    if (hov) hov.remove();
+                }).on("click", () => {
+                    module.parsed.modListing[0].click();
+                });
             }
             this.moduleSlots[module.face][module.index].append(e);
             this.emptyModuleSlots[module.face][module.index] = false;

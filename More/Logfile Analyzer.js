@@ -802,7 +802,7 @@ function Bomb(seed) {
 		// Display modules
 		mods.forEach(function(parseData) {
 			// Information
-			var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
+            var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
 			$("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
 			$("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
 			if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
@@ -823,7 +823,8 @@ function Bomb(seed) {
 			// Listing
 			var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
 				.appendTo(modules)
-				.addCardClick(moduleInfo);
+                .addCardClick(moduleInfo);
+            parseData.modListing = modListing; // for TDSBombRenderer
 
 			var buttonGrid = $("<div>")
 				.text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
@@ -984,7 +985,7 @@ function Bomb(seed) {
                 const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
                 const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
                 console.log(matchingModules[0]);
-				const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.TotalStrikes} : {type: "empty"}, {face, index: moduleFaceIndex});
+				const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.TotalStrikes} : {type: "empty"}, {face, index: moduleFaceIndex});
 
 				rendererModules.push(module);
             }
@@ -1138,7 +1139,8 @@ function parseLog(opt) {
 						moduleID: module.ModuleID,
 						displayName: module.Name,
 						loggingTag: module.Name,
-						iconPosition: { X: module.X, Y: module.Y }
+                        iconPosition: { X: module.X, Y: module.Y },
+                        repo: module
 					});
 				} else if (matches.length === 1) {
 					const match = matches[0];
@@ -1146,6 +1148,7 @@ function parseLog(opt) {
 						console.warn(`Unnecessary module: ${module.Name}`);
 					}
 
+                    match.repo = module;
 					if (Array.isArray(match.moduleID)) {
 						if (match.iconPosition == null)
 							match.iconPosition = [];
