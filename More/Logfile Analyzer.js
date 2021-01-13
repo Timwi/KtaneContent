@@ -985,7 +985,7 @@ function Bomb(seed) {
                 const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
                 const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
                 console.log(matchingModules[0]);
-                const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.TotalStrikes} : {type: "empty"}, {face, index: moduleFaceIndex});
+                const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, {face, index: moduleFaceIndex});
 
                 rendererModules.push(module);
             }

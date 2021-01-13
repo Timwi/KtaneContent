@@ -68,7 +68,7 @@ var BombRenderer = class {
                 transformOrigin: sideTransformOrigins[n] || "unset"
             });
             element.addClass(this.isDefaultCase ? "default" : "non-default");
-            if (this.isDefaultCase) $("<img/>").addClass("bomb-side-image").attr({ src: "images/bomb/" + n + ".png" }).appendTo(element);
+            if (this.isDefaultCase) $("<img/>").addClass("bomb-side-image").attr({ src: "TDSBombRenderer/images/bomb/" + n + ".png" }).appendTo(element);
             var content = $("<div/>").addClass("bomb-side-content bomb-side-content-" + n).appendTo(element);
             if (!this.isDefaultCase) {
                 var apply = (width, height) => {
