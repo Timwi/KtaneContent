@@ -776,7 +776,7 @@ function Bomb(seed) {
 		});
 
 		function GetManual(parseData) {
-			let manual = parseData.moduleData.displayName
+			let manual = parseData.moduleData.icon
 				.replace("'", "’")
 				.replace(/[<>:"/\\|?*]/g, "");
 
