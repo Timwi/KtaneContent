@@ -247,7 +247,7 @@ var BombRenderer = class {
                 //console.log(parseData);
                 var data = module.data;
                 if (!data) setIcon("Blank"); else {
-                    console.log(data);
+                    //console.log(data);
                     setIcon(encodeURIComponent(data.icon || data.displayName));
                 }
                 var hov = null;

@@ -970,7 +970,7 @@ function Bomb(seed) {
             var rendererModules = [];
             var rendererWidth = Math.round(4.54545455 * (Math.abs(viewBox[0]) + viewBox[2]));
             var rendererHeight = Math.round(4.54545455 * (Math.abs(viewBox[1]) + viewBox[3]));
-            console.log(this.ModuleOrder.length, (Math.abs(viewBox[0]) + viewBox[2]), rendererHeight);
+            //console.log(this.ModuleOrder.length, (Math.abs(viewBox[0]) + viewBox[2]), rendererHeight);
 
 			for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
 				var face = moduleIndex >= this.ModuleOrder.length / 2 ? "rear" : "front";
@@ -984,13 +984,13 @@ function Bomb(seed) {
 
                 const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
                 const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                console.log(matchingModules[0]);
+                //console.log(matchingModules[0]);
 				const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.TotalStrikes} : {type: "empty"}, {face, index: moduleFaceIndex});
 
 				rendererModules.push(module);
             }
             
-            console.log(rendererModules);
+            //console.log(rendererModules);
             
             var renderer = new BombRenderer(rendererParent, rendererWidth, rendererHeight);
             renderer.addModules(rendererModules);
