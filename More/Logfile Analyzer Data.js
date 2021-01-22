@@ -355,6 +355,19 @@ const parseData = [
         ]
     },
     {
+        loggingTag: "Voltage Meter",
+        matches: [
+            {
+                regex: /Voltage: (\d+\.\d+|\d+)V/,
+                handler: function (matches) {
+                    var voltage = parseFloat(matches[1]);
+                    bomb.ModdedWidgetInfo.push(`Voltage Meter: ${voltage} volts`);
+                    bomb.VoltageMeterWidgets.push(voltage);
+                }
+            }
+        ]
+    },
+    {
         loggingTag: "MultipleBombs",
         matches: [
             {
