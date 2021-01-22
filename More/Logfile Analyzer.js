@@ -396,6 +396,7 @@ function Bomb(seed) {
     this.ModdedPortPlates = [];
     this.ModdedTwoFactor = [];
     this.DayTimeWidgets = [];
+    this.VoltageMeterWidgets = [];
     this.Serial = "";
     this.State = "Unsolved";
     this.StartLine = 0;
@@ -672,6 +673,17 @@ function Bomb(seed) {
                 if (val == "MultipleWidgets:TwoFactor") {
                     edgework.append("<div class='widget multiplewidgets twofactor'>");
                 }
+            });
+        }
+
+        if (this.VoltageMeterWidgets.length > 0) {
+            edgework.append("<div class='widget separator'>");
+
+            this.VoltageMeterWidgets.sort(function(a, b) { return a - b; });
+            
+            this.VoltageMeterWidgets.forEach(function(voltage) {
+                var widget = $("<div class='widget voltagemeter'>").appendTo(edgework);
+                $("<span>").css({left: (voltage/10*83)+9 }).appendTo(widget);
             });
         }
 
