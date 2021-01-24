@@ -6824,6 +6824,23 @@ const parseData = [
         ]
     },
     {
+        displayName: "Updog",
+        moduleID: "Updog",
+        loggingTag: "Updog",
+        matches: [
+            {
+                regex: /The maze is as follows: \(S = start, x = bone\)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\[Updog #\d+\]: /g, '')) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "UltraStores",
         loggingTag: "UltraStores",
         displayName: "UltraStores",
