@@ -355,6 +355,19 @@ const parseData = [
         ]
     },
     {
+        loggingTag: "Voltage Meter",
+        matches: [
+            {
+                regex: /Voltage: (\d+\.\d+|\d+)V/,
+                handler: function (matches) {
+                    var voltage = parseFloat(matches[1]);
+                    bomb.ModdedWidgetInfo.push(`Voltage Meter: ${voltage} volts`);
+                    bomb.VoltageMeterWidgets.push(voltage);
+                }
+            }
+        ]
+    },
+    {
         loggingTag: "MultipleBombs",
         matches: [
             {
@@ -6815,6 +6828,23 @@ const parseData = [
                     var div = $('<div>');
                     div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
                     module.push({ label: matches[1], obj: div });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Updog",
+        moduleID: "Updog",
+        loggingTag: "Updog",
+        matches: [
+            {
+                regex: /The maze is as follows: \(S = start, x = bone\)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\[Updog #\d+\]: /g, '')) });
                     return true;
                 }
             },
