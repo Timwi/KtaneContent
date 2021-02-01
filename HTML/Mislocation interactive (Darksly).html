@@ -1,570 +1,570 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title>Mislocation — Keep Talking and Nobody Explodes Module</title>
+        <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="css/font.css">
-		<link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <title>Mislocation — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
-       <script src="js/ktane-utils.js"></script>
+        <script src="js/ktane-utils.js"></script>
         <style>
-			.appendix-page {
-				margin: 0;
-			}
-			.appendix-content {
-				 margin: 0 .25in;
-			}
-			@media screen and (min-width: 900px), print {
-				.appendix-content {
-					 margin: 0 .75in;
-				}
-			}
+            .appendix-page {
+                margin: 0;
+            }
+            .appendix-content {
+                 margin: 0 .25in;
+            }
+            @media screen and (min-width: 900px), print {
+                .appendix-content {
+                     margin: 0 .75in;
+                }
+            }
             .appendix-table {
-				margin: auto;
-				border: 0;
+                margin: auto;
+                border: 0;
             }
             .appendix-cell {
-			   border: 0;
-			   min-width: 0.8em;
-			   font-weight: bold;
+               border: 0;
+               min-width: 0.8em;
+               font-weight: bold;
             }
-			td {
-				text-align: center;
-			}
-			.border {
-			   padding: 0;
-			}
-			.vb {
-			   min-width: 5px;
-			   width: 5px;
-			}
+            td {
+                text-align: center;
+            }
+            .border {
+               padding: 0;
+            }
+            .vb {
+               min-width: 5px;
+               width: 5px;
+            }
 
-			.hb {
-			   min-height: 5px;
-			   height: 5px;
-			}
+            .hb {
+               min-height: 5px;
+               height: 5px;
+            }
         </style>
-		<script>
-		    // Setup Code (DarkSly Mark)
-			const TABLE_ROWS = 23;
-			const TABLE_COLS = 20;
-
-			const INACTIVE_COLOR = "#00000000";
-			const PRIMARY_COLOR = "#bced95"; //Light Green
-			const SECONDARY_COLOR =  "#d4f59f"; //Even lighter green
-
-			const INACTIVE_BORDER_COLOR = "#888888"; //Grey
-			const ACTIVE_BORDER_COLOR = "black";
-
-			let colors = {
-				blue: "rgba(68, 130, 255, 0.4)",
-				red: "rgba(223, 32, 32, 0.4)",
-				green: "rgba(34, 195, 34, 0.4)",
-				yellow: "rgba(223, 223, 32, 0.4)",
-			};
-
-			var selectedCells = [];
-			var copiedCells = [];
-
-			var undos = [];
-			var redos = [];
-
-			function createTable() {
-			  var container = document.getElementById('table-container');
-			  var tbl = document.createElement('table');
-			  tbl.className = "appendix-table";
-
-			  var isBorderRow = true;
-			  for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
-				//Rows
-				let tr = document.createElement('tr');
-
-				if(isBorderRow){
-					//First Border Corner
-					var firstBorderCorner = document.createElement('td');
-					firstBorderCorner.row = Math.ceil(i/2 - 1) + 0.5;
-					firstBorderCorner.col = -0.5;
-					firstBorderCorner.id = "border_" + firstBorderCorner.row + "_" + firstBorderCorner.col;
-					firstBorderCorner.className = "appendix-cell border vb hb";
-					firstBorderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
-					tr.appendChild(firstBorderCorner);
-				} else {
-					//First Vertical border
-					let firstVBorder = document.createElement('td');
-					firstVBorder.row = Math.ceil(i/2 - 1);
-					firstVBorder.col = -0.5;
-					firstVBorder.id = "border_" + firstVBorder.row + "_" + firstVBorder.col;
-					firstVBorder.className = "appendix-cell border vb";
-					firstVBorder.style.backgroundColor = INACTIVE_BORDER_COLOR;
-					firstVBorder.onclick = () => onBorderClick(firstVBorder);
-					tr.appendChild(firstVBorder);
-				}
-
-				for (var j = 0; j < TABLE_COLS; j++) {
-					if(isBorderRow) {
-						let currentFirstCorner = firstBorderCorner;
-						let lastCorner = j == 0? currentFirstCorner : borderCorner;
-
-						//Horizontal Corners
-						let hborder = document.createElement('td');
-						hborder.row = Math.ceil(i/2 - 1) + 0.5;
-						hborder.col = j;
-						hborder.id = "border_" + hborder.row + "_" + hborder.col;
-						hborder.className = "appendix-cell border hb";
-						hborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
-						tr.appendChild(hborder);
-
-						//Border Corners
-						var borderCorner = document.createElement('td');
-						borderCorner.row = Math.ceil(i/2 - 1) + 0.5;
-						borderCorner.col = j + 0.5;
-						borderCorner.id = "border_" + borderCorner.row + "_" + borderCorner.col;
-						borderCorner.className = "appendix-cell border vb hb";
-						borderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
-						tr.appendChild(borderCorner);
-						let nextCorner = borderCorner;
-
-						hborder.onclick = () => onBorderClick(hborder);
-						borderCorner.onclick = () => onBorderClick(hborder);
-					} else {
-						//Actual Cells
-						let td = document.createElement('td');
-						td.row = Math.ceil(i/2 - 1);
-						td.col = j;
-						td.id = "cell_" + td.row + "_" + td.col;
-						td.className = "appendix-cell";
-						td.onclick = () => onCellClick(td);
-						td.innerHTML = "&nbsp;";
-						tr.appendChild(td);
-
-						//Vertical Borders
-						let vborder = document.createElement('td');
-						vborder.row = Math.ceil(i/2 - 1);
-						vborder.col = j + 0.5;
-						vborder.id = "border_" + vborder.row + "_" + vborder.col;
-						vborder.className = "appendix-cell border vb";
-						vborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
-						vborder.onclick = () => onBorderClick(vborder);
-						tr.appendChild(vborder);
-					}
-				}
-				isBorderRow = !isBorderRow;
-				tbl.appendChild(tr);
-			  }
-			  container.appendChild(tbl)
-			}
-
-			function resetTable() {
-				var container = document.getElementById('table-container');
-				container.innerHTML = "";
-				selectedCells = [];
-
-				undos = [];
-				redos = [];
-
-				createTable();
-			}
-
-			function toggleBorder(cell) {
-			  setBorder(cell, !isBorderActive(cell));
-			}
-
-			function setBorder(border, active) {
-				let isHorizontal = border.row % 1 != 0;
-
-				border.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-				  if(isHorizontal) {
-					let lastCorner = getBorder(border.row, border.col - 0.5);
-					let nextCorner = getBorder(border.row, border.col + 0.5);
-
-					if(lastCorner) lastCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-					if(nextCorner) nextCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-				  }
-			}
-
-			function toggleCell(cell, multiselection) {
-				if(!cell) return;
-
-				if(multiselection) {
-					// if(isCellNotPainted(cell))
-						getCurrentCell().style.backgroundColor = SECONDARY_COLOR;
-					selectedCells.push(cell);
-
-				} else{
-					if(!isSelectionEmpty())
-					  selectedCells.forEach(cell => {
-						//   if(isCellNotPainted(cell))
-						  cell.style.backgroundColor = INACTIVE_COLOR;
-						});
-					selectedCells = [];
-					selectedCells.push(cell);
-				}
-
-				// if(isCellNotPainted(cell))
-					cell.style.backgroundColor = PRIMARY_COLOR;
-			}
-
-			function isCellNotPainted(cell) {
-				return isCellColor(cell, PRIMARY_COLOR) || isCellColor(cell, SECONDARY_COLOR) || isCellColor(cell, INACTIVE_COLOR)
-			}
-
-			function isCellColor(cell, color) {
-				const ctx = document.createElement('canvas').getContext('2d');
-				ctx.fillStyle = color;
-				ctx.fillRect( 0, 0, 1, 1 );
-				ctx.fillStyle = getComputedStyle(cell, null).getPropertyValue("background-color");
-				ctx.fillRect( 1, 0, 1, 1 );
-				const a = JSON.stringify(Array.from(ctx.getImageData(0, 0, 1, 1).data));
-				const b = JSON.stringify(Array.from(ctx.getImageData(1, 0, 1, 1).data));
-				ctx.canvas = null;
-				return a === b;
-			}
-
-			function setupEventListeners() {
-				if (document.addEventListener) {
-					document.addEventListener('keypress', onKeyPressed, false);
-					document.addEventListener('keydown', onKeyDown, false);
-				}
-				else if (document.attachEvent) {
-					document.attachEvent('onkeypress', onKeyPressed);
-					document.attachEvent('onkeydown', onKeyDown);
-				}
-			}
-
-			function getCell(row, col) {
-				return document.getElementById("cell_" + row + "_" + col);
-			}
-
-			function getBorder(row, col) {
-				return document.getElementById("border_" + row + "_" + col);
-			}
-
-			function isBorderActive(border) {
-				return border.style.backgroundColor == ACTIVE_BORDER_COLOR;
-			}
-
-			function copySelection(undoForced) {
-				copiedCells = [];
-				selectedCells.forEach(cell => {
-					copiedCells.push({
-						content: cell.innerHTML,
-						cell: cell,
-						borders: getBorderConditions(cell)
-					})
-				});
-				if(!undoForced) saveAction({ action: "copied" });
-			}
-
-			function pasteSelection(undoForced, isUndo) {
-				let savedStates = [];
-				let redoStates = [];
-				let beforePasteSelection = [...selectedCells];
-
-				for (let i = 0; i < copiedCells.length; i++) {
-					let cellToCopy = copiedCells[isUndo ? copiedCells.length - 1 - i : i];
-
-					savedStates.push({
-						content: getCurrentCell().innerHTML,
-						cell: getCurrentCell(),
-						borders: getBorderConditions(getCurrentCell())
-					});
-
-					getCurrentCell().innerHTML = cellToCopy.content;
-					setCellBorders(getCurrentCell(), cellToCopy.borders);
-
-					redoStates.push({
-						content: getCurrentCell().innerHTML,
-						cell: getCurrentCell(),
-						borders: getBorderConditions(getCurrentCell())
-					});
-
-					if((!isUndo && i + 2 <= copiedCells.length) || (isUndo && copiedCells.length - i >= 2)) {
-						let nextCell = getNextCell(cellToCopy.cell, copiedCells[isUndo ? copiedCells.length - i - 2 : i + 1].cell);
-						if(!nextCell) break;
-						toggleCell(nextCell, true);
-					}
-				}
-
-				console.log(redoStates);
-				if(!undoForced) saveAction({ event: savedStates, eventRedo: redoStates, beforePasteSelection, action: "keyoverride" });
-			}
-
-			function setCellBorders(cell, borderConfig) {
-				setBorder(getBorder(cell.row - 0.5, cell.col), borderConfig.upBorder); // Up
-				setBorder(getBorder(cell.row + 0.5, cell.col), borderConfig.downBorder); // Down
-				setBorder(getBorder(cell.row, cell.col + 0.5), borderConfig.rightBorder); // Right
-				setBorder(getBorder(cell.row, cell.col - 0.5), borderConfig.leftBorder); // Left
-			}
-
-			function getBorderConditions(cell) {
-				let upBorder = isBorderActive(getBorder(cell.row - 0.5, cell.col), false); // Up
-				let downBorder = isBorderActive(getBorder(cell.row + 0.5, cell.col), false); // Down
-				let rightBorder = isBorderActive(getBorder(cell.row, cell.col + 0.5), false); // Right
-				let leftBorder = isBorderActive(getBorder(cell.row, cell.col - 0.5), false); // Left
-
-				return { upBorder, downBorder, leftBorder, rightBorder }
-			}
-
-			function getNextCell(currentOldCell, nextOldCell) {
-				let rowDiff = currentOldCell.row - nextOldCell.row;
-				let colDiff = currentOldCell.col - nextOldCell.col;
-
-				let row = getCurrentCell().row - rowDiff;
-				let col = getCurrentCell().col - colDiff;
-
-				if(row <= -1 || col <= -1) return null;
-
-				return getCell(row, col);
-			}
-
-			function performUndoRedo(e) {
-				let isUndo = e.keyCode == 90 && !e.altKey;
-					let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
-
-					e.preventDefault();
-
-					if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
-
-					var undoEvent;
-
-					if(isUndo) {
-						undoEvent = undos.pop();
-						redos.push(undoEvent);
-					}
-
-					if(isRedo) {
-						undoEvent = redos.pop();
-						undos.push(undoEvent);
-					}
-
-					if(undoEvent.action == "keymove") {
-						undoMovement(isUndo ? undoEvent.event : undoEvent.eventRedo);
-					} else if(undoEvent.action == "keydown") {
-						onKeyDown(undoEvent.event, true);
-					} else if(undoEvent.action == "keyoverride") {
-						copiedCells = isUndo ? undoEvent.event : undoEvent.eventRedo;
-						pasteSelection(true, isUndo);
-						if(isUndo && undoEvent.beforePasteSelection) undoMovement(undoEvent.beforePasteSelection);
-						copiedCells = [];
-					} else if(undoEvent.action == "keypress") {
-						onKeyPressed(new KeyboardEvent("keypress", { key: isUndo ? undoEvent.event : undoEvent.eventRedo }), true);
-					} else if(undoEvent.action == "cellclick") {
-						if(undoEvent.event || !isUndo)
-						onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
-						else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
-
-					} else if(undoEvent.action == "borderclick") {
-						if(undoEvent.event || !isUndo)
-						onBorderClick(undoEvent.event, true);
-						else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
-					}
-			}
-
-			function undoMovement(selections) {
-				onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
-				selections.forEach((cellToSelect, i) =>
-					toggleCell(cellToSelect, i != 0)
-				);
-			}
-
-			function saveAction(event) {
-				if(redos.length != 0) redos = [];
-				undos.push(event);
-			}
-
-			function isSelectionEmpty() {
-				return selectedCells.length == 0;
-			}
-
-			function getCurrentCell() {
-				return selectedCells[selectedCells.length - 1]
-			}
-
-			function onCellClick(cell, undoForced) {
-				if(selectedCells[0] == cell) return;
-
-				let tempCurCell = selectedCells[0];
-				if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
-
-				toggleCell(cell);
-			}
-
-			function onBorderClick(border, undoForced) {
-				let tempCurBorder = border;
-		        if(!undoForced) saveAction({ event:tempCurBorder, action: "borderclick" });
-
-				toggleBorder(border);
-			}
-
-			function paintCell(cell, color) {
-				if(cell.style.backgroundColor == color)
-					cell.style.backgroundColor = cell == getCurrentCell() ? PRIMARY_COLOR : SECONDARY_COLOR;
-				else cell.style.backgroundColor = color;
-			}
-
-			function onKeyPressed(e, undoForced) {
-				if (!isSelectionEmpty() && e.keyCode != 13 && e.keyCode != 10) {
-					if(!undoForced) saveAction({ event: selectedCells[0].innerHTML, eventRedo: e.key, action: "keypress" });
-
-					// if(e.keyCode == 49) //Digit 1
-					// 	selectedCells.forEach(cell => paintCell(cell, colors.blue));
-					// else if(e.keyCode == 50) //Digit 2
-					// 	selectedCells.forEach(cell => paintCell(cell, colors.red));
-					// else if(e.keyCode == 51) //Digit 3
-					// 	selectedCells.forEach(cell => paintCell(cell, colors.green));
-					// else if(e.keyCode == 52) //Digit 4
-					// 	selectedCells.forEach(cell => paintCell(cell, colors.yellow));
-					selectedCells.forEach(cell => cell.innerHTML = e.key);
-				}
-			}
-
-			function onKeyDown(e, undoForced) {
-				switch (e.keyCode) {
-					case 32: { //Space
-						e.preventDefault();
-						if(!isSelectionEmpty()) {
-							selectedCells.forEach(cell => cell.innerHTML = "&nbsp;");
-							if(!undoForced) saveAction({ event: e, action: "keydown" });
-						}
-						return;
-					}
-
-					case 8: //Backspace
-						e.preventDefault();
-						if(!isSelectionEmpty()) {
-							selectedCells.forEach(cell => cell.innerHTML = "&nbsp;");
-							if(!undoForced) saveAction({ event: e, action: "keydown" });
-						}
-						return;
-
-					case 13: //Enter
-						e.preventDefault();
-						if (!isSelectionEmpty()) {
-							selectedCells.forEach(cell => cell.style.backgroundColor = "white");
-							selectedCells = [];
-							if(!undoForced) saveAction({ event: e, action: "keydown" });
-						}
-						return;
-
-					case 46: //Delete
-						e.preventDefault();
-						if(!isSelectionEmpty()) {
-							let savedStates = [];
-							let redoStates = [];
-							selectedCells.forEach(cell => {
-								if(!undoForced) savedStates.push({
-									content:cell.innerHTML,
-									cell: cell,
-									borders: getBorderConditions(cell)
-								});
-								cell.innerHTML = "&nbsp;";
-							    setBorder(getBorder(cell.row - 0.5, cell.col), false); // Up
-								setBorder(getBorder(cell.row + 0.5, cell.col), false); // Down
-								setBorder(getBorder(cell.row, cell.col + 0.5), false); // Right
-								setBorder(getBorder(cell.row, cell.col - 0.5), false); // Left
-
-								if(!undoForced) redoStates.push({
-									content:cell.innerHTML,
-									cell: cell,
-									borders: getBorderConditions(cell)
-								});
-							});
-							if(!undoForced) saveAction({ event: savedStates, eventRedo: redoStates, beforePasteSelection: [...selectedCells], action: "keyoverride" });
-						}
-						return;
-
-					case 9: //Tab
-						e.preventDefault();
-						if(!isSelectionEmpty())
-							toggleCell(getCell(selectedCells[0].row , selectedCells[0].col >= (TABLE_COLS - 1) ? 0 : selectedCells[0].col + 1));
-					    else toggleCell(getCell(0, 0));
-						if(!undoForced) saveAction({ event: e, action: "keydown" });
-						return;
-
-					case 38: //Arrow Up
-						e.preventDefault();
-						if(e.altKey) { //Alt + Up
-							if(!isSelectionEmpty()) {
-								selectedCells.forEach( cell => toggleBorder(getBorder(cell.row - 0.5, cell.col)));
-								if(!undoForced) saveAction({ event: e, action: "keydown" });
-							}
-						} else { //Up
-							let undoCells = [...selectedCells];
-							if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row <= 0 ? (TABLE_ROWS - 1) : getCurrentCell().row - 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
-							else toggleCell(getCell(0, 0));
-							if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
-						}
-						return;
-
-					case 40: //Arrow Down
-						e.preventDefault();
-						if(e.altKey) { //Alt + Down
-							if(!isSelectionEmpty()) {
-								selectedCells.forEach( cell => toggleBorder(getBorder(cell.row + 0.5, cell.col)));
-								if(!undoForced) saveAction({ event: e, action: "keydown" });
-							}
-						} else { //Down
-							let undoCells = [...selectedCells];
-							if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row >= (TABLE_ROWS - 1) ? 0 : getCurrentCell().row + 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
-							else toggleCell(getCell(0, 0));
-							if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
-						}
-						return;
-
-					case 39: //Arrow Right
-						e.preventDefault();
-						let multiselection = e.ctrlKey || e.shiftKey;
-						if(e.altKey) { //Alt + Right
-							if(!isSelectionEmpty()) {
-								selectedCells.forEach( cell => toggleBorder(getBorder(cell.row, cell.col + 0.5)));
-								if(!undoForced) saveAction({ event: e, action: "keydown" });
-							}
-						} else { //Right
-							let undoCells = [...selectedCells];
-							if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col >= (TABLE_COLS - 1) ? 0 : getCurrentCell().col + 1), multiselection);
-							else toggleCell(getCell(0, 0));
-							if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
-						}
-						return;
-
-					case 37: //Arrow Left
-						e.preventDefault();
-						if(e.altKey) { //Alt + Left
-							if(!isSelectionEmpty()) {
-								 selectedCells.forEach( cell => toggleBorder(getBorder(cell.row, cell.col - 0.5)));
-								if(!undoForced) saveAction({ event: e, action: "keydown" });
-							}
-						} else { //Left
-							let undoCells = [...selectedCells];
-							if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col <= 0 ? (TABLE_COLS - 1) : getCurrentCell().col - 1), e.ctrlKey || e.shiftKey);
-							else toggleCell(getCell(0, 0));
-							if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
-						}
-						return;
-
-					case 90: // Undo (Redo with Shift)
-					case 89: // Redo
-						if(e.ctrlKey) performUndoRedo(e);
-						return;
-
-					case 67: // Copy
-						if(e.ctrlKey) copySelection();
-						return;
-
-					case 86: // Paste
-						if(e.ctrlKey) pasteSelection(undoForced);
-						return;
-
-					case 88: // Cut
-						if(e.ctrlKey) {
-							copySelection();
-							onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 46 }), true);
-						}
-						return;
-				}
-			}
-		</script>
+        <script>
+            // Setup Code (DarkSly Mark)
+            const TABLE_ROWS = 23;
+            const TABLE_COLS = 20;
+
+            const INACTIVE_COLOR = "#00000000";
+            const PRIMARY_COLOR = "#bced95"; //Light Green
+            const SECONDARY_COLOR =  "#d4f59f"; //Even lighter green
+
+            const INACTIVE_BORDER_COLOR = "#888888"; //Grey
+            const ACTIVE_BORDER_COLOR = "black";
+
+            let colors = {
+                blue: "rgba(68, 130, 255, 0.4)",
+                red: "rgba(223, 32, 32, 0.4)",
+                green: "rgba(34, 195, 34, 0.4)",
+                yellow: "rgba(223, 223, 32, 0.4)",
+            };
+
+            var selectedCells = [];
+            var copiedCells = [];
+
+            var undos = [];
+            var redos = [];
+
+            function createTable() {
+              var container = document.getElementById('table-container');
+              var tbl = document.createElement('table');
+              tbl.className = "appendix-table";
+
+              var isBorderRow = true;
+              for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
+                //Rows
+                let tr = document.createElement('tr');
+
+                if(isBorderRow){
+                    //First Border Corner
+                    var firstBorderCorner = document.createElement('td');
+                    firstBorderCorner.row = Math.ceil(i/2 - 1) + 0.5;
+                    firstBorderCorner.col = -0.5;
+                    firstBorderCorner.id = "border_" + firstBorderCorner.row + "_" + firstBorderCorner.col;
+                    firstBorderCorner.className = "appendix-cell border vb hb";
+                    firstBorderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                    tr.appendChild(firstBorderCorner);
+                } else {
+                    //First Vertical border
+                    let firstVBorder = document.createElement('td');
+                    firstVBorder.row = Math.ceil(i/2 - 1);
+                    firstVBorder.col = -0.5;
+                    firstVBorder.id = "border_" + firstVBorder.row + "_" + firstVBorder.col;
+                    firstVBorder.className = "appendix-cell border vb";
+                    firstVBorder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                    firstVBorder.onclick = () => onBorderClick(firstVBorder);
+                    tr.appendChild(firstVBorder);
+                }
+
+                for (var j = 0; j < TABLE_COLS; j++) {
+                    if(isBorderRow) {
+                        let currentFirstCorner = firstBorderCorner;
+                        let lastCorner = j == 0? currentFirstCorner : borderCorner;
+
+                        //Horizontal Corners
+                        let hborder = document.createElement('td');
+                        hborder.row = Math.ceil(i/2 - 1) + 0.5;
+                        hborder.col = j;
+                        hborder.id = "border_" + hborder.row + "_" + hborder.col;
+                        hborder.className = "appendix-cell border hb";
+                        hborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        tr.appendChild(hborder);
+
+                        //Border Corners
+                        var borderCorner = document.createElement('td');
+                        borderCorner.row = Math.ceil(i/2 - 1) + 0.5;
+                        borderCorner.col = j + 0.5;
+                        borderCorner.id = "border_" + borderCorner.row + "_" + borderCorner.col;
+                        borderCorner.className = "appendix-cell border vb hb";
+                        borderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        tr.appendChild(borderCorner);
+                        let nextCorner = borderCorner;
+
+                        hborder.onclick = () => onBorderClick(hborder);
+                        borderCorner.onclick = () => onBorderClick(hborder);
+                    } else {
+                        //Actual Cells
+                        let td = document.createElement('td');
+                        td.row = Math.ceil(i/2 - 1);
+                        td.col = j;
+                        td.id = "cell_" + td.row + "_" + td.col;
+                        td.className = "appendix-cell";
+                        td.onclick = () => onCellClick(td);
+                        td.innerHTML = "&nbsp;";
+                        tr.appendChild(td);
+
+                        //Vertical Borders
+                        let vborder = document.createElement('td');
+                        vborder.row = Math.ceil(i/2 - 1);
+                        vborder.col = j + 0.5;
+                        vborder.id = "border_" + vborder.row + "_" + vborder.col;
+                        vborder.className = "appendix-cell border vb";
+                        vborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        vborder.onclick = () => onBorderClick(vborder);
+                        tr.appendChild(vborder);
+                    }
+                }
+                isBorderRow = !isBorderRow;
+                tbl.appendChild(tr);
+              }
+              container.appendChild(tbl)
+            }
+
+            function resetTable() {
+                var container = document.getElementById('table-container');
+                container.innerHTML = "";
+                selectedCells = [];
+
+                undos = [];
+                redos = [];
+
+                createTable();
+            }
+
+            function toggleBorder(cell) {
+              setBorder(cell, !isBorderActive(cell));
+            }
+
+            function setBorder(border, active) {
+                let isHorizontal = border.row % 1 != 0;
+
+                border.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
+                  if(isHorizontal) {
+                    let lastCorner = getBorder(border.row, border.col - 0.5);
+                    let nextCorner = getBorder(border.row, border.col + 0.5);
+
+                    if(lastCorner) lastCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
+                    if(nextCorner) nextCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
+                  }
+            }
+
+            function toggleCell(cell, multiselection) {
+                if(!cell) return;
+
+                if(multiselection) {
+                    // if(isCellNotPainted(cell))
+                        getCurrentCell().style.backgroundColor = SECONDARY_COLOR;
+                    selectedCells.push(cell);
+
+                } else{
+                    if(!isSelectionEmpty())
+                      selectedCells.forEach(cell => {
+                        //   if(isCellNotPainted(cell))
+                          cell.style.backgroundColor = INACTIVE_COLOR;
+                        });
+                    selectedCells = [];
+                    selectedCells.push(cell);
+                }
+
+                // if(isCellNotPainted(cell))
+                    cell.style.backgroundColor = PRIMARY_COLOR;
+            }
+
+            function isCellNotPainted(cell) {
+                return isCellColor(cell, PRIMARY_COLOR) || isCellColor(cell, SECONDARY_COLOR) || isCellColor(cell, INACTIVE_COLOR)
+            }
+
+            function isCellColor(cell, color) {
+                const ctx = document.createElement('canvas').getContext('2d');
+                ctx.fillStyle = color;
+                ctx.fillRect( 0, 0, 1, 1 );
+                ctx.fillStyle = getComputedStyle(cell, null).getPropertyValue("background-color");
+                ctx.fillRect( 1, 0, 1, 1 );
+                const a = JSON.stringify(Array.from(ctx.getImageData(0, 0, 1, 1).data));
+                const b = JSON.stringify(Array.from(ctx.getImageData(1, 0, 1, 1).data));
+                ctx.canvas = null;
+                return a === b;
+            }
+
+            function setupEventListeners() {
+                if (document.addEventListener) {
+                    document.addEventListener('keypress', onKeyPressed, false);
+                    document.addEventListener('keydown', onKeyDown, false);
+                }
+                else if (document.attachEvent) {
+                    document.attachEvent('onkeypress', onKeyPressed);
+                    document.attachEvent('onkeydown', onKeyDown);
+                }
+            }
+
+            function getCell(row, col) {
+                return document.getElementById("cell_" + row + "_" + col);
+            }
+
+            function getBorder(row, col) {
+                return document.getElementById("border_" + row + "_" + col);
+            }
+
+            function isBorderActive(border) {
+                return border.style.backgroundColor == ACTIVE_BORDER_COLOR;
+            }
+
+            function copySelection(undoForced) {
+                copiedCells = [];
+                selectedCells.forEach(cell => {
+                    copiedCells.push({
+                        content: cell.innerHTML,
+                        cell: cell,
+                        borders: getBorderConditions(cell)
+                    })
+                });
+                if(!undoForced) saveAction({ action: "copied" });
+            }
+
+            function pasteSelection(undoForced, isUndo) {
+                let savedStates = [];
+                let redoStates = [];
+                let beforePasteSelection = [...selectedCells];
+
+                for (let i = 0; i < copiedCells.length; i++) {
+                    let cellToCopy = copiedCells[isUndo ? copiedCells.length - 1 - i : i];
+
+                    savedStates.push({
+                        content: getCurrentCell().innerHTML,
+                        cell: getCurrentCell(),
+                        borders: getBorderConditions(getCurrentCell())
+                    });
+
+                    getCurrentCell().innerHTML = cellToCopy.content;
+                    setCellBorders(getCurrentCell(), cellToCopy.borders);
+
+                    redoStates.push({
+                        content: getCurrentCell().innerHTML,
+                        cell: getCurrentCell(),
+                        borders: getBorderConditions(getCurrentCell())
+                    });
+
+                    if((!isUndo && i + 2 <= copiedCells.length) || (isUndo && copiedCells.length - i >= 2)) {
+                        let nextCell = getNextCell(cellToCopy.cell, copiedCells[isUndo ? copiedCells.length - i - 2 : i + 1].cell);
+                        if(!nextCell) break;
+                        toggleCell(nextCell, true);
+                    }
+                }
+
+                console.log(redoStates);
+                if(!undoForced) saveAction({ event: savedStates, eventRedo: redoStates, beforePasteSelection, action: "keyoverride" });
+            }
+
+            function setCellBorders(cell, borderConfig) {
+                setBorder(getBorder(cell.row - 0.5, cell.col), borderConfig.upBorder); // Up
+                setBorder(getBorder(cell.row + 0.5, cell.col), borderConfig.downBorder); // Down
+                setBorder(getBorder(cell.row, cell.col + 0.5), borderConfig.rightBorder); // Right
+                setBorder(getBorder(cell.row, cell.col - 0.5), borderConfig.leftBorder); // Left
+            }
+
+            function getBorderConditions(cell) {
+                let upBorder = isBorderActive(getBorder(cell.row - 0.5, cell.col), false); // Up
+                let downBorder = isBorderActive(getBorder(cell.row + 0.5, cell.col), false); // Down
+                let rightBorder = isBorderActive(getBorder(cell.row, cell.col + 0.5), false); // Right
+                let leftBorder = isBorderActive(getBorder(cell.row, cell.col - 0.5), false); // Left
+
+                return { upBorder, downBorder, leftBorder, rightBorder }
+            }
+
+            function getNextCell(currentOldCell, nextOldCell) {
+                let rowDiff = currentOldCell.row - nextOldCell.row;
+                let colDiff = currentOldCell.col - nextOldCell.col;
+
+                let row = getCurrentCell().row - rowDiff;
+                let col = getCurrentCell().col - colDiff;
+
+                if(row <= -1 || col <= -1) return null;
+
+                return getCell(row, col);
+            }
+
+            function performUndoRedo(e) {
+                let isUndo = e.keyCode == 90 && !e.altKey;
+                    let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
+
+                    e.preventDefault();
+
+                    if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
+
+                    var undoEvent;
+
+                    if(isUndo) {
+                        undoEvent = undos.pop();
+                        redos.push(undoEvent);
+                    }
+
+                    if(isRedo) {
+                        undoEvent = redos.pop();
+                        undos.push(undoEvent);
+                    }
+
+                    if(undoEvent.action == "keymove") {
+                        undoMovement(isUndo ? undoEvent.event : undoEvent.eventRedo);
+                    } else if(undoEvent.action == "keydown") {
+                        onKeyDown(undoEvent.event, true);
+                    } else if(undoEvent.action == "keyoverride") {
+                        copiedCells = isUndo ? undoEvent.event : undoEvent.eventRedo;
+                        pasteSelection(true, isUndo);
+                        if(isUndo && undoEvent.beforePasteSelection) undoMovement(undoEvent.beforePasteSelection);
+                        copiedCells = [];
+                    } else if(undoEvent.action == "keypress") {
+                        onKeyPressed(new KeyboardEvent("keypress", { key: isUndo ? undoEvent.event : undoEvent.eventRedo }), true);
+                    } else if(undoEvent.action == "cellclick") {
+                        if(undoEvent.event || !isUndo)
+                        onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
+                        else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
+
+                    } else if(undoEvent.action == "borderclick") {
+                        if(undoEvent.event || !isUndo)
+                        onBorderClick(undoEvent.event, true);
+                        else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
+                    }
+            }
+
+            function undoMovement(selections) {
+                onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
+                selections.forEach((cellToSelect, i) =>
+                    toggleCell(cellToSelect, i != 0)
+                );
+            }
+
+            function saveAction(event) {
+                if(redos.length != 0) redos = [];
+                undos.push(event);
+            }
+
+            function isSelectionEmpty() {
+                return selectedCells.length == 0;
+            }
+
+            function getCurrentCell() {
+                return selectedCells[selectedCells.length - 1]
+            }
+
+            function onCellClick(cell, undoForced) {
+                if(selectedCells[0] == cell) return;
+
+                let tempCurCell = selectedCells[0];
+                if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
+
+                toggleCell(cell);
+            }
+
+            function onBorderClick(border, undoForced) {
+                let tempCurBorder = border;
+                if(!undoForced) saveAction({ event:tempCurBorder, action: "borderclick" });
+
+                toggleBorder(border);
+            }
+
+            function paintCell(cell, color) {
+                if(cell.style.backgroundColor == color)
+                    cell.style.backgroundColor = cell == getCurrentCell() ? PRIMARY_COLOR : SECONDARY_COLOR;
+                else cell.style.backgroundColor = color;
+            }
+
+            function onKeyPressed(e, undoForced) {
+                if (!isSelectionEmpty() && e.keyCode != 13 && e.keyCode != 10) {
+                    if(!undoForced) saveAction({ event: selectedCells[0].innerHTML, eventRedo: e.key, action: "keypress" });
+
+                    // if(e.keyCode == 49) //Digit 1
+                    //     selectedCells.forEach(cell => paintCell(cell, colors.blue));
+                    // else if(e.keyCode == 50) //Digit 2
+                    //     selectedCells.forEach(cell => paintCell(cell, colors.red));
+                    // else if(e.keyCode == 51) //Digit 3
+                    //     selectedCells.forEach(cell => paintCell(cell, colors.green));
+                    // else if(e.keyCode == 52) //Digit 4
+                    //     selectedCells.forEach(cell => paintCell(cell, colors.yellow));
+                    selectedCells.forEach(cell => cell.innerHTML = e.key);
+                }
+            }
+
+            function onKeyDown(e, undoForced) {
+                switch (e.keyCode) {
+                    case 32: { //Space
+                        e.preventDefault();
+                        if(!isSelectionEmpty()) {
+                            selectedCells.forEach(cell => cell.innerHTML = "&nbsp;");
+                            if(!undoForced) saveAction({ event: e, action: "keydown" });
+                        }
+                        return;
+                    }
+
+                    case 8: //Backspace
+                        e.preventDefault();
+                        if(!isSelectionEmpty()) {
+                            selectedCells.forEach(cell => cell.innerHTML = "&nbsp;");
+                            if(!undoForced) saveAction({ event: e, action: "keydown" });
+                        }
+                        return;
+
+                    case 13: //Enter
+                        e.preventDefault();
+                        if (!isSelectionEmpty()) {
+                            selectedCells.forEach(cell => cell.style.backgroundColor = "white");
+                            selectedCells = [];
+                            if(!undoForced) saveAction({ event: e, action: "keydown" });
+                        }
+                        return;
+
+                    case 46: //Delete
+                        e.preventDefault();
+                        if(!isSelectionEmpty()) {
+                            let savedStates = [];
+                            let redoStates = [];
+                            selectedCells.forEach(cell => {
+                                if(!undoForced) savedStates.push({
+                                    content:cell.innerHTML,
+                                    cell: cell,
+                                    borders: getBorderConditions(cell)
+                                });
+                                cell.innerHTML = "&nbsp;";
+                                setBorder(getBorder(cell.row - 0.5, cell.col), false); // Up
+                                setBorder(getBorder(cell.row + 0.5, cell.col), false); // Down
+                                setBorder(getBorder(cell.row, cell.col + 0.5), false); // Right
+                                setBorder(getBorder(cell.row, cell.col - 0.5), false); // Left
+
+                                if(!undoForced) redoStates.push({
+                                    content:cell.innerHTML,
+                                    cell: cell,
+                                    borders: getBorderConditions(cell)
+                                });
+                            });
+                            if(!undoForced) saveAction({ event: savedStates, eventRedo: redoStates, beforePasteSelection: [...selectedCells], action: "keyoverride" });
+                        }
+                        return;
+
+                    case 9: //Tab
+                        e.preventDefault();
+                        if(!isSelectionEmpty())
+                            toggleCell(getCell(selectedCells[0].row , selectedCells[0].col >= (TABLE_COLS - 1) ? 0 : selectedCells[0].col + 1));
+                        else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: e, action: "keydown" });
+                        return;
+
+                    case 38: //Arrow Up
+                        e.preventDefault();
+                        if(e.altKey) { //Alt + Up
+                            if(!isSelectionEmpty()) {
+                                selectedCells.forEach( cell => toggleBorder(getBorder(cell.row - 0.5, cell.col)));
+                                if(!undoForced) saveAction({ event: e, action: "keydown" });
+                            }
+                        } else { //Up
+                            let undoCells = [...selectedCells];
+                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row <= 0 ? (TABLE_ROWS - 1) : getCurrentCell().row - 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
+                            else toggleCell(getCell(0, 0));
+                            if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
+                        }
+                        return;
+
+                    case 40: //Arrow Down
+                        e.preventDefault();
+                        if(e.altKey) { //Alt + Down
+                            if(!isSelectionEmpty()) {
+                                selectedCells.forEach( cell => toggleBorder(getBorder(cell.row + 0.5, cell.col)));
+                                if(!undoForced) saveAction({ event: e, action: "keydown" });
+                            }
+                        } else { //Down
+                            let undoCells = [...selectedCells];
+                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row >= (TABLE_ROWS - 1) ? 0 : getCurrentCell().row + 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
+                            else toggleCell(getCell(0, 0));
+                            if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
+                        }
+                        return;
+
+                    case 39: //Arrow Right
+                        e.preventDefault();
+                        let multiselection = e.ctrlKey || e.shiftKey;
+                        if(e.altKey) { //Alt + Right
+                            if(!isSelectionEmpty()) {
+                                selectedCells.forEach( cell => toggleBorder(getBorder(cell.row, cell.col + 0.5)));
+                                if(!undoForced) saveAction({ event: e, action: "keydown" });
+                            }
+                        } else { //Right
+                            let undoCells = [...selectedCells];
+                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col >= (TABLE_COLS - 1) ? 0 : getCurrentCell().col + 1), multiselection);
+                            else toggleCell(getCell(0, 0));
+                            if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
+                        }
+                        return;
+
+                    case 37: //Arrow Left
+                        e.preventDefault();
+                        if(e.altKey) { //Alt + Left
+                            if(!isSelectionEmpty()) {
+                                 selectedCells.forEach( cell => toggleBorder(getBorder(cell.row, cell.col - 0.5)));
+                                if(!undoForced) saveAction({ event: e, action: "keydown" });
+                            }
+                        } else { //Left
+                            let undoCells = [...selectedCells];
+                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col <= 0 ? (TABLE_COLS - 1) : getCurrentCell().col - 1), e.ctrlKey || e.shiftKey);
+                            else toggleCell(getCell(0, 0));
+                            if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
+                        }
+                        return;
+
+                    case 90: // Undo (Redo with Shift)
+                    case 89: // Redo
+                        if(e.ctrlKey) performUndoRedo(e);
+                        return;
+
+                    case 67: // Copy
+                        if(e.ctrlKey) copySelection();
+                        return;
+
+                    case 86: // Paste
+                        if(e.ctrlKey) pasteSelection(undoForced);
+                        return;
+
+                    case 88: // Cut
+                        if(e.ctrlKey) {
+                            copySelection();
+                            onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 46 }), true);
+                        }
+                        return;
+                }
+            }
+        </script>
     </head>
     <body>
         <div class="section">
@@ -577,49 +577,49 @@
                     <img src="img/Component/Mislocation.svg" class="diagram" />
                     <h2>On the Subject of Mislocation</h2>
                     <p class="flavour-text">You've never been this lost in an area this tiny.</p>
-					<br>
-					<div>
-						<table style="width: 100%;">
-							<tr><th style="width: 10%;">Table Controls</th><th style="width: 30%;">Command:</th><th style="width: 60%;">Effect:</th></tr>
-							<tr><th rowspan="6">Cell Control Commands</th><td>Click (Cell)</td><td>Selects the cell</td></tr>
-							<tr><td>Arrow Keys</td><td>Selects the adjacent cell (Or top-left if none are selected) </td></tr>
-							<tr><td>Tab Key</td><td> Selects the cell to the right (Or top-left if none are selected) </td></tr>
-							<tr><td>Ctrl + Arrow Keys</td><td> Multi-selection (Adds the adjacent cell to the selection) </td></tr>
-							<tr><td>Shift + Arrow Keys</td><td> Same as the row above <span style="color: #990000;">[Rectangle Multi-selection in the future]</span></td></tr>
-							<tr><td>Enter Key</td><td> Deselects current cell(s) </td></tr>
-							<tr><th rowspan="2">Cell Content Commands</th><td>Any Character Key</td><td>Sets the content of the selected cell(s)</td></tr>
-							<tr><td>Backspace/Space Key</td><td>Clears the selected cell(s) content</td></tr>
-							<tr><th rowspan="2">Border Commands</th><td>Click (Border)</td><td>Toggles the border</td></tr>
-							<tr><td>Alt + Arrow Keys</td><td> Toggles the adjacent border to the selected cell(s)</td></tr>
-							<tr><th rowspan="4">General Commands</th><td>Ctrl + X/C/V</td><td>Cuts/Copies/Pastes the currently selected cell(s)</td></tr>
-							<tr><td>Ctrl + Z</td><td> Undos last command <span style="color: #990000;">(Clears after reset button pushed)</span></td></tr>
-							<tr><td>Ctrl + Y/<br>Ctrl + Shift + Z</td><td>Redos last undone command (Clears after other executed command)</td></tr>
-							<tr><td>Delete Key</td><td>Clears the content and adjacent borders of the selected cell(s)</td></tr>
-						</table>
-					</div>
-				</div>
+                    <br>
+                    <div>
+                        <table style="width: 100%;">
+                            <tr><th style="width: 10%;">Table Controls</th><th style="width: 30%;">Command:</th><th style="width: 60%;">Effect:</th></tr>
+                            <tr><th rowspan="6">Cell Control Commands</th><td>Click (Cell)</td><td>Selects the cell</td></tr>
+                            <tr><td>Arrow Keys</td><td>Selects the adjacent cell (Or top-left if none are selected) </td></tr>
+                            <tr><td>Tab Key</td><td> Selects the cell to the right (Or top-left if none are selected) </td></tr>
+                            <tr><td>Ctrl + Arrow Keys</td><td> Multi-selection (Adds the adjacent cell to the selection) </td></tr>
+                            <tr><td>Shift + Arrow Keys</td><td> Same as the row above <span style="color: #990000;">[Rectangle Multi-selection in the future]</span></td></tr>
+                            <tr><td>Enter Key</td><td> Deselects current cell(s) </td></tr>
+                            <tr><th rowspan="2">Cell Content Commands</th><td>Any Character Key</td><td>Sets the content of the selected cell(s)</td></tr>
+                            <tr><td>Backspace/Space Key</td><td>Clears the selected cell(s) content</td></tr>
+                            <tr><th rowspan="2">Border Commands</th><td>Click (Border)</td><td>Toggles the border</td></tr>
+                            <tr><td>Alt + Arrow Keys</td><td> Toggles the adjacent border to the selected cell(s)</td></tr>
+                            <tr><th rowspan="4">General Commands</th><td>Ctrl + X/C/V</td><td>Cuts/Copies/Pastes the currently selected cell(s)</td></tr>
+                            <tr><td>Ctrl + Z</td><td> Undos last command <span style="color: #990000;">(Clears after reset button pushed)</span></td></tr>
+                            <tr><td>Ctrl + Y/<br>Ctrl + Shift + Z</td><td>Redos last undone command (Clears after other executed command)</td></tr>
+                            <tr><td>Delete Key</td><td>Clears the content and adjacent borders of the selected cell(s)</td></tr>
+                        </table>
+                    </div>
+                </div>
                 <div class="page-footer relative-footer">Page 1 of 2</div>
             </div>
         </div>
-      	<div class="section">
+          <div class="section">
             <div class="page page-bg-01">
                 <div class="page-header">
                     <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                     <span class="page-header-section-title">Mislocation</span>
                 </div>
                 <div class="page-content appendix-page">
-					<h2 class="appendix-content">Appendix: Interactive Mislocation Table</h2>
-					<button onclick="resetTable()" class="appendix-content">Reset</button>
-					<p></p>
-					<div id="table-container" ></div>
+                    <h2 class="appendix-content">Appendix: Interactive Mislocation Table</h2>
+                    <button onclick="resetTable()" class="appendix-content">Reset</button>
+                    <p></p>
+                    <div id="table-container" ></div>
                 </div>
                 <div class="page-footer relative-footer">Page 2 of 2</div>
             </div>
         </div>
-		<script>
-			// Trigger code
-			createTable();
-			setupEventListeners();
-		</script>
+        <script>
+            // Trigger code
+            createTable();
+            setupEventListeners();
+        </script>
     </body>
 </html>
