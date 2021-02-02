@@ -188,7 +188,7 @@
 
                 if(multiselection) {
                     // if(isCellNotPainted(cell))
-                        getCurrentCell().style.backgroundColor = SECONDARY_COLOR;
+                        if(getCurrentCell()) getCurrentCell().style.backgroundColor = SECONDARY_COLOR;
                     selectedCells.push(cell);
 
                 } else{
@@ -382,6 +382,25 @@
                 return selectedCells[selectedCells.length - 1]
             }
 
+            function toggleSquareSelection(firstCell, lastCell) {
+                if(!firstCell || !lastCell) {
+                    firstCell = selectedCells[0];
+                    lastCell = getCurrentCell();
+                }
+                
+                selectedCells.forEach(cell => cell.style.backgroundColor = INACTIVE_COLOR);
+                selectedCells = [];
+
+                for (let i = 0; i <= Math.abs(firstCell.row - lastCell.row); i++) {
+                    for (let j = 0; j <= Math.abs(firstCell.col - lastCell.col); j++) {
+                        console.log("Cell Row Position: " + (firstCell.row + i).toString());
+                        console.log("Cell Col Position: " + (firstCell.col + j).toString());
+                        toggleCell(getCell(firstCell.row + (firstCell.row - lastCell.row < 0 ? i : -i), firstCell.col + (firstCell.col - lastCell.col < 0 ? j : -j)), true);
+                    }  
+                }
+                console.log("SQUARE");
+            }
+
             function onCellClick(cell, undoForced) {
                 if(selectedCells[0] == cell) return;
 
@@ -442,7 +461,7 @@
                     case 13: //Enter
                         e.preventDefault();
                         if (!isSelectionEmpty()) {
-                            selectedCells.forEach(cell => cell.style.backgroundColor = "white");
+                            selectedCells.forEach(cell => cell.style.backgroundColor = INACTIVE_COLOR);
                             selectedCells = [];
                             if(!undoForced) saveAction({ event: e, action: "keydown" });
                         }
@@ -493,8 +512,10 @@
                             }
                         } else { //Up
                             let undoCells = [...selectedCells];
-                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row <= 0 ? (TABLE_ROWS - 1) : getCurrentCell().row - 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
-                            else toggleCell(getCell(0, 0));
+                            if(!isSelectionEmpty()) {
+                                toggleCell(getCell(getCurrentCell().row <= 0 ? (TABLE_ROWS - 1) : getCurrentCell().row - 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
+                                if(e.shiftKey) toggleSquareSelection();
+                            } else toggleCell(getCell(0, 0));
                             if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
                         }
                         return;
@@ -508,8 +529,10 @@
                             }
                         } else { //Down
                             let undoCells = [...selectedCells];
-                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row >= (TABLE_ROWS - 1) ? 0 : getCurrentCell().row + 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
-                            else toggleCell(getCell(0, 0));
+                            if(!isSelectionEmpty()) {
+                                toggleCell(getCell(getCurrentCell().row >= (TABLE_ROWS - 1) ? 0 : getCurrentCell().row + 1, getCurrentCell().col), e.ctrlKey || e.shiftKey);
+                                if(e.shiftKey) toggleSquareSelection();
+                            } else toggleCell(getCell(0, 0));
                             if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
                         }
                         return;
@@ -524,8 +547,10 @@
                             }
                         } else { //Right
                             let undoCells = [...selectedCells];
-                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col >= (TABLE_COLS - 1) ? 0 : getCurrentCell().col + 1), multiselection);
-                            else toggleCell(getCell(0, 0));
+                            if(!isSelectionEmpty()) {
+                                toggleCell(getCell(getCurrentCell().row, getCurrentCell().col >= (TABLE_COLS - 1) ? 0 : getCurrentCell().col + 1), multiselection);
+                                if(e.shiftKey) toggleSquareSelection();
+                            } else toggleCell(getCell(0, 0));
                             if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
                         }
                         return;
@@ -539,8 +564,10 @@
                             }
                         } else { //Left
                             let undoCells = [...selectedCells];
-                            if(!isSelectionEmpty()) toggleCell(getCell(getCurrentCell().row, getCurrentCell().col <= 0 ? (TABLE_COLS - 1) : getCurrentCell().col - 1), e.ctrlKey || e.shiftKey);
-                            else toggleCell(getCell(0, 0));
+                            if(!isSelectionEmpty()) {
+                                toggleCell(getCell(getCurrentCell().row, getCurrentCell().col <= 0 ? (TABLE_COLS - 1) : getCurrentCell().col - 1), e.ctrlKey || e.shiftKey);
+                                if(e.shiftKey) toggleSquareSelection();
+                            } else toggleCell(getCell(0, 0));
                             if(!undoForced) saveAction({ event: undoCells, eventRedo: [...selectedCells], action: "keymove"  });
                         }
                         return;
@@ -586,14 +613,14 @@
                             <tr><th rowspan="6">Cell Control Commands</th><td>Click (Cell)</td><td>Selects the cell</td></tr>
                             <tr><td>Arrow Keys</td><td>Selects the adjacent cell (Or top-left if none are selected) </td></tr>
                             <tr><td>Tab Key</td><td> Selects the cell to the right (Or top-left if none are selected) </td></tr>
-                            <tr><td>Ctrl + Arrow Keys</td><td> Multi-selection (Adds the adjacent cell to the selection) </td></tr>
-                            <tr><td>Shift + Arrow Keys</td><td> Same as the row above <span style="color: #990000;">[Rectangle Multi-selection in the future]</span></td></tr>
+                            <tr><td>Ctrl + Arrow Keys</td><td> Individual Multi-selection (Adds the adjacent cell to the selection)</td></tr>
+                            <tr><td>Shift + Arrow Keys</td><td> Rectangle Multi-selection (Selects the rectange shape between two cells)</span></td></tr>
                             <tr><td>Enter Key</td><td> Deselects current cell(s) </td></tr>
                             <tr><th rowspan="2">Cell Content Commands</th><td>Any Character Key</td><td>Sets the content of the selected cell(s)</td></tr>
                             <tr><td>Backspace/Space Key</td><td>Clears the selected cell(s) content</td></tr>
                             <tr><th rowspan="2">Border Commands</th><td>Click (Border)</td><td>Toggles the border</td></tr>
                             <tr><td>Alt + Arrow Keys</td><td> Toggles the adjacent border to the selected cell(s)</td></tr>
-                            <tr><th rowspan="4">General Commands</th><td>Ctrl + X/C/V</td><td>Cuts/Copies/Pastes the currently selected cell(s)</td></tr>
+                            <tr><th rowspan="4">General Commands</th><td>Ctrl + X/C/V</td><td>Cuts/Copies/Pastes the currently selected cell(s) <span style="color: #990000;">(Paste according to the first cell in the selection when copied)</span></td></tr>
                             <tr><td>Ctrl + Z</td><td> Undos last command <span style="color: #990000;">(Clears after reset button pushed)</span></td></tr>
                             <tr><td>Ctrl + Y/<br>Ctrl + Shift + Z</td><td>Redos last undone command (Clears after other executed command)</td></tr>
                             <tr><td>Delete Key</td><td>Clears the content and adjacent borders of the selected cell(s)</td></tr>
