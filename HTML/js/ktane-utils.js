@@ -251,7 +251,7 @@ e.onload = function()
                     }
                     else
                     {
-                        let table = element.parents("table").first();
+                        let table = element.parents("table, .highlightable-parent").first();
 
                         let a;
                         let b;
