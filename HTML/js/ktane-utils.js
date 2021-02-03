@@ -36,7 +36,7 @@ e.onload = function()
                 <h3>Highlighter</h3>
                 <div><input type='checkbox' id='highlighter-enabled'>&nbsp;<label for='highlighter-enabled' accesskey='h'>Enabled</label> (Alt-H)</div>
                 <div>Color: <select id='highlighter-color'></select> (Alt-<span id='highlighter-color-index'>1</span>)</div>
-                <div>Highlights: <button id='clear-highlights'>Clear</button></div>
+                <div>Highlights: <button id='clear-highlights' accesskey='c'>Clear</button> (Alt-C)</div>
             </div>
             <div class='option-group'>
                 <h3>Page layout</h3>
@@ -92,7 +92,8 @@ e.onload = function()
 
         // An array of elementHighlights.
         const highlights = [];
-        $("#clear-highlights").click(() => {
+        const clearHighlights = $("#clear-highlights");
+        clearHighlights.click(() => {
             for (const elementHighlights of highlights) {
                 for (const highlight of elementHighlights) {
                     highlight.remove();
@@ -110,6 +111,11 @@ e.onload = function()
             if (event.keyCode === 0x4F)
             {
                 options.toggleClass('open');
+            }
+            // Alt-C: Clear highlights
+            else if (event.keyCode === 67)
+            {
+                clearHighlights.click();
             }
             else if (event.keyCode >= 48 && event.keyCode <= 57)
             {
