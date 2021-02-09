@@ -325,6 +325,13 @@ class BombGroup {
             }
 
             for (const event of this.Events) {
+                if (event.type == "PASS")
+                {
+                    const mod = lastBombGroup.GetMod(event.moduleID, event.loggingID);
+                    if (mod != null && mod.moduleData.needy)
+                        continue;
+                }
+
                 const baseCommand = `L ${(event.realTime / totalRealTime * 2)} `;
 
                 for (const stat of Object.values(stats)) {
