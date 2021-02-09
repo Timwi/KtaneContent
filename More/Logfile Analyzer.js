@@ -374,14 +374,14 @@ class BombGroup {
                 $SVG(`<path stroke="${stat.color}" stroke-width=0.01 fill=none d="${stat.line}">`).prependTo(graph);
 
                 // Legend
-                $SVG(`<rect fill="${stat.color}" width=0.075 height=0.075 y=${i * 0.1}>`).appendTo(graph);
-                $SVG(`<text font-size=0.05 x=0.09 dominant-baseline=middle y=${i * 0.1 + 0.0375}>${stat.name}`).appendTo(graph);
+                $SVG(`<rect fill="${stat.color}" x=0.02 width=0.075 height=0.075 y=${i * 0.1}>`).appendTo(graph);
+                $SVG(`<text font-size=0.05 x=0.11 dominant-baseline=middle y=${i * 0.1 + 0.0375}>${stat.name}`).appendTo(graph);
 
                 i++;
             }
 
             // Graph lines
-            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 1.01 L 2.01 1.01 L 2.01 0">`).appendTo(graph);
+            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 L 0 1.01 L 2.01 1.01">`).appendTo(graph);
 
             var graphInfo = $("<div class='module-info'>").appendTo(info);
             $("<h3>").css("margin-top", "10px").text("Graph").appendTo(graphInfo);
