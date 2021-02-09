@@ -1109,33 +1109,28 @@ function Bomb(seed) {
                 {type: "serial", number: this.Serial}
             ];
             this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
-            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", name: i[1]}));
-            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b == 1 ? "D" : "AA", count: b}));
+            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
+            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
 
-            var rendererModules = [];
-            var rendererWidth = Math.round(4.54545455 * (Math.abs(viewBox[0]) + viewBox[2]));
-            var rendererHeight = Math.round(4.54545455 * (Math.abs(viewBox[1]) + viewBox[3]));
+            const renderer = new BombRenderer(rendererParent);
 
-            for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
-                var face = moduleIndex >= this.ModuleOrder.length / 2 ? "rear" : "front";
-
-                if (this.ModuleOrder[moduleIndex] == null)
-                    continue;
-
-                const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
-                const ID = moduleSplit.splice(moduleSplit.length - 1);
-                const moduleID = moduleSplit.join(" ");
-
-                const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
-                const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, {face, index: moduleFaceIndex});
-
-                rendererModules.push(module);
-            }
-            
-            var renderer = new BombRenderer(rendererParent, rendererWidth, rendererHeight);
-            renderer.addModules(rendererModules);
-            renderer.addEdgework(rendererEdgework);
+            renderer.loadMainAssetsAsync().then(() => {
+                for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+                    const isRear = moduleIndex >= this.ModuleOrder.length / 2;
+    
+                    if (this.ModuleOrder[moduleIndex] == null)
+                        continue;
+    
+                    const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+                    const ID = moduleSplit.splice(moduleSplit.length - 1);
+                    const moduleID = moduleSplit.join(" ");
+    
+                    const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+                    renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
+                }
+                
+                renderer.addEdgework(rendererEdgework);
+            });
         }
 
         return info;

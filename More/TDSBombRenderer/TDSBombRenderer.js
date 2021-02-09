@@ -1,10 +1,162 @@
 // TheDarkSid3r's Bomb Renderer
 
-var BombRenderer = class {
-    constructor(append, width, height) {
+import { GLTFLoader } from "./GLTFLoader.js";
+import { OrbitControls } from "./OrbitControls.js";
+
+
+const NonStandardIconStatusLightPositions = {
+    topsyTurvy: "bl",
+    MorseAMaze: "none",
+    scavengerHunt: "none",
+    exoplanets: "none",
+    roger: "none",
+    kataWireOrdering: "bl",
+    ReverseAlphabetize: "tl",
+    WorldsLargestButton: "none",
+    "15MysticLights": "none",
+    logicalOperators: "none",
+    hinges: "none",
+    CornersModule: "mc",
+    ksmHighScore: "br",
+    NandNs: "tl",
+    MandNs: "br",
+    MandMs: "bl",
+    snakesAndLadders: "tl",
+    cruelDigitalRootModule: "br",
+    lgndHyperactiveNumbers: "br",
+    FaultySink: "br",
+    freeParking: "tl",
+    BrokenGuitarChordsModule: "tl",
+    SimonSpinsModule: "none",
+    DividedSquaresModule: "none",
+    TennisModule: "tl",
+    doubleColor: "br",
+    MorseWar: "br",
+    ThirdBase: "br",
+    Listening: "tl",
+    AnagramsModule: "tl",
+    RegularSudoku: "none",
+    regrettablerelay: "tl",
+    SnackAttack: "none",
+    vennDiagram: "br",
+    KeypadDirectionality: "none",
+    omegaDestroyer: "none",
+    omegaForget: "none",
+    mastermindRestricted: "br",
+    cellLab: "none",
+    console: "none",
+    ultimateTicTacToe: "none",
+    kugelblitz: "none",
+    "7": "bl",
+    multitask: "none",
+    shellGame: "none",
+    eeBgnilleps: "tl",
+    qkRepoSelector: "br",
+    toolmods: "bl",
+    NotTimerModule: "none"
+};
+
+window.BombRenderer = class {
+    constructor(append) {
+        var l = (f) => $("<span/>").css({ position: "fixed", left: -100000, fontFamily: f }).html("a");
+        $(document.body).append(l("serial"), l("os"), l("timer"));
+
         this.append = $(append);
-        this.wrapper = $("<div/>").addClass("bomb-rotator").appendTo(this.append);
-        var d = () => {
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, this.append.width() / this.append.height(), 0.1, 1000);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        scene.add(camera);
+
+        const light1 = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(light1);
+
+        const light = new THREE.DirectionalLight(0xffffff, 0.7);
+        light.position.set(0, 2, 5);
+        light.target.position.set(0, 0, 0);
+        camera.add(light);
+        camera.add(light.target);
+
+        this.texloader = new THREE.TextureLoader();
+        this.gltfloader = new GLTFLoader();
+
+        this.MeshMaterial = THREE.MeshStandardMaterial;
+
+        var ls = window.location.pathname.split("/");
+        this.useMainPath = ls[ls.length - 2] == "TDSBombRenderer";
+        this.mainPath = this.useMainPath ? "" : "TDSBombRenderer/";
+
+        this.texloader.load(this.mainPath + "models/textures/MenuSkybox.png", (texture) => {
+            const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+            rt.fromEquirectangularTexture(renderer, texture);
+            scene.background = rt;
+        });
+
+        const renderer = new THREE.WebGLRenderer();
+        this.append.append(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.update();
+
+        this.bombgroup = new THREE.Group();
+        scene.add(this.bombgroup);
+
+        this.onresize = () => {
+            var width = this.append.width();
+            var height = this.append.height();
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+
+            var g = (i) => this.maxAnchorRanges && !isNaN(this.maxAnchorRanges[i]) ? this.maxAnchorRanges[i] ? Math.abs(this.maxAnchorRanges[i]) : 0.08 : 0.2; //use 0.2 as a default
+            var totalBombWidth = g(0) + g(1);
+            var totalBombHeight = g(2) + g(3);
+            //console.log(totalBombWidth, width, totalBombHeight, height);
+            var scale = Math.min(width / (totalBombWidth * 200), height / (totalBombHeight * 200)) * (camera.fov * Math.PI / 180) * 0.8;
+            this.bombgroup.scale.set(scale, scale, scale);
+        };
+        this.onresize();
+        setInterval(() => this.onresize(), 1000);
+        $(window).on("resize", () => this.onresize());
+
+
+        /* this.loadMainAssetsAsync().then(() => {
+            this.createModuleBox({ type: "timer", time: 300, strikes: 0 }, [-0.507, -0.110]);
+            this.createModuleBox({ type: "module", id: "BigButton", data: { displayName: "The Button" } }, [-0.107, 0.110]);
+            this.createModuleBox({ type: "module", id: "Kahoot", data: { displayName: "Kahoot!" } }, [0.113, -0.110]);
+            this.createModuleBox({ type: "module", id: "Wires", data: { displayName: "Wires" } }, [0.113, 0.110]);
+
+            this.createModuleBox({ type: "empty" }, [-0.107, -0.110], true);
+            this.createModuleBox({ type: "empty" }, [-0.107, 0.110], true);
+            this.createModuleBox({ type: "empty" }, [0.113, -0.110], true);
+            this.createModuleBox({ type: "empty" }, [0.113, 0.110], true);
+
+            this.addEdgework([
+                { type: "serial", number: "ABCDEF" },
+                { type: "battery", battery: 1 },
+                { type: "indicator", label: "CAR", lit: true }
+            ]);
+        }); */
+
+        //setTimeout(() => this.createSerialWidget("AB1CD2", this.bombgroup), 200);
+
+        camera.position.z = 5;
+
+        //this.currentRot = [0, 0];
+        this.animate = () => {
+            requestAnimationFrame(this.animate);
+            controls.update();
+            /*this.bombgroup.rotation.x = -this.currentRot[1];
+            this.bombgroup.rotation.y = this.currentRot[0];*/
+            renderer.render(scene, camera);
+        }
+        this.animate();
+
+        /*var d = () => {
             this.mouseDown = true;
             this.append.css({ cursor: "grabbing" });
         };
@@ -16,156 +168,345 @@ var BombRenderer = class {
             this.prevMousePosition = [];
             this.append.css({ cursor: "grab" });
         };
-        window.addEventListener("touchmove", (e) => this.eventMove(e), {passive: false});
+        window.addEventListener("touchmove", (e) => this.eventMove(e), { passive: false });
         $(window)
             .on("mousemove", (e) => this.eventMove(e))
             .on("mouseup", () => r())
             .on("touchend", () => r());
-        r();
-        anime.set(this.wrapper[0], { translateX: "-50%", translateY: "-50%" });
-        this.width = width;
-        this.height = height;
-        this.isDefaultCase = width == 3 && height == 2;
-        var sidePairs = [
-            { sides: ["front", "back"], padding: [6, 5] },
-            { sides: ["left", "right"], padding: [2, 2] },
-            { sides: ["top", "bottom"], padding: [2, 2] }
-        ];
-        var sideTransforms = {
-            front: "translateZ(90px)",
-            back: "translateZ(-90px) rotateY(180deg)",
-            left: "rotateY(270deg) translateZ(-5px) translateX(-92px) translateY(4px)",
-            right: "rotateY(-270deg) translateZ(362px) translateX(92px) translateY(4px)",
-            bottom: "rotateX(90deg) translateY(92px) translateZ(-375px) translateX(3px) rotateX(-180deg)",
-            top: "rotateX(-90deg) translateZ(-185px) translateY(-97px) translateX(3px) rotateX(180deg)"
+        r();*/
+    }
+
+    createModuleBox(module, anchor, rear) {
+        var groupRotateWrapper = new THREE.Group();
+        groupRotateWrapper.rotation.y = rear ? Math.PI : 0;
+        this.bombgroup.add(groupRotateWrapper);
+        var group = new THREE.Group();
+        group.position.z = 0.045;
+        groupRotateWrapper.add(group);
+
+        if (rear) anchor[0] *= -1; //assuming rear face is rotated 180 on the y axis
+        group.position.x = anchor[0];
+        group.position.y = anchor[1];
+
+        if (!this.moduleAnchors) this.moduleAnchors = [];
+        this.moduleAnchors.push({ a: anchor, p: group, r: rear });
+
+        /*this.bombgroup.position.x = anchor[0] * 4;
+        this.bombgroup.position.y = anchor[1] * -4;
+        console.log(module, anchor, rear);*/
+
+        if (!this.maxAnchorRanges) this.maxAnchorRanges = [0, 0, 0, 0];
+        if (anchor[0] < this.maxAnchorRanges[0]) this.maxAnchorRanges[0] = anchor[0];
+        if (anchor[0] > this.maxAnchorRanges[1]) this.maxAnchorRanges[1] = anchor[0];
+        if (anchor[1] < this.maxAnchorRanges[2]) this.maxAnchorRanges[2] = anchor[1];
+        if (anchor[1] < this.maxAnchorRanges[3]) this.maxAnchorRanges[3] = anchor[1];
+        this.onresize();
+
+        var createWall = (index) => {
+            var wallgroup = new THREE.Group();
+            group.add(wallgroup);
+            wallgroup.rotation.z = index * Math.PI / 2;
+            var wall = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.23, 0.09), new this.MeshMaterial({ color: 0x222222 }));
+            wallgroup.add(wall);
+            wall.position.x = 0.11;
         };
-        var nonDefaultLRTBSize = 186;
-        var nonDefaultFBPadding = 20;
-        var nonDefaultModuleSize = [169.4, 170];
-        var nonDefaultFBWidth = nonDefaultFBPadding * 2 + nonDefaultModuleSize[0] * this.width;
-        var nonDefaultFBHeight = nonDefaultFBPadding * 2 + nonDefaultModuleSize[1] * this.height;
-        var nonDefaultSideTransforms = {
-            front: "translateZ({lrtb}px)",
-            back: "translateZ(-{lrtb}px) rotateY(180deg)",
-            left: "rotateY(270deg) translateX(-{lrtb}px)",
-            right: "translateX(-50%) rotateY(-270deg) translateX({lrtb}px) translateZ({fbw}px)",
-            bottom: "translateY(-50%) rotateX(90deg) translateY({lrtb}px) translateZ(-{fbh}px) rotateX(-180deg)",
-            top: "translateY(-50%) rotateX(-90deg) translateZ(-{fbh}px) translateY(-{lrtb}px) rotateX(180deg)"
-        };
-        var sideTransformOrigins = {
-            left: "center left",
-            right: "top right",
-            bottom: "top center",
-            top: "bottom center"
-        };
-        this.sideNames = ["front", "back", "left", "right", "top", "bottom"];
-        this.sidesObject = {};
-        this.sides = this.sideNames.map((n) => {
-            var pair = sidePairs.find((s) => s.sides.includes(n));
-            var transform = this.isDefaultCase ? sideTransforms[n] : nonDefaultSideTransforms[n].replace(/{lrtb}/g, nonDefaultLRTBSize / 2).replace(/{fbw}/g, nonDefaultFBWidth / 2 - nonDefaultLRTBSize / 2).replace(/{fbh}/g, nonDefaultFBHeight / 2 + nonDefaultLRTBSize / 2);
-            var element = $("<div/>").addClass("bomb-rotator-side bomb-rotator-side-" + n).css({
-                transform: transform,
-                transformOrigin: sideTransformOrigins[n] || "unset"
-            });
-            element.addClass(this.isDefaultCase ? "default" : "non-default");
-            if (this.isDefaultCase) $("<img/>").addClass("bomb-side-image").attr({ src: "TDSBombRenderer/images/bomb/" + n + ".png" }).appendTo(element);
-            var content = $("<div/>").addClass("bomb-side-content bomb-side-content-" + n).appendTo(element);
-            if (!this.isDefaultCase) {
-                var apply = (width, height) => {
-                    var whobj = { width, height };
-                    content.css(whobj);
-                    element.css(whobj);
+        for (var i = 0; i < 4; i++) createWall(i);
+
+        var foamGeom = new THREE.PlaneGeometry(0.23, 0.23);
+
+        var foam = new THREE.Mesh(foamGeom, this.loadTextureToMaterial("foam"));
+        group.add(foam);
+        foam.position.z = 0.03;
+
+        var foamback = new THREE.Mesh(foamGeom, new this.MeshMaterial({ color: 0x222222 }));
+        foamback.rotation.y = Math.PI;
+        foamback.position.z = -0.045;
+        group.add(foamback);
+
+        switch (module.type) {
+            case "timer":
+                this.createTimerComponent(false, group).then((timer) => {
+                    timer.position.z = 0.03;
+                    this.renderTimer(module.time, module.strikes);
+                });
+                break;
+            case "empty":
+                var empty = this.createEmptyComponent(group);
+                empty.position.z = 0.04;
+                break;
+            case "module":
+                var data = module.data;
+                var geticonurl = (n) => (this.useMainPath ? "../.." : "..") + "/Icons/" + encodeURIComponent(n) + ".png";
+                var iconImg = new Image();
+                iconImg.src = geticonurl(data.icon || (data.repo ? data.repo.FileName || data.repo.Name : data.displayName));
+                var isBlank = false;
+                iconImg.onload = () => {
+                    var canvas = document.createElement("canvas");
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    var ctx = canvas.getContext("2d");
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(iconImg, 0, 0, 300, 300); //have to draw to a canvas at a larger scale to make pixelated
+
+
+                    const drawStatusLight = (r, g, b) => {
+                        // use isBlank in case there is a module with a nonstandard light position
+                        // but is displaying the "blank" icon which has a standard position
+                        var NonStandardIconStatusLightPosition = isBlank ? null : NonStandardIconStatusLightPositions[module.id];
+                        if (NonStandardIconStatusLightPosition) {
+                            switch (NonStandardIconStatusLightPosition) {
+                                case "none":
+                                    return;
+                                case "tl":
+                                    ctx.translate(canvas.width, 0);
+                                    ctx.scale(-1, 1);
+                                    break;
+                                case "bl":
+                                    ctx.translate(canvas.width, canvas.height);
+                                    ctx.scale(-1, -1);
+                                    break;
+                                case "br":
+                                    ctx.translate(0, canvas.height);
+                                    ctx.scale(1, -1);
+                                    break;
+                            }
+                        }
+                        var u = (n) => n * 300 / 32;
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
+                        ctx.fillRect(u(28), u(1), u(2), u(1));
+                        ctx.fillRect(u(30), u(2), u(1), u(2));
+                        ctx.fillRect(u(28), u(4), u(2), u(1));
+                        ctx.fillRect(u(27), u(2), u(1), u(2));
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.fillRect(u(28), u(2), u(2), u(2));
+                    };
+                    //drawStatusLight(0, 255, 0); // draw "solved" status light (255 in green)
+
+
+                    var texture = new THREE.CanvasTexture(canvas);
+                    var icon = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.19), new this.MeshMaterial({ map: texture, transparent: true }));
+                    group.add(icon);
+                    icon.position.z = 0.035;
                 };
-                switch (n) {
-                    case "front":
-                    case "back":
-                        apply(nonDefaultFBWidth, nonDefaultFBHeight);
-                        break;
-                    case "left":
-                    case "right":
-                        apply(nonDefaultLRTBSize, nonDefaultFBHeight);
-                        break;
-                    case "top":
-                    case "bottom":
-                        apply(nonDefaultFBWidth, nonDefaultLRTBSize);
-                        break;
-                }
-            }
-            this.wrapper.append(element);
-            var ret = { name: n, element, content, pair };
-            this.sidesObject[n] = ret;
-            return ret;
-        });
-        var edgeworkSlotPos = ["left", "left", "left", "left", "right", "right", "right", "right", "top", "top", "top", "top", "top", "top", "bottom", "bottom", "bottom", "bottom", "bottom", "bottom"];
-        if (!this.isDefaultCase) {
-            edgeworkSlotPos = [];
-            for (var x = 0; x < this.width * 2; x++) edgeworkSlotPos.push("top", "bottom");
-            for (var y = 0; y < this.height * 2; y++) edgeworkSlotPos.push("left", "right");
+                iconImg.onerror = () => {
+                    iconImg.src = geticonurl("blank");
+                    iconImg.onerror = null;
+                    isBlank = true;
+                };
+                break;
         }
-        this.edgeworkSlots = edgeworkSlotPos.map((s) => {
-            var slotElement = $("<div/>").addClass("bomb-edgework-slot bomb-edgework-slot-" + s).appendTo(this.sidesObject[s].content);
-            return { side: s, empty: true, slotElement };
+    }
+
+    loadMainAssetsAsync() {
+        return new Promise(async (resolve, reject) => {
+            this.emptyComponent = await this.loadModelWithTexture("Component_Empty(Clone) 0", "Gameplay-KT-Mobile-Diffuse 0");
+            this.batteryDHolder = await this.loadModelWithTexture("Widgets_Battery_D_Holder(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
+            this.batteryAAHolder = await this.loadModelWithTexture("Battery_2AA_Holder(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
+            this.batteryD = await this.loadModelWithTexture("Battery_D(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
+            this.batteryAA = await this.loadModelWithTexture("Battery_AA(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
+            this.indicatorBacking = await this.loadModelWithTexture("polySurface2(Clone) 1", "Gameplay-KT-Mobile-Diffuse 1");
+            this.indicatorLightOff = await this.loadModelWithTexture("light(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
+            this.indicatorLightOn = await this.loadModelWithTexture("light(Clone) 1", "Gameplay-Unlit-Texture 0");
+            this.portPlate = await this.loadModelWithTexture("Widget_PortPlate(Clone) 0", "Gameplay-KT-Mobile-Diffuse 0");
+            this.portModels = (await this.loadModel("ports")).scene.children[0].children[0].children.map((p) => {
+                p.material = this.loadTextureToMaterial("Gameplay-KT-Mobile-Diffuse 0");
+                return { n: p.name.replace("Widget_Port_", ""), p };
+            });
+            //console.log(this.portModels);
+            resolve();
         });
-        this.moduleSides = { front: this.sidesObject.front, rear: this.sidesObject.back };
-        this.initModuleSlots();
-        this.lastSide = "front";
-        this.currentRot = [0, 0];
-        setInterval(() => this.resize(), 1000);
-        $(window).on("resize", () => this.resize());
-        /* anime({
-            targets: this.wrapper[0],
-            rotateX: [0, -360],
-            easing: "linear",
-            duration: 20000,
-            loop: true
-        }); */
-        //this.rotateToSide("top");
     }
 
-    eventMove(e) {
-        if (!this.mouseDown) return;
-        e.preventDefault();
-        var t = e.touches ? e.touches[0] : e;
-        var offset = this.prevMousePosition.length ? [t.pageX - this.prevMousePosition[0], t.pageY - this.prevMousePosition[1]] : [0, 0];
-        this.prevMousePosition = [t.pageX, t.pageY];
-        this.addRotation(offset[0] * 0.5, offset[1] * 0.5);
+    createEmptyComponent(parent) {
+        var clone = this.emptyComponent.clone();
+        parent.add(clone);
+        return clone;
     }
 
-    formatTime(seconds, eights) {
-        // eights replaces all the digits with 8 (for the number behind the display) eg. 88:88 would show all segments behind 12:34
+    createTimerComponent(nostrikes, parent) {
+        return new Promise((resolve, reject) => {
+            this.loadModelWithTexture(nostrikes ? "Component_TimerNoStrikes(Clone) 0" : "Component_Timer(Clone) 0", "Gameplay-KT-Mobile-Diffuse 0", parent).then((timer) => {
+                timer.position.set(-0.1, -0.1, 0);
+                var canvas = document.createElement("canvas");
+                canvas.width = 300;
+                canvas.height = 300;
+                var ctx = canvas.getContext("2d");
+                ctx.scale(1, 1.53);
 
+                var canvas2 = document.createElement("canvas");
+                canvas2.width = 300;
+                canvas2.height = 300;
+                var ctx2 = canvas2.getContext("2d");
+                ctx2.scale(1, 1.3);
+
+                var texture = new THREE.CanvasTexture(canvas);
+                var plane = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
+                plane.position.set(0.1, 0.1, 0.036);
+                timer.add(plane);
+                var texture2 = new THREE.CanvasTexture(canvas2);
+                var plane2 = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.MeshBasicMaterial({ map: texture2, transparent: true }));
+                plane2.position.set(0.1, 0.1, 0.05);
+                timer.add(plane2);
+
+                this.renderTimer = (time, strikes) => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.font = "83px timer";
+                    ctx.textAlign = "center";
+                    var x = canvas.width / 2 + 6;
+                    var y = 168;
+                    ctx.fillStyle = "#1e1e1e";
+                    ctx.fillText("88:88", x, y);
+                    ctx.fillStyle = "#ff0000";
+                    ctx.fillText(this.formatTime(time), x, y);
+                    texture.needsUpdate = true;
+
+                    if (!nostrikes) {
+                        ctx2.font = "30px timer";
+                        ctx2.textAlign = "right";
+                        var x2 = canvas2.width / 2 + 37;
+                        var y2 = 60;
+                        ctx2.fillStyle = "#1e1e1e";
+                        ctx2.fillText("8888", x2, y2);
+                        ctx2.fillStyle = "#ff0000";
+                        ctx2.fillText(strikes, x2, y2);
+                        texture2.needsUpdate = true;
+                    }
+                };
+
+                resolve(timer);
+            });
+        });
+    }
+
+    createSerialWidget(number, parent) {
+        return new Promise((resolve, reject) => {
+            var serialBacking = new Image(300, 151);
+            serialBacking.src = this.mainPath + "images/serial.png";
+            serialBacking.onload = () => {
+                var canvas = document.createElement("canvas");
+                canvas.width = 300;
+                canvas.height = 151;
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(serialBacking, 0, 0);
+                ctx.font = "75px serial";
+                ctx.fillStyle = "#000000";
+                ctx.fillText(number, 30, 133);
+                var texture = new THREE.CanvasTexture(canvas);
+                var material = new this.MeshMaterial({ map: texture, transparent: true });
+                var plane = new THREE.Mesh(new THREE.PlaneGeometry(0.3 * 0.5, 0.151 * 0.5), material);
+                plane.rotation.x = -Math.PI / 2;
+                if (parent) parent.add(plane);
+                resolve(plane);
+            };
+            serialBacking.onerror = reject;
+        });
+    }
+
+    createBatteryWidget(type, parent) {
+        switch (type) {
+            case 1:
+                var holder = this.batteryDHolder.clone();
+                if (parent) parent.add(holder);
+                var battery = this.batteryD.clone();
+                holder.add(battery);
+                battery.rotation.z = Math.PI / 2;
+                return holder;
+            case 2:
+                var holder = this.batteryAAHolder.clone();
+                if (parent) parent.add(holder);
+                var battery = this.batteryAA.clone();
+                holder.add(battery);
+                battery.position.z = -0.0125;
+                battery.position.x = 0.002;
+                var battery2 = battery.clone();
+                holder.add(battery2);
+                battery2.position.z = 0.0125;
+                return holder;
+            default:
+                return;
+        }
+    }
+
+    createIndicatorWidget(label, on, parent) {
+        var backing = this.indicatorBacking.clone();
+        if (parent) parent.add(backing);
+        backing.rotation.y = Math.PI;
+        var canvas = document.createElement("canvas");
+        canvas.width = 250;
+        canvas.height = 100;
+        var ctx = canvas.getContext("2d");
+        ctx.font = "75px os";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, canvas.width / 2, 73);
+        var texture = new THREE.CanvasTexture(canvas);
+        var material = new this.MeshMaterial({ map: texture, transparent: true });
+        var plane = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.04), material);
+        plane.rotation.z = Math.PI;
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = 0.003;
+        backing.add(plane);
+        var light = (on ? this.indicatorLightOn : this.indicatorLightOff).clone();
+        backing.add(light);
+        return backing;
+    }
+
+    createPortWidget(ports, parent) {
+        var group = new THREE.Group();
+        if (parent) parent.add(group);
+        var plate = this.portPlate.clone();
+        group.add(plate);
+        plate.scale.set(0.06, 0.06, 0.06); //for some reason the port plate model in ktane is gigantic
+        plate.position.y = -0.015;
+        ports.forEach((p) => {
+            this.portModels.filter((m) => m.n.startsWith(p)).forEach((model) => {
+                var port = model.p.clone();
+                group.add(port);
+            });
+        });
+        return group;
+    }
+
+    loadModel(name) {
+        return new Promise((resolve, reject) => {
+            this.gltfloader.load(this.mainPath + "models/" + name + "_out/" + name + ".gltf", (model) => {
+                resolve(model);
+            }, null, reject);
+        });
+    }
+
+    loadModelWithTexture(name, texture, parent) {
+        return new Promise((resolve, reject) => {
+            this.loadModel(name).then((model) => {
+                var mat = this.loadTextureToMaterial(texture);
+                var mesh = model.scene.children[0].children[0];
+                mesh.material = mat;
+                if (parent) parent.add(mesh);
+                resolve(mesh);
+            }).catch(reject);
+        });
+    }
+
+    loadTextureToMaterial(name) {
+        if (!this.textureMats) this.textureMats = [];
+        if (this.textureMats[name]) return this.textureMats[name];
+        var material = new this.MeshMaterial({ map: this.texloader.load(this.mainPath + "models/textures/" + name + ".png") });
+        material.map.flipY = false;
+        this.textureMats[name] = material;
+        return material;
+    }
+
+    formatTime(seconds) {
+        var pad = (n) => n.toString().padStart(2, "0");
         if (seconds < 60) {
             var s = Math.floor(seconds);
             var ns = Math.floor(seconds * 100 % 100);
-            return (eights ? "88" : s < 10 ? "0" + s : s) + (eights ? ":" : ".") + (eights ? "88" : ns < 10 ? "0" + ns : ns);
+            return pad(s) + "." + pad(ns);
         } else {
             var m = Math.floor(seconds / 60).toString();
             var rs = Math.floor(seconds % 60);
-            return (eights ? "8".repeat(Math.max(m.length, 2)) : m < 10 ? "0" + m : m) + ":" + (eights ? "88" : rs < 10 ? "0" + rs : rs);
+            return pad(m) + ":" + pad(rs);
         }
-    }
-
-    resize() {
-        var extraX = 150;
-        var extraY = 250;
-        var front = this.sidesObject.front.content;
-        var fw = front.outerWidth();
-        var fh = front.outerHeight();
-        this.wrapper.css({ width: fw, height: fh });
-        var x = this.append.innerWidth() / (fw + extraX);
-        var y = this.append.innerHeight() / (fh + extraY);
-        var scale = Math.min(x, y);
-        anime.set(this.wrapper[0], { scaleX: scale, scaleY: scale, scaleZ: scale });
-    }
-
-    addRotation(xx, yy) {
-        this.currentRot[0] += xx;
-        this.currentRot[1] -= yy;
-        var clamp = (n) => Math.min(Math.max(n, -90), 90);
-        this.currentRot[1] = clamp(this.currentRot[1]);
-        var x = this.currentRot[0];
-        var y = this.currentRot[1];
-        anime.set(this.wrapper[0], { rotateX: y, rotateY: x });
     }
 
     createEdgeworkElement(data) {
@@ -184,114 +525,63 @@ var BombRenderer = class {
         }
     }
 
-    addEdgeworkElement(data) {
-        var e = this.createEdgeworkElement(data);
-        var sts = this.edgeworkSlots.filter((s) => s.empty);
-        var s = sts[Math.floor(Math.random() * sts.length)];
-        if (!s) return console.warn("BombRenderer: Failed to add edgework component: not enough room\nComponent: %o", data);
-        s.empty = false;
-        s.slotElement.append(e);
-        s.element = e;
-        s.type = data.type;
+    addWidget(data) {
+        var unusedAnchors = this.widgetAnchors.filter((a) => !a.children.length);
+        if (!unusedAnchors.length) {
+            console.warn("BombRenderer: Could not add %s widget: no unused widget anchors\nComponent: %o", data.type, data);
+            return;
+        }
+        var anchor = unusedAnchors[Math.floor(Math.random() * unusedAnchors.length)];
+        switch (data.type) {
+            case "serial":
+                this.createSerialWidget(data.number, anchor);
+                break;
+            case "battery":
+                this.createBatteryWidget(data.battery, anchor);
+                break;
+            case "indicator":
+                this.createIndicatorWidget(data.label, data.lit, anchor);
+                break;
+            case "port":
+                this.createPortWidget(data.ports, anchor);
+                break;
+        }
+    }
+
+    anchorInDirections(a1, a2) {
+        var min = 0.1;
+        var max = 0.3;
+        var diffX = a2[0] - a1[0];
+        var diffY = a2[1] - a1[1];
+        if (Math.abs(diffX) < min || Math.abs(diffY) < min || Math.abs(diffX) > max || Math.abs(diffY) > max) return false;
+        return [diffX > 0 ? "e" : "w", diffY > 0 ? "n" : "s"];
     }
 
     addEdgework(widgets) {
-        widgets.forEach((w) => this.addEdgeworkElement(w));
-    }
-
-    initModuleSlots() {
-        this.moduleSlots = {};
-        this.emptyModuleSlots = {};
-        Object.keys(this.moduleSides).forEach((s) => {
-            var a = new Array(this.width * this.height).fill(true).map((r, i) => {
-                return $("<div/>").addClass("bomb-module-slot").appendTo(this.moduleSides[s].content);
-            });
-            this.moduleSlots[s] = a;
-            this.emptyModuleSlots[s] = new Array(this.width * this.height).fill(true);
-        });
-    }
-
-    addModules(modules) {
-        this.modules = modules;
-        this.modules.forEach((module) => {
-            if (module.type == "empty") return;
-            var errn = module.type == "module" ? "module " + module.id : module.type;
-            if (!this.moduleSlots[module.face]) return console.warn('BombRenderer: Failed to add %s: no face exists with name "%s"', errn, module.face);
-            if (!this.moduleSlots[module.face][module.index]) return console.warn('BombRenderer: Failed to add %s: not enough room on face "%s"', errn, module.face);
-            var e = $("<div/>").addClass("bomb-module");
-            if (module.type == "timer") {
-                e.addClass("bomb-module-timer");
-                var t = $("<div/>").addClass("bomb-module-timer-time").html(this.formatTime(module.time)).appendTo(e);
-                $("<div/>").addClass("bomb-module-timer-time-backing").html(this.formatTime(module.time, true)).appendTo(t);
-                $("<div/>").addClass("yellow-highlight bomb-module-strikes-highlight").appendTo(e);
-                $("<div/>").addClass("yellow-highlight bomb-module-timer-highlight").appendTo(e);
-                if (module.strikes < 3) {
-                    for (var x = 0; x < module.strikes; x++) {
-                        var i = x - 1;
-                        $("<div/>").addClass("bomb-module-timer-strike").css({ transform: "translateX(-50%) translateX(" + i * 20 + "px)" }).appendTo(e);
-                    }
-                } else {
-                    $("<div/>").addClass("bomb-module-timer-strikes").html(module.strikes).appendTo(e);
-                }
-            }
-            if (module.type == "module") {
-                var ic = null;
-                var setIcon = (icon) => {
-                    if (!ic) {
-                        ic = $("<img/>").addClass("bomb-module-module-icon").on("error", () => setIcon("Blank"));
-                        e.addClass("bomb-module-module").append(ic);
-                        $("<div/>").addClass("yellow-highlight bomb-module-highlight").appendTo(e);
-                    }
-                    ic.attr({ src: "https://ktane.timwi.de/Icons/" + icon + ".png" });
-                };
-                //console.log(parseData);
-                var data = module.data;
-                if (!data) setIcon("Blank"); else {
-                    setIcon(encodeURIComponent(data.icon || data.displayName));
-                }
-                var hov = null;
-                var setHovPos = (ev) => hov.css({
-                    top: ev.pageY,
-                    left: ev.pageX
-                });
-                e.on("mouseenter", (ev) => {
-                    var s = module.data.displayName;
-                    if (module.parsed && module.parsed.displayCounter) s += " " + module.parsed.counter;
-                    if (module.data.repo) {
-                        var ex = ["by " + module.data.repo.Author].join("<br/>");
-                        s += "<br/>"+ex;
-                    }
-                    hov = $("<div/>").addClass("bomb-module-hover-label").html(s).appendTo(document.body);
-                    setHovPos(ev);
-                }).on("mousemove", (ev) => {
-                    if (!hov) return;
-                    setHovPos(ev);
-                }).on("mouseleave", () => {
-                    if (hov) hov.remove();
-                }).on("click", () => {
-                    module.parsed.modListing[0].click();
-                });
-            }
-            this.moduleSlots[module.face][module.index].append(e);
-            this.emptyModuleSlots[module.face][module.index] = false;
-        });
-        Object.keys(this.emptyModuleSlots).forEach((s) => {
-            this.emptyModuleSlots[s].forEach((q, y) => {
-                if (q) $("<div/>").addClass("bomb-module bomb-module-empty").appendTo(this.moduleSlots[s][y]);
+        this.widgetAnchors = [];
+        this.moduleAnchors.forEach((anchor) => {
+            var closeAnchors = this.moduleAnchors.map((a) => this.anchorInDirections(anchor.a, a.a)).filter((a) => a);
+            var validSides = ["n", "e", "s", "w"];
+            closeAnchors.forEach((a) => a.forEach((s) => {
+                var i = validSides.indexOf(s);
+                if (i > -1) validSides.splice(i, 1);
+            }));
+            if (!validSides.length) return;
+            var sides = validSides.map((s) => ["n", "e", "s", "w"].indexOf(s));
+            sides.forEach((side) => {
+                var moduleAnchor = new THREE.Group();
+                anchor.p.add(moduleAnchor);
+                moduleAnchor.rotation.z = -side * Math.PI / 2;
+                if (anchor.r) moduleAnchor.position.z *= -1;
+                var widgetAnchor = new THREE.Group();
+                moduleAnchor.add(widgetAnchor);
+                widgetAnchor.position.y = 0.1226;
+                if (anchor.r) widgetAnchor.rotation.y = Math.PI;
+                this.widgetAnchors.push(widgetAnchor);
+                //this.createPortWidget(["Parallel", "Serial"], widgetAnchor);
+                //console.log(anchor.a, !!anchor.r, side);
             });
         });
+        widgets.forEach((w) => this.addWidget(w));
     }
 };
-
-var params = {};
-window.location.search.slice(1).split("&").forEach((s) => {
-    var r = s.split("=");
-    params[decodeURIComponent(r[0])] = decodeURIComponent(r[1]);
-});
-if (params.width && params.height && params.modules && params.edgework) {
-    var modules = JSON.parse(params.modules);
-    var edgework = JSON.parse(params.edgework);
-    var renderer = new BombRenderer(".wrapper", params.width, params.height);
-    renderer.addModules(modules);
-    renderer.addEdgework(edgework);
-}
