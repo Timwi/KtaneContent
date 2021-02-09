@@ -324,10 +324,8 @@ class BombGroup {
                 stat.value = 0;
             }
 
-            let timeLine = "M 0 1 ";
-
             for (const event of this.Events) {
-                const baseCommand = `L ${(event.realTime / totalRealTime * 2)} `
+                const baseCommand = `L ${(event.realTime / totalRealTime * 2)} `;
 
                 for (const stat of Object.values(stats)) {
                     if (stat.type == event.type || stat.type == undefined) {
