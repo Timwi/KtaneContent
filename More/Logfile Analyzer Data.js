@@ -557,15 +557,8 @@ const parseData = [
                             const mod = lastBombGroup.GetMod(eventInfo.moduleID, eventInfo.loggingID);
                             mod.Events.push(eventInfo);
 
-                            const text = [
-                                `${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck"} at ${formatTime(eventInfo.realTime)}.`,
-                                [
-                                    `Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
-                                    eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
-                                ]
-                            ];
-                            if (bombgroup != null) bombgroup.Events.push(text);
-                            else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
+                            if (bombgroup != null) bombgroup.Events.push(eventInfo);
+                            else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, eventInfo);
 
                             if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb && !mod.moduleData.needy)
                                 bombgroup.loggedBombs[0].Solved++;
@@ -583,7 +576,7 @@ const parseData = [
                                     bomb.TimeLeft = eventInfo.bombTime;
                                     bomb.State = `Exploded (${bomb.Strikes == bomb.TotalStrikes ? "Strikes" : "Time Ran Out"})`;
 
-                                    bombgroup.Events.push([`Bomb (${bomb.Serial}) exploded at ${formatTime(eventInfo.realTime)} ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+                                    bombgroup.Events.push(eventInfo);
                                 }
                             }
 
@@ -596,7 +589,7 @@ const parseData = [
                                     bomb.TimeLeft = eventInfo.bombTime;
                                     bomb.State = "Solved";
 
-                                    bombgroup.Events.push([`Bomb (${bomb.Serial}) solved at ${formatTime(eventInfo.realTime)}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+                                    bombgroup.Events.push(eventInfo);
                                 }
                             }
 
