@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Quadrados Pigmentados — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        body.ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        svg#flowchart {
+            width: 85%;
+            margin: 0 auto;
+            display: block;
+        }
+
+        ul {
+            margin-bottom: .5em;
+            padding-left: 1.25em;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 50);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            var direction = rnd.next(0, 8);
+            document.getElementById('rule-start').innerText = ['superior esquerdo', 'superior direito', 'inferior esquerdo', 'inferior direito'][direction % 4];
+            document.getElementById('rule-dir1').innerText = ['abaixo', 'abaixo', 'acima', 'acima', 'à direita', 'à esquerda', 'à direita', 'à esquerda'][direction];
+            document.getElementById('rule-dir-colrow1').innerText = ['coluna', 'linha'][(direction / 4)|0];
+            document.getElementById('rule-dir-colrow2').innerText = ['colunas', 'linhas'][(direction / 4)|0];
+            document.getElementById('rule-dir2').innerText = ['da esquerda para a direita', 'da direita para esquerda', 'da esquerda para a direita', 'da direita para esquerda', 'de cima para baixo', 'de cima para baixo', 'de baixo para cima', 'de baixo para cima'][direction];
+
+            var convert = function(coord)
+            {
+                return String.fromCharCode(0x41 + (coord % 4)) + String.fromCharCode(0x31 + (coord / 4)|0);
+            }
+
+            var c1 = rnd.next(0, 16);
+            var c2 = rnd.next(0, 15);
+            if (c2 >= c1)
+                c2++;
+
+            document.getElementById('initial-col').innerText = convert(c1);
+            document.getElementById('initial-row').innerText = convert(c2);
+
+            var colorNames = ['V', 'D', 'Z', 'A', 'M'];
+            var subsets = [];
+            for (var i = 0; i < 32; i++)
+            {
+                var colors = [];
+                for (var j = 0; j < 5; j++)
+                    if ((i & (1 << j)) != 0)
+                        colors.push(colorNames[j]);
+                rnd.shuffleFisherYates(colors);
+                subsets.push(colors);
+            }
+            rnd.shuffleFisherYates(subsets);
+
+            var svg, paths, missingCells, pointedAt = new Array(36);
+            do
+            {
+                svg = '';
+                paths = [];
+                missingCells = [];
+
+                var ixs = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='${5 + 15*ixs[i]}' y='-2.5' font-size='4'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    missingCells.push(ixs[5] + 6*i);
+
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='-2.5' y='${5 + 15*ixs[i]}' font-size='4' text-anchor='end'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    if (missingCells.indexOf(i + 6*ixs[5]) === -1)
+                        missingCells.push(i + 6*ixs[5]);
+
+                for (var ix = 0; ix < 36; ix++)
+                    pointedAt[ix] = false;
+
+                rnd.shuffleFisherYates(missingCells);
+                missingCells = missingCells.slice(0, 4);
+
+                function pointsAt(px, dir)
+                {
+                    var x = px % 6;
+                    var y = (px / 6)|0;
+                    do
+                    {
+                        x += [0, 1, 0, -1][dir];
+                        y += [-1, 0, 1, 0][dir];
+                        if (x < 0 || x >= 6 || y < 0 || y >= 6)
+                            return null;
+                    }
+                    while (missingCells.indexOf(x + 6*y) >= 0);
+                    return x + 6*y;
+                }
+
+                for (var ix = 0; ix < 36; ix++)
+                {
+                    if (missingCells.indexOf(ix) >= 0)
+                        continue;
+
+                    var x = ix % 6;
+                    var y = (ix / 6)|0;
+                    var dirs = [];
+                    for (var dir = 0; dir < 4; dir++)
+                        if (pointsAt(ix, dir) !== null)
+                            dirs.push(dir);
+                    rnd.shuffleFisherYates(dirs);
+                    dirs = dirs.slice(0, 2);    // 0 = no, 1 = yes
+
+                    var sbstIx = ix - missingCells.filter(cel => cel < ix).length;
+                    svg += `<text transform='translate(${5 + 15*x}, ${5 + 15*y}) rotate(-45)' x='0' y='1'>${subsets[sbstIx].join('')}</text>`;
+                    if (subsets[sbstIx].length === 0)
+                        dirs[1] = null;
+                    else if (subsets[sbstIx].length === 5)
+                        dirs[0] = null;
+
+                    var path = `M${x*15} ${y*15}`;
+                    path += (dirs.indexOf(0) >= 0) ? 'h3l2-2 2 2h3' : 'h10';
+                    path += (dirs.indexOf(1) >= 0) ? 'v3l2 2-2 2v3' : 'v10';
+                    path += (dirs.indexOf(2) >= 0) ? 'h-3l-2 2-2-2h-3' : 'h-10';
+                    path += (dirs.indexOf(3) >= 0) ? 'v-3l-2-2 2-2z' : 'z';
+                    paths.push({ pathData: path, ix: ix });
+
+                    for (var yn = 0; yn < 2; yn++)
+                    {
+                        if (dirs[yn] === null)
+                            continue;
+                        pointedAt[pointsAt(ix, dirs[yn])] = true;
+                        svg += `<text x='${[5, 9, 5, 1][dirs[yn]] + x*15}' y='${[1.5, 6, 10.5, 6][dirs[yn]] + y*15}' text-anchor='${['middle', 'start', 'middle', 'end'][dirs[yn]]}'>${['N', 'S'][yn]}</text>`;
+                    }
+                }
+            }
+            while (pointedAt.filter((p, pIx) => !p && (missingCells.indexOf(pIx) < 0)).length);
+            for (var pIx = 0; pIx < paths.length; pIx++)
+                svg += `<path fill='none' stroke='black' stroke-width='.3' d='${paths[pIx].pathData}' />`;
+
+            document.getElementById('flowchart-inner').innerHTML = svg;
+        }
+    </script>
+</head>
+<body class="multipage">
+    <div class="section"><div class="ruleseed-header"></div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Quadrados Pigmentados</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="./img/Component/Decolored Squares (Portuguese).svg">
+                <h2>No tópico de: Quadrados Pigmentados</h2>
+                <p class="flavour-text">Uma estrutura não se aguenta sem uma fundação. Lógica é a fundação da função. Função é a essência do controlo.</p>
+
+                <ul>
+                    <li>No início, se não existirem três cores que ocorrem exatamente 2 vezes cada e duas cores que ocorrem exatamente 5 vezes cada, estarás a observar um módulo diferente.</li>
+                    <li>Encontra a tua posição inícial no fluxograma seguinte. A coluna será a cor do quadrado na posição <span class="rule" id="initial-col">B1</span> e a linha será a cor do quadrado na posição <span class="rule" id="initial-row">B4</span> (Letras são colunas da esquerda para a direita, números são linhas de cima para baixo). Revê este passo no caso de ser cometido um erro.</li>
+                    <li>Examina o quadrado <span class="rule" id="rule-start">superior direito</span> do módulo. Se a cor estiver presente na posição atual do fluxograma, pressiona esse mesmo quadrado e segue a seta <strong>“S”</strong>; caso contrário, segue a seta <strong>“N”</strong> sem pressionar. Depois passa para o próximo quadrado.</li>
+                    <li>O “próximo quadrado” será o quadrado <span class="rule" id="rule-dir1">à direita</span> do quadrado atual. No fim de cada <span class="rule" id="rule-dir-colrow1">linha</span>, continua o mesmo processo nas consequentes <span class="rule" id="rule-dir-colrow2">linhas</span>, <span class="rule" id="rule-dir2">de cima para baixo</span>.</li>
+                    <li>A cores são <strong>Z</strong> (Azul), <strong>D</strong> (Verde), <strong>M</strong> (Magenta), <strong>V</strong> (Vermelho) e <strong>A</strong> (Amarelo).
+                </li></ul>
+
+                <svg id="flowchart" viewBox="-5.5 -5.5 91.5 91.5" font-family="Special Elite" font-size="2.5" text-anchor="middle">
+                    <g id="flowchart-inner">
+                        <text x="80" y="-2.5" font-size="4">V</text>
+                        <text x="35" y="-2.5" font-size="4">D</text>
+                        <text x="65" y="-2.5" font-size="4">Z</text>
+                        <text x="50" y="-2.5" font-size="4">A</text>
+                        <text x="5" y="-2.5" font-size="4">M</text>
+                        <text x="-2.5" y="80" font-size="4" text-anchor="end">V</text>
+                        <text x="-2.5" y="50" font-size="4" text-anchor="end">D</text>
+                        <text x="-2.5" y="5" font-size="4" text-anchor="end">Z</text>
+                        <text x="-2.5" y="20" font-size="4" text-anchor="end">A</text>
+                        <text x="-2.5" y="65" font-size="4" text-anchor="end">M</text>
+                        <text transform="translate(5, 5) rotate(-45)" x="0" y="1">Z</text>
+                        <text x="9" y="6" text-anchor="start">N</text>
+                        <text x="5" y="10.5" text-anchor="middle">S</text>
+                        <text transform="translate(35, 5) rotate(-45)" x="0" y="1">ADV</text>
+                        <text x="31" y="6" text-anchor="end">N</text>
+                        <text x="35" y="10.5" text-anchor="middle">S</text>
+                        <text transform="translate(50, 5) rotate(-45)" x="0" y="1">ZAV</text>
+                        <text x="50" y="10.5" text-anchor="middle">N</text>
+                        <text x="46" y="6" text-anchor="end">S</text>
+                        <text transform="translate(65, 5) rotate(-45)" x="0" y="1">VM</text>
+                        <text x="65" y="10.5" text-anchor="middle">N</text>
+                        <text x="69" y="6" text-anchor="start">S</text>
+                        <text transform="translate(80, 5) rotate(-45)" x="0" y="1">DA</text>
+                        <text x="76" y="6" text-anchor="end">N</text>
+                        <text x="80" y="10.5" text-anchor="middle">S</text>
+                        <text transform="translate(5, 20) rotate(-45)" x="0" y="1">MDVZ</text>
+                        <text x="5" y="16.5" text-anchor="middle">N</text>
+                        <text x="5" y="25.5" text-anchor="middle">S</text>
+                        <text transform="translate(20, 20) rotate(-45)" x="0" y="1">VZ</text>
+                        <text x="16" y="21" text-anchor="end">N</text>
+                        <text x="20" y="25.5" text-anchor="middle">S</text>
+                        <text transform="translate(35, 20) rotate(-45)" x="0" y="1">ZM</text>
+                        <text x="35" y="25.5" text-anchor="middle">N</text>
+                        <text x="39" y="21" text-anchor="start">S</text>
+                        <text transform="translate(50, 20) rotate(-45)" x="0" y="1">V</text>
+                        <text x="50" y="16.5" text-anchor="middle">N</text>
+                        <text x="46" y="21" text-anchor="end">S</text>
+                        <text transform="translate(65, 20) rotate(-45)" x="0" y="1">ADZ</text>
+                        <text x="65" y="16.5" text-anchor="middle">N</text>
+                        <text x="69" y="21" text-anchor="start">S</text>
+                        <text transform="translate(80, 20) rotate(-45)" x="0" y="1">AMV</text>
+                        <text x="76" y="21" text-anchor="end">N</text>
+                        <text x="80" y="25.5" text-anchor="middle">S</text>
+                        <text transform="translate(5, 35) rotate(-45)" x="0" y="1">DAVZ</text>
+                        <text x="5" y="31.5" text-anchor="middle">N</text>
+                        <text x="9" y="36" text-anchor="start">S</text>
+                        <text transform="translate(20, 35) rotate(-45)" x="0" y="1">AM</text>
+                        <text x="24" y="36" text-anchor="start">N</text>
+                        <text x="20" y="31.5" text-anchor="middle">S</text>
+                        <text transform="translate(65, 35) rotate(-45)" x="0" y="1">VDAM</text>
+                        <text x="65" y="31.5" text-anchor="middle">N</text>
+                        <text x="69" y="36" text-anchor="start">S</text>
+                        <text transform="translate(80, 35) rotate(-45)" x="0" y="1">VA</text>
+                        <text x="76" y="36" text-anchor="end">N</text>
+                        <text x="80" y="31.5" text-anchor="middle">S</text>
+                        <text transform="translate(5, 50) rotate(-45)" x="0" y="1">ZD</text>
+                        <text x="9" y="51" text-anchor="start">N</text>
+                        <text x="5" y="55.5" text-anchor="middle">S</text>
+                        <text transform="translate(20, 50) rotate(-45)" x="0" y="1">MZADV</text>
+                        <text x="16" y="51" text-anchor="end">S</text>
+                        <text transform="translate(35, 50) rotate(-45)" x="0" y="1">M</text>
+                        <text x="31" y="51" text-anchor="end">N</text>
+                        <text x="39" y="51" text-anchor="start">S</text>
+                        <text transform="translate(50, 50) rotate(-45)" x="0" y="1">AZ</text>
+                        <text x="54" y="51" text-anchor="start">N</text>
+                        <text x="50" y="46.5" text-anchor="middle">S</text>
+                        <text transform="translate(65, 50) rotate(-45)" x="0" y="1">MVZ</text>
+                        <text x="65" y="55.5" text-anchor="middle">N</text>
+                        <text x="69" y="51" text-anchor="start">S</text>
+                        <text transform="translate(80, 50) rotate(-45)" x="0" y="1">D</text>
+                        <text x="80" y="46.5" text-anchor="middle">N</text>
+                        <text x="76" y="51" text-anchor="end">S</text>
+                        <text transform="translate(5, 65) rotate(-45)" x="0" y="1">DVZ</text>
+                        <text x="9" y="66" text-anchor="start">N</text>
+                        <text x="5" y="70.5" text-anchor="middle">S</text>
+                        <text transform="translate(35, 65) rotate(-45)" x="0" y="1">ZMA</text>
+                        <text x="35" y="70.5" text-anchor="middle">N</text>
+                        <text x="39" y="66" text-anchor="start">S</text>
+                        <text transform="translate(50, 65) rotate(-45)" x="0" y="1">VD</text>
+                        <text x="50" y="61.5" text-anchor="middle">N</text>
+                        <text x="54" y="66" text-anchor="start">S</text>
+                        <text transform="translate(65, 65) rotate(-45)" x="0" y="1">MZVA</text>
+                        <text x="65" y="61.5" text-anchor="middle">N</text>
+                        <text x="61" y="66" text-anchor="end">S</text>
+                        <text transform="translate(80, 65) rotate(-45)" x="0" y="1">ADM</text>
+                        <text x="80" y="61.5" text-anchor="middle">N</text>
+                        <text x="80" y="70.5" text-anchor="middle">S</text>
+                        <text transform="translate(5, 80) rotate(-45)" x="0" y="1">DMV</text>
+                        <text x="5" y="76.5" text-anchor="middle">N</text>
+                        <text x="9" y="81" text-anchor="start">S</text>
+                        <text transform="translate(20, 80) rotate(-45)" x="0" y="1">MDAZ</text>
+                        <text x="24" y="81" text-anchor="start">N</text>
+                        <text x="20" y="76.5" text-anchor="middle">S</text>
+                        <text transform="translate(35, 80) rotate(-45)" x="0" y="1"></text>
+                        <text x="39" y="81" text-anchor="start">N</text>
+                        <text transform="translate(50, 80) rotate(-45)" x="0" y="1">DM</text>
+                        <text x="54" y="81" text-anchor="start">N</text>
+                        <text x="46" y="81" text-anchor="end">S</text>
+                        <text transform="translate(65, 80) rotate(-45)" x="0" y="1">A</text>
+                        <text x="65" y="76.5" text-anchor="middle">N</text>
+                        <text x="61" y="81" text-anchor="end">S</text>
+                        <text transform="translate(80, 80) rotate(-45)" x="0" y="1">MZD</text>
+                        <text x="76" y="81" text-anchor="end">N</text>
+                        <text x="80" y="76.5" text-anchor="middle">S</text>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 0h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M30 0h10v10h-3l-2 2-2-2h-3v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M45 0h10v10h-3l-2 2-2-2h-3v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 0h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 0h10v10h-3l-2 2-2-2h-3v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 15h3l2-2 2 2h3v10h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M15 15h10v10h-3l-2 2-2-2h-3v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M30 15h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M45 15h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 15h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 15h10v10h-3l-2 2-2-2h-3v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 30h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M15 30h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 30h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 30h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 45h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M15 45h10v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M30 45h10v3l2 2-2 2v3h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M45 45h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 45h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 45h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 60h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M30 60h10v3l2 2-2 2v3h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M45 60h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 60h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 60h3l2-2 2 2h3v10h-3l-2 2-2-2h-3z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M0 75h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M15 75h3l2-2 2 2h3v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M30 75h10v3l2 2-2 2v3h-10z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M45 75h10v3l2 2-2 2v3h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M60 75h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+                        <path fill="none" stroke="black" stroke-width=".3" d="M75 75h3l2-2 2 2h3v10h-10v-3l-2-2 2-2z"></path>
+            </g>
+                        <rect class="highlightable" x="1" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="1" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="1" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="16" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="1" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="31" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="1" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="46" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="1" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="61" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="1" y="76" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="16" y="76" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="31" y="76" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="46" y="76" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="61" y="76" width="8" height="8" fill="transparent"></rect>
+                        <rect class="highlightable" x="76" y="76" width="8" height="8" fill="transparent"></rect>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 1</div>
+        </div>
+    <div class="ruleseed-header"></div></div>
+</body>
+</html>
