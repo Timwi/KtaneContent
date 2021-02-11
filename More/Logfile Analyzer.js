@@ -1109,7 +1109,7 @@ function Bomb(seed) {
             //3.16205534 / number
             //Renderer representation (TheDarkSid3r Bomb Renderer)
 
-            const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+            /*const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
             rendererHTML.replaceWith(rendererParent);
             
             var rendererEdgework = [
@@ -1137,7 +1137,7 @@ function Bomb(seed) {
                 }
                 
                 renderer.addEdgework(rendererEdgework);
-            });
+            });*/
         }
 
         return info;
