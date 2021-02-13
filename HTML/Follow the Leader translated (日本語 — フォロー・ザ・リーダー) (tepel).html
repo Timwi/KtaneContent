@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>フォロー・ザ・リーダー — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        
+        function setRules(rnd)
+        {
+            let ports = ["パラレルポート", "シリアルポート", "RJ-45ポート", "PS/2ポート", "DVI-Dポート", "ステレオRCAポート"];
+            document.getElementById('rule-port').innerText = ports[rnd.next(0, ports.length)];
+            
+            let startingPlugConditions = [
+            "インジケーターの数",
+            "点灯したインジケーターの数",
+            "点灯していないインジケーターの数",
+            "バッテリーの数",
+            "バッテリーホルダーの数",
+            "単3バッテリーの数",
+            "単1バッテリーの数",
+            "ポートの数",
+            "ポートプレートの数",
+            "ポートの種類の数",
+            "モジュールの数(特殊モジュールを含む)",
+            "特殊モジュール以外のモジュールの数",
+            "シリアルナンバーの最初の英字のアルファベットでの位置(A=1,B=2...)",
+            "シリアルナンバーの2つ目の英字のアルファベットでの位置(A=1,B=2...)",
+            "シリアルナンバーの最後の英字のアルファベットでの位置(A=1,B=2...)",
+            "シリアルナンバーの最後から2番目の英字のアルファベットでの位置(A=1,B=2...)",
+            "シリアルナンバーの最後の数字",
+            "シリアルナンバーの2つ目の数字",
+            "シリアルナンバーの最初の数字"
+            ];
+            
+            let startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+            
+            let startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+            startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+            
+            let startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `プラグ${startPlug}`;
+            
+            let indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            let indicator = indicators[rnd.next(0, indicators.length)];
+            document.getElementById('rule-indicator').innerText = indicator;
+            
+            let endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `プラグ${endPlug}`;
+            
+            let litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? '点灯した' : '点灯していない';
+            
+            let startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `プラグ${startAt}から時計回りで最初の` : '番号順で最初の';
+            
+            let startingRuleConditions = [
+            ["いずれかのインジケーターに含まれる英字のうちアルファベットで最初の文字", "インジケーターがない場合"],
+            ["いずれかのインジケーターに含まれる英字のうちアルファベットで最後の文字", "インジケーターがない場合"],
+            ["シリアルナンバーの2つ目の英字", "シリアルナンバーに英字がない場合"],
+            ["シリアルナンバーの最後から2つ目の英字", "シリアルナンバーに英字がない場合"],
+            ["シリアルナンバーの最後の英字", "シリアルナンバーに英字がない場合"],
+            ["シリアルナンバーの最初の英字", "シリアルナンバーに英字がない場合"]
+            ];
+            let startingRuleIx = rnd.next(0, startingRuleConditions.length);
+            
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+            
+            let colors = ["赤", "緑", "青", "白", "黒", "黄色"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]}あるいは${colors[2]}`;
+            
+            let tableRules = [
+            "ワイヤーを切る。",
+            "ワイヤーを切らない",
+            "前のワイヤーの接続先が偶数番のプラグである。",
+            "前のワイヤーの接続先が奇数番のプラグである。",
+            "前のワイヤーの接続先が素数番のプラグである。",
+            "前のワイヤーの接続先が素数番のプラグではない。",
+            "前のワイヤーは切断されるべきである。",
+            "前のワイヤーは切断されるべきでない。",
+            "前の2つのワイヤーは同じ色である。",
+            "前の2つのワイヤーは異なる色である。",
+            "前の3つのワイヤーのうち2つは同じ色である。",
+            "前の3つのワイヤーがすべて異なる色である。",
+            "前の3つのワイヤーがすべて同じ色である。",
+            "前のワイヤーがこのワイヤーと同じ色である。",
+            "前のワイヤーがこのワイヤーと異なる色である。",
+            "前の2つのワイヤーのいずれもこのワイヤーと同じ色でない。",
+            "前の2つのワイヤーのうちちょうど1つがこのワイヤーと同じ色である。",
+            "前の2つのワイヤーの両方がこのワイヤーと同じ色である。",
+            "前の2つのワイヤーのうちちょうど1つこのワイヤーと同じ色であるか、どちらもこのワイヤーの色と異なる。",
+            "前の2つのワイヤーのうちちょうど1つこのワイヤーと同じ色であるか、どちらもこのワイヤーの色と同じである。",
+            "前の2つのワイヤーのうちどちらもこのワイヤーの色と異なるか、どちらもこのワイヤーの色と同じである。",
+            "前のワイヤーはプラグを飛ばしている。",
+            "前のワイヤーはプラグを飛ばしていない。",
+            "前の2つのワイヤーのいずれもプラグを飛ばしていない。",
+            "前の2つのワイヤーのうちちょうど一つがプラグを飛ばしている。",
+            "前の2つのワイヤーの両方がプラグを飛ばしている。",
+            "前の2つのワイヤーのうちちょうど一つがプラグを飛ばしているか、いずれもプラグを飛ばしていない。",
+            "前の2つのワイヤーのうちちょうど一つがプラグを飛ばしているか、両方がプラグを飛ばしている。",
+            ['n12', n => `前のワイヤーの接続先は${n}以下のラベルのプラグである。`],
+            ['n12', n => `前のワイヤーの接続先は${n}以下のラベルのプラグではない。`],
+            ['n12', n => `前のワイヤーの接続先は${n}以上のラベルのプラグである。`],
+            ['n12', n => `前のワイヤーの接続先は${n}以上のラベルのプラグではない。`],
+            ['n6', n => `このモジュールのワイヤーの本数が${n}以上である。`],
+            ['n6', n => `このモジュールのワイヤーの本数が${n}以下である。`],
+            ['c', c => `前のワイヤーは${c[0]}か${c[1]}か${c[2]}である。`],
+            ['c', c => `前のワイヤーは${c[0]}か${c[1]}か${c[2]}ではない。`],
+            ['c', c => `2つ前のワイヤーは${c[0]}か${c[1]}か${c[2]}である。`],
+            ['c', c => `2つ前のワイヤーは${c[0]}か${c[1]}か${c[2]}ではない。`],
+            ['c', c => `前の2つのワイヤーのいずれも${c[0]}か${c[1]}ではない。`],
+            ['c', c => `前の2つのワイヤーのちょうど一つが${c[0]}か${c[1]}である。`],
+            ['c', c => `前の2つのワイヤーの両方が${c[0]}か${c[1]}である。`],
+            ['c', c => `前の2つのワイヤーのうちちょうど一つが${c[0]}か${c[1]}であるか、いずれも${c[0]}か${c[1]}でない。`],
+            ['c', c => `前の2つのワイヤーのうちちょうど一つが${c[0]}か${c[1]}であるか、両方が${c[0]}か${c[1]}である。`],
+            ['c', c => `前の2つのワイヤーのいずれも${c[0]}か${c[1]}でないか、両方が${c[0]}か${c[1]}である。`],
+            ['c', c => `開始ワイヤーから前のワイヤーまでのすべての${c[0]}のワイヤーが切られるべきである。\u00a0*`, true],
+            ['c', c => `開始ワイヤーから前のワイヤーまでのすべての${c[0]}のワイヤーが切られるべきでない。\u00a0*`, true],
+            "開始ワイヤーから前のワイヤーまでのワイヤーのうち、半分より多くが切られるべきである。",
+            "開始ワイヤーから前のワイヤーまでのワイヤーのうち、半分より多くが切られるべきでない。",
+            "開始ワイヤーの次のワイヤーから前のワイヤーまでのワイヤーのうち、半分より多くが切られるべきである。",
+            "開始ワイヤーの次のワイヤーから前のワイヤーまでのワイヤーのうち、半分より多くが切られるべきでない。",
+            "前のワイヤーが開始ワイヤーと同じ色である。",
+            "前のワイヤーが開始ワイヤーと異なる色である。",
+            ];
+            let list = document.getElementsByClassName('table-rule');
+            let footnote = false;
+            if (rnd.seed === 1)
+            {
+                list[0].innerText = tableRules[35][1](['黄色', '青', '緑']);
+                list[1].innerText = tableRules[2];
+                list[2].innerText = tableRules[6];
+                list[3].innerText = tableRules[34][1](['赤', '青', '黒']);
+                list[4].innerText = tableRules[10];
+                list[5].innerText = tableRules[16];
+                list[6].innerText = tableRules[34][1](['黄色', '白', '緑']);
+                list[7].innerText = tableRules[7];
+                list[8].innerText = tableRules[21];
+                list[9].innerText = tableRules[35][1](['白', '黒', '赤']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['白', '黒']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (let i = 0; i < 13; i++)
+                {
+                    let str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[2])
+                        footnote = true;
+                        if (str[0] === 'n12')
+                        str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                        str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+            document.getElementById('footnote').style.display = footnote ? '' : 'none';
+        }
+    </script>
+    <style>
+        .ftl-table {
+            table-layout: fixed;
+        }
+        .ftl-table thead tr th:first-child {
+            width: 92px;
+        }
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">フォロー・ザ・リーダー</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Follow the Leader.svg" class="diagram">
+                <h2>モジュール詳細：フォロー・ザ・リーダー</h2>
+                <p class="flavour-text">子供の遊びと同じ。リーダーの言うことに従えばいい。ただ従えなかった場合の罰ゲームが幾分か爆発的になっただけだ。</p>
+                <p>このモジュールでは、数字のラベルが付いたプラグにつながっている8-12本のワイヤーが輪を成している。それぞれのワイヤーは時計回りあるプラグから次のプラグに繋がっている。このマニュアルでは、ワイヤーは手前のプラグのラベルによってワイヤーを番号付けする。例えば、プラグ1からプラグ2に繋がっているワイヤーは「ワイヤー1」であり「接続元」はプラグ1で「接続先」はプラグ2である。プラグ12からプラグ1に繋がっているワイヤーは「ワイヤー12」であり「接続元」はプラグ12で「接続先」はプラグ1である。</p>
+                <p>最初に「開始ワイヤー」を切断する。その後、適切なワイヤーを順序通りに切断する。それぞれのワイヤーは、その前のワイヤーの状態によって切断されるかそのままにしなければならない。順序から外れてワイヤーを切断してはならない。</p>
+                <h3>開始ワイヤーの特定</h3>
+                次のルールのうち、最初に当てはまるものを適用する。
+                <ol>
+                    <li><span class="rule" id="rule-port">RJ-45ポート</span>があり、<span class="rule" id="rule-plug-start">プラグ4</span>から<span class="rule" id="rule-plug-end">プラグ5</span>へ<em>直接</em>接続しているワイヤーが存在するとき、そのワイヤーから開始する。</li>
+                    <li>そうでない場合、ラベルが<span class="rule" id="rule-start-2">バッテリーの数</span>と一致するプラグを接続元とするワイヤーが存在すれば、そのワイヤーから開始する。</li>
+                    <li>そうでない場合、ラベルが<span class="rule" id="rule-start-3">シリアルナンバーの最初の数字</span>と一致するプラグを接続元とするワイヤーが存在すれば、そのワイヤーから開始する。</li>
+                    <li>そうでない場合、<span class="rule" id="rule-indicator-lit">点灯した</span><span class="rule" id="rule-indicator">CLR</span>のインジケーターが存在すれば、以降のすべてのルールを無視して番号順にすべてのワイヤーを切断する。</li>
+                    <li>以上がすべて当てはまらなかった場合、<span class="rule" id="rule-else">番号順で最初の</span>ワイヤーから開始する。</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">フォロー・ザ・リーダー</span>
+            </div>
+            <div class="page-content">
+                <h3>切断するワイヤーについて</h3>
+                <ul>
+                    <li><em>常に</em>開始ワイヤーは切断されるべきである。その後、次のワイヤーに移る。</li>
+                    <li>この位置から、以下のテーブルのルールに従ってワイヤーを切断するべきかを決定する。<span class="rule" id="rule-starting-step">シリアルナンバーの最初の英字</span>のステップから開始する。<span class="rule" id="rule-starting-step-fallback">シリアルナンバーに英字が存在しない場合</span>、ステップ<span class="rule" id="rule-starting-step-fallback-step">A</span>から開始する。</li>
+                    <li>次のワイヤーに進む時、アルファベット順にテーブルを次の行に進めてワイヤーを切断するべきか決定する。</li>
+                    <li>「前のワイヤー」「前○つのワイヤー」は開始ワイヤーより前のワイヤーを示すこともある。</li>
+                    <li>開始ワイヤーが<span class="rule" id="rule-reverse-colors">赤か緑か白</span>の場合、代わりにアルファベットの逆順でルールを進める。</li>
+                </ul>
+                <table class="repeaters-table ftl-table">
+                    <thead>
+                        <tr>
+                            <th>ステップ</th>
+                            <th>次が当てはまればワイヤーを切断する。</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>AあるいはN</th>
+                            <td class="table-rule">前のワイヤーは黄色か青か緑ではない。</td>
+                        </tr>
+                        <tr>
+                            <th>BあるいはO</th>
+                            <td class="table-rule">前のワイヤーの接続先が偶数番のプラグである。</td>
+                        </tr>
+                        <tr>
+                            <th>CあるいはP</th>
+                            <td class="table-rule">前のワイヤーは切断されるべきである。</td>
+                        </tr>
+                        <tr>
+                            <th>DあるいはQ</th>
+                            <td class="table-rule">前のワイヤーは赤か青か黒である。</td>
+                        </tr>
+                        <tr>
+                            <th>EあるいはR</th>
+                            <td class="table-rule">前の3つのワイヤーのうち2つは同じ色である。</td>
+                        </tr>
+                        <tr>
+                            <th>FあるいはS</th>
+                            <td class="table-rule">前の2つのワイヤーのうちちょうど1つがこのワイヤーと同じ色である。</td>
+                        </tr>
+                        <tr>
+                            <th>GあるいはT</th>
+                            <td class="table-rule">前のワイヤーは黄色か白か緑である。</td>
+                            
+                        </tr>
+                        <tr>
+                            <th>HあるいはU</th>
+                            <td class="table-rule">前のワイヤーは切断されるべきでない。</td>
+                        </tr>
+                        <tr>
+                            <th>IあるいはV</th>
+                            <td class="table-rule">前のワイヤーはプラグを飛ばしている。</td>
+                        </tr>
+                        <tr>
+                            <th>JあるいはW</th>
+                            <td class="table-rule">前のワイヤーは白か黒か赤ではない。</td>
+                            
+                        </tr>
+                        <tr>
+                            <th>KあるいはX</th>
+                            <td class="table-rule">前の2つのワイヤーは異なる色である。</td>
+                        </tr>
+                        <tr>
+                            <th>LあるいはY</th>
+                            <td class="table-rule">前のワイヤーの接続先は6以下のラベルのプラグではない。</td>
+                            
+                        </tr>
+                        <tr>
+                            <th>MあるいはZ</th>
+                            <td class="table-rule">前の2つのワイヤーのうちちょうど一つが白か黒であるか、いずれも白か黒でない。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="footnote" style="display:none">*&nbsp;<a href="https://mathrelish.com/mathematics/implication">空虚な真</a>に注意する。つまり、前提となるワイヤーが存在しない場合、ルールは真である。</div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+
+</html>
