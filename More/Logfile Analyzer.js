@@ -951,6 +951,8 @@ function Bomb(seed) {
             return manual;
         }
 
+        mods = mods.filter(mod => mod?.moduleData?.repo?.Type !== "Holdable");
+
         // Display modules
         mods.forEach(function(parseData) {
             // Information
@@ -1356,7 +1358,7 @@ function parseLog(opt) {
                                     if (matches) {
                                         if (obj.moduleID) {
                                             var parsedModule = id ? GetBomb().GetModuleID(obj.moduleID, id) : GetBomb().GetModule(obj.moduleID);
-                                            if (matcher.handler(matches, parsedModule, bomb.GetMod(obj.moduleID))) {
+                                            if (matcher.handler(matches, parsedModule, GetBomb().GetMod(obj.moduleID))) {
                                                 break;
                                             }
                                         } else if (matcher.handler(matches)) {
