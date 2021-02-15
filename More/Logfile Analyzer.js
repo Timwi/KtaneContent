@@ -951,7 +951,7 @@ function Bomb(seed) {
             return manual;
         }
 
-        mods = mods.filter(mod => mod?.moduleData?.repo?.Type !== "Holdable");
+        mods = mods.filter(mod => mod.moduleData.repo.Type !== "Holdable");
 
         // Display modules
         mods.forEach(function(parseData) {
