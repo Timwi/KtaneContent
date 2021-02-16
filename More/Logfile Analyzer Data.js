@@ -599,6 +599,17 @@ const parseData = [
             }
         ]
     },
+    {
+        loggingTag: "LFABombPreviewService",
+        matches: [
+            {
+                regex: /Camera render for bomb:/,
+                handler: function () {
+                    lastBombGroup.PreviewImage = readLine();
+                }
+            }
+        ]
+    },
 
     // ** MODULES START HERE ** //
 
