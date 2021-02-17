@@ -2395,6 +2395,23 @@ const parseData = [
         ]
     },
     {
+        displayName: "Fifteen",
+        moduleID: "fifteen",
+        loggingTag: "Fifteen",
+        matches: [
+            {
+                regex: /Indexes for placing the tiles:/,
+                handler: function (matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(15)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Find The Date",
         moduleID: "DateFinder",
         loggingTag: "Date Finder"
