@@ -290,7 +290,7 @@ class BombGroup {
             .addCardClick(eventInfo);
 
         // Graph
-        if (this.Events.length !== 0)
+        if (this.Events.length !== 0 && this.isSingleBomb)
         {
             const graph = $SVG(`<svg viewBox="-0.1 -0.1 2.2 1.2">`);
 
