@@ -3046,9 +3046,9 @@ const parseData = [
             {
                 regex: /One possible solution:|Initial state:|Module disarmed with the following board:/,
                 handler: function (matches, module) {
-                    if (module.firseTime == null || module.firseTime === true)
+                    if (module.firstTime == null || module.firstTime === true)
                     {
-                        module.firseTime = false;
+                        module.firstTime = false;
                         module.push("Notation: [White Hexagon: Interactable, Red Hexagon: Constraint Number, Black Hexagon: Non-interactable]");
                     }
                     const div = $('<div>').css({"text-align": "center"});
