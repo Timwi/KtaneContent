@@ -3082,7 +3082,6 @@ const parseData = [
                                 hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
                     });
                     readLine();
-                    //$SVG(`<polygon points="${hexagon}" style="fill:none;stroke:black;stroke-width:1;fill-rule:nonzero;"/>`).appendTo(svg);
                     for (let i = -2; i < 3; i++)
                         for (let j = -2; j < 3; j++)
                             for (let k = -2; k < 3; k++) {
