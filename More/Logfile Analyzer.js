@@ -227,6 +227,8 @@ class BombGroup {
             .mousedown(function() { return false; });
         var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
+        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}")`);
+
         var totalModules = 0;
         var totalNeedies = 0;
         this.loggedBombs.forEach(function(bomb) {
@@ -280,12 +282,118 @@ class BombGroup {
         // Events
         var eventInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").css("margin-top", "10px").text("Events").appendTo(eventInfo);
-        makeTree(this.Events.length > 0 ? this.Events : ["No events."], $("<ul>").appendTo(eventInfo));
+        makeTree(this.Events.length > 0 ? this.Events.map(eventInfo => this.EventToNode(eventInfo)) : ["No events."], $("<ul>").appendTo(eventInfo));
 
         $("<button class='module'>")
             .text("Events")
             .appendTo(modules)
             .addCardClick(eventInfo);
+
+        // Graph
+        if (this.Events.length !== 0 && this.isSingleBomb)
+        {
+            const graph = $SVG(`<svg viewBox="-0.1 -0.1 2.2 1.2">`);
+
+            const totalRealTime = this.Events[this.Events.length - 1].realTime;
+
+            const stats = {
+                strikes: {
+                    name: "Strikes",
+                    color: "red",
+                    max: this.Bombs[0].TotalStrikes,
+                    final: this.Bombs[0].Strikes,
+                    invert: true,
+                    type: "STRIKE"
+                },
+                solves: {
+                    name: "Solves",
+                    color: "rgb(0, 225, 0)",
+                    max: totalModules,
+                    final: this.Bombs[0].Solves,
+                    invert: true,
+                    type: "PASS"
+                },
+                time: {
+                    name: "Time",
+                    color: "grey",
+                    max: this.Bombs[0].Time,
+                    final: this.Bombs[0].TimeLeft
+                }
+            };
+
+            for (const stat of Object.values(stats)) {
+                stat.line = "M 0 1 ";
+                stat.value = 0;
+            }
+
+            for (const event of this.Events) {
+                if (event.type == "PASS")
+                {
+                    const mod = lastBombGroup.GetMod(event.moduleID, event.loggingID);
+                    if (mod != null && mod.moduleData.needy)
+                        continue;
+                }
+
+                const baseCommand = `L ${(event.realTime / totalRealTime * 2)} `;
+
+                for (const stat of Object.values(stats)) {
+                    if (stat.type == event.type || stat.type == undefined) {
+                        let beforeRatio = stat.value / stat.max;
+                        if (stat.invert) beforeRatio = 1 - beforeRatio;
+
+                        if (stat.name != "Time")
+                        {
+                            stat.line += baseCommand + beforeRatio;
+                            stat.value++;
+                        }
+                        else
+                        {
+                            stat.value = event.bombTime;
+                        }
+
+                        let afterRatio = stat.value / stat.max;
+                        if (stat.invert) afterRatio = 1 - afterRatio;
+
+                        stat.line += baseCommand + afterRatio;
+                    }
+                }
+            }
+
+            let i = 0;
+            for (const stat of Object.values(stats)) {
+                if (stat.name != "Time")
+                {
+                    let beforeRatio = stat.value / stat.max;
+                    if (stat.invert) beforeRatio = 1 - beforeRatio;
+                    stat.line += `L 2 ${beforeRatio}`;
+                }
+
+                let afterRatio = stat.final / stat.max;
+                if (stat.invert) afterRatio = 1 - afterRatio;
+                stat.line += `L 2 ${afterRatio}`;
+
+                // Draw line and preprend it to make sure lines are drawn in the right order.
+                $SVG(`<path stroke="${stat.color}" stroke-width=0.01 fill=none d="${stat.line}">`).prependTo(graph);
+
+                // Legend
+                $SVG(`<rect fill="${stat.color}" x=0.02 width=0.075 height=0.075 y=${i * 0.1}>`).appendTo(graph);
+                $SVG(`<text font-size=0.05 x=0.11 dominant-baseline=middle y=${i * 0.1 + 0.0375}>${stat.name}`).appendTo(graph);
+
+                i++;
+            }
+
+            // Graph lines
+            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 L 0 1.01 L 2.01 1.01">`).appendTo(graph);
+
+            var graphInfo = $("<div class='module-info'>").appendTo(info);
+            $("<h3>").css("margin-top", "10px").text("Graph").appendTo(graphInfo);
+            graph.appendTo(graphInfo);
+
+            $("<button class='module'>")
+                .text("Graph")
+                .appendTo(modules)
+                .addCardClick(graphInfo);
+        }
 
         this.loggedBombs.forEach((bomb) => {
             bomb.ToHTML(filteredTab, this.RuleSeed).appendTo(bombGroupHTML);
@@ -372,6 +480,39 @@ class BombGroup {
 
         this.StartLine = undefined;
         this.FilteredLog = log.replace(/\n{3,}/g, "\n\n");
+    }
+
+    EventToNode(eventInfo) {
+        switch (eventInfo.type) {
+            case "STRIKE":
+            case "PASS": {
+                const mod = this.GetMod(eventInfo.moduleID, eventInfo.loggingID);
+
+                return [
+                    `${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck"} at ${formatTime(eventInfo.realTime)}.`,
+                    [
+                        `Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
+                        eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
+                    ]
+                ];
+            }
+            case "BOMB_DETONATE":
+                for (const bomb of this.loggedBombs) {
+                    if (bomb.Serial == eventInfo.serial) {
+                        return [`Bomb (${bomb.Serial}) exploded at ${formatTime(eventInfo.realTime)} ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]];
+                    }
+                }
+
+                break;
+            case "BOMB_SOLVE":
+                for (const bomb of this.loggedBombs) {
+                    if (bomb.Serial == eventInfo.serial) {
+                        return [`Bomb (${bomb.Serial}) solved at ${formatTime(eventInfo.realTime)}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]];
+                    }
+                }
+
+                break;
+        }
     }
 }
 
@@ -812,6 +953,8 @@ function Bomb(seed) {
             return manual;
         }
 
+        mods = mods.filter(mod => mod?.moduleData?.repo?.Type !== "Holdable");
+
         // Display modules
         mods.forEach(function(parseData) {
             // Information
@@ -970,40 +1113,35 @@ function Bomb(seed) {
             //3.16205534 / number
             //Renderer representation (TheDarkSid3r Bomb Renderer)
 
-            const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+            /*const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
             rendererHTML.replaceWith(rendererParent);
             
             var rendererEdgework = [
                 {type: "serial", number: this.Serial}
             ];
             this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
-            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", name: i[1]}));
-            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b == 1 ? "D" : "AA", count: b}));
+            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
+            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
 
-            var rendererModules = [];
-            var rendererWidth = Math.round(4.54545455 * (Math.abs(viewBox[0]) + viewBox[2]));
-            var rendererHeight = Math.round(4.54545455 * (Math.abs(viewBox[1]) + viewBox[3]));
+            const renderer = new BombRenderer(rendererParent);
 
-            for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
-                var face = moduleIndex >= this.ModuleOrder.length / 2 ? "rear" : "front";
-
-                if (this.ModuleOrder[moduleIndex] == null)
-                    continue;
-
-                const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
-                const ID = moduleSplit.splice(moduleSplit.length - 1);
-                const moduleID = moduleSplit.join(" ");
-
-                const moduleFaceIndex = moduleIndex % (this.ModuleOrder.length / 2);
-                const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                const module = Object.assign(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, {face, index: moduleFaceIndex});
-
-                rendererModules.push(module);
-            }
-            
-            var renderer = new BombRenderer(rendererParent, rendererWidth, rendererHeight);
-            renderer.addModules(rendererModules);
-            renderer.addEdgework(rendererEdgework);
+            renderer.loadMainAssetsAsync().then(() => {
+                for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+                    const isRear = moduleIndex >= this.ModuleOrder.length / 2;
+    
+                    if (this.ModuleOrder[moduleIndex] == null)
+                        continue;
+    
+                    const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+                    const ID = moduleSplit.splice(moduleSplit.length - 1);
+                    const moduleID = moduleSplit.join(" ");
+    
+                    const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+                    renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
+                }
+                
+                renderer.addEdgework(rendererEdgework);
+            });*/
         }
 
         return info;
@@ -1222,7 +1360,7 @@ function parseLog(opt) {
                                     if (matches) {
                                         if (obj.moduleID) {
                                             var parsedModule = id ? GetBomb().GetModuleID(obj.moduleID, id) : GetBomb().GetModule(obj.moduleID);
-                                            if (matcher.handler(matches, parsedModule, bomb.GetMod(obj.moduleID))) {
+                                            if (matcher.handler(matches, parsedModule, GetBomb().GetMod(obj.moduleID))) {
                                                 break;
                                             }
                                         } else if (matcher.handler(matches)) {

@@ -557,15 +557,8 @@ const parseData = [
                             const mod = lastBombGroup.GetMod(eventInfo.moduleID, eventInfo.loggingID);
                             mod.Events.push(eventInfo);
 
-                            const text = [
-                                `${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck"} at ${formatTime(eventInfo.realTime)}.`,
-                                [
-                                    `Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
-                                    eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
-                                ]
-                            ];
-                            if (bombgroup != null) bombgroup.Events.push(text);
-                            else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, text);
+                            if (bombgroup != null) bombgroup.Events.push(eventInfo);
+                            else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, eventInfo);
 
                             if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb && !mod.moduleData.needy)
                                 bombgroup.loggedBombs[0].Solved++;
@@ -583,7 +576,7 @@ const parseData = [
                                     bomb.TimeLeft = eventInfo.bombTime;
                                     bomb.State = `Exploded (${bomb.Strikes == bomb.TotalStrikes ? "Strikes" : "Time Ran Out"})`;
 
-                                    bombgroup.Events.push([`Bomb (${bomb.Serial}) exploded at ${formatTime(eventInfo.realTime)} ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+                                    bombgroup.Events.push(eventInfo);
                                 }
                             }
 
@@ -596,12 +589,23 @@ const parseData = [
                                     bomb.TimeLeft = eventInfo.bombTime;
                                     bomb.State = "Solved";
 
-                                    bombgroup.Events.push([`Bomb (${bomb.Serial}) solved at ${formatTime(eventInfo.realTime)}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]]);
+                                    bombgroup.Events.push(eventInfo);
                                 }
                             }
 
                             break;
                     }
+                }
+            }
+        ]
+    },
+    {
+        loggingTag: "LFABombPreviewService",
+        matches: [
+            {
+                regex: /Camera render for bomb:/,
+                handler: function () {
+                    lastBombGroup.PreviewImage = readLine();
                 }
             }
         ]
@@ -2391,6 +2395,23 @@ const parseData = [
         ]
     },
     {
+        displayName: "Fifteen",
+        moduleID: "fifteen",
+        loggingTag: "Fifteen",
+        matches: [
+            {
+                regex: /Indexes for placing the tiles:/,
+                handler: function (matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(15)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Find The Date",
         moduleID: "DateFinder",
         loggingTag: "Date Finder"
@@ -3010,6 +3031,72 @@ const parseData = [
                         type: matches[3]
                     });
                     module.Link.label = "<a href='../HTML/Hexamaze interactive (samfundev).html#" + JSON.stringify(module.JSON) + "'>View the solution interactively</a>";
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Hexiom",
+        moduleID: "hexiomModule",
+        loggingTag: "Hexiom",
+        matches: [
+            {
+                regex: /One possible solution:|Initial state:|Module disarmed with the following board:/,
+                handler: function (matches, module) {
+                    if (module.firseTime == null || module.firseTime === true)
+                    {
+                        module.firseTime = false;
+                        module.push("Notation: [White Hexagon: Interactable, Red Hexagon: Constraint Number, Black Hexagon: Non-interactable]");
+                    }
+                    const div = $('<div>').css({"text-align": "center"});
+                    const svg = $('<svg width="30%" viewBox="-25 -25 50 50" fill="none">').appendTo(div);
+                    const sideLength = 5;
+                    const pointsXY = [sideLength * Math.cos(Math.PI/3), sideLength * Math.sin(Math.PI/3)];
+                    const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
+                    readLine();
+                    let rawData = readMultiple(9).split('\n');
+                    let re = /\[Hexiom #\d+\] ([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)/;
+                    hexData = {};
+                    for (let i = -2; i < 3; i++) {
+                        hexData[i] = {};
+                        for (let j = -2; j < 3; j++) {
+                            hexData[i][j] = {};
+                            for (let k = -2; k < 3; k++) {
+                                hexData[i][j][k] = {};
+                            }
+                        }
+                    }
+                    let baseIndices = [[2, 0], [2, -1], [1, -1], [1, -2], [0, -2]];
+                    rawData.forEach(function(item, index) {
+                        let lineMatches = re.exec(item);
+                        if (index === 0 || index === 8)
+                            hexData[0][2 - index / 2][-2 + index / 2] = {number: lineMatches[5] === " " ? -1 : parseInt(lineMatches[5]), isBlocked: lineMatches[6] === "*"};
+                        else if (index % 2 === 1)
+                            for (let i = -1; i < 2; i = i + 2)
+                                hexData[i][baseIndices[2 + i][0] - (index - 1) / 2][baseIndices[2 + i][1] + (index - 1) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                        else
+                            for (let i = -2; i < 3; i = i + 2)
+                                hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                    });
+                    readLine();
+                    for (let i = -2; i < 3; i++)
+                        for (let j = -2; j < 3; j++)
+                            for (let k = -2; k < 3; k++) {
+                                if (i + j + k !== 0)
+                                    continue;
+                                
+                                let color = hexData[i][j][k].isBlocked ? hexData[i][j][k].number === -1 ? "black" : "red" : "none";
+                                let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4 } ${(k - j) * sideLength * Math.cos(Math.PI/6)})">`).appendTo(svg);
+                                $SVG(`<polygon points="${hexagon}" style="fill:${color};stroke:black;stroke-width:1;fill-rule:nonzero;""/>`).appendTo(group);
+                                if (hexData[i][j][k].number !== -1)
+                                    $SVG('<text x="0" y="0" font-size="8" text-anchor="middle" dominant-baseline="central" fill="black">').text(hexData[i][j][k].number).appendTo(group);
+                            }
+                            
+                    module.push({label: matches.input, obj: div});
+                    return true;
                 }
             },
             {
