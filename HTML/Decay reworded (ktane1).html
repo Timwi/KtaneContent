@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Decay — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        h3 + h4{
+            margin-top: 4px;
+        }
+        p {
+            margin: 0;
+        }
+        p + p {
+            margin-top: 1em;
+        }
+        ul {
+            margin: 0;
+        }
+        p, ul, table{
+            font-size: .95em;
+        }
+        .centered {
+            text-align: center;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Decay.svg" class="diagram">
+                <h2>On the Subject of Decaying Decay</h2>
+                <p class="flavour-text">Everything falls apart.</p>
+                <p>This module displays three pressable symbols.</p>
+                <h3>Step 1</h3>
+                <h4>Step 1.1: Decrypting the display</h4>
+                <p>For each symbol, interpret each vertical bar as:</p>
+                <ul>
+                    <li>0 if it’s disconnected to the base</li>
+                    <li>1 if it’s connected to the base</li>
+                </ul>
+                <p>
+                    Treat each number as binary and convert them into base 10.<br>
+                    Then, add 2^{k}-1 to the number, where k is the number of vertical bars on the character.<br>
+                    Your base number (hereby referred as <i>n</i>) is (First number * 225) + (Second number * 15) + Third number.
+                </p>
+                <h4>Step 1.2: Constructing the tree</h4>
+                <p>
+                    Construct a tree consisting of nodes and branches. Each node consists of three values: Prime Value, Remainder Value, and Binary Value.<br>
+                    In this step we will only consider the Prime and Remainder Values.<br>
+                    Start by constructing a node with n as the Remainder Value and 0 as the Prime Value. This node is also known as <strong>the base node</strong>.<br>
+                    Then for each node:
+                </p>
+                <ul>
+                    <li>For each unique prime factor of the Remainder Value, construct a child node connecting to the node where Prime Value = the prime factor and Remainder Value = [Remainder Value of the parent] / [Prime Value] + 1.</li>
+                    <li>Order these children nodes from lowest to highest based on the Prime Value.</li>
+                </ul>
+                <p>Apply these steps above for each node, with the exception when the Remainder Value of that node is prime.</p>
+                <p>
+                    Example: 284<br>
+                    (Each node is presented as [Prime Value, Remainder Value])<br>
+                    0, 284<br>
+                    - 2, 143<br>
+                    - - 11, 14<br>
+                    - - - 2, 8<br>
+                    - - - - 2, 5*<br>
+                    - - 13, 12<br>
+                    - - - 2, 7*<br>
+                    - - - 3, 5*<br>
+                    - 71, 5*<br>
+                </p>
+                <p>*cases where Remainder Value is prime</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 7</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 2</h3>
+                <h4>Step 2.1: Obtaining the Binary</h4>
+                <p>
+                    Press the middle symbol. You should hear a sequence of seven notes played.<br>
+                    For each note:
+                </p>
+                <ul>
+                    <li>If the next note is higher, this number is a 1.</li>
+                    <li>Otherwise, this number is a 0.</li>
+                    <li>For the last note, the term “next note” refers to the first note.</li>
+                </ul>
+                <p>
+                    This set of numbers is called B_{i}.
+                </p>
+                <p>
+                    Next, create B_{f} by doing the following:
+                </p>
+                <ul>
+                    <li>Start by letting k = 1.</li>
+                    <li>Take the first kth digits from B_{i}, reverse it, then append it in B_{f}.</li>
+                    <li>Add 1 to k and repeat the second step.</li>
+                    <li>If you ran out of digits to use from B_{i}, take the same string and append it in B_{i}.</li>
+                    <li>This goes on until you have enough bits to be used for the upcoming steps. You may generate more bits if needed.</li>
+                </ul>
+                <p>
+                    <strong>At any point if a bit is requested from B_{f}, use the first unused bit. It is highly recommended to mark which bit is left unused to avoid mistakes.</strong>
+                </p>
+                <h4>Step 2.2: Assigning the Branches</h4>
+                <p>
+                    In this step we will begin to assign a bit to the branches of the tree.<br>
+                    The branch of a node is the branch that connects the node to its parent.
+                </p>
+                <ul>
+                    <li>Start from the base node and go through each child node in order. From this child, go to its children and repeat until you land on a node that has no children. </li>
+                    <li>Assign a requested bit from B_{f} to the branch of this node.</li>
+                    <li>Repeat the above until all branches whose nodes have no children are assigned.</li>
+                    <li>For nodes that have children nodes, if their branches are assigned, assign the branch of this node a 0 if there are an even number of 1s on the assigned branches, otherwise assign a 1.</li>
+                    <li>Repeat this process until all branches are assigned.</li>
+                </ul>
+                <h4>Step 2.3: Backpropagating</h4>
+                <p>
+                    In this step we will begin to set the Binary Values of the nodes.
+                </p>
+                <ul>
+                    <li>Set the Binary Value of the base node equal to 1.</li>
+                    <li>Then go to its children and set each Binary Value = [Binary Value of parent node] XOR [Assigned bit on the branch of this node]</li>
+                    <li>Repeat the above until all Binary Values are set.</li>
+
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 7</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 3</h3>
+                <h4>Step 3.1: Obtaining the initial number sequence</h4>
+                <p>Create a sequence S as follows:</p>
+                <ul>
+                    <li>First term = Sum of all Prime Values from all the nodes</li>
+                    <li>Second term = Sum of all Prime Values from the nodes where the Binary Values are equal to 1</li>
+                    <li>
+                        For all n > 2 and (n-1)th term is not 0,
+                        <ul>
+                            <li>nth term = (n-2)th term ⨬ (n-1)th term</li>
+                            <li>The operation ⨬ means reductive modulo. <strong>a</strong> ⨬ <strong>b</strong> means to repeatedly [subtract <strong>b</strong> from <strong>a</strong>, then subtract 1 from <strong>b</strong>] until <strong>a</strong> is less than <strong>b</strong> or <strong>b</strong> is 0.</li>
+                            <li>If <strong>b</strong> is 0, the result is 0. Otherwise, the result is <strong>a</strong>.</li>
+                        </ul>
+                    </li>
+                    <li>Repeat the above until the last term of the sequence is 0.</li>
+                </ul>
+                <h4>Step 3.2: Obtaining the fractions</h4>
+                <p>Create a sequence S2 as follows:</p>
+                <ul>
+                   <li>Convert n to base-b, where b is the number of terms of S.</li>
+                   <li>If the number of digits is odd, prepend a 0 at the front.</li>
+                   <li>Add 1 to all the digits.</li>
+                   <li>
+                       Set k = 1, and repeat the following:
+                       <ul>
+                           <li>Set the kth term of S2 equal to the [kth digit of the number]th term of S.</li>
+                           <li>If k is equal to the number of digits of the number, stop. Otherwise add 1 to k.</li>
+                       </ul>
+                    </li>
+                </ul>
+                <p>
+                    Then, group the terms of S2 in pairs ([1st number, 2nd number], [3rd number 4th number], etc.).<br>
+                    Make a fraction out of each pair, where the lower number is the top part and the higher number is the bottom part.<br>
+                    If your fraction is 0/0, replace it with 1 / 2.<br>
+                    This set of fractions will be referred to as <strong>F</strong>.
+                </p>
+                <h4>Step 3.3: Making the truth table</h4>
+                <p>
+                    Request 2^[Number of terms in F] from B_{f}. This string will be the truth table for the upcoming steps.<br>
+                    Each bit will be the output of some binary configuration of 0s and 1s which length is the number of terms in F.<br>
+                    To determine which configuration outputs which bit, take all the possible binary configurations, order them from smallest to largest, then join them to each bit of the truth table. 
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 7</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <p>
+                    Example:<br>
+                    Say the number of terms in F is 3, and the truth table is 11001011.<br>
+                    Then we’ll have:
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Configuration</th><td>000</td><td>001</td><td>010</td><td>011</td><td>100</td><td>101</td><td>110</td><td>111</td>
+                        </tr>
+                        <tr>
+                            <th>Output</th><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>Step 3.4: Applying the quantum logic</h4>
+                <p>
+                    Let X1, X2, ….. Xk = 1, where k is the number of binary configurations that outputs a 1, and set n = 1.<br>
+                    For each of the binary configurations that outputs 1 in the truth table, do the following:
+                </p>
+                <ul>
+                    <li>Set k = 1. </li>
+                    <li>If the kth digit of the binary configuration is a 0, multiply Xn by (1 - [kth term of F]).</li>
+                    <li>Otherwise multiply Xn by [kth term of F].</li>
+                    <li>If k = number of terms in F, stop. Otherwise add 1 to k and repeat the second step above.</li>
+                </ul>
+                <p>
+                    After stopping, go to the next binary configuration and add 1 to n. Repeat until there are no binary configurations left that outputs a 1.<br>
+                    Set f = X1 + X2 + X3 + … + Xk. Keep f as a fraction at all times.
+                </p>
+                <p>
+                    Example:<br>
+                    We will be using the truth table from the last example shown, and F = {3 / 4, 10 / 11, 3 / 7}.<br>
+                    Then k = 5. Therefore we should have:<br>
+                    X1 = (1 - 3 / 4) * (1 - 10 / 11)  * (1 - 3 / 7) = 1/77 (for configuration 000)<br>
+                    X2 = (1 - 3 / 4) * (1 - 10 / 11) * (3 / 7) = 3/308 (for configuration 001)<br>
+                    X3 = (3 / 4) * (1 - 10 / 11)  * (1 - 3 / 7) = 3/77 (for configuration 100)<br>
+                    X4 = (3 / 4) * (10 / 11) * (1 - 3 / 7) = 30/77 (for configuration 110)<br>
+                    X5 = (3 / 4) * (10 / 11) * (3 / 7) = 45/154 (for configuration 111)<br>
+                    Thus f = 1/77 + 3/308 + 3/77 + 30/77 + 45/154 = 229/308.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 7</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 4</h3>
+                <h4>Step 4.1: Obtaining the submission sequence</h4>
+                <p>Create a sequence S3 for submission.</p>
+                <ul>
+                    <li><strong>If <i>f</i> = 1/1, skip all the steps below, add 1 to S3, and continue to Step 4.2</strong></li>
+                    <li>Otherwise, turn <i>f</i> into a mixed fraction (into form <strong>a b</strong>/<strong>c</strong>). [If the denominator of <i>f</i> > the numerator of <i>f</i>, then <strong>a = 0</strong>.]</li>
+                    <li>Add this <strong>a</strong> to S3, subtract <strong>a</strong> from <i>f</i>, then swap the numerator and denominator of <i>f</i> and repeat.</li>
+                    <li>Stop if at any point <strong>b</strong> = 0.</li>
+                </ul>
+                <h4>Step 4.2: Submitting the answer</h4>
+                <p>
+                    To submit S3, convert each term into binary. Treat the left symbol as 0 and right symbol as 1, then input each term from most to least significant, with the middle symbol as breaks.<br>
+                    Press the middle symbol twice to submit the input sequence.
+                </p>
+                <p>
+                    Example:<br>
+                    S3 = {14, 5, 2, 1}<br>
+                    Converted into binary = {1110, 101, 10, 1}<br>
+                    Input: RRRL M RLR M RL M R MM<br>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 5 of 7</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+                <h2 class="centered">List of Prime Numbers from 1 to 3000</h2>
+                <p class="flavour-text centered">You may need it.</p>
+                <p>2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009, 1013, 1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451, 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511, 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583, 1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657, 1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789, 1801, 1811, 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999, 2003, 2011, 2017, 2027, 2029, 2039, 2053, 2063, 2069, 2081, 2083, 2087, 2089, 2099, 2111, 2113, 2129, 2131, 2137, 2141, 2143, 2153, 2161, 2179, 2203, 2207, 2213, 2221, 2237, 2239, 2243, 2251, 2267, 2269, 2273, 2281, 2287, 2293, 2297, 2309, 2311, 2333, 2339, 2341, 2347, 2351, 2357, 2371, 2377, 2381, 2383, 2389, 2393, 2399, 2411, 2417, 2423, 2437, 2441, 2447, 2459, 2467, 2473, 2477, 2503, 2521, 2531, 2539, 2543, 2549, 2551, 2557, 2579, 2591, 2593, 2609, 2617, 2621, 2633, 2647, 2657, 2659, 2663, 2671, 2677, 2683, 2687, 2689, 2693, 2699, 2707, 2711, 2713, 2719, 2729, 2731, 2741, 2749, 2753, 2767, 2777, 2789, 2791, 2797, 2801, 2803, 2819, 2833, 2837, 2843, 2851, 2857, 2861, 2879, 2887, 2897, 2903, 2909, 2917, 2927, 2939, 2953, 2957, 2963, 2969, 2971, 2999</p>
+            </div>
+            <div class="page-footer relative-footer">Page 6 of 7</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Decay</span>
+            </div>
+            <div class="page-content">
+            <p>
+                Common numbers while constructing the tree:<br>
+                - 0, 4<br>
+                - - 2, 3*
+            </p>
+            <p>
+                - 0, 6<br>
+                - - 2, 4<br>
+                - - - 2, 3*<br>
+                - - 3, 3*
+            </p>
+            <p>
+                - 0, 8<br>
+                - - 2, 5*
+            </p>
+            <p>
+                - 0, 9<br>
+                - - 3, 4<br>
+                - - - 2, 3*
+            </p>
+            <p>
+                - 0, 10<br>
+                - - 2, 6<br>
+                - - - 2, 4<br>
+                - - - - 2, 3*<br>
+                - - - 3, 3*<br>
+                - - 5, 3*
+            </p>
+            <p>
+                - 0, 12<br>
+                - - 2, 7*<br>
+                - - 3, 5*
+            </p>
+            <p>
+                - 0, 14<br>
+                - - 2, 8<br>
+                - - - 2, 5*<br>
+                - - 7, 3*
+            </p>
+            <p>
+                - 0, 15<br>
+                - - 3, 6<br>
+                - - - 2, 4<br>
+                - - - - 2, 3*<br>
+                - - - 3, 3*<br>
+                - - 5, 4<br>
+                - - - 2, 3*
+            </p>
+            <p>
+            </div>
+            <div class="page-footer relative-footer">Page 7 of 7</div>
+        </div>
+    </div>
+</body>
+</html>
