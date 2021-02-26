@@ -116,7 +116,6 @@
                 }, () => Array.from({
                     length: h + 1
                 }, () => 0));
-                this.offset = [0,0];
                 this.setMode(options.initMode || "");
                 this.modes = options.modes || {};
                 this.iconpos = {};
@@ -212,31 +211,31 @@
             }
 
             toggleVert(x, y) {
-                if(!this.vert[this.offset[0] + x]) {
-                    this.vert[this.offset[0] + x] = [];
+                if(!this.vert[x]) {
+                    this.vert[x] = [];
                 }
-                if(!this.vert[this.offset[0] + x][this.offset[1] + y]) {
-                    this.vert[this.offset[0] + x][this.offset[1] + y] = 1;
+                if(!this.vert[x][y]) {
+                    this.vert[x][y] = 1;
                     this.draw();
                     if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
                     return;
                 }
-                this.vert[this.offset[0] + x][this.offset[1] + y] = 1 - this.vert[this.offset[0] + x][this.offset[1] +y];
+                this.vert[x][y] = 1 - this.vert[x][y];
                 this.draw();
                 if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
             }
 
             toggleHoriz(x, y) {
-                if(!this.horiz[this.offset[0] + x]) {
-                    this.horiz[this.offset[0] + x] = [];
+                if(!this.horiz[x]) {
+                    this.horiz[x] = [];
                 }
-                if(!this.horiz[this.offset[0] + x][this.offset[1] + y]) {
-                    this.horiz[this.offset[0] + x][this.offset[1] + y] = 1;
+                if(!this.horiz[x][y]) {
+                    this.horiz[x][y] = 1;
                     if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
                     this.draw();
                     return;
                 }
-                this.horiz[this.offset[0] + x][this.offset[1] + y] = 1 - this.horiz[this.offset[0] + x][this.offset[1] +y];
+                this.horiz[x][y] = 1 - this.horiz[x][y];
                 this.draw();
                 if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
             }
@@ -246,7 +245,7 @@
                     for(let j = 0; j < this.h; j++) {
                         this.$vertline[i][j].setAttribute(
                             "class", 
-                            this.vert[this.offset[0] + i] && this.vert[this.offset[0] + i][this.offset[1] + j] ? "line solid" : "line"
+                            this.vert[i] && this.vert[i][j] ? "line solid" : "line"
                         );
                     }
                 }
@@ -255,7 +254,7 @@
                     for(let j = 0; j < this.h + 1; j++) {
                         this.$horizline[i][j].setAttribute(
                             "class", 
-                            this.horiz[this.offset[0] + i] && this.horiz[this.offset[0] + i][this.offset[1] + j] ? "line solid" : "line"
+                            this.horiz[i] && this.horiz[i][j] ? "line solid" : "line"
                         );
                     }
                 }
@@ -265,15 +264,60 @@
                         continue;
                     }
                     this.icons[mode].setAttribute("visibility", "visible");
-                    this.icons[mode].setAttribute("x", (this.iconpos[mode][0] - this.offset[0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
-                    this.icons[mode].setAttribute("y", (this.iconpos[mode][1] - this.offset[1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                    this.icons[mode].setAttribute("x", (this.iconpos[mode][0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                    this.icons[mode].setAttribute("y", (this.iconpos[mode][1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
                 }
                 if(this.options.onDraw) this.options.onDraw(); 
             }
 
             shift(dx, dy) {
-                this.offset[0] += dx;
-                this.offset[1] += dy;
+                if(
+                    (this.vert.some(v1 => v1.some(v2 => v2)) && (
+                        this.vert.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.vert.length - this.vert.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 > this.w ||
+                        Math.min.apply(null, this.vert.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.vert.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy >= this.h
+                    )) || 
+                    (this.horiz.some(v1 => v1.some(v2 => v2)) && (
+                        this.horiz.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.horiz.length - this.horiz.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 >= this.w ||
+                        Math.min.apply(null, this.horiz.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.horiz.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy > this.h
+                    )) || 
+                    Object.keys(this.modes)
+                        .filter(mode => this.iconpos[mode])
+                        .some(mode => (
+                            this.iconpos[mode][0] - dx < 0 || 
+                            this.iconpos[mode][0] - dx >= this.w ||
+                            this.iconpos[mode][1] - dy < 0 ||
+                            this.iconpos[mode][1] - dy >= this.h
+                        ))
+                    
+                ) return;
+                this.vert = this.vert.map(
+                    (v1, i) => (i + dx < 0 || i + dx > this.w) ? 
+                        Array.from({length: this.h}, () => 0) : 
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy >= this.h) ?
+                            0 :
+                            this.vert[i + dx][j + dy]
+                        )
+                );
+                this.horiz = this.horiz.map(
+                    (v1, i) => (i + dx < 0 || i + dx >= this.w) ? 
+                        Array.from({length: this.h + 1}, () => 0) : 
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy > this.h) ?
+                            0 :
+                            this.horiz[i + dx][j + dy]
+                        )
+                );
+                for(let mode in this.modes) {
+                    if(this.iconpos[mode]) {
+                        this.iconpos[mode][0] -= dx;
+                        this.iconpos[mode][1] -= dy;
+                    }
+                }
                 this.draw();
                 if(this.options.onShift)this.options.onShift(dx, dy);
             }
@@ -320,7 +364,6 @@
                 }, () => Array.from({
                     length: this.h + 1
                 }, () => 0));
-                this.offset = [0,0];
                 this.iconpos = {};
                 this.draw();
                 if(this.options.onReset) this.options.onReset();
