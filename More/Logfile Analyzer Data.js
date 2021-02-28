@@ -2311,7 +2311,7 @@ const parseData = [
             {
                 regex: /Maze:/,
                 handler: function (matches, module) {
-                    var maze = readMultiple(13).replace(/\[Echolocation #\d+\] /g, '');
+                    var maze = readMultiple(4).replace(/\[Echolocation #\d+\] /g, '');
                     module.push({ label: matches.input, obj: pre(maze) });
                     return true;
                 }
