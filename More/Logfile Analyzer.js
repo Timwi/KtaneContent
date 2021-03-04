@@ -1258,6 +1258,9 @@ function readDirectly(line, name, id) {
 //      module: module ID to find and switch to when done
 // }
 function parseLog(opt) {
+    // An error could occur while parsing the log so we should re-enable the message.
+    $(".javascript-error").show();
+
     var log = opt.log.replace(/\r/g, "");
 
     if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz|Mono path\[0\] = '/.exec(log))) {
@@ -1463,6 +1466,9 @@ function parseLog(opt) {
     if (bombSerial && bombModule)
         $(`#bomb-${bombSerial}>.modules>.module.module-${bombModule}`).click();
     toastr.success("Log read successfully!");
+
+    // Parsing finished successfully, so let's hide the error.
+    $(".javascript-error").hide();
 }
 
 $(function() {
@@ -1584,4 +1590,7 @@ $(function() {
             selectBomb(bombSerial);
     };
     window.onhashchange();
+
+    // If the JS has executed to here successfully then we don't need to display the error message.
+    $(".javascript-error").hide();
 });
