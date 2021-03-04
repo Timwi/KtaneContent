@@ -3177,6 +3177,9 @@ const parseData = [
                     module.push({ label: "Current images:", obj: table });
                     return true;
                 }
+            },
+            {
+                regex: /.+/
             }
         ]
     },
