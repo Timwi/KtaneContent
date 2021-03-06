@@ -3153,6 +3153,37 @@ const parseData = [
         ]
     },
     {
+        moduleID: "CaptchaModule",
+        loggingTag: "I'm Not a Robot",
+        matches: [
+            {
+                regex: /Selected module: (.+)/,
+                handler: function (matches, module) {
+                    module.selectedCaptcha = matches[1];
+                }
+            },
+            {
+                regex: /Current images: (\d+) \((.*)\), (\d+) \((.*)\), (\d+) \((.*)\), (\d+) \((.*)\), (\d+) \((.*)\), (\d+) \((.*)\)/,
+                handler: function (matches, module) {
+                    var table = $('<table>');
+                    var currentRow = null;
+                    for (var index = 0; index < 6; index++) {
+                        var i = index * 2 + 1;
+                        var correct = matches[i + 1].split(", ").includes(module.selectedCaptcha);
+                        if (!index || index == 3) currentRow = $('<tr>').appendTo(table);
+                        var cell = $('<td>').css({ padding: 0, fontSize: 0, position: "relative" }).append(`<img src="img/I'm Not a Robot/${matches[i]}.png" style="width: 130px;" />`).appendTo(currentRow);
+                        if (correct) cell.append(`<img src="img/I'm Not a Robot/CorrectCheck.png" style="width: 40px; position: absolute; top: 45px; left: 45px;" />`);
+                    }
+                    module.push({ label: "Current images:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "iceCreamModule",
         loggingTag: "Ice Cream",
         matches: [
