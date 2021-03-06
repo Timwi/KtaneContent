@@ -54,8 +54,14 @@
             text-align: center;
             dominant-baseline: central;
         }
+        .nodeWhiteText {
+            fill: white !important;
+        }
         .selectedVertex {
             fill: yellow !important;
+        }
+        .markedVertex {
+            fill: red !important;
         }
         .vertex {
             fill: white;
@@ -280,6 +286,10 @@
             let options = list.options;
             for (let i = 0; i < options.length; i++)
                 state.push(options[i].disabled);
+            // If no changes and not a new state
+            if (arrayEquals(state, states[currentStep]))
+                return;
+            // If rewrite
             if (currentStep < states.length){
                 for (let j = states.length - 1; j > currentStep; j--)
                     states.splice(j, 1);
@@ -290,6 +300,7 @@
                 else
                     states[currentStep] = state;
             }
+            // If new state
             else if (currentStep === 0 || !arrayEquals(states[currentStep - 1], state)){
                 states.push(state);
                 currentStep++;
@@ -305,6 +316,26 @@
             currentStep += forward ? 1 : -1;
             if (currentStep !== states.length)
                 updateState(list1, list2);
+
+            list1.selectedIndex = -1;
+            list2.selectedIndex = -1;
+
+            for (let i = 0; i < list1.length; i++){
+                list1.options[i].style.background = "white";
+                list2.options[i].style.background = "white";
+            }
+            if (currentStep !== 0 && currentStep !== states.length){
+                let changes = arrayXor(states[currentStep], states[currentStep - 1]);
+                changes.forEach((item, index) => {
+                            if (item){
+                                console.log(states[index])
+                                if (states[currentStep][index])
+                                    list2.options[index].style.background = "yellow";
+                                else
+                                    list1.options[index].style.background = "yellow";
+                            }
+                        });
+            }
         }
 
         function updateState(list1, list2){
@@ -328,6 +359,11 @@
             else {
                 let index = list2.selectedIndex;
                 swapOptionForRiverTable(list2, list1, index);
+            }
+
+            for (let i = 0; i < list1.length; i++){
+                list1.options[i].style.background = "white";
+                list2.options[i].style.background = "white";
             }
         }
 
@@ -400,6 +436,18 @@
         }
 
         function clearSelectedList(list1, list2){
+            allCircles.forEach(circle => {
+                           circle.classList.remove("selectedVertex");
+                           circle.classList.remove("markedVertex");
+                       });
+
+            allTexts.forEach(text => text.classList.remove("nodeWhiteText"))
+
+            for (let i = 0; i < markRed.length; i++)
+                markRed[i] = false;
+
+            currentIndexPressed = -1;
+
             if (list2.length === 0)
                 return;
 
@@ -417,7 +465,7 @@
         // #region Utility functions
 
         function arrayEquals(arr1, arr2){
-            if (arr1.length !== arr2.length)
+            if (arr1 == null || arr2 == null || arr1.length !== arr2.length)
                 return false;
 
             for (let i = 0; i < arr1.length; i++)
@@ -425,6 +473,17 @@
                     return false;
 
             return true;
+        }
+
+        function arrayXor(arr1, arr2){
+            if (arr1.length === 0 || arr2.length ===0 || arr1.length !== arr2.length)
+                return null;
+
+            let newArray = [];
+            for (let i = 0; i < arr1.length; i++)
+                newArray.push(arr1[i] !== arr2[i]);
+
+            return newArray;
         }
 
         // #endregion
@@ -450,7 +509,7 @@
                 list2.selectedIndex = -1;
             list1.selectedIndex = -1;
         }
-        
+
         function transferOption(list1, list2, forward){
             if ((forward && list2.length === allCircles.length) || (!forward && list2.length === 0))
                 return;
@@ -482,6 +541,7 @@
         var allCircles = [];
         var allTexts = [];
         var currentIndexPressed = -1;
+        var markRed = [false, false, false, false, false, false];
 
         var svg;
         var lineGroup;
@@ -505,7 +565,11 @@
                 circle.setAttribute("cy", "0");
                 circle.setAttribute("r", "8");
                 circleGroup.appendChild(circle);
-                circleGroup.setAttribute("onclick", `handlePress(${i})`);
+                circleGroup.addEventListener("contextmenu", function(e){
+                                                                e.preventDefault();
+                                                                handlePress(i, true);
+                                                            });
+                circleGroup.addEventListener("click", function(){handlePress(i, false)});
                 allCircles.push(circle);
                 allCirclesGroup.appendChild(circleGroup);
                 let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -523,6 +587,11 @@
             allLines = {};
             allCircles = [];
             allTexts = [];
+            markRed = [];
+
+            for (let i = 0; i < verticesCount; i++)
+                markRed.push(false);
+
             currentIndexPressed = -1;
             createEmptyGraph(verticesCount);
             while (list2.length > verticesCount){
@@ -538,35 +607,60 @@
             Object.values(allLines).forEach(edge => edge.classList.add("notVisible"));
         }
 
-        function handlePress(pressIndex){
-            if (currentIndexPressed === -1){
-                allCircles[pressIndex].classList.add("selectedVertex");
-                currentIndexPressed = pressIndex;
-            }
-            else if (currentIndexPressed === pressIndex){
-                allCircles[pressIndex].classList.remove("selectedVertex");
-                currentIndexPressed = -1;
+        function handlePress(pressIndex, isRight){
+            if (isRight){
+                markRed[pressIndex] = !markRed[pressIndex];
+                allCircles[pressIndex].classList.remove("markedVertex");
+                allTexts[pressIndex].classList.remove("nodeWhiteText");
+                if (markRed[pressIndex] && pressIndex !== currentIndexPressed){
+                    allCircles[pressIndex].classList.add("markedVertex");
+                    allTexts[pressIndex].classList.add("nodeWhiteText");
+                }
             }
             else {
-                allCircles[currentIndexPressed].classList.remove("selectedVertex");
-                if (currentIndexPressed > pressIndex){
-                    let temp = pressIndex;
-                    pressIndex = currentIndexPressed;
-                    currentIndexPressed = temp;
+                allCircles[pressIndex].classList.remove("markedVertex");
+                allTexts[pressIndex].classList.remove("nodeWhiteText");
+                if (currentIndexPressed === -1){
+                    allCircles[pressIndex].classList.add("selectedVertex");
+                    currentIndexPressed = pressIndex;
                 }
-                if (Object.keys(allLines).some(arr => arr[0] == currentIndexPressed && arr[1] == pressIndex))
-                    allLines[`${currentIndexPressed}${pressIndex}`].classList.toggle("notVisible");
+                else if (currentIndexPressed === pressIndex){
+                    allCircles[pressIndex].classList.remove("selectedVertex");
+                    currentIndexPressed = -1;
+                    if (markRed[pressIndex]){
+                        allCircles[pressIndex].classList.add("markedVertex");
+                        allTexts[pressIndex].classList.add("nodeWhiteText");
+                    }
+                }
                 else {
-                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", `${52 - 43 * Math.sin(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
-                    line.setAttribute("y1", `${52 - 43 * Math.cos(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
-                    line.setAttribute("x2", `${52 - 43 * Math.sin(-2 * pressIndex * Math.PI / allCircles.length)}`);
-                    line.setAttribute("y2", `${52 - 43 * Math.cos(-2 * pressIndex * Math.PI / allCircles.length)}`);
-                    line.setAttribute("stroke", "black");
-                    lineGroup.appendChild(line);
-                    allLines[`${currentIndexPressed}${pressIndex}`] = line;
+                    allCircles[currentIndexPressed].classList.remove("selectedVertex");
+                    if (markRed[pressIndex]){
+                        allCircles[pressIndex].classList.add("markedVertex");
+                        allTexts[pressIndex].classList.add("nodeWhiteText");
+                    }
+                    if (markRed[currentIndexPressed]){
+                        allCircles[currentIndexPressed].classList.add("markedVertex");
+                        allTexts[currentIndexPressed].classList.add("nodeWhiteText");
+                    }
+                    if (currentIndexPressed > pressIndex){
+                        let temp = pressIndex;
+                        pressIndex = currentIndexPressed;
+                        currentIndexPressed = temp;
+                    }
+                    if (Object.keys(allLines).some(arr => arr[0] == currentIndexPressed && arr[1] == pressIndex))
+                        allLines[`${currentIndexPressed}${pressIndex}`].classList.toggle("notVisible");
+                    else {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", `${52 - 43 * Math.sin(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
+                        line.setAttribute("y1", `${52 - 43 * Math.cos(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
+                        line.setAttribute("x2", `${52 - 43 * Math.sin(-2 * pressIndex * Math.PI / allCircles.length)}`);
+                        line.setAttribute("y2", `${52 - 43 * Math.cos(-2 * pressIndex * Math.PI / allCircles.length)}`);
+                        line.setAttribute("stroke", "black");
+                        lineGroup.appendChild(line);
+                        allLines[`${currentIndexPressed}${pressIndex}`] = line;
+                    }
+                    currentIndexPressed = -1;
                 }
-                currentIndexPressed = -1;
             }
         }
         // #endregion
@@ -896,7 +990,7 @@
                             </select>
                         </div>
                         <div style="margin: 0em auto;">
-                            <button id="clearList" style="inline-block;">Clear</button>
+                            <button id="clearList">Clear</button>
                         </div>
                         <div>
                             <button id="moveUp" style="display: block; float: left;">&#8593;</button>
@@ -912,7 +1006,7 @@
                         <li>You can change the number of vertices by changing the number of creatures.</li>
                         <li>To add creature to the graph, select a creature from the left list box then press right arrow.</li>
                         <li>To remove creature from the graph, select a creature from the right list box then press left arrow.</li>
-                        <li>You can also press Clear button to remove all creatures from the graph.</li>
+                        <li>You can also press Clear button to remove all creatures from the graph. This also clear everything from the graph.</li>
                         <li>Creature at the top of the list will be placed at the top vertex of the graph, subsequent creatures go to next vertex in the clockwise direction.</li>
                         <li>You can change position of creature by selecting it and press up or down arrows.</li>
                         <li>Once you are satisfied with the list, press the copy button to copy the list to Start list box to do more works.</li>
@@ -925,9 +1019,11 @@
                 <div id="help2" class="helpMessage">
                     <ul>
                         <li>Upon clicking a vertex, it will turn yellow.</li>
-                        <li>Clicking on any other vertex will connect both vertex with a line. The first vertex will turn back to white.</li>
+                        <li>Clicking on any other vertex will connect both vertices with a line. The first vertex will turn back to white.</li>
                         <li>You can do the same thing as above to remove a drawn line.</li>
                         <li>Clicking on the same vertex once it turn yellow will make it white again, canceling the selection.</li>
+                        <li>You can mark certain vertex red by right click on it. It will stay yellow if it is already yellow, but the vertex will be marked internally.</li>
+                        <li>If you click on that vertex again while it is yellow, it will turn red instead of white.</li>
                         <li>You can click on Clear Connections button to remove all lines from the graph.</li>
                         <li>Changing the size of the graph will also clear every line from it.</li>
                     </ul>
@@ -971,8 +1067,9 @@
                         <li>Select a creature and click on left right arrows to simulate movement across the river.</li>
                         <li>Each step can be saved by clicking the Save State button. If you add a new state, the step counter will increase by 1.</li>
                         <li>There's no default state or state at step 0. You must save this manually.</li>
-                        <li>You can cycle between steps by pressing previous or next buttons.</li>
+                        <li>You can cycle between steps by pressing previous or next buttons. Last inputs made in each step will be marked in yellow.</li>
                         <li>You can rewrite any certain step by changing to the step you want and press Save State button after you modify it. Doing this will also delete all subsequent states.</li>
+                        <li>If there is no changes to the step you are modifying, clicking Save State button will do nothing.</li>
                         <li>Clicking Reset button will return it to the initial state and delete all states stored.</li>
                     </ul>
                 </div>
