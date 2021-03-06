@@ -1258,15 +1258,15 @@ function readDirectly(line, name, id) {
 //      module: module ID to find and switch to when done
 // }
 function parseLog(opt) {
-    // An error could occur while parsing the log so we should re-enable the message.
-    $(".javascript-error").show();
-
     var log = opt.log.replace(/\r/g, "");
 
     if (!(/^Initialize engine version: .+ .+|Desktop is \d+ x \d+ @ \d+ Hz|Mono path\[0\] = '/.exec(log))) {
         toastr.error("Invalid logfile.", "Reading Error");
         return false;
     }
+
+    // An error could occur while parsing the log so we should re-enable the message.
+    $(".javascript-error").show();
 
     bombgroup = null;
     lastBombGroup = null;
