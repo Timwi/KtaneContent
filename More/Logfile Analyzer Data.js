@@ -4811,6 +4811,23 @@ const parseData = [
         loggingTag: "PasswordComponent"
     },
     {
+        moduleID: "GSPathfinder",
+        loggingTag: "Pathfinder",
+        matches: [
+            {
+                regex: /The grid:/,
+                handler: function (matches, module) {
+                    var grid = readMultiple(4);
+                    module.push({ label: "The grid:", obj: $("<pre/>").text(grid) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "Painting",
         loggingTag: "Painting",
         matches: [
