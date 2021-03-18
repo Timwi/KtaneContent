@@ -2346,6 +2346,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "factoringMaze",
+        loggingTag: "Factoring Maze",
+        matches: [
+            {
+                regex: /The generated with its walls is as follows:/,
+                handler: function (matches, module) {
+                    module.push({ label: "The maze generated with its walls as follows:", obj: pre(readMultiple(9).replace(/\[Factoring Maze #\d+\] /g, "")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "fastMath",
         loggingTag: "Fast Math",
         matches: [
@@ -4817,8 +4833,7 @@ const parseData = [
             {
                 regex: /The grid:/,
                 handler: function (matches, module) {
-                    var grid = readMultiple(4);
-                    module.push({ label: "The grid:", obj: $("<pre/>").text(grid) });
+                    module.push({ label: "The grid:", obj: pre(readMultiple(4)) });
                     return true;
                 }
             },
