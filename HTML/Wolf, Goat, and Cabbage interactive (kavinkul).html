@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wolf, Goat, and Cabbage — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .row {
+            font-size: 11pt;
+        }
+        ul.noIndent {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+        .column {
+            float: left;
+            width: 16.6666666%;
+            overflow: hidden;
+        }
+        @media only screen and (max-width: 650px){
+            .column {
+                width: 33.3333333%;
+            }
+        }
+        @media only screen and (max-width: 345px){
+            .column {
+                width: 50%;
+            }
+        }
+        @media print {
+            a[href]:after {
+                content: none !important;
+            }
+        }
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .noTextHighlight {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .node {
+            fill: black;
+            font-size: 6px;
+            text-anchor: middle;
+            text-align: center;
+            dominant-baseline: central;
+        }
+        .nodeWhiteText {
+            fill: white !important;
+        }
+        .selectedVertex {
+            fill: yellow !important;
+        }
+        .markedVertex {
+            fill: red !important;
+        }
+        .vertex {
+            fill: white;
+            stroke: #000000;
+            stroke-width: 1;
+        }
+        .notVisible {
+            stroke: none !important;
+        }
+        .selectMenu {
+            width: 97%;
+        }
+        .noScroll {
+            overflow: hidden;
+        }
+        #graphSize {
+            width: 50px;
+        }
+        .arrows {
+            display: block;
+            margin: 1em auto;
+        }
+        #interactiveSVG {
+            text-align: center;
+        }
+        .helpMessage {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f1f1f1;
+        }
+        .flexContainer {
+            display: flex;
+            justify-content: center;
+            width: 90%;
+            margin: 0.25em auto; 
+        }
+        .generalUI {
+            flex: 1;
+            display: grid;
+            background-color: #808080;
+            color: white;
+            align-items: center;
+            padding: 0.5em;
+            row-gap: 0.5em;
+            text-align: center;
+        }
+        .animalListUI {
+            grid-template-columns: 43% 14% 43%;
+        }
+        .animalListUI {
+            grid-template-columns: 40% 20% 40%;
+        }
+        .leftCol {
+            grid-column: 1;
+        }
+        .middleCol {
+            grid-column: 2;
+        }
+        .rightCol {
+            grid-column: 3;
+        }
+    </style>
+    <script>
+        // #region onload
+
+        window.onload = (function(){
+
+            // Initialization
+            
+            createEmptyGraph(6);
+
+            // #region Help Messages onload
+
+            var helpButton1 = document.getElementById("helpButton1");
+            var helpButton2 = document.getElementById("helpButton2");
+            var helpButton3 = document.getElementById("helpButton3");
+
+            var helpMessage1 = document.getElementById("help1");
+            var helpMessage2 = document.getElementById("help2");
+            var helpMessage3 = document.getElementById("help3");
+
+            helpButton1.addEventListener("click", function() {hideHelpMessage(helpMessage1)});
+            helpButton2.addEventListener("click", function() {hideHelpMessage(helpMessage2)});
+            helpButton3.addEventListener("click", function() {hideHelpMessage(helpMessage3)});
+
+            // #endregion
+
+            // #region Table 1 onload
+
+            var firstListBox = document.getElementById("listBox1");
+            var secondListBox = document.getElementById("listBox2");
+            var moveUpButton = document.getElementById("moveUp");
+            var moveDownButton = document.getElementById("moveDown");
+            var transferRightButton = document.getElementById("transferRight");
+            var transferLeftButton = document.getElementById("transferLeft");
+
+            moveUpButton.addEventListener("click", function() {cycleSelectedMenu(secondListBox, true)});
+            moveDownButton.addEventListener("click", function() {cycleSelectedMenu(secondListBox, false)});
+            transferRightButton.addEventListener("click", function() {transferOption(firstListBox, secondListBox, true)});
+            transferLeftButton.addEventListener("click", function() {transferOption(firstListBox, secondListBox, false)});
+
+            // #endregion
+
+            // #region Table 2 onload
+
+            var thirdListBox = document.getElementById("listBox3");
+            var fourthListBox = document.getElementById("listBox4");
+            var rowButton = document.getElementById("row");
+            var prevButton = document.getElementById("prev");
+            var nextButton = document.getElementById("next");
+            var saveButton = document.getElementById("save");
+            var stepCounter = document.getElementById("stepCounter");
+            var resetButton = document.getElementById("reset");
+
+            thirdListBox.addEventListener("change", function() {fourthListBox.selectedIndex = -1;});
+            fourthListBox.addEventListener("change", function() {thirdListBox.selectedIndex = -1});
+            rowButton.addEventListener("click", function() {
+                                                    moveAcrossRiver(thirdListBox, fourthListBox);
+                                                    updateStepCounter(stepCounter);
+                                                });
+            prevButton.addEventListener("click", function() {
+                                                     cycleState(thirdListBox, fourthListBox, false);
+                                                     updateStepCounter(stepCounter);
+                                                 });
+            nextButton.addEventListener("click", function() {
+                                                     cycleState(thirdListBox, fourthListBox, true);
+                                                     updateStepCounter(stepCounter);
+                                                 });
+            saveButton.addEventListener("click", function() {
+                                                     saveState(thirdListBox);
+                                                     updateStepCounter(stepCounter);
+                                                 });
+
+            resetButton.addEventListener("click", function() {
+                                                     resetStates(thirdListBox, fourthListBox);
+                                                     updateStepCounter(stepCounter);
+                                                 });
+            // #endregion
+
+            // #region Table 1 2 shared
+
+            var copyButton = document.getElementById("copy");
+
+            copyButton.addEventListener("click", function() {
+                                                     copyToRiverTablesAndClear(secondListBox, thirdListBox, fourthListBox);
+                                                     updateStepCounter(stepCounter);
+                                                 });
+
+            // #endregion
+
+            // #region Graph
+
+            var graphSizeMenu = document.getElementById("graphSize");
+            var clearButton = document.getElementById("clear");
+
+            graphSizeMenu.addEventListener("change", function() {createNewGraph(parseInt(graphSizeMenu.options[graphSizeMenu.selectedIndex].value), firstListBox, secondListBox)});
+            clearButton.addEventListener("click", function() {clearEdge()});
+
+            // #endregion
+
+            // #region Table 1 Graph shared
+
+            var clearListButton = document.getElementById("clearList");
+
+            clearListButton.addEventListener("click", function() {
+                                                          clearSelectedList(firstListBox, secondListBox);
+                                                          clearEdge();
+                                                      });
+
+            // #region Set columns
+
+            if (screen.availWidth <= 650 && screen.availWidth > 345) {
+                var secondCol = document.getElementById("SecondCol");
+                var fourthCol = document.getElementById("FourthCol");
+                var sixthCol = document.getElementById("SixthCol");
+
+                document.getElementById("FirstCol").innerHTML += secondCol.innerHTML;
+                secondCol.remove();
+                document.getElementById("ThirdCol").innerHTML += fourthCol.innerHTML;
+                fourthCol.remove();
+                document.getElementById("FifthCol").innerHTML += sixthCol.innerHTML;
+                sixthCol.remove();
+            }
+            else if (screen.availWidth <= 345){
+                var secondCol = document.getElementById("SecondCol");
+                var thirdCol = document.getElementById("ThirdCol");
+                var fifthCol = document.getElementById("FifthCol");
+                var sixthCol = document.getElementById("SixthCol");
+
+                document.getElementById("FirstCol").innerHTML += secondCol.innerHTML + thirdCol.innerHTML;
+                secondCol.remove();
+                thirdCol.remove();
+                document.getElementById("FourthCol").innerHTML += fifthCol.innerHTML + sixthCol.innerHTML;
+                fifthCol.remove();
+                sixthCol.remove();
+            }}
+
+            // #endregion
+        )
+
+        // #endregion
+
+        // #region Help Messages
+
+        function hideHelpMessage(messageDiv){
+            if (messageDiv.style.maxHeight)
+                messageDiv.style.maxHeight = null;
+            else
+                messageDiv.style.maxHeight = messageDiv.scrollHeight + "px";
+        }
+
+        // #endregion
+
+        // #region Second table
+
+        var states = [];
+        var currentStep = 0;
+
+        function saveState(list){
+            let state = [];
+            let options = list.options;
+            for (let i = 0; i < options.length; i++)
+                state.push(options[i].disabled);
+            // If no changes and not a new state
+            if (arrayEquals(state, states[currentStep]))
+                return;
+            // If rewrite
+            if (currentStep < states.length){
+                for (let j = states.length - 1; j > currentStep; j--)
+                    states.splice(j, 1);
+                if (currentStep !== 0 && arrayEquals(states[currentStep - 1], state)){
+                    states.splice(currentStep, 1);
+                    currentStep--;
+                }
+                else
+                    states[currentStep] = state;
+            }
+            // If new state
+            else if (currentStep === 0 || !arrayEquals(states[currentStep - 1], state)){
+                states.push(state);
+                currentStep++;
+            }
+            if (currentStep == states.length - 1)
+                currentStep++;
+        }
+
+        function cycleState(list1, list2, forward){
+            if (states.length === 0 || (!forward && currentStep === 0) || (forward && currentStep > states.length - 1))
+                return;
+
+            currentStep += forward ? 1 : -1;
+            if (currentStep !== states.length)
+                updateState(list1, list2);
+
+            list1.selectedIndex = -1;
+            list2.selectedIndex = -1;
+
+            for (let i = 0; i < list1.length; i++){
+                list1.options[i].style.background = "white";
+                list2.options[i].style.background = "white";
+            }
+            if (currentStep !== 0 && currentStep !== states.length){
+                let changes = arrayXor(states[currentStep], states[currentStep - 1]);
+                changes.forEach((item, index) => {
+                            if (item){
+                                console.log(states[index])
+                                if (states[currentStep][index])
+                                    list2.options[index].style.background = "yellow";
+                                else
+                                    list1.options[index].style.background = "yellow";
+                            }
+                        });
+            }
+        }
+
+        function updateState(list1, list2){
+            for (let i = 0; i < states[currentStep].length; i++)
+                if (states[currentStep][i] !== list1.options[i].disabled){
+                    if (states[currentStep][i])
+                        swapOptionForRiverTable(list1, list2, i, false);
+                    else 
+                        swapOptionForRiverTable(list2, list1, i, false);
+                }
+        }
+
+        function moveAcrossRiver(list1, list2){
+            if (list1.selectedIndex === -1 && list2.selectedIndex === -1)
+                return;
+
+            if (list1.selectedIndex !== -1){
+                let index = list1.selectedIndex;
+                swapOptionForRiverTable(list1, list2, index);
+            }
+            else {
+                let index = list2.selectedIndex;
+                swapOptionForRiverTable(list2, list1, index);
+            }
+
+            for (let i = 0; i < list1.length; i++){
+                list1.options[i].style.background = "white";
+                list2.options[i].style.background = "white";
+            }
+        }
+
+        function updateStepCounter(counter){
+            counter.textContent = "Step: " + currentStep;
+        }
+
+        function deleteStates(){
+            currentStep = 0;
+            states = [];
+        }
+
+        function resetStates(list1, list2){
+            deleteStates();
+            for (let i = 0; i < list1.options.length; i++)
+                if (list1.options[i].disabled)
+                    swapOptionForRiverTable(list2, list1, i, false);
+        }
+
+        // #endregion
+
+        // #region First table
+
+        function sortOptionsAfterInsertion(list){
+            if (list.length < 2)
+                return;
+
+            let currentIndex = list.length - 1;
+            while (currentIndex > 0 && (list.options[currentIndex].value < list.options[currentIndex - 1].value)){
+                swapOptions(list, currentIndex, currentIndex - 1);
+                currentIndex--;
+            }
+        }
+
+        function updateSVGText(list){
+            allTexts.forEach(textObj => textObj.textContent = "");
+
+            let min = Math.min(list.length, allTexts.length);
+
+            for (let i = 0; i < min; i++)
+                allTexts[i].textContent = list.options[i].value.substring(0, 3);
+        }
+
+        function cycleSelectedMenu(selectMenu, isUp){
+            let firstIndex = selectMenu.selectedIndex;
+            if (selectMenu.length === 0 || firstIndex === -1)
+                return;
+            if ((isUp && firstIndex === 0) || (!isUp && selectMenu.length - 1 === firstIndex))
+                return
+            let secondIndex = firstIndex + (isUp ? -1 : 1);
+            let temp = selectMenu.options[firstIndex];
+            swapOptions(selectMenu, firstIndex, secondIndex);
+            updateSVGText(selectMenu);
+        }
+
+        function copyToRiverTablesAndClear(list1, list2, list3){
+            deleteStates();
+            if (list1.length === 0)
+                return;
+            for (let i = list2.options.length - 1; i >= 0; i--){
+                list2.remove(i);
+                list3.remove(i);
+            }
+            for (let i = 0; i < list1.options.length; i++){
+                let optionToCopy = list1.options[i];
+                list2.add(new Option(optionToCopy.text, optionToCopy.value));
+                list3.add(new Option("", ""));
+                list3.options[i].disabled = true;
+            }
+        }
+
+        function clearSelectedList(list1, list2){
+            allCircles.forEach(circle => {
+                           circle.classList.remove("selectedVertex");
+                           circle.classList.remove("markedVertex");
+                       });
+
+            allTexts.forEach(text => text.classList.remove("nodeWhiteText"))
+
+            for (let i = 0; i < markRed.length; i++)
+                markRed[i] = false;
+
+            currentIndexPressed = -1;
+
+            if (list2.length === 0)
+                return;
+
+            for (let i = list2.length - 1; i >= 0; i--){
+                list2.selectedIndex = i
+                transferOption(list1, list2, false);
+            }
+
+            list1.selectedIndex = -1;
+            list2.selectedIndex = -1;
+        }
+
+        // #endregion
+
+        // #region Utility functions
+
+        function arrayEquals(arr1, arr2){
+            if (arr1 == null || arr2 == null || arr1.length !== arr2.length)
+                return false;
+
+            for (let i = 0; i < arr1.length; i++)
+                if (arr1[i] !== arr2[i])
+                    return false;
+
+            return true;
+        }
+
+        function arrayXor(arr1, arr2){
+            if (arr1.length === 0 || arr2.length ===0 || arr1.length !== arr2.length)
+                return null;
+
+            let newArray = [];
+            for (let i = 0; i < arr1.length; i++)
+                newArray.push(arr1[i] !== arr2[i]);
+
+            return newArray;
+        }
+
+        // #endregion
+
+        // #region Swap functions
+
+        function swapOptions(list, index1, index2){
+            if (list.length === 0 || index1 === index2 || index1 < 0 || index2 < 0 || index1 >= list.length || index2 >= list.length)
+                return;
+
+            let temp = list.options[index1];
+            list.options[index1] = new Option(list.options[index2].text, list.options[index2].value);
+            list.options[index2] = temp;
+        }
+
+        function swapOptionForRiverTable(list1, list2, index, swapSelectedIndex = true){
+            let temp = list2.options[index];
+            list2.options[index] = new Option(list1.options[index].text, list1.options[index].value);
+            list1.options[index] = temp;
+            if (swapSelectedIndex)
+                list2.selectedIndex = index;
+            else
+                list2.selectedIndex = -1;
+            list1.selectedIndex = -1;
+        }
+
+        function transferOption(list1, list2, forward){
+            if ((forward && list2.length === allCircles.length) || (!forward && list2.length === 0))
+                return;
+
+            if (forward){
+                let index = list1.selectedIndex;
+                if (index === -1)
+                    return;
+
+                list2.add(list1.options[index]);
+            }
+            else {
+                let index = list2.selectedIndex;
+                if (index === -1)
+                    return;
+
+                list1.add(list2.options[index]);
+
+                sortOptionsAfterInsertion(list1);
+            }
+            updateSVGText(list2);
+        }
+
+        // #endregion
+
+        // #region SVG functions
+
+        var allLines = {};
+        var allCircles = [];
+        var allTexts = [];
+        var currentIndexPressed = -1;
+        var markRed = [false, false, false, false, false, false];
+
+        var svg;
+        var lineGroup;
+        var div;
+        function createEmptyGraph(verticesNumber){
+            svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", "0 0 104 104");
+            svg.setAttribute("fill", "none");
+            svg.setAttribute("width", "50%");
+            lineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            svg.appendChild(lineGroup);
+            allCirclesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            allCirclesGroup.setAttribute("transform", "translate(52, 52)");
+            svg.appendChild(allCirclesGroup);
+            for (let i = 0; i < verticesNumber; i++){
+                let circleGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                circleGroup.setAttribute("transform", `translate(0,-43) rotate(${i * 360 / verticesNumber}, 0, 43) rotate(-${i * 360 / verticesNumber}, 0, 0)`);
+                let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.classList.add("vertex");
+                circle.setAttribute("cx", "0");
+                circle.setAttribute("cy", "0");
+                circle.setAttribute("r", "8");
+                circleGroup.appendChild(circle);
+                circleGroup.addEventListener("contextmenu", function(e){
+                                                                e.preventDefault();
+                                                                handlePress(i, true);
+                                                            });
+                circleGroup.addEventListener("click", function(){handlePress(i, false)});
+                allCircles.push(circle);
+                allCirclesGroup.appendChild(circleGroup);
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.classList.add("node");
+                text.classList.add("noTextHighlight");
+                allTexts.push(text);
+                circleGroup.append(text);
+            }
+            div = document.getElementById("interactiveSVG");
+            div.appendChild(svg);
+        }
+
+        function createNewGraph(verticesCount, list1, list2){
+            svg.remove();
+            allLines = {};
+            allCircles = [];
+            allTexts = [];
+            markRed = [];
+
+            for (let i = 0; i < verticesCount; i++)
+                markRed.push(false);
+
+            currentIndexPressed = -1;
+            createEmptyGraph(verticesCount);
+            while (list2.length > verticesCount){
+                list2.selectedIndex = verticesCount;
+                transferOption(list1, list2, false);
+            }
+            updateSVGText(list2);
+            list1.selectedIndex = -1;
+            list2.selectedIndex = -1;
+        }
+
+        function clearEdge(){
+            Object.values(allLines).forEach(edge => edge.classList.add("notVisible"));
+        }
+
+        function handlePress(pressIndex, isRight){
+            if (isRight){
+                markRed[pressIndex] = !markRed[pressIndex];
+                allCircles[pressIndex].classList.remove("markedVertex");
+                allTexts[pressIndex].classList.remove("nodeWhiteText");
+                if (markRed[pressIndex] && pressIndex !== currentIndexPressed){
+                    allCircles[pressIndex].classList.add("markedVertex");
+                    allTexts[pressIndex].classList.add("nodeWhiteText");
+                }
+            }
+            else {
+                allCircles[pressIndex].classList.remove("markedVertex");
+                allTexts[pressIndex].classList.remove("nodeWhiteText");
+                if (currentIndexPressed === -1){
+                    allCircles[pressIndex].classList.add("selectedVertex");
+                    currentIndexPressed = pressIndex;
+                }
+                else if (currentIndexPressed === pressIndex){
+                    allCircles[pressIndex].classList.remove("selectedVertex");
+                    currentIndexPressed = -1;
+                    if (markRed[pressIndex]){
+                        allCircles[pressIndex].classList.add("markedVertex");
+                        allTexts[pressIndex].classList.add("nodeWhiteText");
+                    }
+                }
+                else {
+                    allCircles[currentIndexPressed].classList.remove("selectedVertex");
+                    if (markRed[pressIndex]){
+                        allCircles[pressIndex].classList.add("markedVertex");
+                        allTexts[pressIndex].classList.add("nodeWhiteText");
+                    }
+                    if (markRed[currentIndexPressed]){
+                        allCircles[currentIndexPressed].classList.add("markedVertex");
+                        allTexts[currentIndexPressed].classList.add("nodeWhiteText");
+                    }
+                    if (currentIndexPressed > pressIndex){
+                        let temp = pressIndex;
+                        pressIndex = currentIndexPressed;
+                        currentIndexPressed = temp;
+                    }
+                    if (Object.keys(allLines).some(arr => arr[0] == currentIndexPressed && arr[1] == pressIndex))
+                        allLines[`${currentIndexPressed}${pressIndex}`].classList.toggle("notVisible");
+                    else {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", `${52 - 43 * Math.sin(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
+                        line.setAttribute("y1", `${52 - 43 * Math.cos(-2 * currentIndexPressed * Math.PI / allCircles.length)}`);
+                        line.setAttribute("x2", `${52 - 43 * Math.sin(-2 * pressIndex * Math.PI / allCircles.length)}`);
+                        line.setAttribute("y2", `${52 - 43 * Math.cos(-2 * pressIndex * Math.PI / allCircles.length)}`);
+                        line.setAttribute("stroke", "black");
+                        lineGroup.appendChild(line);
+                        allLines[`${currentIndexPressed}${pressIndex}`] = line;
+                    }
+                    currentIndexPressed = -1;
+                }
+            }
+        }
+        // #endregion
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wolf, Goat, and Cabbage</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wolf, Goat, and Cabbage.svg" class="diagram">
+                <h2>On the Subject of Wolf, Goat, and Cabbage.</h2>
+                <p class="flavour-text">Do you remember the old riddle Wolf, Goat, and Cabbage from Alcuin of York? If not, you now have a chance to solve it! Well, if only this is not attached to the explosive device.</p>
+                <p class="appendix-reference" id="appendix-reference">See Appendix W for creatures identification.</p>
+                <ul>
+                    <li>Pictures of 6 to 9 creatures will be shown on the screen one at a time.</li>
+                    <li>Buttons to the left and right of this screen can be used to cycle for each creature.</li>
+                    <li>Button labeled aboard will move the current creature on the screen to the virtual boat or leave the boat when pressed.</li>
+                    <li>Button labeled row will move you and everything on the boat to the opposite side of the virtual river when pressed.</li>
+                    <li>Keep track of the current side of each creature and yourself as this will not be shown on the module.</li>
+                    <li>The red button will reset the module when pressed but will not regenerate the module.</li>
+                    <li>The light will be on when the current creature is on the boat and off otherwise.</li>
+                    <li>Each creature has conflicts with another and must not be left together unsupervised. These conflicts are listed on the second page of the manual.</li>
+                    <li>The boat will have <strong>exactly</strong> the minimum spaces required to prevent such conflict to occur.</li>
+                    <li>
+                        The module will strike if one of the following occurs:
+                        <ul>
+                            <li>Trying to move a creature on to the boat when the boat is full.</li>
+                            <li>Trying to move a creature on to the boat when it is on the opposite shore from the boat.</li>
+                            <li>Trying to row while there are conflicts among creatures on land.</li>
+                        </ul>
+                    </li>
+                    <li>Moving every creature across the river will solve the module.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wolf, Goat, and Cabbage</span>
+            </div>
+            <div class="page-content">
+                <h2>Conflicts List</h2>
+                <p class="flavour-text">Why are you expecting this to be accurate?</p>
+                <ul>
+                    <li>Underneath each creature's name are creatures that have conflict with it.</li>
+                    <li>Use this information to determine a collective group that can be left together on the land.</li>
+                </ul>
+                <div class="row">
+                    <div class="column" id="FirstCol">
+                        <h3>Cat</h3>
+                        <ul class="noIndent">
+                            <li>Fish</li>
+                            <li>Mouse</li>
+                            <li>Goose</li>
+                            <li>Bear</li>
+                            <li>Wolf</li>
+                        </ul>
+                        <h3>Duck</h3>
+                        <ul class="noIndent">
+                            <li>Grass</li>
+                            <li>Cabbage</li>
+                            <li>Goose</li>
+                            <li>Rice</li>
+                            <li>Berry</li>
+                            <li>Seeds</li>
+                            <li>Corn</li>
+                        </ul>
+                        <h3>Bear</h3>
+                        <ul class="noIndent">
+                            <li>Fish</li>
+                            <li>Goose</li>
+                            <li>Wolf</li>
+                            <li>Dog</li>
+                            <li>Cat</li>
+                            <li>Horse</li>
+                        </ul>
+                        <h3>Carrot</h3>
+                        <ul class="noIndent">
+                            <li>Rabbit</li>
+                            <li>Horse</li>
+                            <li>Earthworm</li>
+                            <li>Goat</li>
+                        </ul>
+                    </div>
+                    <div class="column" id="SecondCol">
+                        <h3>Wolf</h3>
+                        <ul class="noIndent">
+                            <li>Fox</li>
+                            <li>Goose</li>
+                            <li>Bear</li>
+                            <li>Cat</li>
+                            <li>Goat</li>
+                            <li>Chicken</li>
+                            <li>Dog</li>
+                        </ul>
+                        <h3>Goat</h3>
+                        <ul class="noIndent">
+                            <li>Grass</li>
+                            <li>Cabbage</li>
+                            <li>Goose</li>
+                            <li>Wolf</li>
+                            <li>Corn</li>
+                            <li>Carrot</li>
+                        </ul>
+                        <h3>Cabbage</h3>
+                        <ul class="noIndent">
+                            <li>Goat</li>
+                            <li>Duck</li>
+                            <li>Goose</li>
+                            <li>Mouse</li>
+                            <li>Kiwi</li>
+                            <li>Earthworm</li>
+                            <li>Rabbit</li>
+                        </ul>
+                        <h3>Horse</h3>
+                        <ul class="noIndent">
+                            <li>Grass</li>
+                            <li>Carrot</li>
+                            <li>Goose</li>
+                            <li>Bear</li>
+                        </ul>
+                    </div>
+                    <div class="column" id="ThirdCol">
+                        <h3>Rabbit</h3>
+                        <ul class="noIndent">
+                            <li>Grass</li>
+                            <li>Fox</li>
+                            <li>Carrot</li>
+                            <li>Goose</li>
+                            <li>Cabbage</li>
+                            <li>Dog</li>
+                        </ul>
+                        <h3>Fox</h3>
+                        <ul class="noIndent">
+                            <li>Wolf</li>
+                            <li>Rabbit</li>
+                            <li>Chicken</li>
+                            <li>Berry</li>
+                            <li>Fish</li>
+                            <li>Mouse</li>
+                            <li>Goose</li>
+                        </ul>
+                        <h3>Chicken</h3>
+                        <ul class="noIndent">
+                            <li>Fox</li>
+                            <li>Rice</li>
+                            <li>Goose</li>
+                            <li>Seeds</li>
+                            <li>Earthworm</li>
+                            <li>Corn</li>
+                            <li>Wolf</li>
+                            <li>Dog</li>
+                        </ul>
+                    </div>
+                    <div class="column" id="FourthCol">
+                        <h3>Berry</h3>
+                        <ul class="noIndent">
+                            <li>Fox</li>
+                            <li>Mouse</li>
+                            <li>Duck</li>
+                            <li>Earthworm</li>
+                        </ul>
+                        <h3>Grass</h3>
+                        <ul class="noIndent">
+                            <li>Duck</li>
+                            <li>Goose</li>
+                            <li>Rabbit</li>
+                            <li>Goat</li>
+                            <li>Horse</li>
+                            <li>Earthworm</li>
+                        </ul>
+                        <h3>Goose</h3>
+                        <ul class="noIndent">
+                            <li>Grass</li>
+                            <li>Cabbage</li>
+                            <li>Duck</li>
+                            <li>Chicken</li>
+                            <li>Bear</li>
+                            <li>Horse</li>
+                            <li>Rabbit</li>
+                            <li>Wolf</li>
+                            <li>Fox</li>
+                            <li>Cat</li>
+                            <li>Goat</li>
+                            <li>Dog</li>
+                            <li>Kiwi</li>
+                            <li>Mouse</li>
+                            <li>Earthworm</li>
+                            <li>Rice</li>
+                        </ul>
+                    </div>
+                    <div class="column" id="FifthCol">
+                        <h3>Fish</h3>
+                        <ul class="noIndent">
+                            <li>Cat</li>
+                            <li>Bear</li>
+                            <li>Fox</li>
+                            <li>Dog</li>
+                            <li>Earthworm</li>
+                        </ul>
+                        <h3>Rice</h3>
+                        <ul class="noIndent">
+                            <li>Chicken</li>
+                            <li>Duck</li>
+                            <li>Mouse</li>
+                            <li>Goose</li>
+                        </ul>
+                        <h3>Corn</h3>
+                        <ul class="noIndent">
+                            <li>Mouse</li>
+                            <li>Chicken</li>
+                            <li>Goat</li>
+                            <li>Duck</li>
+                        </ul>
+                        <h3>Earthworm</h3>
+                        <ul class="noIndent">
+                            <li>Kiwi</li>
+                            <li>Carrot</li>
+                            <li>Grass</li>
+                            <li>Cabbage</li>
+                            <li>Chicken</li>
+                            <li>Goose</li>
+                            <li>Seeds</li>
+                            <li>Fish</li>
+                            <li>Berry</li>
+                        </ul>
+                    </div>
+                    <div class="column" id="SixthCol">
+                        <h3>Dog</h3>
+                        <ul class="noIndent">
+                            <li>Wolf</li>
+                            <li>Mouse</li>
+                            <li>Fish</li>
+                            <li>Rabbit</li>
+                            <li>Chicken</li>
+                            <li>Goose</li>
+                            <li>Bear</li>
+                        </ul>
+                        <h3>Mouse</h3>
+                        <ul class="noIndent">
+                            <li>Cat</li>
+                            <li>Berry</li>
+                            <li>Cabbage</li>
+                            <li>Corn</li>
+                            <li>Dog</li>
+                            <li>Rice</li>
+                            <li>Fox</li>
+                            <li>Goose</li>
+                        </ul>
+                        <h3>Kiwi</h3>
+                        <ul class="noIndent">
+                            <li>Earthworm</li>
+                            <li>Cabbage</li>
+                            <li>Seeds</li>
+                            <li>Goose</li>
+                        </ul>
+                        <h3>Seeds</h3>
+                        <ul class="noIndent">
+                            <li>Chicken</li>
+                            <li>Kiwi</li>
+                            <li>Duck</li>
+                            <li>Earthworm</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wolf, Goat, and Cabbage</span>
+            </div>
+            <div class="page-content">
+                <h2>Interactive Section</h2>
+                <h4>Setup</h4>
+                <div class="flexContainer">
+                    <div class="generalUI animalListUI noTextHighlight">
+                        <div class="leftCol">All creatures</div>
+                        <div class="rightCol">Creatures present</div>
+                        <div>
+                            <select id="listBox1" class="selectMenu" size="9">
+                                <option value="Bear">Bear</option>
+                                <option value="Berry">Berry</option>
+                                <option value="Cabbage">Cabbage</option>
+                                <option value="Carrot">Carrot</option>
+                                <option value="Cat">Cat</option>
+                                <option value="Chicken">Chicken</option>
+                                <option value="Corn">Corn</option>
+                                <option value="Dog">Dog</option>
+                                <option value="Duck">Duck</option>
+                                <option value="Earthworm">Earthworm</option>
+                                <option value="Fish">Fish</option>
+                                <option value="Fox">Fox</option>
+                                <option value="Goat">Goat</option>
+                                <option value="Goose">Goose</option>
+                                <option value="Grass">Grass</option>
+                                <option value="Horse">Horse</option>
+                                <option value="Kiwi">Kiwi</option>
+                                <option value="Mouse">Mouse</option>
+                                <option value="Rabbit">Rabbit</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Seeds">Seeds</option>
+                                <option value="Wolf">Wolf</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="transferRight" class="arrows">&#8594;</button>
+                            <button id="transferLeft" class="arrows">&#8592;</button>
+                        </div>
+                        <div>
+                            <select id="listBox2" class="selectMenu noScroll" size="9">
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: white;">Number of creatures: </label>
+                            <select id="graphSize">
+                                <option value="6" selected>6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </div>
+                        <div style="margin: 0em auto;">
+                            <button id="clearList">Clear</button>
+                        </div>
+                        <div>
+                            <button id="moveUp" style="display: block; float: left;">&#8593;</button>
+                            <button id="moveDown" style="display: block; float: right;">&#8595;</button>
+                            <button id="copy" style="display: block; margin-left: auto; margin-right: auto;">Copy to Virtual River</button>
+                            <div style="clear: both;"></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="helpButton1" class="noTextHighlight">Help</button>
+                <div id="help1" class="helpMessage">
+                    <ul>
+                        <li>You can change the number of vertices by changing the number of creatures.</li>
+                        <li>To add creature to the graph, select a creature from the left list box then press right arrow.</li>
+                        <li>To remove creature from the graph, select a creature from the right list box then press left arrow.</li>
+                        <li>You can also press Clear button to remove all creatures from the graph. This also clear everything from the graph.</li>
+                        <li>Creature at the top of the list will be placed at the top vertex of the graph, subsequent creatures go to next vertex in the clockwise direction.</li>
+                        <li>You can change position of creature by selecting it and press up or down arrows.</li>
+                        <li>Once you are satisfied with the list, press the copy button to copy the list to Start list box to do more works.</li>
+                    </ul>
+                </div>
+                <h4>Graph</h4>
+                <div style="margin: 1em auto;" id="interactiveSVG"></div>
+                <button id="clear" class="arrows noTextHighlight">Clear Connections</button>
+                <button id="helpButton2" class="noTextHighlight">Help</button>
+                <div id="help2" class="helpMessage">
+                    <ul>
+                        <li>Upon clicking a vertex, it will turn yellow.</li>
+                        <li>Clicking on any other vertex will connect both vertices with a line. The first vertex will turn back to white.</li>
+                        <li>You can do the same thing as above to remove a drawn line.</li>
+                        <li>Clicking on the same vertex once it turn yellow will make it white again, canceling the selection.</li>
+                        <li>You can mark certain vertex red by right click on it. It will stay yellow if it is already yellow, but the vertex will be marked internally.</li>
+                        <li>If you click on that vertex again while it is yellow, it will turn red instead of white.</li>
+                        <li>You can click on Clear Connections button to remove all lines from the graph.</li>
+                        <li>Changing the size of the graph will also clear every line from it.</li>
+                    </ul>
+                </div>
+                <h4>Virtual River</h4>
+                <div class="flexContainer">
+                    <div class="generalUI animalListUI noTextHighlight">
+                        <div>Start</div>
+                        <div id="stepCounter">Step: 0</div>
+                        <div>Finish</div>
+                        <div>
+                            <select id="listBox3" class="selectMenu noScroll" size="9">
+                            </select>
+                        </div>
+                        <div>
+                            <button id="row" class="arrows">&#10231;</button>
+                        </div>
+                        <div>
+                            <select id="listBox4" class="selectMenu noScroll" size="9">
+                            </select>
+                        </div>
+                        <div class="middleCol">
+                            <button id="reset">Reset</button>
+                        </div>
+                        <div class="leftCol">
+                            <button id="prev" style="float: left;">Prev state</button>
+                        </div>
+                        <div>
+                            <button id="save" style="clear: both;">Save state</button>
+                        </div>
+                        <div>
+                            <button id="next" style="float: right;">Next state</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="helpButton3" class="noTextHighlight">Help</button>
+                <div id="help3" class="helpMessage">
+                    <ul>
+                        <li>Make sure to copy the list from above for this to work.</li>
+                        <li>Copying from the list above will reset everything and everything copied will be inserted into the Start list box.</li>
+                        <li>Select a creature and click on left right arrows to simulate movement across the river.</li>
+                        <li>Each step can be saved by clicking the Save State button. If you add a new state, the step counter will increase by 1.</li>
+                        <li>There's no default state or state at step 0. You must save this manually.</li>
+                        <li>You can cycle between steps by pressing previous or next buttons. Last inputs made in each step will be marked in yellow.</li>
+                        <li>You can rewrite any certain step by changing to the step you want and press Save State button after you modify it. Doing this will also delete all subsequent states.</li>
+                        <li>If there is no changes to the step you are modifying, clicking Save State button will do nothing.</li>
+                        <li>Clicking Reset button will return it to the initial state and delete all states stored.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Appendix W</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix W: Links to Images of Each Creature</h2>
+                <ul style="font-size: 11pt">
+                    <li><strong>Cat</strong>: <a href="https://pixabay.com/photos/cat-young-animal-curious-wildcat-2083492">https://pixabay.com/photos/cat-young-animal-curious-wildcat-2083492</a></li>
+                    <li><strong>Wolf</strong>: <a href="https://pixabay.com/photos/wolf-concerns-forest-predator-1336229">https://pixabay.com/photos/wolf-concerns-forest-predator-1336229</a></li>
+                    <li><strong>Rabbit</strong>: <a href="https://pixabay.com/photos/hare-rabbit-pet-animal-world-cute-4375952">https://pixabay.com/photos/hare-rabbit-pet-animal-world-cute-4375952</a></li>
+                    <li><strong>Berry</strong>: <a href="https://pixabay.com/photos/blackthorn-plums-berry-blue-1621554">https://pixabay.com/photos/blackthorn-plums-berry-blue-1621554</a></li>
+                    <li><strong>Fish</strong>: <a href="https://pixabay.com/photos/sockeye-salmon-kenai-fish-wild-492258">https://pixabay.com/photos/sockeye-salmon-kenai-fish-wild-492258</a></li>
+                    <li><strong>Dog</strong>: <a href="https://pixabay.com/photos/dog-pet-animal-doggy-sweet-cute-2810484">https://pixabay.com/photos/dog-pet-animal-doggy-sweet-cute-2810484</a></li>
+                    <li><strong>Duck</strong>: <a href="https://pixabay.com/photos/ruddy-shelduck-duck-goose-bird-106544">https://pixabay.com/photos/ruddy-shelduck-duck-goose-bird-106544</a></li>
+                    <li><strong>Goose</strong>: <a href="https://www.sunnyskyz.com/blog/1295/Dad-Tells-His-Son-If-He-Can-Bring-Home-A-Goose-Alive-He-ll-Give-Him-20-The-Result-Is-Priceless">https://www.sunnyskyz.com/blog/1295/Dad-Tells-His-Son-If-He-Can-Bring-Home-A-Goose-Alive-He-ll-Give-Him-20-The-Result-Is-Priceless</a></li>
+                    <li><strong>Fox</strong>: <a href="https://pixabay.com/photos/mammals-fox-wildlife-natural-wild-3218028">https://pixabay.com/photos/mammals-fox-wildlife-natural-wild-3218028</a></li>
+                    <li><strong>Grass</strong>: <a href="https://pixabay.com/photos/meadow-green-grass-landscape-196567">https://pixabay.com/photos/meadow-green-grass-landscape-196567</a></li>
+                    <li><strong>Rice</strong>: <a href="https://pixabay.com/photos/rice-food-healthy-cuisine-meal-498688">https://pixabay.com/photos/rice-food-healthy-cuisine-meal-498688</a></li>
+                    <li><strong>Mouse</strong>: <a href="https://pixabay.com/photos/animal-attractive-beautiful-boy-1238228">https://pixabay.com/photos/animal-attractive-beautiful-boy-1238228</a></li>
+                    <li><strong>Bear</strong>: <a href="https://pixabay.com/photos/bear-predator-brown-bear-dangerous-1376361">https://pixabay.com/photos/bear-predator-brown-bear-dangerous-1376361</a></li>
+                    <li><strong>Cabbage</strong>: <a href="https://pixabay.com/photos/savoy-kohl-savoy-cabbage-vegetables-3860933">https://pixabay.com/photos/savoy-kohl-savoy-cabbage-vegetables-3860933</a></li>
+                    <li><strong>Chicken</strong>: <a href="https://pixabay.com/photos/hahn-gockel-chicken-hen-poultry-4872601">https://pixabay.com/photos/hahn-gockel-chicken-hen-poultry-4872601</a></li>
+                    <li><strong>Corn</strong>: <a href="https://pixabay.com/photos/pop-corn-yellow-popcorn-food-785074">https://pixabay.com/photos/pop-corn-yellow-popcorn-food-785074</a></li>
+                    <li><strong>Carrot</strong>: <a href="https://pixabay.com/photos/carrots-carrot-vegetable-tomato-5237036">https://pixabay.com/photos/carrots-carrot-vegetable-tomato-5237036</a></li>
+                    <li><strong>Horse</strong>: <a href="https://pixabay.com/photos/horse-wild-horse-marsh-pony-swamp-60153">https://pixabay.com/photos/horse-wild-horse-marsh-pony-swamp-60153</a></li>
+                    <li><strong>Earthworm</strong>: <a href="https://pixabay.com/photos/earthworms-the-frog-s-perspective-2773457">https://pixabay.com/photos/earthworms-the-frog-s-perspective-2773457</a></li>
+                    <li><strong>Kiwi</strong>: <a href="https://pixabay.com/photos/bird-sand-kiwi-4164829">https://pixabay.com/photos/bird-sand-kiwi-4164829</a></li>
+                    <li><strong>Seeds</strong>: <a href="https://pixabay.com/photos/seed-grain-plant-bean-sprouts-nuts-945877">https://pixabay.com/photos/seed-grain-plant-bean-sprouts-nuts-945877</a></li>
+                    <li><strong>Goat</strong>: <a href="https://pixabay.com/photos/goat-animal-horns-mammals-creature-1438231">https://pixabay.com/photos/goat-animal-horns-mammals-creature-1438231</a></li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>

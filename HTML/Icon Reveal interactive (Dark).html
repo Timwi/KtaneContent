@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Icon Reveal — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .ir-loading {
+            margin-top: 50px;
+            font-size: 16pt;
+            font-weight: 700;
+        }
+
+        .ir-input {
+            display: none;
+            margin-top: 30px;
+            padding: 14px 20px 10px;
+            border: 0;
+            outline: 0;
+            background-color: #ddd;
+            border-radius: 6px;
+            width: 100%;
+            font-family: 'Special Elite', 'Courier New', monospace;
+            font-size: 18pt;
+        }
+
+        .ir-output {
+            text-align: center;
+            margin-top: 28px;
+        }
+        
+        .ir-output > div {
+            display: inline-block;
+            width: 160px;
+            height: 160px;
+            vertical-align: top;
+        }
+
+        .ir-output > div > span {
+            display: inline-block;
+            width: 100%;
+            line-height: 100%;
+            vertical-align: middle;
+        }
+
+        .ir-output > div > span:nth-child(1) {
+            font-size: 30pt;
+            font-weight: 700;
+        }
+
+        .ir-output > div > span:nth-child(2) {
+            font-size: 16pt;
+        }
+    </style>
+    <script>
+        var load = async () => {
+            var request = await fetch("https://ktane.timwi.de/json/raw");
+            var json = await request.text();
+            var data = JSON.parse(json).KtaneModules;
+            $(".ir-loading").remove();
+            var maxlength = 0;
+            data.forEach((m) => {
+                if (m.Name.length > maxlength) maxlength = m.Name.length;
+            });
+            var input = $(".ir-input").show().attr({ maxlength }).on("input", () => {
+                var output = $(".ir-output").empty();
+                var format = (s) => s.toLowerCase().replace(/ /g, "").trim();
+                var val = format(input.val());
+                if (val.length) {
+                    var eq = (n) => format(n.Name) == val;
+                    var mods = data.filter((m) => m.Symbol && !m.TranslationOf && (format(m.Name).indexOf(val) > -1 || format(m.ModuleID).indexOf(val) > -1)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 12);
+                    mods.forEach((m) => output.append($("<div/>").append($("<span/>").text(m.Symbol || "??"), $("<span/>").text(m.Name))));
+                }
+            });
+        };
+        load();
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Icon Reveal</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Icon Reveal.svg" class="diagram">
+                <h2>On the Subject of Icon Reveal</h2>
+                <p class="flavour-text">Who&#x2019;s That Pok&#x00e9;mon?</p>
+
+                <p>This module has a slightly covered-up module icon with a counter and a submit button.</p>
+                <p>Figure out what module on your bomb the icon represents and find its periodic table symbol by typing the module name below.</p>
+                <p>Once you have used the arrows to enter your value, press the submit button.</p>
+
+                <div class="ir-loading">Loading&#x2026;</div>
+                <input class="ir-input" type="text" placeholder="Enter module name here&#x2026;" />
+                <div class="ir-output"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

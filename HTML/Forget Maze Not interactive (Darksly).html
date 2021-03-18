@@ -26,6 +26,23 @@
                font-weight: bold;
                color: #999;
             }
+            #red_maze {
+                margin: auto;
+                border-width: 5px;
+                border-color: #770000;
+            }
+            #red_maze td {
+                color: #444;
+                min-width: 1.3em;
+                height: 1.9em;
+                border: 0;
+            }
+            .right{
+                border-right: 3px solid #c42525 !important;
+            }
+            .bottom{
+                border-bottom: 3px solid #c42525 !important;
+            }
             .painted {
                 color: #000;
             }
@@ -64,7 +81,7 @@
 
             var seenState = true;
             var selectedCell;
-            var arrowsBehavior = "arrowMove";
+            var arrowsBehavior = "arrowBorder";
 
             var solvedCells = [];
             var seenCells = [];
@@ -239,6 +256,14 @@
             }
             //#endregion
 
+            //#region - Red Maze Management
+            function toggleRedMazeCell(cell) {
+                cell.style.backgroundColor = 
+                    isCellColor(cell, PRIMARY_COLOR) ?
+                    INACTIVE_COLOR : PRIMARY_COLOR;
+            }
+            //#endregion
+
             //#region - Cell Management
             function toggleCell(cell) {
                 if(!cell) return;
@@ -406,6 +431,11 @@
 
                 var seenMark = document.getElementById("seenMark");
                 seenMark.onchange = () => onSeenSelectChanged(seenMark);
+
+                var redmaze = document.getElementById("red_maze");
+                redmaze.querySelectorAll("td").forEach(cell => {
+                    cell.onclick = () => toggleRedMazeCell(cell);
+                });
             }
 
             function onCellClick(cell, undoForced) {
@@ -437,7 +467,9 @@
                     case 9: //Tab
                         e.preventDefault();
                         if(selectedCell)
-                            toggleCell(getCell(selectedCell.row , selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                            toggleCell(getCell(
+                                e.shiftKey ? selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1 : selectedCell.row, 
+                                e.shiftKey ? selectedCell.col : selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
                         else toggleCell(getCell(0, 0));
                         if(!undoForced) saveAction({ event: e, action: "keydown" });
                         return;
@@ -535,13 +567,21 @@
                     <h2>On the Subject of Forget Maze Not</h2>
                     <p class="flavour-text">flavor in get you I hope didn't lost this text!</p>
 
-                    <p><span style="background: #DD0000; color: white; padding: 5px;">Red</span>: Go to <u>bottom left</u> of the <u>7x7 maze below</u>.</p>
+                    <p><span style="background: #DD0000; color: white; padding: 5px;">Red</span>: Navigate the <u>red maze below</u> to the corner coordinate.</p>
                     <p><span style="background: #DDDD00; padding: 5px;">Yellow</span>: <u>Input the walls</u> of the given cell using the arrows.</p>
                     <p><span style="background: #0000DD; color: white; padding: 5px;">Blue</span>: <u>Match missing coordinate</u> with given walls and hints.</p>
                     <p><span style="background: #DD00DD; color: white; padding: 5px;">Magenta</span>: Find exit on a <u>normal maze.</u></p>
                     <p><span style="background: #00DDDD; padding: 5px;">Cyan</span>: Find exit on a <u>inverted maze</u> (Walls are the valid moves).</p>
                     <div style="min-height: 20em;"></div>
-                    <img src="img/Forget Maze Not/Maze.svg" width="300" height="300" style="display:block;margin-left:auto;margin-right:auto;margin-top:20px;">
+                    <table id="red_maze">
+                          <tr><td>A1</td><td class="bottom">B1</td><td>C1</td><td class="bottom">D1</td><td class="right">E1</td><td>F1</td><td>G1</td></tr>
+                          <tr><td class="right">A2</td><td class="right">B2</td><td class="bottom">C2</td><td class="right">D2</td><td class="bottom">E2</td><td class="bottom right">F2</td><td>G2</td></tr>
+                          <tr><td class="right">A3</td><td class="bottom">B3</td><td class="bottom">C3</td><td class="bottom right">D3</td><td>E3</td><td>F3</td><td class="bottom">G3</td></tr>
+                          <tr><td class="bottom">A4</td><td class="bottom">B4</td><td class="bottom">C4</td><td class="right">D4</td><td class="right">E4</td><td class="bottom">F4</td><td class="bottom">G4</td></tr>
+                          <tr><td>A5</td><td class="bottom">B5</td><td class="right">C5</td><td class="right">D5</td><td class="right">E5</td><td>F5</td><td>G5</td></tr>
+                          <tr><td class="bottom">A6</td><td class="right">B6</td><td>C6</td><td class="bottom right">D6</td><td class="bottom">E6</td><td class="bottom right">F6</td><td>G6</td></tr>
+                          <tr><td>A7</td><td class="right">B7</td><td class="right">C7</td><td>D7</td><td>E7</td><td>F7</td><td>G7</td></tr>
+                        </table>
                 </div>
                 <div class="page-footer relative-footer">Page 1 of 3</div>
             </div>
@@ -565,8 +605,8 @@
                     <p></p>
                     <label for="arrowBehavior">Arrows behavior:</label>
                     <select name="arrow" id="arrowBehavior" onchange="setArrowsBehavior()">
-                        <option value="arrowMove">Move</option>
                         <option value="arrowBorder">Toggle Borders</option>
+                        <option value="arrowMove">Move</option>
                     </select>
 
                     <p></p>
@@ -594,9 +634,10 @@
                         <p></p>
                         <table style="width: 100%;">
                             <tr><th style="width: 10%;">Table Controls</th><th style="width: 30%;">Command:</th><th style="width: 60%;">Effect:</th></tr>
-                            <tr><th rowspan="4">Cell Control Commands</th><td>Click (Cell)</td><td>Selects the cell</td></tr>
+                            <tr><th rowspan="5">Cell Control Commands</th><td>Click (Cell)</td><td>Selects the cell</td></tr>
                             <tr><td><span style="color: #000099;">[Move]:</span><br>Arrow Keys<br> <span style="color: #000099;">[Toggle Borders]:</span> <span style="color: #990000;">Disabled</span></td><td>Selects the adjacent cell (Or top-left if none are selected) </td></tr>
                             <tr><td>Tab Key</td><td> Selects the cell to the right (Or top-left if none are selected) </td></tr>
+                            <tr><td>Shift + Tab Key</td><td> Selects the cell below (Or top-left if none are selected) </td></tr>
                             <tr><td>Enter Key</td><td> Deselects current cell </td></tr>
                             <tr><th rowspan="2">Cell Content Commands</th><td>Right-click (Cell)<br>or <b>S</b> Key</td><td>Marks/Unmarks the cell for submission</td></tr>
                             <tr><td>Double-click (Cell)<br>or <b>A</b> Key </td><td>Marks/Unmarks the cell as seen</td></tr>
