@@ -1203,6 +1203,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "boomdas",
+        loggingTag: "Boomdas",
+        matches: [
+            {
+                regex: /(Expecting:|You submitted:)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[0], obj: pre(readMultiple(8).replace(/\[Boomdas #\d+\] /g, "").replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "BrokenButtonsModule",
         loggingTag: "Broken Buttons",
         matches: [
