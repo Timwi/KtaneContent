@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Currents — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .interactive-current {
+            font-size: 38px;
+            font-family: "Trebuchet MS", sans-serif;
+            table-layout: fixed;
+        }
+        .interactive-current.animate {
+            transition: .2s;
+        }
+        .interactive-current.rot-90 {
+            transform:rotate(0.25turn);
+        }
+        .interactive-current.rot-180 {
+            transform:rotate(0.5turn);
+        }
+        .interactive-current.rot-270 {
+            transform:rotate(0.75turn);
+        }
+        .interactive-current.rot-360 {
+            transform:rotate(1turn);
+        }
+        .interactive-current td {
+            width: 60px;
+            height: 60px;
+            padding: initial;
+            border-color: #ccc;
+            cursor: pointer;
+            -webkit-user-select: none;       
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .interactive-current td.red {
+            background-color: #ffaaaa;
+        }
+        .interactive-current td.green {
+            background-color: #aaffaa;
+        }
+        .interactive-current td.blue {
+            background-color: #aaaaff;
+        }
+        .interactive-current td.yellow {
+            background-color: #ffffaa;
+        }
+        .buttons {
+            text-align: center;
+        }
+        [id^=current-turn], [id^=current-color]{
+            margin: 4px;
+            font-size: 20px;
+            min-width: 40px;
+            height: 40px;
+        }
+        [id^=current-color]{
+            border-style: none;
+        }
+        [id^=current-color].selected{
+            border: 2px solid #333;
+            border-radius: 2px;
+        }
+        [id^=current-color][id$=red]{
+            background-color: #ffaaaa;
+        }
+        [id^=current-color][id$=green]{
+            background-color: #aaffaa;
+        }
+        [id^=current-color][id$=blue]{
+            background-color: #aaaaff;
+        }
+        [id^=current-color][id$=yellow]{
+            background-color: #ffffaa;
+        }
+    </style>
+    <script>
+        let currentColor;
+        let rot = {A: 0, B: 0, C: 0};
+        let boats = {};
+        function draw() {
+            for(let color of ["red", "blue", "green","yellow"]) {
+                if(currentColor === color) {
+                    document.getElementById(`current-color-${color}`).classList.add("selected");
+                } else {
+                    document.getElementById(`current-color-${color}`).classList.remove("selected");
+                }
+            }
+            for(let type of ["A", "B", "C"]) {
+                document.querySelectorAll(`#interactive-current-${type} td`).forEach($el => $el.setAttribute("class", ""));
+                for(let boat in boats) {
+                    if(boats[boat].type === type) {
+                        document.querySelectorAll(`#interactive-current-${type} td`)[boats[boat].i].setAttribute("class", boat);
+                    }
+                }
+            }
+        }
+        window.addEventListener("load", () => {
+            for(let color of ["red", "blue", "green","yellow"]) {
+                document.getElementById(`current-color-${color}`).addEventListener("click", () => {
+                    currentColor = color;
+                    draw();
+                })
+            }
+            for(let type of ["A", "B", "C"]) {
+                document.getElementById(`current-turn-${type}-cw`).addEventListener("click", () => {
+                    rot[type] = (rot[type] + 1) % 4;
+                    if(rot[type] === 0) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-360");
+                        setTimeout(() => {
+                            document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current");
+                        }, 200)
+                    } else if(rot[type] === 1) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-90");
+                    } else if(rot[type] === 2) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-180");
+                    } else {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-270");
+                    }
+                    draw();
+                });
+                document.getElementById(`current-turn-${type}-ccw`).addEventListener("click", () => {
+                    rot[type] = (rot[type] + 3) % 4;
+                    if(rot[type] === 0) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate");
+                    } else if(rot[type] === 1) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-90");
+                    } else if(rot[type] === 2) {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-180");
+                    } else {
+                        document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current rot-360");
+                        setTimeout(() => {
+                            document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate rot-270");
+                        }, 0)
+                    }
+                    draw();
+                });
+                document.getElementById(`current-turn-${type}-reset`).addEventListener("click", () => {
+                    rot[type] = 0;
+                    document.getElementById(`interactive-current-${type}`).setAttribute("class", "interactive-current animate");
+                })
+                const $els = document.querySelectorAll(`#interactive-current-${type} td`);
+                for(let i = 0; i < $els.length; i++) {
+                    $els[i].addEventListener("click", e => {
+                        e.preventDefault();
+
+                        if(!currentColor) return;
+
+                        if(!boats[currentColor]) boats[currentColor] = {};
+                        for(let othercolor in boats) {
+                            if(boats[othercolor].type === type && boats[othercolor].i === i) {
+                                boats[currentColor] = {};
+                                boats[othercolor] = {};
+                                draw();
+                                return;
+                            }
+                        }
+                        boats[currentColor].type = type;
+                        boats[currentColor].i = i;
+                        draw();
+                    })
+                }
+            }
+        })
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Currents</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Currents.svg" class="diagram">
+                <h2>On the Subject of Currents</h2>
+                <p class="flavour-text">Row, row, row your boats, gently down the tower?</p>
+                <p> This module consists of a screen and 6 interactable buttons. The screen will display four colored numbers all starting with random values between 0 and 9. There is a submit and clear button (C) at the top, and then 4 colored buttons matching the colored numbers on the screen. These are labeled "U", "R", "D", and "L". </p>
+                <h3>Introduction</h3>
+                <ul>
+                    <li>In order to solve this module, you will be tracking the positions of four colored boats as they travel down a tower.</li>
+                    <li>The tower consists of 3 floors, each containing a system of currents leading to a drain. For simplicity, the floors are represented as 5x5 grids with the currents represented by arrows.
+                    </li>
+                    <li>When a boat enters a space, it will follow the arrows, until it reaches a drain, and then it will fall to the next floor, and continue until it exits the third floor of the tower at the bottom.</li>
+                    <li>The solution to the module is the number of times each colored boat makes its respective move. To easily remember the moves you must track for each boat, they are printed on the buttons. (Red = Up, Green = Right, Blue = Down, and Yellow = Left) </li>
+                    <li>Use the colored buttons to change the values on the screen so they match the correct values for each boat, and then press the submit button. If you submit the incorrect answer for any of the four boat values you will get a strike. The module does not tell you which boat was wrong.</li>
+                    <li>You can also press the clear button (C) to reset all the counts to their starting values.
+                </ul>
+                <h3>Step 1: Setup the tower</h3>
+                <ol>
+                    <li>There are 3 floors in the tower. In order to determine the order of the floors, locate the floors in the table below, and use the edgework and the initial values on the screen to calculate their priority value (<strong>PV</strong>). The floors have a priority order of A-&gt;B-&gt;C which means if multiple floors have the same <strong>PV</strong> then they will stay in the order they are in this list. (Ex. APV = 21 BPV = 19 CPV = 21, B-&gt;A-&gt;C)</li>
+                    <li>Once you find the order, these floors will be stacked with highest <strong>PV</strong> on bottom, and lowest <strong>PV</strong> on top.</li>
+                    <li>Next, rotate the middle floor clockwise 90 degrees, and the bottom floor counterclockwise 90 degrees. The currents rotate with the floor so be careful! (ex. an up current becomes a right current if rotated clockwise)</li>
+                    <li>Now you're ready to place the boats!</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Currents</span>
+            </div>
+            <div class="page-content">
+                <p>
+                    The floors are defined with the top left corner as (0,0). The letter pairs in each <strong>PV</strong> mean to catenate the values of those colors on the screen and treat this as a two-digit base-10 number. (Ex. RG where R = 2 and G = 3 would be 23)
+                </p>
+                <p class="buttons">
+                    <button id="current-color-red">&nbsp;</button><button id="current-color-green">&nbsp;</button><button id="current-color-blue">&nbsp;</button><button id="current-color-yellow">&nbsp;</button>
+                </p>
+                <table class="center">
+                    <tr>
+                        <th>Floor A (PV = AA batteries/2 + RG)</th>
+                        <th>Floor B (PV = D batteries + GB)</th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <button id="current-turn-A-cw">⭮</button><button id="current-turn-A-ccw">⭯</button><button id="current-turn-A-reset">Reset</button>
+                            <table class="interactive-current" id="interactive-current-A">
+                                <tr><td>→</td><td>→</td><td>↓</td><td>↓</td><td>←</td></tr>
+                                <tr><td>↓</td><td>←</td><td>←</td><td>→</td><td>↓</td></tr>
+                                <tr><td>[]</td><td>↑</td><td>←</td><td>←</td><td>←</td></tr>
+                                <tr><td>↑</td><td>←</td><td>↓</td><td>↑</td><td>↑</td></tr>
+                                <tr><td>↑</td><td>←</td><td>→</td><td>[]</td><td>←</td></tr>
+                            </table>
+                        </th>
+                        <th>
+                            <button id="current-turn-B-cw">⭮</button><button id="current-turn-B-ccw">⭯</button><button id="current-turn-B-reset">Reset</button>
+                            <table class="interactive-current" id="interactive-current-B">
+                                <tr><td>↓</td><td>←</td><td>←</td><td>→</td><td>↓</td></tr>
+                                <tr><td>↓</td><td>↑</td><td>→</td><td>→</td><td>[]</td></tr>
+                                <tr><td>→</td><td>→</td><td>↑</td><td>↑</td><td>↓</td></tr>
+                                <tr><td>→</td><td>↑</td><td>→</td><td>[]</td><td>↓</td></tr>
+                                <tr><td>→</td><td>→</td><td>↑</td><td>↑</td><td>←</td></tr>
+                            </table>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>Floor C (PV = Port Plates + BY)</th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <button id="current-turn-C-cw">⭮</button><button id="current-turn-C-ccw">⭯</button><button id="current-turn-C-reset">Reset</button>
+                            <table class="interactive-current" id="interactive-current-C">
+                                <tr><td>↓</td><td>↓</td><td>←</td><td>←</td><td>←</td></tr>
+                                <tr><td>↓</td><td>→</td><td>[]</td><td>←</td><td>↑</td></tr>
+                                <tr><td>↓</td><td>→</td><td>↑</td><td>←</td><td>↑</td></tr>
+                                <tr><td>→</td><td>[]</td><td>↑</td><td>↑</td><td>←</td></tr>
+                                <tr><td>↑</td><td>←</td><td>↑</td><td>→</td><td>↑</td></tr>
+                            </table>
+                        </th>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Currents</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 2: Place the boats!</h3>
+                <ol>
+                    <li>The four boats, colored Red, Green, Blue, and Yellow, all start on the top floor. Their locations are determined using edgework, and information about the tower. Use the table below to calculate the starting position of each boat. Sum all the cells beneath each boat color. If the sum is greater than 24, subtract 25 until it isn't.</li>
+                    <li>Once you've calculated the sums for each boat, the starting positions are found by counting the cells of the top floor of the tower in reading order, starting with 0 in the top left corner.</li>
+                    <li>If two boats are placed in the same spot, they immediately crash! These boats are removed from the tower, and their respective move counts will be 0.</li>
+                    <li>Otherwise each boat will travel one space at a time, all at the same time, following the current. If two boats try to enter the same spot at the same time, they will crash and be removed from the tower. Only moves these boats made prior to crashing will count. (Note: Boats can still crash by entering a drain at the same time)</li>
+                    <li>When a boat enters a drain, it will land on the next floor, in the same grid location as the drain it fell from (boats fall straight down). If a boat reaches the drain on the bottom floor, then it exits the tower.</li>
+                </ol>
+                <table class="center">
+                    <tr>
+                        <th>Red Boat</th>
+                        <th>Green Boat</th>
+                        <th>Blue Boat</th>
+                        <th>Yellow Boat</th>
+                    </tr>
+                    <tr>
+                        <th>Number of Occurrences of R, E, and D in serial.</th>
+                        <th>Sum of odd numbers in serial.</th>
+                        <th>Sum of even numbers in serial.</th>
+                        <th>Sum of A1Z26 values of all letters in serial.</th>
+                    </tr>
+                    <tr>
+                        <th>Number of ports containing R (+3 each) and indicators containing R (+5 each).</th>
+                        <th>Sum of Up and Down currents on the top floor (+4 each)</th>
+                        <th>Sum of Right and Left currents on the bottom floor (+3 each)</th>
+                        <th>Yellow value on starting screen.</th>
+                    </tr>
+                    <tr>
+                        <th>Red value on starting screen.</th>
+                        <th>Green value on starting screen.</th>
+                        <th>Blue value on starting screen.</th>
+                    </tr>
+                </table>
+                Note: The "value on starting screen" refers to the initial values on the module. If you press any of the buttons, these numbers will be set to 0 so you can enter a solution, but if you need them back at any time you can press clear (C) to reset back to the starting display.
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Currents</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 3: Calculate the solution</h3>
+                <ol>
+                    <li>Once all the boats have left the tower, either by crashing, or by reaching the end, count only the moves which the respective boat is assigned. (The moves are also written on the buttons)</li>
+                    <li>Enter these numbers by pressing the button corresponding to the boat, until the display for that boat reaches the correct value.</li>
+                    <li>The numbers on the display have the same colors as the buttons/boats they correspond to. If necessary, the numbers are in RGBY order and the buttons are the same in reading order.</li>
+                    <li>Once the values on the screen match the correct solution, you can press submit to solve the module. Remember, if any of the numbers are wrong you will receive a strike, but the module won't tell you which boat was incorrect.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>

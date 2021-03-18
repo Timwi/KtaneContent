@@ -36,6 +36,7 @@ e.onload = function()
                 <h3>Highlighter</h3>
                 <div><input type='checkbox' id='highlighter-enabled'>&nbsp;<label for='highlighter-enabled' accesskey='h'>Enabled</label> (Alt-H)</div>
                 <div>Color: <select id='highlighter-color'></select> (Alt-<span id='highlighter-color-index'>1</span>)</div>
+                <div>Highlights: <button id='clear-highlights' accesskey='c'>Clear</button> (Alt-C)</div>
             </div>
             <div class='option-group'>
                 <h3>Page layout</h3>
@@ -89,6 +90,17 @@ e.onload = function()
             showNotification(`Highlighter color: ${colors[currentColor].name.toLowerCase()}`, colors[currentColor].color);
         });
 
+        // An array of elementHighlights.
+        const highlights = [];
+        const clearHighlights = $("#clear-highlights");
+        clearHighlights.click(() => {
+            for (const elementHighlights of highlights) {
+                for (const highlight of elementHighlights) {
+                    highlight.remove();
+                }
+            }
+        })
+
         $(document).keydown(function(event)
         {
             // Only accept shortcuts with Alt or Ctrl+Shift
@@ -99,6 +111,11 @@ e.onload = function()
             if (event.keyCode === 0x4F)
             {
                 options.toggleClass('open');
+            }
+            // Alt-C: Clear highlights
+            else if (event.keyCode === 67)
+            {
+                clearHighlights.click();
             }
             else if (event.keyCode >= 48 && event.keyCode <= 57)
             {
@@ -223,12 +240,15 @@ e.onload = function()
 
         function makeHighlightable(element)
         {
-            let highlights = [];
+            // An array of highlights that have been created for this element.
+            // This is required because there are different modes of highlights that a single element can have at the same time.
+            let elementHighlights = [];
+            highlights.push(elementHighlights);
 
             function findHighlight(h)
             {
-                for (let i = 0; i < highlights.length; i++)
-                    if (highlights[i].element === h)
+                for (let i = 0; i < elementHighlights.length; i++)
+                    if (elementHighlights[i].element === h)
                         return i;
                 return -1;
             }
@@ -241,17 +261,17 @@ e.onload = function()
                 if (highlighterEnabled && thisMode !== null)
                 {
                     let ix = -1;
-                    for (let i = 0; i < highlights.length; i++)
-                        if (highlights[i].mode === thisMode)
+                    for (let i = 0; i < elementHighlights.length; i++)
+                        if (elementHighlights[i].mode === thisMode)
                             ix = i;
                     if (ix !== -1)
                     {
-                        highlights[ix].element.remove();
-                        highlights.splice(ix, 1);
+                        elementHighlights[ix].element.remove();
+                        elementHighlights.splice(ix, 1);
                     }
                     else
                     {
-                        let table = element.parents("table").first();
+                        let table = element.parents("table, .highlightable-parent").first();
 
                         let a;
                         let b;
@@ -286,32 +306,36 @@ e.onload = function()
                             highlight.css("background-color", "rgba(0, 0, 0, 0)");
                         }
 
+                        function removeHighlight()
+                        {
+                            highlight.remove();
+
+                            if (svg)
+                                element.css("fill", fill);
+
+                            window.getSelection().removeAllRanges();
+                            const ix2 = findHighlight(highlight);
+                            if (ix2 !== -1)
+                                elementHighlights.splice(ix2, 1);
+                        }
+
                         highlight.click(function(event2)
                         {
-                            let ix2;
                             if (highlighterEnabled && getMode(event2) == thisMode)
                             {
-                                highlight.remove();
-
-                                if (svg)
-                                    element.css("fill", fill);
-
-                                window.getSelection().removeAllRanges();
-                                ix2 = findHighlight(highlight);
-                                if (ix2 !== -1)
-                                    highlights.splice(ix2, 1);
+                                removeHighlight();
                             }
                             else
                             {
                                 highlight.hide();
                                 $(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
-                                ix2 = findHighlight(highlight);
+                                const ix2 = findHighlight(highlight);
                                 if (ix2 !== -1)
                                     highlight.show();
                             }
                             return false;
                         });
-                        highlights.push({ mode: thisMode, element: highlight });
+                        elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
 
                         if (mobileControls)
                             highlight.insertAfter($('.ktane-highlight-btn').first());

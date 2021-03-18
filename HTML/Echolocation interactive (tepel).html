@@ -51,203 +51,323 @@
         .select-button.selected {
             border-width: 4px;
         }
+
+        #canvas {
+            display: block;
+            width: 80%;
+            margin: 16px auto 0
+        }
+        @media screen and (min-width:900px) and  (max-width:1652px) {
+            .multipage {
+                align-items: flex-start;
+            }
+            .multipage .interactive-page {
+                max-width: 4in;
+                min-height: unset;
+                position: sticky;
+                top: 10%;
+                order: 1;
+            }
+            .multipage .interactive-section {
+                align-items: start;
+            }
+            .multipage .interactive-page .page-header {
+                display: none;
+            }
+            .multipage .interactive-page .page-content {
+                margin: 24px;
+                min-height: unset;
+                padding-top: 0;
+            }
+            .multipage .interactive-page .page-footer {
+                display: none;
+            }
+            .multipage .page:not(.interactive-page) {
+                min-width: unset;
+                max-width: 8.5in;
+                width: calc(100% - 4.1in);
+                order: 2;
+            }
+            #canvas {
+                display: block;
+                width: 100%;
+                margin: 16px auto 0
+            }
+        }
     </style>
 
     <script>
-        const VIEW_WIDTH = 100;
-        const BOX_WIDTH = 2;
 
-        let vert = Array.from({
-            length: 6
-        }, () => Array.from({
-            length: 7
-        }, () => 0));
-        let horiz = Array.from({
-            length: 7
-        }, () => Array.from({
-            length: 6
-        }, () => 0));
-        let $vertline = Array.from({
-            length: 6
-        }, () => Array.from({
-            length: 7
-        }));
-        let $horizline = Array.from({
-            length: 7
-        }, () => Array.from({
-            length: 6
-        }));
+        class MazeDrawer {
+            constructor(h, w, options = {}) {
+                this.h = h;
+                this.w = w;
+                this.options = options;
+                this.viewWidth = options.viewWidth || 100;
+                this.viewHeight = options.viewHeight || 100;
+                this.hoverLineWidth = options.hoverLineWidth || 2;
+                this.vert = Array.from({
+                    length: w + 1
+                }, () => Array.from({
+                    length: h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: w
+                }, () => Array.from({
+                    length: h + 1
+                }, () => 0));
+                this.setMode(options.initMode || "");
+                this.modes = options.modes || {};
+                this.iconpos = {};
 
-        let $blankButton;
-        let $keyButton;
-        let $exitButton;
-        let $blank;
-        let $key;
-        let $exit;
-        let mode;
-
-        let blankPos = [-Infinity, -Infinity];
-        let keyPos = [-Infinity, -Infinity];
-        let exitPos = [-Infinity, -Infinity];
-
-        function shift(dx, dy) {
-            vert = Array.from({
-                length: 6
-            }, (_, i) => Array.from({
-                length: 7
-            }, (_, j) => {
-                if (i + dy < 0 || i + dy >= 6 || j + dx < 0 || j + dx >= 7) return 0;
-                return vert[i + dy][j + dx];
-            }));
-            horiz = Array.from({
-                length: 7
-            }, (_, i) => Array.from({
-                length: 6
-            }, (_, j) => {
-                if (i + dy < 0 || i + dy >= 7 || j + dx < 0 || j + dx >= 6) return 0;
-                return horiz[i + dy][j + dx];
-            }));
-
-            if(blankPos[0] !== -Infinity && blankPos[1] !== -Infinity) {
-                $blank.setAttribute("x", (blankPos[0] - dx) * 12.25 + 2);
-                $blank.setAttribute("y", (blankPos[1] - dy) * 12.25 + 2);
-            }
-            blankPos = [blankPos[0] - dx, blankPos[1] - dy];
-            if(blankPos[0] >= 0 && blankPos[0] < 6 && blankPos[1] >= 0 && blankPos[1] < 6) {
-                $blank.setAttribute("visibility", "visible");
-            } else {
-                $blank.setAttribute("visibility", "hidden");
             }
 
-            if(keyPos[0] !== -Infinity && keyPos[1] !== -Infinity) {
-                $key.setAttribute("x", (keyPos[0] - dx) * 12.25 + 2);
-                $key.setAttribute("y", (keyPos[1] - dy) * 12.25 + 2);
-            }
-            keyPos = [keyPos[0] - dx, keyPos[1] - dy];
-            if(keyPos[0] >= 0 && keyPos[0] < 6 && keyPos[1] >= 0 && keyPos[1] < 6) {
-                $key.setAttribute("visibility", "visible");
-            } else {
-                $key.setAttribute("visibility", "hidden");
+            setCanvas(id) {
+                this.canvas = document.getElementById(id);
             }
 
-            if(exitPos[0] !== -Infinity && exitPos[1] !== -Infinity) {
-                $exit.setAttribute("x", (exitPos[0] - dx) * 12.25 + 2);
-                $exit.setAttribute("y", (exitPos[1] - dy) * 12.25 + 2);
-            }
-            exitPos = [exitPos[0] - dx, exitPos[1] - dy];
-            if(exitPos[0] >= 0 && exitPos[0] < 6 && exitPos[1] >= 0 && exitPos[1] < 6) {
-                $exit.setAttribute("visibility", "visible");
-            } else {
-                $exit.setAttribute("visibility", "hidden");
+            init() {
+                if(!this.canvas) {
+                    throw new Error("You must set canvas before initialization");
+                }
+                
+                this.icons = {}
+                for(let mode in this.modes) {
+                    this.icons[mode] = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                    this.icons[mode].setAttribute("visibility", "hidden");
+                    this.icons[mode].setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("href", this.modes[mode]);
+                    this.canvas.appendChild(this.icons[mode]);
+                }
+
+                this.$vertline = [];
+                this.$horizline = [];
+
+                for(let i = 0; i < this.w + 1; i++) {
+                    this.$vertline[i] = [];
+                    for(let j = 0; j < this.h; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("x2", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("y1", this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        line.setAttribute("y2", this.hoverLineWidth / 2 + (j + 1) * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        this.canvas.appendChild(line);
+                        this.$vertline[i][j] = line;
+                        
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth + (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("width", this.hoverLineWidth);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleVert(i, j))
+                    }
+                }
+
+                for(let i = 0; i < this.w; i++) {
+                    this.$horizline[i] = [];
+                    for(let j = 0; j < this.h + 1; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", (this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("x2", (this.hoverLineWidth / 2 + (i + 1) * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("y1", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        line.setAttribute("y2", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        this.canvas.appendChild(line);
+                        this.$horizline[i][j] = line;
+
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth);
+                        linehover.setAttribute("width", this.hoverLineWidth + (this.viewWidth - this.hoverLineWidth) / this.w);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleHoriz(i, j))
+                    }
+                }
+
+                for(let i = 0; i < this.w; i++) {
+                    for(let j = 0; j < this.h; j++) {
+                        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        rect.setAttribute("class", "grid-box");
+                        rect.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                        rect.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                        rect.setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                        rect.setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                        this.canvas.appendChild(rect);
+                        rect.addEventListener("click", () => this.setIcon(i , j));
+                        rect.addEventListener("contextmenu", e => {
+                            e.preventDefault();
+                            this.removeIcon(i , j);
+                        });
+                        
+                    }
+                }
+                if(this.options.onInit) this.options.onInit();
             }
 
+            toggleVert(x, y) {
+                if(!this.vert[x]) {
+                    this.vert[x] = [];
+                }
+                if(!this.vert[x][y]) {
+                    this.vert[x][y] = 1;
+                    this.draw();
+                    if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+                    return;
+                }
+                this.vert[x][y] = 1 - this.vert[x][y];
+                this.draw();
+                if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+            }
+
+            toggleHoriz(x, y) {
+                if(!this.horiz[x]) {
+                    this.horiz[x] = [];
+                }
+                if(!this.horiz[x][y]) {
+                    this.horiz[x][y] = 1;
+                    if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+                    this.draw();
+                    return;
+                }
+                this.horiz[x][y] = 1 - this.horiz[x][y];
+                this.draw();
+                if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+            }
+
+            draw() {
+                for(let i = 0; i < this.w + 1; i++) {
+                    for(let j = 0; j < this.h; j++) {
+                        this.$vertline[i][j].setAttribute(
+                            "class", 
+                            this.vert[i] && this.vert[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+
+                for(let i = 0; i < this.w; i++) {
+                    for(let j = 0; j < this.h + 1; j++) {
+                        this.$horizline[i][j].setAttribute(
+                            "class", 
+                            this.horiz[i] && this.horiz[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+                for(let mode in this.modes) {
+                    if(!this.iconpos[mode]) {
+                        this.icons[mode].setAttribute("visibility", "hidden");
+                        continue;
+                    }
+                    this.icons[mode].setAttribute("visibility", "visible");
+                    this.icons[mode].setAttribute("x", (this.iconpos[mode][0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                    this.icons[mode].setAttribute("y", (this.iconpos[mode][1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                }
+                if(this.options.onDraw) this.options.onDraw(); 
+            }
+
+            shift(dx, dy) {
+                if(
+                    (this.vert.some(v1 => v1.some(v2 => v2)) && (
+                        this.vert.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.vert.length - this.vert.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 > this.w ||
+                        Math.min.apply(null, this.vert.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.vert.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy >= this.h
+                    )) || 
+                    (this.horiz.some(v1 => v1.some(v2 => v2)) && (
+                        this.horiz.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.horiz.length - this.horiz.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 >= this.w ||
+                        Math.min.apply(null, this.horiz.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.horiz.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy > this.h
+                    )) || 
+                    Object.keys(this.modes)
+                        .filter(mode => this.iconpos[mode])
+                        .some(mode => (
+                            this.iconpos[mode][0] - dx < 0 || 
+                            this.iconpos[mode][0] - dx >= this.w ||
+                            this.iconpos[mode][1] - dy < 0 ||
+                            this.iconpos[mode][1] - dy >= this.h
+                        ))
+                    
+                ) return;
+                this.vert = this.vert.map(
+                    (v1, i) => (i + dx < 0 || i + dx > this.w) ? 
+                        Array.from({length: this.h}, () => 0) : 
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy >= this.h) ?
+                            0 :
+                            this.vert[i + dx][j + dy]
+                        )
+                );
+                this.horiz = this.horiz.map(
+                    (v1, i) => (i + dx < 0 || i + dx >= this.w) ? 
+                        Array.from({length: this.h + 1}, () => 0) : 
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy > this.h) ?
+                            0 :
+                            this.horiz[i + dx][j + dy]
+                        )
+                );
+                for(let mode in this.modes) {
+                    if(this.iconpos[mode]) {
+                        this.iconpos[mode][0] -= dx;
+                        this.iconpos[mode][1] -= dy;
+                    }
+                }
+                this.draw();
+                if(this.options.onShift)this.options.onShift(dx, dy);
+            }
+
+            setIcon(x, y) {
+                if(!(this.mode in this.modes) || this.iconpos[this.mode]) return;
+                for(let mode in this.modes) {
+                    if(mode === this.mode || !this.iconpos[mode]) continue;
+                    if(this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        return;
+                    }
+                }
+                this.iconpos[this.mode] = [x, y];
+                this.draw();
+                if(this.options.onSetIcon)this.options.onSetIcon(x, y);
+            }
+
+            removeIcon(x, y) {
+                for(let mode in this.modes) {
+                    if(!this.iconpos[mode]) continue;
+                    if(this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        delete this.iconpos[mode];
+                        this.draw();
+                        if(this.options.onRemoveIcon)this.options.onRemoveIcon(x, y);
+                        return;
+                    }
+                }
+
+            }
             
-            draw();
-        }
-
-        function toggleVert(y, x) {
-            vert[x][y] = 1 - vert[x][y];
-            draw();
-        }
-
-        function toggleHoriz(y, x) {
-            horiz[x][y] = 1 - horiz[x][y];
-            draw();
-        }
-
-        function draw() {
-            for (let i = 0; i < vert.length; i++) {
-                for (let j = 0; j < vert[i].length; j++) {
-                    if (vert[i][j]) {
-                        $vertline[i][j].setAttribute("class", "line solid");
-                    } else {
-                        $vertline[i][j].setAttribute("class", "line");
-                    }
-                }
+            setMode(mode) {
+                this.mode = mode;
+                if(this.options.onSetMode) this.options.onSetMode(mode);
             }
-            for (let i = 0; i < horiz.length; i++) {
-                for (let j = 0; j < horiz[i].length; j++) {
-                    if (horiz[i][j]) {
-                        $horizline[i][j].setAttribute("class", "line solid");
-                    } else {
-                        $horizline[i][j].setAttribute("class", "line");
-                    }
-                }
-            }
-        }
 
-        function reset() {
-            vert = Array.from({
-                length: 6
-            }, () => Array.from({
-                length: 7
-            }, () => 0));
-            horiz = Array.from({
-                length: 7
-            }, () => Array.from({
-                length: 6
-            }, () => 0));
-            blankPos = [-Infinity, -Infinity];
-            $blank.setAttribute("visibility", "hidden");
-            keyPos = [-Infinity, -Infinity];
-            $key.setAttribute("visibility", "hidden");
-            exitPos = [-Infinity, -Infinity];
-            $exit.setAttribute("visibility", "hidden");
-            draw();
-            setMode("blank");
-        }
+            reset() {
+                this.vert = Array.from({
+                    length: this.w + 1
+                }, () => Array.from({
+                    length: this.h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: this.w
+                }, () => Array.from({
+                    length: this.h + 1
+                }, () => 0));
+                this.iconpos = {};
+                this.draw();
+                if(this.options.onReset) this.options.onReset();
 
-        function setMode(str) {
-            mode = str;
-            if (str === "blank") {
-                $blankButton.setAttribute("class", "select-button selected");
-            } else {
-                $blankButton.setAttribute("class", "select-button");
-            }
-            if (str === "key") {
-                $keyButton.setAttribute("class", "select-button selected");
-            } else {
-                $keyButton.setAttribute("class", "select-button");
-            }
-            if (str === "exit") {
-                $exitButton.setAttribute("class", "select-button selected");
-            } else {
-                $exitButton.setAttribute("class", "select-button");
-            }
-        }
-
-        function setPos(x, y) {
-            removeIcon(x, y);
-            const $el = mode === "blank" ? $blank :
-                mode === "key" ? $key :
-                mode === "exit" ? $exit :
-                undefined;
-            if (!$el) return;
-
-            $el.setAttribute("x", x * 12.25 + 2);
-            $el.setAttribute("y", y * 12.25 + 2);
-
-            $el.setAttribute("visibility", "visible");
-
-
-            if (mode === "blank") blankPos = [x, y];
-            if (mode === "key") keyPos = [x, y];
-            if (mode === "exit") exitPos = [x, y];
-
-        }
-
-        function removeIcon(x, y) {
-            if (blankPos && (blankPos[0] === x && blankPos[1] === y)) {
-                blankPos = [-1, -1];
-                $blank.setAttribute("visibility", "hidden");
-            }
-            if (keyPos[0] === x && keyPos[1] === y) {
-                keyPos = [-1, -1];
-                $key.setAttribute("visibility", "hidden");
-            }
-            if (exitPos[0] === x && exitPos[1] === y) {
-                exitPos = [-1, -1];
-                $exit.setAttribute("visibility", "hidden");
             }
 
         }
@@ -258,13 +378,6 @@
             const $up = document.getElementById("up-button");
             const $down = document.getElementById("down-button");
             const $reset = document.getElementById("reset-button");
-
-            $left.addEventListener("click", () => shift(1, 0));
-            $right.addEventListener("click", () => shift(-1, 0));
-            $up.addEventListener("click", () => shift(0, 1));
-            $down.addEventListener("click", () => shift(0, -1));
-            $reset.addEventListener("click", () => reset());
-
             $blankButton = document.getElementById("blank-select");
             $keyButton = document.getElementById("key-select");
             $exitButton = document.getElementById("exit-select");
@@ -272,45 +385,51 @@
             $key = document.getElementById("img-key");
             $exit = document.getElementById("img-exit");
 
-            $blankButton.addEventListener("click", () => setMode("blank"));
-            $keyButton.addEventListener("click", () => setMode("key"));
-            $exitButton.addEventListener("click", () => setMode("exit"));
+            let maze = new MazeDrawer(4,4, {
+                hoverLineWidth: 6,
+                modes: {
+                    blank: "img/Mystic Maze interactive (VFlyer)/marker.png",
+                    key: "img/Mystic Maze interactive (VFlyer)/key.png",
+                    exit: "img/Mystic Maze interactive (VFlyer)/exit.png"
+                },
+                initMode: "blank",
+                onSetMode: (mode) => {
+                    if(mode === "blank") {
+                        $blankButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $blankButton.setAttribute("class", "select-button");
+                    }
+                    if(mode === "key") {
+                        $keyButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $keyButton.setAttribute("class", "select-button");
+                    }
+                    if(mode === "exit") {
+                        $exitButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $exitButton.setAttribute("class", "select-button");
+                    }
+                }
+            });
+            maze.setCanvas("canvas");
+            maze.init();
+            
+            $left.addEventListener("click", () => maze.shift(1, 0));
+            $right.addEventListener("click", () => maze.shift(-1, 0));
+            $up.addEventListener("click", () => maze.shift(0, 1));
+            $down.addEventListener("click", () => maze.shift(0, -1));
+            $reset.addEventListener("click", () => maze.reset());
+            
+            $blankButton.addEventListener("click", () => maze.setMode("blank"));
+            $keyButton.addEventListener("click", () => maze.setMode("key"));
+            $exitButton.addEventListener("click", () => maze.setMode("exit"));
 
-
-            for (let i = 0; i < vert.length; i++) {
-                for (let j = 0; j < vert[i].length; j++) {
-                    $vertline[i][j] = document.getElementById(`vertline-${i}-${j}`);
-                    document.getElementById(`vert-${i}-${j}`).addEventListener("click", () => toggleVert(j, i));
-                }
-            }
-            for (let i = 0; i < horiz.length; i++) {
-                for (let j = 0; j < horiz[i].length; j++) {
-                    $horizline[i][j] = document.getElementById(`horizline-${i}-${j}`);
-                    document.getElementById(`horiz-${i}-${j}`).addEventListener("click", () => toggleHoriz(j, i));
-                }
-            }
-
-            for (let i = 0; i < horiz.length - 1; i++) {
-                for (let j = 0; j < horiz.length - 1; j++) {
-                    document.getElementById(`box-${i}-${j}`).addEventListener("click", () => setPos(j, i));
-                }
-            }
-            for (let i = 0; i < horiz.length - 1; i++) {
-                for (let j = 0; j < horiz.length - 1; j++) {
-                    document.getElementById(`box-${i}-${j}`).addEventListener("contextmenu", e => {
-                        e.preventDefault();
-                        removeIcon(j, i);
-                    });
-                }
-            }
-            draw();
-            setMode("blank");
         });
     </script>
 </head>
 
 <body>
-    <div class="section">
+    <div class="section interactive-section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -336,8 +455,8 @@
 
                 <h3>Maze Specifications</h3>
                 <ul>
-                    <li>The maze is a 6x6, with the outer edges of the maze being covered completely by walls.</li>
-                    <li>The walls, keys, and exit locations are completely randomized.</li>
+                    <li>The maze is a 4x4, with the outer edges of the maze being covered completely by walls.</li>
+                    <li>The walls, key, and exit location are completely randomized.</li>
                     <li>A wall can separate two spaces orthogonally.</li>
                     <li>You, the key and the exit are always in the center of a square, thus the key and the exit will only make sounds an integer number of seconds after you make a sound. Walls on the other hand are on the edge of squares, and thus will
                         be played half a second more than an integer number of seconds.</li>
@@ -345,12 +464,20 @@
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
-        <div class="page page-bg-02">
+        <div class="page page-bg-02 interactive-page">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Echolocation</span>
             </div>
             <div class="page-content">
+                <h3>Interactive Maze</h3>
+                <ul>
+                    <li>Left-click on edges to place/remove walls.</li>
+                    <li>Left-click on cells to place icons.</li>
+                    <li>Right-click on cells to remove icons.</li>
+                    <li>Click on arrows to shift walls and icons in that direction.</li>
+                    <li>You can select which icons you want to place by clicking on the icons above the maze.</li>
+                </ul>
                 <div>
                     <button id="blank-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/marker.png"></button>
                     <button id="key-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/key.png"></button>
@@ -358,219 +485,13 @@
                 </div>
                 <div>
                     <button id="reset-button">Reset</button>
-                    <button id="left-button">Shift Left</button>
-                    <button id="right-button">Shift Right</button>
-                    <button id="up-button">Shift Up</button>
-                    <button id="down-button">Shift Down</button>
+                    Shift:
+                    <button id="left-button">←</button>
+                    <button id="up-button">↑</button>
+                    <button id="down-button">↓</button>
+                    <button id="right-button">→</button>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 75 75" class="canvas">
-                    <image visibility="hidden" height="10.25" width="10.25" id="img-blank" href="img/Mystic Maze interactive (VFlyer)/marker.png" />
-                    <image visibility="hidden" height="10.25" width="10.25" id="img-exit" href="img/Mystic Maze interactive (VFlyer)/exit.png" />
-                    <image visibility="hidden" height="10.25" width="10.25" id="img-key" href="img/Mystic Maze interactive (VFlyer)/key.png" />
-                    <line x1="1" y1="1" x2="1" y2="13.25" class="line" id="vertline-0-0"/>
-                    <line y1="1" x1="1" y2="1" x2="13.25" class="line" id="horizline-0-0"/>
-                    <line x1="13.25" y1="1" x2="13.25" y2="13.25" class="line" id="vertline-0-1"/>
-                    <line y1="13.25" x1="1" y2="13.25" x2="13.25" class="line" id="horizline-1-0"/>
-                    <line x1="25.5" y1="1" x2="25.5" y2="13.25" class="line" id="vertline-0-2"/>
-                    <line y1="25.5" x1="1" y2="25.5" x2="13.25" class="line" id="horizline-2-0"/>
-                    <line x1="37.75" y1="1" x2="37.75" y2="13.25" class="line" id="vertline-0-3"/>
-                    <line y1="37.75" x1="1" y2="37.75" x2="13.25" class="line" id="horizline-3-0"/>
-                    <line x1="50" y1="1" x2="50" y2="13.25" class="line" id="vertline-0-4"/>
-                    <line y1="50" x1="1" y2="50" x2="13.25" class="line" id="horizline-4-0"/>
-                    <line x1="62.25" y1="1" x2="62.25" y2="13.25" class="line" id="vertline-0-5"/>
-                    <line y1="62.25" x1="1" y2="62.25" x2="13.25" class="line" id="horizline-5-0"/>
-                    <line x1="74.5" y1="1" x2="74.5" y2="13.25" class="line" id="vertline-0-6"/>
-                    <line y1="74.5" x1="1" y2="74.5" x2="13.25" class="line" id="horizline-6-0"/>
-                    <line x1="1" y1="13.25" x2="1" y2="25.5" class="line" id="vertline-1-0"/>
-                    <line y1="1" x1="13.25" y2="1" x2="25.5" class="line" id="horizline-0-1"/>
-                    <line x1="13.25" y1="13.25" x2="13.25" y2="25.5" class="line" id="vertline-1-1"/>
-                    <line y1="13.25" x1="13.25" y2="13.25" x2="25.5" class="line" id="horizline-1-1"/>
-                    <line x1="25.5" y1="13.25" x2="25.5" y2="25.5" class="line" id="vertline-1-2"/>
-                    <line y1="25.5" x1="13.25" y2="25.5" x2="25.5" class="line" id="horizline-2-1"/>
-                    <line x1="37.75" y1="13.25" x2="37.75" y2="25.5" class="line" id="vertline-1-3"/>
-                    <line y1="37.75" x1="13.25" y2="37.75" x2="25.5" class="line" id="horizline-3-1"/>
-                    <line x1="50" y1="13.25" x2="50" y2="25.5" class="line" id="vertline-1-4"/>
-                    <line y1="50" x1="13.25" y2="50" x2="25.5" class="line" id="horizline-4-1"/>
-                    <line x1="62.25" y1="13.25" x2="62.25" y2="25.5" class="line" id="vertline-1-5"/>
-                    <line y1="62.25" x1="13.25" y2="62.25" x2="25.5" class="line" id="horizline-5-1"/>
-                    <line x1="74.5" y1="13.25" x2="74.5" y2="25.5" class="line" id="vertline-1-6"/>
-                    <line y1="74.5" x1="13.25" y2="74.5" x2="25.5" class="line" id="horizline-6-1"/>
-                    <line x1="1" y1="25.5" x2="1" y2="37.75" class="line" id="vertline-2-0"/>
-                    <line y1="1" x1="25.5" y2="1" x2="37.75" class="line" id="horizline-0-2"/>
-                    <line x1="13.25" y1="25.5" x2="13.25" y2="37.75" class="line" id="vertline-2-1"/>
-                    <line y1="13.25" x1="25.5" y2="13.25" x2="37.75" class="line" id="horizline-1-2"/>
-                    <line x1="25.5" y1="25.5" x2="25.5" y2="37.75" class="line" id="vertline-2-2"/>
-                    <line y1="25.5" x1="25.5" y2="25.5" x2="37.75" class="line" id="horizline-2-2"/>
-                    <line x1="37.75" y1="25.5" x2="37.75" y2="37.75" class="line" id="vertline-2-3"/>
-                    <line y1="37.75" x1="25.5" y2="37.75" x2="37.75" class="line" id="horizline-3-2"/>
-                    <line x1="50" y1="25.5" x2="50" y2="37.75" class="line" id="vertline-2-4"/>
-                    <line y1="50" x1="25.5" y2="50" x2="37.75" class="line" id="horizline-4-2"/>
-                    <line x1="62.25" y1="25.5" x2="62.25" y2="37.75" class="line" id="vertline-2-5"/>
-                    <line y1="62.25" x1="25.5" y2="62.25" x2="37.75" class="line" id="horizline-5-2"/>
-                    <line x1="74.5" y1="25.5" x2="74.5" y2="37.75" class="line" id="vertline-2-6"/>
-                    <line y1="74.5" x1="25.5" y2="74.5" x2="37.75" class="line" id="horizline-6-2"/>
-                    <line x1="1" y1="37.75" x2="1" y2="50" class="line" id="vertline-3-0"/>
-                    <line y1="1" x1="37.75" y2="1" x2="50" class="line" id="horizline-0-3"/>
-                    <line x1="13.25" y1="37.75" x2="13.25" y2="50" class="line" id="vertline-3-1"/>
-                    <line y1="13.25" x1="37.75" y2="13.25" x2="50" class="line" id="horizline-1-3"/>
-                    <line x1="25.5" y1="37.75" x2="25.5" y2="50" class="line" id="vertline-3-2"/>
-                    <line y1="25.5" x1="37.75" y2="25.5" x2="50" class="line" id="horizline-2-3"/>
-                    <line x1="37.75" y1="37.75" x2="37.75" y2="50" class="line" id="vertline-3-3"/>
-                    <line y1="37.75" x1="37.75" y2="37.75" x2="50" class="line" id="horizline-3-3"/>
-                    <line x1="50" y1="37.75" x2="50" y2="50" class="line" id="vertline-3-4"/>
-                    <line y1="50" x1="37.75" y2="50" x2="50" class="line" id="horizline-4-3"/>
-                    <line x1="62.25" y1="37.75" x2="62.25" y2="50" class="line" id="vertline-3-5"/>
-                    <line y1="62.25" x1="37.75" y2="62.25" x2="50" class="line" id="horizline-5-3"/>
-                    <line x1="74.5" y1="37.75" x2="74.5" y2="50" class="line" id="vertline-3-6"/>
-                    <line y1="74.5" x1="37.75" y2="74.5" x2="50" class="line" id="horizline-6-3"/>
-                    <line x1="1" y1="50" x2="1" y2="62.25" class="line" id="vertline-4-0"/>
-                    <line y1="1" x1="50" y2="1" x2="62.25" class="line" id="horizline-0-4"/>
-                    <line x1="13.25" y1="50" x2="13.25" y2="62.25" class="line" id="vertline-4-1"/>
-                    <line y1="13.25" x1="50" y2="13.25" x2="62.25" class="line" id="horizline-1-4"/>
-                    <line x1="25.5" y1="50" x2="25.5" y2="62.25" class="line" id="vertline-4-2"/>
-                    <line y1="25.5" x1="50" y2="25.5" x2="62.25" class="line" id="horizline-2-4"/>
-                    <line x1="37.75" y1="50" x2="37.75" y2="62.25" class="line" id="vertline-4-3"/>
-                    <line y1="37.75" x1="50" y2="37.75" x2="62.25" class="line" id="horizline-3-4"/>
-                    <line x1="50" y1="50" x2="50" y2="62.25" class="line" id="vertline-4-4"/>
-                    <line y1="50" x1="50" y2="50" x2="62.25" class="line" id="horizline-4-4"/>
-                    <line x1="62.25" y1="50" x2="62.25" y2="62.25" class="line" id="vertline-4-5"/>
-                    <line y1="62.25" x1="50" y2="62.25" x2="62.25" class="line" id="horizline-5-4"/>
-                    <line x1="74.5" y1="50" x2="74.5" y2="62.25" class="line" id="vertline-4-6"/>
-                    <line y1="74.5" x1="50" y2="74.5" x2="62.25" class="line" id="horizline-6-4"/>
-                    <line x1="1" y1="62.25" x2="1" y2="74.5" class="line" id="vertline-5-0"/>
-                    <line y1="1" x1="62.25" y2="1" x2="74.5" class="line" id="horizline-0-5"/>
-                    <line x1="13.25" y1="62.25" x2="13.25" y2="74.5" class="line" id="vertline-5-1"/>
-                    <line y1="13.25" x1="62.25" y2="13.25" x2="74.5" class="line" id="horizline-1-5"/>
-                    <line x1="25.5" y1="62.25" x2="25.5" y2="74.5" class="line" id="vertline-5-2"/>
-                    <line y1="25.5" x1="62.25" y2="25.5" x2="74.5" class="line" id="horizline-2-5"/>
-                    <line x1="37.75" y1="62.25" x2="37.75" y2="74.5" class="line" id="vertline-5-3"/>
-                    <line y1="37.75" x1="62.25" y2="37.75" x2="74.5" class="line" id="horizline-3-5"/>
-                    <line x1="50" y1="62.25" x2="50" y2="74.5" class="line" id="vertline-5-4"/>
-                    <line y1="50" x1="62.25" y2="50" x2="74.5" class="line" id="horizline-4-5"/>
-                    <line x1="62.25" y1="62.25" x2="62.25" y2="74.5" class="line" id="vertline-5-5"/>
-                    <line y1="62.25" x1="62.25" y2="62.25" x2="74.5" class="line" id="horizline-5-5"/>
-                    <line x1="74.5" y1="62.25" x2="74.5" y2="74.5" class="line" id="vertline-5-6"/>
-                    <line y1="74.5" x1="62.25" y2="74.5" x2="74.5" class="line" id="horizline-6-5"/>
-                    <rect y="0" x="0" height="2" width="14.25" class="click-box" id="horiz-0-0"/> 
-                    <rect x="0" y="0" width="2" height="14.25" class="click-box" id="vert-0-0"/>
-                    <rect y="12.25" x="0" height="2" width="14.25" class="click-box" id="horiz-1-0"/>
-                    <rect x="12.25" y="0" width="2" height="14.25" class="click-box" id="vert-0-1"/>
-                    <rect y="24.5" x="0" height="2" width="14.25" class="click-box" id="horiz-2-0"/>
-                    <rect x="24.5" y="0" width="2" height="14.25" class="click-box" id="vert-0-2"/>
-                    <rect y="36.75" x="0" height="2" width="14.25" class="click-box" id="horiz-3-0"/>
-                    <rect x="36.75" y="0" width="2" height="14.25" class="click-box" id="vert-0-3"/>
-                    <rect y="49" x="0" height="2" width="14.25" class="click-box" id="horiz-4-0"/>
-                    <rect x="49" y="0" width="2" height="14.25" class="click-box" id="vert-0-4"/>
-                    <rect y="61.25" x="0" height="2" width="14.25" class="click-box" id="horiz-5-0"/>
-                    <rect x="61.25" y="0" width="2" height="14.25" class="click-box" id="vert-0-5"/>
-                    <rect y="73.5" x="0" height="2" width="14.25" class="click-box" id="horiz-6-0"/>
-                    <rect x="73.5" y="0" width="2" height="14.25" class="click-box" id="vert-0-6"/>
-                    <rect y="0" x="12.25" height="2" width="14.25" class="click-box" id="horiz-0-1"/>
-                    <rect x="0" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-0"/>
-                    <rect y="12.25" x="12.25" height="2" width="14.25" class="click-box" id="horiz-1-1"/>
-                    <rect x="12.25" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-1"/>
-                    <rect y="24.5" x="12.25" height="2" width="14.25" class="click-box" id="horiz-2-1"/>
-                    <rect x="24.5" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-2"/>
-                    <rect y="36.75" x="12.25" height="2" width="14.25" class="click-box" id="horiz-3-1"/>
-                    <rect x="36.75" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-3"/>
-                    <rect y="49" x="12.25" height="2" width="14.25" class="click-box" id="horiz-4-1"/>
-                    <rect x="49" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-4"/>
-                    <rect y="61.25" x="12.25" height="2" width="14.25" class="click-box" id="horiz-5-1"/>
-                    <rect x="61.25" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-5"/>
-                    <rect y="73.5" x="12.25" height="2" width="14.25" class="click-box" id="horiz-6-1"/>
-                    <rect x="73.5" y="12.25" width="2" height="14.25" class="click-box" id="vert-1-6"/>
-                    <rect y="0" x="24.5" height="2" width="14.25" class="click-box" id="horiz-0-2"/>
-                    <rect x="0" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-0"/>
-                    <rect y="12.25" x="24.5" height="2" width="14.25" class="click-box" id="horiz-1-2"/>
-                    <rect x="12.25" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-1"/>
-                    <rect y="24.5" x="24.5" height="2" width="14.25" class="click-box" id="horiz-2-2"/>
-                    <rect x="24.5" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-2"/>
-                    <rect y="36.75" x="24.5" height="2" width="14.25" class="click-box" id="horiz-3-2"/>
-                    <rect x="36.75" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-3"/>
-                    <rect y="49" x="24.5" height="2" width="14.25" class="click-box" id="horiz-4-2"/>
-                    <rect x="49" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-4"/>
-                    <rect y="61.25" x="24.5" height="2" width="14.25" class="click-box" id="horiz-5-2"/>
-                    <rect x="61.25" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-5"/>
-                    <rect y="73.5" x="24.5" height="2" width="14.25" class="click-box" id="horiz-6-2"/>
-                    <rect x="73.5" y="24.5" width="2" height="14.25" class="click-box" id="vert-2-6"/>
-                    <rect y="0" x="36.75" height="2" width="14.25" class="click-box" id="horiz-0-3"/>
-                    <rect x="0" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-0"/>
-                    <rect y="12.25" x="36.75" height="2" width="14.25" class="click-box" id="horiz-1-3"/>
-                    <rect x="12.25" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-1"/>
-                    <rect y="24.5" x="36.75" height="2" width="14.25" class="click-box" id="horiz-2-3"/>
-                    <rect x="24.5" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-2"/>
-                    <rect y="36.75" x="36.75" height="2" width="14.25" class="click-box" id="horiz-3-3"/>
-                    <rect x="36.75" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-3"/>
-                    <rect y="49" x="36.75" height="2" width="14.25" class="click-box" id="horiz-4-3"/>
-                    <rect x="49" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-4"/>
-                    <rect y="61.25" x="36.75" height="2" width="14.25" class="click-box" id="horiz-5-3"/>
-                    <rect x="61.25" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-5"/>
-                    <rect y="73.5" x="36.75" height="2" width="14.25" class="click-box" id="horiz-6-3"/>
-                    <rect x="73.5" y="36.75" width="2" height="14.25" class="click-box" id="vert-3-6"/>
-                    <rect y="0" x="49" height="2" width="14.25" class="click-box" id="horiz-0-4"/>
-                    <rect x="0" y="49" width="2" height="14.25" class="click-box" id="vert-4-0"/>
-                    <rect y="12.25" x="49" height="2" width="14.25" class="click-box" id="horiz-1-4"/>
-                    <rect x="12.25" y="49" width="2" height="14.25" class="click-box" id="vert-4-1"/>
-                    <rect y="24.5" x="49" height="2" width="14.25" class="click-box" id="horiz-2-4"/>
-                    <rect x="24.5" y="49" width="2" height="14.25" class="click-box" id="vert-4-2"/>
-                    <rect y="36.75" x="49" height="2" width="14.25" class="click-box" id="horiz-3-4"/>
-                    <rect x="36.75" y="49" width="2" height="14.25" class="click-box" id="vert-4-3"/>
-                    <rect y="49" x="49" height="2" width="14.25" class="click-box" id="horiz-4-4"/>
-                    <rect x="49" y="49" width="2" height="14.25" class="click-box" id="vert-4-4"/>
-                    <rect y="61.25" x="49" height="2" width="14.25" class="click-box" id="horiz-5-4"/>
-                    <rect x="61.25" y="49" width="2" height="14.25" class="click-box" id="vert-4-5"/>
-                    <rect y="73.5" x="49" height="2" width="14.25" class="click-box" id="horiz-6-4"/>
-                    <rect x="73.5" y="49" width="2" height="14.25" class="click-box" id="vert-4-6"/>
-                    <rect y="0" x="61.25" height="2" width="14.25" class="click-box" id="horiz-0-5"/>
-                    <rect x="0" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-0"/>
-                    <rect y="12.25" x="61.25" height="2" width="14.25" class="click-box" id="horiz-1-5"/>
-                    <rect x="12.25" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-1"/>
-                    <rect y="24.5" x="61.25" height="2" width="14.25" class="click-box" id="horiz-2-5"/>
-                    <rect x="24.5" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-2"/>
-                    <rect y="36.75" x="61.25" height="2" width="14.25" class="click-box" id="horiz-3-5"/>
-                    <rect x="36.75" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-3"/>
-                    <rect y="49" x="61.25" height="2" width="14.25" class="click-box" id="horiz-4-5"/>
-                    <rect x="49" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-4"/>
-                    <rect y="61.25" x="61.25" height="2" width="14.25" class="click-box" id="horiz-5-5"/>
-                    <rect x="61.25" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-5"/>
-                    <rect y="73.5" x="61.25" height="2" width="14.25" class="click-box" id="horiz-6-5"/>
-                    <rect x="73.5" y="61.25" width="2" height="14.25" class="click-box" id="vert-5-6"/>
-                    <rect x="2" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-0" />
-                    <rect x="2" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-0" />
-                    <rect x="2" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-0" />
-                    <rect x="2" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-0" />
-                    <rect x="2" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-0" />
-                    <rect x="2" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-0" />
-                    <rect x="14.25" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-1" />
-                    <rect x="14.25" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-1" />
-                    <rect x="14.25" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-1" />
-                    <rect x="14.25" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-1" />
-                    <rect x="14.25" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-1" />
-                    <rect x="14.25" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-1" />
-                    <rect x="26.5" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-2" />
-                    <rect x="26.5" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-2" />
-                    <rect x="26.5" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-2" />
-                    <rect x="26.5" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-2" />
-                    <rect x="26.5" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-2" />
-                    <rect x="26.5" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-2" />
-                    <rect x="38.75" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-3" />
-                    <rect x="38.75" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-3" />
-                    <rect x="38.75" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-3" />
-                    <rect x="38.75" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-3" />
-                    <rect x="38.75" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-3" />
-                    <rect x="38.75" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-3" />
-                    <rect x="51" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-4" />
-                    <rect x="51" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-4" />
-                    <rect x="51" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-4" />
-                    <rect x="51" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-4" />
-                    <rect x="51" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-4" />
-                    <rect x="51" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-4" />
-                    <rect x="63.25" y="2" height="10.25" width="10.25" class="grid-box" id="box-0-5" />
-                    <rect x="63.25" y="14.25" height="10.25" width="10.25" class="grid-box" id="box-1-5" />
-                    <rect x="63.25" y="26.5" height="10.25" width="10.25" class="grid-box" id="box-2-5" />
-                    <rect x="63.25" y="38.75" height="10.25" width="10.25" class="grid-box" id="box-3-5" />
-                    <rect x="63.25" y="51" height="10.25" width="10.25" class="grid-box" id="box-4-5" />
-                    <rect x="63.25" y="63.25" height="10.25" width="10.25" class="grid-box" id="box-5-5" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" id="canvas">
                 </svg>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
