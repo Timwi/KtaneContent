@@ -272,6 +272,26 @@ class BombGroup {
         } else {
             missionInfoTree.push("State: " + this.State);
         }
+
+        // Copy DMG string
+        const dmgString = this.loggedBombs.map(bomb => `(\n\t${formatTime(bomb.Time)}\n\tstrikes:${bomb.TotalStrikes}\n${bomb.Pools.map(pool => `\t${pool.Count}*${pool.Modules.join(", ")}`).join("\n")}\n)`).join("\n\n");
+
+        // Download profile
+        const profileWrapper = $("<div>");
+        const profileModules = [...new Set(this.loggedBombs.flatMap(bomb => Object.keys(bomb.Modules)))];
+        const expertProfile = $(`<a>Expert</a>`)
+            .attr("href", `data:application/json,${JSON.stringify({ "EnabledList": profileModules, "Operation": 0 })}`)
+            .attr("download", `${this.MissionName}.json`);
+        const defuserProfile = $(`<a>Defuser</a>`)
+            .attr("href", `data:application/json,${JSON.stringify({ "EnabledList": profileModules, "Operation": 1 })}`)
+            .attr("download", `${this.MissionName}.json`);
+        profileWrapper.append("Download ", expertProfile, "/", defuserProfile, " Profile");
+
+        missionInfoTree.push(
+            { obj: $("<button class=button>").text("Copy DMG String").click(() => navigator.clipboard.writeText(dmgString)) },
+            { obj: profileWrapper },
+        );
+
         makeTree(missionInfoTree, $("<ul>").appendTo(missionInfo));
 
         $("<button class='module'>")
@@ -522,6 +542,7 @@ function Bomb(seed) {
     this.TimeLeft = 0;
     this.Strikes = 0;
     this.TotalStrikes = 0;
+    this.Pools = [];
     this.Modules = {};
     this.Solved = 0;
     this.TotalModules = 0;
@@ -1335,7 +1356,13 @@ function parseLog(opt) {
 
         var pool = /(\d+) Pools:/.exec(line);
         if (pool) {
-            linen += parseInt(pool[1]) + 1;
+            const poolCount = parseInt(pool[1]);
+            for (let i = 0; i < poolCount; i++) {
+                const matches = /\[(.+)\] Count: (\d+)/.exec(readLine());
+                bomb.Pools.push({ Modules: matches[1].split(" "), Count: parseInt(matches[2]) })
+            }
+
+            linen += 1;
             continue;
         }
 
