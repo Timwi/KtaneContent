@@ -1498,7 +1498,8 @@ function parseLog(opt) {
     parsed.forEach(function(obj) { obj.ToHTML(opt); });
     $('#ui').addClass('has-bomb');
     $('#wrap').toggleClass('has-empty-log', parsed.length < 1);
-    selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
+    if (parsed.length !== 0)
+        selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
     if (bombSerial && bombModule)
         $(`#bomb-${bombSerial}>.modules>.module.module-${bombModule}`).click();
     toastr.success("Log read successfully!");
