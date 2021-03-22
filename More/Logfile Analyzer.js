@@ -274,7 +274,16 @@ class BombGroup {
         }
 
         // Copy DMG string
-        const dmgString = this.loggedBombs.map(bomb => `(\n\t${formatTime(bomb.Time)}\n\tstrikes:${bomb.TotalStrikes}\n${bomb.Pools.map(pool => `\t${pool.Count}*${pool.Modules.join(", ")}`).join("\n")}\n)`).join("\n\n");
+        const dmgString = this.loggedBombs
+            .map(bomb =>
+                [
+                    this.isSingleBomb ? null : "(",
+                    formatTime(bomb.Time),
+                    `strikes:${bomb.TotalStrikes}`,
+                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.join(", ")),
+                    this.isSingleBomb ? null : ")"
+                ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
+            .join("\n\n");
 
         // Download profile
         const profileWrapper = $("<div>");
@@ -288,7 +297,7 @@ class BombGroup {
         profileWrapper.append("Download ", expertProfile, "/", defuserProfile, " Profile");
 
         missionInfoTree.push(
-            { obj: $("<button class=button>").text("Copy DMG String").click(() => navigator.clipboard.writeText(dmgString)) },
+            { obj: $("<button class=button>").text("Copy DMG String").click(() => { navigator.clipboard.writeText(dmgString); return false; }) },
             { obj: profileWrapper },
         );
 
@@ -1359,7 +1368,7 @@ function parseLog(opt) {
             const poolCount = parseInt(pool[1]);
             for (let i = 0; i < poolCount; i++) {
                 const matches = /\[(.+)\] Count: (\d+)/.exec(readLine());
-                bomb.Pools.push({ Modules: matches[1].split(" "), Count: parseInt(matches[2]) })
+                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]) })
             }
 
             linen += 1;
