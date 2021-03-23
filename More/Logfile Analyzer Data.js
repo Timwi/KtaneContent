@@ -795,7 +795,7 @@ const parseData = [
         loggingTag: "1D Chess",
         matches: [
             {
-                regex: /To beat Rustmate.*/,
+                regex: /The position is.*/,
                 handler: function (matches, module) {
                     let html = matches[0].replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span style='background: black; color: white; padding: 0 .1cm'>${m}</span>`);
                     let obj = document.createElement('span');
