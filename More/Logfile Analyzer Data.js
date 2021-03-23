@@ -1223,6 +1223,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "boomdas",
+        loggingTag: "Boomdas",
+        matches: [
+            {
+                regex: /(Expecting:|You submitted:)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[0], obj: pre(readMultiple(8).replace(/\[Boomdas #\d+\] /g, "").replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "BrokenButtonsModule",
         loggingTag: "Broken Buttons",
         matches: [
@@ -2362,6 +2378,22 @@ const parseData = [
                 handler: function (matches, module) {
                     module.push({ label: "Operand:", obj: pre(readMultiple(2)) });
                 }
+            }
+        ]
+    },
+    {
+        moduleID: "factoringMaze",
+        loggingTag: "Factoring Maze",
+        matches: [
+            {
+                regex: /The generated with its walls is as follows:/,
+                handler: function (matches, module) {
+                    module.push({ label: "The maze generated with its walls as follows:", obj: pre(readMultiple(9).replace(/\[Factoring Maze #\d+\] /g, "")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
             }
         ]
     },
@@ -4829,6 +4861,22 @@ const parseData = [
     {
         moduleID: "Password",
         loggingTag: "PasswordComponent"
+    },
+    {
+        moduleID: "GSPathfinder",
+        loggingTag: "Pathfinder",
+        matches: [
+            {
+                regex: /The grid:/,
+                handler: function (matches, module) {
+                    module.push({ label: "The grid:", obj: pre(readMultiple(4)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
     },
     {
         moduleID: "Painting",
