@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Maze³ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="jquery.3.1.1.min.js"></script>
+    <script>
+
+    mazeGroup = document.getElementById("themaze");
+    var mazeRotation = 0;
+
+    function setPosition(highlight)
+    {
+        let a = highlight.data('obj-a'), b = highlight.data('obj-b');
+        // Check to see if we're parented to any overflow elements.
+        const overflowElement = a.parents().filter((_, element) => {
+            const jqueryElement = $(element);
+            const overflows = [jqueryElement.css("overflow-x"), jqueryElement.css("overflow-y")];
+            return ["hidden", "scroll", "auto", "overlay"].some(value => overflows.includes(value));
+        });
+
+        // If we have no overflow elements faster path.
+        // We also don't support more than one overflow element so fallback if that happens.
+        if (overflowElement.length !== 1) {
+            highlight.outerWidth(a.outerWidth());
+            highlight.outerHeight(b.outerHeight());
+            highlight.css("left", a.offset().left + "px");
+            highlight.css("top", b.offset().top + "px");
+            highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
+            return;
+        }
+
+        // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of it's overflow element.
+        const outerClipBox = overflowElement[0].getBoundingClientRect();
+        const left = Math.max(a.offset().left, scrollX + outerClipBox.left);
+        const top = Math.max(b.offset().top, scrollY + outerClipBox.top);
+
+        highlight.css("left", left + "px");
+        highlight.css("top", top + "px");
+        highlight.css("transform-origin", -left + "px " + -top + "px");
+        highlight.outerWidth(Math.min(a.outerWidth() - Math.max(0, scrollX + outerClipBox.left - a.offset().left), scrollX + outerClipBox.right - left));
+        highlight.outerHeight(Math.min(b.outerHeight() - Math.max(0, scrollY + outerClipBox.top - b.offset().top), scrollY + outerClipBox.bottom - top));
+    }
+
+    function setupAnimations() {
+        mazeGroup = document.getElementById("themaze");
+        mazeGroup.addEventListener("click", event => {
+            clickMaze();
+            $('.ktane-highlight').each(function(_, e)
+            {
+                setPosition($(e));
+            });
+        }, false);
+        mazeRotation = 0;
+    }
+
+    function clickMaze() {
+        if (document.querySelector("#rotate-left").checked) {
+            mazeRotation--;
+            // if (mazeRotation == -4) {
+            //     mazeRotation = 0;
+            // }
+        } else {
+            mazeRotation++;// = (mazeRotation + 1) % 4;
+        }
+
+        mazeGroup.style.transform = `rotate(${mazeRotation * 90}deg)`;
+        console.log(mazeGroup.style.transform, mazeRotation);
+    }
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+            width: 80%;
+            border: none;
+        }
+
+        td {
+            width: 25%;
+        }
+
+        .empty {
+            border: none;
+        }
+
+        .mazeimg {
+            width: 90%;
+            margin: 0 auto;
+            display: block;
+            margin-top: .5cm;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .italics {
+            font-style: italic;
+        }
+
+        img.center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        img.example-image {
+            width: 60%;
+        }
+        .appendix-reference {
+            font-style: italic;
+        }
+
+        div.highlight-overlay-table {
+            position: absolute;
+        }
+        div.highlight-overlay-table table {
+            position: absolute;
+            border-color: rgba(0,0,0,0);
+            border: 0 solid transparent;
+            width: 55mm;
+            height: 55mm;
+        }
+        div.highlight-overlay-table table tr,td {
+            border-color: rgba(0,0,0,0);
+            border: 0 solid transparent;
+        }
+
+        .solid {
+            border-color: black;
+            border: 1px solid black;
+        }
+
+    </style>
+</head>
+<body onload="setupAnimations()">
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Maze³</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Maze³.svg" class="diagram">
+                <h2>On the Subject of Mazes³</h2>
+                <p class="flavour-text">It’s like the original, but on a whole ’nother scale!</p>
+
+                <p class="appendix-reference" id="appendix-reference">See Appendix A for indicator identification reference.<br>See Appendix B for battery identification reference.<br>See Appendix C for port identification reference.</p>
+
+                <ul>
+                    <li>This module consists of a cube with nine
+                        dots on each face and a circular
+                        ENTER button in the top left corner of
+                        the module.</li>
+                    <li>To disarm the module, move the white light by pressing the edges of the front-facing side of the cube
+                        without hitting any walls,
+                        pressing ENTER when its position coincides with three correct central
+                        dots. Hitting a wall or pressing ENTER at an incorrect dot will
+                        cause a strike.</li>
+                    <li>Look at the table below to determine which dots are required to be submitted to disarm the module. The dots must be entered in the order that they appear on
+                        the table, from top to bottom. Note that not all colored dots are shown as colored
+                        in the module.
+                    </li>
+                    <li>
+                        To find where the walls are, use the
+                        colored dots visible in the module and their location and
+                        match those to the maze
+                        printed below. Note that the maze may be rotated.
+                    </li>
+                </ul>
+
+                <br>
+
+                <table class="solid">
+                    <tr class="solid">
+                        <td class="empty"></td>
+                        <th>1 OR LESS</th>
+                        <th>2, 3 or 4</th>
+                        <th>5 OR MORE </th>
+                    </tr>
+                    <tr class="solid">
+                        <th>Batteries</th>
+                        <td class="solid">Magenta</td>
+                        <td class="solid">Orange</td>
+                        <td class="solid">Blue</td>
+                    </tr>
+                    <tr class="solid">
+                        <th>Indicators</th>
+                        <td class="solid">Red</td>
+                        <td class="solid">Yellow</td>
+                        <td class="solid">Green</td>
+                    </tr>
+                    <tr class="solid">
+                        <th>Ports</th>
+                        <td class="solid">Blue</td>
+                        <td class="solid">Magenta</td>
+                        <td class="solid">Orange</td>
+                    </tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03" style="width: 260mm; height: 250mm">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Maze³</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <input type="radio" id="rotate-left" name="rotate" value="left">
+                    <label for="rotate-left">Rotate 90° Counterclockwise</label>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-right" name="rotate" value="right" checked>
+                    <label for="rotate-right">Rotate 90° Clockwise</label>
+                </div>
+                <div class="themaze" id="themaze">
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 0mm; margin-left: 83.2mm">
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 54.5mm; margin-left: 28.7mm"> <!-- ; width: 53.2mm -->
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 54.5mm; margin-left: 83.1mm">
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 54.5mm; margin-left: 137.8mm"> <!-- ; width: 53.2mm -->
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 109.2mm; margin-left: 83mm">
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="highlight-overlay-table">
+                        <table style="margin-top: 164mm; margin-left: 83mm">
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <img class="mazeimg" src="img/Maze³/maze.png" style="width: 164mm; margin-top: 0">
+                </div>
+            </div>
+           <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
