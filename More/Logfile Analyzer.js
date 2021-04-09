@@ -227,7 +227,7 @@ class BombGroup {
             .mousedown(function() { return false; });
         var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
-        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}")`);
+        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}"), url(img/BombPreview.png)`);
 
         var totalModules = 0;
         var totalNeedies = 0;
