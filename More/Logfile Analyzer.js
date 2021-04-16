@@ -289,10 +289,10 @@ class BombGroup {
         const profileWrapper = $("<div>");
         const profileModules = [...new Set(this.loggedBombs.flatMap(bomb => Object.keys(bomb.Modules)))];
         const expertProfile = $(`<a>Expert</a>`)
-            .attr("href", `data:application/json,${JSON.stringify({ "EnabledList": profileModules, "Operation": 0 })}`)
+            .attr("href", `data:application/json,${encodeURIComponent(JSON.stringify({ "EnabledList": profileModules, "Operation": 0 }))}`)
             .attr("download", `${this.MissionName}.json`);
         const defuserProfile = $(`<a>Defuser</a>`)
-            .attr("href", `data:application/json,${JSON.stringify({ "EnabledList": profileModules, "Operation": 1 })}`)
+            .attr("href", `data:application/json,${encodeURIComponent(JSON.stringify({ "EnabledList": profileModules, "Operation": 1 }))}`)
             .attr("download", `${this.MissionName}.json`);
         profileWrapper.append("Download ", expertProfile, "/", defuserProfile, " Profile");
 
