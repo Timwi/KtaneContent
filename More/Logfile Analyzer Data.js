@@ -633,7 +633,7 @@ const parseData = [
                     });
                     return true;
                 }
-            },	
+            },
             {
                 regex: /.+/
             }
@@ -781,6 +781,26 @@ const parseData = [
                 handler: function (matches, module) {
                     var board = readMultiple(4);
                     module.push({ label: matches.input, obj: pre(board) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "1D Chess",
+        moduleID: "1DChess",
+        loggingTag: "1D Chess",
+        matches: [
+            {
+                regex: /The position is.*/,
+                handler: function (matches, module) {
+                    let html = matches[0].replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span style='background: black; color: white; padding: 0 .1cm'>${m}</span>`);
+                    let obj = document.createElement('span');
+                    obj.innerHTML = html;
+                    module.push({ obj: obj });
                     return true;
                 }
             },
@@ -1199,6 +1219,22 @@ const parseData = [
 
                     module.push({ label: "Diagram:", obj: $("<div style='width: 40%'>").append(svg), expanded: true });
                 }
+            }
+        ]
+    },
+    {
+        moduleID: "boomdas",
+        loggingTag: "Boomdas",
+        matches: [
+            {
+                regex: /(Expecting:|You submitted:)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[0], obj: pre(readMultiple(8).replace(/\[Boomdas #\d+\] /g, "").replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
             }
         ]
     },
@@ -2346,6 +2382,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "factoringMaze",
+        loggingTag: "Factoring Maze",
+        matches: [
+            {
+                regex: /The generated with its walls is as follows:/,
+                handler: function (matches, module) {
+                    module.push({ label: "The maze generated with its walls as follows:", obj: pre(readMultiple(9).replace(/\[Factoring Maze #\d+\] /g, "")) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "fastMath",
         loggingTag: "Fast Math",
         matches: [
@@ -2899,7 +2951,7 @@ const parseData = [
         moduleID: "giantsDrink",
         loggingTag: "The Giant's Drink",
         displayName: "The Giant’s Drink"
-    },	
+    },
     {
         displayName: "Grid Matching",
         moduleID: "GridMatching",
@@ -3087,14 +3139,14 @@ const parseData = [
                             for (let k = -2; k < 3; k++) {
                                 if (i + j + k !== 0)
                                     continue;
-                                
+
                                 let color = hexData[i][j][k].isBlocked ? hexData[i][j][k].number === -1 ? "black" : "red" : "none";
                                 let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4 } ${(k - j) * sideLength * Math.cos(Math.PI/6)})">`).appendTo(svg);
                                 $SVG(`<polygon points="${hexagon}" style="fill:${color};stroke:black;stroke-width:1;fill-rule:nonzero;""/>`).appendTo(group);
                                 if (hexData[i][j][k].number !== -1)
                                     $SVG('<text x="0" y="0" font-size="8" text-anchor="middle" dominant-baseline="central" fill="black">').text(hexData[i][j][k].number).appendTo(group);
                             }
-                            
+
                     module.push({label: matches.input, obj: div});
                     return true;
                 }
@@ -4811,6 +4863,22 @@ const parseData = [
         loggingTag: "PasswordComponent"
     },
     {
+        moduleID: "GSPathfinder",
+        loggingTag: "Pathfinder",
+        matches: [
+            {
+                regex: /The grid:/,
+                handler: function (matches, module) {
+                    module.push({ label: "The grid:", obj: pre(readMultiple(4)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "Painting",
         loggingTag: "Painting",
         matches: [
@@ -6038,7 +6106,7 @@ const parseData = [
                     {
                         var unused1 = readTaggedLine();
                         var unused2 = readTaggedLine();
-    
+
                         var letterTable = readTaggedLine().replace(/Letter table is:/, "");
                         var ltable = $('<table>').css('border', '1px solid black').css('border-collapse', 'collapse')
                         for (var r = 0; r < 5; r++) {
@@ -6236,14 +6304,14 @@ const parseData = [
                 handler: function (matches, module) {
                     module.push(matches.input);
                     return true;
-                }	
+                }
             },
             {
                 regex: /Module is now in the solve phase, good luck!/,
                 handler: function (matches, module) {
                     module.push({obj: matches.input, nobullet: true});
                     return true;
-                }	
+                }
             },
             {
                 regex: /----------Stage (.+):----------/,

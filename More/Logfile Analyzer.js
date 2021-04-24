@@ -227,7 +227,7 @@ class BombGroup {
             .mousedown(function() { return false; });
         var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
-        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}")`);
+        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}"), url(img/BombPreview.png)`);
 
         var totalModules = 0;
         var totalNeedies = 0;
@@ -272,6 +272,35 @@ class BombGroup {
         } else {
             missionInfoTree.push("State: " + this.State);
         }
+
+        // Copy DMG string
+        const dmgString = this.loggedBombs
+            .map(bomb =>
+                [
+                    this.isSingleBomb ? null : "(",
+                    formatTime(bomb.Time),
+                    `strikes:${bomb.TotalStrikes}`,
+                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.join(", ")),
+                    this.isSingleBomb ? null : ")"
+                ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
+            .join("\n\n");
+
+        // Download profile
+        const profileWrapper = $("<div>");
+        const profileModules = [...new Set(this.loggedBombs.flatMap(bomb => Object.keys(bomb.Modules)))];
+        const expertProfile = $(`<a>Expert</a>`)
+            .attr("href", `data:application/json,${encodeURIComponent(JSON.stringify({ "EnabledList": profileModules, "Operation": 0 }))}`)
+            .attr("download", `${this.MissionName}.json`);
+        const defuserProfile = $(`<a>Defuser</a>`)
+            .attr("href", `data:application/json,${encodeURIComponent(JSON.stringify({ "EnabledList": profileModules, "Operation": 1 }))}`)
+            .attr("download", `${this.MissionName}.json`);
+        profileWrapper.append("Download ", expertProfile, "/", defuserProfile, " Profile");
+
+        missionInfoTree.push(
+            { obj: $("<button class=button>").text("Copy DMG String").click(() => { navigator.clipboard.writeText(dmgString); return false; }) },
+            { obj: profileWrapper },
+        );
+
         makeTree(missionInfoTree, $("<ul>").appendTo(missionInfo));
 
         $("<button class='module'>")
@@ -522,6 +551,7 @@ function Bomb(seed) {
     this.TimeLeft = 0;
     this.Strikes = 0;
     this.TotalStrikes = 0;
+    this.Pools = [];
     this.Modules = {};
     this.Solved = 0;
     this.TotalModules = 0;
@@ -1335,7 +1365,13 @@ function parseLog(opt) {
 
         var pool = /(\d+) Pools:/.exec(line);
         if (pool) {
-            linen += parseInt(pool[1]) + 1;
+            const poolCount = parseInt(pool[1]);
+            for (let i = 0; i < poolCount; i++) {
+                const matches = /\[(.+)\] Count: (\d+)/.exec(readLine());
+                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]) })
+            }
+
+            linen += 1;
             continue;
         }
 
@@ -1462,7 +1498,8 @@ function parseLog(opt) {
     parsed.forEach(function(obj) { obj.ToHTML(opt); });
     $('#ui').addClass('has-bomb');
     $('#wrap').toggleClass('has-empty-log', parsed.length < 1);
-    selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
+    if (parsed.length !== 0)
+        selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
     if (bombSerial && bombModule)
         $(`#bomb-${bombSerial}>.modules>.module.module-${bombModule}`).click();
     toastr.success("Log read successfully!");

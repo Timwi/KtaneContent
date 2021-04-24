@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Agujero negro — Módulo de Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setRules(rnd)
+        {
+            // Añade aleatoriedad
+            for (var i = rnd.next(0, 10); i > 0; i--)
+                rnd.nextDouble();
+
+            var dots2 = 'M45 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z';
+            var dots3 = 'M35 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z';
+            var dots4 = 'M25 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z';
+
+            var alternative = [
+                { dots: dots4, gest: 'M30 70v10h20V70M70 70v10' },  // • └─•─┘ • | •
+                { dots: dots3, gest: 'M40 70v10h20V70' },           // • └─•─┘ •
+            ];
+            var pool = rnd.shuffleArray([
+                { dots: dots3, gest: 'M40 70v10m20-10v10' },                    // • | • | •
+                { dots: dots4, gest: 'M52.5 70v10H70V70m-40 0v10h17.5V70' },    // • └─•─┘└─•─┘ •
+                { dots: dots4, gest: 'M30 70v10M50 70v10h20V70' },              // • | •  └─•─┘ •
+                { dots: dots4, gest: 'M30 70v10h40V70' },                       // • └─•──•─┘ •
+                alternative [ rnd.next(0, alternative.length) ],
+                { dots: dots4, gest: 'M30 70v10M70 70v10' },                    // • | •   • | •
+            ]);
+
+            for (var i = 0; i < 5; i++) {
+                document.getElementById(`dots-${i}`).setAttribute('d', pool[i].dots);
+                document.getElementById(`gest-${i}`).setAttribute('d', pool[i].gest);
+            }
+
+            var c = [
+                { dots: dots3, gest: 'M37.5 70v10h20V70M62.5 70v10' },          // • └─•─┘| •
+                { dots: dots2, gest: 'M47.5 70v10M52.5 70v10' },                // • || •
+                { dots: dots3, gest: 'M37.5 70v10M42.5 70v10h20V70' },          // • |└─•─┘ •
+            ][ rnd.next(0, 3) ];
+            document.getElementById('dots-C').setAttribute('d', c.dots);
+            document.getElementById('gest-C').setAttribute('d', c.gest);
+
+            console.log(rnd.count);
+
+            var arr = [ El tercer carácter es la coordenada x; el sexto es la y
+                "El primer carácter numérico es la coordenada x, el segundo carácter numérico es la coordenada y.",
+                "El segundo carácter numérico es la coordenada x, el primer carácter numérico es la coordenada y.",
+                "El sexto carácter numérico es la coordenada x, el tercer carácter numérico es la coordenada y.",
+                "El tercer carácter numérico es la coordenada x, el sexto carácter numérico es la coordenada y.",
+                "El primer carácter numérico es la coordenada x, el último carácter numérico es la coordenada y.",
+                "El último carácter numérico es la coordenada x, el primer carácter numérico es la coordenada y.",
+            ];
+            var elem = arr[rnd.next(0, arr.length)];
+            document.getElementById('sn-coords').innerText = elem;
+
+            var directions = [ "este", "sur", "oeste", "norte" ];
+            document.getElementById('initial-direction').innerText = directions [ rnd.next(0, 4) ];
+
+            var rotations = [ "sinistrorsamente", "dextrorsamente" ];
+            document.getElementById('initial-rotation').innerText = rotations [ rnd.next(0, 2) ];
+            var rotation2 = rotations [ rnd.next(0, 2) ];
+            document.getElementById('rotation-1').innerText = rotation2;
+            document.getElementById('rotation-2').innerText = rotation2;
+
+            var widgets = [ "pila y puerto", "pila e indicador", "portapilas y puerto", "portapilas e indicador", "puerto e indicador", "puerto", "indicador", "pila", "portapilas" ];
+            document.getElementById('rot-widget').innerText = widgets [ rnd.next(0, widgets.length) ];
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+    </script>
+    <style>
+        ul {
+            padding-left: 1em;
+        }
+
+        li {
+            margin: .8em 0;
+        }
+
+        table.grid {
+            margin: 3em auto 0;
+            font-size: 14pt;
+        }
+
+            table.grid col {
+                width: 1.2cm;
+            }
+
+            table.grid td {
+                text-align: center;
+            }
+
+            table.grid tr {
+                height: 1.2cm;
+            }
+
+        .ruleseed-active .seedable {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        span.footnote-marker {
+            vertical-align: super;
+            font-size: 70%;
+        }
+        p.footnote {
+            font-size: 75%;
+        }
+        div.footnotes {
+            position: relative;
+            margin-top: 2em;
+            padding-top: 1em;
+        }
+        div.footnotes:before {
+            border-top: 1px solid black;
+            left: 0;
+            top: 0;
+            position: absolute;
+            width: 50mm;
+            content: '';
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Agujero negro</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Black Hole.svg" class="diagram">
+                <h2>En caso del agujero negro</h2>
+                <p class="flavour-text">Control a Gran Tom, ¿puedes leer?</p>
+                <ul>
+                    <li>Para desactivar todos los agujeros negros de la bomba, debes obtener un código con dígitos comprendidos en el rango 0-4. La longitud del código es 7 veces el número de agujeros de negros en la misma bomba. En cualquier momento puedes introducir el siguiente dígito del código en cualquier agujero negro.
+                    <li>Si resuelves cualquier otro módulo en la bomba después de meter un dígito, el código se reduce en dos dígitos (excepto cuando el dígito hace que se resuelva un agujero negro). Así, el código para un agujero negro se reduce de 7 a 3; para dos, de 14 (7*2) a 6 (3*2), etc. al resolver otros módulos entre dígito y dígito.
+                    <li>Mira la cuadrícula 10×10 de la siguiente página. Debes calcular tu posición inicial a partir del número de serie de la bomba. <span class='seedable' id='sn-coords'>El tercer carácter es la coordenada x; el sexto es la y.</span> Las columnas se cuentan de arriba a abajo y las filas de izquierda a derecha (contando desde el 0).
+                    <li>Para determinar tu dirección inicial de tu primer movimeinto, mira al <span class='seedable' id='initial-direction'>norte</span>, y luego gira 45° <span class='seedable' id='initial-rotation'>dextrorsamente</span> por cada <span class='seedable' id='rot-widget'>puerto</span> en la bomba.
+                    <li>Obtén el primer dígito del código a partir de esa posición/casilla, y luego, muévete un espacio en tu dirección incial, después gira tu dirección 45° <span class='seedable' id='rotation-1'>dextrorsamente</span>.
+                    <li>El siguiente dígito es la suma, <em>módulo 5</em><span class='footnote-marker'>*</span>, de dos casillas consecutivas en la dirección actual. Obtén los dos números, muévete un espacio por delante de ellas, y luego gira 45° <span class='seedable' id='rotation-2'>dextrorsamente</span>.
+                    <li>Procede de la misma manera por cada dígito subsecuente, añadiendo una casilla más cada vez. El dígito en la posición <var>n</var>-ésima del código es la suma (módulo 5<span class='footnote-marker'>*</span>) de <var>n</var> casillas consecutivas.
+                    <li>Cada vez que te pases del extremo de la cuadrícula, vete al lado contrario de la misma ( p. ej.: (3, 9) ⭢ (3, 0) ).
+                    <li>En la página siguiente están los combos para introducir cada dígito.
+                    <li>El combo “C” se usa para determinar cuántos dígitos correctos se le han introducido al agujero negro (por si has perdido la cuenta).
+                </ul>
+                <div class='footnotes'>
+                    <p class='footnote'><sup>*</sup> “módulo 5”: Suma/resta 5 hasta que el número esté en el rango 0-4.</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 2</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Agujero negro</span>
+            </div>
+            <div class="page-content">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox='-2 -2 604 94' font-size="28" font-family="Special Elite" text-anchor="middle">
+                    <!-- frame -->
+                    <path fill="none" stroke="#000" stroke-width="2" d="M0 40h600v50H0zm100 0v50m100-50v50m100-50v50m100-50v50m100-50v50" />
+
+                    <!-- 0 --> <path id='dots-0' transform='translate(000, 0)' d="M35 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- 0 --> <path id='gest-0' transform='translate(000, 0)' fill="none" stroke="#000" d="M40 70v10h20V70" />
+                    <!-- 1 --> <path id='dots-1' transform='translate(100, 0)' d="M35 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- 1 --> <path id='gest-1' transform='translate(100, 0)' fill="none" stroke="#000" d="M40 70v10m20-10v10" />
+                    <!-- 2 --> <path id='dots-2' transform='translate(200, 0)' d="M25 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- 2 --> <path id='gest-2' transform='translate(200, 0)' fill="none" stroke="#000" d="M30 70v10M50 70v10h20V70" />
+                    <!-- 3 --> <path id='dots-3' transform='translate(300, 0)' d="M25 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- 3 --> <path id='gest-3' transform='translate(300, 0)' fill="none" stroke="#000" d="M52.5 70v10H70V70m-40 0v10h17.5V70" />
+                    <!-- 4 --> <path id='dots-4' transform='translate(400, 0)' d="M25 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- 4 --> <path id='gest-4' transform='translate(400, 0)' fill="none" stroke="#000" d="M30 70v10h40V70" />
+                    <!-- C --> <path id='dots-C' transform='translate(500, 0)' d="M45 55a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm20 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+                    <!-- C --> <path id='gest-C' transform='translate(500, 0)' fill="none" stroke="#000" d="M47.5 70v10M52.5 70v10" />
+
+                    <text x="50" y="30"><tspan x="50" y="30" fill="#000" stroke="none">0</tspan></text>
+                    <text x="250" y="30"><tspan x="250" y="30" fill="#000" stroke="none">2</tspan></text>
+                    <text x="150" y="30"><tspan x="150" y="30" fill="#000" stroke="none">1</tspan></text>
+                    <text x="350" y="30"><tspan x="350" y="30" fill="#000" stroke="none">3</tspan></text>
+                    <text x="450" y="30"><tspan x="450" y="30" fill="#000" stroke="none">4</tspan></text>
+                    <text x="550" y="30"><tspan x="550" y="30" fill="#000" stroke="none">C</tspan></text>
+                </svg>
+                <ul>
+                    <li>En los diagramas de arriba, el punto representa un tick en el reloj de la bomba (es decir, el cambio de número en los segundos) yendo de izquierda a derecha.
+                    <li>La línea vertical representa un click (rápido) en el módulo. Asegúrate de que pulsas <em>y</em> sueltas el click en medio de dos ticks.
+                    <li>El corchete indica mantener pulsado el ratón durante uno o más ticks.
+                </ul>
+                <table class='grid'>
+                    <colgroup><col><col><col><col><col><col><col><col><col><col></colgroup>
+                    <tr><td>3</td><td>4</td><td>1</td><td>0</td><td>2</td><td>3</td><td>1</td><td>2</td><td>0</td><td>4</td></tr>
+                    <tr><td>1</td><td>3</td><td>0</td><td>2</td><td>4</td><td>1</td><td>2</td><td>3</td><td>4</td><td>0</td></tr>
+                    <tr><td>3</td><td>2</td><td>4</td><td>2</td><td>1</td><td>3</td><td>0</td><td>0</td><td>1</td><td>4</td></tr>
+                    <tr><td>4</td><td>0</td><td>0</td><td>1</td><td>3</td><td>4</td><td>2</td><td>2</td><td>1</td><td>3</td></tr>
+                    <tr><td>1</td><td>2</td><td>1</td><td>3</td><td>0</td><td>0</td><td>4</td><td>3</td><td>4</td><td>2</td></tr>
+                    <tr><td>4</td><td>0</td><td>2</td><td>3</td><td>4</td><td>1</td><td>3</td><td>0</td><td>2</td><td>1</td></tr>
+                    <tr><td>2</td><td>1</td><td>3</td><td>1</td><td>3</td><td>0</td><td>4</td><td>4</td><td>0</td><td>2</td></tr>
+                    <tr><td>2</td><td>4</td><td>4</td><td>0</td><td>0</td><td>2</td><td>1</td><td>1</td><td>3</td><td>3</td></tr>
+                    <tr><td>0</td><td>1</td><td>3</td><td>4</td><td>2</td><td>2</td><td>0</td><td>4</td><td>3</td><td>1</td></tr>
+                    <tr><td>0</td><td>3</td><td>2</td><td>4</td><td>1</td><td>4</td><td>3</td><td>1</td><td>2</td><td>0</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Página 2 de 2</div>
+        </div>
+    </div>
+</body>
+</html>
