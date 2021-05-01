@@ -137,7 +137,7 @@ const parseData = [
                 }
             },
             {
-                regex: /Selected (.+) \(.+ \((.+)\)\)/,
+                regex: /Selected (.+?) \(.+ \((.+)\)\)/,
                 handler: function (matches) {
                     var tree = [];
                     tree.groups = new Groups();
