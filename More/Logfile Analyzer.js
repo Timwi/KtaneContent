@@ -960,7 +960,8 @@ function Bomb(seed) {
         });
 
         function GetManual(parseData) {
-            let manual = parseData.moduleData.displayName
+            const moduleData = parseData.moduleData;
+            let manual = (moduleData.repo?.FileName || moduleData.repo?.Name || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
 
