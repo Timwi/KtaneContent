@@ -2593,6 +2593,15 @@ const parseData = [
         loggingTag: "Forget Everything",
         matches: [
             {
+                regex: /(Stage order:) (\d+(,\d+)*)/,
+                handler: function (matches, module){
+                    var div = $('<div>');
+                    div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
+                    module.push({ label: matches[1], obj: div });
+                    return true;
+                }
+            },
+            {
                 regex: /Initial answer \(stage 1 display\): (\d+)$/,
                 handler: function (matches, module) {
                     module.ForgetEverything = [{
