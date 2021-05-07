@@ -7000,7 +7000,7 @@ const parseData = [
                     if (!('TennisLines' in module))
                         module.TennisLines = [];
                     module.TennisLines.push(matches.input);
-                    if (module.TennisLines.length % 5 === 0) {
+                    if (module.TennisLines.length % 5 === 0 || matches.input.includes('wins.')) {
                         module.push({ label: module.TennisLastHeading || 'SN character:', obj: $('<pre>').text(module.TennisLines.join("\n")) });
                         module.TennisLines = [];
                     }
