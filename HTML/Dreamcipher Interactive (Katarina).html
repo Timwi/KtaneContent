@@ -1,0 +1,394 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Dreamcipher (Interactive) — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function(){
+        
+            var letterTable = $("#emptyTable");
+            var startingLetter = "A";
+            var currentLetter = 0;
+            var prevUsed = -1;
+            var prevPosition = "";
+            var alphabetString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var letterPositions = [];
+            
+            function genTable(){
+                for (var i = 0; i < 9; i++) 
+                {
+                    var row = $("<tr>").appendTo(letterTable);
+                    if (i == 0) 
+                    {
+                        row.addClass("textTable")
+                        for (var x = 0; x < 9; x++) 
+                        {
+                            if (x == 0) 
+                            {
+                                $("<td>").css({"border": "none"}).appendTo(row);
+                                continue;
+                            }
+                            var chrs = "ABCDEFGH";
+                            $("<td>").text(chrs[x-1]).appendTo(row);
+                        }
+                        continue;
+                    }
+                    var nums = "12345678";
+                    for (var x = 0; x < 9; x++) 
+                    {
+                        if (x == 0) 
+                        {
+                            $("<td>").text(i).attr("class", "textRow").appendTo(row);
+                            continue;
+                        }
+                        $("<td>").attr("id", "letters").appendTo(row).each(function(_,ele) 
+                        {
+                            var thing = $(ele);
+                            thing.on("contextmenu", function(ele) {
+                                return false;
+                            });
+                            
+                            thing.mousedown(function(ev)
+                            {   
+                                var pos = thing.closest('tr').index() + ":" + thing.index();
+                                switch (ev.which) 
+                                {
+                                    case 1:
+                                        if (currentLetter == 25 || ((pos == prevPosition) && letterTable.find("tr:eq("+prevPosition.split(":")[0]+")").find("td:eq("+prevPosition.split(":")[1]+")").text() != "")) 
+                                        {
+                                            break;
+                                        }
+                                        while (currentLetter == prevUsed) 
+                                        {
+                                            currentLetter++;
+                                        }
+                                        prevUsed = currentLetter;
+                                        thing.text(alphabetString[currentLetter]);
+                                        thing.css('color', 'red');
+                                        letterTable.find("tr:eq("+prevPosition.split(":")[0]+")").find("td:eq("+prevPosition.split(":")[1]+")").css('color', 'black');
+                                        letterPositions.push(pos);
+                                        prevPosition = pos;
+                                        break;
+                                }
+                            }); 
+                        });
+                        
+                    }
+                    
+                }
+            }
+            genTable();
+
+            $("#toggleTable").click(() => {
+                $("#glyphTable").toggle();
+                $("#emptyTable").toggle();
+            });
+            
+            $("#letterSelect").change(
+            function() {
+                startingLetter = $("select option:selected").val();
+                var abet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                alphabetString = abet.replace(abet.substring(0, abet.indexOf(startingLetter)), "") + abet.substring(0, abet.indexOf(startingLetter));
+                currentLetter = 0;
+                prevPosition = "";
+                letterPositions = [];
+                letterTable.empty();
+                genTable();
+            });
+            
+            $("#resetButton").click(() => {
+                letterTable.empty();
+                genTable();
+                $("#letterSelect").prop('selectedIndex',0);
+                startingLetter = "A";
+                alphabetString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                prevUsed = -1;
+                currentLetter = 0;
+                prevPosition = "";
+                letterPositions = [];
+            });
+            
+            $("#undoButton").click(function() 
+            {
+                if (letterPositions.length == 0) return;
+                var pos = letterPositions[letterPositions.length-1].split(":");
+                var cell = letterTable.find("tr:eq("+pos[0]+")").find("td:eq("+pos[1]+")");
+                cell.text("");
+                letterPositions.pop();
+                if (letterPositions.length != 0) 
+                {
+                    pos = letterPositions[letterPositions.length-1].split(":");
+                    cell = letterTable.find("tr:eq("+pos[0]+")").find("td:eq("+pos[1]+")");
+                    cell.css('color', 'red');
+                }
+                if (currentLetter != 0) 
+                {
+                    currentLetter--;
+                    prevUsed = currentLetter;
+                    return;
+                }
+                prevUsed = currentLetter-1;
+            });
+            
+        });  
+    </script>
+    <style>
+        button {
+            background-color: #FFFFFF;
+            border: 2px solid black;
+            border-radius: 10px;
+            font-size: 15px;
+            padding: 12px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            
+        }
+        .buttons select 
+        {
+            display: block;
+            border: 2px solid black;
+            border-radius: 10px;
+            margin-left: 30px;
+            margin-right: 30px;
+            padding: 12px;
+        }
+        table {
+            width: 100%;
+            border: none;
+            table-layout: fixed;
+        }
+        td {
+            position: relative;
+            padding: 0.5% 12% 12% 0.5%;
+        }
+        .glyph {
+            width:93.5%;
+            position: absolute;
+        }
+        .textTable td
+        {
+            padding: 3px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .textRow 
+        {
+            padding: 3px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #glyphTable {
+            display: block;
+        }
+        #emptyTable {
+            display: none;
+        }
+        #letters {
+            text-align: center;
+            padding: 25px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Dreamcipher</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Dreamcipher.svg" class="diagram">
+                <h2>On the Subject of Dreamletters</h2>
+                <p class="flavour-text">I'm now more awake, but it seems someone has helped me already. So, I'm going back to bed again.</p>
+                <ul>
+                    <li>Take down the order of the bits, filled (fully white) being 1 and unfilled (white outline) being 0. The "-" also counts as a bit, but is not a letter/glyph.</li>
+                    <li>After taking down these bits, they should have formed a 16 bit string. Split it into groups of 8, 4 and 4, turn them into decimal form and add 1 to each.</li>
+                    <li>Take the first number and add it to the second number and that will give you a position to a glyph that corresponds to the last letter of the serial number.</li>
+                    <li>The table below will start at the top-left, which is position 0, and go in reading order. Bottom-right of the table will be position 63. If you must go past 63 in order to get to a glyph, wrap around back to 0.</li>
+                    <li>If you land on a glyph that already has a letter attached to it, keep going in reading order until you land on a glyph that has not been taken.</li>
+                    <li>Here are the shifting rules:
+                        <ul>
+                            <li>Remove <span style="font-weight: bold;">(First SN Digit + 1)</span> digits from left to right and add <span style="font-weight: bold;">(First SN Digit + 1)</span> 0's at the right side of the string (Ex. [1111]01 shifted left is 01[0000]). Then, XOR the two strings (1 being true, 0 being false).</li>
+                            <li>Remove <span style="font-weight: bold;">(Last SN Digit + 1)</span> digits from right to left and add <span style="font-weight: bold;">(Last SN Digit + 1)</span> 0's at the left side of the string (Ex. 11[1101] shifted left is [0000]11). Then, XOR the two strings (1 being true, 0 being false).</li>
+                            <li>Remove <span style="font-weight: bold;">[(Sum of SN Digits % 15) + 1]</span> digits from left to right and add <span style="font-weight: bold;">[(Sum of SN Digits % 15) + 1]</span> 0's at the right side of the string (Ex. [1111]01 shifted left is 01[0000]). Then, XOR the two strings (1 being true, 0 being false).</li>
+                            <li>This is your new bit string, split this into groups of 4 and turn them into decimal and add one to each and continue placing them into the table from the last placed letter.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h3>Using the Interactive Table</h3>
+                <ul>
+                    <li><span style="font-weight: bold;">Toggle Table:</span> Switches the table between Glyphs and Letter table.</li>
+                    <li><span style="font-weight: bold;">Starting Letter:</span> Select which letter is the last letter of your serial number.</li>
+                    <li><span style="font-weight: bold;">Reset Table:</span> This will reset the table.</li>
+                    <li><span style="font-weight: bold;">Undo:</span> This will undo your previous letter placement.</li>
+                    <li>Every new letter will be highlighted in red. Undoing will highlight the previous placed letter in red.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of Inf.</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Dreamcipher</span>
+            </div>
+            <div class="page-content">            
+                <div class="buttons">
+                    <button id="toggleTable">Toggle Table</button>
+                    
+                    <select id="letterSelect">
+                        <option selected disabled hidden>Select Starting Letter</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                        <option value="H">H</option>
+                        <option value="I">I</option>
+                        <option value="J">J</option>
+                        <option value="K">K</option>
+                        <option value="L">L</option>
+                        <option value="M">M</option>
+                        <option value="N">N</option>
+                        <option value="O">O</option>
+                        <option value="P">P</option>
+                        <option value="Q">Q</option>
+                        <option value="R">R</option>
+                        <option value="S">S</option>
+                        <option value="T">T</option>
+                        <option value="U">U</option>
+                        <option value="V">V</option>
+                        <option value="W">W</option>
+                        <option value="X">X</option>
+                        <option value="Y">Y</option>
+                        <option value="Z">Z</option>
+                    </select>
+                    
+                    <button id="resetButton" style="margin-right: 30px;">Reset Table</button>
+                    <button id="undoButton">Undo</button>
+                </div>
+                <br>
+                <div id="glyphTable">
+                    <table>
+                        <tr class="textTable">
+                            <td style="border: none;"></td>
+                            <td>A</td>
+                            <td>B</td>
+                            <td>C</td>
+                            <td>D</td>
+                            <td>E</td>
+                            <td>F</td>
+                            <td>G</td>
+                            <td>H</td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">1</td>
+                            <td><img src="img/Dreamcipher/glyph-00.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-01.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-02.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-03.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-04.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-05.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-06.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-07.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">2</td>
+                            <td><img src="img/Dreamcipher/glyph-10.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-11.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-12.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-13.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-14.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-15.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-16.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-17.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">3</td>
+                            <td><img src="img/Dreamcipher/glyph-20.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-21.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-22.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-23.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-24.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-25.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-26.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-27.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">4</td>
+                            <td><img src="img/Dreamcipher/glyph-30.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-31.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-32.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-33.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-34.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-35.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-36.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-37.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">5</td>
+                            <td><img src="img/Dreamcipher/glyph-40.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-41.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-42.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-43.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-44.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-45.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-46.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-47.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">6</td>
+                            <td><img src="img/Dreamcipher/glyph-50.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-51.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-52.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-53.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-54.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-55.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-56.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-57.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">7</td>
+                            <td><img src="img/Dreamcipher/glyph-60.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-61.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-62.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-63.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-64.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-65.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-66.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-67.svg" class="glyph"></td>
+                        </tr>
+                        <tr>
+                            <td class="textRow">8</td>
+                            <td><img src="img/Dreamcipher/glyph-70.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-71.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-72.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-73.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-74.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-75.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-76.svg" class="glyph"></td>
+                            <td><img src="img/Dreamcipher/glyph-77.svg" class="glyph"></td>
+                        </tr>
+                    </table>
+                </div>
+                <!-- Separator for the two tables -->
+                <table id="emptyTable">
+                   
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of Inf.</div>
+        </div>
+    </div>
+</body>
+</html>
