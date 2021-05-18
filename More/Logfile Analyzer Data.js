@@ -958,7 +958,7 @@ const parseData = [
                         }
                     }
 
-                    var table = $('<table>').css('border-spacing', '0');
+                    var table = $('<table>').css('border-spacing', '0').css('border-collapse', 'separate');
                     for (r = 0; r < 6; r++) {
                         tr = $('<tr>').appendTo(table);
                         for (c = 0; c < 6; c++) {
