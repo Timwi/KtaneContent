@@ -6966,6 +6966,11 @@ const parseData = [
         ]
     },
     {
+        displayName: "The Burnt",
+        moduleID: "burnt",
+        loggingTag: "Burnt",
+    },
+    {
         displayName: "The Button",
         moduleID: "BigButton",
         loggingTag: "ButtonComponent"
