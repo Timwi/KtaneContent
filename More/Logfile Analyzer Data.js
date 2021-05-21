@@ -603,9 +603,10 @@ const parseData = [
         loggingTag: "TwitchPlays",
         matches: [
             {
-                regex: /\[IRCConnection\] \[M\] (.+) \((.+), .+\): (.+)/,
+                regex: /\[IRCConnection\] \[M\] (.+) \((.+)\): (.+)/,
                 handler: function (matches) {
-                    lastBombGroup.TwitchChat.push({ username: matches[1], color: matches[2], content: matches[3] });
+                    // Capture everything in the parentheses for multiple cases
+                    lastBombGroup.TwitchChat.push({ username: matches[1], color: matches[2].split(",")[0], content: matches[3] });
                 }
             }
         ]
