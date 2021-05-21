@@ -201,6 +201,7 @@ class BombGroup {
         this.ParseAgain = []; // Lines that might be for a module but couldn't be matched by name. If Tweaks is installed, it'll try to parse these again once the LFABombInfo is logged.
         this.LoggedSerials = [];
         this.Events = [];
+        this.TwitchChat = [];
         this.RuleSeed = 1;
     }
 
@@ -423,6 +424,30 @@ class BombGroup {
                 .appendTo(modules)
                 .addCardClick(graphInfo);
         }
+
+
+        if (this.TwitchChat.length) {
+            var chatInfo = $("<div class='module-info'>").appendTo(info);
+            $("<h3>").css("margin-top", "10px").text("Twitch Chat").appendTo(chatInfo);
+            
+            var chatTree = [];
+
+            this.TwitchChat.forEach(function (message) {
+                var obj = $("<div>");
+                $("<span>").text(message.username).css({ fontWeight: 700, color: message.color }).appendTo(obj);
+                $("<span>").text(": ").appendTo(obj);
+                $("<span>").text(message.content).appendTo(obj);
+                chatTree.push({ obj });
+            });
+
+            makeTree(chatTree, $("<ul>").appendTo(chatInfo));
+
+            $("<button class='module'>")
+                .text("Twitch Chat")
+                .appendTo(modules)
+                .addCardClick(chatInfo);
+        }
+
 
         this.loggedBombs.forEach((bomb) => {
             bomb.ToHTML(filteredTab, this.RuleSeed).appendTo(bombGroupHTML);

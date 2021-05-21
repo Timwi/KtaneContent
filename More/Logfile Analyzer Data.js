@@ -600,6 +600,17 @@ const parseData = [
         ]
     },
     {
+        loggingTag: "TwitchPlays",
+        matches: [
+            {
+                regex: /\[IRCConnection\] \[M\] (.+) \((.+), .+\): (.+)/,
+                handler: function (matches) {
+                    lastBombGroup.TwitchChat.push({ username: matches[1], color: matches[2], content: matches[3] });
+                }
+            }
+        ]
+    },
+    {
         loggingTag: "LFABombPreviewService",
         matches: [
             {
