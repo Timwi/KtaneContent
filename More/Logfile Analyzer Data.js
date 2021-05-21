@@ -810,6 +810,217 @@ const parseData = [
         ]
     },
     {
+        moduleID: "2048",
+        loggingTag: "2048",
+        matches: [
+            {
+                regex: /Setup \[(.+)\]/,
+                handler: function (matches, module) {
+                    let gridSize = parseInt(matches[1]);
+                    module.Grids = [];
+
+
+                    let getTileStyle = function (value) {
+                        switch (value) {
+                            case 2:
+                                return { color: "eee4da", blackText: true };
+                            case 4:
+                                return { color: "eee1c9", blackText: true };
+                            case 8:
+                                return { color: "f3b27a" };
+                            case 16:
+                                return { color: "f69664" };
+                            case 32:
+                                return { color: "f77c5f" };
+                            case 64:
+                                return { color: "f75f3b" };
+                            case 128:
+                                return { color: "edd073" };
+                            case 256:
+                                return { color: "edcc62" };
+                            case 512:
+                                return { color: "edc950" };
+                            case 1024:
+                                return { color: "edc53f" };
+                            case 2048:
+                                return { color: "edc22e" };
+                        }
+                        return { color: "3c3a33" };
+                    };
+
+                    let getFontSize = function (value) {
+                        switch (value.toString().length) {
+                            case 1:
+                            case 2:
+                                return 40;
+                            case 3:
+                                return 30;
+                            case 4:
+                                return 23;
+                        }
+                        return 19;
+                    };
+
+
+                    let obj = $("<div>").css({
+                        webkitTouchCallout: "none",
+                        webkitUserSelect: "none",
+                        khtmlUserSelect: "none",
+                        mozUserSelect: "none",
+                        msUserSelect: "none",
+                        userSelect: "none"
+                    });
+
+                    let gridLabel = $("<div>").css({
+                        display: "inline-block",
+                        padding: "5px 0",
+                        margin: "10px 0",
+                        minWidth: 150,
+                        textAlign: "center"
+                    });
+                    let gameContainer = $("<div>").css({
+                        position: "relative",
+                        width: 300,
+                        height: 300,
+                        backgroundColor: "#bbada0",
+                        borderRadius: 6
+                    });
+                    let gridAndTileCSS = {
+                        position: "absolute",
+                        width: "70%",
+                        height: "70%",
+                        top: "15%",
+                        left: "15%",
+                        zIndex: 10
+                    };
+                    let gridContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+                    gridAndTileCSS.zIndex = 20;
+                    let tileContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+
+                    let posPerc = function (val) {
+                        return `${val / 3 * 100}%`;
+                    };
+
+                    for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div>").css({
+                        position: "absolute",
+                        width: 60,
+                        height: 60,
+                        backgroundColor: "#cdc1b4",
+                        borderRadius: 6,
+                        left: posPerc(x),
+                        top: posPerc(y),
+                        transform: "translate(-50%, -50%)"
+                    }).appendTo(gridContainer);
+
+                    let currentGrid = -1;
+                    module.actuateGrid = function (newGrid) {
+                        gridLabel.text(`Move ${newGrid + 1} of ${module.Grids.length}`);
+                        leftArrow.css({ visibility: newGrid > 0 ? "visible" : "hidden" });
+                        rightArrow.css({ visibility: newGrid < module.Grids.length - 1 ? "visible" : "hidden" });
+                        if (newGrid == currentGrid) return;
+
+                        currentGrid = newGrid;
+
+                        let grid = module.Grids[currentGrid];
+
+                        let actuateTile = function (tile) {
+                            let wrapper = $("<div>").appendTo(tileContainer);
+                            let inner = $("<div>").text(tile.value).appendTo(wrapper);
+                            let position = tile.previousPosition || { x: tile.x, y: tile.y };
+
+                            let style = getTileStyle(tile.value);
+                            wrapper.css({
+                                width: 60,
+                                height: 60,
+                                position: "absolute",
+                                left: posPerc(position.x),
+                                top: posPerc(position.y),
+                                transform: "translate(-50%, -50%)",
+                                zIndex: tile.mergedFrom ? 20 : 10
+                            });
+                            inner.css({
+                                textAlign: "center",
+                                lineHeight: "60px",
+                                fontSize: getFontSize(tile.value),
+                                fontWeight: 900,
+                                backgroundColor: "#" + style.color,
+                                color: style.blackText ? "#776e65" : "#f9f6f2",
+                                borderRadius: 6
+                            });
+
+                            if (tile.previousPosition) {
+                                wrapper[0].animate([
+                                    { left: posPerc(tile.x), top: posPerc(tile.y) }
+                                ], {
+                                    duration: 100,
+                                    easing: "ease-in-out",
+                                    fill: "forwards"
+                                });
+                            } else if (tile.mergedFrom) {
+                                inner[0].animate([
+                                    { transform: "scale(0)" },
+                                    { transform: "scale(1.3)" },
+                                    { transform: "scale(1)" }
+                                ], {
+                                    duration: 200,
+                                    delay: 50,
+                                    fill: "backwards",
+                                    easing: "ease"
+                                });
+
+                                tile.mergedFrom.forEach(actuateTile);
+                            } else {
+                                inner[0].animate([
+                                    { transform: "scale(0)", opacity: 0 },
+                                    { transform: "scale(1)", opacity: 1 }
+                                ], {
+                                    duration: 200,
+                                    easing: "ease"
+                                });
+                            }
+                        };
+
+                        tileContainer.empty();
+
+                        grid.tiles.forEach(actuateTile);
+                    };
+
+                    let buttonStyle = {
+                        padding: "5px 10px",
+                        margin: 10,
+                        cursor: "pointer",
+                        backgroundColor: "#eee4da",
+                        fontWeight: 900,
+                        borderRadius: 6
+                    };
+
+                    let leftArrow = $("<span>").text("< Prev").click(function () {
+                        if (currentGrid > 0) module.actuateGrid(currentGrid - 1);
+                    }).appendTo(obj).css(buttonStyle).css({ marginLeft: -4 });
+
+                    obj.append(gridLabel);
+
+                    let rightArrow = $("<span>").text("Next >").click(function () {
+                        if (currentGrid < module.Grids.length - 1) module.actuateGrid(currentGrid + 1);
+                    }).appendTo(obj).css(buttonStyle);
+
+                    obj.append(gameContainer);
+
+                    module.push({ obj, nobullet: true });
+                    return true;
+                }
+            },
+            {
+                regex: /Current grid: (.+)/,
+                handler: function (matches, module) {
+                    module.Grids.push(JSON.parse(matches[1]));
+                    module.actuateGrid(0);
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         displayName: "3D Maze",
         moduleID: "spwiz3DMaze",
         loggingTag: "3D Maze",
