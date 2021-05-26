@@ -7103,6 +7103,30 @@ const parseData = [
         ]
     },
     {
+        displayName: "Ten-Button Color Code",
+        moduleID: "TenButtonColorCode",
+        loggingTag: "Ten-Button Color Code",
+        matches: [
+            {
+                regex: /^(.*:) ([RGB]{10})$/,
+                handler: function (matches, module) {
+                    let colors = {
+                        R: '#fd4238',
+                        G: '#00e317',
+                        B: '#2583ff'
+                    };
+                    let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
+                    let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5*row, 5*(row+1)).join('')}</tr>`);
+                    module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "TetraVex",
         moduleID: "ksmTetraVex",
         loggingTag: "TetraVex",
