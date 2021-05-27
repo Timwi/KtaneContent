@@ -1144,35 +1144,37 @@ function Bomb(seed) {
             //3.16205534 / number
             //Renderer representation (TheDarkSid3r Bomb Renderer)
 
-            const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
-            rendererHTML.replaceWith(rendererParent);
+            if (window.BombRenderer) {
+                const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+                rendererHTML.replaceWith(rendererParent);
 
-            var rendererEdgework = [
-                {type: "serial", number: this.Serial}
-            ];
-            this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
-            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
-            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
+                var rendererEdgework = [
+                    {type: "serial", number: this.Serial}
+                ];
+                this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
+                this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
+                this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
 
-            const renderer = new BombRenderer(rendererParent);
+                const renderer = new BombRenderer(rendererParent);
 
-            renderer.loadMainAssetsAsync().then(() => {
-                for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
-                    const isRear = moduleIndex >= this.ModuleOrder.length / 2;
+                renderer.loadMainAssetsAsync().then(() => {
+                    for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+                        const isRear = moduleIndex >= this.ModuleOrder.length / 2;
 
-                    if (this.ModuleOrder[moduleIndex] == null)
-                        continue;
+                        if (this.ModuleOrder[moduleIndex] == null)
+                            continue;
 
-                    const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
-                    const ID = moduleSplit.splice(moduleSplit.length - 1);
-                    const moduleID = moduleSplit.join(" ");
+                        const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+                        const ID = moduleSplit.splice(moduleSplit.length - 1);
+                        const moduleID = moduleSplit.join(" ");
 
-                    const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                    renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
-                }
+                        const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+                        renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
+                    }
 
-                renderer.addEdgework(rendererEdgework);
-            });
+                    renderer.addEdgework(rendererEdgework);
+                });
+            }
         }
 
         return info;
