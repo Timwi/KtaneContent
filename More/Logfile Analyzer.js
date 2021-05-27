@@ -881,8 +881,8 @@ function Bomb(seed) {
             portList.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
         });
 
-        var caseHTML = $("<span>").text("Unknown");
-        var rendererHTML = $("<span>").text("Unknown");
+        var caseHTML = $("<span>").text(" Unknown");
+        var rendererHTML = $("<span>").text(" Unknown");
 
         var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").text("Edgework").appendTo(edgeworkInfo);
@@ -1144,7 +1144,7 @@ function Bomb(seed) {
             //3.16205534 / number
             //Renderer representation (TheDarkSid3r Bomb Renderer)
 
-            /*const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+            const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
             rendererHTML.replaceWith(rendererParent);
 
             var rendererEdgework = [
@@ -1172,7 +1172,7 @@ function Bomb(seed) {
                 }
 
                 renderer.addEdgework(rendererEdgework);
-            });*/
+            });
         }
 
         return info;
