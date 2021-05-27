@@ -464,7 +464,7 @@ window.BombRenderer = class {
             this.portModels.filter((m) => m.n.startsWith(p)).forEach((model) => {
                 var port = model.p.clone();
                 group.add(port);
-                port.position.y = 0.002;
+                port.position.y += 0.002;
             });
         });
         return group;
