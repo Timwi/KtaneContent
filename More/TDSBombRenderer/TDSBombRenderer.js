@@ -100,6 +100,9 @@ window.BombRenderer = class {
         controls.enablePan = false;
         controls.enableDamping = true;
         controls.dampingFactor = 0.1;
+        controls.autoRotate = true;
+        // rotate counter-clockwise, looks better
+        controls.autoRotateSpeed = -1;
         controls.update();
 
         this.bombgroup = new THREE.Group();
@@ -148,11 +151,12 @@ window.BombRenderer = class {
 
         //this.currentRot = [0, 0];
         this.animate = () => {
+            // Lesson I learned: only render if the damn thing is visible
+            if (this.append.closest(".module-info").css("display") == "block") {
+                controls.update();
+                renderer.render(scene, camera);
+            }
             requestAnimationFrame(this.animate);
-            controls.update();
-            /*this.bombgroup.rotation.x = -this.currentRot[1];
-            this.bombgroup.rotation.y = this.currentRot[0];*/
-            renderer.render(scene, camera);
         }
         this.animate();
 
@@ -238,7 +242,7 @@ window.BombRenderer = class {
                 var data = module.data;
                 var geticonurl = (n) => (this.useMainPath ? "../.." : "..") + "/Icons/" + encodeURIComponent(n) + ".png";
                 var iconImg = new Image();
-                iconImg.src = geticonurl(data.icon || (data.repo ? data.repo.FileName || data.repo.Name : data.displayName));
+                iconImg.src = geticonurl((data.repo ? data.repo.FileName || data.repo.Name : data.displayName));
                 var isBlank = false;
                 iconImg.onload = () => {
                     var canvas = document.createElement("canvas");
@@ -408,13 +412,14 @@ window.BombRenderer = class {
             case 1:
                 var holder = this.batteryDHolder.clone();
                 if (parent) parent.add(holder);
+                holder.position.y = -0.001;
                 var battery = this.batteryD.clone();
                 holder.add(battery);
                 battery.rotation.z = Math.PI / 2;
-                return holder;
             case 2:
                 var holder = this.batteryAAHolder.clone();
                 if (parent) parent.add(holder);
+                holder.position.y = -0.001;
                 var battery = this.batteryAA.clone();
                 holder.add(battery);
                 battery.position.z = -0.0125;
@@ -422,9 +427,6 @@ window.BombRenderer = class {
                 var battery2 = battery.clone();
                 holder.add(battery2);
                 battery2.position.z = 0.0125;
-                return holder;
-            default:
-                return;
         }
     }
 
@@ -457,11 +459,12 @@ window.BombRenderer = class {
         var plate = this.portPlate.clone();
         group.add(plate);
         plate.scale.set(0.06, 0.06, 0.06); //for some reason the port plate model in ktane is gigantic
-        plate.position.y = -0.015;
+        plate.position.y = -0.017;
         ports.forEach((p) => {
             this.portModels.filter((m) => m.n.startsWith(p)).forEach((model) => {
                 var port = model.p.clone();
                 group.add(port);
+                port.position.y = 0.002;
             });
         });
         return group;
@@ -526,12 +529,12 @@ window.BombRenderer = class {
     }
 
     addWidget(data) {
-        var unusedAnchors = this.widgetAnchors.filter((a) => !a.children.length);
-        if (!unusedAnchors.length) {
+        if (!this.widgetAnchors.length) {
             console.warn("BombRenderer: Could not add %s widget: no unused widget anchors\nComponent: %o", data.type, data);
             return;
         }
-        var anchor = unusedAnchors[Math.floor(Math.random() * unusedAnchors.length)];
+        var anchorIndex = Math.floor(Math.random() * this.widgetAnchors.length);
+        var anchor = this.widgetAnchors[anchorIndex];
         switch (data.type) {
             case "serial":
                 this.createSerialWidget(data.number, anchor);
@@ -546,6 +549,7 @@ window.BombRenderer = class {
                 this.createPortWidget(data.ports, anchor);
                 break;
         }
+        this.widgetAnchors.splice(anchorIndex, 1);
     }
 
     anchorInDirections(a1, a2) {
