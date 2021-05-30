@@ -2569,6 +2569,24 @@ const parseData = [
         ]
     },
     {
+        displayName: "Emoticon Math",
+        moduleID: "emoticonMathModule",
+        loggingTag: "Emoticon Math",
+        matches: [
+            {
+                regex: /^Puzzle on module: “([^“”]+)”$/,
+                handler: function (matches, module) {
+                    let span = $("span").css("font-family", "Emoticons").css("font-size", "9px").text(matches[1]);
+                    module.push({ label: "Puzzle on module: ", obj: span});
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "EncryptedEquationsModule",
         loggingTag: "Encrypted Equations",
         matches: [
