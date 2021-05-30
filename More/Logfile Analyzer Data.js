@@ -3330,7 +3330,7 @@ const parseData = [
                     const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
                     readLine();
                     let rawData = readMultiple(9).split('\n');
-                    let re = /\[Hexiom #\d+\] ([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)/;
+                    let re = /\[Hexiom #\d+\] ([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)/;
                     hexData = {};
                     for (let i = -2; i < 3; i++) {
                         hexData[i] = {};
