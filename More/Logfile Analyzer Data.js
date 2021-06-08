@@ -1103,6 +1103,11 @@ const parseData = [
         ]
     },
     {
+        moduleID: "artPricing",
+        loggingTag: "Art Pricing",
+        displayName: "Art Pricing"
+    },
+    {
         moduleID: "asciiArt",
         loggingTag: "Ascii Art",
         displayName: "ASCII Art"
@@ -5170,6 +5175,11 @@ const parseData = [
         ]
     },
     {
+        moduleID: "perceptron",
+        loggingTag: "Perceptron",
+        displayName: "Perceptron"
+    },
+    {
         moduleID: "spwizPerspectivePegs",
         loggingTag: "Perspective Pegs",
         matches: [
@@ -5965,6 +5975,11 @@ const parseData = [
         ]
     },
     {
+        moduleID: "rgbCombination",
+        loggingTag: "RGB Combination",
+        displayName: "RGB Combination"
+    },
+    {
         displayName: "RGB Hypermaze",
         moduleID: "rgbhypermaze",
         loggingTag: "RGB Hypermaze",
@@ -6129,6 +6144,11 @@ const parseData = [
                 }
             }
         ]
+    },
+    {
+        displayName: "Wire Association",
+        loggingTag: "Wire Association",
+        moduleID: "WireAssociationModule"
     },
     {
         displayName: "Wire Sequence",
