@@ -20,7 +20,6 @@ const blacklist = [
     "[BombGenerator] Instantiating RequiresTimerVisibility components on",
     "[BombGenerator] Instantiating remaining components on any valid face.",
     "[Mod-",
-    "[Rules]",
     "[Factory]",
     "[MenuPage]",
     "[PaceMaker]",
@@ -1275,8 +1274,7 @@ const parseData = [
 
                     // Make nodes
                     const characters = readMultiple(10).replace(/[^\w]/g, "");
-                    for (let i = 0; i < 21; i += 3)
-                    {
+                    for (let i = 0; i < 21; i += 3) {
                         const buttonColor = colors[characters[i]];
                         const text = characters[i + 1];
                         const textColor = colors[characters[i + 2]];
@@ -1869,25 +1867,22 @@ const parseData = [
             {
                 regex: /Module generated/,
                 handler: function (matches, module) {
-                    let table = $('<table>').css({'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto'});
+                    let table = $('<table>').css({ 'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto' });
                     let rowHeader = $('<tr>').appendTo(table);
-                    $('<th>').text("#").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Word").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Color").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Valid Response").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+                    $('<th>').text("#").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Word").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Color").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Valid Response").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
                     let count = 0;
                     let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? (.+)\b\s+(?:\||,)(?: Color)? (.+)\b\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
-                    for (let i = 0; i < 15; i++)
-                    {
+                    for (let i = 0; i < 15; i++) {
                         let line = readLine();
-                        if (exp.test(line))
-                        {
+                        if (exp.test(line)) {
                             count++;
                             let tr = $('<tr>').appendTo(table);
                             let match = exp.exec(line);
-                            for (let j = 1; j <= 4; j++)
-                            {
-                                let td = $('<td>').text(match[j]).css({'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(tr);
+                            for (let j = 1; j <= 4; j++) {
+                                let td = $('<td>').text(match[j]).css({ 'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(tr);
                                 if (j == 4)
                                     td.css('text-align', 'center');
                             }
@@ -1988,8 +1983,7 @@ const parseData = [
             {
                 regex: /(?:Monitor: (\d+) \| Number: (\d+) \| Color: (\w+) \| Indicators: (.+) \| Display color: (\w+))/,
                 handler: function (matches, module) {
-                    if (!('infoTable' in module))
-                    {
+                    if (!('infoTable' in module)) {
                         var table = $('<table>')
                             .css('font-size', '12px')
                             .css('border-collapse', 'collapse')
@@ -2062,8 +2056,7 @@ const parseData = [
             {
                 regex: /Monitor: (\d+):/,
                 handler: function (matches, module) {
-                    if (!('calculationTable' in module))
-                    {
+                    if (!('calculationTable' in module)) {
                         var table = $('<table>')
                             .css('font-size', '12px')
                             .css('border-collapse', 'collapse')
@@ -2823,7 +2816,7 @@ const parseData = [
         matches: [
             {
                 regex: /(Stage order:) (\d+(,\d+)*)/,
-                handler: function (matches, module){
+                handler: function (matches, module) {
                     var div = $('<div>');
                     div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
                     module.push({ label: matches[1], obj: div });
@@ -2888,8 +2881,7 @@ const parseData = [
                             <tr><th>#</th><th>Valid?</th><th>LEDs → Color</th><th colspan='2'>Calculation</th><th>Answer</th></tr>
                             ${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
                                 <th style='text-align: right'>${stage + 1}</th>
-                                ${
-                            inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+                                ${inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
                                 inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
                                     `<td colspan='6' style='color: #888'>(not valid)</td>`
                             }
@@ -3336,15 +3328,14 @@ const parseData = [
             {
                 regex: /One possible solution:|Initial state:|Module disarmed with the following board:/,
                 handler: function (matches, module) {
-                    if (module.firstTime == null || module.firstTime === true)
-                    {
+                    if (module.firstTime == null || module.firstTime === true) {
                         module.firstTime = false;
                         module.push("Notation: [White Hexagon: Interactable, Red Hexagon: Constraint Number, Black Hexagon: Non-interactable]");
                     }
-                    const div = $('<div>').css({"text-align": "center"});
+                    const div = $('<div>').css({ "text-align": "center" });
                     const svg = $('<svg width="30%" viewBox="-25 -25 50 50" fill="none">').appendTo(div);
                     const sideLength = 5;
-                    const pointsXY = [sideLength * Math.cos(Math.PI/3), sideLength * Math.sin(Math.PI/3)];
+                    const pointsXY = [sideLength * Math.cos(Math.PI / 3), sideLength * Math.sin(Math.PI / 3)];
                     const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
                     readLine();
                     let rawData = readMultiple(9).split('\n');
@@ -3360,16 +3351,16 @@ const parseData = [
                         }
                     }
                     let baseIndices = [[2, 0], [2, -1], [1, -1], [1, -2], [0, -2]];
-                    rawData.forEach(function(item, index) {
+                    rawData.forEach(function (item, index) {
                         let lineMatches = re.exec(item);
                         if (index === 0 || index === 8)
-                            hexData[0][2 - index / 2][-2 + index / 2] = {number: lineMatches[5] === " " ? -1 : parseInt(lineMatches[5]), isBlocked: lineMatches[6] === "*"};
+                            hexData[0][2 - index / 2][-2 + index / 2] = { number: lineMatches[5] === " " ? -1 : parseInt(lineMatches[5]), isBlocked: lineMatches[6] === "*" };
                         else if (index % 2 === 1)
                             for (let i = -1; i < 2; i = i + 2)
-                                hexData[i][baseIndices[2 + i][0] - (index - 1) / 2][baseIndices[2 + i][1] + (index - 1) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                                hexData[i][baseIndices[2 + i][0] - (index - 1) / 2][baseIndices[2 + i][1] + (index - 1) / 2] = { number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*" };
                         else
                             for (let i = -2; i < 3; i = i + 2)
-                                hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                                hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = { number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*" };
                     });
                     readLine();
                     for (let i = -2; i < 3; i++)
@@ -3379,13 +3370,13 @@ const parseData = [
                                     continue;
 
                                 let color = hexData[i][j][k].isBlocked ? hexData[i][j][k].number === -1 ? "black" : "red" : "none";
-                                let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4 } ${(k - j) * sideLength * Math.cos(Math.PI/6)})">`).appendTo(svg);
+                                let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4} ${(k - j) * sideLength * Math.cos(Math.PI / 6)})">`).appendTo(svg);
                                 $SVG(`<polygon points="${hexagon}" style="fill:${color};stroke:black;stroke-width:1;fill-rule:nonzero;""/>`).appendTo(group);
                                 if (hexData[i][j][k].number !== -1)
                                     $SVG('<text x="0" y="0" font-size="8" text-anchor="middle" dominant-baseline="central" fill="black">').text(hexData[i][j][k].number).appendTo(group);
                             }
 
-                    module.push({label: matches.input, obj: div});
+                    module.push({ label: matches.input, obj: div });
                     return true;
                 }
             },
@@ -3542,7 +3533,7 @@ const parseData = [
             {
                 regex: /^Symbols \(left-to-right, top-to-bottom\):$/,
                 handler: function (matches, module) {
-                    module.push({ label: "Symbols (left-to-right, top-to-bottom):", obj: pre(readMultiple(3))})
+                    module.push({ label: "Symbols (left-to-right, top-to-bottom):", obj: pre(readMultiple(3)) })
                     return true;
                 }
             },
@@ -3665,7 +3656,7 @@ const parseData = [
             },
             {
                 regex: /Coin pressed at \d+ modules solved/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.push({ label: matches.input + ":", obj: pre(readMultiple(2)) });
                 }
             }
@@ -3941,8 +3932,7 @@ const parseData = [
             {
                 regex: /Inputs = /,
                 handler: function (matches, module) {
-                    if (module.Inputs == null)
-                    {
+                    if (module.Inputs == null) {
                         module.Inputs = [];
                         module.push(["Inputs", module.Inputs]);
                     }
@@ -4396,7 +4386,7 @@ const parseData = [
             },
             {
                 regex: /--------------------------------------------------/,
-                handler: function() {
+                handler: function () {
                     return true;
                 }
             },
@@ -4941,24 +4931,21 @@ const parseData = [
             {
                 regex: /Generated Maze is/,
                 handler: function (matches, module) {
-                    var table = $('<table>').css({'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto"});
+                    var table = $('<table>').css({ 'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto" });
                     var maze = readMultiple(17).split('\n');
-                    for (var i = 0; i < 8; i++)
-                    {
+                    for (var i = 0; i < 8; i++) {
                         var row = $('<tr>').appendTo(table);
-                        for (var j = 0; j < 8; j++)
-                        {
+                        for (var j = 0; j < 8; j++) {
                             var width = "";
-                            width += maze[2*i][2*j + 1] !== "■" ? "0px" : "5px";
-                            width += maze[2*i + 1][2*j + 2] !== "■" ? " 0px" : " 5px";
-                            width += maze[2*i + 2][2*j + 1] !== "■" ? " 0px" : " 5px";
-                            width += maze[2*i + 1][2*j] !== "■" ? " 0px" : " 5px";
-                            var cell = $('<td>').css({"border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%"}).appendTo(row);
-                            var cellValue = /[IKYE]/.exec(maze[2*i + 1][2*j + 1]);
-                            if (cellValue !== null)
-                            {
+                            width += maze[2 * i][2 * j + 1] !== "■" ? "0px" : "5px";
+                            width += maze[2 * i + 1][2 * j + 2] !== "■" ? " 0px" : " 5px";
+                            width += maze[2 * i + 2][2 * j + 1] !== "■" ? " 0px" : " 5px";
+                            width += maze[2 * i + 1][2 * j] !== "■" ? " 0px" : " 5px";
+                            var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%" }).appendTo(row);
+                            var cellValue = /[IKYE]/.exec(maze[2 * i + 1][2 * j + 1]);
+                            if (cellValue !== null) {
                                 cell.css("padding-bottom", "0%");
-                                $('<div>').text(cellValue.input).css({"margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%"}).appendTo(cell);
+                                $('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%" }).appendTo(cell);
                             }
                         }
                     }
@@ -5523,7 +5510,7 @@ const parseData = [
                 regex: /(The displayed BitBook posts are as follows:)|The values of the planes are as follows:|The displayed items are as follows:|(The item that should be loaded with top priority is:)/,
                 handler: function (matches, module) {
                     var numberOfLines = matches[1] ? 3 : matches[2] ? 1 : 4;
-                    module.push({ label: matches.input, obj: pre(readMultiple(numberOfLines))})
+                    module.push({ label: matches.input, obj: pre(readMultiple(numberOfLines)) })
                     return true;
                 }
             },
@@ -5795,8 +5782,7 @@ const parseData = [
             {
                 regex: /.+/,
                 handler: function (matches, module) {
-                    if (module.Group == undefined)
-                    {
+                    if (module.Group == undefined) {
                         module.push(matches.input);
                         return;
                     }
@@ -6340,8 +6326,7 @@ const parseData = [
                         directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
                     };
 
-                    if (color != "5")
-                    {
+                    if (color != "5") {
                         var unused1 = readTaggedLine();
                         var unused2 = readTaggedLine();
 
@@ -6427,8 +6412,7 @@ const parseData = [
                     }
                     module.push({ label: "Color of the square is: ", obj: matches[1] });
                     module.push({ label: "Arrow Sequence are: ", obj: pre(directions) });
-                    if (color != "5")
-                    {
+                    if (color != "5") {
                         module.push({ obj: unused1 });
                         module.push({ obj: unused2 });
                         module.push({ label: "The Letter Table is: ", obj: ltable });
@@ -6547,7 +6531,7 @@ const parseData = [
             {
                 regex: /Module is now in the solve phase, good luck!/,
                 handler: function (matches, module) {
-                    module.push({obj: matches.input, nobullet: true});
+                    module.push({ obj: matches.input, nobullet: true });
                     return true;
                 }
             },
@@ -6572,7 +6556,7 @@ const parseData = [
             {
                 regex: /Board:/,
                 handler: function (matches, module) {
-                    module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true});
+                    module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true });
                     return true;
                 }
             },
@@ -7176,7 +7160,7 @@ const parseData = [
             {
                 regex: /(Wheel #(\d)( \(Bonus\))?:) (.+)/,
                 handler: function (matches, module) {
-                    module.push({label: matches[1], obj: pre(matches[4])})
+                    module.push({ label: matches[1], obj: pre(matches[4]) })
                     return true;
                 }
             },
