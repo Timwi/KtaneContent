@@ -135,7 +135,7 @@ function selectBomb(serial) {
     return false;
 }
 
-function formatTime(seconds) {
+function formatTime(seconds, milliseconds = true) {
     const timeParts = [];
 
     const negative = seconds < 0;
@@ -150,7 +150,7 @@ function formatTime(seconds) {
         }
     }
 
-    return `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}`;
+    return milliseconds ? `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}` : `${negative ? "-" : ""}${timeParts.join(":")}`;
 }
 
 $.fn.addCardClick = function(info) {
@@ -278,9 +278,10 @@ class BombGroup {
             .map(bomb =>
                 [
                     this.isSingleBomb ? null : "(",
-                    formatTime(bomb.Time),
+                    formatTime(bomb.Time, false),
                     `strikes:${bomb.TotalStrikes}`,
-                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.join(", ")),
+                    `widgets:${bomb.Widgets - 1}`,
+                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => module.includes(" ") ? `"${module}"` : module).join(", ")),
                     this.isSingleBomb ? null : ")"
                 ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
             .join("\n\n");
@@ -556,6 +557,7 @@ function Bomb(seed) {
     this.Solved = 0;
     this.TotalModules = 0;
     this.Needies = 0;
+    this.Widgets = 0;
     this.Indicators = [];
     this.Batteries = [];
     this.BatteryWidgets = 0;

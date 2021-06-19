@@ -182,6 +182,8 @@ const parseData = [
             {
                 regex: /Added widget: (.+) at/,
                 handler: function (matches) {
+                    bomb.Widgets++;
+
                     if (matches[1] == "ModWidget") {
                         bomb.ModdedWidgets++;
                     } else if (matches[1] == "BatteryWidget") {
