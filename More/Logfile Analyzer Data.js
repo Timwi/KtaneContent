@@ -3175,7 +3175,7 @@ const parseData = [
                 }
             },
             {
-                regex: /No errors found!/
+                regex: /No errors found!|Amount of iterations: \d+/
             }
         ]
     },
