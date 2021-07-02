@@ -1,18 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="initial-scale=1">
-        <title>Role Reversal — Keep Talking and Nobody Explodes Module</title>
-        <link rel="stylesheet" type="text/css" href="css/font.css">
-        <link rel="stylesheet" type="text/css" href="css/normalize.css">
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-        <script src="js/ktane-utils.js"></script>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Role Reversal — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
         <style>
-            table {
-                margin: 1em auto;
+        @media print {
+            #showPDF {
+                display: inline;
             }
-        </style>
+            #hidePDF {
+                display: none;
+            }
+        }
+
+        div > input {
+            float: left;
+            width: 65px;
+            height: 15px;
+            margin-left: 70px;
+            transform: scale(1.5);
+            text-align: center;
+        }
+    </style>
+    <script>
+        function update() {
+            var input = parseInt(document.getElementById("input").value) ? parseInt(document.getElementById("input").value) : 0;
+            document.getElementById("base").value = convertBase(input);
+        }
+
+        function convertBase(value) {
+            var range = '012345'.split('');
+            var from_range = range.slice(0, 10);
+            var to_range = range.slice(0, 6);
+
+            var old_value = value;
+            var new_value = '';
+            while (value > 0) {
+                new_value = to_range[value % 6] + new_value;
+                value = (value - (value % 6)) / 6;
+            }
+            while (new_value.length != 7) {
+                if (new_value.length < 7) {
+                    new_value = '0' + new_value;
+                } else {
+                    new_value = new_value.substring(0,7);
+                }
+            }
+            return new_value.substring(0,(old_value % 6)+2) || '0';
+        }
+    </script>
     </head>
     <body>
         <div class="section">
@@ -26,33 +67,38 @@
                     <h2>On the Subject of Role Reversal</h2>
                     <p class="flavour-text">I just so happens that the rules on the module don't change. So here they are.</p>
 
-                    <p>To make your sequence, convert the seed to base 6, and if there isn't 7 digits, add 0s to the start until there is. Then only consider the first X digits, where X = (Seed % 6) + 2. <br/> <span style="font-style: italic">#1</span> = 1st digit in sequence <span style="font-style: italic">P(x)</span> = position of x</p>
+                    <div id="hidePDF">
+                    <input type="text" id="input">
+                    <input type="text" id="base" readonly>
+                    <br>
+                    </div>
+                    <p><br>Input seed in box 1 to get wire numbers in box 2.<br><i>#1</i> = 1st digit in sequence <i>P(x)</i> = position of x</p>
 
                     <table>
-                    <tr><td>Seed % 6</td><td></td><td>Condition</td><td>Action</td></tr>
-                    <tr><td rowspan="8">0</td><td>C1</td><td>#1 is Odd?</td><td>Skip to C3</td></tr>
-                    <tr><td>C2</td><td>#1 and #2 2 or 4 apart?</td><td>Submit P(lowest value)</td></tr>
+                    <tr><td># of wires</td><td></td><td>Condition</td><td>Action</td></tr>
+                    <tr><td rowspan="8">2</td><td>C1</td><td>#1 is Odd?</td><td>Skip to C3</td></tr>
+                    <tr><td>C2</td><td>#1 and #2 both even or both odd?</td><td>Submit P(lowest value)</td></tr>
                     <tr><td>C3</td><td>#2 = 2?</td><td>Submit P(first 2)</td></tr>
                     <tr><td>C4</td><td>#1 = #2</td><td>Submit 2</td></tr>
                     <tr><td>C5</td><td>0 batteries?</td><td>Submit 1</td></tr>
                     <tr><td>C6</td><td>#1 and #2 3 apart?</td><td>Submit P(highest value)</td></tr>
-                    <tr><td>C7</td><td>#1 &gt; #2</td><td>Submit 2</td></tr>
+                    <tr><td>C7</td><td>#1 > #2</td><td>Submit 2</td></tr>
                     <tr><td>C8</td><td colspan="2">Submit position of first odd value</td></tr>
-                    <tr><td rowspan="8">1</td><td>C1</td><td>1st SN digit odd?</td><td>Skip to C3</td></tr>
+                    <tr><td rowspan="8">3</td><td>C1</td><td>1st SN digit odd?</td><td>Skip to C3</td></tr>
                     <tr><td>C2</td><td>Only one # = 5?</td><td>Submit P(# = 5)</td></tr>
                     <tr><td>C3</td><td>All #s match?</td><td>Submit 2</td></tr>
-                    <tr><td>C4</td><td>Role Reversals &gt; 1?</td><td>Submit 3</td></tr>
-                    <tr><td>C5</td><td>Any # &lt; 3 comes before any # &gt; 2?</td><td>Submit P(last # &gt; 2)</td></tr>
+                    <tr><td>C4</td><td>Role Reversals > 1?</td><td>Submit 3</td></tr>
+                    <tr><td>C5</td><td>Any # &lt; 3 comes before any # &gt; 2?</td><td>Submit P(last # > 2)</td></tr>
                     <tr><td>C6</td><td>SN contains any letter in "AELORSV"?</td><td>Submit 1</td></tr>
                     <tr><td>C7</td><td>Two #s match?</td><td>Submit P(unique #)</td></tr>
                     <tr><td>C8</td><td colspan="2">Submit 2</td></tr>
-                    <tr><td rowspan="8">2</td><td>C1</td><td>More than 2 indicators?</td><td>Skip to C3</td></tr>
+                    <tr><td rowspan="8">4</td><td>C1</td><td>More than 2 indicators?</td><td>Skip to C3</td></tr>
                     <tr><td>C2</td><td>#1 = 0?</td><td>Submit P(last 0)</td></tr>
                     <tr><td>C3</td><td>All #s differ?</td><td>Submit P(first 1, 4, 5)</td></tr>
                     <tr><td>C4</td><td>Less than 1 minute remaining?</td><td>Submit 1</td></tr>
-                    <tr><td>C5</td><td>#s in ascending order?</td><td>Submit P(first # &gt; 2 or non-unique #)</td></tr>
+                    <tr><td>C5</td><td>#s in ascending order?</td><td>Submit P(first # > 2 or non-unique #)</td></tr>
                     <tr><td>C6</td><td>1-4 solved modules?</td><td>Submit # of solved modules</td></tr>
-                    <tr><td>C7</td><td>#1 &lt; 3</td><td>Submit P(last # &lt; 3)</td></tr>
+                    <tr><td>C7</td><td>#1 &lt; 3</td><td>Submit P(last # &gt; 3)</td></tr>
                     <tr><td>C8</td><td colspan="2">Submit 2</td></tr>
                     </table>
                 </div>
@@ -65,8 +111,8 @@
                 </div>
                 <div class="page-content">
                     <table>
-                    <tr><td>Seed % 6</td><td></td><td>Condition</td><td>Action</td></tr>
-                    <tr><td rowspan="8">3</td><td>C1</td><td>Any # = 0?</td><td>Skip to C3</td></tr>
+                    <tr><td># of wires</td><td></td><td>Condition</td><td>Action</td></tr>
+                    <tr><td rowspan="8">5</td><td>C1</td><td>Any # = 0?</td><td>Skip to C3</td></tr>
                     <tr><td>C2</td><td>Any # = 1?</td><td>Submit P(first 1)</td></tr>
                     <tr><td>C3</td><td>23 appears in the sequence?</td><td>Submit P(first 2)</td></tr>
                     <tr><td>C4</td><td>32 appears in the sequence?</td><td>Submit P(first 3)</td></tr>
@@ -74,7 +120,7 @@
                     <tr><td>C6</td><td>Only one # = 5?</td><td>Submit P(# = 5)</td></tr>
                     <tr><td>C7</td><td>Any unlit indicator?</td><td>Submit 3</td></tr>
                     <tr><td>C8</td><td colspan="2">Submit 2</td></tr>
-                    <tr><td rowspan="8">4</td><td>C1</td><td>SN has exactly 2 digits?</td><td>Skip to C3</td></tr>
+                    <tr><td rowspan="8">6</td><td>C1</td><td>SN has exactly 2 digits?</td><td>Skip to C3</td></tr>
                     <tr><td>C2</td><td>SN has a vowel?</td><td>Submit 6</td></tr>
                     <tr><td>C3</td><td>0, 2, 4 all appear in the sequence?</td><td>Submit P(first 1, 4, 5)</td></tr>
                     <tr><td>C4</td><td>Seed % 5 = 0?</td><td>Submit 4</td></tr>
@@ -82,9 +128,9 @@
                     <tr><td>C6</td><td>More than 10 minutes remaining?</td><td>Submit 2</td></tr>
                     <tr><td>C7</td><td>Seed even?</td><td>Submit 5</td></tr>
                     <tr><td>C8</td><td colspan="2">Submit 3 </td></tr>
-                    <tr><td rowspan="8">5</td><td>C1</td><td>Unlit = Lit or Lit > Unlit?</td><td>Skip to C3</td></tr>
+                    <tr><td rowspan="8">7</td><td>C1</td><td>Unlit = Lit or Lit > Unlit?</td><td>Skip to C3</td></tr>
                     <tr><td>C2</td><td># of 5s &lt; 2?</td><td>Submit 7</td></tr>
-                    <tr><td>C3</td><td># of 4s &gt; 2?</td><td>Submit P(2nd 4) + 1</td></tr>
+                    <tr><td>C3</td><td># of 4s > 2?</td><td>Submit P(2nd 4) + 1</td></tr>
                     <tr><td>C4</td><td>SN contains # of 0s?</td><td>Submit 6</td></tr>
                     <tr><td>C5</td><td>Batteries &lt; # of 1s?</td><td>Submit P(last 1)</td></tr>
                     <tr><td>C6</td><td>4 or more #s match?</td><td>Submit P(last non-unique)</td></tr>
@@ -95,5 +141,6 @@
                 <div class="page-footer relative-footer">Page 2 of 2</div>
             </div>
         </div>
+        <script>setInterval(update, 100);</script>
     </body>
 </html>
