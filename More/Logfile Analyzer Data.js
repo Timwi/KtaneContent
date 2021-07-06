@@ -4512,6 +4512,30 @@ const parseData = [
         ]
     },
     {
+		moduleID: "mislocation",
+		displayName: "Mislocation",
+		loggingTag: "Mislocation",
+		matches: [
+            {
+                regex: /\(use slashes as new line separators\) ([\/\-ABCDEFGHIJKLMNOPQRSTUVWXYZ*]+)$/,
+                handler: function(matches, module) {
+                    module.push({ label: "The maze:", obj: pre(matches[1].replace(/\//g, '\n').replace(/-/g, ' '))});
+                    return true;
+                }
+            },
+            {
+                regex: /\d, \d$/,
+                handler: function(matches, module) {
+                    module.push({ label: "Current position(col, row): ", obj: matches[0]})
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+		]
+	},
+    {
         moduleID: "SquaresOfMisery",
         displayName: "Misery Squares",
         loggingTag: "SquaresOfMisery"
