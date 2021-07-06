@@ -39,11 +39,44 @@
         .maze-symbol.triangle {
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12.5 100 100"><path d="m 50,0 43.301269,75 -86.6025409,0 z" /></svg>');
         }
+        #variety-order {
+            float: right;
+            clear: right;
+            margin-left: 1.2cm;
+            margin-bottom: 4cm;
+        }
+        img.diagram {
+            margin-left: 2cm;
+        }
+        .layout {
+            column-count: 2;
+        }
+        .layout > div:first-child h3 {
+            margin-top: 0;
+        }
+        .layout > div {
+            break-inside: avoid;
+        }
+        .wire-conditions td, .wire-conditions th {
+            padding: .1em .6em .05em;
+        }
     </style>
     <script>
         function setDefaultRules(rnd) { setRules(rnd); }
         function setRules(rnd)
         {
+            let edgeworkTds = Array.from(document.getElementsByClassName('edgework-condition'));
+            let edgeworkConditions = [
+                'more lit than unlit indicators',
+                'more D batteries than AA batteries',
+                'more parallel+serial ports than all other port types',
+                'more letters than digits in the serial number',
+                'more battery holders than port plates'
+            ];
+            rnd.shuffleFisherYates(edgeworkConditions);
+            for (let ec = 0; ec < edgeworkTds.length; ec++)
+                edgeworkTds[ec].innerText = edgeworkConditions[ec];
+
             let mazeTds = Array.from(document.getElementsByClassName('maze-td'));
             let mazeIx = 0;
             for (let mw = 3; mw <= 4; mw++)
@@ -61,21 +94,27 @@
                 'Red wire',
                 'Yellow wire',
                 'White wire',
-                'Key to turn',
+                'Key-in-lock',
                 'Horizontal slider',
                 'Vertical slider',
+                'Knob',
+                'Digit display',
+                'Blue switch',
+                'Red switch',
+                'Yellow switch',
+                'White switch',
                 '2×2 keypad',
-                '1×3 keypad',
-                '1×4 keypad',
-                '3×1 keypad',
-                '4×1 keypad',
+                '1×3 keypad (tall)',
+                '1×4 keypad (tall)',
+                '3×1 keypad (wide)',
+                '4×1 keypad (wide)',
                 '3×3 maze',
                 '3×4 maze (tall)',
                 '4×3 maze (wide)',
                 '4×4 maze'
             ];
             rnd.shuffleFisherYates(flavors);
-            vo.innerHTML = flavors.map(fl => `<tr><td>${fl}<${''}/td><${''}/tr>`).join('');
+            vo.innerHTML = flavors.map(fl => `<li>${fl}<${''}/li>`).join('');
 
             let pages = Array.from(document.getElementsByClassName('page'));
             for (let pIx = 0; pIx < pages.length; pIx++)
@@ -252,10 +291,100 @@
 
                 <p class="flavour-text">What does it want from me this time?</p>
 
-                <p>Process items in this order:</p>
-                <table id='variety-order'>
-                </table>
+                <ul id='variety-order'>
+                </ul>
 
+                <p>Begin with a list of the items on the module, sorted into the order shown on the right.</p>
+
+                <p>Observe the number displayed at the top of the module. Decoding this number involves an iterative process.
+                    In each iteration, a number <var>n</var> is relevant. Perform these calcuations:</p>
+
+                <ul>
+                    <li>Take the number <em>modulo</em> <var>n</var> to obtain a value.</li>
+                    <li><em>Divide</em> the number by <var>n</var> (rounding down) to obtain the number for the next iteration.</li>
+                </ul>
+
+                <p>First, apply the iteration with <var>n</var> equal to the number of items in your list.
+                    The value obtained specifies which item to interact with (numbered from 0).</p>
+
+                <p>Next, apply the iteration with <var>n</var> equal to the number of states the item can be in,
+                    as listed below. Set the item to the correct state as indicated by the obtained value.</p>
+
+                <p>Remove the item from your list. Continue this process, each time with the reduced list
+                    of remaining items.</p>
+
+                <p>Variety will only issue a strike if an item is interacted with while an item earlier
+                    in this process is in an invalid state. Incorrectly cut wires will only cause one strike,
+                    but all other types of items must be corrected to avoid further strikes.</p>
+
+                <p>In the special case where the last item is put into the correct state, but an incorrectly
+                    cut wire causes a strike, an item may need to have its state changed and changed back to disarm the module.</p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Variety</span>
+            </div>
+            <div class="page-content">
+                <div class='layout'>
+                    <div>
+                        <h3>Sliders</h3>
+                        <p><var>n</var> is the number of tickmarks. The states are numbered from 0, starting on the left for
+                            horizontal sliders and the top for vertical ones.</p>
+                    </div>
+                    <div>
+                        <h3>Knobs</h3>
+                        <p><var>n</var> is the number of tickmarks. The states are numbered from 0 going clockwise.
+                            To find out which tickmark is state 0, start with the up-facing tickmark and move clockwise
+                            a number of tickmarks equal to the numeric value of the first character
+                            in the serial number (letters are A=1 to Z=26).</p>
+                    </div>
+                    <div>
+                        <h3>Switches</h3>
+                        <p><var>n</var> is the number of positions the switch can be toggled to (between 2 and 4).
+                            These positions are numbered from 0 starting from the full “up” position.</p>
+                    </div>
+                    <div>
+                        <h3>Key-in-lock</h3>
+                        <p><var>n</var> is 10. Turn the key clockwise when the last seconds digit of the bomb’s timer equals the value.</p>
+                    </div>
+                    <div>
+                        <h3>Keypads</h3>
+                        <p><var>n</var> is the factorial of the number of keys. Obtain the order in which to press
+                            the keys by applying the iterative process to the obtained value. In each iteration,
+                            the value of <var>n</var> for the nested process is the number of remaining keys, which
+                            are numbered from 0 in reading order.</p>
+                    </div>
+                    <div>
+                        <h3>Wires</h3>
+                        <p><var>n</var> is 2. If the condition in the following table is <em>false</em>,
+                            1 means “cut” and 0 means “don’t cut”; if it is <em>true</em>, they are reversed.</p>
+                        <table class='wire-conditions'>
+                            <tr><th>Wire color</th><th>Condition</th></tr>
+                            <tr><td>Black</td><td class='edgework-condition'></td></tr>
+                            <tr><td>Blue</td><td class='edgework-condition'></td></tr>
+                            <tr><td>Red</td><td class='edgework-condition'></td></tr>
+                            <tr><td>Yellow</td><td class='edgework-condition'></td></tr>
+                            <tr><td>White</td><td class='edgework-condition'></td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3>Digit display</h3>
+                        <p><var>n</var> is the number of prior items in the process excluding wires. The value identifies a
+                            prior item, numbered from 0 in the order of the process. Set the display to the digit it
+                            showed in blue when that item was interacted with. Entered digits are shown in yellow.</p>
+                    </div>
+                    <div>
+                        <h3>Mazes</h3>
+                        <p><var>n</var> is the number of positions in the maze (width times height).
+                            Use the arrow buttons to move the symbol to the goal position identified by the
+                            value. The positions are numbered in reading order from 0 in the top-left corner.
+                            The maze geometries are listed below.</p>
+                    </div>
+                </div>
             </div>
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
