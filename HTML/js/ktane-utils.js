@@ -381,7 +381,7 @@ e.onload = function()
 
         // Read current preferences from local storage
         let highlighterEnabled = localStorage.getItem('ktane-highlighter-enabled');
-        $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled);
+        $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled == "true");
         let pageLayout = localStorage.getItem('ktane-page-layout') || 'vertical';
         $(`#page-layout-${pageLayout}`).prop('checked', true);
         updateMultipageView();
