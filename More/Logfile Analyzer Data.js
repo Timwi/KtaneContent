@@ -3483,6 +3483,43 @@ const parseData = [
         ]
     },
     {
+        moduleID: "theIconKitModule",
+        loggingTag: "The Icon Kit",
+        matches: [
+            {
+                regex: /^(The correct (cube|ship|gravity ball|ufo|wave|robot|spider) is |You selected ){1}((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *){1}(, which is correct\.|, which is incorrect\. Strike!|\.){1}$/,
+                handler: function(matches, module) {
+                    module.push(`${matches[1]}`);
+                    var div = $('<div>');
+                    var photos = matches[3].split(' ');
+                    for (var i = 0; i < photos.length; i++){
+                        div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    if(matches[6] != '.'){
+                        module.push(`${matches[6].substring(2)}`);
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /^((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *)+$/,
+                handler: function(matches, module) {
+                    var div = $('<div>');
+                    var photos = matches[0].split(' ');
+                    for (var i = 0; i < photos.length; i++){
+                        div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "Maze",
         loggingTag: "InvisibleWallsComponent"
     },
