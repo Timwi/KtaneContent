@@ -1299,6 +1299,71 @@ const parseData = [
         ]
     },
     {
+        displayName: "The Bioscanner",
+        moduleID: "TheBioscanner",
+        loggingTag: "The Bioscanner",
+        matches: [
+            {
+                regex: /^(The (first|second|third) glyph is) ([ABCDE]\d+).$/,
+                handler: function(matches, module){
+                    module.push(matches[1] + ':');
+                    const glyph = matches[3];
+                    let div = $('<div>');
+
+                    let itempair = [glyph.charAt(0), glyph.substring(1)];
+                    let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                    div.append(`<img src='img/The Bioscanner/${"ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString()}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /^(The current offset is \d+\. This means the current glyphs are) ((([ABCDE]\d+)(, |, and )*){3})\.$/,
+                handler: function(matches, module){
+                    module.push(matches[1] + ':');
+                    const glyphs = matches[2].split(', ').slice(0, 2).concat(matches[2].split(', ')[2].substring(4));
+                    let actualGlyphs = [];
+                    let div = $('<div>');
+
+                    glyphs.forEach(element => {
+                        let itempair = [element.charAt(0), element.substring(1)];
+                        let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                        actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
+                    });
+                    for (var i = 0; i < actualGlyphs.length; i++){
+                        div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /^(Fake glyphs are:) (([ABCDE]\d+ )+)$/,
+                handler: function(matches, module){
+                    module.push(matches[1]);
+                    const glyphs = matches[2].slice(0, -1).split(' ');
+                    let actualGlyphs = [];
+                    let div = $('<div>');
+
+                    glyphs.forEach(element => {
+                        let itempair = [element.charAt(0), element.substring(1)];
+                        let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                        actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
+                    });
+                    for (var i = 0; i < actualGlyphs.length; i++){
+                        div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "BitmapsModule",
         loggingTag: "Bitmaps",
         matches: [
