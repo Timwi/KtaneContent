@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>4D Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function createMap(size, dims, _default) {
+            if (dims === 0) return _default;
+            return new Array(size).fill(null).map(() => createMap(size, dims - 1, _default));
+        }
+
+        function setRules(rnd) {
+            const MAP_SIZE = 5;
+            const COLORS = ["black", "red", "green", "blue", "magenta", "yellow", "cyan"];
+            const DIMENSIONS = 4;
+            const maze = createMap(MAP_SIZE, DIMENSIONS, 0);
+            const startX = rnd.next(0, MAP_SIZE);
+            const startY = rnd.next(0, MAP_SIZE);
+            const startZ = rnd.next(0, MAP_SIZE);
+            const startW = rnd.next(0, MAP_SIZE);
+            // console.log(startX, startY, startZ, startW);
+            maze[startX][startY][startZ][startW] = 1;
+            const q = [[startX, startY, startZ, startW]];
+            const directions = [
+                [1, 0, 0, 0], [-1, 0, 0, 0],
+                [0, 1, 0, 0], [0, -1, 0, 0],
+                [0, 0, 1, 0], [0, 0, -1, 0],
+                [0, 0, 0, 1], [0, 0, 0, -1],
+            ];
+            while (q.length > 0) {
+                const i = rnd.next(0, q.length);
+                const [x, y, z, w] = q[i];
+                q[i] = q[q.length - 1];
+                q.pop();
+                if (maze[x][y][z][w] !== 1) continue;
+                maze[x][y][z][w] = 2;
+                for (const [dx, dy, dz, dw] of directions) {
+                    const nx = (x + MAP_SIZE + dx) % MAP_SIZE;
+                    const ny = (y + MAP_SIZE + dy) % MAP_SIZE;
+                    const nz = (z + MAP_SIZE + dz) % MAP_SIZE;
+                    const nw = (w + MAP_SIZE + dw) % MAP_SIZE;
+                    if (maze[nx][ny][nz][nw] === 0) {
+                        maze[nx][ny][nz][nw] = 1;
+                        q.push([nx, ny, nz, nw]);
+                    } else if (maze[nx][ny][nz][nw] === 1) maze[nx][ny][nz][nw] = 3;
+                }
+            }
+            for (let x = 0; x < MAP_SIZE; x++) {
+                for (let y = 0; y < MAP_SIZE; y++) {
+                    for (let z = 0; z < MAP_SIZE; z++) {
+                        for (let w = 0; w < MAP_SIZE; w++) {
+                            if (maze[x][y][z][w] === 3 && rnd.next(0, 8) === 0) maze[x][y][z][w] = 2;
+                        }
+                    }
+                }
+            }
+            for (let x = 0; x < MAP_SIZE; x++) {
+                for (let y = 0; y < MAP_SIZE; y++) {
+                    for (let z = 0; z < MAP_SIZE; z++) {
+                        for (let w = 0; w < MAP_SIZE; w++) {
+                            maze[x][y][z][w] = maze[x][y][z][w] === 2 ? COLORS[0] : COLORS[rnd.next(1, COLORS.length)];
+                        }
+                    }
+                }
+            }
+            const mapTable = document.getElementById("map");
+            while (mapTable.children.length > 3) mapTable.removeChild(mapTable.lastChild);
+            for (let y = MAP_SIZE - 1; y >= 0; y--) {
+                for (let z = MAP_SIZE - 1; z >= 0; z--) {
+                    const row = mapTable.appendChild(document.createElement("tr"));
+                    if (z === MAP_SIZE - 1) {
+                        const yCoord = row.appendChild(document.createElement("td"));
+                        yCoord.innerText = y + 1;
+                        yCoord.rowSpan = 5;
+                    }
+                    const zCoord = row.appendChild(document.createElement("td"));
+                    zCoord.innerText = z + 1;
+                    row.appendChild(document.createElement("td"));
+                    for (let w = 0; w < MAP_SIZE; w++) {
+                        for (let x = 0; x < MAP_SIZE; x++) {
+                            const cell = row.appendChild(document.createElement("td"));
+                            cell.style.backgroundColor = maze[x][y][z][w];
+                            const border = "16px solid white";
+                            if (z === MAP_SIZE - 1) cell.style.borderTop = border;
+                            if (z === 0) cell.style.borderBottom = border;
+                            if (x === 0) cell.style.borderLeft = border;
+                            if (x === MAP_SIZE - 1) cell.style.borderRight = border;
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        #map td {
+            width: 16px;
+            height: 16px;
+            padding: 0;
+            border-color: white;
+            border-width: 0;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        #inner-td-border td {
+            border-bottom: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">4D Maze</span>
+            </div>
+            <div class="page-content" style="font-size: 15px;">
+                <img src="img/Component/4D Maze.svg" class="diagram">
+                <h2>On the Subject of 4D Maze</h2>
+                <p class="flavour-text">How to imagine a 4-dimensional space? Easy! Imagine N-dimensional space, and then imagine that N is equal to four.</p>
+                <p>Defuser starts at a random position and orientation in a 4D maze. On the module, this maze is displayed as a projection onto a 140-degree cubic retina. Determine the location of the defuser using the colors of the surrounding walls. The maze map is cyclic: moving off one of the edges will take the defuser to the space on the opposite side.</p>
+                <p>To defuse the module, go to the shown coordinates and press display.</p>
+                <p>Use the buttons on the right of the module to rotate (<b>L</b>eft/<b>R</b>ight; <b>U</b>p/<b>D</b>own; <b>A</b>na/<b>K</b>ata) and the large button on the bottom to move <b>F</b>orward.</p>
+                <p>The module also has a button for switching the display mode. The normal mode only shows the walls adjacent to the defuser. The advanced mode has a higher display range. Advanced mode is enabled by default.</p>
+                <table>
+                    <tbody id="map">
+                        <tr>
+                            <td colspan="3" style="text-align: right; padding-right: 6px;">W</td>
+                            <td colspan="5">1</td>
+                            <td colspan="5">2</td>
+                            <td colspan="5">3</td>
+                            <td colspan="5">4</td>
+                            <td colspan="5">5</td>
+                        </tr>
+                        <tr class="inner-td-border">
+                            <td colspan="3" style="text-align: right; padding-right: 6px;">X</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: bottom;">Y</td>
+                            <td style="vertical-align: bottom;">Z</td>
+                            <td colspan="26"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+
+</html>
