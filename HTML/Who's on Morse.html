@@ -1,0 +1,730 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Who’s on Morse — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.eye-table td.button {
+            background-size: contain;
+        }
+
+        table.eye-table.eye-0 td.button-0,
+        table.eye-table.eye-1 td.button-1,
+        table.eye-table.eye-2 td.button-2,
+        table.eye-table.eye-3 td.button-3 {
+            background: url("img/Who's on First/eye-icon.png") center center no-repeat;
+        }
+        
+        svg.morse {
+            display: block;
+            margin: 0 auto;
+            width: 14cm;
+        }
+    </style>
+    <script>
+        var defaults = null;
+
+        var DisplayWords = [
+            "SHELL", "HALLS", "SLICK", "TRICK", "BOXES", "LEAKS", "STROBE", "BISTRO", "FLICK", "BOMBS",
+            "BREAK", "BRICK", "STEAK", "STING", "VECTOR", "BEATS", "CURSE", "NICE", "VERB", "NEARLY",
+            "CREEK", "TRIBE", "CYBER", "CINEMA", "KOALA", "WATER", "WHISK", "MATTER", "KEYS", "STUCK"
+        ];
+        var Alphabet = [
+            "A", "B", "C", "D", "E", "F",
+            "G", "H", "I", "J", "K", "L",
+            "M", "N", "O", "P", "Q", "R",
+            "S", "T", "U", "V", "W", "X",
+            "Y", "Z"
+        ];
+        var SectionBChars = [
+            ["C", "L", "U", "D", "Y", "J", "R", "T", "X", "K", "G", "W", "M", "H", "Q", "F", "B", "A", "N", "P", "S", "Z", "E", "V", "I", "O"],
+            ["F", "R", "P", "O", "M", "X", "Y", "T", "S", "J", "C", "N", "K", "E", "B", "I", "U", "Q", "A", "H", "L", "Z", "V", "G", "D", "W"],
+            ["Y", "O", "Z", "F", "E", "V", "D", "N", "K", "S", "B", "H", "M", "J", "Q", "T", "A", "U", "C", "G", "I", "R", "X", "W", "P", "L"],
+            ["W", "K", "Q", "I", "A", "O", "R", "X", "F", "U", "P", "B", "H", "L", "C", "M", "S", "Y", "E", "Z", "G", "J", "T", "N", "D", "V"],
+            ["V", "Y", "W", "N", "D", "X", "A", "L", "G", "Z", "M", "O", "P", "K", "E", "C", "T", "I", "S", "U", "F", "Q", "R", "B", "J", "H"],
+            ["V", "B", "T", "L", "J", "X", "I", "W", "Q", "A", "F", "Y", "D", "H", "G", "S", "K", "N", "U", "R", "C", "E", "O", "M", "P", "Z"],
+            ["H", "S", "Z", "M", "J", "P", "E", "D", "Q", "B", "N", "X", "C", "T", "W", "U", "I", "L", "F", "K", "O", "A", "V", "R", "Y", "G"],
+            ["U", "O", "I", "X", "R", "Z", "G", "C", "E", "J", "Q", "N", "L", "T", "S", "Y", "P", "F", "B", "K", "A", "H", "D", "M", "W", "V"],
+            ["G", "E", "B", "I", "U", "C", "L", "D", "P", "N", "J", "S", "T", "W", "M", "O", "K", "X", "A", "Z", "H", "F", "R", "Q", "Y", "V"],
+            ["B", "L", "J", "H", "T", "W", "P", "C", "G", "X", "Z", "A", "M", "Y", "D", "E", "R", "V", "F", "Q", "N", "I", "U", "O", "S", "K"],
+            ["S", "Q", "B", "W", "A", "I", "P", "E", "L", "D", "V", "T", "C", "N", "R", "K", "X", "M", "G", "O", "J", "U", "Z", "F", "H", "Y"],
+            ["Z", "T", "V", "S", "L", "B", "Y", "W", "U", "N", "Q", "H", "E", "G", "P", "J", "O", "I", "R", "K", "A", "X", "F", "M", "C", "D"],
+            ["S", "O", "J", "R", "K", "N", "C", "G", "L", "U", "W", "B", "V", "Q", "I", "P", "D", "M", "A", "T", "H", "X", "E", "F", "Y", "Z"],
+            ["F", "I", "Y", "X", "A", "G", "N", "J", "T", "W", "Q", "B", "C", "Z", "R", "E", "D", "M", "V", "H", "S", "P", "O", "U", "L", "K"],
+            ["C", "S", "H", "J", "W", "E", "Z", "G", "B", "A", "K", "X", "U", "V", "T", "D", "M", "R", "F", "L", "Q", "P", "N", "O", "Y", "I"],
+            ["Z", "G", "B", "M", "R", "I", "U", "X", "F", "P", "Y", "V", "K", "S", "T", "A", "N", "D", "L", "H", "E", "C", "O", "W", "J", "Q"],
+            ["W", "V", "O", "J", "Z", "D", "U", "F", "T", "K", "G", "R", "M", "P", "E", "I", "B", "X", "Q", "L", "Y", "A", "H", "S", "N", "C"],
+            ["S", "G", "N", "D", "U", "K", "M", "P", "A", "T", "V", "H", "C", "I", "R", "X", "L", "B", "O", "Z", "E", "W", "F", "J", "Y", "Q"],
+            ["S", "I", "Z", "G", "C", "W", "A", "Y", "N", "K", "D", "X", "L", "Q", "F", "T", "H", "E", "U", "M", "P", "O", "V", "B", "J", "R"],
+            ["D", "C", "L", "G", "B", "Z", "S", "P", "R", "T", "H", "M", "J", "V", "A", "E", "Y", "I", "X", "O", "N", "W", "K", "F", "U", "Q"],
+            ["Y", "S", "I", "N", "H", "F", "K", "U", "P", "Q", "X", "V", "C", "E", "J", "O", "W", "A", "R", "D", "G", "B", "Z", "L", "T", "M"],
+            ["E", "K", "A", "H", "R", "P", "M", "D", "X", "V", "S", "O", "Q", "Z", "U", "J", "Y", "T", "B", "C", "I", "G", "F", "W", "L", "N"],
+            ["B", "M", "Z", "C", "W", "E", "X", "S", "N", "R", "K", "Q", "D", "G", "I", "A", "O", "U", "Y", "V", "F", "L", "H", "T", "P", "J"],
+            ["A", "L", "K", "P", "H", "Y", "T", "W", "R", "C", "N", "B", "U", "D", "I", "Z", "O", "F", "S", "J", "X", "G", "E", "M", "Q", "V"],
+            ["T", "G", "Z", "I", "L", "M", "S", "K", "H", "J", "C", "U", "P", "F", "A", "D", "V", "N", "W", "Q", "B", "R", "Y", "X", "E", "O"],
+            ["J", "N", "M", "Y", "R", "Q", "Z", "H", "F", "B", "K", "I", "O", "U", "S", "C", "X", "G", "W", "V", "A", "T", "P", "D", "L", "E"]
+        ];
+
+        function setRules(rnd)
+        {
+            var eyeTables = document.getElementsByClassName('eye-table');
+            var precTrs = document.getElementsByClassName('whos-on-morse-step2-table')[0].getElementsByTagName('TR');
+
+            if (defaults === null)
+            {
+                defaults = { eyes: [], lists: {} };
+                for (var i = 0; i < eyeTables.length; i++)
+                {
+                    defaults.eyes.push({
+                        display: eyeTables[i].getElementsByClassName('whos-on-first-look-at-display')[0].innerText,
+                        eye: Array.from(eyeTables[i].classList).filter(s => /^eye-\d+$/.test(s))[0].substr(4) | 0
+                    });
+                }
+                for (var i = 0; i < precTrs.length; i++)
+                    defaults.lists[precTrs[i].getAttribute('data-char')] = precTrs[i].getElementsByTagName('TD')[0].innerText;
+            }
+
+            var rules;
+            if (rnd.seed === 1)
+                rules = defaults;
+            else
+            {
+                rules = { eyes: [], lists: {} };
+                for (var i = 0; i < 30; i++)
+                    rules.eyes.push({ display: DisplayWords[i], eye: rnd.next(0, 4) });
+                for (var i = 0; i < SectionBChars.length; i++)
+                    // The .slice(0) is necessary to take a copy of the array, because .shuffleFisherYates() is in-place.
+                    rules.lists[Alphabet[i]] = rnd.shuffleFisherYates(SectionBChars[i].slice(0)).join(', ');
+            }
+
+            for (var i = 0; i < eyeTables.length; i++)
+            {
+                eyeTables[i].getElementsByClassName('whos-on-first-look-at-display')[0].innerText = rules.eyes[i].display;
+                Array.from(eyeTables[i].classList).filter(x => /^eye-\d+$/.test(x)).forEach(x => eyeTables[i].classList.remove(x));
+                eyeTables[i].classList.add('eye-' + rules.eyes[i].eye);
+            }
+
+            for (var i = 0; i < precTrs.length; i++)
+                precTrs[i].getElementsByTagName('TD')[0].innerText = rules.lists[precTrs[i].getAttribute('data-char')];
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+    </script>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Who’s on Morse</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Who's on Morse.svg" class="diagram" />
+                <h2>On the Subject of Who’s on Morse</h2>
+                <p class="flavour-text">This contraption is like something out of a military bunker, which might be interesting if it wasn't connected to a bomb. I’ll keep this brief, as Morse only complicates matters.</p>
+                <ol>
+                    <li>Determine the flashing word in Morse code by the light at the top of the module. The signal will loop, with a long gap between repetitions. Use this word in section A to determine which of the four LEDs to <u>read</u>.</li>
+                    <li>Using the letter this LED is flashing, use section B to determine which LED to <u>push</u>.</li>
+                    <li>Repeat until the module has been disarmed.</li>
+                </ol>
+                <h3>Section A</h3>
+                <p>Based on the flashing word, <u>read</u> the flashing letter of a particular LED and proceed to section B:</p>
+                <table class="whos-on-first-step1-table">
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">SHELL</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">HALLS</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">SLICK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">TRICK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BOXES</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">LEAKS</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">STROBE</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BISTRO</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">FLICK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BOMBS</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BREAK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BRICK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">STEAK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">STING</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">VECTOR</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">BEATS</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">CURSE</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">NICE</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">VERB</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">NEARLY</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">CREEK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">TRIBE</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">CYBER</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">CINEMA</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">KOALA</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">WATER</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">WHISK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">MATTER</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">KEYS</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">STUCK</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Who’s on Morse</span> </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <h3>Section B</h3>
+                <p>Using the letter from section A, <u>push the first LED</u> that appears in its corresponding list:</p>
+                <table class="whos-on-morse-step2-table">
+                    <tr data-char='A'>
+                        <th>A</th>
+                        <td>C, L, U, D, Y, J, R, T, X, K, G, W, M, H, Q, F, B, A, N, P, S, Z, E, V, I, O</td>
+                    </tr>
+                    <tr data-char='B'>
+                        <th>B</th>
+                        <td>F, R, P, O, M, X, Y, T, S, J, C, N, K, E, B, I, U, Q, A, H, L, Z, V, G, D, W</td>
+                    </tr>
+                    <tr data-char='C'>
+                        <th>C</th>
+                        <td>Y, O, Z, F, E, V, D, N, K, S, B, H, M, J, Q, T, A, U, C, G, I, R, X, W, P, L</td>
+                    </tr>
+                    <tr data-char='D'>
+                        <th>D</th>
+                        <td>W, K, Q, I, A, O, R, X, F, U, P, B, H, L, C, M, S, Y, E, Z, G, J, T, N, D, V</td>
+                    </tr>
+                    <tr data-char='E'>
+                        <th>E</th>
+                        <td>V, Y, W, N, D, X, A, L, G, Z, M, O, P, K, E, C, T, I, S, U, F, Q, R, B, J, H</td>
+                    </tr>
+                    <tr data-char='F'>
+                        <th>F</th>
+                        <td>V, B, T, L, J, X, I, W, Q, A, F, Y, D, H, G, S, K, N, U, R, C, E, O, M, P, Z</td>
+                    </tr>
+                    <tr data-char='G'>
+                        <th>G</th>
+                        <td>H, S, Z, M, J, P, E, D, Q, B, N, X, C, T, W, U, I, L, F, K, O, A, V, R, Y, G</td>
+                    </tr>
+                    <tr data-char='H'>
+                        <th>H</th>
+                        <td>U, O, I, X, R, Z, G, C, E, J, Q, N, L, T, S, Y, P, F, B, K, A, H, D, M, W, V</td>
+                    </tr>
+                    <tr data-char='I'>
+                        <th>I</th>
+                        <td>G, E, B, I, U, C, L, D, P, N, J, S, T, W, M, O, K, X, A, Z, H, F, R, Q, Y, V</td>
+                    </tr>
+                    <tr data-char='J'>
+                        <th>J</th>
+                        <td>B, L, J, H, T, W, P, C, G, X, Z, A, M, Y, D, E, R, V, F, Q, N, I, U, O, S, K</td>
+                    </tr>
+                    <tr data-char='K'>
+                        <th>K</th>
+                        <td>S, Q, B, W, A, I, P, E, L, D, V, T, C, N, R, K, X, M, G, O, J, U, Z, F, H, Y</td>
+                    </tr>
+                    <tr data-char='L'>
+                        <th>L</th>
+                        <td>Z, T, V, S, L, B, Y, W, U, N, Q, H, E, G, P, J, O, I, R, K, A, X, F, M, C, D</td>
+                    </tr>
+                    <tr data-char='M'>
+                        <th>M</th>
+                        <td>S, O, J, R, K, N, C, G, L, U, W, B, V, Q, I, P, D, M, A, T, H, X, E, F, Y, Z</td>
+                    </tr>
+                    <tr data-char='N'>
+                        <th>N</th>
+                        <td>F, I, Y, X, A, G, N, J, T, W, Q, B, C, Z, R, E, D, M, V, H, S, P, O, U, L, K</td>
+                    </tr>
+                    <tr data-char='O'>
+                        <th>O</th>
+                        <td>C, S, H, J, W, E, Z, G, B, A, K, X, U, V, T, D, M, R, F, L, Q, P, N, O, Y, I</td>
+                    </tr>
+                    <tr data-char='P'>
+                        <th>P</th>
+                        <td>Z, G, B, M, R, I, U, X, F, P, Y, V, K, S, T, A, N, D, L, H, E, C, O, W, J, Q</td>
+                    </tr>
+                    <tr data-char='Q'>
+                        <th>Q</th>
+                        <td>W, V, O, J, Z, D, U, F, T, K, G, R, M, P, E, I, B, X, Q, L, Y, A, H, S, N, C</td>
+                    </tr>
+                    <tr data-char='R'>
+                        <th>R</th>
+                        <td>S, G, N, D, U, K, M, P, A, T, V, H, C, I, R, X, L, B, O, Z, E, W, F, J, Y, Q</td>
+                    </tr>
+                    <tr data-char='S'>
+                        <th>S</th>
+                        <td>S, I, Z, G, C, W, A, Y, N, K, D, X, L, Q, F, T, H, E, U, M, P, O, V, B, J, R</td>
+                    </tr>
+                    <tr data-char='T'>
+                        <th>T</th>
+                        <td>D, C, L, G, B, Z, S, P, R, T, H, M, J, V, A, E, Y, I, X, O, N, W, K, F, U, Q</td>
+                    </tr>
+                    <tr data-char='U'>
+                        <th>U</th>
+                        <td>Y, S, I, N, H, F, K, U, P, Q, X, V, C, E, J, O, W, A, R, D, G, B, Z, L, T, M</td>
+                    </tr>
+                    <tr data-char='V'>
+                        <th>V</th>
+                        <td>E, K, A, H, R, P, M, D, X, V, S, O, Q, Z, U, J, Y, T, B, C, I, G, F, W, L, N</td>
+                    </tr>
+                    <tr data-char='W'>
+                        <th>W</th>
+                        <td>B, M, Z, C, W, E, X, S, N, R, K, Q, D, G, I, A, O, U, Y, V, F, L, H, T, P, J</td>
+                    </tr>
+                    <tr data-char='X'>
+                        <th>X</th>
+                        <td>A, L, K, P, H, Y, T, W, R, C, N, B, U, D, I, Z, O, F, S, J, X, G, E, M, Q, V</td>
+                    </tr>
+                    <tr data-char='Y'>
+                        <th>Y</th>
+                        <td>T, G, Z, I, L, M, S, K, H, J, C, U, P, F, A, D, V, N, W, Q, B, R, Y, X, E, O</td>
+                    </tr>
+                    <tr data-char='Z'>
+                        <th>Z</th>
+                        <td>J, N, M, Y, R, Q, Z, H, F, B, K, I, O, U, S, C, X, G, W, V, A, T, P, D, L, E</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Who’s on Morse</span> </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <h3>Morse code chart</h3>
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-4 -10 347 271" class='morse'><text x="54.052" y="38.502" font-family="Special Elite" font-size="10" transform="translate(0 -267.298)"/><path fill="none" stroke="#000" stroke-width="1.843" d="M0-8.4h341.035v267.298H0z" color="#000" overflow="visible" style="marker:none"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -38.735)"/><path d="M242.828 140.062h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 177.917 -38.735)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -20.301)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 177.917 -20.301)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 196.35 -20.301)"/><path d="M261.262 158.496h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -1.867)"/><path d="M224.394 176.93h27.651v9.217h-27.651zM261.262 176.93h27.651v9.217h-27.651zM205.959 195.365h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 196.35 16.567)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 214.785 16.567)"/><path d="M279.697 195.365h27.651v9.217h-27.651zM205.959 213.799h27.651v9.217h-27.651zM261.262 213.799h27.651v9.217h-27.651zM298.131 213.799h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 196.35 35.002)"/><path d="M205.959 232.233h27.651v9.217h-27.651zM242.828 232.233h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 233.22 53.436)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 251.654 53.436)"/><text x="183.586" y="149.279" font-family="Special Elite" font-size="18">U</text><text x="183.793" y="167.713" font-family="Special Elite" font-size="18">V</text><text x="183.7" y="185.923" font-family="Special Elite" font-size="18">W</text><text x="184.056" y="204.582" font-family="Special Elite" font-size="18">X</text><text x="184.421" y="223.016" font-family="Special Elite" font-size="18">Y</text><text x="183.903" y="241.45" font-family="Special Elite" font-size="18">Z</text><text x="183.586" y="20.243" font-family="Special Elite" font-size="18">N</text><text x="183.753" y="38.677" font-family="Special Elite" font-size="18">O</text><text x="183.784" y="75.546" font-family="Special Elite" font-size="18">Q</text><text x="184.289" y="57.111" font-family="Special Elite" font-size="18">P</text><text x="183.56" y="93.98" font-family="Special Elite" font-size="18">R</text><text x="183.92" y="112.414" font-family="Special Elite" font-size="18">S</text><text x="183.999" y="130.848" font-family="Special Elite" font-size="18">T</text><path d="M205.959 29.46h27.651v9.217h-27.651zM242.828 29.46h27.651v9.217h-27.651zM279.697 29.46h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -130.903)"/><path d="M224.394 47.894h27.651v9.217h-27.651zM261.262 47.894h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 251.654 -130.903)"/><path d="M205.959 66.328h27.651v9.217h-27.651zM242.828 66.328h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 233.22 -112.469)"/><path d="M298.131 66.328h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -94.035)"/><path d="M224.394 84.763h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 214.785 -94.035)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 196.35 -75.6)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 177.917 -75.6)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 159.482 -75.6)"/><path d="M205.959 121.631h27.651v9.217h-27.651zM205.959 11.025h27.651v9.217h-27.651z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 196.35 -167.772)"/><text x="14.042" y="20.243" font-family="Special Elite" font-size="18">A</text><text x="13.713" y="38.677" font-family="Special Elite" font-size="18">B</text><text x="13.792" y="56.886" font-family="Special Elite" font-size="18">C</text><text x="13.449" y="75.546" font-family="Special Elite" font-size="18">D</text><text x="13.357" y="93.98" font-family="Special Elite" font-size="18">E</text><text x="13.365" y="112.414" font-family="Special Elite" font-size="18">F</text><text x="13.295" y="130.623" font-family="Special Elite" font-size="18">G</text><text x="13.027" y="149.283" font-family="Special Elite" font-size="18">H</text><text x="14.526" y="167.717" font-family="Special Elite" font-size="18">I</text><text x="13.989" y="186.151" font-family="Special Elite" font-size="18">J</text><text x="13.471" y="204.586" font-family="Special Elite" font-size="18">K</text><text x="13.528" y="223.02" font-family="Special Elite" font-size="18">L</text><text x="12.667" y="241.454" font-family="Special Elite" font-size="18">M</text><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -167.772)"/><path id="a" d="M51.486 11.025h27.651v9.217H51.486z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 23.68 -149.338)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 41.878 -149.043)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 60.306 -149.338)"/><path d="M33.052 47.894h27.651v9.217H33.052z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 23.415 -130.903)"/><path d="M88.355 47.894h27.651v9.217H88.355z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 78.807 -130.903)"/><path d="M33.052 66.328h27.651v9.217H33.052z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 23.355 -112.469)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 41.878 -112.291)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -94.035)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -75.6)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 5.01 -75.6)"/><path d="M69.921 103.197h27.651v9.217H69.921z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 60.312 -75.6)"/><path d="M33.052 121.631h27.651v9.217H33.052zM69.921 121.631h27.651v9.217H69.921z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 60.312 -57.166)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -38.732)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 5.01 -38.732)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 23.443 -38.732)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 41.878 -38.732)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -20.297)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 5.01 -20.297)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 -1.863)"/><path d="M51.486 176.934h27.651v9.217H51.486zM88.355 176.934h27.651v9.217H88.355zM125.224 176.934h27.651v9.217h-27.651zM33.052 195.369h27.651v9.217H33.052z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 23.443 16.571)"/><path d="M88.355 195.369h27.651v9.217H88.355z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 -13.425 35.006)"/><path d="M51.486 213.803h27.651v9.217H51.486z"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 41.878 35.006)"/><circle cx="39.4" cy="141.48" r="3.555" transform="matrix(1.29636 0 0 1.29636 60.312 35.006)"/><path d="M33.052 232.237h27.651v9.217H33.052zM69.921 232.237h27.651v9.217H69.921z"/><use width="414.772" height="500.994" transform="translate(-18.434 18.434)" xlink:href="#a"/></svg>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
