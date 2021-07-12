@@ -73,6 +73,13 @@
                 padding: .1em .6em .05em;
                 text-align: left;
             }
+        #led-color-rules {
+            width: 100%;
+        }
+            #led-color-rules td {
+                padding: .1em 0 .05em;
+                text-align: center;
+            }
     </style>
     <script>
         function setDefaultRules(rnd) { setRules(rnd); }
@@ -90,6 +97,27 @@
             rnd.shuffleFisherYates(edgeworkConditions);
             for (let ec = 0; ec < edgeworkTds.length; ec++)
                 edgeworkTds[ec].innerText = edgeworkConditions[ec];
+
+            // LEDS
+            let ledColors = ['K', 'R', 'Y', 'B', 'W'];
+            let table = '';
+            table += `<tr>${ledColors.slice(1).map(lc => `<th>${lc}<${''}/th>`).join('')}<td class='corner'><${''}/td><${''}/tr>`;
+            let allAnswers = [];
+            for (let color1 = 0; color1 < ledColors.length - 1; color1++)
+            {
+                let tr = Array(color1).fill('<td class="corner"></td>').join('');
+                for (let color2 = color1 + 1; color2 < ledColors.length; color2++)
+                {
+                    let answers;
+                    do
+                        answers = rnd.shuffleFisherYates(ledColors.slice(0)).slice(0, rnd.next(2, 6)).join(' ');
+                    while (allAnswers.includes(answers));
+                    allAnswers.push(answers);
+                    tr += `<td>${answers}<${''}/td>`;
+                }
+                table += `<tr>${tr}<th>${ledColors[color1]}<${''}/th><${''}/tr>`;
+            }
+            document.getElementById('led-color-rules').innerHTML = table;
 
             // BUTTONS
             let buttons = Array.from(document.getElementsByClassName('button-color-rule'));
@@ -241,8 +269,6 @@
                     segs.splice(extIx, 1);
                     if (seg.c[0] === ext.c[0])
                     {
-                        if (id === 27)
-                            console.log(copy(seg), copy(ext), f, 1);
                         seg.c.reverse();
                         seg.c.pop();
                         if (seg.d1 === (ext.d1 ^ 2))
@@ -250,59 +276,44 @@
                         seg.c.push(...ext.c);
                         seg.d1 = seg.d2;
                         seg.d2 = ext.d2;
-                        if (id === 27)
-                            console.log(copy(seg));
                     }
                     else if (seg.c[0] === ext.c[ext.c.length - 1])
                     {
-                        if (id === 27)
-                            console.log(copy(seg), copy(ext), f, 2);
                         ext.c.pop();
                         if (seg.d1 === (ext.d2 ^ 2))
                             seg.c.shift();
                         ext.c.push(...seg.c);
                         ext.d2 = seg.d2;
                         seg = ext;
-                        if (id === 27)
-                            console.log(copy(seg));
                     }
                     else if (seg.c[seg.c.length - 1] === ext.c[0])
                     {
-                        if (id === 27)
-                            console.log(copy(seg), copy(ext), f, 3);
                         seg.c.pop();
                         if (ext.d1 === (seg.d2 ^ 2))
                             ext.c.shift();
                         seg.c.push(...ext.c);
                         seg.d2 = ext.d2;
-                        if (id === 27)
-                            console.log(copy(seg));
                     }
                     else if (seg.c[seg.c.length - 1] === ext.c[ext.c.length - 1])
                     {
-                        if (id === 27)
-                            console.log(copy(seg), copy(ext), f, 4);
                         ext.c.reverse();
                         seg.c.pop();
                         if (seg.d2 === (ext.d2 ^ 2))
                             ext.c.shift();
                         seg.c.push(...ext.c);
                         seg.d2 = ext.d1;
-                        if (id === 27)
-                            console.log(copy(seg));
-                    }
-                    else
-                    {
-                        if (id === 27)
-                            console.error(copy(seg), copy(ext), f, 5);
                     }
                 }
                 svg.push(`M${seg.c.map(p => `${p & 7} ${p >> 3}`).join(' ')}`);
-                if (id === 27)
-                    console.log(svg [ svg.length - 1 ]);
             }
 
-            td.innerHTML = `<svg viewBox='-.1 -.1 ${w+.2} ${h+.2}'><path d='${svg.join('')}' fill='none' stroke='black' stroke-width='.05' /><path d='M0 0h${w}v${h}H0z' fill='none' stroke='black' stroke-width='.1'><${''}/svg>`;
+            td.innerHTML = `
+                <svg viewBox='-.1 -.1 ${w+.2} ${h+.2}'>
+                    <path d='${svg.join('')}' fill='none' stroke='black' stroke-width='.05' />
+                    <path d='M0 0h${w}v${h}H0z' fill='none' stroke='black' stroke-width='.1' />
+                    ${Array(w*h).fill(null).map((_, c) => `<rect class='highlightable' x='${c % w}' y='${(c / w) | 0}' width='1' height='1' fill='transparent' />`).join('')}
+                <${''}/svg>
+            `;
         }
     </script>
 </head>
@@ -424,12 +435,6 @@
             <div class="page-content">
                 <div class='layout'>
                     <div>
-                        <h3>Letter Displays</h3>
-                        <p><var>n</var> is the number of words from the below word list that can be formed using the provided options.
-                            The words are numbered from 0 in alphabetical order.</p>
-                        <ul id='word-list'></ul>
-                    </div>
-                    <div>
                         <h3>Buttons</h3>
                         <table class='button-table'>
                             <tr><th>Color</th><th><var>k</var></th></tr>
@@ -438,11 +443,28 @@
                             <tr><td>Blue</td><td class='button-color-rule'></td></tr>
                             <tr><td>White</td><td class='button-color-rule'></td></tr>
                         </table>
-                        <p><var>n</var> is <var>k</var> + <var>p</var>, where <var>k</var> is the value obtained from the table based on the button’s color,
-                        while <var>p</var> is the number of corners of the button’s shape.</p>
+                        <p><var>n</var> is <var>k</var> + <var>p</var>, where <var>k</var> is the value obtained from the table based
+                            on the button’s color, while <var>p</var> is the number of corners of the button’s shape.</p>
                         <p>If the obtained value is &lt; <var>k</var>, hold the button across that many timer ticks.</p>
-                        <p>Otherwise, subtract <var>k</var> − 2 from the value, tap the button that many times, then wait two timer ticks for the input to be recognized.</p>
+                        <p>Otherwise, subtract <var>k</var> − 2 from the value, tap the button that many times,
+                            then wait two timer ticks for the input to be recognized.</p>
                         <p style='font-size: 9pt'>A “timer tick” is a change in the seconds value of the bomb’s countdown timer.</p>
+                    </div>
+                    <div>
+                        <h3>LEDs</h3>
+                        <p>An LED starts out flashing between two colors. Look up that combination of colors in the following table
+                            to obtain a new list of colors. <var>n</var> is the size of that list. The colors in the list are numbered from 0.</p>
+                        <p>Tap the LED once to switch to input mode. The LED will cycle all five possible colors. Tap the LED again
+                            when the correct color is shown to submit it.</p>
+                        <table id='led-color-rules'>
+                        </table>
+                        <p style='font-size: 9pt'>B = blue, K = black, R = red, W = white, Y = yellow</p>
+                    </div>
+                    <div>
+                        <h3>Letter Displays</h3>
+                        <p><var>n</var> is the number of words from the below word list that can be formed using the provided options.
+                            The words are numbered from 0 in alphabetical order.</p>
+                        <ul id='word-list'></ul>
                     </div>
                 </div>
             </div>
