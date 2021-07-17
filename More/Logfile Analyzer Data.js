@@ -1305,7 +1305,7 @@ const parseData = [
         matches: [
             {
                 regex: /^(The (first|second|third) glyph is) ([ABCDE]\d+).$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.push(matches[1] + ':');
                     const glyph = matches[3];
                     let div = $('<div>');
@@ -1313,14 +1313,14 @@ const parseData = [
                     let itempair = [glyph.charAt(0), glyph.substring(1)];
                     let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
                     div.append(`<img src='img/The Bioscanner/${"ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString()}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
-                    
+
                     module.push(div);
                     return true;
                 }
             },
             {
                 regex: /^(The current offset is \d+\. This means the current glyphs are) ((([ABCDE]\d+)(, |, and )*){3})\.$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.push(matches[1] + ':');
                     const glyphs = matches[2].split(', ').slice(0, 2).concat(matches[2].split(', ')[2].substring(4));
                     let actualGlyphs = [];
@@ -1331,7 +1331,7 @@ const parseData = [
                         let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
                         actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
                     });
-                    for (var i = 0; i < actualGlyphs.length; i++){
+                    for (var i = 0; i < actualGlyphs.length; i++) {
                         div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
                     }
                     module.push(div);
@@ -1340,7 +1340,7 @@ const parseData = [
             },
             {
                 regex: /^(Fake glyphs are:) (([ABCDE]\d+ )+)$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.push(matches[1]);
                     const glyphs = matches[2].slice(0, -1).split(' ');
                     let actualGlyphs = [];
@@ -1351,7 +1351,7 @@ const parseData = [
                         let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
                         actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
                     });
-                    for (var i = 0; i < actualGlyphs.length; i++){
+                    for (var i = 0; i < actualGlyphs.length; i++) {
                         div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
                     }
                     module.push(div);
@@ -2637,7 +2637,7 @@ const parseData = [
                 regex: /^Puzzle on module: “([^“”]+)”$/,
                 handler: function (matches, module) {
                     let span = $("span").css("font-family", "Emoticons").css("font-size", "9px").text(matches[1]);
-                    module.push({ label: "Puzzle on module: ", obj: span});
+                    module.push({ label: "Puzzle on module: ", obj: span });
                     return true;
                 }
             },
@@ -3501,6 +3501,48 @@ const parseData = [
         ]
     },
     {
+        moduleID: "hypercolor",
+        loggingTag: "The Hypercolor",
+        matches: [
+            {
+                regex: /^Cube (\d+) is/,
+                handler: function (matches, module) {
+                    let lines = readMultiple(9).split(/\r?\n/g).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
+                    let vertices = [
+                        { line: 0, col: 3, x: 1, y: 0 },
+                        { line: 0, col: 13, x: 3, y: 0 },
+                        { line: 3, col: 0, x: 0, y: 1 },
+                        { line: 3, col: 10, x: 2, y: 1 },
+                        { line: 5, col: 3, x: 1, y: 2 },
+                        { line: 5, col: 13, x: 3, y: 2 },
+                        { line: 8, col: 0, x: 0, y: 3 },
+                        { line: 8, col: 10, x: 2, y: 3 }
+                    ];
+                    let svg = [
+                        `<path d='M1 0 3 0 3 2 1 2z' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M1 0 3 0 3 2 1 2z' stroke='#ccc' stroke-width='.125' fill='none' />`,
+                        `<path d='M1 0 0 1M3 0 2 1M1 2 0 3M3 2 2 3' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M1 0 0 1M3 0 2 1M1 2 0 3M3 2 2 3' stroke='#ccc' stroke-width='.125' fill='none' />`,
+                        `<path d='M0 1 2 1 2 3 0 3z' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M0 1 2 1 2 3 0 3z' stroke='#ccc' stroke-width='.125' fill='none' />`
+                    ];
+                    let colors = { 'K': '#000', 'B': '#00f', 'G': '#0f0', 'C': '#0ff', 'R': '#f00', 'M': '#f0f', 'Y': '#ff0', 'W': '#fff' };
+                    const radius = .4;
+                    for (let v of vertices) {
+                        //rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
+                        svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col]]}' d='M ${v.x + radius * Math.cos(-Math.PI / 4)} ${v.y + radius * Math.sin(-Math.PI / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} z' />`);
+                        svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col + 2]]}' d='M ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 7 / 4)} ${v.y + radius * Math.sin(Math.PI * 7 / 4)} z' />`);
+                    }
+                    module.push({ label: 'Cube ' + matches[1], obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "CaptchaModule",
         loggingTag: "I'm Not a Robot",
         matches: [
@@ -3553,15 +3595,15 @@ const parseData = [
         matches: [
             {
                 regex: /^(The correct (cube|ship|gravity ball|ufo|wave|robot|spider) is |You selected ){1}((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *){1}(, which is correct\.|, which is incorrect\. Strike!|\.){1}$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.push(`${matches[1]}`);
                     var div = $('<div>');
                     var photos = matches[3].split(' ');
-                    for (var i = 0; i < photos.length; i++){
+                    for (var i = 0; i < photos.length; i++) {
                         div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
                     }
                     module.push(div);
-                    if(matches[6] != '.'){
+                    if (matches[6] != '.') {
                         module.push(`${matches[6].substring(2)}`);
                     }
                     return true;
@@ -3569,10 +3611,10 @@ const parseData = [
             },
             {
                 regex: /^((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *)+$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     var div = $('<div>');
                     var photos = matches[0].split(' ');
-                    for (var i = 0; i < photos.length; i++){
+                    for (var i = 0; i < photos.length; i++) {
                         div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
                     }
                     module.push(div);
@@ -4614,29 +4656,29 @@ const parseData = [
         ]
     },
     {
-		moduleID: "mislocation",
-		displayName: "Mislocation",
-		loggingTag: "Mislocation",
-		matches: [
+        moduleID: "mislocation",
+        displayName: "Mislocation",
+        loggingTag: "Mislocation",
+        matches: [
             {
                 regex: /\(use slashes as new line separators\) ([\/\-ABCDEFGHIJKLMNOPQRSTUVWXYZ*]+)$/,
-                handler: function(matches, module) {
-                    module.push({ label: "The maze:", obj: pre(matches[1].replace(/\//g, '\n').replace(/-/g, ' '))});
+                handler: function (matches, module) {
+                    module.push({ label: "The maze:", obj: pre(matches[1].replace(/\//g, '\n').replace(/-/g, ' ')) });
                     return true;
                 }
             },
             {
                 regex: /\d, \d$/,
-                handler: function(matches, module) {
-                    module.push({ label: "Current position(col, row): ", obj: matches[0]})
+                handler: function (matches, module) {
+                    module.push({ label: "Current position(col, row): ", obj: matches[0] })
                     return true;
                 }
             },
             {
                 regex: /.+/
             }
-		]
-	},
+        ]
+    },
     {
         moduleID: "SquaresOfMisery",
         displayName: "Misery Squares",
@@ -7246,7 +7288,7 @@ const parseData = [
                         B: '#2583ff'
                     };
                     let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
-                    let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5*row, 5*(row+1)).join('')}</tr>`);
+                    let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5 * row, 5 * (row + 1)).join('')}</tr>`);
                     module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
                     return true;
                 }
