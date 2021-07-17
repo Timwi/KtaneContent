@@ -3053,6 +3053,105 @@ const parseData = [
         ]
     },
     {
+        displayName: "Forget Maze Not",
+        moduleID: "forgetMazeNot",
+        loggingTag: "Forget Maze Not",
+        matches: [
+            {
+                regex: /^The maze has a size of (\d+) \* (\d+)$/,
+                handler: function(matches, module) {
+                    const COL_COUNT = parseInt(matches[1]);
+                    const ROW_COUNT = parseInt(matches[2]);
+
+                    let maze = readMultiple(ROW_COUNT + 1).split('\n').slice(1, ROW_COUNT + 1);
+                    let table = $('<table>').css('border-collapse', 'collapse');
+
+                    for(let row = 0; row < ROW_COUNT; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < COL_COUNT; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr);
+
+                            let current = maze[row].split(' ')[col].split('');
+                            current.forEach(element => {
+                                switch(element){
+                                    case 'N':
+                                        td.css('border-top', 'none');
+                                        break;
+                                    case 'E':
+                                        td.css('border-right', 'none');
+                                        break;
+                                    case 'S':
+                                        td.css('border-bottom', 'none');
+                                        break;
+                                    case 'W':
+                                        td.css('border-left', 'none');
+                                        break;
+                                }
+                            });
+                        }
+                    }
+                    
+                    module.push('The maze has a size of ' + COL_COUNT + ' * ' + ROW_COUNT)
+                    module.push({ label: "Maze:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^((You generated an inverted maze:)|(You generated a maze:))$/,
+                handler: function(matches, module) {
+                    const COL_COUNT = 5;
+                    const ROW_COUNT = 5;
+
+                    let maze = readMultiple(ROW_COUNT).split('\n');
+                    let table = $('<table>').css('border-collapse', 'collapse');
+
+                    for(let row = 0; row < ROW_COUNT; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < COL_COUNT; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr);
+
+                            let current = maze[row].split(' ')[col].split('');
+                            current.forEach(element => {
+                                switch(element){
+                                    case 'N':
+                                        td.css('border-top', 'none');
+                                        break;
+                                    case 'E':
+                                        td.css('border-right', 'none');
+                                        break;
+                                    case 'S':
+                                        td.css('border-bottom', 'none');
+                                        break;
+                                    case 'W':
+                                        td.css('border-left', 'none');
+                                        break;
+                                }
+                            });
+                        }
+                    }
+
+                    module.push({ label: matches[1], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]  
+    },
+    {
         displayName: "Forget Perspective",
         moduleID: "qkForgetPerspective",
         loggingTag: "Forget Perspective",
