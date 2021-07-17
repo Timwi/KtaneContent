@@ -1143,6 +1143,25 @@ const parseData = [
         ]
     },
     {
+        displayName: "Badugi",
+        moduleID: "ksmBadugi",
+        loggingTag: "Badugi",
+        matches: [
+            {
+                regex: /^(The hand on the (left|right) is )(.+)—(a(n|)(.+))$/,
+                handler: function (matches, module) {
+                    module.push(matches[1]);
+                    module.push($("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]));
+                    module.push(matches[6]);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "BattleshipModule",
         loggingTag: "Battleship",
         matches: [
