@@ -3393,7 +3393,7 @@ const parseData = [
         loggingTag: "Hexiom",
         matches: [
             {
-                regex: /One possible solution:|Initial state:|Module disarmed with the following board:/,
+                regex: /One possible solution:|Initial state:|Module disarmed with the following board:|Non initial board before reset:|Unsolved board upon detonation:/,
                 handler: function (matches, module) {
                     if (module.firstTime == null || module.firstTime === true) {
                         module.firstTime = false;
