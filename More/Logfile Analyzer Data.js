@@ -7963,9 +7963,9 @@ const parseData = [
         loggingTag: "The World's Largest Button"
     },
     {
-        displayName: "X-Ray",
-        moduleID: "XRayModule",
-        loggingTag: "X-Ray",
+        displayName: ["X-Ray", "Not X-Ray"],
+        moduleID: ["XRayModule", "NotXRayModule"],
+        loggingTag: ["X-Ray", "Not X-Ray"],
         matches: [
             {
                 regex: /.+/,
