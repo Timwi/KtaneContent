@@ -2602,6 +2602,68 @@ const parseData = [
         ]
     },
     {
+        displayName: "Cursor Maze",
+        moduleID: "cursorMazeModule",
+        loggingTag: "Cursor Maze",
+        matches: [
+            {
+                regex: /^Generated Maze:$/,
+                handler: function(matches, module) {
+                    let maze = readMultiple(9).replace(/\[Cursor Maze #\d+\]/g, '').split('\n').slice(0, 8);
+                    let table = $('<table>');
+                    for(let i = 0; i < 8; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        maze[i].split('').forEach(element => {
+                            switch(element) {
+                                case 'X':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#000000')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'O':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#00FFFF')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'G':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#00FF00')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'R':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#FF0000')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                            }
+                        });
+                    }
+                    module.push({ label: "Generated Maze:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "The Dealmaker",
         moduleID: "thedealmaker",
         loggingTag: "TheDealmaker"
