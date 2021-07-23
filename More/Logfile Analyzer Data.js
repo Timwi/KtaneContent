@@ -4789,6 +4789,201 @@ const parseData = [
         loggingTag: "Megaman 2"
     },
     {
+        displayName: "Minecraft Survival",
+        moduleID: "kataMinecraftSurvival",
+        loggingTag: "Minecraft Survival",
+        matches: [
+            {
+                regex: /Gathered (\d+|a|an) (.+)\.$/,
+                handler: function (matches, module) {
+                    function cparseInt (string) {
+                        if (string === "a" || string === "an"){
+                            return 1
+                        }
+                        return parseInt(string)
+                    }
+
+                    if (module.prev == null) {
+                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
+                    }
+                    else if (module.prev.type === "gather" && module.prev.material === matches[2]) {
+                        module.prev = {type: "gather", material: matches[2], count: module.prev.count + cparseInt(matches[1])};
+                    }
+                    else if (module.prev.type === "gather") {
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
+                    } 
+                    else if (module.prev.type === "craft"){
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
+                    }
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /Crafted (\d+|a|an) (.+)\.$/,
+                handler: function (matches, module) {
+                    function cparseInt (string) {
+                        if (string === "a" || string === "an"){
+                            return 1
+                        }
+                        return parseInt(string)
+                    }
+
+                    if (module.prev == null) {
+                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                    }
+                    else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
+                        module.prev = {type: "craft", material: matches[2], count: module.prev.count + cparseInt(matches[1])};
+                    }
+                    else if (module.prev.type === "craft") {
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                    }
+                    else if (module.prev.type === "gather"){
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /The monster you are fighting is (.+) and it has (\d+) health and (\d+) damage\.$/,
+                handler: function (matches, module) {
+                    function cparseInt (string) {
+                        if (string === "a" || string === "an"){
+                            return 1
+                        }
+                        return parseInt(string)
+                    }
+
+                    if (module.prev == null) {
+                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                    }
+                    else if (module.prev.type === "fight") {
+                        console.error("Minecraft Survival: fight started before it ended!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                    }
+                    else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                    }
+                    else if (module.prev.type === "gather"){
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                    }
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /You (attacked|have been attacked by) the (.+) for -?(\d+) damage and now ha(s|ve) (\d+) health remaining\.$/,
+                handler: function (matches, module) {
+                    function cparseInt (string) {
+                        if (string === "a" || string === "an"){
+                            return 1
+                        }
+                        return parseInt(string)
+                    }
+
+                    if (module.prev == null) {
+                        console.error("Minecraft Survival: fight continued before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                    }
+                    else if (module.prev.type === "fight") {
+                        //Continue
+                    }
+                    else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
+                        console.error("Minecraft Survival: fight continued before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = null;
+                    }
+                    else if (module.prev.type === "gather"){
+                        console.error("Minecraft Survival: fight continued before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = null;
+                    }
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /The monster has been defeated. It dropped (\d+|an) items?. Resume gathering! Number of resources gathered till next fight: (\d+)\.$/,
+                handler: function (matches, module) {
+                    function cparseInt (string) {
+                        if (string === "a" || string === "an"){
+                            return 1
+                        }
+                        return parseInt(string)
+                    }
+
+                    if (module.prev == null) {
+                        console.error("Minecraft Survival: fight ended before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                    }
+                    else if (module.prev.type === "fight") {
+                        module.push($(`<span>Combat: ${module.prev.enemy}: ${matches[1]}</span>`));
+                        module.prev = null;
+                    }
+                    else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
+                        console.error("Minecraft Survival: fight ended before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = null;
+                    }
+                    else if (module.prev.type === "gather"){
+                        console.error("Minecraft Survival: fight ended before it started!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = null;
+                    }
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /Dragon defeated. Go click on the egg!$/,
+                handler: function (matches, module) {
+                    module.push($(`<span>Combat: Dragon: 1</span>`));
+                    module.prev = null;
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /.+$/,
+                handler: function (matches, module) {
+                    let blacklist = ["Fight did not start because you have no sword!"];
+                    
+                    if (blacklist.includes(matches[0])) {
+                        return true;
+                    }
+                    
+                    if (module.prev == null) {
+                        // Do nothing
+                    }
+                    else if (module.prev.type === "gather") {
+                        module.push($(`<span>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+                    }
+                    else if (module.prev.type === "craft") {
+                        module.push($(`<span>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                    } else if (module.prev.type === "fight") {
+                        console.error("Minecraft Survival: fight never ended!");
+                        module.push($(`<span>Error in LFA!</span>`));
+                    }
+                    module.prev = null;
+                    
+                    module.push($(`<span>${matches[0]}</span>`));
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         moduleID: "mineseeker",
         loggingTag: "Mineseeker",
         matches: [
