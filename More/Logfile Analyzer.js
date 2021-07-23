@@ -322,7 +322,7 @@ class BombGroup {
         // Graph
         if (this.Events.length !== 0 && this.isSingleBomb)
         {
-            const graph = $SVG(`<svg viewBox="-0.1 -0.1 2.2 1.2">`);
+            const graph = $SVG(`<svg viewBox="-0.1 -0.1 2.3 1.4">`);
 
             const totalRealTime = this.Events[this.Events.length - 1].realTime;
 
@@ -413,7 +413,55 @@ class BombGroup {
             }
 
             // Graph lines
-            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 L 0 1.01 L 2.01 1.01">`).appendTo(graph);
+            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 0 1.01 2.01 1.01">`).appendTo(graph);
+            
+            function printTime(num) {
+                num = Math.floor(num);
+                let sec = num % 60;
+                let min = (num / 60) | 0;
+                return `${min}:${sec < 10 ? `0${sec}` : sec}`;
+            }
+
+            let timerLabels = [];
+            if(totalRealTime > 120) {
+                if (totalRealTime < 420) {
+                    for (let i = 60; i < totalRealTime - 60; i += 60) {
+                        timerLabels = timerLabels.concat(i);
+                    }
+                }
+                else if (totalRealTime < 2100) {
+                    for (let i = 300; i < totalRealTime - 300; i += 300) {
+                        timerLabels = timerLabels.concat(i);
+                    }
+                }
+                else {
+                    for (let i = 1800; i < totalRealTime - 1800; i += 1800) {
+                        timerLabels = timerLabels.concat(i);
+                    }
+                }
+            }
+
+            // Graph time labels
+            let group = $SVG(`
+            <g>
+                <defs>
+                    <path id='left-label' stroke=black stroke-width=0.01 fill=none d="M 0 1.06 .2 1.26"/>
+                    <path id='right-label' stroke=black stroke-width=0.01 fill=none d="M 2.01 1.06 2.21 1.26"/>
+                </defs>
+                <text>
+                    <textpath href='#left-label' style="font-size: .05;">0:00</textpath>
+                    <textpath href='#right-label' style="font-size: .05;">${printTime(totalRealTime)}</textpath>
+                </text>
+                <text x='1' y='1.2' style="font-size: .05;text-anchor: middle;">Real Time</text>
+            </g>
+            `);
+            
+            for (const item of timerLabels) {
+                $SVG(`<text transform='translate(${item * 2 / totalRealTime}, 0)'><textpath href='#left-label' style="font-size: .05;">${printTime(item)}</textpath></text>`).appendTo(group);
+                $SVG(`<path stroke='#ccc' stroke-width='.005' d='M${item * 2 / totalRealTime} 0v1.01'/>`).appendTo(group);
+            }
+
+            group.prependTo(graph);
 
             var graphInfo = $("<div class='module-info'>").appendTo(info);
             $("<h3>").css("margin-top", "10px").text("Graph").appendTo(graphInfo);
