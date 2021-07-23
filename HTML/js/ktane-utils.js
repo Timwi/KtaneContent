@@ -54,12 +54,12 @@ e.onload = function()
         {
             if ($('#dark-mode-enabled').prop('checked'))
             {
-                $(".page").addClass("dark");
+                $("body").addClass("dark");
                 localStorage.setItem('ktane-dark-mode', true);
             }
             else
             {
-                $(".page").removeClass("dark");
+                $("body").removeClass("dark");
                 localStorage.setItem('ktane-dark-mode', false);
             }
         }
