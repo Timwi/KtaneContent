@@ -1,0 +1,912 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Match 'em — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function(){
+        
+            var pairTable = $("#pairTable");
+            var pairLetter = "A";
+            var letters = ["", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", ""];
+            var currentCondition = 1;
+
+            // Swap rows
+            var swapRowContainer = -1;
+            var swapRowClicked = false;
+
+            // Swap Columns
+            var swapColContainer = -1;
+            var swapColClicked = false;
+
+            // Swap Single
+            var swapSingleContainer = "";
+            var swapSingleClicked = false;
+            
+            // Rotations (Clockwise: From:To, Counter: To:From)
+            var clockRot1 = ["20:0", "0:4", "4:24", "24:20"];
+            var clockRot2 = ["15:1", "1:9", "9:23", "23:15"];
+            var clockRot3 = ["10:2", "2:14", "14:22", "22:10"];
+            var clockRot4 = ["5:3", "3:19", "19:21", "21:5"];
+            var clockRot5 = ["16:6", "6:8", "8:18", "18:16"];
+            var clockRot6 = ["11:7", "7:13", "13:17", "17:11"];
+
+            // 7,8,9,10,11 | 13,14,15,16,17 | 19,20,21,22,23 | 25,26,27,28,29 | 31,32,33,34,35
+
+            var ment1 = [7,11,35,31];
+            var ment2 = [8,17,34,25];
+            var ment3 = [9,23,33,19];
+            var ment4 = [10,29,32,13];
+            var ment5 = [14,16,28,26];
+            var ment6 = [15,22,27,20];
+
+            function genTable(){
+                for (var i = 0; i < 6; i++) 
+                {
+                    var nums = "12345";
+                    var row = $("<tr>").appendTo(pairTable);
+                    if (i == 0) 
+                    {
+                        for (var x = 0; x < 6; x++) 
+                        {
+                            if (x == 0) 
+                            {
+                                $("<td>").appendTo(row).css('border', 'none');
+                                continue;
+                            }
+                            $("<td>").appendTo(row).css('font-weight', 'bold').text(nums[x-1]).each(function(_,e) 
+                            {
+                                var obj = $(e);
+
+                                obj.on("contextmenu", function(e) {
+                                    if (currentCondition == 0) return true;
+                                    return false;
+                                });
+
+                                obj.mouseenter(function() {
+                                    if (currentCondition == 0) return;
+                                    if (currentCondition == 2 || currentCondition == 6) 
+                                    {
+                                        if (swapColClicked && obj.index() == swapColContainer) return;
+                                        $(this).css('background-color', '#787878');
+                                    }
+                                });
+
+                                obj.mouseleave(function() {
+                                    if (currentCondition == 0) return;
+                                    if (swapColClicked && obj.index() == swapColContainer) return;
+                                    $(this).css('background-color', 'white');   
+                                });
+                                
+                                obj.mousedown(function(ev) {
+                                    if (currentCondition == 0) return;
+                                    switch (ev.which) {
+                                        case 1:
+                                            // Swap Columns
+                                            if (currentCondition == 2) {
+                                                if (swapColContainer == -1) 
+                                                {
+                                                    swapColContainer = obj.index();
+                                                    swapColClicked = true;
+                                                    obj.css('background-color', '#339933');
+                                                    break;
+                                                }
+                                                var swapTd = pairTable.find("tr:eq(0)").find("td:eq("+swapColContainer+")");
+                                                var objText = obj.text();
+                                                swapTd.css('background-color', 'white');
+                                                for (var r = 1; r < 6; r++) 
+                                                {
+                                                    var ftx = pairTable.find("tr:eq("+r+")").find("td:eq("+obj.index()+")").text(); 
+                                                    console.log(pairTable.find("tr:eq("+r+")").find("td:eq("+swapColContainer+")").text());
+                                                    pairTable.find("tr:eq("+r+")").find("td:eq("+obj.index()+")").text(pairTable.find("tr:eq("+r+")").find("td:eq("+swapColContainer+")").text());
+                                                    pairTable.find("tr:eq("+r+")").find("td:eq("+swapColContainer+")").text(ftx);
+                                                }
+
+                                                swapColContainer = -1;
+                                                swapColClicked = false;
+                                                break;
+                                            }
+                                            // Shift Columns Up
+                                            else if (currentCondition == 6) 
+                                            {
+                                                var store = [];
+                                                for (var sh = 1; sh < 5; sh++) 
+                                                {
+                                                    store.push(pairTable.find("tr:eq("+sh+")").find("td:eq("+obj.index()+")").text());
+                                                }
+                                                store.unshift(pairTable.find("tr:eq(5)").find("td:eq("+obj.index()+")").text());
+                                                for (var sh = 1; sh < 6; sh++) 
+                                                {
+                                                    pairTable.find("tr:eq("+sh+")").find("td:eq("+obj.index()+")").text(store[sh-1]);
+                                                }
+                                                break;
+                                            }
+                                            break;
+                                        case 3:
+                                            // Shift Columns Down
+                                            if (currentCondition == 6) 
+                                            {
+                                                var store = [];
+                                                for (var sh = 2; sh < 6; sh++) 
+                                                {
+                                                    store.push(pairTable.find("tr:eq("+sh+")").find("td:eq("+obj.index()+")").text());
+                                                }
+                                                store.push(pairTable.find("tr:eq(1)").find("td:eq("+obj.index()+")").text());
+                                                for (var sh = 1; sh < 6; sh++) 
+                                                {
+                                                    pairTable.find("tr:eq("+sh+")").find("td:eq("+obj.index()+")").text(store[sh-1]);
+                                                }
+                                            }   
+                                            break;
+                                    }
+                                    updateLetterArray();
+                                });
+
+                            });
+                        }
+                        continue;
+                    }
+                    for (var x = 0; x < 6;x++) 
+                    {
+                        if (x == 0) 
+                        {
+                            $("<td>").appendTo(row).css('font-weight', 'bold').text(nums[i-1]).each(function(_,e) 
+                            {   
+                                var obj = $(e);
+
+                                obj.on("contextmenu", function(e) {
+                                    if (currentCondition == 0) return true;
+                                    return false;
+                                });
+
+                                obj.mouseenter(function() {
+                                    if (currentCondition == 0) return;
+                                    if (currentCondition == 3 || currentCondition == 5) 
+                                    {
+                                        if (swapRowClicked && obj.closest('tr').index() == swapRowContainer) return;
+                                        obj.css('background-color', '#787878');
+                                    }
+                                });
+                                obj.mouseleave(function() {
+                                    if (currentCondition == 0) return;
+                                    if ((swapRowClicked && obj.closest('tr').index() == swapRowContainer) || currentCondition == 1) return;
+                                    obj.css('background-color', 'white');
+                                });
+                                obj.mousedown(function(ev) {
+                                    if (currentCondition == 0) return;
+                                    switch (ev.which) 
+                                    {
+                                        case 1: 
+                                            // Swap Row
+                                            if (currentCondition == 3) 
+                                            {
+                                                if (swapRowContainer == -1) 
+                                                {
+                                                    swapRowContainer = obj.closest('tr').index();
+                                                    swapRowClicked = true;
+                                                    obj.css('background-color', '#339933');
+                                                    break;
+                                                }
+                                                var swapTr = pairTable.find("tr:eq("+swapRowContainer+")");
+                                                var objTr = obj.closest('tr');
+                                                swapTr.find("td:eq(0)").css('background-color', 'white');
+                                                for (var cell = 1; cell < 6; cell++) 
+                                                {
+                                                    var tx = objTr.find("td:eq("+cell+")").text();
+                                                    objTr.find("td:eq("+cell+")").text(swapTr.find("td:eq("+cell+")").text());
+                                                    swapTr.find("td:eq("+cell+")").text(tx);
+                                                }
+                                                swapRowContainer = -1;
+                                                swapRowClicked = false;
+                                                break;
+                                            }
+                                            // Shift Row Right
+                                            else if (currentCondition == 5) 
+                                            {
+                                                if (currentCondition == 5) 
+                                                {
+                                                    var store = [];
+                                                    for (var sh = 2; sh < 6; sh++) 
+                                                    {
+                                                        store.push(obj.closest('tr').find("td:eq("+sh+")").text());
+                                                    }
+                                                    store.push(obj.closest('tr').find("td:eq(1)").text());
+                                                    for (var sh = 1; sh < 6; sh++) 
+                                                    {
+                                                        obj.closest('tr').find("td:eq("+sh+")").text(store[sh-1]);
+                                                    }
+                                                    break;
+                                                }
+
+                                            }
+                                        break;
+                                        case 3:
+                                            // Shift Row Left
+                                            var store = [];
+                                                for (var sh = 1; sh < 5; sh++) 
+                                                {
+                                                    store.push(obj.closest('tr').find("td:eq("+sh+")").text());
+                                                }
+                                                store.unshift(obj.closest('tr').find("td:eq(5)").text());
+                                                for (var sh = 1; sh < 6; sh++) 
+                                                {
+                                                    obj.closest('tr').find("td:eq("+sh+")").text(store[sh-1]);
+                                                }
+                                                break;
+                                    }
+                                    updateLetterArray();
+                                });
+                            });
+                            continue;
+                        }
+                        $("<td>").attr("id", "cell").appendTo(row).each(function(_,e) 
+                        {
+                            var obj = $(e);
+                            obj.on("contextmenu", function(e) {
+                                if (currentCondition == 0) return true;
+                                return false;
+                            });
+                            obj.mouseenter(function() {
+                                if (currentCondition == 0) return;
+                                if (currentCondition == 4 || currentCondition == 7 || currentCondition == 8) 
+                                {
+                                    if ((currentCondition == 7 || currentCondition == 8) && (obj.closest('tr').index() + ":" + obj.index()) == "3:3") { return; }
+
+                                    // Clockwise Highlight
+                                    if (currentCondition == 7 || currentCondition == 8) 
+                                    {
+
+                                        var pos = (obj.closest('tr').index()*6 + obj.index())-(7+(1*(obj.closest('tr').index()-1)));
+                                        switch (pos) 
+                                        {
+                                            // First Rot
+                                            case 0:
+                                            case 4:
+                                            case 20:
+                                            case 24:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment1[i]) / 6);
+                                                    var col = (ment1[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                            // Second Rot
+                                            case 1:
+                                            case 9:
+                                            case 15:
+                                            case 23:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment2[i]) / 6);
+                                                    var col = (ment2[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                            // Third Rot
+                                            case 2:
+                                            case 10:
+                                            case 14:
+                                            case 22:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment3[i]) / 6);
+                                                    var col = (ment3[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                            // Fourth Rot
+                                            case 3:
+                                            case 5:
+                                            case 19:
+                                            case 21:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment4[i]) / 6);
+                                                    var col = (ment4[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                            // Fifth Rot
+                                            case 6:
+                                            case 8:
+                                            case 16:
+                                            case 18:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment5[i]) / 6);
+                                                    var col = (ment5[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                            // Sixth Rot
+                                            case 7:
+                                            case 11:
+                                            case 13:
+                                            case 17:
+                                                for (var i = 0; i < 4; i++) 
+                                                {
+                                                    var row = parseInt((ment6[i]) / 6);
+                                                    var col = (ment6[i]) % 6;
+                                                    pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").css('background-color', '#787878');
+                                                }
+                                                break;
+                                        }
+                                        return;
+                                    }
+                                    obj.css('background-color', '#787878');
+                                }
+                            });
+
+                            obj.mouseleave(function() {
+                                if (currentCondition == 0) return;
+                                if (swapSingleClicked && swapSingleContainer == (obj.closest('tr').index() + ":" + obj.index())) return;
+                                if (currentCondition == 7 || currentCondition == 8) 
+                                {
+                                    for (var k = 0; k < 6; k++) 
+                                    {
+                                        for (var l = 0; l < 6; l++) {
+                                            pairTable.find("tr:eq("+k+")").find("td:eq("+l+")").css('background-color', 'white');
+                                        }
+                                    }
+                                    return;
+                                }
+                                obj.css('background-color', 'white');
+                            });
+
+                            obj.mousedown(function(ev) 
+                            {
+                                if (currentCondition == 0) return;
+                                var pos = obj.closest('tr').index()*6 + obj.index();
+                                var ind = getAllIndexes(letters, pairLetter);
+                                switch (ev.which) 
+                                {
+                                    case 1: 
+                                        // Place Letters
+                                        if (currentCondition == 1) 
+                                        {
+                                            if (ind.length == 2) 
+                                            {
+                                                var rowA = parseInt((ind[0]+7) / 6);
+                                                var rowB = parseInt((ind[1]+7) / 6);
+                                                var colA = ((ind[0]+7) % 6);
+                                                var colB = ((ind[1]+7) % 6);
+                                                pairTable.find("tr:eq("+rowA+")").find("td:eq("+colA+")").text("");
+                                                pairTable.find("tr:eq("+rowB+")").find("td:eq("+colB+")").text("");
+                                                letters[ind[0]] = "";
+                                                letters[ind[1]] = "";
+                                            }
+                                            letters[pos-7] = pairLetter;
+                                            obj.text(pairLetter);
+                                            break;
+                                        }
+                                        // Swap Single
+                                        else if (currentCondition == 4) 
+                                        {
+                                            if (swapSingleContainer == "") 
+                                            {
+                                                swapSingleContainer = obj.closest('tr').index() + ":" + obj.index();
+                                                swapSingleClicked = true;
+                                                obj.css('background-color', '#339933');
+                                                break;
+                                            }
+                                            var split = swapSingleContainer.split(':');
+                                            var swapCell = pairTable.find("tr:eq("+split[0]+")").find("td:eq("+split[1]+")");
+                                            var objText = obj.text();
+                                            swapCell.css('background-color', 'white');
+                                            obj.text(swapCell.text());
+                                            swapCell.text(objText);
+                                            swapSingleContainer = "";
+                                            swapSingleClicked = false;
+                                            break;
+                                        }
+                                        // Clockwise Rotation
+                                        else if (currentCondition == 7) 
+                                        {
+                                            var row = -1;
+                                            var col = -1; 
+                                            var lets = [];
+                                            switch ((obj.closest('tr').index()*6 + obj.index())-(7+(1*(obj.closest('tr').index()-1)))) 
+                                            {
+                                                // First Rot
+                                                case 0:
+                                                case 4:
+                                                case 20:
+                                                case 24:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment1[i]) / 6);
+                                                        col = (ment1[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment1[3]) / 6)+")").find("td:eq("+((ment1[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment1[i]) / 6);
+                                                        col = (ment1[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Second Rot
+                                                case 1:
+                                                case 9:
+                                                case 15:
+                                                case 23:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment2[i]) / 6);
+                                                        col = (ment2[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment2[3]) / 6)+")").find("td:eq("+((ment2[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment2[i]) / 6);
+                                                        col = (ment2[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Third Rot
+                                                case 2:
+                                                case 10:
+                                                case 14:
+                                                case 22:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment3[i]) / 6);
+                                                        col = (ment3[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment3[3]) / 6)+")").find("td:eq("+((ment3[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment3[i]) / 6);
+                                                        col = (ment3[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Fourth Rot
+                                                case 3:
+                                                case 5:
+                                                case 19:
+                                                case 21:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment4[i]) / 6);
+                                                        col = (ment4[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment4[3]) / 6)+")").find("td:eq("+((ment4[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment4[i]) / 6);
+                                                        col = (ment4[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Fifth Rot
+                                                case 6:
+                                                case 8:
+                                                case 16:
+                                                case 18:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment5[i]) / 6);
+                                                        col = (ment5[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment5[3]) / 6)+")").find("td:eq("+((ment5[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment5[i]) / 6);
+                                                        col = (ment5[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Sixth Rot
+                                                case 7:
+                                                case 11:
+                                                case 13:
+                                                case 17:
+                                                    for (var i = 0; i < 3; i++) 
+                                                    {
+                                                        row = parseInt((ment6[i]) / 6);
+                                                        col = (ment6[i]) % 6;
+                                                        lets[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.unshift(pairTable.find("tr:eq("+parseInt((ment6[3]) / 6)+")").find("td:eq("+((ment6[3]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment6[i]) / 6);
+                                                        col = (ment6[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                            }
+                                            
+                                        }
+                                        else if (currentCondition == 8) 
+                                        {
+                                            var row = -1;
+                                            var col = -1; 
+                                            var lets = [];
+                                            switch ((obj.closest('tr').index()*6 + obj.index())-(7+(1*(obj.closest('tr').index()-1)))) 
+                                            {
+                                                // First Rot
+                                                case 0:
+                                                case 4:
+                                                case 20:
+                                                case 24:
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment1[i]) / 6);
+                                                        col = (ment1[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment1[0]) / 6)+")").find("td:eq("+((ment1[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment1[i]) / 6);
+                                                        col = (ment1[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Second Rot
+                                                case 1:
+                                                case 9:
+                                                case 15:
+                                                case 23:
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment2[i]) / 6);
+                                                        col = (ment2[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment2[0]) / 6)+")").find("td:eq("+((ment2[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment2[i]) / 6);
+                                                        col = (ment2[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Third Rot
+                                                case 2:
+                                                case 10:
+                                                case 14:
+                                                case 22:
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment3[i]) / 6);
+                                                        col = (ment3[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment3[0]) / 6)+")").find("td:eq("+((ment3[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment3[i]) / 6);
+                                                        col = (ment3[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Fourth Rot
+                                                case 3:
+                                                case 5:
+                                                case 19:
+                                                case 21:
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment4[i]) / 6);
+                                                        col = (ment4[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment4[0]) / 6)+")").find("td:eq("+((ment4[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment4[i]) / 6);
+                                                        col = (ment4[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Fifth Rot
+                                                case 6:
+                                                case 8:
+                                                case 16:
+                                                case 18:
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment5[i]) / 6);
+                                                        col = (ment5[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment5[0]) / 6)+")").find("td:eq("+((ment5[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment5[i]) / 6);
+                                                        col = (ment5[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                                // Sixth Rot
+                                                case 7:
+                                                case 11:
+                                                case 13:
+                                                case 17:
+                                                    // ABCD -> DABC
+                                                    // DCBA -> ADCB
+                                                    for (var i = 3; i > 0; i--) 
+                                                    {
+                                                        row = parseInt((ment6[i]) / 6);
+                                                        col = (ment6[i]) % 6;
+                                                        lets[i-1] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                                                    }
+                                                    lets.push(pairTable.find("tr:eq("+parseInt((ment6[0]) / 6)+")").find("td:eq("+((ment6[0]) % 6)+")").text());
+                                                    for (var i = 0; i < 4; i++) 
+                                                    {
+                                                        row = parseInt((ment6[i]) / 6);
+                                                        col = (ment6[i]) % 6;
+                                                        pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text(lets[i]);
+                                                    }
+                                                    break;
+                                            }
+                                        }
+                                        break;
+                                    case 3:
+
+                                        // Remove Letter
+                                        if (currentCondition == 1) 
+                                        {
+                                            if (obj.text() == "") break;
+                                            letters[pos-7] = "";
+                                            obj.text("");
+                                            break;
+                                        }
+                                        break;
+                                }
+                                var emptyPos = getAllIndexes(letters, "");
+                                if (emptyPos.length == 1) 
+                                {
+                                    pairTable.find("tr:eq("+parseInt((emptyPos[0]+7)/6)+")").find("td:eq("+(emptyPos[0]+7)%6+")").text("*").css('color', 'black');
+                                }
+                                updateLetterArray();
+                            });
+
+                        });
+                        
+                    }
+                }
+            }
+            genTable();
+            
+            function getAllIndexes(arr, val) 
+            {
+                var indexes = [], i;
+                for(i = 0; i < arr.length; i++)
+                {
+                    if (arr[i] === val) 
+                    {
+                        indexes.push(i);
+                    }
+                }
+                return indexes;
+            }
+
+            function updateLetterArray() 
+            {
+                for (var i = 0; i < letters.length; i++) 
+                {
+                    if (i == 5 || i == 11 || i == 17 || i == 23) continue;
+                    var row = parseInt((i+7) / 6);
+                    var col = (i+7) % 6;
+                    letters[i] = pairTable.find("tr:eq("+row+")").find("td:eq("+col+")").text();
+                }
+            }
+
+            $("#pairSelect").change(function()
+            {
+                pairLetter = "ABCDEFGHIJKL"[$("select option:selected").val()];
+            });
+
+            document.addEventListener('keydown', e => {
+                var chars = "abcdefghijkl";
+                var nums = "123456789";
+                if (chars.indexOf(e.key.toLowerCase()) != -1) 
+                {
+                    $("#pairSelect").val(chars.indexOf(e.key.toLowerCase())).change();
+                    return;
+                }
+                if (nums.indexOf(e.key) != -1) 
+                {
+                    $("input[value='"+(nums.indexOf(e.key))+"']").prop('checked', true);
+                    currentCondition = $("input[name='condition']:checked").val();
+                    for (var k = 0; k < 6; k++) 
+                    {
+                        for (var l = 0; l < 6; l++) {
+                            pairTable.find("tr:eq("+k+")").find("td:eq("+l+")").css('background-color', 'white');
+                        }
+                    }
+                    return;
+                }
+            });
+
+            $("#resetButton").click(() => {
+                pairTable.empty();
+                $("#pairSelect").prop('selectedIndex',0);
+                $("input[name='condition'][id='placeLetters']").prop('checked', true);
+                currentCondition = 1;
+                letters = ["", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", "", "-", "", "", "", "", ""];
+                genTable();
+            });
+            
+            $("#simpleSwaps").click(() => {
+                currentCondition = $("input[name='condition']:checked").val();
+                for (var k = 0; k < 6; k++) 
+                {
+                    for (var l = 0; l < 6; l++) {
+                        pairTable.find("tr:eq("+k+")").find("td:eq("+l+")").css('background-color', 'white');
+                    }
+                }
+                return;
+            });
+            $("#shiftSwaps").click(() => {
+                currentCondition = $("input[name='condition']:checked").val();
+                for (var k = 0; k < 6; k++) 
+                {
+                    for (var l = 0; l < 6; l++) {
+                        pairTable.find("tr:eq("+k+")").find("td:eq("+l+")").css('background-color', 'white');
+                    }
+                }
+                return;
+            });
+            $("#clockSwaps").click(() => {
+                currentCondition = $("input[name='condition']:checked").val();
+                for (var k = 0; k < 6; k++) 
+                {
+                    for (var l = 0; l < 6; l++) {
+                        pairTable.find("tr:eq("+k+")").find("td:eq("+l+")").css('background-color', 'white');
+                    }
+                }
+                return;
+            });
+
+        });  
+    </script>
+    <style>
+        button {
+            background-color: #FFFFFF;
+            border: 2px solid black;
+            border-radius: 10px;
+            font-size: 15px;
+            padding: 12px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            
+        }
+        .buttons select 
+        {
+            display: block;
+            border: 2px solid black;
+            border-radius: 10px;
+            margin-right: 30px;
+            padding: 12px;
+        }
+        .buttons input
+        {
+            margin-right: 10px;
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border: none;
+            table-layout: fixed;
+        }
+        td {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Match 'em</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Match 'em.svg" class="diagram">
+                <h2>On the Subject of Movin' and Matchin' 'em</h2>
+                <p class="flavour-text">Matchmaker, matchmaker, make me a batch.</p>
+
+                <ul>
+                    <li>Use the table provided to store your pairs in them and the last slot (25th card) will be filled in with a <span style="font-weight: bold;">*</span>.</li>
+                    <li>Here are the following things you can do with the table below:
+                        <ul>
+                            <li><span style="font-weight: bold;">Select Pair Letter</span>: Use this select box to select a letter that you wish to use OR you may use your keyboard from A to L in order to choose a letter.</li>
+                            <li><span style="font-weight: bold;">Reset Table</span>: Resets the table.</li>
+                            <li><span style="font-weight: bold;">Cursor</span>: Allows you to highlight the table if needed, does not allow any interaction with the table. Can also use '1' to select this option.</li>
+                            <li><span style="font-weight: bold;">Place Letters</span>: Allows the placement of letters into the table, left click places them and right click removes them. Can also use '2' to select this option.</li>
+                            <li><span style="font-weight: bold;">Swap Columns/Rows</span>: Select two rows/columns in order to swap them. Can also use '3' or '4' to select this option.</li>
+                            <li><span style="font-weight: bold;">Swap Single</span>: Select two cells to swap them. Can also use '5' to select this option.</li>
+                            <li><span style="font-weight: bold;">Shift Column/Row</span>: Shift a row or column by pressing left click and right click. Left click causes a row to shift left and a column to shift down. Right click causes a row to shift right and a column to shift up. Can also use '6' or '7' to select this option.</li>
+                            <li><span style="font-weight: bold;">Rotate Counter/Clockwise</span>: Rotate a cell clockwise or counter-clockwise. Hovering over a cell will tell you what other cells will be affected (middle of the table does not have rotation). Clicking on the cell will rotate all 4 cells in chosen direction. Can also use '8' or '9' to select this option.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of Inf.</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Match 'em</span>
+            </div>
+            <div class="page-content">
+
+                <div class="buttons">
+                    <select id="pairSelect">
+                        <option selected disabled hidden>Select Pair Letter</option>
+                        <option value="0">A</option>
+                        <option value="1">B</option>
+                        <option value="2">C</option>
+                        <option value="3">D</option>
+                        <option value="4">E</option>
+                        <option value="5">F</option>
+                        <option value="6">G</option>
+                        <option value="7">H</option>
+                        <option value="8">I</option>
+                        <option value="9">J</option>
+                        <option value="10">K</option>
+                        <option value="11">L</option>
+                    </select>
+                    <button id="resetButton" style="margin-right: 30px;">Reset Table</button>
+                </div>
+                <br>
+                <table id="pairTable">
+                   
+                </table>
+                <br>
+                <div class="buttons" id="simpleSwaps">
+                    <input type="radio" id="cursor" name="condition" value="0">
+                    <label for="cursor">Cursor</label>
+                    <input type="radio" id="placeLetters" name="condition" value="1" checked>
+                    <label for="placeLetters">Place Letters</label>
+                    <input type="radio" id="swapColumns" name="condition" value="2">
+                    <label for="swapColumns">Swap Columns</label>
+                    <input type="radio" id="swapRows" name="condition" value="3">
+                    <label for="swapRows">Swap Rows</label>
+                    <input type="radio" id="swapSingle" name="condition" value="4">
+                    <label for="swapSingle">Swap Single</label>
+                </div>
+                <div class="buttons" id="shiftSwaps">
+                    <input type="radio" id="shiftRow" name="condition" value="5">
+                    <label for="shiftRow">Shift Row</label>
+                    <input type="radio" id="shiftColumn" name="condition" value="6">
+                    <label for="shiftColumn">Shift Column</label>
+                </div>
+                <div class="buttons" id="clockSwaps">
+                    <input type="radio" id="rotateClockwise" name="condition" value="7">
+                    <label for="rotateClockwise">Rotate Clockwise</label>
+                    <input type="radio" id="rotateCounter" name="condition" value="8">
+                    <label for="rotateCounter">Rotate Counter-Clockwise</label>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of Inf.</div>
+        </div>
+
+    </div>
+</body>
+</html>

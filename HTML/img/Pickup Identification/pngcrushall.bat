@@ -1,0 +1,1 @@
+forfiles /s /m *.png /c "cmd /c pngcrush.exe -brute -reduce -rem alla -ow @path"

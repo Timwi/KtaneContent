@@ -20,7 +20,6 @@ const blacklist = [
     "[BombGenerator] Instantiating RequiresTimerVisibility components on",
     "[BombGenerator] Instantiating remaining components on any valid face.",
     "[Mod-",
-    "[Rules]",
     "[Factory]",
     "[MenuPage]",
     "[PaceMaker]",
@@ -183,6 +182,8 @@ const parseData = [
             {
                 regex: /Added widget: (.+) at/,
                 handler: function (matches) {
+                    bomb.Widgets++;
+
                     if (matches[1] == "ModWidget") {
                         bomb.ModdedWidgets++;
                     } else if (matches[1] == "BatteryWidget") {
@@ -810,6 +811,217 @@ const parseData = [
         ]
     },
     {
+        moduleID: "2048",
+        loggingTag: "2048",
+        matches: [
+            {
+                regex: /Setup \[(.+)\]/,
+                handler: function (matches, module) {
+                    let gridSize = parseInt(matches[1]);
+                    module.Grids = [];
+
+
+                    let getTileStyle = function (value) {
+                        switch (value) {
+                            case 2:
+                                return { color: "eee4da", blackText: true };
+                            case 4:
+                                return { color: "eee1c9", blackText: true };
+                            case 8:
+                                return { color: "f3b27a" };
+                            case 16:
+                                return { color: "f69664" };
+                            case 32:
+                                return { color: "f77c5f" };
+                            case 64:
+                                return { color: "f75f3b" };
+                            case 128:
+                                return { color: "edd073" };
+                            case 256:
+                                return { color: "edcc62" };
+                            case 512:
+                                return { color: "edc950" };
+                            case 1024:
+                                return { color: "edc53f" };
+                            case 2048:
+                                return { color: "edc22e" };
+                        }
+                        return { color: "3c3a33" };
+                    };
+
+                    let getFontSize = function (value) {
+                        switch (value.toString().length) {
+                            case 1:
+                            case 2:
+                                return 40;
+                            case 3:
+                                return 30;
+                            case 4:
+                                return 23;
+                        }
+                        return 19;
+                    };
+
+
+                    let obj = $("<div>").css({
+                        webkitTouchCallout: "none",
+                        webkitUserSelect: "none",
+                        khtmlUserSelect: "none",
+                        mozUserSelect: "none",
+                        msUserSelect: "none",
+                        userSelect: "none"
+                    });
+
+                    let gridLabel = $("<div>").css({
+                        display: "inline-block",
+                        padding: "5px 0",
+                        margin: "10px 0",
+                        minWidth: 150,
+                        textAlign: "center"
+                    });
+                    let gameContainer = $("<div>").css({
+                        position: "relative",
+                        width: 300,
+                        height: 300,
+                        backgroundColor: "#bbada0",
+                        borderRadius: 6
+                    });
+                    let gridAndTileCSS = {
+                        position: "absolute",
+                        width: "70%",
+                        height: "70%",
+                        top: "15%",
+                        left: "15%",
+                        zIndex: 10
+                    };
+                    let gridContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+                    gridAndTileCSS.zIndex = 20;
+                    let tileContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+
+                    let posPerc = function (val) {
+                        return `${val / 3 * 100}%`;
+                    };
+
+                    for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div>").css({
+                        position: "absolute",
+                        width: 60,
+                        height: 60,
+                        backgroundColor: "#cdc1b4",
+                        borderRadius: 6,
+                        left: posPerc(x),
+                        top: posPerc(y),
+                        transform: "translate(-50%, -50%)"
+                    }).appendTo(gridContainer);
+
+                    let currentGrid = -1;
+                    module.actuateGrid = function (newGrid) {
+                        gridLabel.text(`Move ${newGrid + 1} of ${module.Grids.length}`);
+                        leftArrow.css({ visibility: newGrid > 0 ? "visible" : "hidden" });
+                        rightArrow.css({ visibility: newGrid < module.Grids.length - 1 ? "visible" : "hidden" });
+                        if (newGrid == currentGrid) return;
+
+                        currentGrid = newGrid;
+
+                        let grid = module.Grids[currentGrid];
+
+                        let actuateTile = function (tile) {
+                            let wrapper = $("<div>").appendTo(tileContainer);
+                            let inner = $("<div>").text(tile.value).appendTo(wrapper);
+                            let position = tile.previousPosition || { x: tile.x, y: tile.y };
+
+                            let style = getTileStyle(tile.value);
+                            wrapper.css({
+                                width: 60,
+                                height: 60,
+                                position: "absolute",
+                                left: posPerc(position.x),
+                                top: posPerc(position.y),
+                                transform: "translate(-50%, -50%)",
+                                zIndex: tile.mergedFrom ? 20 : 10
+                            });
+                            inner.css({
+                                textAlign: "center",
+                                lineHeight: "60px",
+                                fontSize: getFontSize(tile.value),
+                                fontWeight: 900,
+                                backgroundColor: "#" + style.color,
+                                color: style.blackText ? "#776e65" : "#f9f6f2",
+                                borderRadius: 6
+                            });
+
+                            if (tile.previousPosition) {
+                                wrapper[0].animate([
+                                    { left: posPerc(tile.x), top: posPerc(tile.y) }
+                                ], {
+                                    duration: 100,
+                                    easing: "ease-in-out",
+                                    fill: "forwards"
+                                });
+                            } else if (tile.mergedFrom) {
+                                inner[0].animate([
+                                    { transform: "scale(0)" },
+                                    { transform: "scale(1.3)" },
+                                    { transform: "scale(1)" }
+                                ], {
+                                    duration: 200,
+                                    delay: 50,
+                                    fill: "backwards",
+                                    easing: "ease"
+                                });
+
+                                tile.mergedFrom.forEach(actuateTile);
+                            } else {
+                                inner[0].animate([
+                                    { transform: "scale(0)", opacity: 0 },
+                                    { transform: "scale(1)", opacity: 1 }
+                                ], {
+                                    duration: 200,
+                                    easing: "ease"
+                                });
+                            }
+                        };
+
+                        tileContainer.empty();
+
+                        grid.tiles.forEach(actuateTile);
+                    };
+
+                    let buttonStyle = {
+                        padding: "5px 10px",
+                        margin: 10,
+                        cursor: "pointer",
+                        backgroundColor: "#eee4da",
+                        fontWeight: 900,
+                        borderRadius: 6
+                    };
+
+                    let leftArrow = $("<span>").text("< Prev").click(function () {
+                        if (currentGrid > 0) module.actuateGrid(currentGrid - 1);
+                    }).appendTo(obj).css(buttonStyle).css({ marginLeft: -4 });
+
+                    obj.append(gridLabel);
+
+                    let rightArrow = $("<span>").text("Next >").click(function () {
+                        if (currentGrid < module.Grids.length - 1) module.actuateGrid(currentGrid + 1);
+                    }).appendTo(obj).css(buttonStyle);
+
+                    obj.append(gameContainer);
+
+                    module.push({ obj, nobullet: true });
+                    return true;
+                }
+            },
+            {
+                regex: /Current grid: (.+)/,
+                handler: function (matches, module) {
+                    module.Grids.push(JSON.parse(matches[1]));
+                    module.actuateGrid(0);
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         displayName: "3D Maze",
         moduleID: "spwiz3DMaze",
         loggingTag: "3D Maze",
@@ -931,6 +1143,25 @@ const parseData = [
         ]
     },
     {
+        displayName: "Badugi",
+        moduleID: "ksmBadugi",
+        loggingTag: "Badugi",
+        matches: [
+            {
+                regex: /^(The hand on the (left|right) is )(.+)—(a(n|)(.+))$/,
+                handler: function (matches, module) {
+                    module.push(matches[1]);
+                    module.push($("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]));
+                    module.push(matches[6]);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "BattleshipModule",
         loggingTag: "Battleship",
         matches: [
@@ -958,7 +1189,7 @@ const parseData = [
                         }
                     }
 
-                    var table = $('<table>').css('border-spacing', '0');
+                    var table = $('<table>').css('border-spacing', '0').css('border-collapse', 'separate');
                     for (r = 0; r < 6; r++) {
                         tr = $('<tr>').appendTo(table);
                         for (c = 0; c < 6; c++) {
@@ -1064,8 +1295,7 @@ const parseData = [
 
                     // Make nodes
                     const characters = readMultiple(10).replace(/[^\w]/g, "");
-                    for (let i = 0; i < 21; i += 3)
-                    {
+                    for (let i = 0; i < 21; i += 3) {
                         const buttonColor = colors[characters[i]];
                         const text = characters[i + 1];
                         const textColor = colors[characters[i + 2]];
@@ -1079,6 +1309,71 @@ const parseData = [
 
 
                     module.push({ label: "Tree:", obj: tree });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "The Bioscanner",
+        moduleID: "TheBioscanner",
+        loggingTag: "The Bioscanner",
+        matches: [
+            {
+                regex: /^(The (first|second|third) glyph is) ([ABCDE]\d+).$/,
+                handler: function (matches, module) {
+                    module.push(matches[1] + ':');
+                    const glyph = matches[3];
+                    let div = $('<div>');
+
+                    let itempair = [glyph.charAt(0), glyph.substring(1)];
+                    let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                    div.append(`<img src='img/The Bioscanner/${"ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString()}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /^(The current offset is \d+\. This means the current glyphs are) ((([ABCDE]\d+)(, |, and )*){3})\.$/,
+                handler: function (matches, module) {
+                    module.push(matches[1] + ':');
+                    const glyphs = matches[2].split(', ').slice(0, 2).concat(matches[2].split(', ')[2].substring(4));
+                    let actualGlyphs = [];
+                    let div = $('<div>');
+
+                    glyphs.forEach(element => {
+                        let itempair = [element.charAt(0), element.substring(1)];
+                        let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                        actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
+                    });
+                    for (var i = 0; i < actualGlyphs.length; i++) {
+                        div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    return true;
+                }
+            },
+            {
+                regex: /^(Fake glyphs are:) (([ABCDE]\d+ )+)$/,
+                handler: function (matches, module) {
+                    module.push(matches[1]);
+                    const glyphs = matches[2].slice(0, -1).split(' ');
+                    let actualGlyphs = [];
+                    let div = $('<div>');
+
+                    glyphs.forEach(element => {
+                        let itempair = [element.charAt(0), element.substring(1)];
+                        let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+                        actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
+                    });
+                    for (var i = 0; i < actualGlyphs.length; i++) {
+                        div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
                     return true;
                 }
             },
@@ -1658,25 +1953,22 @@ const parseData = [
             {
                 regex: /Module generated/,
                 handler: function (matches, module) {
-                    let table = $('<table>').css({'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto'});
+                    let table = $('<table>').css({ 'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto' });
                     let rowHeader = $('<tr>').appendTo(table);
-                    $('<th>').text("#").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Word").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Color").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
-                    $('<th>').text("Valid Response").css({'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(rowHeader);
+                    $('<th>').text("#").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Word").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Color").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+                    $('<th>').text("Valid Response").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
                     let count = 0;
                     let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? (.+)\b\s+(?:\||,)(?: Color)? (.+)\b\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
-                    for (let i = 0; i < 15; i++)
-                    {
+                    for (let i = 0; i < 15; i++) {
                         let line = readLine();
-                        if (exp.test(line))
-                        {
+                        if (exp.test(line)) {
                             count++;
                             let tr = $('<tr>').appendTo(table);
                             let match = exp.exec(line);
-                            for (let j = 1; j <= 4; j++)
-                            {
-                                let td = $('<td>').text(match[j]).css({'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px'}).appendTo(tr);
+                            for (let j = 1; j <= 4; j++) {
+                                let td = $('<td>').text(match[j]).css({ 'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(tr);
                                 if (j == 4)
                                     td.css('text-align', 'center');
                             }
@@ -1777,8 +2069,7 @@ const parseData = [
             {
                 regex: /(?:Monitor: (\d+) \| Number: (\d+) \| Color: (\w+) \| Indicators: (.+) \| Display color: (\w+))/,
                 handler: function (matches, module) {
-                    if (!('infoTable' in module))
-                    {
+                    if (!('infoTable' in module)) {
                         var table = $('<table>')
                             .css('font-size', '12px')
                             .css('border-collapse', 'collapse')
@@ -1851,8 +2142,7 @@ const parseData = [
             {
                 regex: /Monitor: (\d+):/,
                 handler: function (matches, module) {
-                    if (!('calculationTable' in module))
-                    {
+                    if (!('calculationTable' in module)) {
                         var table = $('<table>')
                             .css('font-size', '12px')
                             .css('border-collapse', 'collapse')
@@ -2312,6 +2602,68 @@ const parseData = [
         ]
     },
     {
+        displayName: "Cursor Maze",
+        moduleID: "cursorMazeModule",
+        loggingTag: "Cursor Maze",
+        matches: [
+            {
+                regex: /^Generated Maze:$/,
+                handler: function(matches, module) {
+                    let maze = readMultiple(9).replace(/\[Cursor Maze #\d+\]/g, '').split('\n').slice(0, 8);
+                    let table = $('<table>');
+                    for(let i = 0; i < 8; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        maze[i].split('').forEach(element => {
+                            switch(element) {
+                                case 'X':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#000000')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'O':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#00FFFF')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'G':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#00FF00')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                                case 'R':
+                                    $('<td>')
+                                        .text(' ')
+                                        .css('background-color', '#FF0000')
+                                        .css('text-align', 'center')
+                                        .css('width', '20px')
+                                        .css('height', '20px')
+                                        .appendTo(tr);
+                                    break;
+                            }
+                        });
+                    }
+                    module.push({ label: "Generated Maze:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "The Dealmaker",
         moduleID: "thedealmaker",
         loggingTag: "TheDealmaker"
@@ -2349,6 +2701,24 @@ const parseData = [
                 handler: function (matches, module) {
                     var maze = readMultiple(4).replace(/\[Echolocation #\d+\] /g, '');
                     module.push({ label: matches.input, obj: pre(maze) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Emoticon Math",
+        moduleID: "emoticonMathModule",
+        loggingTag: "Emoticon Math",
+        matches: [
+            {
+                regex: /^Puzzle on module: “([^“”]+)”$/,
+                handler: function (matches, module) {
+                    let span = $("span").css("font-family", "Emoticons").css("font-size", "9px").text(matches[1]);
+                    module.push({ label: "Puzzle on module: ", obj: span });
                     return true;
                 }
             },
@@ -2594,7 +2964,7 @@ const parseData = [
         matches: [
             {
                 regex: /(Stage order:) (\d+(,\d+)*)/,
-                handler: function (matches, module){
+                handler: function (matches, module) {
                     var div = $('<div>');
                     div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
                     module.push({ label: matches[1], obj: div });
@@ -2659,8 +3029,7 @@ const parseData = [
                             <tr><th>#</th><th>Valid?</th><th>LEDs → Color</th><th colspan='2'>Calculation</th><th>Answer</th></tr>
                             ${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
                                 <th style='text-align: right'>${stage + 1}</th>
-                                ${
-                            inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+                                ${inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
                                 inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
                                     `<td colspan='6' style='color: #888'>(not valid)</td>`
                             }
@@ -2682,6 +3051,105 @@ const parseData = [
                 regex: /.+/
             }
         ]
+    },
+    {
+        displayName: "Forget Maze Not",
+        moduleID: "forgetMazeNot",
+        loggingTag: "Forget Maze Not",
+        matches: [
+            {
+                regex: /^The maze has a size of (\d+) \* (\d+)$/,
+                handler: function(matches, module) {
+                    const COL_COUNT = parseInt(matches[1]);
+                    const ROW_COUNT = parseInt(matches[2]);
+
+                    let maze = readMultiple(ROW_COUNT + 1).split('\n').slice(1, ROW_COUNT + 1);
+                    let table = $('<table>').css('border-collapse', 'collapse');
+
+                    for(let row = 0; row < ROW_COUNT; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < COL_COUNT; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr);
+
+                            let current = maze[row].split(' ')[col].split('');
+                            current.forEach(element => {
+                                switch(element){
+                                    case 'N':
+                                        td.css('border-top', 'none');
+                                        break;
+                                    case 'E':
+                                        td.css('border-right', 'none');
+                                        break;
+                                    case 'S':
+                                        td.css('border-bottom', 'none');
+                                        break;
+                                    case 'W':
+                                        td.css('border-left', 'none');
+                                        break;
+                                }
+                            });
+                        }
+                    }
+                    
+                    module.push('The maze has a size of ' + COL_COUNT + ' * ' + ROW_COUNT)
+                    module.push({ label: "Maze:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^((You generated an inverted maze:)|(You generated a maze:))$/,
+                handler: function(matches, module) {
+                    const COL_COUNT = 5;
+                    const ROW_COUNT = 5;
+
+                    let maze = readMultiple(ROW_COUNT).split('\n');
+                    let table = $('<table>').css('border-collapse', 'collapse');
+
+                    for(let row = 0; row < ROW_COUNT; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < COL_COUNT; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr);
+
+                            let current = maze[row].split(' ')[col].split('');
+                            current.forEach(element => {
+                                switch(element){
+                                    case 'N':
+                                        td.css('border-top', 'none');
+                                        break;
+                                    case 'E':
+                                        td.css('border-right', 'none');
+                                        break;
+                                    case 'S':
+                                        td.css('border-bottom', 'none');
+                                        break;
+                                    case 'W':
+                                        td.css('border-left', 'none');
+                                        break;
+                                }
+                            });
+                        }
+                    }
+
+                    module.push({ label: matches[1], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]  
     },
     {
         displayName: "Forget Perspective",
@@ -2952,7 +3420,7 @@ const parseData = [
                 }
             },
             {
-                regex: /No errors found!/
+                regex: /No errors found!|Amount of iterations: \d+/
             }
         ]
     },
@@ -3105,21 +3573,20 @@ const parseData = [
         loggingTag: "Hexiom",
         matches: [
             {
-                regex: /One possible solution:|Initial state:|Module disarmed with the following board:/,
+                regex: /One possible solution:|Initial state:|Module disarmed with the following board:|Non initial board before reset:|Unsolved board upon detonation:/,
                 handler: function (matches, module) {
-                    if (module.firstTime == null || module.firstTime === true)
-                    {
+                    if (module.firstTime == null || module.firstTime === true) {
                         module.firstTime = false;
                         module.push("Notation: [White Hexagon: Interactable, Red Hexagon: Constraint Number, Black Hexagon: Non-interactable]");
                     }
-                    const div = $('<div>').css({"text-align": "center"});
+                    const div = $('<div>').css({ "text-align": "center" });
                     const svg = $('<svg width="30%" viewBox="-25 -25 50 50" fill="none">').appendTo(div);
                     const sideLength = 5;
-                    const pointsXY = [sideLength * Math.cos(Math.PI/3), sideLength * Math.sin(Math.PI/3)];
+                    const pointsXY = [sideLength * Math.cos(Math.PI / 3), sideLength * Math.sin(Math.PI / 3)];
                     const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
                     readLine();
                     let rawData = readMultiple(9).split('\n');
-                    let re = /\[Hexiom #\d+\] ([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)([ 1-6])(\*|\s)/;
+                    let re = /\[Hexiom #\d+\] ([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)/;
                     hexData = {};
                     for (let i = -2; i < 3; i++) {
                         hexData[i] = {};
@@ -3131,16 +3598,16 @@ const parseData = [
                         }
                     }
                     let baseIndices = [[2, 0], [2, -1], [1, -1], [1, -2], [0, -2]];
-                    rawData.forEach(function(item, index) {
+                    rawData.forEach(function (item, index) {
                         let lineMatches = re.exec(item);
                         if (index === 0 || index === 8)
-                            hexData[0][2 - index / 2][-2 + index / 2] = {number: lineMatches[5] === " " ? -1 : parseInt(lineMatches[5]), isBlocked: lineMatches[6] === "*"};
+                            hexData[0][2 - index / 2][-2 + index / 2] = { number: lineMatches[5] === " " ? -1 : parseInt(lineMatches[5]), isBlocked: lineMatches[6] === "*" };
                         else if (index % 2 === 1)
                             for (let i = -1; i < 2; i = i + 2)
-                                hexData[i][baseIndices[2 + i][0] - (index - 1) / 2][baseIndices[2 + i][1] + (index - 1) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                                hexData[i][baseIndices[2 + i][0] - (index - 1) / 2][baseIndices[2 + i][1] + (index - 1) / 2] = { number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*" };
                         else
                             for (let i = -2; i < 3; i = i + 2)
-                                hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = {number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*"};
+                                hexData[i][baseIndices[2 + i][0] - (index - 2) / 2][baseIndices[2 + i][1] + (index - 2) / 2] = { number: lineMatches[5 + 2 * i] === " " ? -1 : parseInt(lineMatches[5 + 2 * i]), isBlocked: lineMatches[6 + 2 * i] === "*" };
                     });
                     readLine();
                     for (let i = -2; i < 3; i++)
@@ -3150,13 +3617,13 @@ const parseData = [
                                     continue;
 
                                 let color = hexData[i][j][k].isBlocked ? hexData[i][j][k].number === -1 ? "black" : "red" : "none";
-                                let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4 } ${(k - j) * sideLength * Math.cos(Math.PI/6)})">`).appendTo(svg);
+                                let group = $SVG(`<g transform="translate(${(i - j - k) * sideLength * 3 / 4} ${(k - j) * sideLength * Math.cos(Math.PI / 6)})">`).appendTo(svg);
                                 $SVG(`<polygon points="${hexagon}" style="fill:${color};stroke:black;stroke-width:1;fill-rule:nonzero;""/>`).appendTo(group);
                                 if (hexData[i][j][k].number !== -1)
                                     $SVG('<text x="0" y="0" font-size="8" text-anchor="middle" dominant-baseline="central" fill="black">').text(hexData[i][j][k].number).appendTo(group);
                             }
 
-                    module.push({label: matches.input, obj: div});
+                    module.push({ label: matches.input, obj: div });
                     return true;
                 }
             },
@@ -3214,6 +3681,48 @@ const parseData = [
         ]
     },
     {
+        moduleID: "hypercolor",
+        loggingTag: "The Hypercolor",
+        matches: [
+            {
+                regex: /^Cube (\d+) is/,
+                handler: function (matches, module) {
+                    let lines = readMultiple(9).split(/\r?\n/g).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
+                    let vertices = [
+                        { line: 0, col: 3, x: 1, y: 0 },
+                        { line: 0, col: 13, x: 3, y: 0 },
+                        { line: 3, col: 0, x: 0, y: 1 },
+                        { line: 3, col: 10, x: 2, y: 1 },
+                        { line: 5, col: 3, x: 1, y: 2 },
+                        { line: 5, col: 13, x: 3, y: 2 },
+                        { line: 8, col: 0, x: 0, y: 3 },
+                        { line: 8, col: 10, x: 2, y: 3 }
+                    ];
+                    let svg = [
+                        `<path d='M1 0 3 0 3 2 1 2z' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M1 0 3 0 3 2 1 2z' stroke='#ccc' stroke-width='.125' fill='none' />`,
+                        `<path d='M1 0 0 1M3 0 2 1M1 2 0 3M3 2 2 3' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M1 0 0 1M3 0 2 1M1 2 0 3M3 2 2 3' stroke='#ccc' stroke-width='.125' fill='none' />`,
+                        `<path d='M0 1 2 1 2 3 0 3z' stroke='black' stroke-width='.2' fill='none' />`,
+                        `<path d='M0 1 2 1 2 3 0 3z' stroke='#ccc' stroke-width='.125' fill='none' />`
+                    ];
+                    let colors = { 'K': '#000', 'B': '#00f', 'G': '#0f0', 'C': '#0ff', 'R': '#f00', 'M': '#f0f', 'Y': '#ff0', 'W': '#fff' };
+                    const radius = .4;
+                    for (let v of vertices) {
+                        //rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
+                        svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col]]}' d='M ${v.x + radius * Math.cos(-Math.PI / 4)} ${v.y + radius * Math.sin(-Math.PI / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} z' />`);
+                        svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col + 2]]}' d='M ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 7 / 4)} ${v.y + radius * Math.sin(Math.PI * 7 / 4)} z' />`);
+                    }
+                    module.push({ label: 'Cube ' + matches[1], obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "CaptchaModule",
         loggingTag: "I'm Not a Robot",
         matches: [
@@ -3252,6 +3761,43 @@ const parseData = [
                 regex: /Stage \d/,
                 handler: function (matches, module) {
                     module.push([matches.input, readMultiple(3).split("\n")]);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        moduleID: "theIconKitModule",
+        loggingTag: "The Icon Kit",
+        matches: [
+            {
+                regex: /^(The correct (cube|ship|gravity ball|ufo|wave|robot|spider) is |You selected ){1}((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *){1}(, which is correct\.|, which is incorrect\. Strike!|\.){1}$/,
+                handler: function (matches, module) {
+                    module.push(`${matches[1]}`);
+                    var div = $('<div>');
+                    var photos = matches[3].split(' ');
+                    for (var i = 0; i < photos.length; i++) {
+                        div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
+                    if (matches[6] != '.') {
+                        module.push(`${matches[6].substring(2)}`);
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /^((icon|spider|robot|ball|ship|ufo|wave)(\d+|def) *)+$/,
+                handler: function (matches, module) {
+                    var div = $('<div>');
+                    var photos = matches[0].split(' ');
+                    for (var i = 0; i < photos.length; i++) {
+                        div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+                    }
+                    module.push(div);
                     return true;
                 }
             },
@@ -3313,7 +3859,7 @@ const parseData = [
             {
                 regex: /^Symbols \(left-to-right, top-to-bottom\):$/,
                 handler: function (matches, module) {
-                    module.push({ label: "Symbols (left-to-right, top-to-bottom):", obj: pre(readMultiple(3))})
+                    module.push({ label: "Symbols (left-to-right, top-to-bottom):", obj: pre(readMultiple(3)) })
                     return true;
                 }
             },
@@ -3436,7 +3982,7 @@ const parseData = [
             },
             {
                 regex: /Coin pressed at \d+ modules solved/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.push({ label: matches.input + ":", obj: pre(readMultiple(2)) });
                 }
             }
@@ -3712,8 +4258,7 @@ const parseData = [
             {
                 regex: /Inputs = /,
                 handler: function (matches, module) {
-                    if (module.Inputs == null)
-                    {
+                    if (module.Inputs == null) {
                         module.Inputs = [];
                         module.push(["Inputs", module.Inputs]);
                     }
@@ -4167,7 +4712,7 @@ const parseData = [
             },
             {
                 regex: /--------------------------------------------------/,
-                handler: function() {
+                handler: function () {
                     return true;
                 }
             },
@@ -4282,6 +4827,30 @@ const parseData = [
                 regex: /Board:|Legend:/,
                 handler: function (matches, module) {
                     module.push({ label: matches.input, obj: pre(readMultiple(matches.input.includes("Board") ? 10 : 5)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        moduleID: "mislocation",
+        displayName: "Mislocation",
+        loggingTag: "Mislocation",
+        matches: [
+            {
+                regex: /\(use slashes as new line separators\) ([\/\-ABCDEFGHIJKLMNOPQRSTUVWXYZ*]+)$/,
+                handler: function (matches, module) {
+                    module.push({ label: "The maze:", obj: pre(matches[1].replace(/\//g, '\n').replace(/-/g, ' ')) });
+                    return true;
+                }
+            },
+            {
+                regex: /\d, \d$/,
+                handler: function (matches, module) {
+                    module.push({ label: "Current position(col, row): ", obj: matches[0] })
                     return true;
                 }
             },
@@ -4712,24 +5281,21 @@ const parseData = [
             {
                 regex: /Generated Maze is/,
                 handler: function (matches, module) {
-                    var table = $('<table>').css({'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto"});
+                    var table = $('<table>').css({ 'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto" });
                     var maze = readMultiple(17).split('\n');
-                    for (var i = 0; i < 8; i++)
-                    {
+                    for (var i = 0; i < 8; i++) {
                         var row = $('<tr>').appendTo(table);
-                        for (var j = 0; j < 8; j++)
-                        {
+                        for (var j = 0; j < 8; j++) {
                             var width = "";
-                            width += maze[2*i][2*j + 1] !== "■" ? "0px" : "5px";
-                            width += maze[2*i + 1][2*j + 2] !== "■" ? " 0px" : " 5px";
-                            width += maze[2*i + 2][2*j + 1] !== "■" ? " 0px" : " 5px";
-                            width += maze[2*i + 1][2*j] !== "■" ? " 0px" : " 5px";
-                            var cell = $('<td>').css({"border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%"}).appendTo(row);
-                            var cellValue = /[IKYE]/.exec(maze[2*i + 1][2*j + 1]);
-                            if (cellValue !== null)
-                            {
+                            width += maze[2 * i][2 * j + 1] !== "■" ? "0px" : "5px";
+                            width += maze[2 * i + 1][2 * j + 2] !== "■" ? " 0px" : " 5px";
+                            width += maze[2 * i + 2][2 * j + 1] !== "■" ? " 0px" : " 5px";
+                            width += maze[2 * i + 1][2 * j] !== "■" ? " 0px" : " 5px";
+                            var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%" }).appendTo(row);
+                            var cellValue = /[IKYE]/.exec(maze[2 * i + 1][2 * j + 1]);
+                            if (cellValue !== null) {
                                 cell.css("padding-bottom", "0%");
-                                $('<div>').text(cellValue.input).css({"margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%"}).appendTo(cell);
+                                $('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%" }).appendTo(cell);
                             }
                         }
                     }
@@ -5294,7 +5860,7 @@ const parseData = [
                 regex: /(The displayed BitBook posts are as follows:)|The values of the planes are as follows:|The displayed items are as follows:|(The item that should be loaded with top priority is:)/,
                 handler: function (matches, module) {
                     var numberOfLines = matches[1] ? 3 : matches[2] ? 1 : 4;
-                    module.push({ label: matches.input, obj: pre(readMultiple(numberOfLines))})
+                    module.push({ label: matches.input, obj: pre(readMultiple(numberOfLines)) })
                     return true;
                 }
             },
@@ -5566,8 +6132,7 @@ const parseData = [
             {
                 regex: /.+/,
                 handler: function (matches, module) {
-                    if (module.Group == undefined)
-                    {
+                    if (module.Group == undefined) {
                         module.push(matches.input);
                         return;
                     }
@@ -6111,8 +6676,7 @@ const parseData = [
                         directions = directions.replace(/\(/, '\n\#').replace(/\#/, i).replace(/\)/, ".").replace(/\n15./, "");
                     };
 
-                    if (color != "5")
-                    {
+                    if (color != "5") {
                         var unused1 = readTaggedLine();
                         var unused2 = readTaggedLine();
 
@@ -6198,8 +6762,7 @@ const parseData = [
                     }
                     module.push({ label: "Color of the square is: ", obj: matches[1] });
                     module.push({ label: "Arrow Sequence are: ", obj: pre(directions) });
-                    if (color != "5")
-                    {
+                    if (color != "5") {
                         module.push({ obj: unused1 });
                         module.push({ obj: unused2 });
                         module.push({ label: "The Letter Table is: ", obj: ltable });
@@ -6318,7 +6881,7 @@ const parseData = [
             {
                 regex: /Module is now in the solve phase, good luck!/,
                 handler: function (matches, module) {
-                    module.push({obj: matches.input, nobullet: true});
+                    module.push({ obj: matches.input, nobullet: true });
                     return true;
                 }
             },
@@ -6343,7 +6906,7 @@ const parseData = [
             {
                 regex: /Board:/,
                 handler: function (matches, module) {
-                    module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true});
+                    module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true });
                     return true;
                 }
             },
@@ -6892,6 +7455,30 @@ const parseData = [
         ]
     },
     {
+        displayName: "Ten-Button Color Code",
+        moduleID: "TenButtonColorCode",
+        loggingTag: "Ten-Button Color Code",
+        matches: [
+            {
+                regex: /^(.*:) ([RGB]{10})$/,
+                handler: function (matches, module) {
+                    let colors = {
+                        R: '#fd4238',
+                        G: '#00e317',
+                        B: '#2583ff'
+                    };
+                    let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
+                    let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5 * row, 5 * (row + 1)).join('')}</tr>`);
+                    module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "TetraVex",
         moduleID: "ksmTetraVex",
         loggingTag: "TetraVex",
@@ -6923,7 +7510,7 @@ const parseData = [
             {
                 regex: /(Wheel #(\d)( \(Bonus\))?:) (.+)/,
                 handler: function (matches, module) {
-                    module.push({label: matches[1], obj: pre(matches[4])})
+                    module.push({ label: matches[1], obj: pre(matches[4]) })
                     return true;
                 }
             },
@@ -6966,6 +7553,11 @@ const parseData = [
         ]
     },
     {
+        displayName: "The Burnt",
+        moduleID: "burnt",
+        loggingTag: "Burnt",
+    },
+    {
         displayName: "The Button",
         moduleID: "BigButton",
         loggingTag: "ButtonComponent"
@@ -7000,7 +7592,7 @@ const parseData = [
                     if (!('TennisLines' in module))
                         module.TennisLines = [];
                     module.TennisLines.push(matches.input);
-                    if (module.TennisLines.length % 5 === 0) {
+                    if (module.TennisLines.length % 5 === 0 || matches.input.includes('wins.')) {
                         module.push({ label: module.TennisLastHeading || 'SN character:', obj: $('<pre>').text(module.TennisLines.join("\n")) });
                         module.TennisLines = [];
                     }
@@ -7371,9 +7963,9 @@ const parseData = [
         loggingTag: "The World's Largest Button"
     },
     {
-        displayName: "X-Ray",
-        moduleID: "XRayModule",
-        loggingTag: "X-Ray",
+        displayName: ["X-Ray", "Not X-Ray"],
+        moduleID: ["XRayModule", "NotXRayModule"],
+        loggingTag: ["X-Ray", "Not X-Ray"],
         matches: [
             {
                 regex: /.+/,

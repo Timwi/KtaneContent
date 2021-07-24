@@ -7,148 +7,10 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Game of Life/style.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
-    <script>
-        $(function() {
-            const interactive = $("table.interactive");
-            let saveStates = [];
-            let currentState = 0;
-
-            function removeFutureSaves() {
-                if (currentState < saveStates.length - 1) {
-                    for (let i = currentState + 1; i < saveStates.length; i++) {
-                        saveStates[i].remove();
-                    }
-
-                    saveStates.splice(currentState + 1, saveStates.length - currentState);
-                }
-            }
-
-            for (let y = 0; y < 9; y++) {
-                const row = $("<tr>").appendTo(interactive);
-                for (let x = 0; x < 7; x++) {
-                    if (x == 0 && y == 0) {
-                        $("<th>").appendTo(row);
-                    } else if (y == 0 && x > 0) {
-                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
-                    } else if (y > 0 && x == 0) {
-                        $("<th>").text(y).appendTo(row);
-                    } else {
-                        $("<td>").click(function() {
-                            $(this).toggleClass("white");
-                            removeFutureSaves();
-                        }).contextmenu(function() {
-                            $(this).toggleClass("dot");
-                            removeFutureSaves();
-                            return false;
-                        }).append('<div class="box"></div>').appendTo(row);
-                    }
-                }
-            }
-
-            $("button.reset").click(function() {
-                $("table.interactive td").removeClass("white dot");
-                saveStates.forEach(x => x.remove());
-                saveStates = [];
-                currentState = 0;
-            });
-
-            $("button.reset-grid").click(function() {
-                $("table.interactive td").removeClass("white dot");
-            });
-
-            $("button.save").click(function() {
-                removeFutureSaves();
-
-                let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
-                console.log(saveStates);
-                let stateNumber = saveStates.length;
-                currentState = stateNumber;
-
-                let button = $("<button>").text(stateNumber + 1).click(function() {
-                    $("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
-                    currentState = stateNumber;
-                }).appendTo(".saves");
-
-                saveStates.push(button);
-            });
-        });
-    </script>
-    <style>
-        .interactive-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
-            border: none;
-            background: none;
-        }
-
-        table.interactive td {
-            border: rgb(51, 77, 108) 8px solid;
-            padding: 0;
-            width: 35px;
-            height: 35px;
-        }
-
-        table.interactive td > .box {
-            background: black;
-            transition: background 0.2s;
-
-            position: relative;
-            width: 35px;
-            height: 35px;
-        }
-
-        table.interactive td.white > .box {
-            background: white;
-        }
-
-        table.interactive td > .box::after {
-            position: absolute;
-            top: 17.5px;
-            left: 17.5px;
-
-            content: '';
-            width: 0px;
-            height: 0px;
-            background: white;
-            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
-        }
-
-        table.interactive td.dot > .box::after {
-            top: 12.5px;
-            left: 12.5px;
-
-            width: 10px;
-            height: 10px;
-        }
-
-        table.interactive td.white.dot > .box::after {
-            background: black;
-        }
-
-        button {
-            margin: 5px;
-            border: black 2px solid;
-            border-radius: 3px;
-            transition: color 1s, background-color 1s;
-            display: block;
-        }
-
-        button:hover {
-            color: white;
-            background-color: black;
-        }
-
-        .buttons {
-            display: flex;
-            flex-direction: row;
-        }
-    </style>
+    <script src="js/Game of Life/interactive.js"></script>
 </head>
 <body>
     <div class="section">
@@ -196,7 +58,7 @@
                 If square is black:
                 <table>
                     <tr>
-                        <td>White neighbouring squares < 3 or > 3</td>
+                        <td>White neighbouring squares &lt; 3 or > 3</td>
                         <td>Stay black</td>
                     </tr>
                     <tr>
@@ -207,7 +69,7 @@
                 If square is white:
                 <table>
                     <tr>
-                        <td>White neighbouring squares < 2 or > 3</td>
+                        <td>White neighbouring squares &lt; 2 or > 3</td>
                         <td>Turn black</td>
                     </tr>
                     <tr>

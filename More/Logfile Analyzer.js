@@ -135,7 +135,7 @@ function selectBomb(serial) {
     return false;
 }
 
-function formatTime(seconds) {
+function formatTime(seconds, milliseconds = true) {
     const timeParts = [];
 
     const negative = seconds < 0;
@@ -150,7 +150,7 @@ function formatTime(seconds) {
         }
     }
 
-    return `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}`;
+    return milliseconds ? `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}` : `${negative ? "-" : ""}${timeParts.join(":")}`;
 }
 
 $.fn.addCardClick = function(info) {
@@ -278,9 +278,10 @@ class BombGroup {
             .map(bomb =>
                 [
                     this.isSingleBomb ? null : "(",
-                    formatTime(bomb.Time),
+                    formatTime(bomb.Time, false),
                     `strikes:${bomb.TotalStrikes}`,
-                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.join(", ")),
+                    `widgets:${bomb.Widgets - 1}`,
+                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => module.includes(" ") ? `"${module}"` : module).join(", ")),
                     this.isSingleBomb ? null : ")"
                 ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
             .join("\n\n");
@@ -556,6 +557,7 @@ function Bomb(seed) {
     this.Solved = 0;
     this.TotalModules = 0;
     this.Needies = 0;
+    this.Widgets = 0;
     this.Indicators = [];
     this.Batteries = [];
     this.BatteryWidgets = 0;
@@ -677,7 +679,7 @@ function Bomb(seed) {
             edgeworkSeparator = true;
             edgework.append("<div class='widget separator'>");
 
-            // The game will log out batteries that don't actually exist on the bomb. 
+            // The game will log out batteries that don't actually exist on the bomb.
             var actualBatteries = this.Batteries.slice(0, this.BatteryWidgets);
             actualBatteries.sort().reverse();
             actualBatteries.forEach(function(val) {
@@ -851,7 +853,7 @@ function Bomb(seed) {
             edgework.append("<div class='widget separator'>");
 
             this.VoltageMeterWidgets.sort(function(a, b) { return a - b; });
-            
+
             this.VoltageMeterWidgets.forEach(function(voltage) {
                 var widget = $("<div class='widget voltagemeter'>").appendTo(edgework);
                 $("<span>").css({left: (voltage/10*83)+9 }).appendTo(widget);
@@ -881,8 +883,8 @@ function Bomb(seed) {
             portList.push((count > 1 ? count + " × " : "") + (PortNames[port] || port));
         });
 
-        var caseHTML = $("<span>").text("Unknown");
-        var rendererHTML = $("<span>").text("Unknown");
+        var caseHTML = $("<span>").text(" Unknown");
+        var rendererHTML = $("<span>").text(" Unknown");
 
         var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").text("Edgework").appendTo(edgeworkInfo);
@@ -1073,7 +1075,7 @@ function Bomb(seed) {
                 icon.attr("src", "https://ktane.timwi.de/iconsprite").css({ "object-position": `${position.X * -32}px ${position.Y * -32}px`, "object-fit": "none" });
             }
         });
-        
+
         // Case representation
         if (this.Anchors != null && this.ModuleOrder != null) {
             const viewBox = [0, 0, 0, 0];
@@ -1138,41 +1140,43 @@ function Bomb(seed) {
                 frontFace.css("transform", `rotateY(${degrees}deg)`);
                 backFace.css("transform", `rotateY(${180 - degrees}deg)`);
             }).after("(Click to flip)");
-            
+
 
             //4.5 / number
             //3.16205534 / number
             //Renderer representation (TheDarkSid3r Bomb Renderer)
 
-            /*const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
-            rendererHTML.replaceWith(rendererParent);
-            
-            var rendererEdgework = [
-                {type: "serial", number: this.Serial}
-            ];
-            this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
-            this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
-            this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
+            if (window.BombRenderer) {
+                const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
+                rendererHTML.replaceWith(rendererParent);
 
-            const renderer = new BombRenderer(rendererParent);
+                var rendererEdgework = [
+                    {type: "serial", number: this.Serial}
+                ];
+                this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
+                this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
+                this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
 
-            renderer.loadMainAssetsAsync().then(() => {
-                for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
-                    const isRear = moduleIndex >= this.ModuleOrder.length / 2;
-    
-                    if (this.ModuleOrder[moduleIndex] == null)
-                        continue;
-    
-                    const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
-                    const ID = moduleSplit.splice(moduleSplit.length - 1);
-                    const moduleID = moduleSplit.join(" ");
-    
-                    const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                    renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
-                }
-                
-                renderer.addEdgework(rendererEdgework);
-            });*/
+                const renderer = new BombRenderer(rendererParent);
+
+                renderer.loadMainAssetsAsync().then(() => {
+                    for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
+                        const isRear = moduleIndex >= this.ModuleOrder.length / 2;
+
+                        if (this.ModuleOrder[moduleIndex] == null)
+                            continue;
+
+                        const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
+                        const ID = moduleSplit.splice(moduleSplit.length - 1);
+                        const moduleID = moduleSplit.join(" ");
+
+                        const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
+                        renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
+                    }
+
+                    renderer.addEdgework(rendererEdgework);
+                });
+            }
         }
 
         return info;
@@ -1548,7 +1552,7 @@ $(function() {
         if (files.length === 1) {
             if ($("#upload-to-server").prop('checked'))
             {
-                $('#upload')[0].files[0] = files[0];
+                $('#upload')[0].files = files;
                 $('#upload-form').submit();
                 return;
             }

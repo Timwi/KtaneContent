@@ -43,8 +43,27 @@ e.onload = function()
                 <div><input type='radio' name='page-layout' class='page-layout' id='page-layout-vertical'>&nbsp;<label for='page-layout-vertical' accesskey='v'><kbd>V</kbd>ertical</label></div>
                 <div><input type='radio' name='page-layout' class='page-layout' id='page-layout-side-by-side'>&nbsp;<label for='page-layout-side-by-side' accesskey='s'><kbd>S</kbd>ide by side</label></div>
             </div>
+            <div class='option-group'>
+                <h3>Dark Mode</h3>
+                <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled' accesskey='w'>Enabled</label> (Alt-W)</div>
+            </div>
         </div>`).appendTo("body");
 
+        // DARK MODE
+        function updateDarkMode()
+        {
+            if ($('#dark-mode-enabled').prop('checked'))
+            {
+                $("body").addClass("dark");
+                localStorage.setItem('ktane-dark-mode', true);
+            }
+            else
+            {
+                $("body").removeClass("dark");
+                localStorage.setItem('ktane-dark-mode', false);
+            }
+        }
+        $('#dark-mode-enabled').click(function() { updateDarkMode(); });
 
         // PAGE-LAYOUT OPTIONS
         function updateMultipageView()
@@ -381,9 +400,12 @@ e.onload = function()
 
         // Read current preferences from local storage
         let highlighterEnabled = localStorage.getItem('ktane-highlighter-enabled');
-        $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled);
+        $('#highlighter-enabled').prop('checked', highlighterEnabled === null ? true : highlighterEnabled == "true");
         let pageLayout = localStorage.getItem('ktane-page-layout') || 'vertical';
         $(`#page-layout-${pageLayout}`).prop('checked', true);
+        let darkModeEnabled = localStorage.getItem('ktane-dark-mode');
+        $('#dark-mode-enabled').prop('checked', darkModeEnabled == null ? false : darkModeEnabled == "true");
+        updateDarkMode();
         updateMultipageView();
         setColor(1);
     });
