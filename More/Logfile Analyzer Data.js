@@ -1189,6 +1189,24 @@ const parseData = [
                 }
             },
             {
+                regex: /This gives the final segment combinations in reading order: (.), (.), (.), (.), (.), (.), (.)/,
+                handler: function (matches, module) {
+                    let Colors = {"R":"#f00", "G":"#0f0", "B":"#00f", "W":"#fff", "K":"#000", "C":"#0ff", "M":"#f0f", "Y":"#ff0"};
+                    let svg = [
+                        `<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${Colors[matches[3]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${Colors[matches[4]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${Colors[matches[5]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${Colors[matches[6]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${Colors[matches[7]]}' stroke='#000' stroke-width='0.1'/>`,
+                    ];
+
+                    module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+                    return true;
+                }
+            },
+            {
                 regex: /.+/
             }
         ]
