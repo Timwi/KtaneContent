@@ -1063,6 +1063,137 @@ const parseData = [
         ]
     },
     {
+        displayName: "7",
+        loggingTag: "7",
+        moduleID: "7",
+        matches: [
+            {
+                regex: /Stage (\d+): LED: (.+), Values: \( (-?)(\d), (-?)(\d), (-?)(\d) \)$|Initial Values: \( -?\d, -?\d, -?\d \)$/,
+                handler: function (matches, module) {
+                    function seg (segment, digit) {
+                        switch (segment) {
+                            case "a":
+                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";       
+                                break;
+                            case "b":
+                                return digit == "0" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                break;
+                            case "c":
+                                return digit == "0" || digit == "1" || digit == "2" || digit == "3" || digit == "4" || digit == "7" || digit == "8" || digit == "9";       
+                                break;
+                            case "d":
+                                return digit == "2" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                break;
+                            case "e":
+                                return digit == "0" || digit == "2" || digit == "6" || digit == "8"       
+                                break;
+                            case "f":
+                                return digit == "0" || digit == "1" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";       
+                                break;
+                            case "g":
+                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                break;
+                        
+                            default:
+                                return false;
+                                break;
+                        }
+                    }
+                    function seg2 (segment, digit, dash) {
+                        return dash === "-" ? !seg(segment, digit) : seg(segment, digit);
+                    }
+                    function mix (r, g, b) {
+                        if (r) {
+                            if (g) {
+                                if (b) {
+                                    return "#fff";
+                                }
+                                else {
+                                    return "#ff0";
+                                }
+                            }
+                            else {
+                                if (b) {
+                                    return "#f0f";
+                                }
+                                else {
+                                    return "#f00";
+                                }
+                            }
+                        }
+                        else {
+                            if (g) {
+                                if (b) {
+                                    return "#0ff";
+                                }
+                                else {
+                                    return "#0f0";
+                                }
+                            }
+                            else {
+                                if (b) {
+                                    return "#00f";
+                                }
+                                else {
+                                    return "#000";
+                                }
+                            }
+                        }
+                    }
+
+                    if (/Initial( Values: \( -?\d, -?\d, -?\d \))$/.test(matches[0])){
+                        let m = /Initial( Values: \( -?\d, -?\d, -?\d \))$/.exec(matches[0]);
+                        let t = matches[0];
+                        matches = /Stage (\d+): LED: (.+), Values: \( (-?)(\d), (-?)(\d), (-?)(\d) \)$/.exec(`Stage 0: LED: Black,${m[1]}`);
+                        matches[0] = t;
+                    }
+
+                    let Colors = {"Red":"#f00", "Green":"#0f0", "Blue":"#00f", "White":"#fff", "Black":"#000"};
+                    let svg = [
+                        `<circle cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m0.7 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m2.9 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m0.8 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m0.7 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m2.9 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m0.8 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+
+                        `<path d='m3.2 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m3.1 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.3 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m3.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m3.1 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.3 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m3.2 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+
+                        `<path d='m5.6 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.5 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m7.7 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.6 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.5 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m7.7 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m5.6 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+
+                        `<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${mix(seg2('a', matches[4], matches[3]), seg2('a', matches[6], matches[5]), seg2('a', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${mix(seg2('b', matches[4], matches[3]), seg2('b', matches[6], matches[5]), seg2('b', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${mix(seg2('c', matches[4], matches[3]), seg2('c', matches[6], matches[5]), seg2('c', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${mix(seg2('d', matches[4], matches[3]), seg2('d', matches[6], matches[5]), seg2('d', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${mix(seg2('e', matches[4], matches[3]), seg2('e', matches[6], matches[5]), seg2('e', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${mix(seg2('f', matches[4], matches[3]), seg2('f', matches[6], matches[5]), seg2('f', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
+                        `<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${mix(seg2('g', matches[4], matches[3]), seg2('g', matches[6], matches[5]), seg2('g', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`
+                    ];
+
+                    module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "algebra",
         loggingTag: "Algebra",
         matches: [
