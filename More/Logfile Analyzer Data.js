@@ -1,33 +1,32 @@
 // Used to load external js files only once.
-class HookableCallback {
-    fns = [];
-    
-    called = false;
+class HookableCallbackSet {
+    callbacks = {};
 
-    hooked = false;
-
-    Add (fn) {
-        if (this.called) {
+    Add(path, fn) {
+        if (this.callbacks[path] === undefined) {
+            this.callbacks[path] = { fns: [], called: false, hooked: false };
+        }
+        if (this.callbacks[path].called) {
             fn();
         }
         else {
-            this.fns.push(fn);
+            this.callbacks[path].fns.push(fn);
+            if (!this.callbacks[path].hooked) {
+                this.callbacks[path].hooked = true;
+                $.getScript(path, () => { this.Call(path); });
+            }
         }
     }
 
-    Call () {
-        console.log("Calling");
-        console.log(this.fns);
-        this.called = true;
-        for (let fn of this.fns){
+    Call(path) {
+        this.callbacks[path].called = true;
+        for (let fn of this.callbacks[path].fns) {
             fn();
         }
     }
 }
 
-let MonoRandomCallback = new HookableCallback(); // ./js/MonoRandom.js
-let USACallback = new HookableCallback(); // ./js/USAMaze/USAMaze.js
-let DACHCallback = new HookableCallback(); // ./js/DACHMaze/DACHMaze.js
+let FileLoadCallbacks = new HookableCallbackSet();
 
 // A list of internal port names used to convert to their display name.
 const PortNames = {
@@ -1101,85 +1100,49 @@ const parseData = [
             {
                 regex: /Stage (\d+): LED: (.+), Values: \( (-?)(\d), (-?)(\d), (-?)(\d) \)$|Initial Values: \( -?\d, -?\d, -?\d \)$/,
                 handler: function (matches, module) {
-                    function seg (segment, digit) {
+                    function seg(segment, digit) {
                         switch (segment) {
                             case "a":
-                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";       
+                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";
                                 break;
                             case "b":
-                                return digit == "0" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                return digit == "0" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";
                                 break;
                             case "c":
-                                return digit == "0" || digit == "1" || digit == "2" || digit == "3" || digit == "4" || digit == "7" || digit == "8" || digit == "9";       
+                                return digit == "0" || digit == "1" || digit == "2" || digit == "3" || digit == "4" || digit == "7" || digit == "8" || digit == "9";
                                 break;
                             case "d":
-                                return digit == "2" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                return digit == "2" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "8" || digit == "9";
                                 break;
                             case "e":
-                                return digit == "0" || digit == "2" || digit == "6" || digit == "8"       
+                                return digit == "0" || digit == "2" || digit == "6" || digit == "8"
                                 break;
                             case "f":
-                                return digit == "0" || digit == "1" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";       
+                                return digit == "0" || digit == "1" || digit == "3" || digit == "4" || digit == "5" || digit == "6" || digit == "7" || digit == "8" || digit == "9";
                                 break;
                             case "g":
-                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "8" || digit == "9";       
+                                return digit == "0" || digit == "2" || digit == "3" || digit == "5" || digit == "6" || digit == "8" || digit == "9";
                                 break;
-                        
+
                             default:
                                 return false;
                                 break;
                         }
                     }
-                    function seg2 (segment, digit, dash) {
+                    function seg2(segment, digit, dash) {
                         return dash === "-" ? !seg(segment, digit) : seg(segment, digit);
                     }
-                    function mix (r, g, b) {
-                        if (r) {
-                            if (g) {
-                                if (b) {
-                                    return "#fff";
-                                }
-                                else {
-                                    return "#ff0";
-                                }
-                            }
-                            else {
-                                if (b) {
-                                    return "#f0f";
-                                }
-                                else {
-                                    return "#f00";
-                                }
-                            }
-                        }
-                        else {
-                            if (g) {
-                                if (b) {
-                                    return "#0ff";
-                                }
-                                else {
-                                    return "#0f0";
-                                }
-                            }
-                            else {
-                                if (b) {
-                                    return "#00f";
-                                }
-                                else {
-                                    return "#000";
-                                }
-                            }
-                        }
+                    function mix(r, g, b) {
+                        return `#${r ? 'f' : '0'}${g ? 'f' : '0'}${b ? 'f' : '0'}`;
                     }
-
-                    if (/Initial( Values: \( -?\d, -?\d, -?\d \))$/.test(matches[0])){
+                    if (/Initial( Values: \( -?\d, -?\d, -?\d \))$/.test(matches[0])) {
                         let m = /Initial( Values: \( -?\d, -?\d, -?\d \))$/.exec(matches[0]);
                         let t = matches[0];
                         matches = /Stage (\d+): LED: (.+), Values: \( (-?)(\d), (-?)(\d), (-?)(\d) \)$/.exec(`Stage 0: LED: Black,${m[1]}`);
                         matches[0] = t;
                     }
 
-                    let Colors = {"Red":"#f00", "Green":"#0f0", "Blue":"#00f", "White":"#fff", "Black":"#000"};
+                    let Colors = { "Red": "#f00", "Green": "#0f0", "Blue": "#00f", "White": "#fff", "Black": "#000" };
                     let svg = [
                         `<circle cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
                         `<path d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
@@ -1222,7 +1185,7 @@ const parseData = [
             {
                 regex: /This gives the final segment combinations in reading order: (.), (.), (.), (.), (.), (.), (.)/,
                 handler: function (matches, module) {
-                    let Colors = {"R":"#f00", "G":"#0f0", "B":"#00f", "W":"#fff", "K":"#000", "C":"#0ff", "M":"#f0f", "Y":"#ff0"};
+                    let Colors = { "R": "#f00", "G": "#0f0", "B": "#00f", "W": "#fff", "K": "#000", "C": "#0ff", "M": "#f0f", "Y": "#ff0" };
                     let svg = [
                         `<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}' stroke='#000' stroke-width='0.1'/>`,
                         `<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
@@ -2788,13 +2751,13 @@ const parseData = [
         matches: [
             {
                 regex: /^Generated Maze:$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     let maze = readMultiple(9).replace(/\[Cursor Maze #\d+\]/g, '').split('\n').slice(0, 8);
                     let table = $('<table>');
-                    for(let i = 0; i < 8; i++) {
+                    for (let i = 0; i < 8; i++) {
                         let tr = $('<tr>').appendTo(table);
                         maze[i].split('').forEach(element => {
-                            switch(element) {
+                            switch (element) {
                                 case 'X':
                                     $('<td>')
                                         .text(' ')
@@ -3239,16 +3202,16 @@ const parseData = [
         matches: [
             {
                 regex: /^The maze has a size of (\d+) \* (\d+)$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     const COL_COUNT = parseInt(matches[1]);
                     const ROW_COUNT = parseInt(matches[2]);
 
                     let maze = readMultiple(ROW_COUNT + 1).split('\n').slice(1, ROW_COUNT + 1);
                     let table = $('<table>').css('border-collapse', 'collapse');
 
-                    for(let row = 0; row < ROW_COUNT; row++) {
+                    for (let row = 0; row < ROW_COUNT; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let col = 0; col < COL_COUNT; col++) {
+                        for (let col = 0; col < COL_COUNT; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3259,7 +3222,7 @@ const parseData = [
 
                             let current = maze[row].split(' ')[col].split('');
                             current.forEach(element => {
-                                switch(element){
+                                switch (element) {
                                     case 'N':
                                         td.css('border-top', 'none');
                                         break;
@@ -3284,16 +3247,16 @@ const parseData = [
             },
             {
                 regex: /^((You generated an inverted maze:)|(You generated a maze:))$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     const COL_COUNT = 5;
                     const ROW_COUNT = 5;
 
                     let maze = readMultiple(ROW_COUNT).split('\n');
                     let table = $('<table>').css('border-collapse', 'collapse');
 
-                    for(let row = 0; row < ROW_COUNT; row++) {
+                    for (let row = 0; row < ROW_COUNT; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let col = 0; col < COL_COUNT; col++) {
+                        for (let col = 0; col < COL_COUNT; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3304,7 +3267,7 @@ const parseData = [
 
                             let current = maze[row].split(' ')[col].split('');
                             current.forEach(element => {
-                                switch(element){
+                                switch (element) {
                                     case 'N':
                                         td.css('border-top', 'none');
                                         break;
@@ -4976,54 +4939,54 @@ const parseData = [
             {
                 regex: /Gathered (\d+|a|an) (.+)\.$/,
                 handler: function (matches, module) {
-                    function cparseInt (string) {
-                        if (string === "a" || string === "an"){
+                    function cparseInt(string) {
+                        if (string === "a" || string === "an") {
                             return 1
                         }
                         return parseInt(string)
                     }
 
                     if (module.prev == null) {
-                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
+                        module.prev = { type: "gather", material: matches[2], count: cparseInt(matches[1]) };
                     }
                     else if (module.prev.type === "gather" && module.prev.material === matches[2]) {
-                        module.prev = {type: "gather", material: matches[2], count: module.prev.count + cparseInt(matches[1])};
+                        module.prev = { type: "gather", material: matches[2], count: module.prev.count + cparseInt(matches[1]) };
                     }
                     else if (module.prev.type === "gather") {
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
-                    } 
-                    else if (module.prev.type === "craft"){
-                        module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "gather", material: matches[2], count: cparseInt(matches[1])};
+                        module.prev = { type: "gather", material: matches[2], count: cparseInt(matches[1]) };
                     }
-                    
+                    else if (module.prev.type === "craft") {
+                        module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+                        module.prev = { type: "gather", material: matches[2], count: cparseInt(matches[1]) };
+                    }
+
                     return true;
                 }
             },
             {
                 regex: /Crafted (\d+|a|an) (.+)\.$|Crafted (Iron|Diamond) Armor\.$/,
                 handler: function (matches, module) {
-                    function cparseInt (string) {
-                        if (string === "a" || string === "an"){
+                    function cparseInt(string) {
+                        if (string === "a" || string === "an") {
                             return 1
                         }
                         return parseInt(string)
                     }
 
                     if (module.prev == null) {
-                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                        module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
                     }
                     else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
-                        module.prev = {type: "craft", material: matches[2], count: module.prev.count + cparseInt(matches[1])};
+                        module.prev = { type: "craft", material: matches[2], count: module.prev.count + cparseInt(matches[1]) };
                     }
                     else if (module.prev.type === "craft") {
                         module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                        module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
                     }
-                    else if (module.prev.type === "gather"){
+                    else if (module.prev.type === "gather") {
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "craft", material: matches[2], count: cparseInt(matches[1])};
+                        module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
                     }
                     return true;
                 }
@@ -5031,38 +4994,38 @@ const parseData = [
             {
                 regex: /The monster you are fighting is (.+) and it has (\d+) health and (\d+) damage\.$/,
                 handler: function (matches, module) {
-                    function cparseInt (string) {
-                        if (string === "a" || string === "an"){
+                    function cparseInt(string) {
+                        if (string === "a" || string === "an") {
                             return 1
                         }
                         return parseInt(string)
                     }
 
                     if (module.prev == null) {
-                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                        module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
                     }
                     else if (module.prev.type === "fight") {
                         console.error("Minecraft Survival: fight started before it ended!");
                         module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                        module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
                     }
                     else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
                         module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                        module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
                     }
-                    else if (module.prev.type === "gather"){
+                    else if (module.prev.type === "gather") {
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
-                        module.prev = {type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3])};
+                        module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
                     }
-                    
+
                     return true;
                 }
             },
             {
                 regex: /You (attacked|have been attacked by) the (.+) for -?(\d+) damage and now ha(s|ve) (\d+) health remaining\.$/,
                 handler: function (matches, module) {
-                    function cparseInt (string) {
-                        if (string === "a" || string === "an"){
+                    function cparseInt(string) {
+                        if (string === "a" || string === "an") {
                             return 1
                         }
                         return parseInt(string)
@@ -5081,21 +5044,21 @@ const parseData = [
                         module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
                         module.prev = null;
                     }
-                    else if (module.prev.type === "gather"){
+                    else if (module.prev.type === "gather") {
                         console.error("Minecraft Survival: fight continued before it started!");
                         module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
                         module.prev = null;
                     }
-                    
+
                     return true;
                 }
             },
             {
                 regex: /The monster has been defeated. It dropped (\d+|an) items?. Resume gathering! Number of resources gathered till next fight: (\d+)\.$/,
                 handler: function (matches, module) {
-                    function cparseInt (string) {
-                        if (string === "a" || string === "an"){
+                    function cparseInt(string) {
+                        if (string === "a" || string === "an") {
                             return 1
                         }
                         return parseInt(string)
@@ -5115,13 +5078,13 @@ const parseData = [
                         module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
                         module.prev = null;
                     }
-                    else if (module.prev.type === "gather"){
+                    else if (module.prev.type === "gather") {
                         console.error("Minecraft Survival: fight ended before it started!");
                         module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
                         module.prev = null;
                     }
-                    
+
                     return true;
                 }
             },
@@ -5130,7 +5093,7 @@ const parseData = [
                 handler: function (matches, module) {
                     module.push($(`<span style="background-color: #ffcccc">Combat: Dragon: 1</span>`));
                     module.prev = null;
-                    
+
                     return true;
                 }
             },
@@ -5151,7 +5114,7 @@ const parseData = [
                         module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
                         module.prev = null;
                     }
-                    else if (module.prev.type === "gather"){
+                    else if (module.prev.type === "gather") {
                         console.error("Minecraft Survival: fight ended before it started!");
                         module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
                         module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
@@ -5163,11 +5126,11 @@ const parseData = [
                 regex: /.+$/,
                 handler: function (matches, module) {
                     let blacklist = ["Fight did not start because you have no sword!"];
-                    
+
                     if (blacklist.includes(matches[0])) {
                         return true;
                     }
-                    
+
                     if (module.prev == null) {
                         // Do nothing
                     }
@@ -5181,7 +5144,7 @@ const parseData = [
                         module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
                     }
                     module.prev = null;
-                    
+
                     let color = "#ffffff";
 
                     if (/[Ss]trike/.test(matches[0])) {
@@ -8109,100 +8072,91 @@ const parseData = [
                 regex: /Using rule seed: (\d+).$/,
                 handler: function (matches, module) {
                     let sl = {
-                        "WA":{X:125,Y:50},
-                        "OR":{X:85,Y:125},
-                        "CA":{X:65,Y:285},
-                        "NV":{X:125,Y:230},
-                        "ID":{X:185,Y:155},
-                        "MT":{X:275,Y:90},
-                        "NM":{X:300,Y:385},
-                        "WY":{X:300,Y:185},
-                        "UT":{X:220,Y:260},
-                        "AZ":{X:200,Y:375},
-                        "CO":{X:320,Y:280},
-                        "ND":{X:420,Y:90},
-                        "SD":{X:420,Y:160},
-                        "NE":{X:430,Y:230},
-                        "KS":{X:450,Y:300},
-                        "OK":{X:455,Y:365},
-                        "TX":{X:455,Y:465},
-                        "MN":{X:515,Y:130},
-                        "IA":{X:530,Y:215},
-                        "MO":{X:555,Y:300},
-                        "AR":{X:555,Y:385},
-                        "LA":{X:560,Y:470},
-                        "WI":{X:600,Y:160},
-                        "IL":{X:605,Y:260},
-                        "MS":{X:615,Y:425},
-                        "FL":{X:780,Y:510},
-                        "AL":{X:670,Y:430},
-                        "GA":{X:735,Y:420},
-                        "SC":{X:780,Y:380},
-                        "TN":{X:670,Y:355},
-                        "NC":{X:805,Y:340},
-                        "KY":{X:700,Y:310},
-                        "WV":{X:760,Y:280},
-                        "VA":{X:810,Y:300},
-                        "MD":{X:970,Y:345},
-                        "DE":{X:970,Y:310},
-                        "IN":{X:660,Y:255},
-                        "OH":{X:720,Y:245},
-                        "PA":{X:800,Y:210},
-                        "NJ":{X:970,Y:270},
-                        "MI":{X:685,Y:190},
-                        "NY":{X:835,Y:140},
-                        "CT":{X:970,Y:225},
-                        "RI":{X:970,Y:185},
-                        "MA":{X:970,Y:145},
-                        "VT":{X:780,Y:60},
-                        "NH":{X:850,Y:60},
-                        "ME":{X:920,Y:75},
-                        "AK":{X:100,Y:500},
-                        "HI":{X:200,Y:500}
+                        "WA": { X: 125, Y: 50 },
+                        "OR": { X: 85, Y: 125 },
+                        "CA": { X: 65, Y: 285 },
+                        "NV": { X: 125, Y: 230 },
+                        "ID": { X: 185, Y: 155 },
+                        "MT": { X: 275, Y: 90 },
+                        "NM": { X: 300, Y: 385 },
+                        "WY": { X: 300, Y: 185 },
+                        "UT": { X: 220, Y: 260 },
+                        "AZ": { X: 200, Y: 375 },
+                        "CO": { X: 320, Y: 280 },
+                        "ND": { X: 420, Y: 90 },
+                        "SD": { X: 420, Y: 160 },
+                        "NE": { X: 430, Y: 230 },
+                        "KS": { X: 450, Y: 300 },
+                        "OK": { X: 455, Y: 365 },
+                        "TX": { X: 455, Y: 465 },
+                        "MN": { X: 515, Y: 130 },
+                        "IA": { X: 530, Y: 215 },
+                        "MO": { X: 555, Y: 300 },
+                        "AR": { X: 555, Y: 385 },
+                        "LA": { X: 560, Y: 470 },
+                        "WI": { X: 600, Y: 160 },
+                        "IL": { X: 605, Y: 260 },
+                        "MS": { X: 615, Y: 425 },
+                        "FL": { X: 780, Y: 510 },
+                        "AL": { X: 670, Y: 430 },
+                        "GA": { X: 735, Y: 420 },
+                        "SC": { X: 780, Y: 380 },
+                        "TN": { X: 670, Y: 355 },
+                        "NC": { X: 805, Y: 340 },
+                        "KY": { X: 700, Y: 310 },
+                        "WV": { X: 760, Y: 280 },
+                        "VA": { X: 810, Y: 300 },
+                        "MD": { X: 970, Y: 345 },
+                        "DE": { X: 970, Y: 310 },
+                        "IN": { X: 660, Y: 255 },
+                        "OH": { X: 720, Y: 245 },
+                        "PA": { X: 800, Y: 210 },
+                        "NJ": { X: 970, Y: 270 },
+                        "MI": { X: 685, Y: 190 },
+                        "NY": { X: 835, Y: 140 },
+                        "CT": { X: 970, Y: 225 },
+                        "RI": { X: 970, Y: 185 },
+                        "MA": { X: 970, Y: 145 },
+                        "VT": { X: 780, Y: 60 },
+                        "NH": { X: 850, Y: 60 },
+                        "ME": { X: 920, Y: 75 },
+                        "AK": { X: 100, Y: 500 },
+                        "HI": { X: 200, Y: 500 }
                     };
-                    
-                    module.push({obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 996 602" id="main-map"/>`), nobullet: true, stateLoc: sl});
-                    
+
+                    module.push({ obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 996 602" id="main-map"/>`), nobullet: true, stateLoc: sl });
+
                     let callback2 = () => {
                         let mz = new USAMaze();
-                        if (parseInt(matches[1]) == 1){
+                        if (parseInt(matches[1]) == 1) {
                             mz = mz.USAMazeSetDefaultRules();
                         } else {
                             mz = mz.USAMazeSetRules(new MonoRandom(parseInt(matches[1])));
                         }
-                        module.push(module.pop().obj.prepend($SVG("<g>" + mz.svg[0].innerHTML + "</g>")));
+                        module.push(module.pop().obj.prepend(mz.svg[0].querySelector("#USAMap")));
                     };
 
                     let callback = () => {
-                        USACallback.Add(callback2);
-                        if (!USACallback.hooked){
-                            USACallback.hooked = true;
-                            $.getScript('./js/USAMaze/USAMaze.js', () => { USACallback.Call(); });
-                        }
+                        FileLoadCallbacks.Add('./js/USAMaze/USAMaze.js', callback2);
                     };
 
-                    // Adding the script tag to the head
-                    MonoRandomCallback.Add(callback);
-                    if (!MonoRandomCallback.hooked){
-                        MonoRandomCallback.hooked = true;
-                        $.getScript('./js/MonoRandom.js', () => { MonoRandomCallback.Call(); });
-                    }
+                    FileLoadCallbacks.Add('./js/MonoRandom.js', callback);
 
                     return true;
                 }
-            
+
             },
             {
                 regex: /Departing .+ \((..)\) to .+ \((..)\)\.$/,
                 handler: function (matches, module) {
                     let svg = module.pop();
-                    if(matches[1] == "HI" || matches[2] == "HI"){
+                    if (matches[1] == "HI" || matches[2] == "HI") {
                         svg.obj.append($SVG(`<text x='200' y='550'>HI</text>`));
                     }
                     else if (matches[1] == "AK" || matches[2] == "AK") {
                         svg.obj.append($SVG(`<text x='100' y='550'>AK</text>`));
                     }
-                    
+
                     svg.obj.append($SVG(`<g><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='15' fill='none' stroke='#00ff00' stroke-width='5'/><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#000000'/><circle id='loc' cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#ff00ff'/></g>`));
                     svg.obj.append($SVG(`<circle cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='15' fill='none' stroke='#ff0000' stroke-width='5'/>`));
 
@@ -8216,7 +8170,7 @@ const parseData = [
                 handler: function (matches, module) {
                     let svg = module.pop();
                     svg.obj.find("#loc").remove();
-                    if(matches[1] == "HI" || matches[2] == "HI"){
+                    if (matches[1] == "HI" || matches[2] == "HI") {
                         svg.obj.append($SVG(`<text x='200' y='550'>HI</text>`));
                     }
                     else if (matches[2] == "AK" || matches[1] == "AK") {
@@ -8231,7 +8185,7 @@ const parseData = [
             },
             {
                 regex: /.+/,
-                handler: function (matches, module){
+                handler: function (matches, module) {
                     let svg = module.pop();
                     module.push($(`<span>${matches[0]}</span>`));
                     module.push(svg);
