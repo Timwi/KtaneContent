@@ -2812,6 +2812,128 @@ const parseData = [
         loggingTag: "TheDealmaker"
     },
     {
+        displayName: "DACH Maze",
+        moduleID: "DACH",
+        loggingTag: "DACH Maze",
+        matches: [
+            {
+                regex: /Using rule seed: (\d+)\.$/,
+                handler: function (matches, module) {
+                    let sl = {
+                        " D (BB)": { X: 840, Y: 195 },
+                        " D (BE)": { X: 935, Y: 165 },
+                        " D (BW)": { X: 645, Y: 420 },
+                        " D (BY)": { X: 755, Y: 395 },
+                        " D (HB)": { X: 515, Y: 80 },
+                        " D (HE)": { X: 650, Y: 290 },
+                        " D (HH)": { X: 510, Y: 40 },
+                        " D (MV)": { X: 785, Y: 85 },
+                        " D (NI)": { X: 685, Y: 155 },
+                        " D (NW)": { X: 585, Y: 235 },
+                        " D (RP)": { X: 580, Y: 340 },
+                        " D (SH)": { X: 680, Y: 70 },
+                        " D (SL)": { X: 550, Y: 420 },
+                        " D (SN)": { X: 820, Y: 260 },
+                        " D (ST)": { X: 755, Y: 210 },
+                        " D (TH)": { X: 725, Y: 270 },
+                        " A (BU)": { X: 960, Y: 575 },
+                        " A (KN)": { X: 855, Y: 540 },
+                        " A (NO)": { X: 930, Y: 435 },
+                        " A (NT)": { X: 735, Y: 510 },
+                        " A (OO)": { X: 855, Y: 450 },
+                        " A (OT)": { X: 790, Y: 575 },
+                        " A (SA)": { X: 820, Y: 505 },
+                        " A (ST)": { X: 905, Y: 500 },
+                        " A (VO)": { X: 425, Y: 290 },
+                        " A (WI)": { X: 960, Y: 335 },
+                        "CH (AG)": { X: 245, Y: 265 },
+                        "CH (AI)": { X: 375, Y: 80 },
+                        "CH (AR)": { X: 340, Y: 40 },
+                        "CH (BE)": { X: 185, Y: 365 },
+                        "CH (BL)": { X: 110, Y: 80 },
+                        "CH (BS)": { X: 180, Y: 80 },
+                        "CH (FR)": { X: 130, Y: 385 },
+                        "CH (GE)": { X: 125, Y: 575 },
+                        "CH (GL)": { X: 380, Y: 570 },
+                        "CH (GR)": { X: 400, Y: 380 },
+                        "CH (JU)": { X: 80, Y: 35 },
+                        "CH (LU)": { X: 235, Y: 320 },
+                        "CH (NE)": { X: 45, Y: 85 },
+                        "CH (NW)": { X: 255, Y: 570 },
+                        "CH (OW)": { X: 185, Y: 570 },
+                        "CH (SG)": { X: 310, Y: 80 },
+                        "CH (SH)": { X: 240, Y: 85 },
+                        "CH (SO)": { X: 145, Y: 35 },
+                        "CH (SZ)": { X: 275, Y: 35 },
+                        "CH (TG)": { X: 335, Y: 245 },
+                        "CH (TI)": { X: 310, Y: 435 },
+                        "CH (UR)": { X: 320, Y: 570 },
+                        "CH (VD)": { X: 70, Y: 395 },
+                        "CH (VS)": { X: 175, Y: 460 },
+                        "CH (ZG)": { X: 205, Y: 35 },
+                        "CH (ZH)": { X: 295, Y: 265 },
+                        "in (FL)": { X: 437, Y: 80 }
+                    };
+
+                    module.push({ obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="1603.3 445.8 996 602"/>`), nobullet: true, stateLoc: sl });
+
+                    let callback2 = () => {
+                        let mz = new DACHMaze();
+                        mz = mz.SetRules(new MonoRandom(parseInt(matches[1])));
+
+                        // let p = module.pop();
+                        // console.log(p);
+                        // module.push(p);
+                        module.push(module.pop().obj.prepend(mz.svg[0].querySelector(".DACHMap")));
+                    };
+
+                    let callback = () => {
+                        FileLoadCallbacks.Add('./js/DACHMaze/DACHMaze.js', callback2);
+                    };
+
+                    FileLoadCallbacks.Add('./js/MonoRandom.js', callback);
+
+                    return true;
+                }
+
+            },
+            {
+                regex: /Departing .+(.. \(..\)) to .+(.. \(..\))\.$/,
+                handler: function (matches, module) {
+                    let svg = module.pop();
+                    
+                    svg.obj.append($SVG(`<g transform="translate(1603.3 445.8)"><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='15' fill='none' stroke='#00ff00' stroke-width='5'/><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#000000'/><circle id='loc' cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#ff00ff'/></g>`));
+                    svg.obj.append($SVG(`<circle transform="translate(1603.3 445.8)" cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='15' fill='none' stroke='#ff0000' stroke-width='5'/>`));
+                    
+                    module.push($(`<span>${matches[0]}</span>`))
+                    module.push(svg);
+                    return true;
+                }
+            },
+            {
+                regex: /.+ - traveled from .+(.. \(..\)) to .+(.. \(..\))\.$/,
+                handler: function (matches, module) {
+                    let svg = module.pop();
+                    svg.obj.find("#loc").remove();
+                    
+                    svg.obj.append($SVG(`<g transform="translate(1603.3 445.8)"><path d='M${svg.stateLoc[matches[1]].X} ${svg.stateLoc[matches[1]].Y} ${svg.stateLoc[matches[2]].X} ${svg.stateLoc[matches[2]].Y}' fill='none' stroke='#0000ff' stroke-width='5'/><circle cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='10' stroke='none' fill='#000000'/><circle id='loc' cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='10' stroke='none' fill='#ff00ff'/></g>`));
+                    module.push($(`<span>${matches[0]}</span>`));
+                    module.push(svg);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    let svg = module.pop();
+                    module.push($(`<span>${matches[0]}</span>`));
+                    module.push(svg);
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         displayName: "Determinants",
         moduleID: "determinant",
         loggingTag: "Needy Determinants"
