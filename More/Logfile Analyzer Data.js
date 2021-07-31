@@ -3096,7 +3096,7 @@ const parseData = [
                             });
                         }
                     }
-                    
+
                     module.push('The maze has a size of ' + COL_COUNT + ' * ' + ROW_COUNT)
                     module.push({ label: "Maze:", obj: table });
                     return true;
@@ -3149,7 +3149,7 @@ const parseData = [
             {
                 regex: /.+/
             }
-        ]  
+        ]
     },
     {
         displayName: "Forget Perspective",
@@ -7706,6 +7706,129 @@ const parseData = [
         displayName: "Venting Gas",
         moduleID: "NeedyVentGas",
         loggingTag: "NeedyVentComponent",
+    },
+    {
+        moduleID: 'VoronoiMazeModule',
+        loggingTag: 'Voronoi Maze',
+        matches: [
+            {
+                regex: /^\{.*\}$/,
+                handler: function (matches, module) {
+                    let json = JSON.parse(matches);
+                    if (!module.Infos)
+                    {
+                        module.Infos = [];
+
+                        let svg = module[0].obj[0];
+                        let controlsDiv = document.createElement('div');
+                        controlsDiv.innerHTML = `
+                            <button type='button' class='left' style='position: absolute; left: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>◀</button>
+                            <button type='button' class='right' style='position: absolute; right: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>▶</button>
+                            <div class='info1' style='text-align: center'></div>
+                            <div class='info2' style='text-align: center'></div>
+                            <div class='info3' style='text-align: center'></div>
+                        `;
+                        controlsDiv.setAttribute('style', 'position: relative; background: #eef; padding: .1cm .25cm; margin: 0 auto .5cm; width: 12cm;');
+                        let info1 = controlsDiv.querySelector('.info1');
+                        let info2 = controlsDiv.querySelector('.info2');
+                        let info3 = controlsDiv.querySelector('.info3');
+                        module[0].obj[0] = document.createElement('div');
+                        module[0].obj[0].appendChild(controlsDiv);
+                        module[0].obj[0].appendChild(svg);
+
+                        let curPage = 0;
+                        function setMaze(j)
+                        {
+                            Array.from(svg.querySelectorAll('.edgecircle')).forEach(ec => { ec.setAttribute('opacity', 0); });
+                            Array.from(svg.querySelectorAll('.edgelabel')).forEach(el => { el.textContent = ''; });
+                            Array.from(svg.querySelectorAll('.edgepath')).forEach(ep => { ep.setAttribute('stroke', 'black'); ep.setAttribute('stroke-width', '.0075'); });
+                            Array.from(svg.querySelectorAll('.room')).forEach(rl => { rl.setAttribute('fill', 'white'); });
+                            Array.from(svg.querySelectorAll('.roomlabel')).forEach(rl => { rl.textContent = ''; });
+                            Array.from(svg.querySelectorAll('.key')).forEach(key => { key.setAttribute('opacity', 0); });
+                            svg.querySelector('.arrow').setAttribute('opacity', 0);
+                            if (j.isRoom)
+                            {
+                                for (let rIx = 0; rIx < j.arr.length; rIx++)
+                                {
+                                    svg.querySelector(`.roomlabel-${j.arr[rIx]}`).textContent = rIx;
+                                    svg.querySelector(`.room-${j.arr[rIx]}`).setAttribute('fill', j.ix === rIx ? '#fdd' : '#dfd');
+                                }
+
+                                info1.innerText = `${j.old} % ${j.arr.length} = ${j.ix}`;
+                                info2.innerText = `Selecting room #${j.ix} out of ${j.arr.length} rooms`;
+                                info3.innerText = `${j.old} ÷ ${j.arr.length} = ${j.new}`;
+                            }
+                            else
+                            {
+                                for (let eIx = 0; eIx < j.passable.length; eIx++)
+                                    svg.querySelector(`.edgepath-${j.passable[eIx]}`).setAttribute('stroke', 'rgba(0, 0, 0, .1)');
+
+                                if (j.isStep)
+                                {
+                                    for (let eIx = 0; eIx < j.arr.length; eIx++)
+                                    {
+                                        svg.querySelector(`.edgepath-${j.arr[eIx]}`).setAttribute('stroke', j.ix === eIx ? '#a00' : '#0a0');
+                                        svg.querySelector(`.edgecircle-${j.arr[eIx]}`).setAttribute('opacity', '.7');
+                                        svg.querySelector(`.edgecircle-${j.arr[eIx]}`).setAttribute('fill', j.ix === eIx ? '#fdd' : '#dfd');
+                                        svg.querySelector(`.edgelabel-${j.arr[eIx]}`).textContent = eIx;
+                                    }
+                                    Array.from(svg.querySelectorAll('.room')).forEach(rl => { rl.setAttribute('fill', '#ddf'); });
+                                    for (let rIx = 0; rIx < j.visited.length; rIx++)
+                                        svg.querySelector(`.room-${j.visited[rIx]}`).setAttribute('fill', 'white');
+
+                                    info1.innerText = `${j.old} % ${j.arr.length} = ${j.ix}`;
+                                    info2.innerText = `Selecting edge #${j.ix} out of ${j.arr.length} edges`;
+                                    info3.innerText = `${j.old} ÷ ${j.arr.length} = ${j.new}`;
+                                }
+                                else if (j.isFinal)
+                                {
+                                    info1.innerText = ' ';
+                                    info2.innerText = 'Final maze';
+                                    info3.innerText = ' ';
+                                    Array.from(svg.querySelectorAll('.key')).forEach(key => { key.setAttribute('opacity', 1); });
+                                    svg.querySelector(`.room-${j.keys[0]}`).setAttribute('fill', '#ce2121');
+                                    svg.querySelector(`.room-${j.keys[1]}`).setAttribute('fill', '#dddd41');
+                                    svg.querySelector(`.room-${j.keys[2]}`).setAttribute('fill', '#3f7cf4');
+                                }
+                                else if (j.isStrike)
+                                {
+                                    info1.innerText = ' ';
+                                    info2.innerText = 'You hit a wall. Strike!';
+                                    info3.innerText = ' ';
+                                    svg.querySelector(`.room-${j.from}`).setAttribute('fill', '#a5d6f7');
+                                    svg.querySelector(`.room-${j.to}`).setAttribute('fill', '#a5d6f7');
+                                    svg.querySelector('.arrow').setAttribute('opacity', 1);
+                                    svg.querySelector('.arrow').setAttribute('d', j.d);
+                                    svg.querySelector(`.edgepath-${j.edge}`).setAttribute('stroke', '#f00');
+                                    svg.querySelector(`.edgepath-${j.edge}`).setAttribute('stroke-width', '.02');
+                                }
+                                else if (j.isSolve)
+                                {
+                                    info1.innerText = ' ';
+                                    info2.innerText = 'Module solved!';
+                                    info3.innerText = ' ';
+                                }
+                            }
+                        }
+                        setMaze(json);
+
+                        controlsDiv.querySelector('.left').onclick = function() {
+                            curPage = Math.max(curPage - 1, 0);
+                            setMaze(module.Infos[curPage]);
+                        };
+                        controlsDiv.querySelector('.right').onclick = function() {
+                            curPage = Math.min(curPage + 1, module.Infos.length - 1);
+                            setMaze(module.Infos[curPage]);
+                        };
+                    }
+                    module.Infos.push(json);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
     },
     {
         moduleID: "webDesign",
