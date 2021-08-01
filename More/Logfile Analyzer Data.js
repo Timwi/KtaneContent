@@ -2575,6 +2575,110 @@ const parseData = [
         ]
     },
     {
+        moduleID: "CrittersModule",
+        loggingTag: "Critters",
+        matches: [
+            {
+                regex: /^(The grid was:|IP#\d: |The expected grid is: )$/,
+                handler: function (matches, module) {
+                    let binary = readTaggedLine();
+                    let grid = binary.match(/.{1,8}/g);
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let x = 0; x < 8; x++){
+                        let tr = $('<tr>').appendTo(table);
+                        for(let y = 0; y < 8; y++){
+                            let td = $('<td>')
+                            .text(' ')
+                            .css('text-align', 'center')
+                            .css('border', 'solid')
+                            .css('border-width', 'thin')
+                            .css('width', '25px')
+                            .css('height', '25px')
+                            .appendTo(tr)
+                            switch(grid[x][y]){
+                                case '0':
+                                    td.css('background-color', '#888888')
+                                    break;
+                                case '1':
+                                    switch(module.color){
+                                        case "Blue":
+                                            td.css('background-color', '#7BC0F9')
+                                            break;
+                                        case "Pink":
+                                            td.css('background-color', '#F97BF5')
+                                            break;
+                                        case "Yellow":
+                                            td.css('background-color', '#F9EB7B')
+                                            break;
+                                    }        
+                                    break;
+                            }
+                        }
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^The colour shown on the module is (Yellow|Pink|Blue), which indicates that we will be using the (reverse|standard|alternative) ruleset\.$/,
+                handler: function (matches, module) {
+                    module.color = matches[1];
+                    module.push(matches[0]);
+                    return true;
+                } 
+            },
+            {
+                regex: /^Submitted grid: ([10]{64})\. Expected grid: ([10]{64})\. Strike!$/,
+                handler: function (matches, module) {
+                    let tables = [];
+                    for(let i = 0; i < 2; i++){
+                        let grid = matches[i + 1].match(/.{1,8}/g);
+                        let table = $('<table>').css('table-collapse', 'collapse');
+                        for(let x = 0; x < 8; x++){
+                            let tr = $('<tr>').appendTo(table);
+                            for(let y = 0; y < 8; y++){
+                                let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', 'thin')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr)
+                                switch(grid[x][y]){
+                                    case '0':
+                                        td.css('background-color', '#888888')
+                                        break;
+                                    case '1':
+                                        switch(module.color){
+                                            case "Blue":
+                                                td.css('background-color', '#7BC0F9')
+                                                break;
+                                            case "Pink":
+                                                td.css('background-color', '#F97BF5')
+                                                break;
+                                            case "Yellow":
+                                                td.css('background-color', '#F9EB7B')
+                                                break;
+                                        }        
+                                        break;
+                                }
+                            }
+                        }
+                        tables.push(table);
+                    }
+                    module.push({ label: 'Submitted grid:', obj: tables[0] });
+                    module.push({ label: 'Expected grid:', obj: tables[1] });
+                    module.push('Strike!')
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "The cRule",
         moduleID: "the_cRule",
         loggingTag: "The cRule",
