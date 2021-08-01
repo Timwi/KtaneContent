@@ -3690,6 +3690,42 @@ const parseData = [
         ]
     },
     {
+        moduleID: "CrittersModule",
+        loggingTag: "Critters",
+        displayName: "Critters",
+        matches: [
+            {
+                regex: /(The grid was|IP#[12]|The expected grid is|Submitted grid): /,
+                handler: function (matches, module) {
+
+                    let table = $('<table>').css('border-collapse', 'collapse')
+                    const rows = 8;
+                    const columns = 8;
+                    let grid = readMultiple(rows).split('\n');
+
+                    for(var x = 0; x < rows; x++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(var y = 0; y < columns; y++) {
+                            let td = $('<td>').css('border', 'solid').css('text-align', 'center').css('width', '20px').css('height', '20px').appendTo(tr);
+                            let current = grid[x][y];
+                            switch(current) {
+                                case '0':
+                                    td.css('background-color', '#202020');
+                                    break;
+                                case '1':
+                                    td.css('background-color', '#c0c0c0');
+                                    break;
+                            }
+                        }
+                    }
+
+                    module.push({ label: matches[1], obj: table });
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         moduleID: "giantsDrink",
         loggingTag: "The Giant's Drink",
         displayName: "The Giant’s Drink"
