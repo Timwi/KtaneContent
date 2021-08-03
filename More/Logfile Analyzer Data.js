@@ -4176,6 +4176,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "IKEADocuments",
+        loggingTag: "IKEA Documents",
+        matches: [
+            {
+                regex: /^Selected: Page (\d+?) of (.+?) \((.+)\)/,
+                handler: (matches, module) => {
+                    module.push({ label: `Selected: ${matches[2]} (page ${matches[1]})`, obj: $("<div>").append($("<img>").attr("src", `../HTML/img/IKEA%20Documents/${matches[3]}.png`).css({ width: 400, maxWidth: "100%", backgroundColor: "#fff", border: "2px solid #000", margin: "5px 0 10px" })) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "Maze",
         loggingTag: "InvisibleWallsComponent"
     },
