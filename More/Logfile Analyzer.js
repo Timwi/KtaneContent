@@ -1120,7 +1120,7 @@ function Bomb(seed) {
                 icon.attr("src", `../Icons/${encodeURI(parseData.moduleData.icon)}.png`);
             } else {
                 const position = parseData.moduleData.iconPosition;
-                icon.attr("src", "https://ktane.timwi.de/iconsprite").css({ "object-position": `${position.X * -32}px ${position.Y * -32}px`, "object-fit": "none" });
+                icon.attr("src", "../iconsprite").css({ "object-position": `${position.X * -32}px ${position.Y * -32}px`, "object-fit": "none" });
             }
         });
 
@@ -1364,7 +1364,7 @@ function parseLog(opt) {
     function getWebsiteData(opt) {
         websiteParseData = [];
 
-        $.get("https://ktane.timwi.de/json/raw", function(websiteData) {
+        $.get("../json/raw", function(websiteData) {
             for (const module of websiteData.KtaneModules) {
                 const matches = parseData.filter(data => Array.isArray(data.moduleID) ? data.moduleID.includes(module.ModuleID) : data.moduleID == module.ModuleID);
                 if (matches.length === 0) {
