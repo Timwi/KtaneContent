@@ -8225,6 +8225,175 @@ const parseData = [
         ]
     },
     {
+        displayName: "The Tile Maze",
+        moduleID: "theTileMazeModule",
+        loggingTag: "The Tile Maze",
+        matches: [
+            {
+                regex: /^Generated Maze:$/,
+                handler: function (matches, module) {
+                    let maze = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    module.tileMaze = maze;
+                    return true;
+                }
+            },
+            {
+                regex: /^Extra Tile: (.)$/,
+                handler: function (matches, module) {
+                    module.extraTile = matches[1];
+                    return true;
+                }  
+            },
+            {
+                regex: /^Tile Numbers:$/,
+                handler: function (matches, module) {
+                    let tileNumbers = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    module.tileNumbers = tileNumbers;
+                    return true;
+                }  
+            },
+            {
+                regex: /^Extra Tile Number: (.)$/,
+                handler: function (matches, module) {
+                    module.extraNumber = matches[1];
+                    return true;
+                }
+            },
+            {
+                regex: /^Colors of corner tiles in reading order: ((?:(?:Red|Blue|Yellow|Green)(, |))+)$/,
+                handler: function (matches, module) {
+                    const colorIndexes = ['00', '06', '60', '66']
+                    let cornerColors = matches[1].split(', ');
+                    let maze = [];
+                    for(let i = 0; i < 7; i++) {
+                        let mazeRow = [];
+                        for(let j = 0; j < 7; j++) {
+                            mazeRow.push(
+                                {
+                                    'tile': module.tileMaze[i][j],
+                                    'number': module.tileNumbers[i][j]
+                                }
+                            );
+                        }
+                        maze.push(mazeRow);
+                    }
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let i = 0; i < 7; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 7; j++) {
+                            let currentCell = maze[i][j];
+                            let cellColor = '';
+                            let td = $('<td>')
+                            .css('position', 'relative')
+                            .css('border', 'none')
+                            .css('width', '50px')
+                            .css('height', '50px')
+                            .css('background-color', '#103A86')
+                            .appendTo(tr);
+
+                            if(colorIndexes.includes(i.toString().concat(j))){
+                                cellColor = cornerColors[colorIndexes.indexOf(i.toString().concat(j))][0];
+                            }
+
+                            let tile;
+                            let rotation;
+                            let number = currentCell.number == '-' ? ' ' : currentCell.number;
+                            switch(currentCell.tile) {
+                                case '╔':
+                                case '╚':
+                                case '╝':
+                                case '╗':
+                                    tile = cellColor != '' ? `L tile ${cellColor}` : 'L tile';
+                                    rotation = [0,90,180,270]['╚╔╗╝'.indexOf(currentCell.tile)]
+                                    break;
+                                case '═':
+                                case '║':
+                                    tile = 'I tile';
+                                    rotation = [0,90]['║═'.indexOf(currentCell.tile)]
+                                    break;
+                                case '╠':
+                                case '╩':
+                                case '╦':
+                                case '╣':
+                                    tile = 'T tile';
+                                    rotation = [0,90,180,270]['╦╣╩╠'.indexOf(currentCell.tile)]
+                                    break;
+                            }
+
+                            $('<img>')
+                            .attr('src', `img/The Tile Maze/${tile}.png`)
+                            .css('transform', `rotate(${rotation}deg)`)
+                            .css('height', '50px')
+                            .css('width', '50px')
+                            .css('vertical-align', 'middle')
+                            .appendTo(td);
+
+                            $('<div>')
+                            .text(number)
+                            .css('position', 'absolute')
+                            .css('left', '50%')
+                            .css('top', '50%')
+                            .css('transform', 'translate(-50%, -50%)')
+                            .css('font-weight', 'bold')
+                            .appendTo(td)
+                        }
+                    }
+                    module.push({ label: 'Generated Maze:', obj: table });
+
+                    let div = $('<div>')
+                    .css('width', '50px')
+                    .css('height', '50px')
+                    .css('position', 'relative')
+                    .css('background-color', '#103A86');
+                    let tile;
+                    let rotation;
+                    let number = module.extraNumber == '-' ? ' ' : module.extraNumber;
+                    switch(module.extraTile) {
+                        case '╔':
+                        case '╚':
+                        case '╝':
+                        case '╗':
+                            tile = 'L tile';
+                            rotation = [0,90,180,270]['╚╔╗╝'.indexOf(module.extraTile)]
+                            break;
+                        case '═':
+                        case '║':
+                            tile = 'I tile';
+                            rotation = [0,180]['║═'.indexOf(module.extraTile)]
+                            break;
+                        case '╠':
+                        case '╩':
+                        case '╦':
+                        case '╣':
+                            tile = 'T tile';
+                            rotation = [0,90,180,270]['╦╣╩╠'.indexOf(module.extraTile)]
+                            break;
+                    }
+
+                    $('<img>')
+                    .attr('src', `img/The TIle Maze/${tile}.png`)
+                    .css('transform', `rotate(${rotation}deg)`)
+                    .css('width', '50px').css('height', '50px')
+                    .appendTo(div);
+
+                    $('<div>')
+                    .text(number)
+                    .css('position', 'absolute')
+                    .css('left', '50%')
+                    .css('top', '50%')
+                    .css('transform', 'translate(-50%, -50%)')
+                    .css('font-weight', 'bold')
+                    .appendTo(div);
+                    module.push({ label: 'Extra tile:', obj: div });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+            }
+        ]
+    },
+    {
         displayName: "The Twin",
         moduleID: "TheTwinModule",
         loggingTag: "The Twin",
