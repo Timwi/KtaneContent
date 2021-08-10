@@ -135,11 +135,12 @@ function selectBomb(serial) {
     return false;
 }
 
-function formatTime(seconds, milliseconds = true) {
+function formatTime(seconds, hundredths = true) {
     const timeParts = [];
 
     const negative = seconds < 0;
     if (negative) seconds = -seconds;
+    seconds = Math.round(seconds * 100) / 100;
 
     let showRemaining = false;
     for (const part of [3600, 60, 1]) {
@@ -150,7 +151,7 @@ function formatTime(seconds, milliseconds = true) {
         }
     }
 
-    return milliseconds ? `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}` : `${negative ? "-" : ""}${timeParts.join(":")}`;
+    return hundredths ? `${negative ? "-" : ""}${timeParts.join(":")}.${Math.round(seconds * 100).toString().padStart(2, "0")}` : `${negative ? "-" : ""}${timeParts.join(":")}`;
 }
 
 $.fn.addCardClick = function(info) {
@@ -274,7 +275,9 @@ class BombGroup {
         }
 
         // Copy DMG string
-        const dmgString = this.loggedBombs
+        const dmgString = 
+        `/// ${this.MissionName}\n\n` +
+        this.loggedBombs
             .map(bomb =>
                 [
                     this.isSingleBomb ? null : "(",
@@ -1320,17 +1323,39 @@ function readDirectly(line, name, id) {
     }
 
     var match = /^=svg\[(.*?)\](<svg .*<\/svg>)$/.exec(line);
-    if (match)
+    if (match) {
         line = {
             label: match[1],
             obj: $(match[2])
         };
+    } else {
+        var match = /^=mu (\d+)$/.exec(line);
+        if (match) {
+            const lines = readMultiple(parseInt(match[1]));
+            parseMarkup(lines);
+            return;
+        }
+    }
 
     if (id) {
         GetBomb().GetModuleID(name, id).push(line);
     } else {
         GetBomb().GetModule(name).push(line);
     }
+}
+
+function parseMarkup(lines) {
+    const bullets = [];
+
+    for (const character of lines) {
+        if (character.trim() == "") { // Whitespace
+
+        } else if (character == "-") { // Subbullet
+
+        }
+    }
+
+    return bullets;
 }
 
 // opt = {
