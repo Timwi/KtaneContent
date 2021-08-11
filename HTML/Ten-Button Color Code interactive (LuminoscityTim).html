@@ -14,15 +14,26 @@
         const colorLabel = [ "R", "G", "B" ]
         var buttonContentIndex = [];
         var buttonContentIndexSaved = [];
+        let saveStates = [];
+        let currentState = 0;
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
         function setupButtons() {
             const buttonsAll = document.querySelectorAll('.buttoncell');
             for (let i = 0; i < buttonsAll.length; i++)
             {
                 buttons[i] = buttonsAll[i];
-                buttonContentIndex[i] = 0;
                 buttonContentIndexSaved[i] = 0;
-                buttons[i].style.background = buttonsColor[0];
-                buttons[i].rows.item(0).cells.item(0).innerHTML = colorLabel[0];
+                resetGrid();
                 buttons[i].addEventListener("click", () => clickButton(i));
             }
         }
@@ -33,20 +44,49 @@
             buttons[index].rows.item(0).cells.item(0).innerHTML = colorLabel[buttonContentIndex[index]];
         }
 
+
         function saveButtonStates() {
+            removeFutureSaves();
+
             for (let i = 0; i < buttons.length; i++)
             {
                 buttonContentIndexSaved[i] = buttonContentIndex[i];
             }
+            let saveState = Array.from(buttonContentIndex);
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                for (let i = 0; i < buttons.length; i++)
+                {
+                    buttonContentIndex[i] = saveState[i];
+                    buttons[i].style.background = buttonsColor[buttonContentIndex[i]];
+                    buttons[i].rows.item(0).cells.item(0).innerHTML = colorLabel[buttonContentIndex[i]];
+                }
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
         }
 
-        function resetButtonStates() {
+        function resetGrid() {
             for (let i = 0; i < buttons.length; i++)
             {
-                buttonContentIndex[i] = buttonContentIndexSaved[i];
+                buttonContentIndex[i] = 0;
                 buttons[i].style.background = buttonsColor[buttonContentIndex[i]];
                 buttons[i].rows.item(0).cells.item(0).innerHTML = colorLabel[buttonContentIndex[i]];
             }
+        }
+
+        function resetAllSaves() {
+            resetGrid();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
         }
     </script>
     <style>
@@ -123,17 +163,41 @@
                 height: calc(60vh - 2em);
             }
         }
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
     </style>
 </head>
 <body onload="setupButtons()">
     <div class="section">
         <div class="left-wrapper">
             <div class="center">
-                <div style="height: 7mm"></div>
-                <div style="position: relative; height: 0; left:0.7mm; top: -8mm">
-                    <button onclick="saveButtonStates()">Save Colors</button>
-                    <span style="color: rgba(0,0,0,0)">.</span>
-                    <button onclick="resetButtonStates()">Reset to Save</button>
+                <!-- <div style="height: 6mm"></div> -->
+                <div class="buttons" > <!--style="position: relative; height: 0; left:0.7mm; top: -8mm" -->
+                    <button onclick="resetAllSaves()">Reset Saves</button>
+                    &nbsp;
+                    <button onclick="resetGrid()">Reset Grid</button>
+                </div>
+                <div class="saves buttons">
+                    <button onclick="saveButtonStates()">Save</button>
                 </div>
                 <table class="buttonbox">
                     <tr>

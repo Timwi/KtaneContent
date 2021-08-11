@@ -2584,23 +2584,23 @@ const parseData = [
                     let binary = readTaggedLine();
                     let grid = binary.match(/.{1,8}/g);
                     let table = $('<table>').css('table-collapse', 'collapse');
-                    for(let x = 0; x < 8; x++){
+                    for (let x = 0; x < 8; x++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let y = 0; y < 8; y++){
+                        for (let y = 0; y < 8; y++) {
                             let td = $('<td>')
-                            .text(' ')
-                            .css('text-align', 'center')
-                            .css('border', 'solid')
-                            .css('border-width', 'thin')
-                            .css('width', '25px')
-                            .css('height', '25px')
-                            .appendTo(tr)
-                            switch(grid[x][y]){
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', 'thin')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .appendTo(tr)
+                            switch (grid[x][y]) {
                                 case '0':
                                     td.css('background-color', '#888888')
                                     break;
                                 case '1':
-                                    switch(module.color){
+                                    switch (module.color) {
                                         case "Blue":
                                             td.css('background-color', '#7BC0F9')
                                             break;
@@ -2610,7 +2610,7 @@ const parseData = [
                                         case "Yellow":
                                             td.css('background-color', '#F9EB7B')
                                             break;
-                                    }        
+                                    }
                                     break;
                             }
                         }
@@ -2625,32 +2625,32 @@ const parseData = [
                     module.color = matches[1];
                     module.push(matches[0]);
                     return true;
-                } 
+                }
             },
             {
                 regex: /^Submitted grid: ([10]{64})\. Expected grid: ([10]{64})\. Strike!$/,
                 handler: function (matches, module) {
                     let tables = [];
-                    for(let i = 0; i < 2; i++){
+                    for (let i = 0; i < 2; i++) {
                         let grid = matches[i + 1].match(/.{1,8}/g);
                         let table = $('<table>').css('table-collapse', 'collapse');
-                        for(let x = 0; x < 8; x++){
+                        for (let x = 0; x < 8; x++) {
                             let tr = $('<tr>').appendTo(table);
-                            for(let y = 0; y < 8; y++){
+                            for (let y = 0; y < 8; y++) {
                                 let td = $('<td>')
-                                .text(' ')
-                                .css('text-align', 'center')
-                                .css('border', 'solid')
-                                .css('border-width', 'thin')
-                                .css('width', '25px')
-                                .css('height', '25px')
-                                .appendTo(tr)
-                                switch(grid[x][y]){
+                                    .text(' ')
+                                    .css('text-align', 'center')
+                                    .css('border', 'solid')
+                                    .css('border-width', 'thin')
+                                    .css('width', '25px')
+                                    .css('height', '25px')
+                                    .appendTo(tr)
+                                switch (grid[x][y]) {
                                     case '0':
                                         td.css('background-color', '#888888')
                                         break;
                                     case '1':
-                                        switch(module.color){
+                                        switch (module.color) {
                                             case "Blue":
                                                 td.css('background-color', '#7BC0F9')
                                                 break;
@@ -2660,7 +2660,7 @@ const parseData = [
                                             case "Yellow":
                                                 td.css('background-color', '#F9EB7B')
                                                 break;
-                                        }        
+                                        }
                                         break;
                                 }
                             }
@@ -3005,10 +3005,10 @@ const parseData = [
                 regex: /Departing .+(.. \(..\)) to .+(.. \(..\))\.$/,
                 handler: function (matches, module) {
                     let svg = module.pop();
-                    
+
                     svg.obj.append($SVG(`<g transform="translate(1603.3 445.8)"><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='15' fill='none' stroke='#00ff00' stroke-width='5'/><circle cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#000000'/><circle id='loc' cx='${svg.stateLoc[matches[1]].X}' cy='${svg.stateLoc[matches[1]].Y}' r='10' stroke='none' fill='#ff00ff'/></g>`));
                     svg.obj.append($SVG(`<circle transform="translate(1603.3 445.8)" cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='15' fill='none' stroke='#ff0000' stroke-width='5'/>`));
-                    
+
                     module.push($(`<span>${matches[0]}</span>`))
                     module.push(svg);
                     return true;
@@ -3019,7 +3019,7 @@ const parseData = [
                 handler: function (matches, module) {
                     let svg = module.pop();
                     svg.obj.find("#loc").remove();
-                    
+
                     svg.obj.append($SVG(`<g transform="translate(1603.3 445.8)"><path d='M${svg.stateLoc[matches[1]].X} ${svg.stateLoc[matches[1]].Y} ${svg.stateLoc[matches[2]].X} ${svg.stateLoc[matches[2]].Y}' fill='none' stroke='#0000ff' stroke-width='5'/><circle cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='10' stroke='none' fill='#000000'/><circle id='loc' cx='${svg.stateLoc[matches[2]].X}' cy='${svg.stateLoc[matches[2]].Y}' r='10' stroke='none' fill='#ff00ff'/></g>`));
                     module.push($(`<span>${matches[0]}</span>`));
                     module.push(svg);
@@ -4176,6 +4176,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "IKEADocuments",
+        loggingTag: "IKEA Documents",
+        matches: [
+            {
+                regex: /^Selected: Page (\d+?) of (.+?) \((.+)\)/,
+                handler: (matches, module) => {
+                    module.push({ label: `Selected: ${matches[2]} (page ${matches[1]})`, obj: $("<div>").append($("<img>").attr("src", `../HTML/img/IKEA%20Documents/${matches[3]}.png`).css({ width: 400, maxWidth: "100%", backgroundColor: "#fff", border: "2px solid #000", margin: "5px 0 10px" })) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "Maze",
         loggingTag: "InvisibleWallsComponent"
     },
@@ -4265,18 +4281,220 @@ const parseData = [
         loggingTag: "Kyudoku",
         matches: [
             {
-                regex: /^(Puzzle|Solution):$/,
+                regex: /^(Solution|Codings|New codings):$/,
                 handler: function (matches, module) {
-                    var lines = readMultiple(6).split('\n').map(line => line.replace(/^\[Kyudoku #\d+\] /, ''));
-                    module.push({
-                        label: matches.input, obj: $(`
-                        <table style='border-collapse: collapse'>
-                            ${lines.map(row => `<tr>${[...Array(6).keys()].map(ix => `
-                                <td style='${row[3 * ix] === '[' ? `background:url(&#39;data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 2 2"><circle cx="0" cy="0" r=".7" stroke-width=".2" stroke="%23080" fill="none"/></svg>&#39;)` :
-                                row[3 * ix + 1] === '#' ? `background:#aaa` : ''}'>${row[3 * ix + 1] === '#' ? '' : row[3 * ix + 1]}</td>
-                            `).join('')}</tr>`).join('')}
-                        </table>`).find('td').css({ border: '1px solid black', width: '1.5cm', height: '1.5cm', textAlign: 'center', verticalAlign: 'middle', fontSize: '18pt' }).end()
-                    });
+                    var lines = readMultiple(4).split('\n').map(l => l.split(' '));
+                    module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        moduleID: "kugelblitz",
+        displayName: "Kugelblitz",
+        loggingTag: "Kugelblitz",
+        matches: [
+            {
+                regex: /^Found \d+ solvable modules?\.$/,
+                handler: function () {
+                    return true;
+                }
+            },
+            {
+                regex: /^Generated binary numbers are (([01]{7}[,.] )+)This will result in ([01]{7}).$/,
+                handler: function (matches, module) {
+                    let rows = `<tr id="kugel-title"><th style="text-align: center;">#</th><th style="outline: black solid 2px;">Black:</th></tr>${matches[1]}`;
+                    let i = 1;
+                    while (/([01]{7})[,.] /g.test(rows)) {
+                        rows = rows.replace(/([01]{7})[,.] /, `<tr id="kugel-row-${i}"><td style="text-align: center;">${i}</td><td style="outline: black solid 2px;">$1</td></tr>`);
+                        i++;
+                    }
+                    rows += `<tr id="kugel-final"><th /><th style="outline: black solid 2px;"><strong>Final:</strong></th></tr><tr id="kugel-final-number"><td /><td style="outline: black solid 2px;">${matches[3]}</td><tr>`;
+                    let table = $(`<table style="border-collapse: collapse; background-color: #aaa; outline: black solid 2px; text-align: center;">${rows}<table>`);
+                    module.table = table;
+                    return true;
+                }
+            },
+            {
+                regex: /^Generated binary numbers for extra Kugelblitz \((red|orange|yellow|green|blue|indigo)\) are (([01]{7}[,.] )+)This will result in ([0-7]{6,7}).$/,
+                handler: function (matches, module) {
+                    let cs = function (string) {
+                        switch (string) {
+                            case "red":
+                                return "#f00";
+                            case "orange":
+                                return "#f80";
+                            case "yellow":
+                                return "#ff0";
+                            case "green":
+                                return "#0f0";
+                            case "blue":
+                                return "#0cf";
+                            case "indigo":
+                                return "#40f";
+                        }
+                        return string;
+                    }
+                    let table = module.table;
+                    table.find("#kugel-title").append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;"><strong>${matches[1].charAt(0).toUpperCase() + matches[1].slice(1)}:</strong></td>`);
+                    let stages = matches[2].split(/[,.] /);
+                    for (let i = 1; i < stages.length; i++) {
+                        table.find(`#kugel-row-${i}`).append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;">${stages[i - 1]}</td>`);
+                    }
+                    table.find("#kugel-final").append(`<th style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th>`);
+                    table.find("#kugel-final-number").append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;">${matches[4]}</td>`);
+                    return true;
+                }
+            },
+            {
+                regex: /^Generated binary numbers for extra Kugelblitz \((violet)\) are (([01]{7}[,.] )+)This will result in horzontally placed modifier ([0-7]{7}) and vertically placed modifier ([0-7]{7})\.$/,
+                handler: function (matches, module) {
+                    let table = module.table;
+                    table.find("#kugel-title").append($.parseHTML(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Violet: (Horiz)</strong></td><td style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Violet: (Vert)</strong></td>`));
+                    let stages = matches[2].split(/[,.] /);
+                    for (let i = 1; i < stages.length; i++) {
+                        if (i % 2 === 0) {
+                            table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;" />`);
+                        }
+                        table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${stages[i - 1]}</td>`);
+                        if (i % 2 === 1) {
+                            table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;" />`);
+                        }
+                    }
+                    table.find("#kugel-final").append($.parseHTML(`<th style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th><th style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th>`));
+                    table.find("#kugel-final-number").append($.parseHTML(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${matches[4]}</td><td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${matches[5]}</td>`));
+
+                    const tbl = [
+                        [5, 1, 4, 3, 0, 6, 2],
+                        [1, 2, 0, 5, 3, 4, 6],
+                        [3, 6, 5, 2, 4, 0, 1],
+                        [6, 4, 1, 0, 2, 5, 3],
+                        [4, 0, 3, 1, 6, 2, 5],
+                        [0, 5, 2, 6, 1, 3, 4],
+                        [2, 3, 6, 4, 5, 1, 0]
+                    ];
+
+                    let cols = [matches[5][0], matches[5][1], matches[5][2], matches[5][3], matches[5][4], matches[5][5], matches[5][6]].map(c => parseInt(c));
+                    let rows = [matches[4][0], matches[4][1], matches[4][2], matches[4][3], matches[4][4], matches[4][5], matches[4][6]].map(c => parseInt(c));
+                    let vm = [];
+
+                    for (let i = 0; i < 7; i++) {
+                        vm.push(rows.map((j, ix) => (j + cols[i] + tbl[ix][i]) % 7));
+                    }
+
+                    module.violetMod = vm;
+                    return true;
+                }
+            },
+            {
+                regex: /^Starting at \(\d, \d\) in direction .+\.$/,
+                handler: function (_, module) {
+                    module.table.find("td, th").css("padding", "6px");
+                    module.push({ obj: module.table, nobullet: true });
+                    if (module.violetMod) {
+                        module.push("Modified table (violet):");
+                        module.push({
+                            obj: $(`
+                        <table>${module.violetMod.map(a => `
+                            <tr>${a.map(i => `
+                                <td style="border: black solid 2px; padding: 2px 6px 2px 6px;">${i}
+                                </td>`).join("")}
+                            </tr>`).join("")}
+                        </table>`), nobullet: true
+                        });
+                    }
+
+                    return false;
+                }
+            },
+            {
+                regex: /The calculated sequence is [ip]+, which translates to ([\[\]∙]+)\./,
+                handler: function (matches, module) {
+                    module.push(matches[0]);
+                    let dotssvg = `<circle cx='0' cy='0' r='.25' fill='black' stroke='none' />`;
+                    let linessvg = "";
+                    let line = "";
+                    let pos = 0.5;
+                    let working = matches[1];
+                    const eps = 0.0001
+                    while (working.length > 0) {
+                        switch (working[0]) {
+                            case "[":
+                                line += `M${pos} .25v.5`
+                                break;
+                            case "∙":
+                                dotssvg += `<circle cx='${pos + 0.5}' cy='0' r='.25' fill='black' stroke='none' />`;
+                                pos += 1;
+                                break;
+                            case "]":
+                                linessvg += `<path d='${line}H${pos + eps}v-.5' fill='none' stroke='black' stroke-width='0.15' stroke-linecap="square" />`
+                                line = "";
+                                if (working[1] !== "∙")
+                                    pos += 0.25
+                                break;
+                        }
+                        working = working.substring(1);
+                    }
+                    dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='black' stroke='none' />`;
+
+                    module.push({nobullet: true, obj: $SVG(`
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">
+                        ${dotssvg}
+                        ${linessvg}
+                    </svg>`)});
+                    return true;
+                }
+            },
+            {
+                regex: /You submitted ([\[\]∙]+), but I expected [\[\]∙]+\./,
+                handler: function (matches, module) {
+                    module.push(matches[0]);
+                    let dotssvg = `<circle cx='0' cy='0' r='.25' fill='#800' stroke='none' />`;
+                    let linessvg = "";
+                    let line = "";
+                    let pos = 0.5;
+                    let working = matches[1];
+                    const eps = 0.0001
+                    while (working.length > 0) {
+                        switch (working[0]) {
+                            case "[":
+                                line += `M${pos} .25v.5`
+                                break;
+                            case "∙":
+                                dotssvg += `<circle cx='${pos + 0.5}' cy='0' r='.25' fill='#800' stroke='none' />`;
+                                pos += 1;
+                                break;
+                            case "]":
+                                linessvg += `<path d='${line}H${pos + eps}v-.5' fill='none' stroke='#800' stroke-width='0.15' stroke-linecap="square" />`
+                                line = "";
+                                if (working[1] !== "∙")
+                                    pos += 0.25
+                                break;
+                        }
+                        working = working.substring(1);
+                    }
+                    dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='#800' stroke='none' />`;
+
+                    module.push({nobullet: true, obj: $SVG(`
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">
+                        ${dotssvg}
+                        ${linessvg}
+                    </svg>`)});
+                    return true;
+                }
+            },
+            {
+                regex: /Logging can be found at 'Kugelblitz #(\d+)'./,
+                handler: function (matches, module) {
+                    let callback = () => {
+                        $("div").filter((_, d) => d.innerText == `Kugelblitz #${matches[1]}`).parent().click();
+                        return false;
+                    };
+                    module.push({obj: $(`<p>Logging can be found at <a href=''>Kugelblitz #${matches[1]}</a>.</p>`).find("a").click(callback).end()});
                     return true;
                 }
             },
@@ -8209,6 +8427,175 @@ const parseData = [
         ]
     },
     {
+        displayName: "The Tile Maze",
+        moduleID: "theTileMazeModule",
+        loggingTag: "The Tile Maze",
+        matches: [
+            {
+                regex: /^Generated Maze:$/,
+                handler: function (matches, module) {
+                    let maze = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    module.tileMaze = maze;
+                    return true;
+                }
+            },
+            {
+                regex: /^Extra Tile: (.)$/,
+                handler: function (matches, module) {
+                    module.extraTile = matches[1];
+                    return true;
+                }  
+            },
+            {
+                regex: /^Tile Numbers:$/,
+                handler: function (matches, module) {
+                    let tileNumbers = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    module.tileNumbers = tileNumbers;
+                    return true;
+                }  
+            },
+            {
+                regex: /^Extra Tile Number: (.)$/,
+                handler: function (matches, module) {
+                    module.extraNumber = matches[1];
+                    return true;
+                }
+            },
+            {
+                regex: /^Colors of corner tiles in reading order: ((?:(?:Red|Blue|Yellow|Green)(, |))+)$/,
+                handler: function (matches, module) {
+                    const colorIndexes = ['00', '06', '60', '66']
+                    let cornerColors = matches[1].split(', ');
+                    let maze = [];
+                    for(let i = 0; i < 7; i++) {
+                        let mazeRow = [];
+                        for(let j = 0; j < 7; j++) {
+                            mazeRow.push(
+                                {
+                                    'tile': module.tileMaze[i][j],
+                                    'number': module.tileNumbers[i][j]
+                                }
+                            );
+                        }
+                        maze.push(mazeRow);
+                    }
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let i = 0; i < 7; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 7; j++) {
+                            let currentCell = maze[i][j];
+                            let cellColor = '';
+                            let td = $('<td>')
+                            .css('position', 'relative')
+                            .css('border', 'none')
+                            .css('width', '50px')
+                            .css('height', '50px')
+                            .css('background-color', '#103A86')
+                            .appendTo(tr);
+
+                            if(colorIndexes.includes(i.toString().concat(j))){
+                                cellColor = cornerColors[colorIndexes.indexOf(i.toString().concat(j))][0];
+                            }
+
+                            let tile;
+                            let rotation;
+                            let number = currentCell.number == '-' ? ' ' : currentCell.number;
+                            switch(currentCell.tile) {
+                                case '╔':
+                                case '╚':
+                                case '╝':
+                                case '╗':
+                                    tile = cellColor != '' ? `L tile ${cellColor}` : 'L tile';
+                                    rotation = [0,90,180,270]['╚╔╗╝'.indexOf(currentCell.tile)]
+                                    break;
+                                case '═':
+                                case '║':
+                                    tile = 'I tile';
+                                    rotation = [0,90]['║═'.indexOf(currentCell.tile)]
+                                    break;
+                                case '╠':
+                                case '╩':
+                                case '╦':
+                                case '╣':
+                                    tile = 'T tile';
+                                    rotation = [0,90,180,270]['╦╣╩╠'.indexOf(currentCell.tile)]
+                                    break;
+                            }
+
+                            $('<img>')
+                            .attr('src', `img/The Tile Maze/${tile}.png`)
+                            .css('transform', `rotate(${rotation}deg)`)
+                            .css('height', '50px')
+                            .css('width', '50px')
+                            .css('vertical-align', 'middle')
+                            .appendTo(td);
+
+                            $('<div>')
+                            .text(number)
+                            .css('position', 'absolute')
+                            .css('left', '50%')
+                            .css('top', '50%')
+                            .css('transform', 'translate(-50%, -50%)')
+                            .css('font-weight', 'bold')
+                            .appendTo(td)
+                        }
+                    }
+                    module.push({ label: 'Generated Maze:', obj: table });
+
+                    let div = $('<div>')
+                    .css('width', '50px')
+                    .css('height', '50px')
+                    .css('position', 'relative')
+                    .css('background-color', '#103A86');
+                    let tile;
+                    let rotation;
+                    let number = module.extraNumber == '-' ? ' ' : module.extraNumber;
+                    switch(module.extraTile) {
+                        case '╔':
+                        case '╚':
+                        case '╝':
+                        case '╗':
+                            tile = 'L tile';
+                            rotation = [0,90,180,270]['╚╔╗╝'.indexOf(module.extraTile)]
+                            break;
+                        case '═':
+                        case '║':
+                            tile = 'I tile';
+                            rotation = [0,180]['║═'.indexOf(module.extraTile)]
+                            break;
+                        case '╠':
+                        case '╩':
+                        case '╦':
+                        case '╣':
+                            tile = 'T tile';
+                            rotation = [0,90,180,270]['╦╣╩╠'.indexOf(module.extraTile)]
+                            break;
+                    }
+
+                    $('<img>')
+                    .attr('src', `img/The TIle Maze/${tile}.png`)
+                    .css('transform', `rotate(${rotation}deg)`)
+                    .css('width', '50px').css('height', '50px')
+                    .appendTo(div);
+
+                    $('<div>')
+                    .text(number)
+                    .css('position', 'absolute')
+                    .css('left', '50%')
+                    .css('top', '50%')
+                    .css('transform', 'translate(-50%, -50%)')
+                    .css('font-weight', 'bold')
+                    .appendTo(div);
+                    module.push({ label: 'Extra tile:', obj: div });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+            }
+        ]
+    },
+    {
         displayName: "The Twin",
         moduleID: "TheTwinModule",
         loggingTag: "The Twin",
@@ -8450,8 +8837,7 @@ const parseData = [
                 regex: /^\{.*\}$/,
                 handler: function (matches, module) {
                     let json = JSON.parse(matches);
-                    if (!module.Infos)
-                    {
+                    if (!module.Infos) {
                         module.Infos = [];
 
                         let svg = module[0].obj[0];
@@ -8472,8 +8858,7 @@ const parseData = [
                         module[0].obj[0].appendChild(svg);
 
                         let curPage = 0;
-                        function setMaze(j)
-                        {
+                        function setMaze(j) {
                             Array.from(svg.querySelectorAll('.edgecircle')).forEach(ec => { ec.setAttribute('opacity', 0); });
                             Array.from(svg.querySelectorAll('.edgelabel')).forEach(el => { el.textContent = ''; });
                             Array.from(svg.querySelectorAll('.edgepath')).forEach(ep => { ep.setAttribute('stroke', 'black'); ep.setAttribute('stroke-width', '.0075'); });
@@ -8481,10 +8866,8 @@ const parseData = [
                             Array.from(svg.querySelectorAll('.roomlabel')).forEach(rl => { rl.textContent = ''; });
                             Array.from(svg.querySelectorAll('.key')).forEach(key => { key.setAttribute('opacity', 0); });
                             svg.querySelector('.arrow').setAttribute('opacity', 0);
-                            if (j.isRoom)
-                            {
-                                for (let rIx = 0; rIx < j.arr.length; rIx++)
-                                {
+                            if (j.isRoom) {
+                                for (let rIx = 0; rIx < j.arr.length; rIx++) {
                                     svg.querySelector(`.roomlabel-${j.arr[rIx]}`).textContent = rIx;
                                     svg.querySelector(`.room-${j.arr[rIx]}`).setAttribute('fill', j.ix === rIx ? '#fdd' : '#dfd');
                                 }
@@ -8493,15 +8876,12 @@ const parseData = [
                                 info2.innerText = `Selecting room #${j.ix} out of ${j.arr.length} rooms`;
                                 info3.innerText = `${j.old} ÷ ${j.arr.length} = ${j.new}`;
                             }
-                            else
-                            {
+                            else {
                                 for (let eIx = 0; eIx < j.passable.length; eIx++)
                                     svg.querySelector(`.edgepath-${j.passable[eIx]}`).setAttribute('stroke', 'rgba(0, 0, 0, .1)');
 
-                                if (j.isStep)
-                                {
-                                    for (let eIx = 0; eIx < j.arr.length; eIx++)
-                                    {
+                                if (j.isStep) {
+                                    for (let eIx = 0; eIx < j.arr.length; eIx++) {
                                         svg.querySelector(`.edgepath-${j.arr[eIx]}`).setAttribute('stroke', j.ix === eIx ? '#a00' : '#0a0');
                                         svg.querySelector(`.edgecircle-${j.arr[eIx]}`).setAttribute('opacity', '.7');
                                         svg.querySelector(`.edgecircle-${j.arr[eIx]}`).setAttribute('fill', j.ix === eIx ? '#fdd' : '#dfd');
@@ -8515,8 +8895,7 @@ const parseData = [
                                     info2.innerText = `Selecting edge #${j.ix} out of ${j.arr.length} edges`;
                                     info3.innerText = `${j.old} ÷ ${j.arr.length} = ${j.new}`;
                                 }
-                                else if (j.isFinal)
-                                {
+                                else if (j.isFinal) {
                                     info1.innerText = ' ';
                                     info2.innerText = 'Final maze';
                                     info3.innerText = ' ';
@@ -8525,8 +8904,7 @@ const parseData = [
                                     svg.querySelector(`.room-${j.keys[1]}`).setAttribute('fill', '#dddd41');
                                     svg.querySelector(`.room-${j.keys[2]}`).setAttribute('fill', '#3f7cf4');
                                 }
-                                else if (j.isStrike)
-                                {
+                                else if (j.isStrike) {
                                     info1.innerText = ' ';
                                     info2.innerText = 'You hit a wall. Strike!';
                                     info3.innerText = ' ';
@@ -8537,8 +8915,7 @@ const parseData = [
                                     svg.querySelector(`.edgepath-${j.edge}`).setAttribute('stroke', '#f00');
                                     svg.querySelector(`.edgepath-${j.edge}`).setAttribute('stroke-width', '.02');
                                 }
-                                else if (j.isSolve)
-                                {
+                                else if (j.isSolve) {
                                     info1.innerText = ' ';
                                     info2.innerText = 'Module solved!';
                                     info3.innerText = ' ';
@@ -8547,11 +8924,11 @@ const parseData = [
                         }
                         setMaze(json);
 
-                        controlsDiv.querySelector('.left').onclick = function() {
+                        controlsDiv.querySelector('.left').onclick = function () {
                             curPage = Math.max(curPage - 1, 0);
                             setMaze(module.Infos[curPage]);
                         };
-                        controlsDiv.querySelector('.right').onclick = function() {
+                        controlsDiv.querySelector('.right').onclick = function () {
                             curPage = Math.min(curPage + 1, module.Infos.length - 1);
                             setMaze(module.Infos[curPage]);
                         };
