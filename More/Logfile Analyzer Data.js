@@ -8728,6 +8728,11 @@ const parseData = [
         ]
     },
     {
+      moduleID: "UNO",
+      loggingTag: "UNO!",
+      displayName: "UNO!"
+    },
+    {
         moduleID: "USA",
         loggingTag: "USA Maze",
         displayName: "USA Maze",
