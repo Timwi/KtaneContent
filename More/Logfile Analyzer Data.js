@@ -1861,11 +1861,6 @@ const parseData = [
         ]
     },
     {
-        moduleID: "CactusPConundram",
-        loggingTag: "Cacti's Conundrum",
-        displayName: "Cacti's Conundrum"
-    },
-    {
         moduleID: "CaesarCipherModule",
         loggingTag: "CaesarCipher"
     },
