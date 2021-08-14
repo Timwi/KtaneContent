@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>Simon Signals — Keep Talking and Nobody Explodes Module</title>
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <script src="js/ktane-utils.js"></script>
+	<script src="js/ruleseed.js"></script>
+	<script>
+		function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let markerId = 0;
+            function abs(i, n, ccw)
+            {
+                markerId++;
+                return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'><path stroke='black' stroke-width='2' fill='none' transform='rotate(${i*360/n + [270, 45, 90, 0][n-3]})' d='M40 0H-40M-20 -10L-40 0l20 10'/><${''}/svg>`;
+            }
+
+            let directions = Array(4).fill(null).map((_, n) => n + 3).map(n => [
+                // Numbers from -n+1 to n-1
+                ...Array(2*n - 2).fill(null).map((_, i) => i - n + 1 + (i > n-2 ? 1 : 0)),
+                // Arrows 0..n-1
+                ...Array(n).fill(null).map((_, i) => abs(i, n, false))
+            ]);
+
+			for (let j = 3; j <= 6; j++) {
+				let tds = Array.from(document.querySelectorAll(`.simon-signals-${j} td`));
+				let remainingDir = [];
+				for (let i = 0; i < tds.length; i++) {
+					if (remainingDir.length === 0) {
+						remainingDir = directions[j-3].slice(0);
+						rnd.shuffleFisherYates(remainingDir);
+					}
+					let ix = rnd.next(0, remainingDir.length);
+					tds[i].innerHTML = remainingDir[ix];
+					remainingDir.splice(ix, 1);
+				}
+			}
+
+            document.getElementById('seed-1a').innerText = [ 'the previous arrow in the sequence', 'this arrow' ][rnd.next(0, 2)];
+            document.getElementById('seed-1b').innerText = [ 'the previous arrow in the sequence', 'this arrow' ][rnd.next(0, 2)];
+            document.getElementById('seed-2a').innerText = [ 'this arrow', 'the next arrow in the sequence', 'the previous arrow in the sequence' ][rnd.next(0, 3)];
+            document.getElementById('seed-2b').innerText = [ 'this arrow', 'the next arrow in the sequence', 'the previous arrow in the sequence' ][rnd.next(0, 3)];
+            document.getElementById('seed-3a').innerText = [ 'this arrow', 'the next arrow in the sequence', 'the previous arrow in the sequence', 'the arrow before the previous in the sequence' ][rnd.next(0, 4)];
+            document.getElementById('seed-3b').innerText = [ 'this arrow', 'the next arrow in the sequence', 'the previous arrow in the sequence', 'the arrow before the previous in the sequence' ][rnd.next(0, 4)];
+		}
+	</script>
+	<style>
+		table.simon-signals {
+			text-align: center;
+			margin: 1cm auto;
+		}
+        table.simon-signals col {
+            width: 1.8cm;
+        }
+        table.simon-signals col:first-child {
+            width: 2.5cm;
+        }
+
+		table.simon-signals th {
+			background-color: #ddd;
+            padding: .3cm 0;
+		}
+		table.simon-signals th.corner {
+			font-size: 18pt;
+			background-color: #bbb;
+		}
+
+        .arrow {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 20"><path d="M 4.3964844,0.75 6.1445312,2.5 0.64648438,8 2,9.3535156 2.1777344,9.1777344 7.5,3.8554688 9.25,5.6035156 V 0.75 Z m 1.2089844,0.5 H 8.75 V 4.3945312 L 7.5,3.1464844 2,8.6445312 1.3554688,8 6.8535156,2.5 Z" /><path d="M 2,19 7.5,13.5 9,15 V 11 H 5 L 6.5,12.5 1,18 Z" /><path d="M 13.75,1 V 1.25 3 h 1.832031 L 11.115234,7.46875 12.53125,8.8847656 17,4.4179688 V 6.25 h 2 V 1 Z m 0.5,0.5 h 4.25 v 4.25 h -1 V 3.2089844 L 12.53125,8.1757812 11.824219,7.46875 16.791016,2.5 H 14.25 Z" /><path d="m 14,11.25 v 1.5 h 2.1875 l -4.71875,4.71875 1.0625,1.0625 L 17.25,13.8125 V 16 h 1.5 v -4.75 z" /><path d="M 29.771484 0.22851562 L 29.296875 0.38671875 C 27.838351 0.87289339 26.416704 1.3476562 24.513672 1.3476562 L 23.214844 1.3476562 L 24.421875 1.828125 C 25.157342 2.1223117 25.627494 2.3701377 26.054688 2.6328125 C 24.598348 4.4036436 22.358568 5.7972784 20.511719 6.7207031 L 20.064453 6.9453125 L 20.511719 7.1679688 C 21.424439 7.6243291 22.37567 8.5755605 22.832031 9.4882812 L 23.054688 9.9355469 L 23.279297 9.4882812 C 24.202721 7.6414318 25.596357 5.4016513 27.367188 3.9453125 C 27.629862 4.3725059 27.877689 4.8426584 28.171875 5.578125 L 28.652344 6.7851562 L 28.652344 5.4863281 C 28.652344 3.5832965 29.127107 2.1616488 29.613281 0.703125 L 29.771484 0.22851562 z M 29.003906 0.99609375 C 28.64668 2.0820855 28.363499 3.2627231 28.253906 4.6210938 C 28.053324 4.1831415 27.855558 3.6884037 27.636719 3.3730469 L 27.486328 3.1582031 L 27.279297 3.3164062 C 25.385924 4.7623221 24.007985 7.0248092 23.03125 8.9257812 C 22.553786 8.1427511 21.857249 7.4462142 21.074219 6.96875 C 22.975191 5.9920153 25.237678 4.614076 26.683594 2.7207031 L 26.841797 2.5136719 L 26.626953 2.3632812 C 26.311596 2.1444419 25.816859 1.9466764 25.378906 1.7460938 C 26.737277 1.6365009 27.917914 1.3533207 29.003906 0.99609375 z " /><path d="m 29.375571,10.624429 c -1.458524,0.486174 -2.917047,0.972349 -4.861746,0.972349 0.871366,0.348546 1.487714,0.636778 1.971287,0.972349 -1.485112,1.944698 -3.915985,3.403222 -5.860683,4.375571 0.972349,0.486175 1.944698,1.458524 2.430873,2.430873 0.972349,-1.944698 2.430873,-4.375571 4.375571,-5.860683 0.335571,0.483573 0.623803,1.099921 0.972349,1.971287 0,-1.944699 0.486175,-3.403222 0.972349,-4.861746 z" /><path d="M 39.927734,0.07226562 34.875,1.9667969 36.078125,2.5664062 33.896484,4.75 h -1 l -2.5,2.5 H 32.75 V 9.6035156 L 33.177734,9.1777344 35.25,7.1035156 v -1 L 37.433594,3.921875 38.033203,5.125 Z M 39.072266,0.92773438 37.966797,3.875 37.568359,3.078125 34.75,5.8964844 v 1 l -1.5,1.4980468 V 6.75 h -1.644531 l 1.498047,-1.5 h 1 L 36.921875,2.4316406 36.125,2.0332031 Z" /><path d="m 33,19 v -2 h -2 l 2,-2 h 1 l 2.5,-2.5 -1,-0.5 4,-1.5 -1.5,4 -0.5,-1 L 35,16 v 1 z" /></svg>');
+            background-size: 4cm 2cm;
+            width: 1cm;
+            height: 1cm;
+            display: block;
+            margin: 0 auto;
+        }
+
+        body.ruleseed-active .rule {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+	</style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Signals</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Signals.svg" class="diagram">
+                <h2>On the Subject of Simon Signals</h2>
+                <p class="flavour-text">Because “Points” doesn’t start with an S.</p>
+                <ul>
+                    <li>A cyclic sequence of arrows will flash on the display.</li>
+					<li>Find each arrow’s new direction based on the shape, color, and initial direction of some arrow.</li>
+					<li>Use the clockwise/counter-clockwise buttons to change the direction of the arrow that is currently showing.</li>
+                    <li>If an arrow is pointing in its initial direction, its color is red, green, blue or gray. Otherwise, the color is modified to pink, yellow, cyan or white, respectively.</li>
+					<li>Press SUBMIT to advance to the next stage. There are three stages. The LEDs on the top of the module indicate the number of completed stages. The arrows’ current directions become their new initial directions and an additional arrow is added to the sequence at each stage.</li>
+				</ul>
+				<h3>Finding the Arrow Direction</h3>
+                <p>For every arrow:</p>
+				<ul>
+                    <li>Find the table corresponding to the number of directions the arrow can point in.</li>
+                    <li>Find the column corresponding to the shape of:
+                        <ul>
+                            <li>Stage 1: <span class='rule' id='seed-1a'>this arrow</span></li>
+                            <li>Stage 2: <span class='rule' id='seed-2a'>the previous arrow in the sequence</span></li>
+                            <li>Stage 3: <span class='rule' id='seed-3a'>the previous arrow in the sequence</span></li>
+                        </ul>
+                    </li>
+                    <li>Find the row corresponding to the color of:
+                        <ul>
+                            <li>Stage 1: <span class='rule' id='seed-1b'>this arrow</span></li>
+                            <li>Stage 2: <span class='rule' id='seed-2b'>the previous arrow in the sequence</span></li>
+                            <li>Stage 3: <span class='rule' id='seed-3b'>the arrow before the previous in the sequence</span></li>
+                        </ul>
+                    </li>
+                    <li>If the table cell is a number, rotate the current arrow that many places clockwise (positive) or counter-clockwise (negative).</li>
+                    <li>If the cell is an arrow, set the arrow to the indicated direction.</li>
+				</ul>
+			</div>
+        <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Signals</span>
+            </div>
+            <div class="page-content">
+				<table class="simon-signals simon-signals-shape simon-signals-3">
+                    <colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+					<tr>
+                        <th class="corner">3</th>
+                        <th><div class='arrow' style='background-position:  0cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position:  0cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm -1cm'></div></th>
+					</tr>
+					<tr>
+						<th>Red/<br>Pink</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Green/<br>Yellow</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Blue/<br>Cyan</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Gray/<br>White</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+				</table>
+				<table class="simon-signals simon-signals-shape simon-signals-4">
+                    <colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+					<tr>
+                        <th class="corner">4</th>
+                        <th><div class='arrow' style='background-position:  0cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position:  0cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm -1cm'></div></th>
+					</tr>
+					<tr>
+						<th>Red/<br>Pink</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Green/<br>Yellow</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Blue/<br>Cyan</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Gray/<br>White</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+				</table>
+			</div>
+        <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Signals</span>
+            </div>
+            <div class="page-content">
+				<table class="simon-signals simon-signals-shape simon-signals-5">
+                    <colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+					<tr>
+                        <th class="corner">5</th>
+                        <th><div class='arrow' style='background-position:  0cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position:  0cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm -1cm'></div></th>
+					</tr>
+					<tr>
+						<th>Red/<br>Pink</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Green/<br>Yellow</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Blue/<br>Cyan</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Gray/<br>White</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+				</table>
+				<table class="simon-signals simon-signals-shape simon-signals-6">
+                    <colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+					<tr>
+                        <th class="corner">6</th>
+                        <th><div class='arrow' style='background-position:  0cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position:  0cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -1cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -2cm -1cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm  0cm'></div></th>
+                        <th><div class='arrow' style='background-position: -3cm -1cm'></div></th>
+					</tr>
+					<tr>
+						<th>Red/<br>Pink</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Green/<br>Yellow</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Blue/<br>Cyan</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+					<tr>
+						<th>Gray/<br>White</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+					</tr>
+				</table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>

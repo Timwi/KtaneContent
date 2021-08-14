@@ -1,0 +1,448 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Not Coordinates — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        div.column {
+            float: left;
+            margin: 0 0 .7em;
+        }
+        table {
+            border: none;
+        }
+        table.grid {
+            border-collapse: separate;
+            border-spacing: .5mm;
+        }
+        td.corner {
+            border: none;
+        }
+
+        input {
+            width: 25px;
+        }
+
+        .input-grid, .input-grid td, .input-grid th {
+            border: none;
+            text-align: center;
+        }
+
+        .marked.cell {
+            background-color: rgba(0, 0, 255, 0.25) !important; /* I'm sorry. */
+        }
+
+        .selected, .selected.cell {
+            background-color: rgba(255, 255, 0, 0.5) !important; /* Really sorry. */
+        }
+
+        .grid td {
+            padding: 0px 0px;
+            width: 0px;
+            height: 0px;
+            transition: padding 0.5s, border-color 0.5s, font-size 0.5s, background-color 0.5s;
+            border: 1px solid rgba(0, 0, 0, 0);
+            background-color: rgba(0, 0, 0, 0);
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            font-size: 0;
+            line-height: 0;
+            max-width: 0;
+        }
+
+        .grid td.cell {
+            font-size: initial;
+            padding: 20px 20px;
+            border-color: #222;
+        }
+
+        .grid td span {
+            position: relative;
+            left: -5px;
+        }
+
+        .input {
+            float: left;
+            margin-right: 5px;
+            padding-top: 10px;
+        }
+
+        .input.width, .input.height {
+            padding: 10px;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button.arrow-down {
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        /* .page-content {
+            position: relative;
+        } */
+
+        /* Side grid */
+        .section {
+            display: grid !important; /* !important because multipage changes the section to flex. */
+            grid-template-columns: 0.5fr 1fr;
+            gap: 1em;
+            margin: 1em;
+        }
+
+        .page {
+            margin: 0;
+            width: auto;
+            min-width: 200mm;
+        }
+
+        .left-wrapper {
+            height: calc(100vh - 2em);
+            max-width: 110mm;
+        }
+
+        .center {
+            padding: 10px;
+            margin: 1px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            gap: 5px;
+        }
+
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: min-content min-content;
+            grid-template-rows: min-content min-content;
+        }
+
+        /* Only show it as a "floating page" if we're displayed separate pages. */
+        @media screen and (min-width: 900px) {
+            .center {
+                margin: 0px;
+                border: 1px solid #222;
+                box-shadow: #222 0.0em 0em 0.6em;
+                background: white;
+            }
+        }
+
+        .page-bg-01 {
+            position: relative;
+            right: 92mm;
+        }
+        .page-bg-02 {
+            position: relative;
+            left: 112.5mm;
+        }
+
+        /* Only if the grid can fit on the page should it be sticky. */
+        @media screen and (min-height: 690px) {
+            .left-wrapper {
+                position: sticky;
+                top: 1em;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: calc(100vh - 2em);
+                max-width: 110mm;
+            }
+        }
+
+        table.double-oh td {
+            height: 35px;
+            width: 35px;
+            white-space: nowrap;
+            border-right: .5mm dotted black;
+            border-bottom: .5mm dotted black;
+        }
+        table.double-oh tr:nth-child(3n) th {
+            border-bottom: 1.5mm solid black;
+        }
+        table.double-oh th:nth-child(3n) {
+            border-right: 1.5mm solid black;
+        }
+        table.double-oh tr:nth-child(1) th {
+            border-top: 1.5mm solid black;
+        }
+        table.double-oh th:nth-child(1) {
+            border-left: 1.5mm solid black;
+        }
+        table.double-oh img {
+            width: 12mm;
+        }
+    </style>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            var grid = $(".grid");
+            var selected;
+            var helm = $(".height");
+            var welm = $(".width");
+            let maxCoords = 14;
+
+            $(document).click(function() {
+                selected = null;
+
+                updateSelection();
+            }).keydown(function(event) {
+                if (!selected) {
+                    selected = grid;
+                    // updateSelection();
+                }
+
+                var n;
+                if (event.key == "w") {
+                    selected = welm;
+                    updateSelection();
+                } else if (event.key == "h") {
+                    selected = helm;
+                    updateSelection();
+                } else if (selected.hasClass("cell")) {
+                    n = parseInt(event.key);
+                    if (n && n < 10) {
+                        $(".grid td.marked span").each(function() {
+                            if ($(this).text() == n.toString()) {
+                                $(this).text("").parent().removeClass("marked");
+                            }
+                        });
+                        selected.children("span").text(n);
+                        selected.addClass("marked");
+                    } else if (event.key == "Backspace" || event.key == "Delete") {
+                        selected.children("span").text("");
+                        selected.removeClass("marked");
+                    }
+                } else {
+                    n = parseInt(event.key);
+                }
+            });
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                }
+            }
+
+            for (var i = 0; i < 9; i++) {
+                var row = $("<tr>").appendTo(grid);
+                for (var n = 0; n < 9; n++) {
+                    $("<td>").appendTo(row).click(function(event) {
+                        selected = $(this);
+                        updateSelection();
+
+                        event.stopPropagation();
+                    }).contextmenu(function(event) {
+                        var span = $(this).children("span");
+                        if (span.text() == "") {
+                            $(".grid td.marked span").each(function() {
+                                if ($(this).text() == mark.toString()) {
+                                    $(this).text("").parent().removeClass("marked");
+                                }
+                            });
+                            span.text(mark);
+                            mark = Math.min(mark + 1, maxCoords);
+                            $(".mark").text(mark);
+                            $(this).addClass("marked");
+                        } else {
+                            span.text("");
+                            $(this).removeClass("marked");
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }).append($("<span>"));
+                }
+            }
+
+            var width = parseInt(welm.text());
+            var height = parseInt(helm.text());
+            var mark = 1;
+
+            function updateGrid() {
+                width = Math.min(Math.max(width, 3), 9);
+                height = Math.min(Math.max(height, 3), 9);
+
+                welm.text(width);
+                helm.text(height);
+                grid.children().each(function(index) {
+                    var row = $(this);
+                    row.children().each(function(index2) {
+                        $(this).toggleClass("cell", index2 < width && index < height);
+                    });
+                });
+            }
+            updateGrid();
+
+            $(".width, .height").click(function(event) {
+                selected = $(this);
+                updateSelection();
+
+                event.stopPropagation();
+            });
+
+            function resetGrid() {
+                $(".marked").removeClass("marked").children("span").text("");
+            }
+
+            $(".reset").click(function() {
+                $(".width, .height").text(5);
+                mark = 1;
+                $(".mark").text(mark);
+                width = 9;
+                height = 9;
+                updateGrid();
+                resetGrid();
+            });
+
+            $(".reset-grid").click(function() {
+                resetGrid();
+            });
+
+            $(".mark-down").click(function() {
+                if (mark > 1) {
+                    mark--;
+                    $(".mark").text(mark);
+                }
+            });
+
+            $(".mark-up").click(function() {
+                if (mark < maxCoords) {
+                    mark++;
+                    $(".mark").text(mark);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+        <div class="section">
+            <div class="left-wrapper">
+                <div class="center">
+                    <table class="input-grid">
+                        <tr>
+                            <th>Marker</th>
+                            <td><button class="mark-down">←</button></td>
+                            <td><span class="mark">1</span></td>
+                            <td><button class="mark-up">→</button></td>
+                        </tr>
+                        <tr>
+                            <th>Grid Size</th>
+                            <td>Width</td>
+                            <th class="width">9</th>
+                            <td>Height</td>
+                            <th class="height">9</th>
+                        </tr>
+                    </table>
+                    <div class="grid-wrapper">
+                        <table class="grid"></table>
+                    </div>
+                    <div>
+                        <button class="reset-grid">Reset Grid</button>
+                        <button class="reset">Reset</button>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Input</th>
+                            <th>Action</th>
+                        </tr>
+                        <tr>
+                            <td>Backspace<br>Delete<br>Right-Click</td>
+                            <td>Clears a square.<br>(Only if a number is present)</td>
+                        </tr>
+                        <tr>
+                            <td>1-9<br>Right-Click</td>
+                            <td>Marks a square with a number.<br>(Only if a number is absent)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Not Coordinates</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Not Coordinates.svg" class="diagram">
+                    <h2>On the Subject of Not Coordinates</h2>
+                    <p class="flavour-text">Column second or row second?</p>
+                <p>Picture a 9&#x00d7;9 grid. Determine the positions on the grid that are indicated by the module.</p>
+                <p>Each display corresponds to a unique position in the grid. Three of the positions lie on three vertices of a square within the grid. Submit the three displays that correspond to those positions.</p>
+                <p>Use the left and right arrows to cycle through the list of displays and the middle button to submit the current display.</p>
+                <h4>Grid position formats</h4>
+                <table style = "font-size:15px;">
+                    <tr><th>[<var>x</var>,<var>y</var>]<td>Column, then row; top-left is [0,0].</td></tr>
+                    <tr><th style="width:30mm"><var>letter</var> <var>number</var><td>Column, then row; top-left is A1.</td></tr>
+                    <tr><th>&lt;<var>x</var>, <var>y</var>&gt;<td>Row, then column; top-left is &lt;0, 0&gt;.</td></tr>
+                    <tr><th><var>x</var>, <var>y</var><td>Row, then column; top-left is 1, 1.</td></tr>
+                    <tr><th>(<var>x</var>,<var>y</var>)<td>Column, then row; bottom-left is (0,0).</td></tr>
+                    <tr><th><var>letter</var>-<var>number</var><td>Column, then row; bottom-left is A-1.</td></tr>
+                    <tr><th>“<var>x</var>, <var>y</var>”<td>Row, then column; bottom-left is “0, 0”.</td></tr>
+                    <tr><th><var>x</var>/<var>y</var><td>Row, then column; bottom-left is 1/1.</td></tr>
+                    <tr><th>[<var>x</var>]<td>Cell number in scanline order, top-left is [0].</td></tr>
+                    <tr><th><var>x</var>th<td>Cell number in scanline order, top-left is 1st.</td></tr>
+                    <tr><th>#<var>x</var><td>Cell number in Cartesian order, bottom-left is #1.</td></tr>
+                    <tr><th>四十七<td>Cell number in Chinese reading order, top-right is 一.<br>(The example shown is the number 47.)</td></tr>
+                    <tr><th><var>x cardinal</var>, <var>y cardinal</var></th><td>The number of spaces, in the specified direction(s), from the centre of the grid.<br>"centre" is displayed if the corresponding position is the centre of the grid.</td></tr>
+                    <tr><th><var>cardinal from cardinal</var></th><td>The second cardinal is the relative position of the 3&#x00d7;3 subgrid from the centre.<br>The first cardinal is the relative position of the cell from the centre of the subgrid.<br>If only one cardinal is displayed, the cell is at the centre of the displayed subgrid.</td></tr>
+                </table>
+                </div>
+                <div class="page-footer relative-footer">Page 1 of 2</div>
+           </div>
+           <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Not Coordinates</span>
+                </div>
+                <div class="page-content">
+                <p>Once all three correct displays have been submitted, the display will change to one of the shapes in the grid below.</p>
+                <p>Each of the following actions toggles the display in one of the following ways, wrapping around the edges of the grid/subgrids:</p>
+                <table style="width:48%; font-size:16px; float:left; margin-bottom:30px;">
+                <tr><th>Pressing left when the number of seconds left on the timer is even-</th></tr>
+                <tr><th>Pressing left when the number of seconds left on the timer is odd-</th></tr>
+                <tr><th>Pressing right when the number of seconds left on the timer is even-</th></tr>
+                <tr><th>Pressing right when the number of seconds left on the timer is odd-</th></tr>
+                </table>
+                <table style="width:48%; font-size:16px; float:right; margin-bottom:30px;">
+                <tr><th>-moves to the cell in same position in the subgrid to its left/right.</th></tr>
+                <tr><th>-moves to the cell in same position in the subgrid to its top/bottom.</th></tr>
+                <tr><th>-moves to the cell to its left/right within the current subgrid.</th></tr>
+                <tr><th>-moves to the cell to its top/bottom within the current subgrid.</th></tr>
+                </table>
+                <p>Navigate to the cell where the fourth vertex of the square, that was not originally displayed, is located and submit the displayed shape.</p>
+                <table class="double-oh">
+                <tr><th><img src="img/Not Coordinates/60.svg" width="50"></th><th><img src="img/Not Coordinates/02.svg" width="50"></th><th><img src="img/Not Coordinates/15.svg" width="50"></th><th><img src="img/Not Coordinates/57.svg" width="50"></th><th><img src="img/Not Coordinates/36.svg" width="50"></th><th><img src="img/Not Coordinates/83.svg" width="50"></th><th><img src="img/Not Coordinates/48.svg" width="50"></th><th><img src="img/Not Coordinates/71.svg" width="50"></th><th><img src="img/Not Coordinates/24.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/88.svg" width="50"></th><th><img src="img/Not Coordinates/46.svg" width="50"></th><th><img src="img/Not Coordinates/31.svg" width="50"></th><th><img src="img/Not Coordinates/70.svg" width="50"></th><th><img src="img/Not Coordinates/22.svg" width="50"></th><th><img src="img/Not Coordinates/64.svg" width="50"></th><th><img src="img/Not Coordinates/07.svg" width="50"></th><th><img src="img/Not Coordinates/55.svg" width="50"></th><th><img src="img/Not Coordinates/13.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/74.svg" width="50"></th><th><img src="img/Not Coordinates/27.svg" width="50"></th><th><img src="img/Not Coordinates/53.svg" width="50"></th><th><img src="img/Not Coordinates/05.svg" width="50"></th><th><img src="img/Not Coordinates/41.svg" width="50"></th><th><img src="img/Not Coordinates/18.svg" width="50"></th><th><img src="img/Not Coordinates/86.svg" width="50"></th><th><img src="img/Not Coordinates/30.svg" width="50"></th><th><img src="img/Not Coordinates/62.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/52.svg" width="50"></th><th><img src="img/Not Coordinates/10.svg" width="50"></th><th><img src="img/Not Coordinates/04.svg" width="50"></th><th><img src="img/Not Coordinates/43.svg" width="50"></th><th><img src="img/Not Coordinates/85.svg" width="50"></th><th><img src="img/Not Coordinates/37.svg" width="50"></th><th><img src="img/Not Coordinates/61.svg" width="50"></th><th><img src="img/Not Coordinates/28.svg" width="50"></th><th><img src="img/Not Coordinates/76.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/33.svg" width="50"></th><th><img src="img/Not Coordinates/65.svg" width="50"></th><th><img src="img/Not Coordinates/78.svg" width="50"></th><th><img src="img/Not Coordinates/21.svg" width="50"></th><th><img src="img/Not Coordinates/00.svg" width="50"></th><th><img src="img/Not Coordinates/56.svg" width="50"></th><th><img src="img/Not Coordinates/12.svg" width="50"></th><th><img src="img/Not Coordinates/44.svg" width="50"></th><th><img src="img/Not Coordinates/87.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/47.svg" width="50"></th><th><img src="img/Not Coordinates/81.svg" width="50"></th><th><img src="img/Not Coordinates/26.svg" width="50"></th><th><img src="img/Not Coordinates/68.svg" width="50"></th><th><img src="img/Not Coordinates/14.svg" width="50"></th><th><img src="img/Not Coordinates/72.svg" width="50"></th><th><img src="img/Not Coordinates/50.svg" width="50"></th><th><img src="img/Not Coordinates/03.svg" width="50"></th><th><img src="img/Not Coordinates/35.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/06.svg" width="50"></th><th><img src="img/Not Coordinates/38.svg" width="50"></th><th><img src="img/Not Coordinates/42.svg" width="50"></th><th><img src="img/Not Coordinates/84.svg" width="50"></th><th><img src="img/Not Coordinates/63.svg" width="50"></th><th><img src="img/Not Coordinates/20.svg" width="50"></th><th><img src="img/Not Coordinates/75.svg" width="50"></th><th><img src="img/Not Coordinates/17.svg" width="50"></th><th><img src="img/Not Coordinates/51.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/25.svg" width="50"></th><th><img src="img/Not Coordinates/73.svg" width="50"></th><th><img src="img/Not Coordinates/67.svg" width="50"></th><th><img src="img/Not Coordinates/16.svg" width="50"></th><th><img src="img/Not Coordinates/58.svg" width="50"></th><th><img src="img/Not Coordinates/01.svg" width="50"></th><th><img src="img/Not Coordinates/34.svg" width="50"></th><th><img src="img/Not Coordinates/82.svg" width="50"></th><th><img src="img/Not Coordinates/40.svg" width="50"></th></tr>
+                <tr><th><img src="img/Not Coordinates/11.svg" width="50"></th><th><img src="img/Not Coordinates/54.svg" width="50"></th><th><img src="img/Not Coordinates/80.svg" width="50"></th><th><img src="img/Not Coordinates/32.svg" width="50"></th><th><img src="img/Not Coordinates/77.svg" width="50"></th><th><img src="img/Not Coordinates/45.svg" width="50"></th><th><img src="img/Not Coordinates/23.svg" width="50"></th><th><img src="img/Not Coordinates/66.svg" width="50"></th><th><img src="img/Not Coordinates/08.svg" width="50"></th></tr>
+                </table>
+                <p><strong>Note:</strong> Some of the cells cause the display to glitch, obscuring the left and/or right side of the displayed shape.</p>
+                </div>
+                <div class="page-footer relative-footer">Page 2 of 2</div>
+            </div>
+        </div>
+</body>
+</html>
