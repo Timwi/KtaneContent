@@ -1,0 +1,525 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>1D Chess — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            var pieces = [
+                "wtk", "wtq", "wtn", "wtb", "wtr", "wtp",
+                "bkk", "bkq", "bkn", "bkb", "bkr", "bkp"
+            ]
+            var selected = "";
+            var toMove = 0;
+            var start;
+            let saveStates = [];
+            let currentState = 0;
+
+            $(document).click(function() {
+                start = null;
+            });
+
+            var row;
+            var chessboard = $(".chessboard");
+            let y = 1;
+            var squares = 9;
+
+            row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+            for (var i = 0; i < squares; i++) {
+                $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
+                    if (i == (squares - 1)) {
+                        $(this).addClass("label9");
+                    }
+                });
+            }
+            row = $("<div>").addClass("chess-row").appendTo(chessboard);
+            $("<div>").addClass("square").appendTo(row);
+            for (let x = 0; x < squares; x++) {
+                $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "white" : "green")).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                    if (x == (squares - 2)) {
+                        $(this).addClass("square8");
+                    } else if (x == (squares - 1)) {
+                        $(this).addClass("square9");
+                    }
+
+                    element.mouseup(function(event) {
+                        if (start) { // Just in case.
+                            var changed = [];
+                            var a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                if (selected == "moving") {
+                                    changed.push([x, a]);
+                                    if (a != b) { changed.push([x, b]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([x, i]);
+                                    }
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                if (selected == "moving") {
+                                    changed.push([a, y]);
+                                    if (a != b) { changed.push([b, y]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([i, y]);
+                                    }
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                var dist = Math.abs(start[0] - x);
+                                var dirx = (start[0] < x) ? 1 : -1;
+                                var diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+
+                            if (changed.length > 0) {
+                                var from = chessboard.children().eq(start[1]).children().eq(start[0] + 1);
+                                var first = from.hasClass("occupied");
+                                let toMove = hasWhichPieceClass(from);
+                                changed.forEach(function(pos) {
+                                    var elm = chessboard.children().eq(pos[1]).children().eq(pos[0] + 1);
+                                    if (selected == "marking") {
+                                        if (changed.length == 1) {
+                                            elm.toggleClass("occupied");
+                                        } else {
+                                            elm.toggleClass("occupied", !first);
+                                        }
+                                    } else if (selected == "moving") {
+                                        if (changed.length > 1) {
+                                            if (pos[0] == start[0] && pos[1] == start[1]) {
+                                                removePieceClass(elm);
+                                            } else {
+                                                removePieceClass(elm);
+                                                elm.addClass(pieces[toMove]);
+                                            }
+                                        }
+                                    } else if (changed.length == 1) {
+                                        var whichPiece = hasWhichPieceClass(elm);
+                                        if (whichPiece >= 0) {
+                                            elm.removeClass(pieces[whichPiece]);
+                                            if (pieces[whichPiece] != selected) {
+                                                elm.addClass(selected);
+                                            }
+                                        } else {
+                                            elm.addClass(selected);
+                                        }
+                                    }
+                                });
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+
+                    if (x === 0) {
+                        element.css("border-left-width", "2px");
+                    } else if (x == (squares - 1)) {
+                        element.addClass("last-square");
+                    }
+
+                    element.css("border-top-width", "2px");
+                    element.parent().addClass("extra-height");
+                    element.css("border-bottom-width", "2px");
+                });
+            }
+
+            function removePieceClass(elem) {
+                pieces.forEach(function(val) {
+                    elem.removeClass(val);
+                });
+            }
+
+            function hasWhichPieceClass(elem) {
+                for (let i = 0; i < pieces.length; i++) {
+                    if (elem.hasClass(pieces[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            var chesspieces1 = $(".chess-pieces.r1");
+            var chesspieces2 = $(".chess-pieces.r2");
+            $("<div>").addClass("square").appendTo(chesspieces1);
+            $("<div>").addClass("square").appendTo(chesspieces2);
+            for (let i = 0; i < pieces.length; i++) {
+                 $("<div>").addClass("piece square").appendTo(i < 6 ? chesspieces1 : chesspieces2).click(function() {
+                    $(".piece").removeClass("selected");
+                    $(this).addClass("selected");
+                    selected = pieces[i];
+                }).addClass(pieces[i]);
+            }
+            $(".wtk").click();
+            $("<div>").addClass("piece square").css("background-color", "rgba(255, 105, 105, 1)").appendTo(chesspieces1).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "marking";
+            });
+            $("<div>").addClass("piece square move").text("Move").appendTo(chesspieces2).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "moving";
+            });
+
+            $(".reset").click(function() {
+                $(".green.square, .white.square").each(function(_, e) {
+                    removePieceClass($(e));
+                }).removeClass("occupied");
+            });
+
+            $(".reset-all").click(function() {
+                $(".green.square, .white.square").each(function(_, e) {
+                    removePieceClass($(e));
+                }).removeClass("occupied");
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $(".spacesButton").click(function() {
+                $(".square8").toggleClass("last-square");
+                $(".square9").toggleClass("invisible");
+                $(".label9").toggleClass("invisible");
+            });
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($(".chessboard .square")).map(x => $(x)).map(x => x.attr("class") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(".chessboard .square").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .chess-board {
+            width: 424px;
+        }
+
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+        .chess-row.extra-height {
+            height: 62px;
+        }
+        .chess-row.letters {
+            margin-left: 60px;
+        }
+
+        .chess-pieces {
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            text-align: center;
+            border: black 0px solid;
+            cursor: default;
+        }
+
+        .last-square {
+            border-right-width: 2px;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+
+        @media screen and (max-width: 600px) {
+            .chess-row, .chess-pieces {
+                height: 40px;
+            }
+            .chess-row.extra-height {
+                height: 42px;
+            }
+            .chess-row.letters {
+                margin-left: 40px;
+            }
+
+            .square {
+                width: 40px;
+                height: 40px;
+                font-size: 40px;
+            }
+        }
+
+        .white.square, .green.square {
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .green {
+            background-color: #008000;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .white.occupied {
+            background-color: rgba(255, 105, 105, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .green.occupied {
+            background-color: rgba(150, 0, 0, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+        }
+        .move {
+            border: 1px solid black;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+
+        .bkk { background-image: url("img/1D%20Chess/bk.svg"); }
+        .bkq { background-image: url("img/1D%20Chess/bq.svg"); }
+        .bkn { background-image: url("img/1D%20Chess/bn.svg"); }
+        .bkb { background-image: url("img/1D%20Chess/bb.svg"); }
+        .bkr { background-image: url("img/1D%20Chess/br.svg"); }
+        .bkp { background-image: url("img/1D%20Chess/bp.svg"); }
+        .wtk { background-image: url("img/1D%20Chess/wk.svg"); }
+        .wtq { background-image: url("img/1D%20Chess/wq.svg"); }
+        .wtn { background-image: url("img/1D%20Chess/wn.svg"); }
+        .wtb { background-image: url("img/1D%20Chess/wb.svg"); }
+        .wtr { background-image: url("img/1D%20Chess/wr.svg"); }
+        .wtp { background-image: url("img/1D%20Chess/wp.svg"); }
+        .bkk, .bkq, .bkn, .bkb, .bkr, .bkp, .wtk, .wtq, .wtn, .wtb, .wtr, .wtp {
+            background-size: contain;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+
+        table.chess h4 {
+            margin: 0;
+        }
+        table.chess p {
+            margin: 0;
+        }
+        li {
+            margin-bottom: 16px;
+        }
+
+        .table-piece {
+            width: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">1D Chess</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/1D Chess.svg" class="diagram">
+                <h2>On the Subject of 1D Chess</h2>
+                <p class="flavour-text">Whatever you do, <u><strong>don't panic</strong></u>.</p>
+
+                <p>The module has 8 or 9 tiles and a blackboard overlaid on a wooden backing. When the lights come on,
+                    it will attempt to generate a puzzle. It may take a while.</p>
+
+                <p>Once a valid position has been found, the blackboard will update with "Mate in #", # being a number.
+                </p>
+
+                <p>To solve this module, you <u><strong>must</strong></u> beat Rustmate, a computer chess engine, at
+                    their own game. You cannot use more moves than the blackboard specifies. Losing/drawing the game
+                    will incur a strike and reset the module.</p>
+
+                <h3>Game Rules</h3>
+
+                <ul>
+                    <li>
+                        6 chess pieces are divided into white and black sets. The game is played on a 1-dimensional
+                        board of 8 or 9 squares, detonated A-I, left-to-right. Any corner turns on it are treated as
+                        straight lines.
+                    </li>
+                    <li>
+                        When the king is attacked, they are put in <i>check</i>, the player being
+                        checked must go out of check. A player cannot put themselves in check.
+                    </li>
+                    <li>
+                        To win the game of 1D Chess, a player must put the opponent in <i>Checkmate</i>, where the
+                        opponent is in check, and cannot move out of check.
+                        <ul>
+                            <li>If the king is safe, but the player cannot make any moves, this is called
+                                <i>Stalemate</i> and is a draw.
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <th>Icon</th>
+                        <th>Movement</th>
+                    </tr>
+                    <tr>
+                        <td><u><strong>K</strong></u>ing</td>
+                        <td><img src="img/1D Chess/bk.svg" class="table-piece" title="King"></td>
+                        <td>1 space forward/backward.</td>
+                    </tr>
+                    <tr>
+                        <td>K<u><strong>n</strong></u>ight</td>
+                        <td><img src="img/1D Chess/bn.svg" class="table-piece" title="Knight"></td>
+                        <td>2 spaces forward/backwards, can jump over another piece.</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>P</strong></u>awn</td>
+                        <td><img src="img/1D Chess/bp.svg" class="table-piece" title="Pawn"></td>
+                        <td>1-2 spaces toward the opponent king.</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>B</strong></u>ishop</td>
+                        <td><img src="img/1D Chess/bb.svg" class="table-piece" title="Bishop"></td>
+                        <td>Any <u><strong>even-numbered</strong></u> spaces forward/backwards.</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>R</strong></u>ook</td>
+                        <td><img src="img/1D Chess/br.svg" class="table-piece" title="Rook"></td>
+                        <td>Any <u><strong>odd-numbered</strong></u> spaces forward/backwards.</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>Q</strong></u>ueen</td>
+                        <td><img src="img/1D Chess/bq.svg" class="table-piece" title="Queen"></td>
+                        <td>Any spaces forward/backwards.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">1D Chess</span>
+            </div>
+            <div class="page-content">
+                <h3>Chessboard</h3>
+                <p>Use the following interactive graphic as a chessboard.
+                <p>Select one of the tools below the chessboard then click on the chessboard to use that tool.
+                <br>
+                Use one of the chess pieces tools to place/remove a piece.
+                <br>
+                Use the marker tool to mark/unmark a square.
+                <br>
+                Drag using the marker tool to mark/unmark several squares.
+                <br>
+                You can save the current state of the board, toggle the 9th square, <br>
+                reset the board, or reset everything using the buttons below the board.
+                <br>
+                <b>Tip:</b> To move a piece on the board, keep that piece type selected below the board, then
+                click the piece you want to move and then where you want to move it to.
+                <p><button class="spacesButton">8/9 squares</button></p>
+                <div class="chessboard"></div>
+                <div class="chess-pieces r1"></div>
+                <div class="chess-pieces r2"></div>
+                <br>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div>
+                    <button class="reset-all">Reset Saves</button>
+                    <button class="reset">Reset Board</button>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+
+</html>
