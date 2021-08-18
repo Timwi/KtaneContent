@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Simón canta — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table {
+            border: none;
+        }
+        td.corner {
+            border: none;
+        }
+        li {
+            margin: .75em 0;
+        }
+        h3 {
+            margin: 1.5em 0 .5em;
+        }
+        table.binary td:nth-child(3n+1):not(:first-child), table.binary th:nth-child(3n+1):not(:first-child) {
+            border-left: 3px solid black;
+        }
+        .keys-diagram {
+            display: block;
+            width: 10cm;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            var candidateFallbacks = rnd.shuffleFisherYates([
+                "Hay un número impar de pilas",
+                "Hay un número impar de indicadores",
+                "Hay un número impar de puertos",
+                "Hay un número impar de letras en el número de serie",
+                "Hay un número impar de placas",
+                "El primer dígito del número de serie es impar",
+                "Hay un número impar de tipos de puertos",
+                "El último dígito del número de serie es impar",
+                "Hay un número impar de indicadores encendidos",
+                "Hay un número impar de indicadores apagados",
+                "Hay un número impar de portapilas",
+                "Hay un número par de pilas",
+                "El último dígito del número de serie es par",
+                "El primer dígito del número de serie es par",
+                "Hay un número par de placas",
+                "Hay un número par de indicadores",
+                "Hay un número par de puetos",
+                "Hay un número par de tipos de puertos",
+                "Hay un número par de letras en el número de serie",
+                "Hay un número par de indicadores encendidos",
+                "Hay un número par de indicadores apagados",
+                "Hay un número par de portapilas",
+            ]);
+
+            var candidateRules = rnd.shuffleFisherYates([
+                "Estamos en la {fase} fase del módulo.",
+                "Si este es el {digito} dígito en este número binario de 4 dígitos: {comodin}. En caso contrario: el {digito} número de este color se refiere a una nota {sabor}.",
+                "Si este es el primero de los 8 dígitos: {comodin}. En caso contrario: el dígito previo fue {0o1}.",
+                "Si no hay indicadores: {comodin}. En caso contrario: la posición de este dígito en este número de 4 dígitos coincide con el número de indicadores apagados o encendidos, cual sea más abundante.",
+                "La posición de este dígito en este número de 4 dígitos coincide con el número de placas.",
+                "Si estamos en la primera fase:  {comodin}. n caso contrario: aparecieron exactamente {3a5} colores consecutivos en la fase anterior que se referían a una nota {sabor}.",
+                "Si no hay placas: {comodin}. En caso contrario: La posición de este dígito número de 4 dígitos coincide con el número de puertos en la placa que más puertos tenga.",
+                "La fase actual coincide con el número de {elemento}.",
+                "Si no hay portapilas: {comodin}. En caso contrario: la posición de este dígito en este número de 4 dígitos coincide con el número de baterías.",
+                "Si este es el {primer} o {segundo} dígito en este número binario de 4 dígitos.",
+                "Another color in this 4-digit number refers to {nota1} or {nota2}.",
+                "El número de este dígito hubiera sido un número primo si este dígito fuese un 1.",
+                "Si estamos en la primera fase: {comodin}. En caso contrario: {operador} de los números de 4 dígitos de la fase anterior {fue-fueron} menores que 5.",
+                "No estamos en la {fase} fase del módulo.",
+                "Si estamos en la primera fase:  {comodin}. Otherwise: aparecieron dos colores consecutivos en la fase anterior que se referían a una nota {sabor}.",
+                "Un color en el otro número de 4 dígitos se refiere a {nota3} o {nota4}.",
+                "El color del {digito} del otro número se refiere a la nota {sabor}.",
+                "Este es el {tercer} o {cuarto} dígito en este número binario de 4 dígitos.",
+            ]);
+
+            var candidateElements = rnd.shuffleFisherYates([
+                "baterías",
+                "portapilas",
+                "indicadores",
+                "letras en el número de serie menos uno",
+                "indicadores apagados",
+                "puertos",
+                "tipos de puerto",
+                "placas",
+                "dígitos en el número de serie menos uno",
+                "indicadores encendidos",
+            ]);
+
+            var fallbackIx = 0;
+            var elementIx = 0;
+            var digitOrder = rnd.shuffleFisherYates(["último", "segundo", "primero", "tercero"]);
+            var keys = rnd.shuffleFisherYates("do,do#/re♭,fa#/sol♭,re#/mi♭,mi,la#/si♭,re,sol,sol#/la♭,la,fa,si".split(','));
+            var operator = rnd.next(0, 4);
+
+            var tds = document.getElementsByClassName('regla');
+            for (var i = 0; i < 12; i++)
+            {
+                var digit = ["tercero", "segundo", "primer", "cuarto"][rnd.next(0, 4)];
+                tds[i].innerText = candidateRules[i].replace(/\{(.*?)\}/g, (_, varName) => {
+                    switch (varName)
+                    {
+                        case "primer": return digitOrder[0];
+                        case "segundo": return digitOrder[1];
+                        case "tercer": return digitOrder[2];
+                        case "cuarto": return digitOrder[3];
+
+                        case "digito": return digit;
+                        case "0o1": return 1-rnd.next(0, 2);
+                        case "elemento": return candidateElements[elementIx++];
+                        case "fase": return ["primera", "tercera", "segunda"][rnd.next(0, 3)];
+                        case "sabor": return ["bemol/sostenido", "natural"][rnd.next(0, 2)];
+                        case "3a5": return rnd.next(3, 6);
+                        case "operador": return ["Ninguno", "Uno, pero no los dos,", "Uno (o ambos)", "Ambos"][operator];
+                        case "fue-fueron": return ["fueron", "fue", "fue", "fueron"][operator];
+                        case "nota1": return keys[0];
+                        case "nota2": return keys[1];
+                        case "nota3": return keys[2];
+                        case "nota4": return keys[3];
+
+                        case "comodin": return candidateFallbacks[fallbackIx++];
+                    }
+                    return "INVALIDO";
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Simón canta</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Simon Sings.svg">
+                <h2>En caso de Simón canta</h2>
+                <p class="flavour-text">
+                    Me niego a traducir eso ._.XD </p>
+                                                                                                                     
+
+                <ul>
+                    <li>Este módulo consiste en un piano circular con teclas de color. Al igual que también hay una luz en el centro la cual muestra colores de algunas de las teclas.</li>
+                    <li>La luz va mostrando una secuencia de 8 colores. El color negro indica un espacio entre repeticiones. Identifica qué teclas tienen estos colores y pásalas a dígitos binarios siguiendo con la tabla 1 de abajo. Si la correspondiente condición es verdadera, el dígito es 1; en caso contrario, 0. Cada grupo de 4 constituye un número binario de 4 dígitos.</li>
+                    <li>The module consists of three stages. In each stage, the two binary numbers point to two new piano keys to press according to Table 2. In each stage, press the keys from the previous stages plus the new ones.</li>
+                    <li>El módulo consiste de tres fases. En cada una, los dos números en binario se refieren a dos nuevas teclas en el piano que hay que tocar según la tabla 2. Por cada fase, toca las teclas de las fases anteriores más las nuevas.</li>
+                    <li>The keyboard has two octaves, one on the left half of the wheel and the other on the right. Each key to press is on the other side from the previous. Start on the left if the serial number has a vowel and on the right otherwise.</li>
+                    <li>Este piano circular tiene dos octavas, una en la mitad izquierda y otra en la derecha. Consecutivas teclas a tocar se deben hacer alternando octavas. Empieza en la de la izquierda si el número de serie tiene una vocal, y sino en la derecha.</li>
+                    <li>Un fallo reinicia la fase actual; y mantener presionado el centro del módulo reinicia todas las fases (disponible solamente en las fases 2 y 3).</li>
+                </ul>
+
+                <h3>Tabla 1</h3>
+                <table>
+                    <tr><th>do</th><td class="regla">Este es el primer o último dígito en este número binario de 4 dígitos.</td></tr>
+                    <tr><th>do♯/re♭</th><td class="regla">Este es el tercer o cuarto dígito en este número binario de 4 dígitos.</td></tr>
+                    <tr><th>re</th><td class="regla">Si este es el primero de los 8 dígitos: el último dígito del número de serie es impar. En caso contrario: el dígito previo fue 0.</td></tr>
+                    <tr><th>re♯/mi♭</th><td class="regla">La posición de este dígito en este número de 4 dígitos coincide con el número de placas.</td></tr>
+                    <tr><th>mi</th><td class="regla">Si no hay placas: hay un número impar de portapilas. En caso contrario: La posición de este dígito número de 4 dígitos coincide con el número de puertos en la placa que más puertos tenga.</td></tr>
+                    <tr><th>fa</th><td class="regla">Estamos en la tercera fase del módulo.</td></tr>
+                    <tr><th>fa♯/sol♭</th><td class="regla">La fase actual coincide con el número de letras en el número de serie menos uno.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 2</div>
+        </div>
+        <div class="page page-2 page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Simón canta</span>
+            </div>
+            <div class="page-content">
+
+                <table>
+                    <tr><th>sol</th><td class="regla">Si este es el primer dígito en este número binario de 4 dígitos: hay un número impar de indicadores. En caso contrario: el primer número de este color se refiere a una nota bemol/sostenida.</td></tr>
+                    <tr><th>sol♯/la♭</th><td class="regla">Si estamos en la primera fase: hay un número impar de puertos. En caso contrario: aparecieron dos colores consecutivos en la fase anterior que se referían a una nota bemol/sostenida.</td></tr>
+                    <tr><th>la</th><td class="regla">Si estamos en la primera fase: hay un número par de indicadores. En caso contrario: uno (o ambos) de los números de 4 dígitos de la fase anterior fueron menores que 5.</td></tr>
+                    <tr><th>la♯/si♭</th><td class="regla">Otro color en este número de 4 dígitos se refiere a fa o fa♯/sol♭.</td></tr>
+                    <tr><th>si</th><td class="regla">El número de este dígito hubiera sido un número primo si este dígito fuese un 1.</td></tr>
+                </table>
+
+                <h3>Tabla 2</h3>
+                <table class='binary'>
+                    <tr><th>Binario</th><th>#</th><th>Nota</th><th>Binario</th><th>#</th><th>Nota</th><th>Binario</th><th>#</th><th>Significado</th></tr>
+                    <tr><td>0000</td><td>0</td><td>do</td><td>0110</td><td>6</td><td>fa♯</td><td>1100</td><td>12</td><td>1ª nota en este número</td></tr>
+                    <tr><td>0001</td><td>1</td><td>do♯</td><td>0111</td><td>7</td><td>sol</td><td>1101</td><td>13</td><td>2ª nota en este número</td></tr>
+                    <tr><td>0010</td><td>2</td><td>re</td><td>1000</td><td>8</td><td>sol♯</td><td>1110</td><td>14</td><td>3ª nota en este número</td></tr>
+                    <tr><td>0011</td><td>3</td><td>re♯</td><td>1001</td><td>9</td><td>la</td><td>1111</td><td>15</td><td>4ª nota en este número</td></tr>
+                    <tr><td>0100</td><td>4</td><td>mi</td><td>1010</td><td>10</td><td>la♯</td><td class='corner'></td><td class='corner'></td></tr>
+                    <tr><td>0101</td><td>5</td><td>fa</td><td>1011</td><td>11</td><td>si</td><td class='corner'></td><td class='corner'></td></tr>
+                </table>
+
+                <h3>Relación tecla-nota</h3>
+                <img src='img/Simon Sings/Keyboard.svg' class='keys-diagram'/>
+                  
+                                                                      
+        </div>
+    </div>
+</body>
+</html>
