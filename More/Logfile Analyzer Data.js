@@ -9207,7 +9207,7 @@ const parseData = [
         displayName: "Who's That Monsplode?",
         moduleID: "monsplodeWho",
         loggingTag: "Who's that Monsplode?",
-        icon: "Who’s that Monsplode",
+        icon: "Who's that Monsplode",
         matches: [
             {
                 regex: /(?:Correct answer is \w+, which is the \w+ button\.|Answer is incorrect! Strike!)/
@@ -9250,7 +9250,7 @@ const parseData = [
     {
         displayName: "The World's Largest Button",
         moduleID: "WorldsLargestButton",
-        icon: "The World’s Largest Button",
+        icon: "The World's Largest Button",
         loggingTag: "The World's Largest Button"
     },
     {
@@ -9397,7 +9397,7 @@ const parseData = [
     {
         displayName: "Who’s On First (Translated)",
         moduleID: "WhosOnFirstTranslated",
-        icon: "Who’s On First",
+        icon: "Who's On First",
         loggingTag: "Who's on First Translated"
     },
     {
