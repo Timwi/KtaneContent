@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Shifted Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            var left = 0;
+            var up = 0;
+            var rows = 6;
+            var cols = 6;
+            var leftPx = [0,0,0,0,0,0];
+            var upPx = [0,0,0,0,0,0];
+            var selected;
+            var selectedT;
+            var selectedRing = 0;
+            var ldisp = $(".leftOff");
+            var udisp = $(".upOff");
+
+            const directions = {
+                Up: [0, 1],
+                Left: [1, 0],
+                Down: [0, -1],
+                Right: [-1, 0],
+                w: [0, 1],
+                a: [1, 0],
+                s: [0, -1],
+                d: [-1, 0]
+            };
+            const whichDisp = {
+                Up: udisp,
+                Left: ldisp,
+                Down: udisp,
+                Right: ldisp,
+                w: ldisp,
+                a: udisp,
+                s: ldisp,
+                d: udisp
+            };
+            const rcolors = {
+                b: "#00F",
+                m: "#F0F",
+                y: "#DD0",
+                g: "#0C0",
+                w: "#FFF"
+            };
+            const ringIdx = {
+                "rdisp1": 0,
+                "rdisp2": 1,
+                "rdisp3": 2,
+                "rdisp4": 3
+            };
+            const nextColor = {
+                "#00F": rcolors["w"],
+                "#FFF": rcolors["m"],
+                "#F0F": rcolors["y"],
+                "#DD0": rcolors["g"],
+                "#0C0": rcolors["b"]
+            };
+            const colorText = {
+                "#00F": "Blue",
+                "#FFF": "White",
+                "#F0F": "Magenta",
+                "#DD0": "Yellow",
+                "#0C0": "Green"
+            };
+            var ringColors = {};
+            var rings = [];
+            var ringDisp = [];
+
+            function UMod(n, d) {
+                return n - d * Math.floor(n / d);
+            }
+            function selectNone() {
+                selected = null;
+                selectedT = "";
+                updateSelection();
+            }
+
+            $(document).click(function(event) {
+                selectNone();
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                if (event.key.startsWith("Arrow")) {
+                    selected = whichDisp[event.key.substring(5)];
+                    selectedT = "disp";
+                    updateSelection();
+                    let direction = directions[event.key.substring(5)];
+                    left = UMod(left + direction[0], cols);
+                    up = UMod(up + direction[1], rows);
+                    if (direction[0] != 0) {
+                        selected.text(left);
+                    } else {
+                        selected.text(up);
+                    }
+                    translateWalls();
+                    event.preventDefault();
+                } else if (event.shiftKey && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                    selected = whichDisp[k];
+                    selectedT = "disp";
+                    updateSelection();
+                    let direction = directions[k];
+                    left = UMod(left + direction[0], cols);
+                    up = UMod(up + direction[1], rows);
+                    if (direction[0] != 0) {
+                        selected.text(left);
+                    } else {
+                        selected.text(up);
+                    }
+                    translateWalls();
+                } else if (k == "m" || k == "g" || k == "y" || k == "b" || k == "w") {
+                    if (selectedT != "rings") {
+                        selected = rings[0];
+                        selectedT = "rings";
+                        selectedRing = 0;
+                        updateSelection();
+                    }
+
+                    selected.css("stroke", rcolors[k])
+                    var id = "rdisp" + (selectedRing + 1);
+                    ringColors[id] = rcolors[k];
+                    ringDisp[selectedRing].text(colorText[ rcolors[k] ]);
+                    selectedRing = (selectedRing + 1) % rings.length;
+                    selected = rings[selectedRing];
+                    updateSelection();
+                } else if (k == "l" || k == "u") {
+                    selectedT = "disp";
+                    if (k == "l") { selected = ldisp; }
+                    else { selected = udisp; }
+                    updateSelection();
+                } else if (event.key == "Escape") {
+                    selectNone();
+                } else if (event.shiftKey && event.keyCode >= 49 && event.keyCode <= 53) {
+                    var n = event.keyCode - 49;
+                    selectedRing = n;
+                    selected = rings[selectedRing];
+                    selectedT = "rings";
+                    updateSelection();
+                } else if (!event.shiftKey) {
+                    n = parseInt(event.key);
+                    if (n >= 0 && !event.altKey) {
+                        n = UMod(n, rows);
+                        if (selectedT != "disp") {
+                            selectedT = "disp";
+                            selected = ldisp;
+                            updateSelection();
+                        }
+                        selected.text(n);
+                        left = parseInt(ldisp.text());
+                        up = parseInt(udisp.text());
+                        translateWalls();
+
+                        if (selected.is(ldisp)) {
+                            selected = udisp;
+                        } else if (selected.is(udisp)) {
+                            selected = ldisp;
+                        }
+                        updateSelection();
+                    }
+                }
+            });
+
+            $(".ring").each(function() {
+                rings.push($(this));
+            });
+            $(".ring-display").each(function() {
+                ringColors[this.id] = "#00F";
+                ringDisp.push($(this));
+            });
+            $(".ring-display").click(function(event) {
+                var i = ringIdx[event.target.id];
+                var next = nextColor[ ringColors[event.target.id] ];
+                ringDisp[i].text(colorText[next]);
+                rings[i].css("stroke", next);
+                ringColors[event.target.id] = next;
+                event.preventDefault();
+            });
+
+            $(".markedListUp").click(function() {
+                var off = $(".markedListOffset")[0];
+                var n = parseInt(off.innerText) + 1;
+                off.innerText = n;
+
+                var items = $(".markedList")[0].getElementsByTagName("li");
+                var s = items[0].innerText;
+                items[0].innerText = items[1].innerText;
+                items[1].innerText = items[2].innerText;
+                items[2].innerText = s;
+            });
+            $(".markedListDown").click(function() {
+                var off = $(".markedListOffset")[0];
+                var n = parseInt(off.innerText) - 1;
+                if (n >= 0) {
+                    off.innerText = n;
+
+                    var items = $(".markedList")[0].getElementsByTagName("li");
+                    var s = items[2].innerText;
+                    items[2].innerText = items[1].innerText;
+                    items[1].innerText = items[0].innerText;
+                    items[0].innerText = s;
+                }
+            });
+
+            $(".reset").click(function() {
+                let col = rcolors["b"];
+                $(".ring").css("stroke", col);
+                $(".ring-display").text(colorText[col]);
+                $(".off-display").text("0");
+                $(".ring-display").each(function() {
+                    ringColors[this.id] = col;
+                });
+                left = 0;
+                up = 0;
+                translateWalls();
+                selectNone();
+            });
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                $(".outlined").removeClass("outlined");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                    if (selectedT == "rings") {
+                        for (let i = 1; i <= rings.length; i++) {
+                            if ($("#ring" + i).hasClass("selected")) {
+                                $("#ringO" + i).addClass("outlined");
+                                $("#rdisp" + i).addClass("selected");
+                            }
+                        }
+                    }
+                }
+            }
+
+            function translateWalls() {
+                for (let i = 0; i < rows; i++) {
+                    if (i < left) {
+                        leftPx[i] = left - cols;
+                    } else {
+                        leftPx[i] = left;
+                    }
+                    leftPx[i] *= -100;
+
+                    if (i < up) {
+                        upPx[i] = up - rows;
+                    } else {
+                        upPx[i] = up;
+                    }
+                    upPx[i] *= -100;
+                }
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        $(".maze-wall.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
+                        // $("rect.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
+                    }
+                }
+            }
+        });
+    </script>
+    <style>
+        table {
+            font-size: 14px;
+        }
+        .dark svg path, .dark circle.dot {
+            filter: invert(100%) contrast(90%);
+        }
+        .maze-wall, rect.highlightable {
+            transition: 0.5s;
+        }
+
+        .selected {
+            background-color: rgba(255, 255, 0, 0.5) !important;
+        }
+        .outlined {
+            stroke-width: 18;
+        }
+        .dark .outlined {
+            stroke: #FA0;
+        }
+
+        .input {
+            float: left;
+            margin-right: 5px;
+            padding-top: 10px;
+        }
+        .markedListControls {
+            float: left;
+            text-align: center;
+            position: relative;
+            bottom: 2mm;
+        }
+        .markedListControls button {
+            font-size: 13px;
+            font-weight: bolder;
+            height: 5.5mm;
+            width: 6.5mm;
+        }
+        .markedList {
+            margin-left: 2mm;
+        }
+        .markedListOffset {
+            margin-top: 0.5mm;
+            font-weight: bold;
+        }
+        button {
+            pointer-events: all;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+        }
+        button.reset {
+            position: relative;
+            top: 8mm;
+            left: 100mm;
+            font-family: Special Elite;
+            font-size: 17px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+
+        input {
+            width: 25px;
+        }
+        .input-grid, .input-grid td, .input-grid th {
+            border: none;
+            text-align: center;
+            font-size: 18px;
+        }
+        .input.width, .input.height {
+            padding: 10px;
+        }
+
+        th.off-display {
+            width: 3mm;
+        }
+        th.ring-display {
+            width: 20mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Shifted Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Shifted Maze.svg" class="diagram">
+                <h2>On the Subject of Shifted Maze</h2>
+                <p class="flavour-text">This maze loves repeating itself. Again and again and again…</p>
+
+                <p>This module consists of a screen displaying coordinates of a 6x6 maze and four arrow buttons for navigating the white light inside the maze.</p>
+
+                <p>
+                    To solve the module, the defuser must navigate the white light to three circular markings in the correct order.
+                    <br />
+                    Moving into a wall, out of the maze, or onto a marked coordinate out of order will cause a strike. The module will not reset and the maze will not change.
+                </p>
+
+                <h3>Determine navigation order</h3>
+                <p>
+                    Four coordinates have circular markings with the starting position always marked white.
+                    Navigate to the other marked coordinates in the following order:
+                </p>
+                <div class="markedListControls">
+                    <button class="markedListUp">+</button>
+                    <div class="markedListOffset">0</div>
+                    <button class="markedListDown">–</button>
+                </div>
+                <ol class="markedList" id="markedList">
+                    <li style="font-size:14px">Marked coordinate diagonally opposite of starting position.</li>
+                    <li style="font-size:14px">Marked coordinate in the same row as the starting position.</li>
+                    <li style="font-size:14px">Marked coordinate in the same column as the starting position.</li>
+                </ol>
+                <p>For each D-Battery on the bomb cycle this list so that 2 becomes 1, 3 becomes 2 and 1 becomes 3.</p>
+
+                <h3>Determine shift of maze</h3>
+                <p>
+                    There is only one unique maze but it might be shifted in both vertical and horizontal directions.
+                    <br />
+                    To determine the shift, refer to the colors of the circular markers (relative to the starting position) and look up the steps in the tables below.
+                </p>
+
+                <h4>Vertical shift</h4>
+                <table>
+                    <tr>
+                        <th>Same column</th>
+                        <td colspan="2">yellow</td>
+                        <td colspan="2">magenta</td>
+                        <td colspan="2">blue</td>
+                    </tr>
+                    <tr>
+                        <th>Diagonally opposite</th>
+                        <td>magenta, yellow</td>
+                        <td>blue, green</td>
+                        <td>magenta, yellow</td>
+                        <td>blue, green</td>
+                        <td>magenta, yellow</td>
+                        <td>blue, green</td>
+                    </tr>
+                    <tr>
+                        <th>Steps</th>
+                        <td>2</td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>5</td>
+                        <td>1</td>
+                        <td>4</td>
+                </table>
+
+                <h4>Horizontal shift</h4>
+                <table>
+                    <tr>
+                        <th>On same row</th>
+                        <td colspan="2">yellow</td>
+                        <td colspan="2">magenta</td>
+                        <td colspan="2">blue</td>
+                    </tr>
+                    <tr>
+                        <th>Diagonally opposite</th>
+                        <td>green, yellow</td>
+                        <td>blue, magenta</td>
+                        <td>green, yellow</td>
+                        <td>blue, magenta</td>
+                        <td>green, yellow</td>
+                        <td>blue, magenta</td>
+                    </tr>
+                    <tr>
+                        <th>Steps</th>
+                        <td>0</td>
+                        <td>4</td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td>2</td>
+                        <td>5</td>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Shifted Maze</span>
+            </div>
+            <div class="page-content">
+                <p>
+                    The maze is shifted the corresponding number of steps to the <em>left</em> (horizontal shift) or <em>up</em> (vertical shift) repeating itself infinitely in every direction.
+                    <br>
+                    The diagram on this page shows the maze in its unaltered position.
+                    <br>
+                    Solid lines are walls, dotted lines are passable if the maze is shifted.
+                </p>
+                <p>
+                    Click the ring color names or press <b>B/W/M/Y/G</b> to change the ring colors.<br>
+                    Press <B>Shift + 1-4</b> to select a ring.<br>
+                    Press <b>0-9</b> to update the Left or Up offset one at a time.<br>
+                    Press <b>L</b> or <b>U</b> to select the Left or Up offset.<br>
+                    Use <b>arrow keys</b> or <b>Shift + WASD</b> to shift the maze.<br>
+                    Press <b>Esc</b> or click the document to select none.
+                </p>
+
+                <button class="reset">Reset</button>
+                <table class="input-grid">
+                    <tr>
+                        <th>Offsets:</th>
+                        <td>Left:</td>
+                        <th class="leftOff off-display">0</th>
+                        <td>Up:</td>
+                        <th class="upOff off-display">0</th>
+                    </tr>
+                </table>
+                <table class="input-grid">
+                    <tr>
+                        <th>Rings:</th>
+                        <td>1:</td>
+                        <th id="rdisp1" class="ring-display">Blue</th>
+                        <td>2:</td>
+                        <th id="rdisp2" class="ring-display">Blue</th>
+                        <td>3:</td>
+                        <th id="rdisp3" class="ring-display">Blue</th>
+                        <td>4:</td>
+                        <th id="rdisp4" class="ring-display">Blue</th>
+                    </tr>
+                </table>
+				<svg viewBox="0 0 800 705" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
+					<path fill="none" stroke="#000" stroke-width="3" stroke-dasharray="0,3,3,3" d="M100 100h600v600H100z"/>
+                    <path class="maze-wall row0 column0" d="M100 100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row0 column2" d="M300 100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column3" d="M400 100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row0 column4" d="M600 100v100h-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column5" d="M600 100v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column4" d="M500 200h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column0" d="M100 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column0" d="M100 300v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column0" d="M100 400h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column1" d="M300 200H200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column1" d="M200 200h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column0" d="M200 200v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column2" d="M400 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column3" d="M400 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column2" d="M400 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column3" d="M400 300v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column5" d="M700 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column5" d="M700 300v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row2 column2" d="M300 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column2" d="M300 400v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column2" d="M400 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column1" d="M300 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column1" d="M300 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column2" d="M300 500h103" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column3" d="M400 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row2 column4" d="M600 400v-100h-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column5" d="M600 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column4" d="M500 300h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column4" d="M600 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column5" d="M600 400v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column0" d="M200 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column1" d="M200 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row3 column3" d="M500 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column3" d="M500 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column4" d="M500 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column4" d="M500 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column5" d="M600 600h100v-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column5" d="M600 600h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column5" d="M700 600v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column0" d="M100 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column0" d="M100 600v100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row5 column2" d="M300 600v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column3" d="M400 700h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column1" d="M300 600v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 -59.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 -59.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 -59.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 -59.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 -59.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 -59.5)"/>
+					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 40.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 40.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 40.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 40.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 40.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 40.5)"/></g>
+					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 140.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 140.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 140.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 140.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 140.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 140.5)"/></g>
+					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 240.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 240.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 240.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 240.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 240.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 240.5)"/></g>
+					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 340.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 340.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 340.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 340.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 340.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 340.5)"/></g>
+					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 440.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 440.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 440.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 440.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 440.5)"/>
+					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 440.5)"/></g>
+
+                    <circle id="ringO1" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 40.5)"/>
+                    <circle id="ringO2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(656.3 40.5)"/>
+                    <circle id="ringO3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 340.5)"/>
+                    <circle id="ringO4" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(656.3 340.5)"/>
+                    <circle class="ring" id="ring1" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(356.3 40.5)"/>
+                    <circle class="ring" id="ring2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 40.5)"/>
+                    <circle class="ring" id="ring3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(356.3 340.5)"/>
+                    <circle class="ring" id="ring4" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 340.5)"/>
+
+                    <rect class="highlightable row0 column0" x="100" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row0 column1" x="200" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row0 column2" x="300" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row0 column3" x="400" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row0 column4" x="500" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row0 column5" x="600" y="100" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column0" x="100" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column1" x="200" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column2" x="300" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column3" x="400" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column4" x="500" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row1 column5" x="600" y="200" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column0" x="100" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column1" x="200" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column2" x="300" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column3" x="400" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column4" x="500" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row2 column5" x="600" y="300" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column0" x="100" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column1" x="200" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column2" x="300" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column3" x="400" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column4" x="500" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row3 column5" x="600" y="400" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column0" x="100" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column1" x="200" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column2" x="300" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column3" x="400" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column4" x="500" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row4 column5" x="600" y="500" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column0" x="100" y="600" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column1" x="200" y="600" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column2" x="300" y="600" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column3" x="400" y="600" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column4" x="500" y="600" width="100" height="100" fill="transparent" />
+					<rect class="highlightable row5 column5" x="600" y="600" width="100" height="100" fill="transparent" />
+                </svg0>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
