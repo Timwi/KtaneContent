@@ -92,28 +92,22 @@
                     selectedT = "disp";
                     updateSelection();
                     let direction = directions[event.key.substring(5)];
-                    left = UMod(left + direction[0], cols);
-                    up = UMod(up + direction[1], rows);
-                    if (direction[0] != 0) {
-                        selected.text(left);
+                    if (direction[0] !== 0) {
+                        newOffset(selected, UMod(left + direction[0], cols));
                     } else {
-                        selected.text(up);
+                        newOffset(selected, UMod(up + direction[1], rows));
                     }
-                    translateWalls();
                     event.preventDefault();
                 } else if (event.shiftKey && (k == "w" || k == "a" || k == "s" || k == "d")) {
                     selected = whichDisp[k];
                     selectedT = "disp";
                     updateSelection();
                     let direction = directions[k];
-                    left = UMod(left + direction[0], cols);
-                    up = UMod(up + direction[1], rows);
-                    if (direction[0] != 0) {
-                        selected.text(left);
+                    if (direction[0] !== 0) {
+                        newOffset(selected, UMod(left + direction[0], cols));
                     } else {
-                        selected.text(up);
+                        newOffset(selected, UMod(up + direction[1], rows));
                     }
-                    translateWalls();
                 } else if (k == "m" || k == "g" || k == "y" || k == "b" || k == "w") {
                     if (selectedT != "rings") {
                         selected = rings[0];
@@ -151,10 +145,7 @@
                             selected = ldisp;
                             updateSelection();
                         }
-                        selected.text(n);
-                        left = parseInt(ldisp.text());
-                        up = parseInt(udisp.text());
-                        translateWalls();
+                        newOffset(selected, n);
 
                         if (selected.is(ldisp)) {
                             selected = udisp;
@@ -164,6 +155,21 @@
                         updateSelection();
                     }
                 }
+            });
+
+            function newOffset(disp, value) {
+                disp.text(value);
+                left = parseInt(ldisp.text());
+                up = parseInt(udisp.text());
+                translateWalls();
+            }
+
+            ldisp.click(function() {
+                newOffset(ldisp, UMod(left + 1, cols));
+            });
+
+            udisp.click(function() {
+                newOffset(udisp, UMod(up + 1, rows));
             });
 
             $(".ring").each(function() {
@@ -181,6 +187,35 @@
                 ringColors[event.target.id] = next;
                 event.preventDefault();
             });
+
+            let mazesvg = $(".mazesvg");
+
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    let dot = makeSVG("circle", {
+                        class: "dot", cx:(150 + c*100), cy:(150 + r*100), r:13.5,
+                        fill: "none", stroke: "#000", "stroke-width": 3
+                    });
+                    mazesvg[0].appendChild(dot);
+                }
+            }
+
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    let cell = makeSVG("rect", {
+                        class: ("highlightable row" + r + " column" + c), x:(c*100 + 100),
+                        y:(r*100 + 100), width:100, height:100, fill:"transparent"
+                    });
+                    mazesvg[0].appendChild(cell);
+                }
+            }
 
             $(".markedListUp").click(function() {
                 var off = $(".markedListOffset")[0];
@@ -257,7 +292,7 @@
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         $(".maze-wall.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
-                        // $("rect.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
+                        $("rect.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
                     }
                 }
             }
@@ -343,7 +378,7 @@
         }
 
         th.off-display {
-            width: 3mm;
+            width: 5mm;
         }
         th.ring-display {
             width: 20mm;
@@ -419,6 +454,7 @@
                         <td>5</td>
                         <td>1</td>
                         <td>4</td>
+                    </tr>
                 </table>
 
                 <h4>Horizontal shift</h4>
@@ -446,6 +482,7 @@
                         <td>3</td>
                         <td>2</td>
                         <td>5</td>
+                    </tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
@@ -464,11 +501,11 @@
                     Solid lines are walls, dotted lines are passable if the maze is shifted.
                 </p>
                 <p>
-                    Click the ring color names or press <b>B/W/M/Y/G</b> to change the ring colors.<br>
-                    Press <B>Shift + 1-4</b> to select a ring.<br>
+                    Click the <b>ring color names</b> or press <b>B/W/M/Y/G</b> to change the ring colors.<br>
+                    Press <b>Shift + 1-4</b> to select a ring.<br>
                     Press <b>0-9</b> to update the Left or Up offset one at a time.<br>
                     Press <b>L</b> or <b>U</b> to select the Left or Up offset.<br>
-                    Use <b>arrow keys</b> or <b>Shift + WASD</b> to shift the maze.<br>
+                    Click the <b>offset numbers</b> or use <b>arrow keys</b> or <b>Shift + WASD</b> to shift the maze.<br>
                     Press <b>Esc</b> or click the document to select none.
                 </p>
 
@@ -495,8 +532,8 @@
                         <th id="rdisp4" class="ring-display">Blue</th>
                     </tr>
                 </table>
-				<svg viewBox="0 0 800 705" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
-					<path fill="none" stroke="#000" stroke-width="3" stroke-dasharray="0,3,3,3" d="M100 100h600v600H100z"/>
+                <svg class="mazesvg" viewbox="0 0 800 705" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
+                    <path fill="none" stroke="#000" stroke-width="3" stroke-dasharray="0,3,3,3" d="M100 100h600v600H100z"/>
                     <path class="maze-wall row0 column0" d="M100 100h100" fill="none" stroke="#000" stroke-width="6"/>
 
                     <path class="maze-wall row0 column2" d="M300 100h100" fill="none" stroke="#000" stroke-width="6"/>
@@ -555,43 +592,6 @@
                     <path class="maze-wall row5 column3" d="M400 700h100" fill="none" stroke="#000" stroke-width="6"/>
                     <path class="maze-wall row5 column1" d="M300 600v100" fill="none" stroke="#000" stroke-width="6"/>
 
-                    <circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 -59.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 -59.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 -59.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 -59.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 -59.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 -59.5)"/>
-					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 40.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 40.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 40.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 40.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 40.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 40.5)"/></g>
-					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 140.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 140.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 140.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 140.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 140.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 140.5)"/></g>
-					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 240.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 240.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 240.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 240.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 240.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 240.5)"/></g>
-					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 340.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 340.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 340.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 340.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 340.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 340.5)"/></g>
-					<g><circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(256.3 440.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(356.3 440.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(456.3 440.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(556.3 440.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(656.3 440.5)"/>
-					<circle class="dot" cx="-106.3" cy="209.5" r="13.5" fill="none" stroke="#000" stroke-width="3" transform="translate(756.3 440.5)"/></g>
-
                     <circle id="ringO1" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 40.5)"/>
                     <circle id="ringO2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(656.3 40.5)"/>
                     <circle id="ringO3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 340.5)"/>
@@ -600,44 +600,7 @@
                     <circle class="ring" id="ring2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 40.5)"/>
                     <circle class="ring" id="ring3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(356.3 340.5)"/>
                     <circle class="ring" id="ring4" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 340.5)"/>
-
-                    <rect class="highlightable row0 column0" x="100" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row0 column1" x="200" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row0 column2" x="300" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row0 column3" x="400" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row0 column4" x="500" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row0 column5" x="600" y="100" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column0" x="100" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column1" x="200" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column2" x="300" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column3" x="400" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column4" x="500" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row1 column5" x="600" y="200" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column0" x="100" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column1" x="200" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column2" x="300" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column3" x="400" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column4" x="500" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row2 column5" x="600" y="300" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column0" x="100" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column1" x="200" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column2" x="300" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column3" x="400" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column4" x="500" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row3 column5" x="600" y="400" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column0" x="100" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column1" x="200" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column2" x="300" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column3" x="400" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column4" x="500" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row4 column5" x="600" y="500" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column0" x="100" y="600" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column1" x="200" y="600" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column2" x="300" y="600" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column3" x="400" y="600" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column4" x="500" y="600" width="100" height="100" fill="transparent" />
-					<rect class="highlightable row5 column5" x="600" y="600" width="100" height="100" fill="transparent" />
-                </svg0>
+                </svg>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>

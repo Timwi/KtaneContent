@@ -1,13 +1,13 @@
 /*
-	MIT License
+    MIT License
 
-	Copyright 2017 samfundev and Timwi
+    Copyright 2017 samfundev and Timwi
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this file (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this file (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 let protocol = location.protocol;
@@ -244,12 +244,12 @@ e.onload = function()
                 highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
                 return;
             }
-            
-            // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of it's overflow element.
+
+            // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of its overflow element.
             const outerClipBox = overflowElement[0].getBoundingClientRect();
             const left = Math.max(a.offset().left, scrollX + outerClipBox.left);
             const top = Math.max(b.offset().top, scrollY + outerClipBox.top);
-            
+
             highlight.css("left", left + "px");
             highlight.css("top", top + "px");
             highlight.css("transform-origin", -left + "px " + -top + "px");
@@ -279,6 +279,14 @@ e.onload = function()
 
                 if (highlighterEnabled && thisMode !== null)
                 {
+                    let svg = element.is("svg *");
+
+                    if (svg && element.hasClass("svgIsHighlighted")) {
+                        element.css("fill", element.data('origFill'));
+                        element.removeClass("svgIsHighlighted");
+                        return;
+                    }
+
                     let ix = -1;
                     for (let i = 0; i < elementHighlights.length; i++)
                         if (elementHighlights[i].mode === thisMode)
@@ -312,54 +320,51 @@ e.onload = function()
                         else
                             return;
 
-                        let svg = element.is("svg *");
-                        let fill;
-
-                        let highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor].color, position: 'absolute' });
-                        setPosition(highlight);
 
                         if (svg)
                         {
-                            fill = element.css("fill");
+                            element.addClass("svgIsHighlighted");
+                            element.data('origFill', element.css("fill"));
                             element.css("fill", colors[currentColor].color);
-                            highlight.css("background-color", "rgba(0, 0, 0, 0)");
                         }
-
-                        function removeHighlight()
+                        else
                         {
-                            highlight.remove();
+                            let highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor].color, position: 'absolute' });
+                            setPosition(highlight);
 
-                            if (svg)
-                                element.css("fill", fill);
-
-                            window.getSelection().removeAllRanges();
-                            const ix2 = findHighlight(highlight);
-                            if (ix2 !== -1)
-                                elementHighlights.splice(ix2, 1);
-                        }
-
-                        highlight.click(function(event2)
-                        {
-                            if (highlighterEnabled && getMode(event2) == thisMode)
+                            function removeHighlight()
                             {
-                                removeHighlight();
-                            }
-                            else
-                            {
-                                highlight.hide();
-                                $(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
+                                highlight.remove();
+
+                                window.getSelection().removeAllRanges();
                                 const ix2 = findHighlight(highlight);
                                 if (ix2 !== -1)
-                                    highlight.show();
+                                    elementHighlights.splice(ix2, 1);
                             }
-                            return false;
-                        });
-                        elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
 
-                        if (mobileControls)
-                            highlight.insertAfter($('.ktane-highlight-btn').first());
-                        else
-                            highlight.appendTo(document.body);
+                            highlight.click(function(event2)
+                            {
+                                if (highlighterEnabled && getMode(event2) == thisMode)
+                                {
+                                    removeHighlight();
+                                }
+                                else
+                                {
+                                    highlight.hide();
+                                    $(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
+                                    const ix2 = findHighlight(highlight);
+                                    if (ix2 !== -1)
+                                        highlight.show();
+                                }
+                                return false;
+                            });
+                            elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
+
+                            if (mobileControls)
+                                highlight.insertAfter($('.ktane-highlight-btn').first());
+                            else
+                                highlight.appendTo(document.body);
+                        }
                     }
                     window.getSelection().removeAllRanges();
                     return false;
