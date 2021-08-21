@@ -244,12 +244,12 @@ e.onload = function()
                 highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
                 return;
             }
-            
+
             // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of it's overflow element.
             const outerClipBox = overflowElement[0].getBoundingClientRect();
             const left = Math.max(a.offset().left, scrollX + outerClipBox.left);
             const top = Math.max(b.offset().top, scrollY + outerClipBox.top);
-            
+
             highlight.css("left", left + "px");
             highlight.css("top", top + "px");
             highlight.css("transform-origin", -left + "px " + -top + "px");
@@ -279,6 +279,16 @@ e.onload = function()
 
                 if (highlighterEnabled && thisMode !== null)
                 {
+                    let svg = element.is("svg *");
+                    let fill;
+
+                    if (svg && element.hasClass("svgIsHighlighted")) {
+                        fill = element.data('origFill');
+                        element.css("fill", fill);
+                        element.removeClass("svgIsHighlighted");
+                        return;
+                    }
+
                     let ix = -1;
                     for (let i = 0; i < elementHighlights.length; i++)
                         if (elementHighlights[i].mode === thisMode)
@@ -312,54 +322,52 @@ e.onload = function()
                         else
                             return;
 
-                        let svg = element.is("svg *");
-                        let fill;
-
-                        let highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor].color, position: 'absolute' });
-                        setPosition(highlight);
 
                         if (svg)
                         {
+                            element.addClass("svgIsHighlighted");
                             fill = element.css("fill");
+                            element.data('origFill', fill);
                             element.css("fill", colors[currentColor].color);
-                            highlight.css("background-color", "rgba(0, 0, 0, 0)");
                         }
-
-                        function removeHighlight()
+                        else
                         {
-                            highlight.remove();
+                            let highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor].color, position: 'absolute' });
+                            setPosition(highlight);
 
-                            if (svg)
-                                element.css("fill", fill);
-
-                            window.getSelection().removeAllRanges();
-                            const ix2 = findHighlight(highlight);
-                            if (ix2 !== -1)
-                                elementHighlights.splice(ix2, 1);
-                        }
-
-                        highlight.click(function(event2)
-                        {
-                            if (highlighterEnabled && getMode(event2) == thisMode)
+                            function removeHighlight()
                             {
-                                removeHighlight();
-                            }
-                            else
-                            {
-                                highlight.hide();
-                                $(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
+                                highlight.remove();
+
+                                window.getSelection().removeAllRanges();
                                 const ix2 = findHighlight(highlight);
                                 if (ix2 !== -1)
-                                    highlight.show();
+                                    elementHighlights.splice(ix2, 1);
                             }
-                            return false;
-                        });
-                        elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
 
-                        if (mobileControls)
-                            highlight.insertAfter($('.ktane-highlight-btn').first());
-                        else
-                            highlight.appendTo(document.body);
+                            highlight.click(function(event2)
+                            {
+                                if (highlighterEnabled && getMode(event2) == thisMode)
+                                {
+                                    removeHighlight();
+                                }
+                                else
+                                {
+                                    highlight.hide();
+                                    $(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
+                                    const ix2 = findHighlight(highlight);
+                                    if (ix2 !== -1)
+                                        highlight.show();
+                                }
+                                return false;
+                            });
+                            elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
+
+                            if (mobileControls)
+                                highlight.insertAfter($('.ktane-highlight-btn').first());
+                            else
+                                highlight.appendTo(document.body);
+                        }
                     }
                     window.getSelection().removeAllRanges();
                     return false;
