@@ -8,48 +8,14 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <script src="jquery.3.1.1.min.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <script>
 
-    mazeGroup = document.getElementById("themaze");
-    var mazeRotation = 0;
+    $(function() {
+        let mazeGroup = document.getElementById("themaze");
+        var mazeRotation = 0;
 
-    function setPosition(highlight)
-    {
-        let a = highlight.data('obj-a'), b = highlight.data('obj-b');
-        // Check to see if we're parented to any overflow elements.
-        const overflowElement = a.parents().filter((_, element) => {
-            const jqueryElement = $(element);
-            const overflows = [jqueryElement.css("overflow-x"), jqueryElement.css("overflow-y")];
-            return ["hidden", "scroll", "auto", "overlay"].some(value => overflows.includes(value));
-        });
-
-        // If we have no overflow elements faster path.
-        // We also don't support more than one overflow element so fallback if that happens.
-        if (overflowElement.length !== 1) {
-            highlight.outerWidth(a.outerWidth());
-            highlight.outerHeight(b.outerHeight());
-            highlight.css("left", a.offset().left + "px");
-            highlight.css("top", b.offset().top + "px");
-            highlight.css("transform-origin", -a.offset().left + "px " + -b.offset().top + "px");
-            return;
-        }
-
-        // This is a whole bunch of math that tries to "clip" the highlight so that it's inside of it's overflow element.
-        const outerClipBox = overflowElement[0].getBoundingClientRect();
-        const left = Math.max(a.offset().left, scrollX + outerClipBox.left);
-        const top = Math.max(b.offset().top, scrollY + outerClipBox.top);
-
-        highlight.css("left", left + "px");
-        highlight.css("top", top + "px");
-        highlight.css("transform-origin", -left + "px " + -top + "px");
-        highlight.outerWidth(Math.min(a.outerWidth() - Math.max(0, scrollX + outerClipBox.left - a.offset().left), scrollX + outerClipBox.right - left));
-        highlight.outerHeight(Math.min(b.outerHeight() - Math.max(0, scrollY + outerClipBox.top - b.offset().top), scrollY + outerClipBox.bottom - top));
-    }
-
-    function setupAnimations() {
-        mazeGroup = document.getElementById("themaze");
-        mazeRotation = 0;
+        let mazesvg = $(".mazesvg");
 
         $("button.rotate-left").click(function() {
             rotateMaze(false);
@@ -57,26 +23,86 @@
         $("button.rotate-right").click(function() {
             rotateMaze(true);
         });
-    }
 
-    function rotateMaze(clockwise) {
-        if (clockwise) {
-            mazeRotation = (mazeRotation + 1) % 4;
-        } else {
-            mazeRotation--;
-            if (mazeRotation == -4) {
-                mazeRotation = 0;
+        function makeSVG(tag, attrs) {
+            var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
+
+        for (let r = 0; r < 12; r++) {
+            for (let c = 3; c < 6; c++) {
+                let ring = makeSVG("circle", {
+                    class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                    r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                });
+                mazesvg[0].appendChild(ring);
+                if (c != 4 || r % 3 != 1) {
+                    let dot = makeSVG("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:10.5, fill: "#000"
+                    });
+                    mazesvg[0].appendChild(dot);
+                }
+            }
+        }
+        for (let r = 3; r < 6; r++) {
+            for (let c = 0; c < 12; c++) {
+                if (c >= 3 && c < 6) { continue; }
+                let ring = makeSVG("circle", {
+                    class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                    r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                });
+                mazesvg[0].appendChild(ring);
+                if (r != 4 || c % 3 != 1) {
+                    let dot = makeSVG("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:10.5, fill: "#000"
+                    });
+                    mazesvg[0].appendChild(dot);
+                }
+            }
+        }
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:450, cy:150, r:11, fill: "#00F" }));
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:150, cy:450, r:11, fill: "#FF0" }));
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:450, cy:450, r:11, fill: "#F00" }));
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:750, cy:450, r:11, fill: "#0F0" }));
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:450, cy:750, r:11, fill: "#F0F" }));
+        mazesvg[0].appendChild(makeSVG("circle", { class: "cdot", cx:450, cy:1050, r:11, fill: "#F70" }));
+
+        for (let r = 0; r < 12; r++) {
+            for (let c = 3; c < 6; c++) {
+                let cell = makeSVG("rect", {
+                    class: "highlightable mcell", x:(c*100), y:(r*100 + (r == 0 ? 2 : 0)),
+                    width:100, height:(r == 0 ? 98 : 100), fill:"transparent"
+                });
+                mazesvg[0].appendChild(cell);
+            }
+        }
+        for (let r = 3; r < 6; r++) {
+            for (let c = 0; c < 12; c++) {
+                if (c >= 3 && c < 6) { continue; }
+                let cell = makeSVG("rect", {
+                    class: "highlightable mcell", x:(c*100 + (c == 0 ? 2 : 0)),
+                    y:(r*100),
+                    width:(c == 0 ? 98 : 100), height:100, fill:"transparent"
+                });
+                mazesvg[0].appendChild(cell);
             }
         }
 
-        mazeGroup.style.transform = `rotate(${mazeRotation * 90}deg)`;
-        console.log(mazeGroup.style.transform, mazeRotation);
+        function rotateMaze(clockwise) {
+            if (clockwise) {
+                mazeRotation += 1;
+            } else {
+                mazeRotation -= 1;
+            }
 
-        $('.ktane-highlight').each(function(_, e)
-        {
-            setPosition($(e));
-        });
-    }
+            mazeGroup.style.transform = `rotate(${mazeRotation * 90}deg)`;
+            console.log(mazeGroup.style.transform, mazeRotation);
+        }
+    });
     </script>
     <style>
         table {
@@ -87,6 +113,9 @@
 
         td {
             width: 25%;
+        }
+        .dark svg path, .dark circle.dot {
+            filter: invert(100%) contrast(90%);
         }
 
         .empty {
@@ -148,10 +177,23 @@
         .rotate-right {
             font-size: 30px;
         }
+        .maze-wall {
+            fill: none;
+            stroke: #000;
+            stroke-width: 6;
+        }
+        .maze-fold {
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+        }
+        .themaze {
+            transition: 0.5s;
+        }
 
     </style>
 </head>
-<body onload="setupAnimations()">
+<body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
@@ -226,50 +268,32 @@
             <div class="page-content">
                 <button class="rotate-left floating">←</button>
                 <button class="rotate-right floating">→</button>
-                <div class="themaze" id="themaze">
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 0mm; margin-left: 83.2mm">
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 54.5mm; margin-left: 28.7mm"> <!-- ; width: 53.2mm -->
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 54.5mm; margin-left: 83.1mm">
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 54.5mm; margin-left: 137.8mm"> <!-- ; width: 53.2mm -->
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 109.2mm; margin-left: 83mm">
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <div class="highlight-overlay-table">
-                        <table style="margin-top: 164mm; margin-left: 83mm">
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                            <tr><td></td><td></td><td></td></tr>
-                        </table>
-                    </div>
-                    <img class="mazeimg" src="img/Maze³/maze.png" style="width: 164mm; margin-top: 0">
+                <div class="themaze" id="themaze" style="width: 170mm; margin: auto">
+                    <svg class="mazesvg" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
+                        <path class="maze-fold" stroke-dasharray="4,4" d="M300 4v1194h300V4z"/>
+                        <path class="maze-fold" stroke-dasharray="4,4" d="M4 300h894v300H4z"/>
+                        <path class="maze-fold" stroke-dasharray="4,4" stroke-dashoffset="2" d="M300 900h300z"/>
+                        <path class="maze-wall" d="M300 2v100h200v-100"/>
+                        <path class="maze-wall" d="M300 100v100h300"/>
+                        <path class="maze-wall" d="M300 300h100v-100"/>
+                        <path class="maze-wall" d="M600 100v200h200"/>
+                        <path class="maze-wall" d="M4 400v-100h200"/>
+                        <path class="maze-wall" d="M500 300v100h300"/>
+                        <path class="maze-wall" d="M500 400v100"/>
+                        <path class="maze-wall" d="M700 400v100h200"/>
+                        <path class="maze-wall" d="M600 500h100v100"/>
+                        <path class="maze-wall" d="M800 500v100h100"/>
+                        <path class="maze-wall" d="M4 600h96v-100h100v-100"/>
+                        <path class="maze-wall" d="M100 400h300"/>
+                        <path class="maze-wall" d="M300 500h100v300h-100v100"/>
+                        <path class="maze-wall" d="M200 600h100v100h100"/>
+                        <path class="maze-wall" d="M500 600v100h100"/>
+                        <path class="maze-wall" d="M400 800h200v100"/>
+                        <path class="maze-wall" d="M400 900v100h200"/>
+                        <path class="maze-wall" d="M300 1000h100v200"/>
+                        <path class="maze-wall" d="M500 1000v100h100"/>
+                        <path class="maze-wall" d="M300 1100v100"/>
+                    </svg>
                 </div>
             </div>
            <div class="page-footer relative-footer">Page 2 of 2</div>
