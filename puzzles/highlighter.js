@@ -160,6 +160,16 @@ e.onload = function()
 
 				if (enabled && thisMode !== null)
 				{
+					let svg = element.is("svg *");
+                    let fill;
+
+                    if (svg && element.hasClass("svgIsHighlighted")) {
+                        fill = element.data('origFill');
+                        element.css("fill", fill);
+                        element.removeClass("svgIsHighlighted");
+                        return;
+                    }
+
 					var ix = -1;
 					for (var i = 0; i < highlights.length; i++)
 						if (highlights[i].mode === thisMode)
@@ -192,52 +202,47 @@ e.onload = function()
 						} else
 							return;
 
-						var svg = element.is("svg *");
-						var fill;
-
-						var highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor], position: 'absolute' });
-						setPosition(highlight);
-
 						if (svg)
-						{
-							fill = element.css("fill");
-							element.css("fill", colors[currentColor]);
-							highlight.css("background-color", "rgba(0, 0, 0, 0)");
-						}
+                        {
+                            element.addClass("svgIsHighlighted");
+                            fill = element.css("fill");
+                            element.data('origFill', fill);
+                            element.css("fill", colors[currentColor]);
+                        }
+                        else
+                        {
+                            var highlight = $("<div>").addClass("ktane-highlight").data('obj-a', a).data('obj-b', b).css({ 'background-color': colors[currentColor], position: 'absolute' });
+							setPosition(highlight);
 
-						highlight.click(function(event2)
-						{
-							var ix2;
-							if (enabled && getMode(event2) == thisMode)
+							highlight.click(function(event2)
 							{
-								highlight.remove();
-
-								if (svg)
+								var ix2;
+								if (enabled && getMode(event2) == thisMode)
 								{
-									element.css("fill", fill);
+									highlight.remove();
+
+									window.getSelection().removeAllRanges();
+									ix2 = findHighlight(highlight);
+									if (ix2 !== -1)
+										highlights.splice(ix2, 1);
 								}
+								else
+								{
+									highlight.hide();
+									$(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
+									ix2 = findHighlight(highlight);
+									if (ix2 !== -1)
+										highlight.show();
+								}
+								return false;
+							});
+							highlights.push({ mode: thisMode, element: highlight });
 
-								window.getSelection().removeAllRanges();
-								ix2 = findHighlight(highlight);
-								if (ix2 !== -1)
-									highlights.splice(ix2, 1);
-							}
+							if (mobileControls)
+								highlight.insertAfter($('.ktane-highlight-btn').first());
 							else
-							{
-								highlight.hide();
-								$(document.elementFromPoint(event2.clientX, event2.clientY)).trigger(event2);
-								ix2 = findHighlight(highlight);
-								if (ix2 !== -1)
-									highlight.show();
-							}
-							return false;
-						});
-						highlights.push({ mode: thisMode, element: highlight });
-
-						if (mobileControls)
-							highlight.insertAfter($('.ktane-highlight-btn').first());
-						else
-							highlight.appendTo(document.body);
+								highlight.appendTo(document.body);
+						}
 					}
 					window.getSelection().removeAllRanges();
 					return false;
