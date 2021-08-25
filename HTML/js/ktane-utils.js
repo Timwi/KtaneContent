@@ -118,6 +118,9 @@ e.onload = function()
                     highlight.remove();
                 }
             }
+            $("svg .svgIsHighlighted").each(function() {
+                $(this).css("fill", $(this).data('origFill'));
+            }).removeClass("svgIsHighlighted");
         })
 
         $(document).keydown(function(event)
