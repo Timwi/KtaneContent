@@ -491,7 +491,7 @@ const parseData = [
                 regex: /LFABombInfo (\d+)/,
                 handler: function (matches) {
                     // Parse the JSON based on the number of lines specified in the log message.
-                    const bombInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
+                    const bombInfo = JSON.parse(readLines(parseInt(matches[1])).join(""));
 
                     bombgroup.LoggedSerials.push(bombInfo.serial);
 
@@ -581,7 +581,7 @@ const parseData = [
                 regex: /LFAEvent (\d+)/,
                 handler: function (matches) {
                     // Parse the JSON based on the number of lines specified in the log message.
-                    const eventInfo = JSON.parse(readMultiple(parseInt(matches[1])).replace(/\n/g, ""));
+                    const eventInfo = JSON.parse(readLines(parseInt(matches[1])).join(''));
                     switch (eventInfo.type) {
                         case "STRIKE":
                         case "PASS": {
@@ -3432,7 +3432,7 @@ const parseData = [
                     const COL_COUNT = parseInt(matches[1]);
                     const ROW_COUNT = parseInt(matches[2]);
 
-                    let maze = readMultiple(ROW_COUNT + 1).split('\n').slice(1, ROW_COUNT + 1);
+                    let maze = readLines(ROW_COUNT + 1).slice(1, ROW_COUNT + 1);
                     let table = $('<table>').css('border-collapse', 'collapse');
 
                     for (let row = 0; row < ROW_COUNT; row++) {
@@ -3477,7 +3477,7 @@ const parseData = [
                     const COL_COUNT = 5;
                     const ROW_COUNT = 5;
 
-                    let maze = readMultiple(ROW_COUNT).split('\n');
+                    let maze = readLines(ROW_COUNT);
                     let table = $('<table>').css('border-collapse', 'collapse');
 
                     for (let row = 0; row < ROW_COUNT; row++) {
@@ -3745,7 +3745,7 @@ const parseData = [
                 regex: /(Initial state|Solution|Colored square states|Submitted):/,
                 handler: function (matches, module) {
                     const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
-                    readMultiple(8).split("\n").map(row => row.split("")).forEach((row, y) => {
+                    readLines(8).map(row => row.split("")).forEach((row, y) => {
                         row.forEach((cell, x) => {
                             const color = module.reference[cell];
                             const rect = $SVG(`<rect x=${x} y=${y} width=1 height=1 stroke=black stroke-width=0.05>`).appendTo(grid);
@@ -3954,7 +3954,7 @@ const parseData = [
                     const pointsXY = [sideLength * Math.cos(Math.PI / 3), sideLength * Math.sin(Math.PI / 3)];
                     const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
                     readLine();
-                    let rawData = readMultiple(9).split('\n');
+                    let rawData = readLines(9);
                     let re = /\[Hexiom #\d+\] ([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)([ 0-6])(\*|\s)/;
                     hexData = {};
                     for (let i = -2; i < 3; i++) {
@@ -4056,7 +4056,7 @@ const parseData = [
             {
                 regex: /^Cube (\d+) is/,
                 handler: function (matches, module) {
-                    let lines = readMultiple(9).split(/\r?\n/g).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
+                    let lines = readLines(9).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
                     let vertices = [
                         { line: 0, col: 3, x: 1, y: 0 },
                         { line: 0, col: 13, x: 3, y: 0 },
@@ -4129,7 +4129,7 @@ const parseData = [
             {
                 regex: /Stage \d/,
                 handler: function (matches, module) {
-                    module.push([matches.input, readMultiple(3).split("\n")]);
+                    module.push([matches.input, readLines(3)]);
                     return true;
                 }
             },
@@ -4265,7 +4265,7 @@ const parseData = [
             {
                 regex: /^(Solution|Codings|New codings):$/,
                 handler: function (matches, module) {
-                    var lines = readMultiple(4).split('\n').map(l => l.split(' '));
+                    var lines = readLines(4).map(l => l.split(' '));
                     module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
                     return true;
                 }
@@ -4283,7 +4283,7 @@ const parseData = [
             {
                 regex: /^(Solution|Codings|New codings):$/,
                 handler: function (matches, module) {
-                    var lines = readMultiple(4).split('\n').map(l => l.split(' '));
+                    var lines = readLines(4).map(l => l.split(' '));
                     module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
                     return true;
                 }
@@ -4631,7 +4631,7 @@ const parseData = [
                 regex: /(Manual Page (\d+)) w\/(o)?|(Solution:|Submitting:)/,
                 handler: function (matches, module) {
                     const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
-                    const board = readMultiple(8).split("\n");
+                    const board = readLines(8);
                     const colors = {
                         R: "red",
                         G: "green",
@@ -6104,7 +6104,7 @@ const parseData = [
                 regex: /Generated Maze is/,
                 handler: function (matches, module) {
                     var table = $('<table>').css({ 'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto" });
-                    var maze = readMultiple(17).split('\n');
+                    var maze = readLines(17);
                     for (var i = 0; i < 8; i++) {
                         var row = $('<tr>').appendTo(table);
                         for (var j = 0; j < 8; j++) {
@@ -6349,7 +6349,7 @@ const parseData = [
                     var tmpLine = readLine();
                     var ascii;
                     if (tmpLine.length > 0) {
-                        ascii = readMultiple(10).split('\n');
+                        ascii = readLines(10);
                         ascii.splice(0, 0, tmpLine);
                     } else {
                         ascii = readMultiple(21).replace(/\n{2}/g, "\n").split('\n');
@@ -6533,7 +6533,7 @@ const parseData = [
             {
                 regex: /^Beginning of Matrix/,
                 handler: function (matches, module) {
-                    const matrix = readMultiple(6).split("\n").map(line => line.replace(/^\[Playfair Cipher #\d+\] /, ""));
+                    const matrix = readLines(6).map(line => line.replace(/^\[Playfair Cipher #\d+\] /, ""));
                     matrix.splice(5, 1);
 
                     module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
@@ -7325,7 +7325,7 @@ const parseData = [
                 handler: function (matches, module) {
                     for (let thing of module.Things)
                         module.push(thing);
-                    module.push(["SETTINGS", readMultiple(3).split('\n').map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
+                    module.push(["SETTINGS", readLines(3).map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
                     module.Things = false;
                     return true;
                 }
@@ -8485,7 +8485,7 @@ const parseData = [
             {
                 regex: /^Generated Maze:$/,
                 handler: function (matches, module) {
-                    let maze = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    let maze = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
                     module.tileMaze = maze;
                     return true;
                 }
@@ -8500,7 +8500,7 @@ const parseData = [
             {
                 regex: /^Tile Numbers:$/,
                 handler: function (matches, module) {
-                    let tileNumbers = readMultiple(7).split('\n').map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+                    let tileNumbers = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
                     module.tileNumbers = tileNumbers;
                     return true;
                 }
