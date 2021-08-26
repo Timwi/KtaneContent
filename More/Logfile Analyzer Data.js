@@ -3246,6 +3246,85 @@ const parseData = [
         ]
     },
     {
+        displayName: "Flipping Squares",
+        moduleID: "FlippingSquaresModule",
+        loggingTag: "Flipping Squares",
+        matches: [
+            {
+                regex: /^(Initial state:|Intended solution:)$/,
+                handler: function (matches, module) {
+                    let lns = readLines(3);
+                    let arrowPathD = 'm 2.01e-4,-4.902 c -0.632551,1.2651 -1.2651,2.5302 -2.530201,3.795302 0.793599,-0.340114 1.382063,-0.553566 1.914947,-0.649848 0.298978,2.231223 -0.333571,4.761423 -0.966122,6.659074 0.948825,-0.316275 2.213927,-0.316275 3.162752,0 -0.632551,-1.897651 -1.2651,-4.427851 -0.966122,-6.659074 0.532884,0.09628 1.121348,0.309734 1.914947,0.649848 C 1.265301,-2.3718 0.632752,-3.6369 2.01e-4,-4.902 z';
+                    let colors = {
+                        R: '#ff5252',
+                        O: '#ffa952',
+                        Y: '#ffff52',
+                        G: '#8bff52',
+                        C: '#52ffc6',
+                        Z: '#52a7ff',
+                        B: '#5452ff',
+                        P: '#ab52ff',
+                        I: '#ff52fc'
+                    };
+                    let rotations = "↑↗→↘↓↙←↖";
+                    let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -4.5 81 35' font-size='4' text-anchor='middle'>
+                        <text x='15' y='-1'>FRONT</text>
+                        <text x='65' y='-1'>BACK</text>
+                        ${Array(18).fill(null).map((_, sq) => `
+                            <g transform='translate(${10*(sq % 3) + 50*((sq / 9) | 0)}, ${10*(((sq / 3) | 0) % 3)})'>
+                                <rect fill='${colors[lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12]]}' width='10' height='10'/>
+                                <path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
+                                <path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
+                                ${lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1] === '·' ? '' :
+                                  lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1] === '•' ? `<circle cx='5' cy='5' r='1.5' />` :
+                                  `<path d='${arrowPathD}' transform='translate(5, 5) scale(.7)
+                                    rotate(${45*rotations.indexOf(lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1])})'/>`}
+                            </g>
+                        `).join('')}</svg>`);
+                    module.push({ label: matches[1], obj: svg });
+                    return true;
+                }
+            },
+            {
+                regex: /^Flips:$/,
+                handler: function (matches, module) {
+                    let lns = readLines(9)
+                        .map(line => /Squares \[(.*)\], Dir (\d+)/.exec(line))
+                        .map(match => ({ sq: match[1].split(',').map(s => s.split('↔').map(v => parseInt(v))), dir: parseInt(match[2]) }));
+                    let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -5.5 101 106' font-size='4' text-anchor='middle'>
+                        ${lns.map((ln, lnIx) => `
+                            <g transform='translate(${35*(lnIx % 3)}, ${35*((lnIx / 3)|0)})'>
+                                <text x='15' y='-1'>${lnIx+1}</text>
+                                ${Array(9).fill(null).map((_, sq) => `
+                                    <g transform='translate(${10*(sq % 3)}, ${10*((sq / 3)|0)})'>
+                                        <rect fill='${ln.sq.some(tup => tup[0] === sq || tup[1] === sq) ? '#bdf' : '#ddd'}' width='10' height='10'/>
+                                        <path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
+                                        <path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
+                                    </g>
+                                `).join('')}
+                                ${ln.sq.map(sq => sq[0] === sq[1]
+                                    ? `<g transform='translate(${10*(sq[0] % 3)+5}, ${10*((sq[0] / 3)|0)+5}) rotate(${45*ln.dir})'>
+                                            <path d='M0 -1v2' fill='none' stroke='black' stroke-width='1' />
+                                            <path d='M-1 -1 h2 l-1 -2zM-1 1 h2 l-1 2z' fill='black' stroke='none' />
+                                        </g>`
+                                    : `
+                                        <path data-dir='${ln.dir}' d='M${10*(sq[0] % 3)+5} ${10*((sq[0] / 3)|0)+5} ${10*(sq[1] % 3)+5} ${10*((sq[1] / 3)|0)+5}' fill='none' stroke='black' stroke-width='1' />
+                                        <path transform='translate(${10*(sq[0] % 3)+5}, ${10*((sq[0] / 3)|0)+5}) rotate(${ln.dir < 2 ? 180+45*ln.dir : 45*ln.dir})' d='M-1 0 h2 l-1 2z' fill='black' stroke='none' />
+                                        <path transform='translate(${10*(sq[1] % 3)+5}, ${10*((sq[1] / 3)|0)+5}) rotate(${ln.dir < 2 ? 180+45*ln.dir : 45*ln.dir})' d='M-1 0 h2 l-1 -2z' fill='black' stroke='none' />
+                                    `
+                                ).join('')}
+                            </g>
+                        `).join('')}<${''}/svg>`);
+                    module.push({ label: "Flips:", obj: svg });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Follow the Leader",
         moduleID: "FollowTheLeaderModule",
         loggingTag: "Follow the Leader",
