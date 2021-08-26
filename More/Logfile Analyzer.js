@@ -275,7 +275,7 @@ class BombGroup {
         }
 
         // Copy DMG string
-        const dmgString = 
+        const dmgString =
         `/// ${this.MissionName}\n\n` +
         this.loggedBombs
             .map(bomb =>
@@ -417,7 +417,7 @@ class BombGroup {
 
             // Graph lines
             $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 0 1.01 2.01 1.01">`).appendTo(graph);
-            
+
             function printTime(num) {
                 num = Math.floor(num);
                 let sec = num % 60;
@@ -458,7 +458,7 @@ class BombGroup {
                 <text x='1' y='1.2' style="font-size: .05;text-anchor: middle;">Real Time</text>
             </g>
             `);
-            
+
             for (const item of timerLabels) {
                 $SVG(`<text transform='translate(${item * 2 / totalRealTime}, 0)'><textpath href='#left-label' style="font-size: .05;">${printTime(item)}</textpath></text>`).appendTo(group);
                 $SVG(`<path stroke='#ccc' stroke-width='.005' d='M${item * 2 / totalRealTime} 0v1.01'/>`).appendTo(group);
@@ -1307,10 +1307,13 @@ function readTaggedLine() {
 }
 
 function readMultiple(count, fnc) {
-    var lines = '';
-    for (var i = 0; i < count; i++) {
-        lines += (i === 0 ? '' : "\n") + (fnc ? fnc(readLine()) : readLine());
-    }
+    return (fnc ? readLines(count).map(fnc) : readLines(count)).join("\n");
+}
+
+function readLines(count) {
+    var lines = [];
+    for (var i = 0; i < count; i++)
+        lines.push(readLine());
     return lines;
 }
 
