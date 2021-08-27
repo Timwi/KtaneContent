@@ -117,6 +117,10 @@
 
             $(document).click(function() {
                 start = null;
+            }).keydown(function(event) {
+                if (event.key == "Escape") {
+                    selectNet();
+                }
             });
 
             var row;
@@ -126,14 +130,23 @@
             var rotations = {};
             var netRotation = 0;
             row = $(".net-rot-box");
-            $("<div>").addClass("net-rotation").text("0").appendTo(row).click(function(event) {
-                netRotation = netRotation + ((event.ctrlKey || event.metaKey) ? -1 : 1);
+            $("<div>").addClass("net-rotation thenumber").text("0").appendTo(row);
+            $("<div>").addClass("net-rotation").text("deg").appendTo(row);
+            $("<div>").css("width", "15px").appendTo(row);
+            $("<button>").text("←").appendTo(row).click(function() {
+                rotateNet(true);
+            });
+            $("<button>").text("→").appendTo(row).click(function() {
+                rotateNet(false);
+            });
+
+            function rotateNet(ccw) {
+                netRotation = netRotation + (ccw ? -1 : 1);
                 symbolboard.css("transform", `rotate(${netRotation * 90}deg)`);
                 $(".symbol-row.letters .square").css("transform", `rotate(${-netRotation * 90}deg)`);
                 $(".symbol-row .square.numbers").css("transform", `rotate(${-netRotation * 90}deg)`);
-                $(this).text(`${(netRotation % 4) * 90}`);
-            });
-            $("<div>").addClass("net-rotation").text("deg").appendTo(row);
+                $(".net-rotation.thenumber").text(`${(netRotation % 4) * 90}`);
+            }
 
             let cubeColors = ["num-1", "num-2", "num-3"];
             function hasWhichCubeColor(elem) {
@@ -147,7 +160,7 @@
             }
             $(".cubes.cubes1 .cube-row .cube-box").click(function(event) {
                 var mobileElemHL = $(".ktane-highlight-btn.element").hasClass("selected");
-                if (event.altKey || mobileElemHL) {
+                if (event.altKey || (event.shiftKey && (event.ctrlKey || event.metaKey)) || mobileElemHL) {
                     var copy = $(this).html();
                     var col = hasWhichCubeColor($(this));
                     removeCubeColorClass($(".copy-cube.tcube"))
@@ -156,7 +169,7 @@
             });
             $(".cubes.cubes2 .cube-row .cube-box").click(function(event) {
                 var mobileElemHL = $(".ktane-highlight-btn.element").hasClass("selected");
-                if (event.altKey || mobileElemHL) {
+                if (event.altKey || (event.shiftKey && (event.ctrlKey || event.metaKey)) || mobileElemHL) {
                     var copy = $(this).html();
                     var col = hasWhichCubeColor($(this));
                     removeCubeColorClass($(".copy-cube.bcube"))
@@ -617,17 +630,17 @@
 
         h3 > .symbols > .sep { width: 1cm; }
 
-        h3 > .symbols > .sq { position: relative; }
-            h3 > .symbols > .sq-1 { background-color: hsl(  0, 35%, 67%); }
-            h3 > .symbols > .sq-2 { background-color: hsl(100, 30%, 67%); }
-            h3 > .symbols > .sq-3 { background-color: hsl(200, 30%, 67%); }
-            h3 > .symbols > .sq > span {
-                position: absolute;
-                left: 50%;
-                top: 54%;
-                transform: translate(-50%, -50%);
-                font-size: 32pt;
-            }
+        h3 > .symbols > .sq { position: relative; color: black; }
+        h3 > .symbols > .sq-1 { background-color: hsl(  0, 35%, 67%); }
+        h3 > .symbols > .sq-2 { background-color: hsl(100, 30%, 67%); }
+        h3 > .symbols > .sq-3 { background-color: hsl(200, 30%, 67%); }
+        h3 > .symbols > .sq > span {
+            position: absolute;
+            left: 50%;
+            top: 54%;
+            transform: translate(-50%, -50%);
+            font-size: 32pt;
+        }
 
         .front { background-color: hsl(0, 0%, 60%); }
             .front.or-0 { transform: translateZ(.9cm); }
@@ -887,11 +900,9 @@
         }
         .stamp.bluemarked, h3 .symbols .face.bluemarked {
             background-color: rgba(105, 105, 255, 1);
-            /* border-color: rgba(0, 0, 150, 1); */
         }
         .stamp.redmarked, h3 .symbols .face.redmarked {
             background-color: rgba(255, 105, 105, 1);
-            /* border-color: rgba(150, 0, 0, 1); */
         }
 
         .redmark, .bluemark, .netmark, .rotatetool {
@@ -925,11 +936,11 @@
         }
         .tcube {
             position: relative;
-            top: 20px;
+            top: 110px;
         }
         .bcube {
             position: relative;
-            top: 150px;
+            top: 230px;
         }
         .symbolboard {
             transform-origin: 50% 50%;
@@ -940,12 +951,25 @@
             width: 360px;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 10px;
         }
         .stampholder {
             height: 180px;
             width: 510px;
             margin-left: auto;
             margin-right: auto;
+        }
+        .dark .stamp:not(.redmark, .bluemark), .dark h3 .symbols .face {
+            filter: invert(90%);
+        }
+        .dark .stamp {
+            color: black;
+        }
+        .dark .stamp.bluemarked, .dark h3 .symbols .face.bluemarked {
+            background-color: rgba(200, 200, 20, 1);
+        }
+        .dark .stamp.redmarked, .dark h3 .symbols .face.redmarked {
+            background-color: rgba(20, 200, 200, 1);
         }
 
         button {
@@ -960,6 +984,15 @@
         }
         button.reset-board, button.reset-all, button.reset-saves {
             padding: 10px 20px;
+        }
+        .net-rot-box button {
+            height: 30px;
+            position: relative;
+            bottom: 7px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
 
         button:hover {
@@ -985,7 +1018,7 @@
             background-position: top;
         }
         .page-bg-02 {
-            height: 1350px;
+            height: 368mm;
         }
     </style>
 </head>
@@ -1127,8 +1160,7 @@
                         click on the net to use that tool or stamp.</li>
                     <li>Use one of the <b>symbol stamps</b> to place/remove a symbol.</li>
                     <li><b>Shift-click</b> a square or use the <b>Rotate</b> tool to rotate clockwise, <b>Ctrl-click</b> for counter-clockwise.</li>
-                    <li>Click the Net Rotation <b>number</b> to rotate the whole net clockwise,
-                        <b>Ctrl-click</b> for counter-clockwise.</li>
+                    <li>Use the <b>Net Rotation</b> buttons to rotate the whole net.</li>
                     <li><b>Highlight a cube</b> from Group 1 on the previous page, and one
                         from Group 2, to view them on this page.</li>
                     <li>Use the <b>Net</b> tool to mark/unmark a square as part of the given net.</li>
@@ -1137,7 +1169,7 @@
                         which squares on the net are <em>known</em>.</li>
                     <li>Use the <b>Mark</b> tool to mark which symbol or square on the net is <em>highlighted</em>.</li>
                     <li>Marking a <b>symbol stamp</b> in red or blue also highlights them on page 2.
-                    <li>Deselect the <b>Mark</b> or <b>Have</b> tool by clicking them again or clicking <b>Net</b>.
+                    <li>Deselect the <b>Mark</b> or <b>Have</b> tool by clicking them again, clicking <b>Net</b>, or pressing <b>Esc</b>.
                     <li>You can save the current state of the board, reset the squares, reset all saves,
                         or reset everything using the buttons below the board.</li>
                 </ul>
