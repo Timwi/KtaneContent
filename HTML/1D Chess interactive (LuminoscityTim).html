@@ -21,9 +21,35 @@
             var start;
             let saveStates = [];
             let currentState = 0;
+            let movesNumber = $(".movesnumber");
+            var movesLeft = 6;
 
             $(document).click(function() {
+                $(".movesnumber").removeClass("selected");
                 start = null;
+            }).keydown(function(event) {
+                if (!(event.altKey || event.ctrlKey || event.shiftKey)) {
+                    let k = event.key.toLowerCase();
+                    if (k == "m") {
+                        movesNumber.addClass("selected");
+                    } else if (movesNumber.hasClass("selected")) {
+                        var n = parseInt(event.key);
+                        if (n >= 0) {
+                            movesLeft = n;
+                            movesNumber.text(n)
+                            $(".movesnumber").removeClass("selected");
+                        }
+                    }
+                }
+            });
+
+            $(".movestext.minus").click(function() {
+                movesLeft = Math.max(0, movesLeft - 1);
+                movesNumber.text(movesLeft)
+            });
+            $(".movestext.plus").click(function() {
+                movesLeft = Math.min(99, movesLeft + 1);
+                movesNumber.text(movesLeft)
             });
 
             var row;
@@ -198,12 +224,15 @@
                 saveStates.forEach(x => x.remove());
                 saveStates = [];
                 currentState = 0;
+                movesLeft = 6;
+                movesNumber.text(movesLeft);
             });
 
             $(".spacesButton").click(function() {
                 $(".square8").toggleClass("last-square");
                 $(".square9").toggleClass("invisible");
                 $(".label9").toggleClass("invisible");
+                $(this).toggleClass('eightsquares');
             });
 
             function removeFutureSaves() {
@@ -222,11 +251,14 @@
                 let saveState = Array.from($(".chessboard .square")).map(x => $(x)).map(x => x.attr("class") || "");
                 console.log(saveStates);
                 let stateNumber = saveStates.length;
+                let m = movesLeft;
                 currentState = stateNumber;
 
                 let button = $("<button>").text(stateNumber + 1).click(function() {
                     $(".chessboard .square").each((i, x) => $(x).attr("class", saveState[i]));
                     currentState = stateNumber;
+                    movesLeft = m;
+                    movesNumber.text(m);
                 }).addClass("flash").appendTo(".saves");
                 setTimeout(() => {
                     button.removeClass("flash");
@@ -272,11 +304,32 @@
 
         .move {
             border: 1px solid black;
+        }
+        .move, .movestext {
             font-size: 20px;
             display: flex;
             justify-content: center;
             align-content: center;
             flex-direction: column;
+        }
+        .movestext {
+            padding-top: 8px;
+        }
+        .movesnumber {
+            font-size: 35px;
+            height: 30px;
+            width: 42px;
+            position: relative;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .movesnumber.selected {
+            background-color: rgba(0, 0, 255, 0.4);
+        }
+        .movestext.label {
+            padding-left: 50px;
         }
 
         @media screen and (max-width: 600px) {
@@ -383,6 +436,15 @@
         button.reset-saves, button.reset-board, button.reset-all {
             padding: 10px 20px;
         }
+        button.spacesButton:before {
+            content: '9 ';
+        }
+        button.spacesButton.eightsquares:before {
+            content: '8 ';
+        }
+        button.spacesButton {
+            min-width: 30mm;
+        }
 
         button:hover {
             background-color: black;
@@ -395,7 +457,10 @@
         .save {
             padding: 5px 8px;
         }
-        .buttons {
+        .movesholder {
+            height: 42px;
+        }
+        .movesholder {
             display: flex;
             flex-direction: row;
         }
@@ -475,7 +540,7 @@
                     <tr>
                         <td>K<u><strong>n</strong></u>ight</td>
                         <td><img src="img/1D Chess/bn.svg" class="table-piece" title="Knight"></td>
-                        <td>2 spaces forward/backwards, can jump over another piece.</td>
+                        <td>2 spaces forward/backward, can jump over another piece.</td>
                     </tr>
                     <tr>
                         <td><u><strong>P</strong></u>awn</td>
@@ -485,17 +550,17 @@
                     <tr>
                         <td><u><strong>B</strong></u>ishop</td>
                         <td><img src="img/1D Chess/bb.svg" class="table-piece" title="Bishop"></td>
-                        <td>Any <u><strong>even-numbered</strong></u> spaces forward/backwards.</td>
+                        <td>Any <u><strong>even-number</strong></u> of spaces forward/backward.</td>
                     </tr>
                     <tr>
                         <td><u><strong>R</strong></u>ook</td>
                         <td><img src="img/1D Chess/br.svg" class="table-piece" title="Rook"></td>
-                        <td>Any <u><strong>odd-numbered</strong></u> spaces forward/backwards.</td>
+                        <td>Any <u><strong>odd-number</strong></u> of spaces forward/backward.</td>
                     </tr>
                     <tr>
                         <td><u><strong>Q</strong></u>ueen</td>
                         <td><img src="img/1D Chess/bq.svg" class="table-piece" title="Queen"></td>
-                        <td>Any spaces forward/backwards.</td>
+                        <td>Any number of spaces forward/backward.</td>
                     </tr>
                 </table>
             </div>
@@ -507,7 +572,14 @@
                 <span class="page-header-section-title">1D Chess</span>
             </div>
             <div class="page-content">
-                <p><button class="spacesButton">8/9 squares</button></p>
+                <div class="movesholder">
+                    <button class="spacesButton">squares</button>
+                    <div class="movestext label">Moves:</div>
+                    <div class="movestext movesnumber">6</div>
+
+                    <button class="movestext minus">-</button>
+                    <button class="movestext plus">+</button>
+                </div>
                 <div class="gridholder"><div class="chessboard"></div></div>
                 <div class="stampholder">
                     <div class="chess-pieces r1"></div>
@@ -526,16 +598,18 @@
                 <p>Use the following interactive graphic as a chessboard.
                 <p>Select one of the tools below the chessboard then click on the chessboard to use that tool.
                 <br>
-                Use one of the chess pieces tools to place/remove a piece.
+                Use one of the chess piece tools to place/remove a piece.
                 <br>
                 Use the marker tool to mark/unmark a square.
                 <br>
-                Use the Move tool to drag a piece from one square to another.
-                <br>
                 Drag using the marker tool to mark/unmark several squares.
                 <br>
-                You can save the current state of the board, toggle the 9th square, reset the board,
-                reset the saves, or reset everything using the buttons below the board.
+                Use the <b>Move</b> tool to drag a piece from one square to another.
+                <br>
+                Use the <b>+</b> and <b>-</b> buttons or press <b>M</b> and then <b>0-9</b> to set the moves until checkmate.
+                <br>
+                You can toggle the 9th square, save the current state of the board, reset the board,
+                reset the saves, or reset everything using the other buttons.
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
