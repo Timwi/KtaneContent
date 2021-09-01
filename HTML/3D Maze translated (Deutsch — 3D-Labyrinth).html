@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -18,11 +19,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -57,6 +70,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -203,6 +226,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -292,6 +317,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -443,67 +470,89 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-<span class="page-header-section-title">3D-Labyrinth</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>Zum Thema 3D-Labyrinth</h2>
-
-                <p class="flavour-text">Du bist in einem Labyrinth von kurvenreichen Passagen, alle gleich.
-                    Ausgänge sind nach Norden, Süden, Osten und Westen.
-
-                <ul>
-                    <li>Der Entschärfer startet in einer zufälligen Position und Ausrichtung in einem der zehn Labyrinthe unten.
-                    <li>Orte den Entschärfer mit einer 3D-Ansicht der Labyrinthwände, welche auch das Symbol auf dem Boden des aktuellen Zwischenraumes zeigt, und ob sich ein Symbol in dem nächsten Zwischenraum befindet.
-                    <li>Die Labyrinthkarte ist zyklisch; Wenn sich der Entschärfer über eine der Kanten bewegt, wird er in den Zwischenraum auf der gegenüberliegenden Seite gebracht, sofern keine Wand dazwischen ist.
-                    <li>Eine der Wände ist das Ziel, der Rest verursacht Strikes, wenn der Entschärfer sich hineinbewegt.
-                    <li>Um das Modul zu entschärfen, finde die Zielwand und bewege dich von einer der beiden Seiten hindurch.
-                    <li>Berechne mit den folgenden Methoden eine Zeile (0-7), eine Spalte (0-7) und eine Richtung. Die Zielwand wird die erste Wand von diesen Koordinaten aus in der gegebenen Richtung sein.
-                </ul>
-
-                <p class='heading'>Reihe:
-                <ul>
-                    <li>Beginne mit der ersten Ziffer der Seriennummer.
-                    <li>Addiere 1 für jeden unbeleuchteten Indikator mit einem Buchstaben in <strong>„<span id='row-phrase'>MAZE GAMER</span>“</strong>.
-                    <li>Wenn die Reihennummer größer als 7 ist, subtrahiere 8.
-                </ul>
-
-                <p class='heading'>Spalte:
-                <ul>
-                    <li>Beginne mit der letzten Ziffer der Seriennummer.
-                    <li>Addiere 1 für jeden beleuchteten Indikator mit einem Buchstaben in <strong>„<span id='col-phrase'>HELP IM LOST</span>“</strong>.
-                    <li>Wenn die Spaltennummer größer als 7 ist, subtrahiere 8.
-                </ul>
-
-                <p class='heading'>Richtung:
-                <ul>
-                    <li>Jedes Labyrinth enthält drei Sternsymbole, die auf der Karte markiert sind.
-                    <li>Auf dem Boden in jedem dieser Orte ist ein Buchstabe, welcher der Richtung zu der Zielwand entspricht: „N“ wird zu Norden, „S“ wird zu Süden, „E“ wird zu Osten, und „W“ wird zu Westen.
-                    <li>Vorsicht vor Buchstaben, die nicht an diesen markierten Orten sind, sie tragen falsche Täuschungsanweisungen!
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">Seite 1 von 3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D-Labyrinth</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>Zum Thema 3D-Labyrinth</h2>
+
+            <p class="flavour-text">Du bist in einem Labyrinth von kurvenreichen Passagen, alle gleich.
+                Ausgänge sind nach Norden, Süden, Osten und Westen.
+
+            <ul>
+                <li>Der Entschärfer startet in einer zufälligen Position und Ausrichtung in einem der zehn Labyrinthe unten.
+                <li>Orte den Entschärfer mit einer 3D-Ansicht der Labyrinthwände, welche auch das Symbol auf dem Boden des aktuellen Zwischenraumes zeigt, und ob sich ein Symbol in dem nächsten Zwischenraum befindet.
+                <li>Die Labyrinthkarte ist zyklisch; Wenn sich der Entschärfer über eine der Kanten bewegt, wird er in den Zwischenraum auf der gegenüberliegenden Seite gebracht, sofern keine Wand dazwischen ist.
+                <li>Eine der Wände ist das Ziel, der Rest verursacht Strikes, wenn der Entschärfer sich hineinbewegt.
+                <li>Um das Modul zu entschärfen, finde die Zielwand und bewege dich von einer der beiden Seiten hindurch.
+                <li>Berechne mit den folgenden Methoden eine Zeile (0-7), eine Spalte (0-7) und eine Richtung. Die Zielwand wird die erste Wand von diesen Koordinaten aus in der gegebenen Richtung sein.
+            </ul>
+
+            <p class='heading'>Reihe:
+            <ul>
+                <li>Beginne mit der ersten Ziffer der Seriennummer.
+                <li>Addiere 1 für jeden unbeleuchteten Indikator mit einem Buchstaben in <strong>„<span id='row-phrase'>MAZE GAMER</span>“</strong>.
+                <li>Wenn die Reihennummer größer als 7 ist, subtrahiere 8.
+            </ul>
+
+            <p class='heading'>Spalte:
+            <ul>
+                <li>Beginne mit der letzten Ziffer der Seriennummer.
+                <li>Addiere 1 für jeden beleuchteten Indikator mit einem Buchstaben in <strong>„<span id='col-phrase'>HELP IM LOST</span>“</strong>.
+                <li>Wenn die Spaltennummer größer als 7 ist, subtrahiere 8.
+            </ul>
+
+            <p class='heading'>Richtung:
+            <ul>
+                <li>Jedes Labyrinth enthält drei Sternsymbole, die auf der Karte markiert sind.
+                <li>Auf dem Boden in jedem dieser Orte ist ein Buchstabe, welcher der Richtung zu der Zielwand entspricht: „N“ wird zu Norden, „S“ wird zu Süden, „E“ wird zu Osten, und „W“ wird zu Westen.
+                <li>Vorsicht vor Buchstaben, die nicht an diesen markierten Orten sind, sie tragen falsche Täuschungsanweisungen!
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">Seite 1 von 3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-<span class="page-header-section-title">3D-Labyrinth</span>
+                <span class="page-header-section-title">3D-Labyrinth</span>
             </div>
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">Seite 2 von 3</div>
@@ -515,10 +564,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">Seite 3 von 3</div>

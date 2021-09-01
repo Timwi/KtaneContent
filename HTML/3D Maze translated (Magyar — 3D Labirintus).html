@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -18,11 +19,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -57,6 +70,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -203,6 +226,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -292,6 +317,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -443,54 +470,76 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D Labirintus</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>Információ a 3D Labirintusról</h2>
-
-                <p class="flavour-text">Úgy néz ki, hogy tekergő utak útvesztőjében vagy.
-                    A kijáratok Északon, Délen, Keleten és Nyugaton találhatóak.
-
-                <ul>
-                    <li>A hatástalanító egy véletlenszerű helyen és irányban kezd a lenti tíz labirintus egyikében.
-                    <li>Találd meg a hatástalanítót a 3D nézet segítségével, amely mindig mutatja ha egy betűvel helyzett helyre lépsz, vagy ha a következő lépésnél egy betű lesz.
-                    <li>A labirintus ciklikus - ha a szélén lemész, a másik oldal ugyanazon pontján kötsz ki, persze csak ha nincs fal köztük.
-                    <li>Az egyik fal a cél, míg a többi hibát ad ha nekimész.
-                    <li>A modul hatástalanításához találd meg a célfalat, és menj bele bármelyik oldaláról.
-                    <li>A lenti metódusok alapján számold ki a sort (0-7), az oszlopot (0-7), majd az irányt. A célfal a kiindulási ponttal szembeni első fal a megadott irányban.
-                </ul>
-
-                <p class='heading'>Sor:
-                <ul>
-                    <li>Kezdj az első számmal a szériaszámban.
-                    <li>Adj hozzá 1-et minden olyan indikátorért amely nem világít, és bármely betűje szerepel ebben: <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
-                    <li>Ha a sor száma nagyobb mint 7, vonj ki belőle 8-at.
-                </ul>
-
-                <p class='heading'>Oszlop:
-                <ul>
-                    <li>Kezdj az utolsó  számmal a szériaszámban.
-                    <li>Adj hozzá 1-et minden olyan indikátorért amely világít, és bármely betűje szerepel ebben: <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
-                    <li>Ha az oszlop száma nagyobb mint 7, vonj ki belőle 8-at.
-                </ul>
-
-                <p class='heading'>Irány:
-                <ul>
-                    <li>Minden labirintus tartalmaz három csillag ikont, a térképen megjelölve.
-                    <li>A padlón minden helyen van egy betű, amely égtájat jelöl meg a célfal felé: "N" az Észak, "S" a Dél, "E" a Kelet és "W" a Nyugat.
-                    <li>Vigyázz a betűkkel a nem megjelölt helyeken, ezek ugyanis csali utasításokat tartalmaznak!
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">1. oldal</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D Labirintus</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>Információ a 3D Labirintusról</h2>
+
+            <p class="flavour-text">Úgy néz ki, hogy tekergő utak útvesztőjében vagy.
+                A kijáratok Északon, Délen, Keleten és Nyugaton találhatóak.
+
+            <ul>
+                <li>A hatástalanító egy véletlenszerű helyen és irányban kezd a lenti tíz labirintus egyikében.
+                <li>Találd meg a hatástalanítót a 3D nézet segítségével, amely mindig mutatja ha egy betűvel helyzett helyre lépsz, vagy ha a következő lépésnél egy betű lesz.
+                <li>A labirintus ciklikus - ha a szélén lemész, a másik oldal ugyanazon pontján kötsz ki, persze csak ha nincs fal köztük.
+                <li>Az egyik fal a cél, míg a többi hibát ad ha nekimész.
+                <li>A modul hatástalanításához találd meg a célfalat, és menj bele bármelyik oldaláról.
+                <li>A lenti metódusok alapján számold ki a sort (0-7), az oszlopot (0-7), majd az irányt. A célfal a kiindulási ponttal szembeni első fal a megadott irányban.
+            </ul>
+
+            <p class='heading'>Sor:
+            <ul>
+                <li>Kezdj az első számmal a szériaszámban.
+                <li>Adj hozzá 1-et minden olyan indikátorért amely nem világít, és bármely betűje szerepel ebben: <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
+                <li>Ha a sor száma nagyobb mint 7, vonj ki belőle 8-at.
+            </ul>
+
+            <p class='heading'>Oszlop:
+            <ul>
+                <li>Kezdj az utolsó  számmal a szériaszámban.
+                <li>Adj hozzá 1-et minden olyan indikátorért amely világít, és bármely betűje szerepel ebben: <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
+                <li>Ha az oszlop száma nagyobb mint 7, vonj ki belőle 8-at.
+            </ul>
+
+            <p class='heading'>Irány:
+            <ul>
+                <li>Minden labirintus tartalmaz három csillag ikont, a térképen megjelölve.
+                <li>A padlón minden helyen van egy betű, amely égtájat jelöl meg a célfal felé: "N" az Észak, "S" a Dél, "E" a Kelet és "W" a Nyugat.
+                <li>Vigyázz a betűkkel a nem megjelölt helyeken, ezek ugyanis csali utasításokat tartalmaznak!
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">1. oldal</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -499,11 +548,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">2. oldal</div>
@@ -515,10 +564,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">3. oldal</div>

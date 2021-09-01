@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -19,11 +20,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -58,6 +71,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -204,6 +227,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -293,6 +318,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -444,54 +471,76 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D 迷宫</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>关于 3D 迷宫模块</h2>
-
-                <p class="flavour-text">你身处一个道路曲折的迷宫之中，出口可能在任何地方。
-
-                <ul>
-                    <li>拆弹者开始于下图10个迷宫中的一个任意位置。
-                    <li>拆弹者可以使用3D视角中的墙壁和地上的字母来确定自己的位置。
-                    <li>这个迷宫是循环的：从没有墙的迷宫边缘离开会从对侧边缘再次进入迷宫。
-                    <li>其中一堵墙是迷宫出口，进入其他的墙会触发一次失误。
-                    <li>要解除这个模块，需要找到出口墙并从任何一面进入。
-                    <li>使用下面的方法，计算出行（0-7）、列（0-7）以及一个方向；出口墙位于
-                                                站在计算出的行列坐标点、面向计算出的方向正前方的位置。
-                </ul>
-
-                <p class='heading'>行：
-                <ul>
-                    <li>读炸弹序列号的第一个数字。
-                    <li>每有一个含有<strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>中的字母的不亮灯标签，就将刚才的数字加1。
-                    <li>如果计算出的数字大于7，则减去8，作为行数。
-                </ul>
-
-                <p class='heading'>列：
-                <ul>
-                    <li>读炸弹序列号的最后一个数字。
-                    <li>每有一个含有<strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>中的字母的亮灯标签，就将刚才的数字加1。
-                    <li>如果计算出的数字大于7，则减去8，作为列数。
-                </ul>
-
-                <p class='heading'>方向：
-                <ul>
-                    <li>每个迷宫都有3个标有星号的点。
-                    <li>在迷宫中这些点地面上标有去往出口的方向：“N”表示北，“S”表示南，“E”表示东，“W”表示西。
-                    <li>小心没有在星标地点的字母，它们可能标有错误的方向。
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">第1页 共3页</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D 迷宫</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>关于 3D 迷宫模块</h2>
+
+            <p class="flavour-text">你身处一个道路曲折的迷宫之中，出口可能在任何地方。
+
+            <ul>
+                <li>拆弹者开始于下图10个迷宫中的一个任意位置。
+                <li>拆弹者可以使用3D视角中的墙壁和地上的字母来确定自己的位置。
+                <li>这个迷宫是循环的：从没有墙的迷宫边缘离开会从对侧边缘再次进入迷宫。
+                <li>其中一堵墙是迷宫出口，进入其他的墙会触发一次失误。
+                <li>要解除这个模块，需要找到出口墙并从任何一面进入。
+                <li>使用下面的方法，计算出行（0-7）、列（0-7）以及一个方向；出口墙位于
+                                            站在计算出的行列坐标点、面向计算出的方向正前方的位置。
+            </ul>
+
+            <p class='heading'>行：
+            <ul>
+                <li>读炸弹序列号的第一个数字。
+                <li>每有一个含有<strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>中的字母的不亮灯标签，就将刚才的数字加1。
+                <li>如果计算出的数字大于7，则减去8，作为行数。
+            </ul>
+
+            <p class='heading'>列：
+            <ul>
+                <li>读炸弹序列号的最后一个数字。
+                <li>每有一个含有<strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>中的字母的亮灯标签，就将刚才的数字加1。
+                <li>如果计算出的数字大于7，则减去8，作为列数。
+            </ul>
+
+            <p class='heading'>方向：
+            <ul>
+                <li>每个迷宫都有3个标有星号的点。
+                <li>在迷宫中这些点地面上标有去往出口的方向：“N”表示北，“S”表示南，“E”表示东，“W”表示西。
+                <li>小心没有在星标地点的字母，它们可能标有错误的方向。
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">第1页 共3页</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -500,11 +549,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">第2页 共3页</div>
@@ -516,10 +565,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">第3页 共3页</div>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -19,11 +20,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -58,6 +71,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -204,6 +227,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -293,6 +318,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -444,53 +471,75 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D Лабиринт</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>О 3D Лабиринте</h2>
-
-                <p class="flavour-text">Вы находитесь в лабиринте с извилистыми коридорами. Выходы расположены на севере, юге, востоке и западе.
-
-                </p><ul>
-                    <li>Сапёр находится в случайном месте в одном из десяти лабиринтов, показанных ниже.
-                    </li><li>Основываясь на трёхмерном виде стен лабиринта, определите, где находится cапёр. На дисплее также отображены символы на полу в данном месте, а также метки, указывающие на наличие символа.
-                    </li><li> Карта лабиринта циклична: если вы выйдете за край изображенной области лабиринта, вы окажетесь на её противоположной стороне.
-                    </li><li>Одна из стен — ваша цель, остальные при входе в них вызовут ошибку.
-                    </li><li>Чтобы обезвредить модуль, найдите необходимую стену и войдите в неё с любой из сторон.
-                    </li><li>Пользуясь указаниями ниже, найдите ряд (0-7), столбец (0-7) и направление (север, запад, юг, восток). Первая стена в этом направлении от ячейки с полученными координатами — нужная вам стена.
-                </li></ul>
-
-                <p class="heading">Ряд:
-                </p><ul>
-                    <li>Возьмите первую цифру в серийном номере.
-                    </li><li>Прибавьте к ней 1 за каждый негорящий индикатор, в названии которого содержатся буквы из фразы <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
-                    </li><li>Если полученное число больше 7, отнимите от него 8.
-                </li></ul>
-
-                <p class="heading">Столбец:
-                </p><ul>
-                    <li>Возьмите последнюю цифру в серийном номере.
-                    </li><li>Прибавьте к ней 1 за каждый горящий индикатор, в названии которого содержатся буквы из фразы <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
-                    </li><li>Если полученное число больше 7, отнимите от него 8.
-                </li></ul>
-
-                <p class="heading">Направление:
-                </p><ul>
-                    <li>На карте каждого лабиринта есть три места, отмеченных звёздочками.
-                    </li><li>В этих местах на полу есть буква, обозначающая направление к нужной стене:<br>“N” означает север, “S” — юг, “E” — восток, “W” — запад.
-                    </li><li>Остерегайтесь букв, которые не находятся в отмеченных местах — это ловушка!
-                </li></ul>
-            </div>
-            <div class="page-footer relative-footer">Стр. 1 из 3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D Лабиринт</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>О 3D Лабиринте</h2>
+
+            <p class="flavour-text">Вы находитесь в лабиринте с извилистыми коридорами. Выходы расположены на севере, юге, востоке и западе.
+
+            </p><ul>
+                <li>Сапёр находится в случайном месте в одном из десяти лабиринтов, показанных ниже.
+                </li><li>Основываясь на трёхмерном виде стен лабиринта, определите, где находится cапёр. На дисплее также отображены символы на полу в данном месте, а также метки, указывающие на наличие символа.
+                </li><li> Карта лабиринта циклична: если вы выйдете за край изображенной области лабиринта, вы окажетесь на её противоположной стороне.
+                </li><li>Одна из стен — ваша цель, остальные при входе в них вызовут ошибку.
+                </li><li>Чтобы обезвредить модуль, найдите необходимую стену и войдите в неё с любой из сторон.
+                </li><li>Пользуясь указаниями ниже, найдите ряд (0-7), столбец (0-7) и направление (север, запад, юг, восток). Первая стена в этом направлении от ячейки с полученными координатами — нужная вам стена.
+            </li></ul>
+
+            <p class="heading">Ряд:
+            </p><ul>
+                <li>Возьмите первую цифру в серийном номере.
+                </li><li>Прибавьте к ней 1 за каждый негорящий индикатор, в названии которого содержатся буквы из фразы <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
+                </li><li>Если полученное число больше 7, отнимите от него 8.
+            </li></ul>
+
+            <p class="heading">Столбец:
+            </p><ul>
+                <li>Возьмите последнюю цифру в серийном номере.
+                </li><li>Прибавьте к ней 1 за каждый горящий индикатор, в названии которого содержатся буквы из фразы <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
+                </li><li>Если полученное число больше 7, отнимите от него 8.
+            </li></ul>
+
+            <p class="heading">Направление:
+            </p><ul>
+                <li>На карте каждого лабиринта есть три места, отмеченных звёздочками.
+                </li><li>В этих местах на полу есть буква, обозначающая направление к нужной стене:<br>“N” означает север, “S” — юг, “E” — восток, “W” — запад.
+                </li><li>Остерегайтесь букв, которые не находятся в отмеченных местах — это ловушка!
+            </li></ul>
+        </div>
+        <div class="page-footer relative-footer">Стр. 1 из 3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -499,11 +548,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">Стр. 2 из 3</div>
@@ -515,10 +564,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">Стр. 3 из 3</div>
