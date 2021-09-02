@@ -3325,6 +3325,116 @@ const parseData = [
         ]
     },
     {
+        displayName: "Floor Lights",
+        moduleID: "FloorLights",
+        loggingTag: "Floor Lights",
+        matches: [
+            {
+                regex: /^-{58}$/,
+                handler: function (matches, module) {
+                    module.push(module.FloorLightsStage);
+                    return true;
+                }
+            },
+            {
+                regex: /^Tile patterns for Stage (\d+):$/,
+                handler: function (matches, module) {
+                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let row = 0; row < lights.length; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < lights.length; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', '1px')
+                                .css('width', '15px')
+                                .css('height', '15px')
+                                .appendTo(tr);
+                            switch(lights[row][col]) {
+                                case 'R':
+                                    td.css('background-color', '#FF0000')
+                                    break;
+                                case 'G':
+                                    td.css('background-color', '#00FF00')
+                                    break;
+                                case 'B':
+                                    td.css('background-color', '#0000FF')
+                                    break;
+                                case 'Y':
+                                    td.css('background-color', '#FFFF00')
+                                    break;
+                                default:
+                                    td.css('background-color', '#858585');
+                                    break;
+                            }
+                        }
+                    }
+
+                    module.FloorLightsStage = ["Stage " + matches[1], [{ label: "Tile patterns:", obj: table, nobullet: true }]];
+                    return true;
+                }
+            },
+            {
+                regex: /^(Correct toggle patterns for this stage:)|(You submitted these toggles:)|(Correct toggles to submit:)$/,
+                handler: function (matches, module) {
+                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let row = 0; row < lights.length; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let col = 0; col < lights.length; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', '1px')
+                                .css('width', '15px')
+                                .css('height', '15px')
+                                .appendTo(tr);
+                            switch(lights[row][col]) {
+                                case '1':
+                                    td.css('background-color', '#FFFF00')
+                                    break;
+                                case '0':
+                                    td.css('background-color', '#858585')
+                                    break;
+                            }
+                        }
+                    }
+                    switch(matches[0]){
+                        case "Correct toggle patterns for this stage:":
+                            module.FloorLightsStage[1].push({ label: matches[0], obj: table });
+                            break;
+                        case "Correct toggles to submit:":
+                            module.FloorLightsAnswer = lights;
+                            module.FloorLightsStage = ["Answer", [{ label: matches[0], obj: table }]]
+                            module.FloorLightsAttempts = 1
+                            break;
+                        case "You submitted these toggles:":
+                            module.FloorLightsStage = ["Attempt " + module.FloorLightsAttempts, [{ label: matches[0], obj: table }]]
+                            if(module.FloorLightsAnswer.every((val, index) => val === lights[index])) {
+                                readLines(1);
+                                module.FloorLightsStage[1].push("That was correct. Module solves.");
+                                module.push(module.FloorLightsStage);
+                            }
+                            else {
+                                let result = readLines(3).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                                module.FloorLightsStage[1].push(result[1]);
+                                module.FloorLightsStage[1].push(result[2]);
+                            }
+                            module.FloorLightsAttempts++;
+                            break;
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Follow the Leader",
         moduleID: "FollowTheLeaderModule",
         loggingTag: "Follow the Leader",
