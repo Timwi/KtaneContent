@@ -119,7 +119,12 @@ e.onload = function()
                 }
             }
             $("svg .svgIsHighlighted").each(function() {
-                $(this).css("fill", $(this).data('origFill'));
+                if ($(this).hasClass("stroke-highlightable")) {
+                    $(this).css("stroke", $(this).data('origStroke'));
+                }
+                else {
+                    $(this).css("fill", $(this).data('origFill'));
+                }
             }).removeClass("svgIsHighlighted");
         })
 
@@ -285,7 +290,12 @@ e.onload = function()
                     let svg = element.is("svg *");
 
                     if (svg && element.hasClass("svgIsHighlighted")) {
-                        element.css("fill", element.data('origFill'));
+                        if (element.hasClass("stroke-highlightable")) {
+                            element.css("stroke", element.data('origStroke'));
+                        }
+                        else {
+                            element.css("fill", element.data('origFill'));
+                        }
                         element.removeClass("svgIsHighlighted");
                         return;
                     }
@@ -327,8 +337,14 @@ e.onload = function()
                         if (svg)
                         {
                             element.addClass("svgIsHighlighted");
-                            element.data('origFill', element.css("fill"));
-                            element.css("fill", colors[currentColor].color);
+                            if (element.hasClass("stroke-highlightable")) {
+                                element.data('origStroke', element.css("stroke"));
+                                element.css("stroke", colors[currentColor].color);
+                            }
+                            else {
+                                element.data('origFill', element.css("fill"));
+                                element.css("fill", colors[currentColor].color);
+                            }
                         }
                         else
                         {
@@ -375,14 +391,14 @@ e.onload = function()
             });
         };
 
-        $("td, th, li, .highlightable").each(function() {
+        $("td, th, li, .highlightable, .stroke-highlightable").each(function() {
             makeHighlightable($(this));
         });
 
         new MutationObserver((mutationsList) => {
             for (const mutation of mutationsList) {
                 for (const node of mutation.addedNodes) {
-                    if (node instanceof Element && node.matches("td, th, li, .highlightable"))
+                    if (node instanceof Element && node.matches("td, th, li, .highlightable, .stroke-highlightable"))
                         makeHighlightable($(node));
                 }
             }
