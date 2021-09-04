@@ -1,0 +1,479 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Game of Colors — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            let interactive = $("table.interactive");
+            let saveStates = [ [],[],[],[],[] ];
+            let currentState = [0,0,0,0,0];
+            var squares = [];
+            var selectedSquare = 0;
+            var selected = null;
+            var objClicked = false;
+            let squareColors = ["cyan", "magenta", "yellow", "blue", "green", "red", "black", "white"];
+            const colorKeyI = { c: 0, m: 1, y: 2, b: 3, g: 4, r: 5, k: 6, w: 7 };
+
+            $(document).click(function() {
+                if (!objClicked) {
+                    selected = null;
+                    updateSelection();
+                }
+                objClicked = false;
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                let space = event.key == " ";
+                if (space || k == "c" || k == "m" || k == "y" || k == "b" ||
+                      k == "g" || k == "r" || k == "k" || k == "w") {
+                    pressColorKey(space ? colorKeyI["w"] : colorKeyI[k]);
+                    $(document).click();
+                    if (space) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+            });
+
+            function pressColorKey(k) {
+                if (selected) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[k]);
+                    if (selectedSquare < 25) {selectedSquare = (selectedSquare + 1) % 25;}
+                    else {selectedSquare = (selectedSquare + 1) % 25 + 25;}
+                    selected = squares[selectedSquare];
+                    updateSelection();
+                }
+            }
+
+            function removeFutureSaves(t) {
+                if (currentState[t] < saveStates[t].length - 1) {
+                    for (let i = currentState[t] + 1; i < saveStates[t].length; i++) {
+                        saveStates[t][i].remove();
+                    }
+
+                    saveStates[t].splice(currentState[t] + 1, saveStates[t].length - currentState[t]);
+                }
+            }
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                }
+                objClicked = true;
+            }
+
+            for (let t = 0; t < interactive.length; t++) {
+                for (let y = 0; y < 6; y++) {
+                    const row = $("<tr>").appendTo(interactive[t]);
+                    for (let x = 0; x < 6; x++) {
+                        if (x == 0 && y == 0) {
+                            $("<th>").appendTo(row);
+                        } else if (y == 0 && x > 0) {
+                            $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                        } else if (y > 0 && x == 0) {
+                            $("<th>").text(y).appendTo(row);
+                        } else {
+                            $("<td>").click(function() {
+                                if (t == 1) $(this).toggleClass("cyan");
+                                else if (t == 2) $(this).toggleClass("magenta");
+                                else if (t == 3) $(this).toggleClass("yellow");
+                                else {
+                                    selected = $(this);
+                                    selectedSquare = (y-1)*5 + x - 1 + (t == 4 ? 25 : 0);
+                                    updateSelection()
+                                }
+                                // removeFutureSaves(t);
+                            }).contextmenu(function() {
+                                if (t == 0 || t == 4) {
+                                    nextColor($(this));
+                                    selected = null;
+                                    updateSelection();
+                                } else {
+                                    $(this).toggleClass("dot");
+                                    // removeFutureSaves(t);
+                                }
+                                return false;
+                            }).addClass((t == 0 || t == 4) ? "multicolor white" : "").append('<div class="box"></div>').appendTo(row);
+                        }
+                    }
+                }
+            }
+            $("td.multicolor").each(function() {
+                squares.push($(this));
+            });
+
+            let cButtons = $(".hstack.colors");
+            let colorLetters = ["C", "M", "Y", "B", "G", "R", "K", "W"];
+            for (let h = 0; h < 2; h++) {
+                var vstack = $("<div>").addClass("vstack").appendTo(cButtons);
+                for (let v = 0; v < 4; v++) {
+                    let t = h + v*2;
+                    $("<button>").text(colorLetters[t]).click(function() {
+                        pressColorKey(t);
+                    }).addClass(squareColors[t]).appendTo(vstack);
+                }
+            }
+
+            function hasWhichColor(elem) {
+                for (var i = 0; i < squareColors.length; i++) {
+                    if (elem.hasClass(squareColors[i])) { return i; }
+                }
+                return -1;
+            }
+
+            function nextColor(elem) {
+                let c = hasWhichColor(elem);
+                removeColorClass(elem);
+                elem.addClass(squareColors[(c + 1) % squareColors.length]);
+            }
+
+            function removeColorClass(elem) {
+                elem.removeClass("white black cyan magenta yellow red blue green");
+            }
+
+            let resetButton = $("button.reset-all");
+            for (let t = 0; t < resetButton.length; t++) {
+                resetButton[t].addEventListener("click", function() {
+                    $(`.grid${t} table.interactive td`).removeClass("black cyan magenta yellow red blue green dot");
+                    $(`.grid${t} table.interactive td`).addClass("white");
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetSavesButton = $("button.reset-saves");
+            for (let t = 0; t < resetSavesButton.length; t++) {
+                resetSavesButton[t].addEventListener("click", function() {
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetGridButton = $("button.reset-grid");
+            for (let t = 0; t < resetGridButton.length; t++) {
+                resetGridButton[t].addEventListener("click", function() {
+                    $(`.grid${t} table.interactive td`).removeClass("black cyan magenta yellow red blue green dot");
+                    $(`.grid${t} table.interactive td`).addClass("white");
+                });
+            }
+
+            $(".colorblind").click(function() {
+                $("body").toggleClass("cblind");
+            });
+
+            let saveButton = $("button.save");
+            for (let t = 0; t < saveButton.length; t++) {
+                saveButton[t].addEventListener("click", function() {
+                    removeFutureSaves(t);
+
+                    let saveState = Array.from($(`.grid${t} table.interactive td`)).map(x => $(x)).map(x => x.attr("class") || "");
+                    console.log(saveStates[t]);
+                    let stateNumber = saveStates[t].length;
+                    currentState[t] = stateNumber;
+
+                    let button = $("<button>").text(stateNumber + 1).click(function() {
+                        $(`.grid${t} table.interactive td`).each((i, x) => $(x).attr("class", saveState[i]));
+                        currentState[t] = stateNumber;
+                    }).addClass("flash").appendTo(`.grid${t} .saves`);
+                    setTimeout(() => {
+                        button.removeClass("flash");
+                    }, 100);
+
+                    saveStates[t].push(button);
+                });
+            }
+        });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            right: 15mm;
+        }
+        @media screen and (max-width: 900px) {
+            .vstack { right: 8mm; }
+            .hstack {
+                position: relative;
+                left: 10mm;
+            }
+        }
+        @media screen and (max-width: 600px) {
+            .hstack {
+                position: relative;
+                left: 37mm;
+            }
+        }
+        .interactive-container {
+            width: 100mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+            border: none;
+            background: none;
+        }
+
+        table.interactive td {
+            border: rgb(51, 77, 108) 5px solid;
+            /* box-sizing: border-box; */
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        table.interactive td>.box {
+            background: white;
+            transition: background 0.2s;
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+
+        table.interactive td.black>.box, button.black { background: black; }
+        table.interactive td.white>.box, button.white { background: white; }
+        table.interactive td.cyan>.box, button.cyan { background: cyan; }
+        table.interactive td.magenta>.box, button.magenta { background: magenta; }
+        table.interactive td.yellow>.box, button.yellow { background: yellow; }
+        table.interactive td.blue>.box, button.blue { background: blue; }
+        table.interactive td.green>.box, button.green { background: green; }
+        table.interactive td.red>.box, button.red { background: red; }
+        body.cblind table.interactive td.multicolor.black .box::after, button.black { color: white; content: "K"; }
+        body.cblind table.interactive td.multicolor.white .box::after { content: "W"; }
+        body.cblind table.interactive td.multicolor.cyan .box::after { content: "C"; }
+        body.cblind table.interactive td.multicolor.magenta .box::after { content: "M"; }
+        body.cblind table.interactive td.multicolor.yellow .box::after { content: "Y"; }
+        body.cblind table.interactive td.multicolor.blue .box::after, button.blue { color: white; content: "B"; }
+        body.cblind table.interactive td.multicolor.green .box::after { content: "G"; }
+        body.cblind table.interactive td.multicolor.red .box::after { content: "R"; }
+
+        table.interactive td.selected>.box {
+            /* border: rgb(150, 150, 50) 5px solid; */
+            background: gray;
+        }
+
+        table.interactive td:not(.multicolor)>.box::after {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            content: '';
+            width: 0px;
+            height: 0px;
+            background: black;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+        table.interactive td.multicolor>.box::after {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+        }
+
+        table.interactive td.dot>.box::after {
+            top: 10px;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+        }
+
+        table.interactive td.black.dot>.box::after {
+            background: white;
+        }
+
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+            font-family: "Special Elite";
+            padding-top: 3px;
+        }
+        button.reset-board, button.reset-all, button.reset-saves, button.save {
+            padding-left: 2px;
+            padding-bottom: 0px;
+            padding-right: 2px;
+        }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 30px;
+        }
+        button.colorblind {
+            font-size: 13px;
+            padding: 2px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        h4 {
+            margin-top: 3mm;
+            padding-left: 6mm;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Game of Colors</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Game of Colors.svg" class="diagram">
+                <h2>On the Subject of Game of Colors</h2>
+                <p class="flavour-text">A decision is never white or black.</p>
+
+                <ul>
+                    <li>A five by five grid of colors will be displayed, each of which will be a color within the CMYK coloring system.</li>
+                    <li>Split each channel based on its primary color and do the following for each square:
+                        <ul>
+                            <li>If a cell is on, and there are two or three neighboring cells (orthogonal and diagonal) who are also on, then the cell stays on. Otherwise it turns off.</li>
+                            <li>If a cell is off, and there are three neighboring cells (orthogonal and diagonal) who are on, then the cell turns on. Otherwise it stays off.</li>
+                        </ul>
+                    </li>
+                    <li>Color the grid so that it matches the result of all three channels overlayed and submit by using the color indicator on the right.</li>
+                </ul>
+                <img src="img/Game of Colors/CMYKColourModel.png" style="height:100%; width: 100%; margin-top: 100px">
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Game of Colors</span>
+            </div>
+            <div class="page-content">
+                <button class="colorblind">Toggle Colorblind</button>
+                <div class="hstack">
+                    <div class="interactive-container grid0">
+                        <h4>Read</h4>
+                        <table class="interactive"></table>
+                        <div class="saves buttons">
+                            <button class="save">Save</button>
+                        </div>
+                        <div class="buttons">
+                            <button class="reset-saves">Reset Saves</button>
+                            <button class="reset-grid">Reset Grid</button>
+                            <button class="reset-all">Reset All</button>
+                        </div>
+                    </div>
+                    <div class="hstack colors"></div>
+                </div>
+                <div class="hstack">
+                    <div class="interactive-container grid1">
+                        <h4>Cyan</h4>
+                        <table class="interactive"></table>
+                        <div class="saves buttons">
+                            <button class="save">Save</button>
+                        </div>
+                        <div class="buttons resets">
+                            <button class="reset-saves">Reset Saves</button>
+                            <button class="reset-grid">Reset Grid</button>
+                        </div>
+                        <div class="buttons">
+                            <button class="reset-all">Reset All</button>
+                        </div>
+                    </div>
+                    <div class="interactive-container grid2">
+                        <h4>Magenta</h4>
+                        <table class="interactive"></table>
+                        <div class="saves buttons">
+                            <button class="save">Save</button>
+                        </div>
+                        <div class="buttons resets">
+                            <button class="reset-saves">Reset Saves</button>
+                            <button class="reset-grid">Reset Grid</button>
+                        </div>
+                        <div class="buttons">
+                            <button class="reset-all">Reset All</button>
+                        </div>
+                    </div>
+                    <div class="interactive-container grid3">
+                        <h4>Yellow</h4>
+                        <table class="interactive"></table>
+                        <div class="saves buttons">
+                            <button class="save">Save</button>
+                        </div>
+                        <div class="buttons resets">
+                            <button class="reset-saves">Reset Saves</button>
+                            <button class="reset-grid">Reset Grid</button>
+                        </div>
+                        <div class="buttons">
+                            <button class="reset-all">Reset All</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hstack">
+                    <div class="interactive-container grid4">
+                        <h4>Solution</h4>
+                        <table class="interactive"></table>
+                        <div class="saves buttons">
+                            <button class="save">Save</button>
+                        </div>
+                        <div class="buttons">
+                            <button class="reset-saves">Reset Saves</button>
+                            <button class="reset-grid">Reset Grid</button>
+                            <button class="reset-all">Reset All</button>
+                        </div>
+                    </div>
+                    <div class="hstack colors"></div>
+                </div>
+                <h3>Controls</h3>
+                <ul>
+                    <li><em>Click</em> a <b>Read</b> or <b>Solution</b> cell to select it, then press <b>C/M/Y/B/G/R/ K/W(Space)</b>
+                    or click the buttons to color the selected cell.</li>
+                    <li><em>Right-Click</em> a <b>Read</b> or <b>Solution</b> cell to cycle its color.</li>
+                    <li><em>Click</em> a <b>single-color</b> cell to toggle between occupied and empty.</li>
+                    <li><em>Right-Click</em> a <b>single-color</b> cell to mark it to be changed in the next iteration.</li>
+                    <li>Colorblind mode shows the color letters in each <b>Read</b> or <b>Solution</b> cell.</li>
+                    <li>Use the buttons below each grid to save the state, reset saves, reset the grid, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
