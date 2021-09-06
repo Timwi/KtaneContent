@@ -55,14 +55,12 @@
             var row;
             var chessboard = $(".chessboard");
             let y = 1;
-            var squares = 9;
+            var squares = 11;
 
             row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
             for (var i = 0; i < squares; i++) {
                 $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
-                    if (i == (squares - 1)) {
-                        $(this).addClass("label9");
-                    }
+                    $(this).addClass(`label${i+1}`);
                 });
             }
             row = $("<div>").addClass("chess-row").appendTo(chessboard);
@@ -74,11 +72,7 @@
                         event.preventDefault();
                         event.stopPropagation();
                     });
-                    if (x == (squares - 2)) {
-                        $(this).addClass("square8");
-                    } else if (x == (squares - 1)) {
-                        $(this).addClass("square9");
-                    }
+                    $(this).addClass(`square${x + 1}`);
 
                     element.mouseup(function(event) {
                         if (start) { // Just in case.
@@ -229,10 +223,27 @@
             });
 
             $(".spacesButton").click(function() {
-                $(".square8").toggleClass("last-square");
-                $(".square9").toggleClass("invisible");
-                $(".label9").toggleClass("invisible");
-                $(this).toggleClass('eightsquares');
+                if ($(".square8").hasClass("last-square")) {
+                    $(".square8").toggleClass("last-square");
+                    $(".square11").toggleClass("last-square");
+                    for (let i = 9; i <= 11; i++) {
+                        $(`.square${i}`).removeClass("invisible");
+                        $(`.label${i}`).removeClass("invisible");
+                    }
+                    $(this).toggleClass('squares8');
+                    $(this).toggleClass('squares11');
+                } else {
+                    for (let s = 8; s <= 10; s++) {
+                        if ($(`.square${s+1}`).hasClass("last-square")) {
+                            $(`.square${s+1}`).toggleClass("invisible");
+                            $(`.label${s+1}`).toggleClass("invisible");
+                            for (let i = s; i <= (s+1); i++) { $(`.square${i}`).toggleClass("last-square"); }
+                            $(this).toggleClass(`squares${s}`);
+                            $(this).toggleClass(`squares${s+1}`);
+                            break;
+                        }
+                    }
+                }
             });
 
             function removeFutureSaves() {
@@ -411,7 +422,7 @@
 
         .gridholder {
             height: 130px;
-            width: 550px;
+            width: 700px;
             margin-left: auto;
             margin-right: auto;
 
@@ -436,11 +447,17 @@
         button.reset-saves, button.reset-board, button.reset-all {
             padding: 10px 20px;
         }
-        button.spacesButton:before {
+        button.spacesButton.squares8:before {
+            content: '8 ';
+        }
+        button.spacesButton.squares9:before {
             content: '9 ';
         }
-        button.spacesButton.eightsquares:before {
-            content: '8 ';
+        button.spacesButton.squares10:before {
+            content: '10 ';
+        }
+        button.spacesButton.squares11:before {
+            content: '11 ';
         }
         button.spacesButton {
             min-width: 30mm;
@@ -493,7 +510,7 @@
                 <h2>On the Subject of 1D Chess</h2>
                 <p class="flavour-text">Whatever you do, <u><strong>don't panic</strong></u>.</p>
 
-                <p>The module has 8 or 9 tiles and a blackboard overlaid on a wooden backing. When the lights come on,
+                <p>The module has 8 – 11 tiles and a blackboard overlaid on a wooden backing. When the lights come on,
                     it will attempt to generate a puzzle. It may take a while.</p>
 
                 <p>Once a valid position has been found, the blackboard will update with "Mate in #", # being a number.
@@ -507,8 +524,7 @@
 
                 <ul>
                     <li>
-                        6 chess pieces are divided into white and black sets. The game is played on a 1-dimensional
-                        board of 8 or 9 squares, detonated A-I, left-to-right. Any corner turns on it are treated as
+                        4 to 8 chess pieces are divided into white and black sets. The game is played on a 1-dimensional board of 8 to 11 squares, designated A-K, left-to-right. Any corner turns on it are treated as
                         straight lines.
                     </li>
                     <li>
@@ -573,7 +589,7 @@
             </div>
             <div class="page-content">
                 <div class="movesholder">
-                    <button class="spacesButton">squares</button>
+                    <button class="spacesButton squares11">squares</button>
                     <div class="movestext label">Moves:</div>
                     <div class="movestext movesnumber">6</div>
 
