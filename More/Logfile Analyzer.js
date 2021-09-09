@@ -275,7 +275,7 @@ class BombGroup {
         }
 
         // Copy DMG string
-        const dmgString = 
+        const dmgString =
         `/// ${this.MissionName}\n\n` +
         this.loggedBombs
             .map(bomb =>
@@ -417,7 +417,7 @@ class BombGroup {
 
             // Graph lines
             $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 0 1.01 2.01 1.01">`).appendTo(graph);
-            
+
             function printTime(num) {
                 num = Math.floor(num);
                 let sec = num % 60;
@@ -458,7 +458,7 @@ class BombGroup {
                 <text x='1' y='1.2' style="font-size: .05;text-anchor: middle;">Real Time</text>
             </g>
             `);
-            
+
             for (const item of timerLabels) {
                 $SVG(`<text transform='translate(${item * 2 / totalRealTime}, 0)'><textpath href='#left-label' style="font-size: .05;">${printTime(item)}</textpath></text>`).appendTo(group);
                 $SVG(`<path stroke='#ccc' stroke-width='.005' d='M${item * 2 / totalRealTime} 0v1.01'/>`).appendTo(group);
@@ -1307,10 +1307,13 @@ function readTaggedLine() {
 }
 
 function readMultiple(count, fnc) {
-    var lines = '';
-    for (var i = 0; i < count; i++) {
-        lines += (i === 0 ? '' : "\n") + (fnc ? fnc(readLine()) : readLine());
-    }
+    return (fnc ? readLines(count).map(fnc) : readLines(count)).join("\n");
+}
+
+function readLines(count) {
+    var lines = [];
+    for (var i = 0; i < count; i++)
+        lines.push(readLine());
     return lines;
 }
 
@@ -1466,7 +1469,21 @@ function parseLog(opt) {
                 } else
                     loggingTag = match[1];
 
-                const obj = getModuleData(loggingTag);
+                let obj = getModuleData(loggingTag);
+
+                // If we have a logging ID but the module data we get is for non-module parsing, we found the wrong one.
+                // The Rules module runs into this edge case and so we need to make sure we find the one that has a module ID (if it exists).
+                if (id !== null && obj?.moduleID == undefined) {
+                    var potentialModules = parseData.filter(data => data.loggingTag == loggingTag && data.moduleID !== undefined);
+                    switch (potentialModules.length) {
+                        case 1:
+                            obj = potentialModules[0];
+                            break;
+                        default:
+                            obj = null;
+                            break;
+                    }
+                }
 
                 if (obj) {
                     try {
