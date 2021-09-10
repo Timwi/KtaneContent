@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -18,11 +19,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -57,6 +70,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -203,6 +226,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -292,6 +317,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -443,53 +470,75 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D Bludiště (čeština) v1.2</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>Na téma 3D Bludiště (čeština)</h2>
-
-                <p class="flavour-text">Jsi v bludišti klikatých cest. Východy z tohoto bludišti jsou na severu, jihu, východě a západě.
-
-                <ul>
-                    <li>Zneškodňovatel začíná na náhodné pozici otočený náhodným směrem v jednom z deseti bludišť, které jsou znázorněny níže.
-                    <li>Navigujte zneškodňovatele pomocí 3D pohledu na zdi bludiště. Na zemi se mohou objevit různé symboly.
-                    <li>Mapa bludiště je cyklická, tzn. že když se dostanete na konec jednoho kraje, tak stále můžete jít dál na druhou stranu, pokud tam tedy není zeď.
-                    <li>Jedna z těchto zdí je cíl, když naazíte do ostatních zdí dostanete chybu.
-                    <li>K zněškodnění modulu, zjistěte cílovou zeď a naražte do ní z jakékoliv strany.
-                    <li>Pomocí níže uvedené metody, vypočítejte řádku (0-7), sloupec (0-7) a směr. Cílová zeď bude ta první zeď od těchto souřadnic daným směrem.
-                </ul>
-
-                <p class='heading'>Řádka:
-                <ul>
-                    <li>Začněte s <strong>prvním číslem</strong> sériového čísla.
-                    <li>Přičtěte 1 za všechny nerozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
-                    <li>Pokud je číslo řádky větší než 7, tak odečtěte 8.
-                </ul>
-
-                <p class='heading'>Sloupec:
-                <ul>
-                    <li>Začněte s <strong>posledním číslem</strong> sériového čísla.
-                    <li>Přičtěte 1 za všechny rozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
-                    <li>Pokud je číslo sloupce větší než 7, tak odečtěte 8.
-                </ul>
-
-                <p class='heading'>Směr:
-                <ul>
-                    <li>Každé bludiště obsahuje tři ikony hvězdy vyznačených na mapě.
-                    <li>Na zemi v každé z těchto lokací je písmeno, které značí směr do cílové zdi: “N” = Sever, “S” = Jih, “E” = Východ a “W” = Západ.
-                    <li>Pozor na písmena, která nejsou na těchto vyznačených lokací, dávají vám návnadu na špatné instrukce!
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">Strana 1 ze 3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D Bludiště (čeština) v1.2</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>Na téma 3D Bludiště (čeština)</h2>
+
+            <p class="flavour-text">Jsi v bludišti klikatých cest. Východy z tohoto bludišti jsou na severu, jihu, východě a západě.
+
+            <ul>
+                <li>Zneškodňovatel začíná na náhodné pozici otočený náhodným směrem v jednom z deseti bludišť, které jsou znázorněny níže.
+                <li>Navigujte zneškodňovatele pomocí 3D pohledu na zdi bludiště. Na zemi se mohou objevit různé symboly.
+                <li>Mapa bludiště je cyklická, tzn. že když se dostanete na konec jednoho kraje, tak stále můžete jít dál na druhou stranu, pokud tam tedy není zeď.
+                <li>Jedna z těchto zdí je cíl, když naazíte do ostatních zdí dostanete chybu.
+                <li>K zněškodnění modulu, zjistěte cílovou zeď a naražte do ní z jakékoliv strany.
+                <li>Pomocí níže uvedené metody, vypočítejte řádku (0-7), sloupec (0-7) a směr. Cílová zeď bude ta první zeď od těchto souřadnic daným směrem.
+            </ul>
+
+            <p class='heading'>Řádka:
+            <ul>
+                <li>Začněte s <strong>prvním číslem</strong> sériového čísla.
+                <li>Přičtěte 1 za všechny nerozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
+                <li>Pokud je číslo řádky větší než 7, tak odečtěte 8.
+            </ul>
+
+            <p class='heading'>Sloupec:
+            <ul>
+                <li>Začněte s <strong>posledním číslem</strong> sériového čísla.
+                <li>Přičtěte 1 za všechny rozsvícené indikátory s písmenem ve slovním spojení <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
+                <li>Pokud je číslo sloupce větší než 7, tak odečtěte 8.
+            </ul>
+
+            <p class='heading'>Směr:
+            <ul>
+                <li>Každé bludiště obsahuje tři ikony hvězdy vyznačených na mapě.
+                <li>Na zemi v každé z těchto lokací je písmeno, které značí směr do cílové zdi: “N” = Sever, “S” = Jih, “E” = Východ a “W” = Západ.
+                <li>Pozor na písmena, která nejsou na těchto vyznačených lokací, dávají vám návnadu na špatné instrukce!
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">Strana 1 ze 3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -498,11 +547,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">Strana 2 ze 3</div>
@@ -514,10 +563,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">Strana 3 ze 3</div>

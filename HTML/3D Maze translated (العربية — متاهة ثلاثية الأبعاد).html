@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -18,11 +19,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -57,6 +70,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -203,6 +226,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -292,6 +317,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -325,7 +352,7 @@
                 // Column headers
                 (omitAxes ? '' : [...Array(xSize).keys()].map(colIx => `<text x='${colIx * 25 + 15}' y='-4' class='x-label'>${colIx}</text>`).join('')) +
                 // Row headers
-                (omitAxes ? '' : [...Array(ySize).keys()].map(rowIx => `<text x='-4' y='${rowIx * 25 + 20}' class='y-label'>${rowIx}</text>`).join('')) +
+                (omitAxes ? '' : [...Array(ySize).keys()].map(rowIx => `<text x='-12' y='${rowIx * 25 + 20}' class='y-label'>${rowIx}</text>`).join('')) +
                 // Text objects
                 (labels === null ? '' : [...Array(8).keys()].map(rowIx =>
                     [...Array(8).keys()].map(colIx =>
@@ -443,55 +470,77 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">إضافات "واصل الحديث و لا أحد سينفجر"</span>
-<span class="page-header-section-title">متاهة ثلاثية الأبعاد</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>فيما يتعلق بالمتاهات ثلاثية الأبعاد</h2>
-
-                <p class="flavour-text">أنت في متاهة ممتلئة بالممرات الملتوية، كل على حد سواء.
-                    توجد المخارج في الشمال، الجنوب، الشرق و الغرب.
-
-                <ul>
-                    <li>يبدأ نازع فتيل القنبلة في مكان و إستدارة عشوائية في واحدة من المتاهات العشر في أسفل الورقة.
-                    <li>وجه نازع الفتيل بإستعمال منظر ثلاثي الأبعاد، مما يريه رموزا على الأرض في الموقع الذي هو فيه، وإذا كان هناك رمزا في الموقع التالي.
-                    <li>خريطة المتاهة دورية؛ إذا ذهب نازع الفتيل في إحدى الأطراف سيتم نقله إلى الطرف المقابل، إلا إن لم يكن هناك حائط في المساحة بينهما.
-                    <li>إحدى الجدران هي نقطة الوصول، البقية ستسبب بتحذير إذا ذهبت بإتجاهه.
-                    <li>لنزع فتيل الوحدة، حدد الحائط الصحيح، و إصطدم به في أي جهة.
-                    <li>بإستعمال الطريقة الموالية، إحسب الصف (7-0)، و العمود (7-0)، و الإتجاه؛ الحائط الصحيح سيكون الحائط الأول من هذه الإحداثيات في الإتجاه المعطى.
-                </ul>
-
-                <p class='heading'>الصف:
-                <ul>
-                    <li>إبدأ بالرقم ذو الرتبة الأولى في الرقم التسلسلي.
-                    <li>أضف 1 لكل مؤشر مطفئ مع حرف في <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
-                    <li>إذا كان عدد الصفوف أكبر من 7، إطرح 8.
-                </ul>
-
-                <p class='heading'>العمود:
-                <ul>
-                    <li>إبدأ بالرقم ذو الرتبة الأخيرة في الرقم التسلسلي.
-                    <li>أضف 1 لكل مؤشر مضاء مع حرف في <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
-                    <li>إذا كان عدد الأعمدة أكبر من 7، إطرح 8.
-                </ul>
-
-                <p class='heading'>الإتجاه:
-                <ul>
-                    <li>كل متاهة تحتوي على ثلاث نجوم مؤشرة على الخارطة.
-                    <li>على الأرض في كل موقع توجد أحرف تدل على الإتجاه إلى مكان الوصول:
-"N" هي الشمال، "S" هي الجنوب، "E" هي الشرق، "W" هي الغرب.
-                    <li>إحذر من الأحرف الغير موجودة بتلك المواقع المحدودة، فهي تحمل تعليمات خاطئة!
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">صفحة 1 من 3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">إضافات "واصل الحديث و لا أحد سينفجر"</span>
+            <span class="page-header-section-title">متاهة ثلاثية الأبعاد</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>فيما يتعلق بالمتاهات ثلاثية الأبعاد</h2>
+
+            <p class="flavour-text">أنت في متاهة ممتلئة بالممرات الملتوية، كل على حد سواء.
+                توجد المخارج في الشمال، الجنوب، الشرق و الغرب.
+
+            <ul>
+                <li>يبدأ نازع فتيل القنبلة في مكان و إستدارة عشوائية في واحدة من المتاهات العشر في أسفل الورقة.
+                <li>وجه نازع الفتيل بإستعمال منظر ثلاثي الأبعاد، مما يريه رموزا على الأرض في الموقع الذي هو فيه، وإذا كان هناك رمزا في الموقع التالي.
+                <li>خريطة المتاهة دورية؛ إذا ذهب نازع الفتيل في إحدى الأطراف سيتم نقله إلى الطرف المقابل، إلا إن لم يكن هناك حائط في المساحة بينهما.
+                <li>إحدى الجدران هي نقطة الوصول، البقية ستسبب بتحذير إذا ذهبت بإتجاهه.
+                <li>لنزع فتيل الوحدة، حدد الحائط الصحيح، و إصطدم به في أي جهة.
+                <li>بإستعمال الطريقة الموالية، إحسب الصف (7-0)، و العمود (7-0)، و الإتجاه؛ الحائط الصحيح سيكون الحائط الأول من هذه الإحداثيات في الإتجاه المعطى.
+            </ul>
+
+            <p class='heading'>الصف:
+            <ul>
+                <li>إبدأ بالرقم ذو الرتبة الأولى في الرقم التسلسلي.
+                <li>أضف 1 لكل مؤشر مطفئ مع حرف في <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>.
+                <li>إذا كان عدد الصفوف أكبر من 7، إطرح 8.
+            </ul>
+
+            <p class='heading'>العمود:
+            <ul>
+                <li>إبدأ بالرقم ذو الرتبة الأخيرة في الرقم التسلسلي.
+                <li>أضف 1 لكل مؤشر مضاء مع حرف في <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>.
+                <li>إذا كان عدد الأعمدة أكبر من 7، إطرح 8.
+            </ul>
+
+            <p class='heading'>الإتجاه:
+            <ul>
+                <li>كل متاهة تحتوي على ثلاث نجوم مؤشرة على الخارطة.
+                <li>على الأرض في كل موقع توجد أحرف تدل على الإتجاه إلى مكان الوصول:
+"N" هي الشمال، "S" هي الجنوب، "E" هي الشرق، "W" هي الغرب.
+                <li>إحذر من الأحرف الغير موجودة بتلك المواقع المحدودة، فهي تحمل تعليمات خاطئة!
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">صفحة 1 من 3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">إضافات "واصل الحديث و لا أحد سينفجر"</span>
@@ -500,11 +549,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">صفحة 2 من 3</div>
@@ -516,10 +565,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">صفحة 3 من 3</div>

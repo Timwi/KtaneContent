@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -19,12 +20,24 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-top: 1.5em;
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-top: 1.5em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -67,6 +80,16 @@
         }
         svg.tmaze rect.ambiguous {
             fill: #FF8787;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
 
         .header {
@@ -232,6 +255,8 @@
             let colPhrase = phrases[rnd.next(0, phrases.length)];
             document.getElementById('col-phrase').innerText = colPhrase;
             document.getElementById('col-phrase-ind').innerText = `lit ${'BOB,CAR,CLR,FRK,FRQ,IND,MSA,NSA,SIG,SND,TRN'.split(',').filter(ind => common(ind, colPhrase)).join(', ')}`;
+
+            makeHighlightCells();
         }
 
         function common(letters1, letters2)
@@ -330,6 +355,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -544,60 +571,82 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D Лабиринт</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>3D Лабиринт</h2>
-
-                <p class="flavour-text">Вие сте в лабиринт със много извити пътища, а изходите са на Север, Юг, Изток и Запад.
-
-                <ul>
-                    <li>Обезвреждащият започва на прозивлоно място и произволна ориентация на някой от 10-те лабиринта по-долу.
-                    <li>Намерете обезвреждащия като използвате 3D погледа,
-                        за да видите стените и също показва символа на пода на определеното
-                        място ако има.
-                    <li>Картата на лабиринта е като във кръг, защото като излезете от границите
-                        на картата навлизате отново от друга страна затова няма стени на границите.
-                    <li>Една от стените е фалшива и влизането в нея бива изход от лабиринта,
-                        останалите при сблъсак ще причинят страйк на бомбата.
-                    <li>За да обезвредите модула намерете правилната стена и влезте в нея от която и да е страна.
-                    <li>Използвайки методите по-долу изчислете реда (0-7), колоната (0-7) и посоката.
-                        Правилната стена ще бъде първата стена след като на дадените координати използвате дадената посока.
-                </ul>
-
-                <p class='heading'>Ред:
-                <ul>
-                    <li>Започваме с <strong>първото число</strong> от серийният номер.
-                    <li>Добавете 1 за всеки <strong id='row-phrase-ind'>несветещ CAR, CLR, FRK, FRQ, MSA, NSA, SIG, TRN</strong> (<span id='row-phrase'>MAZE GAMER</span>).
-                    <li>Ако полученото число е по голямо от 7, извадете 8.
-                </ul>
-
-                <p class='heading'>Колона:
-                <ul>
-                    <li>Започваме с <strong>последното число</strong> от серийният номер.
-                    <li>Добавете 1 за всеки <strong id='col-phrase-ind'>светещ BOB, CLR, IND, MSA, NLL, NSA, SIG, SND, TRN</strong> (<span id='col-phrase'>HELP IM LOST</span>).
-                    <li>Ако полученото число е по голямо от 7, извадете 8.
-                </ul>
-
-                <p class='heading'>Посока
-                <ul>
-                    <li>Всеки лабиринт съдържа 3 звезди маркирани на картите по-долу.
-                    <li>На пода на всяко от тези 3 места има определена буква за посоката.
-                        “N” за Север, “S” за Юг, “E” за Изток, и “W” за Запад.
-                    <li>Внимавайте със букви, които не са на дадените места,
-                        те са примамка и дават фалшиви инструкции.
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">Страница 1/3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D Лабиринт</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>3D Лабиринт</h2>
+
+            <p class="flavour-text">Вие сте в лабиринт със много извити пътища, а изходите са на Север, Юг, Изток и Запад.
+
+            <ul>
+                <li>Обезвреждащият започва на прозивлоно място и произволна ориентация на някой от 10-те лабиринта по-долу.
+                <li>Намерете обезвреждащия като използвате 3D погледа,
+                    за да видите стените и също показва символа на пода на определеното
+                    място ако има.
+                <li>Картата на лабиринта е като във кръг, защото като излезете от границите
+                    на картата навлизате отново от друга страна затова няма стени на границите.
+                <li>Една от стените е фалшива и влизането в нея бива изход от лабиринта,
+                    останалите при сблъсак ще причинят страйк на бомбата.
+                <li>За да обезвредите модула намерете правилната стена и влезте в нея от която и да е страна.
+                <li>Използвайки методите по-долу изчислете реда (0-7), колоната (0-7) и посоката.
+                    Правилната стена ще бъде първата стена след като на дадените координати използвате дадената посока.
+            </ul>
+
+            <p class='heading'>Ред:
+            <ul>
+                <li>Започваме с <strong>първото число</strong> от серийният номер.
+                <li>Добавете 1 за всеки <strong id='row-phrase-ind'>несветещ CAR, CLR, FRK, FRQ, MSA, NSA, SIG, TRN</strong> (<span id='row-phrase'>MAZE GAMER</span>).
+                <li>Ако полученото число е по голямо от 7, извадете 8.
+            </ul>
+
+            <p class='heading'>Колона:
+            <ul>
+                <li>Започваме с <strong>последното число</strong> от серийният номер.
+                <li>Добавете 1 за всеки <strong id='col-phrase-ind'>светещ BOB, CLR, IND, MSA, NLL, NSA, SIG, SND, TRN</strong> (<span id='col-phrase'>HELP IM LOST</span>).
+                <li>Ако полученото число е по голямо от 7, извадете 8.
+            </ul>
+
+            <p class='heading'>Посока
+            <ul>
+                <li>Всеки лабиринт съдържа 3 звезди маркирани на картите по-долу.
+                <li>На пода на всяко от тези 3 места има определена буква за посоката.
+                    “N” за Север, “S” за Юг, “E” за Изток, и “W” за Запад.
+                <li>Внимавайте със букви, които не са на дадените места,
+                    те са примамка и дават фалшиви инструкции.
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">Страница 1/3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -606,11 +655,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">Страница 2/3</div>
@@ -622,10 +671,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">Страница 3/3</div>

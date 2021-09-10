@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .heading {
             font-weight: bold;
@@ -19,11 +20,23 @@
         .mazes-table {
             border: none;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
         }
-            .mazes-table td {
-                padding-bottom: 2em;
-                border: none;
-            }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-bottom: 2em;
+            border: none;
+        }
 
         div.tmaze-outer {
             border: .7mm solid black;
@@ -59,6 +72,16 @@
         svg.tmaze text.y-label {
             font-size: 9pt;
             text-anchor: end;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
         }
     </style>
     <script>
@@ -205,6 +228,8 @@
             document.getElementById('row-phrase').innerText = phrases[ix];
             phrases.splice(ix, 1);
             document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
         }
 
         function setDefaultRules()
@@ -294,6 +319,8 @@
             }
             document.getElementById('col-phrase').innerText = 'HELP IM LOST';
             document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
         }
 
         function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
@@ -445,55 +472,77 @@
                 }
             }
         }
+
+        function makeHighlightCells() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = makeSVG("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">3D迷路</span>
-            </div>
-            <div class="page-content">
-                <img class="diagram" src="img/Component/3D Maze.svg">
-                <h2>モジュール詳細：3D迷路</h2>
-
-                <p class="flavour-text">あなたはどこも同じような見た目の、曲がりくねった通路の迷路にいる。
-                    出口は北に、南に、東に、西に行ったところにある。</p>
-
-                <ul>
-                    <li>処理担当者は以下の10の迷路のうちの一つからランダムな場所･方向で開始する。</li>
-                    <li>迷路の壁の3次元ビューを利用して現在地を特定する。
-                        ビューは現在の場所の床にある文字と、1ステップ先の場所に文字が存在するかどうかを表示する。</li>
-                    <li>迷路は循環する。つまり、端から外れると処理担当者は迷路の反対側の場所に辿り着く。(ただし、間に壁がないときに限る。)</li>
-                    <li>壁のうち一つがゴールである。その他の壁に向かって移動するとミスが記録される。</li>
-                    <li>モジュールを解除するには、ゴールを特定し、いずれかの方向からゴールの壁に向かって移動する必要がある。</li>
-                    <li>次の方法を利用して、段(0-7)と列(0-7)と方向を計算する。ゴールはその位置から見てその方向にある最初の壁である。</li>
-                </ul>
-
-                <p class='heading'>段:</p>
-                <ul>
-                    <li>シリアル番号の最初の数字から始める。</li>
-                    <li><strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>の文字を含む点灯していないインジケーター一つに付き1足す。</li>
-                    <li>番号が7より大きい時、8引く。</li>
-                </ul>
-
-                <p class='heading'>列:</p>
-                <ul>
-                    <li>シリアル番号の最後の数字から始める。</li>
-                    <li><strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>の文字を含む点灯したインジケーター一つに付き1足す。</li>
-                    <li>番号が7より大きい時、8引く。</li>
-                </ul>
-
-                <p class='heading'>方向:</p>
-                <ul>
-                    <li>それぞれの迷路には3つの星マークが記されている。</li>
-                    <li>それぞれのマークの場所には文字が書いており、ゴールの壁の方向を示している。Nは北、Sは南、Eは東、Wは西である。</li>
-                    <li>マークの書いていない場所の文字には注意せよ。それらはおとりの命令である。</li>
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">ページ 1/3</div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D迷路</span>
         </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>モジュール詳細：3D迷路</h2>
+
+            <p class="flavour-text">あなたはどこも同じような見た目の、曲がりくねった通路の迷路にいる。
+                出口は北に、南に、東に、西に行ったところにある。</p>
+
+            <ul>
+                <li>処理担当者は以下の10の迷路のうちの一つからランダムな場所･方向で開始する。</li>
+                <li>迷路の壁の3次元ビューを利用して現在地を特定する。
+                    ビューは現在の場所の床にある文字と、1ステップ先の場所に文字が存在するかどうかを表示する。</li>
+                <li>迷路は循環する。つまり、端から外れると処理担当者は迷路の反対側の場所に辿り着く。(ただし、間に壁がないときに限る。)</li>
+                <li>壁のうち一つがゴールである。その他の壁に向かって移動するとミスが記録される。</li>
+                <li>モジュールを解除するには、ゴールを特定し、いずれかの方向からゴールの壁に向かって移動する必要がある。</li>
+                <li>次の方法を利用して、段(0-7)と列(0-7)と方向を計算する。ゴールはその位置から見てその方向にある最初の壁である。</li>
+            </ul>
+
+            <p class='heading'>段:</p>
+            <ul>
+                <li>シリアル番号の最初の数字から始める。</li>
+                <li><strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>の文字を含む点灯していないインジケーター一つに付き1足す。</li>
+                <li>番号が7より大きい時、8引く。</li>
+            </ul>
+
+            <p class='heading'>列:</p>
+            <ul>
+                <li>シリアル番号の最後の数字から始める。</li>
+                <li><strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>の文字を含む点灯したインジケーター一つに付き1足す。</li>
+                <li>番号が7より大きい時、8引く。</li>
+            </ul>
+
+            <p class='heading'>方向:</p>
+            <ul>
+                <li>それぞれの迷路には3つの星マークが記されている。</li>
+                <li>それぞれのマークの場所には文字が書いており、ゴールの壁の方向を示している。Nは北、Sは南、Eは東、Wは西である。</li>
+                <li>マークの書いていない場所の文字には注意せよ。それらはおとりの命令である。</li>
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">ページ 1/3</div>
+    </div>
+    <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -502,11 +551,11 @@
             <div class="page-content">
 
 <!-- ##[## -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ##]## -->
             </div>
             <div class="page-footer relative-footer">ページ 2/3</div>
@@ -518,10 +567,10 @@
             </div>
             <div class="page-content">
 <!-- ###[### -->
-<table class='mazes-table'>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-<tr><td class='tmaze-td'><div class='tmaze-outer'></div></td><td class='tmaze-td'><div class='tmaze-outer'></div></td></tr>
-</table>
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
 <!-- ###]### -->
             </div>
             <div class="page-footer relative-footer">ページ 3/3</div>
