@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Yellow Button — Keep Talking and Nobody Explodes Mod</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            let size = 6;
+            function recurse(sofar, available)
+            {
+                function processAvailable(sq, v)
+                {
+                    let newAvailable = available.slice(0);
+                    for (let c = 0; c < size; c++)
+                    {
+                        let avIx = c + size * ((sq / size) | 0);
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1)
+                        {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    for (let r = 0; r < size; r++)
+                    {
+                        let avIx = (sq % size) + size * r;
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1)
+                        {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    return newAvailable;
+                }
+
+                let ixs = [];
+                let lowest = null;
+                for (let sq = 0; sq < size * size; sq++)
+                {
+                    if (sofar[sq] !== null)
+                        continue;
+                    if (lowest == null || available[sq].length < lowest)
+                    {
+                        ixs = [sq];
+                        lowest = available[sq].length;
+                    }
+                    else if (available[sq].length === lowest)
+                        ixs.push(sq);
+                    if (lowest === 1)
+                        break;
+                }
+
+                if (ixs.length === 0)
+                    return sofar;
+
+                let square = ixs[rnd.next(0, ixs.length)];
+                let offset = rnd.next(0, available[square].length);
+                for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++)
+                {
+                    let avIx = (fAvIx + offset) % available[square].length;
+                    let v = available[square][avIx];
+                    sofar[square] = v;
+
+                    let result = recurse(sofar, processAvailable(square, v));
+                    if (result !== null)
+                        return result;
+                }
+                sofar[square] = null;
+                return null;
+            }
+
+            let divs = Array.from(document.querySelectorAll(`.yellow-button-dancefloor`));
+            for (let df = 0; df < 4; df++)
+            {
+                let grid = recurse(
+                    Array(size * size).fill(null),
+                    Array(size * size).fill(null).map(x => Array(size).fill(null).map((_, c) => c)));
+
+                divs[df].innerHTML = `<table>${Array(size).fill(null).map((_, row) => `<tr>${Array(size).fill(null).map((_, col) => `<td class='color-${grid[col + size*row]}'><${''}/td>`).join('')}<${''}/tr>`).join('')}<${''}/table>`;
+            }
+        }
+    </script>
+    <style>
+        .corner {
+            border: none;
+        }
+
+        #yellow-button-dancefloors {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .yellow-button-dancefloor {
+            margin-bottom: 1cm;
+            border: 2px solid black;
+        }
+            .yellow-button-dancefloor td {
+                width: 1cm;
+                height: 1cm;
+                padding: 0;
+            }
+            .yellow-button-dancefloor td.color-0 { background: hsl(  0, 90%, 70%); }
+            .yellow-button-dancefloor td.color-1 { background: hsl( 60, 90%, 70%); }
+            .yellow-button-dancefloor td.color-2 { background: hsl(120, 90%, 70%); }
+            .yellow-button-dancefloor td.color-3 { background: hsl(180, 90%, 70%); }
+            .yellow-button-dancefloor td.color-4 { background: hsl(240, 90%, 70%); }
+            .yellow-button-dancefloor td.color-5 { background: hsl(300, 90%, 70%); }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Yellow Button</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Yellow Button.svg" class="diagram">
+                <h2>On the Subject of The Yellow Button</h2>
+                <p class="flavour-text">This is a button. It is yellow.</p>
+                <p>Pick the right dance floor as indicated by the filled part of the symbol on the button.</p>
+                <p>The screen reveals the newest hip color sequence you need to grok to fit in with the cool kids. It is up to you to find the sick moves that cover that exact sequence. You can only take one step at a time in any direction (including diagonal), and you cannot re-use a square you’ve been on. If you stumble off the dancefloor, you brand yourself as a lame loser.</p>
+                <p>Tap the button to take a step in the direction of the spinning arrow.</p>
+                <div id="yellow-button-dancefloors">
+                    <div class="yellow-button-dancefloor"></div>
+                    <div class="yellow-button-dancefloor"></div>
+                    <div class="yellow-button-dancefloor"></div>
+                    <div class="yellow-button-dancefloor"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

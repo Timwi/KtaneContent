@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Glitched Button — Keep Talking and Nobody Explodes Mod</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let tds = document.querySelectorAll('.bitseq');
+
+            let bitLength = 12;
+            let results = [];
+            while (results.length < tds.length)
+            {
+                let all = Array(1 << bitLength).fill(null).map((_, c) => c)
+                    .filter(v =>
+                    {
+                        for (let cycle = 1; cycle < bitLength; cycle++)
+                        {
+                            let cycled = ((v << cycle) & ((1 << bitLength) - 1)) | (v >> (bitLength - cycle));
+                            let nb = countBits(cycled ^ v);
+                            if (nb === 0 || nb === 2)
+                                return false;
+                        }
+                        return true;
+                    });
+                results = [];
+                while (all.length > 0 && results.length < tds.length)
+                {
+                    let rndIx = rnd.next(0, all.length);
+                    let bits = all[rndIx];
+                    for (let cycle = 0; cycle < bitLength; cycle++)
+                    {
+                        let compare = ((bits << cycle) & ((1 << bitLength) - 1)) | (bits >> (bitLength - cycle));
+                        all = all.filter(v => { let nb = countBits(compare ^ v); return nb != 0 && nb != 2; });
+                    }
+                    results.push(bits);
+                }
+            }
+
+            for (let i = 0; i < tds.length; i++)
+                tds[i].innerText = results[i].toString(2).padStart(bitLength, '0');
+        }
+
+        function countBits(v)
+        {
+            let n = 0;
+            while (v > 0)
+            {
+                n++;
+                v &= (v - 1);
+            }
+            return n;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Glitched Button</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Glitched Button.svg" class="diagram">
+                <h2>On the Subject of The Glitched Button</h2>
+                <p class="flavour-text">This is a button. It is...?</p>
+                <p>The module contains a glitched button and a screen consisting of white 0’s and 1’s.</p>
+                <p>The displayed sequence will be found in the table below. However, one bit has been flipped.</p>
+                <p>Tap the button when the seconds digits of the timer, modulo 15, are equal to the corresponding number plus the position of the flipped bit, modulo 15.</p>
+                <table>
+                    <tr> <th>0</th><td class='bitseq'>10011100</td></tr>
+                    <tr> <th>1</th><td class='bitseq'>00111000</td></tr>
+                    <tr> <th>2</th><td class='bitseq'>01110000</td></tr>
+                    <tr> <th>3</th><td class='bitseq'>00000010</td></tr>
+                    <tr> <th>4</th><td class='bitseq'>00000100</td></tr>
+                    <tr> <th>5</th><td class='bitseq'>00100110</td></tr>
+                    <tr> <th>6</th><td class='bitseq'>10011010</td></tr>
+                    <tr> <th>7</th><td class='bitseq'>00110101</td></tr>
+                    <tr> <th>8</th><td class='bitseq'>11010111</td></tr>
+                    <tr> <th>9</th><td class='bitseq'>10101110</td></tr>
+                    <tr><th>10</th><td class='bitseq'>10111011</td></tr>
+                    <tr><th>11</th><td class='bitseq'>01110110</td></tr>
+                    <tr><th>12</th><td class='bitseq'>11011000</td></tr>
+                    <tr><th>13</th><td class='bitseq'>10110001</td></tr>
+                    <tr><th>14</th><td class='bitseq'>01100010</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

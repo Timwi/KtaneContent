@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Gray Button — Keep Talking and Nobody Explodes Mod</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let paths = [
+                /* triangle up */ "m 5,1.25 4.3301269,7.5 -8.66025409,0 z",
+                /* triangle down */ "m 5,8.75 4.3301269,-7.5 -8.66025409,0 z",
+                /* circle */ "M 8.955,5 A 3.955,3.955 0 0 1 5,8.955 3.955,3.955 0 0 1 1.045,5 3.955,3.955 0 0 1 5,1.045 3.955,3.955 0 0 1 8.955,5 Z",
+                /* circle with X */ "M 4.9746094 1.0449219 A 3.955 3.955 0 0 0 2.7851562 1.7226562 L 5 3.9375 L 7.2148438 1.7226562 A 3.955 3.955 0 0 0 5 1.0449219 A 3.955 3.955 0 0 0 4.9746094 1.0449219 z M 1.7226562 2.7851562 A 3.955 3.955 0 0 0 1.0449219 5 A 3.955 3.955 0 0 0 1.7226562 7.2148438 L 3.9375 5 L 1.7226562 2.7851562 z M 8.2773438 2.7851562 L 6.0625 5 L 8.2773438 7.2148438 A 3.955 3.955 0 0 0 8.9550781 5 A 3.955 3.955 0 0 0 8.2773438 2.7851562 z M 5 6.0625 L 2.7851562 8.2773438 A 3.955 3.955 0 0 0 5 8.9550781 A 3.955 3.955 0 0 0 7.2148438 8.2773438 L 5 6.0625 z",
+                /* square */ "M 1.5,1.5 H 8.5 V 8.5 H 1.5 Z",
+                /* square with plus */ "M 1.5 1.5 L 1.5 4.5 L 4.5 4.5 L 4.5 1.5 L 1.5 1.5 z M 5.5 1.5 L 5.5 4.5 L 8.5 4.5 L 8.5 1.5 L 5.5 1.5 z M 1.5 5.5 L 1.5 8.5 L 4.5 8.5 L 4.5 5.5 L 1.5 5.5 z M 5.5 5.5 L 5.5 8.5 L 8.5 8.5 L 8.5 5.5 L 5.5 5.5 z",
+                /* diamond */ "M 5,1 9,5 5,9 1,5 Z",
+                /* star */ "M 5,0.47745752 6.1067849,3.9540988 9.7552826,3.9323727 6.7908156,6.0593288 7.9389262,9.5225426 5,7.3604325 2.0610736,9.5225424 3.2091844,6.0593288 0.24471746,3.9323724 3.8932151,3.9540988 Z",
+                /* plus */ "M 3.5,1 H 6.5 V 3.5 H 9 V 6.5 H 6.5 V 9 H 3.5 V 6.5 H 1 V 3.5 h 2.5 z",
+            ];
+            document.getElementById('gray-button-mazes').innerHTML = "<div class='maze-td'></div>".repeat(paths.length);
+            let mazeTds = Array.from(document.getElementsByClassName('maze-td'));
+            for (let mazeIx = 0; mazeIx < paths.length; mazeIx++)
+                mazeTds[mazeIx].innerHTML = generateMaze(rnd, 10, 10, paths[mazeIx]);
+        }
+
+        function generateMaze(rnd, w, h, path)
+        {
+            let segs = [];
+            for (let x = 0; x < w; x++)
+                for (let y = 0; y < h; y++)
+                {
+                    if (y > 0)
+                        segs.push({ d1: 1, d2: 3, c: [x | (y << 8), (x + 1) | (y << 8)]});
+                    if (x > 0)
+                        segs.push({ d1: 2, d2: 0, c: [x | (y << 8), x | ((y + 1) << 8)]});
+                }
+
+            let todo = Array(w * h).fill(null).map((_, c) => (c % w) | ((c / w) << 8));
+            let active = [];
+
+            let start = rnd.next(0, todo.length);
+            active.push(todo[start]);
+            todo.splice(start, 1);
+
+            while (todo.length > 0)
+            {
+                let activeIx = rnd.next(0, active.length);
+                let sq = active[activeIx];
+                let adjs = [];
+                if ((sq & 0xff) > 0 && todo.includes(sq - 1))
+                    adjs.push(sq - 1);
+                if ((sq & 0xff) < w - 1 && todo.includes(sq + 1))
+                    adjs.push(sq + 1);
+                if ((sq >> 8) > 0 && todo.includes(sq - 0x100))
+                    adjs.push(sq - 0x100);
+                if ((sq >> 8) < h - 1 && todo.includes(sq + 0x100))
+                    adjs.push(sq + 0x100);
+
+                if (adjs.length == 0)
+                {
+                    active.splice(activeIx, 1);
+                    continue;
+                }
+                else
+                {
+                    let adj = adjs[rnd.next(0, adjs.length)];
+                    todo.splice(todo.indexOf(adj), 1);
+                    active.push(adj);
+
+                    if (adj === sq - 1)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 2 && sg.c[0] === sq), 1);
+                    else if (adj === sq + 1)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 2 && sg.c[0] === adj), 1);
+                    else if (adj === sq - 0x100)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 1 && sg.c[0] === sq), 1);
+                    else if (adj === sq + 0x100)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 1 && sg.c[0] === adj), 1);
+                }
+            }
+
+            let svg = [];
+            while (segs.length > 0)
+            {
+                let seg = segs.pop();
+                while (true)
+                {
+                    let extIx = segs.findIndex(sg =>
+                        ((sg.d1 ^ 2) === seg.d1 && sg.c[0] === seg.c[0]) ||
+                        ((sg.d1 ^ 2) === seg.d2 && sg.c[0] === seg.c[seg.c.length - 1]) ||
+                        ((sg.d2 ^ 2) === seg.d1 && sg.c[sg.c.length - 1] === seg.c[0]) ||
+                        ((sg.d2 ^ 2) === seg.d2 && sg.c[sg.c.length - 1] === seg.c[seg.c.length - 1]));
+                    let f = false;
+                    if (extIx === -1)
+                    {
+                        extIx = segs.findIndex(sg =>
+                            ((sg.c[0] === seg.c[0] || sg.c[0] === seg.c[seg.c.length - 1]) &&
+                                !segs.some(s => (s.c[0] === sg.c[0] && (s.d1 ^ 2) === sg.d1) || (s.c[s.c.length - 1] === sg.c[0] && (s.d2 ^ 2) === sg.d1))) ||
+                            ((sg.c[sg.c.length - 1] === seg.c[0] || sg.c[sg.c.length - 1] === seg.c[seg.c.length - 1]) &&
+                                !segs.some(s => (s.c[0] === sg.c[sg.c.length - 1] && (s.d1 ^ 2) === sg.d2) || (s.c[s.c.length - 1] === sg.c[sg.c.length - 1] && (s.d2 ^ 2) === sg.d2))));
+                        f = true;
+                    }
+                    if (extIx === -1)
+                        break;
+                    let ext = segs[extIx], newSeg;
+                    segs.splice(extIx, 1);
+                    if (seg.c[0] === ext.c[0])
+                    {
+                        seg.c.reverse();
+                        seg.c.pop();
+                        if (seg.d1 === (ext.d1 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d1 = seg.d2;
+                        seg.d2 = ext.d2;
+                    }
+                    else if (seg.c[0] === ext.c[ext.c.length - 1])
+                    {
+                        ext.c.pop();
+                        if (seg.d1 === (ext.d2 ^ 2))
+                            seg.c.shift();
+                        ext.c.push(...seg.c);
+                        ext.d2 = seg.d2;
+                        seg = ext;
+                    }
+                    else if (seg.c[seg.c.length - 1] === ext.c[0])
+                    {
+                        seg.c.pop();
+                        if (ext.d1 === (seg.d2 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d2 = ext.d2;
+                    }
+                    else if (seg.c[seg.c.length - 1] === ext.c[ext.c.length - 1])
+                    {
+                        ext.c.reverse();
+                        seg.c.pop();
+                        if (seg.d2 === (ext.d2 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d2 = ext.d1;
+                    }
+                }
+                svg.push(`M${seg.c.map(p => `${p & 0xff} ${p >> 8}`).join(' ')}`);
+            }
+
+            return `
+                <svg viewBox='-.1 -.1 ${w+.2} ${h+.2}'>
+                    <path d='${path}' fill='#ddd' stroke='none' />
+                    <path d='${svg.join('')}' fill='none' stroke='black' stroke-width='.05' />
+                    <path d='M0 0h${w}v${h}H0z' fill='none' stroke='black' stroke-width='.1' />
+                    ${Array(w*h).fill(null).map((_, c) => `<rect class='highlightable' x='${c % w}' y='${(c / w) | 0}' width='1' height='1' fill='transparent' />`).join('')}
+                <${''}/svg>
+            `;
+        }
+    </script>
+    <style>
+        #gray-button-mazes {
+            display: flex;
+            flex-wrap: wrap;
+            clear: both;
+            justify-content: space-between;
+        }
+            #gray-button-mazes .maze-td {
+                width: 5.75cm;
+            }
+            #gray-button-mazes .symbol > svg {
+                display: inline;
+            }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Gray Button</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Gray Button.svg" class="diagram">
+                <h2>On the Subject of The Gray Button</h2>
+                <p class="flavour-text">This is a button. It is gray.</p>
+                <p>In the maze corresponding to the symbol on the button, find the position given by the third and sixth character of the serial number, as well as the position displayed on the screen (column 0–9 from left to right, then row 0–9 from top to bottom). Calculate the distance between these positions, modulo 60. Tap the button when the seconds on the bomb timer equal this value, or the total seconds equal a tenth of it (rounded down).</p>
+
+                <div id='gray-button-mazes'></div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
