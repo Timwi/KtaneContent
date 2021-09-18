@@ -1835,27 +1835,25 @@ const parseData = [
                         .map(str => str.split(', ').map(c => parseInt(c)))
                         .map(arr => ({ x: arr[0], y: arr[1], z: arr[2] }));
                     for (let c of coords)
-                        c.p = { x: 21*c.x - 15*c.y, y: -5*c.x - 6*c.y - 24*c.z };
+                        c.p = { x: 21 * c.x - 15 * c.y, y: -5 * c.x - 6 * c.y - 24 * c.z };
                     module.BrownButtonInfo = { coords: coords };
                     return true;
                 }
             },
             {
                 regex: /^(Cube|The correct cell to submit is) \((.*)\)(?: (corresponds to|is displaying) (.*))?\.$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     let inf = module.BrownButtonInfo;
                     let coords = matches[2].split(', ').map(c => parseInt(c));
                     let ix = inf.coords.findIndex(c => c.x === coords[0] && c.y === coords[1] && c.z === coords[2]);
                     let isSolution = matches[1] !== 'Cube';
-                    if (!isSolution)
-                    {
+                    if (!isSolution) {
                         if (matches[3] === 'corresponds to')
                             inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4] - 1];
                         else
                             inf.coords[ix].label2 = matches[4];
                     }
-                    else
-                    {
+                    else {
                         inf.coords[ix].label2 = 'solution';
                         inf.coords[ix].isSolution = true;
                         inf.coords.sort((one, two) => (two.y - one.y) || (one.z - two.z) || (two.x - one.x));
@@ -1867,7 +1865,7 @@ const parseData = [
                         inf.coords.sort((one, two) => one.p.y - two.p.y);
                         let minY = inf.coords[0].p.y;
                         let maxY = inf.coords[7].p.y;
-                        let svg = `<svg viewBox='${minX-16} ${minY-36} ${maxX-minX+138} ${maxY-minY+37}' stroke-linejoin='round' text-anchor='middle' font-size='9'>${cubes}</svg>`;
+                        let svg = `<svg viewBox='${minX - 16} ${minY - 36} ${maxX - minX + 138} ${maxY - minY + 37}' stroke-linejoin='round' text-anchor='middle' font-size='9'>${cubes}</svg>`;
                         module.push({ label: 'Chosen net:', obj: $(svg) });
                     }
                     return true;
@@ -3322,20 +3320,21 @@ const parseData = [
                         I: '#ff52fc'
                     };
                     let rotations = "↑↗→↘↓↙←↖";
+                    let svgGroups = Array(18).fill(null).map((_, sq) => {
+                        let ch = lns[((sq / 3) | 0) % 3][(sq % 3) * 3 + ((sq / 9) | 0) * 12 + 1];
+                        return `
+                            <g transform='translate(${10 * (sq % 3) + 50 * ((sq / 9) | 0)}, ${10 * (((sq / 3) | 0) % 3)})'>
+                                <rect fill='${colors[lns[((sq / 3) | 0) % 3][(sq % 3) * 3 + ((sq / 9) | 0) * 12]]}' width='10' height='10'/>
+                                <path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
+                                <path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
+                                ${ch === '·' ? '' : ch === '•' ? `<circle cx='5' cy='5' r='1.5' />` : `<path d='${arrowPathD}' transform='translate(5, 5) scale(.7) rotate(${45 * rotations.indexOf(ch)})'/>`}
+                            </g>
+                        `;
+                    }).join('');
                     let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -4.5 81 35' font-size='4' text-anchor='middle'>
                         <text x='15' y='-1'>FRONT</text>
                         <text x='65' y='-1'>BACK</text>
-                        ${Array(18).fill(null).map((_, sq) => `
-                            <g transform='translate(${10*(sq % 3) + 50*((sq / 9) | 0)}, ${10*(((sq / 3) | 0) % 3)})'>
-                                <rect fill='${colors[lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12]]}' width='10' height='10'/>
-                                <path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
-                                <path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
-                                ${lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1] === '·' ? '' :
-                                  lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1] === '•' ? `<circle cx='5' cy='5' r='1.5' />` :
-                                  `<path d='${arrowPathD}' transform='translate(5, 5) scale(.7)
-                                    rotate(${45*rotations.indexOf(lns[((sq/3)|0)%3][(sq%3)*3 + ((sq/9)|0)*12 + 1])})'/>`}
-                            </g>
-                        `).join('')}</svg>`);
+                        ${svgGroups}</svg>`);
                     module.push({ label: matches[1], obj: svg });
                     return true;
                 }
@@ -3346,30 +3345,31 @@ const parseData = [
                     let lns = readLines(9)
                         .map(line => /Squares \[(.*)\], Dir (\d+)/.exec(line))
                         .map(match => ({ sq: match[1].split(',').map(s => s.split('↔').map(v => parseInt(v))), dir: parseInt(match[2]) }));
-                    let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -5.5 101 106' font-size='4' text-anchor='middle'>
-                        ${lns.map((ln, lnIx) => `
-                            <g transform='translate(${35*(lnIx % 3)}, ${35*((lnIx / 3)|0)})'>
-                                <text x='15' y='-1'>${lnIx+1}</text>
+                    let lnsSvg = lns.map((ln, lnIx) => {
+                        let inner = ln.sq.map(sq => sq[0] === sq[1] ?
+                            `<g transform='translate(${10 * (sq[0] % 3) + 5}, ${10 * ((sq[0] / 3) | 0) + 5}) rotate(${45 * ln.dir})'>
+                                <path d='M0 -1v2' fill='none' stroke='black' stroke-width='1' />
+                                <path d='M-1 -1 h2 l-1 -2zM-1 1 h2 l-1 2z' fill='black' stroke='none' />
+                            </g>`: `
+                                <path data-dir='${ln.dir}' d='M${10 * (sq[0] % 3) + 5} ${10 * ((sq[0] / 3) | 0) + 5} ${10 * (sq[1] % 3) + 5} ${10 * ((sq[1] / 3) | 0) + 5}' fill='none' stroke='black' stroke-width='1' />
+                                <path transform='translate(${10 * (sq[0] % 3) + 5}, ${10 * ((sq[0] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 2z' fill='black' stroke='none' />
+                                <path transform='translate(${10 * (sq[1] % 3) + 5}, ${10 * ((sq[1] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 -2z' fill='black' stroke='none' />
+                            `).join('');
+                        return `
+                            <g transform='translate(${35 * (lnIx % 3)}, ${35 * ((lnIx / 3) | 0)})'>
+                                <text x='15' y='-1'>${lnIx + 1}</text>
                                 ${Array(9).fill(null).map((_, sq) => `
-                                    <g transform='translate(${10*(sq % 3)}, ${10*((sq / 3)|0)})'>
+                                    <g transform='translate(${10 * (sq % 3)}, ${10 * ((sq / 3) | 0)})'>
                                         <rect fill='${ln.sq.some(tup => tup[0] === sq || tup[1] === sq) ? '#bdf' : '#ddd'}' width='10' height='10'/>
                                         <path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
                                         <path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
                                     </g>
                                 `).join('')}
-                                ${ln.sq.map(sq => sq[0] === sq[1]
-                                    ? `<g transform='translate(${10*(sq[0] % 3)+5}, ${10*((sq[0] / 3)|0)+5}) rotate(${45*ln.dir})'>
-                                            <path d='M0 -1v2' fill='none' stroke='black' stroke-width='1' />
-                                            <path d='M-1 -1 h2 l-1 -2zM-1 1 h2 l-1 2z' fill='black' stroke='none' />
-                                        </g>`
-                                    : `
-                                        <path data-dir='${ln.dir}' d='M${10*(sq[0] % 3)+5} ${10*((sq[0] / 3)|0)+5} ${10*(sq[1] % 3)+5} ${10*((sq[1] / 3)|0)+5}' fill='none' stroke='black' stroke-width='1' />
-                                        <path transform='translate(${10*(sq[0] % 3)+5}, ${10*((sq[0] / 3)|0)+5}) rotate(${ln.dir < 2 ? 180+45*ln.dir : 45*ln.dir})' d='M-1 0 h2 l-1 2z' fill='black' stroke='none' />
-                                        <path transform='translate(${10*(sq[1] % 3)+5}, ${10*((sq[1] / 3)|0)+5}) rotate(${ln.dir < 2 ? 180+45*ln.dir : 45*ln.dir})' d='M-1 0 h2 l-1 -2z' fill='black' stroke='none' />
-                                    `
-                                ).join('')}
+                                ${inner}
                             </g>
-                        `).join('')}<${''}/svg>`);
+                        `;
+                    }).join('');
+                    let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -5.5 101 106' font-size='4' text-anchor='middle'>${lnsSvg}<${''}/svg>`);
                     module.push({ label: "Flips:", obj: svg });
                     return true;
                 }
@@ -3396,9 +3396,9 @@ const parseData = [
                 handler: function (matches, module) {
                     let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for(let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < lights.length; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < lights.length; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3407,7 +3407,7 @@ const parseData = [
                                 .css('width', '15px')
                                 .css('height', '15px')
                                 .appendTo(tr);
-                            switch(lights[row][col]) {
+                            switch (lights[row][col]) {
                                 case 'R':
                                     td.css('background-color', '#FF0000')
                                     break;
@@ -3436,9 +3436,9 @@ const parseData = [
                 handler: function (matches, module) {
                     let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for(let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < lights.length; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < lights.length; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3447,7 +3447,7 @@ const parseData = [
                                 .css('width', '15px')
                                 .css('height', '15px')
                                 .appendTo(tr);
-                            switch(lights[row][col]) {
+                            switch (lights[row][col]) {
                                 case '1':
                                     td.css('background-color', '#FFFF00')
                                     break;
@@ -3457,7 +3457,7 @@ const parseData = [
                             }
                         }
                     }
-                    switch(matches[0]){
+                    switch (matches[0]) {
                         case "Correct toggle patterns for this stage:":
                             module.FloorLightsStage[1].push({ label: matches[0], obj: table });
                             break;
@@ -3468,7 +3468,7 @@ const parseData = [
                             break;
                         case "You submitted these toggles:":
                             module.FloorLightsStage = ["Attempt " + module.FloorLightsAttempts, [{ label: matches[0], obj: table }]]
-                            if(module.FloorLightsAnswer.every((val, index) => val === lights[index])) {
+                            if (module.FloorLightsAnswer.every((val, index) => val === lights[index])) {
                                 readLines(1);
                                 module.FloorLightsStage[1].push("That was correct. Module solves.");
                                 module.push(module.FloorLightsStage);
@@ -4642,16 +4642,10 @@ const parseData = [
                     if (module.violetMod) {
                         module.push("Modified table (violet):");
                         module.push({
-                            obj: $(`
-                        <table>${module.violetMod.map(a => `
-                            <tr>${a.map(i => `
-                                <td style="border: black solid 2px; padding: 2px 6px 2px 6px;">${i}
-                                </td>`).join("")}
-                            </tr>`).join("")}
-                        </table>`), nobullet: true
+                            obj: $(`<table>${module.violetMod.map(a => `<tr>${a.map(i => `<td style="border: black solid 2px; padding: 2px 6px 2px 6px;">${i}</td>`).join("")}</tr>`).join("")}</table>`),
+                            nobullet: true
                         });
                     }
-
                     return false;
                 }
             },
@@ -4685,11 +4679,10 @@ const parseData = [
                     }
                     dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='black' stroke='none' />`;
 
-                    module.push({nobullet: true, obj: $SVG(`
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">
-                        ${dotssvg}
-                        ${linessvg}
-                    </svg>`)});
+                    module.push({
+                        nobullet: true,
+                        obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">${dotssvg}${linessvg}</svg>`)
+                    });
                     return true;
                 }
             },
@@ -4723,11 +4716,10 @@ const parseData = [
                     }
                     dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='#800' stroke='none' />`;
 
-                    module.push({nobullet: true, obj: $SVG(`
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">
-                        ${dotssvg}
-                        ${linessvg}
-                    </svg>`)});
+                    module.push({
+                        nobullet: true,
+                        obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">${dotssvg}${linessvg}</svg>`)
+                    });
                     return true;
                 }
             },
@@ -4738,7 +4730,7 @@ const parseData = [
                         $("div").filter((_, d) => d.innerText == `Kugelblitz #${matches[1]}`).parent().click();
                         return false;
                     };
-                    module.push({obj: $(`<p>Logging can be found at <a href=''>Kugelblitz #${matches[1]}</a>.</p>`).find("a").click(callback).end()});
+                    module.push({ obj: $(`<p>Logging can be found at <a href=''>Kugelblitz #${matches[1]}</a>.</p>`).find("a").click(callback).end() });
                     return true;
                 }
             },
@@ -8064,23 +8056,22 @@ const parseData = [
                         'M 0,-4.962 -1.876,-0.836 -0.805,-1.194 -0.804,1.398 -1.398,1.992 L -1.398,4.962 L 0,3.564 1.398,4.962 1.399,4.455 1.398,1.992 0.804,1.398 0.805,-1.194 1.876,-0.836 z M 0,-3.946 1.094,-1.539 0.384,-1.776 L 0.384,1.573 L 0.978,2.166 0.977,3.947 0,2.97 -0.977,3.947 -0.978,2.166 -0.384,1.573 L -0.384,-1.776 L -1.094,-1.539 z',
                         'M 1.315,4.932 0,3.617 -1.315,4.932 L -1.315,2.302 L -0.658,1.644 L -0.658,-1.644 L -1.644,-1.315 0,-4.932 1.644,-1.315 0.658,-1.644 L 0.658,1.644 L 1.315,2.302 z',
                     ];
-                    let angleOffsets = [ 180, 315, 0, 270 ];
+                    let angleOffsets = [180, 315, 0, 270];
 
                     let j = JSON.parse(matches[0]);
                     console.log(j);
-                    function svg(i, n, cs)
-                    {
+                    function svg(i, n, cs) {
                         return `<td>
                             <svg viewBox="-5 -5 10 10" style='width: 2cm'>
-                              <path transform='rotate(${angleOffsets[n-3] + 360*i/n})' fill='${colors[cs >> 3]}' d='${shapes[cs & 7]}' />
+                              <path transform='rotate(${angleOffsets[n - 3] + 360 * i / n})' fill='${colors[cs >> 3]}' d='${shapes[cs & 7]}' />
                             </svg>
                             <div>(${n})</div>
                         </td>`;
                     }
                     let table = $(`<table style='border-collapse: collapse; margin: .3cm auto 1cm 0;'>
-                        <tr><th>Initial</th>${Array(j.stage+2).fill(null).map((_, i) => svg(j.arrows[i].initial, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>
-                        <tr><th>Expected</th>${Array(j.stage+2).fill(null).map((_, i) => svg(j.arrows[i].expected, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>
-                        ${j.strike ? `<tr><th>Your submission</th>${Array(j.stage+2).fill(null).map((_, i) => svg(j.arrows[i].current, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>`: ''}
+                        <tr><th>Initial</th>${Array(j.stage + 2).fill(null).map((_, i) => svg(j.arrows[i].initial, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>
+                        <tr><th>Expected</th>${Array(j.stage + 2).fill(null).map((_, i) => svg(j.arrows[i].expected, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>
+                        ${j.strike ? `<tr><th>Your submission</th>${Array(j.stage + 2).fill(null).map((_, i) => svg(j.arrows[i].current, j.arrows[i].num, j.arrows[i].colorshape)).join('')}</tr>` : ''}
                     </table>`);
                     table.find('td,th').css({ border: '1px solid black', padding: '.1cm .25cm', textAlign: 'center' });
                     module.push({ label: `Stage: ${j.stage}${j.strike ? ' — STRIKE' : ''}`, obj: $(table) });
@@ -8762,9 +8753,9 @@ const parseData = [
                     const colorIndexes = ['00', '06', '60', '66']
                     let cornerColors = matches[1].split(', ');
                     let maze = [];
-                    for(let i = 0; i < 7; i++) {
+                    for (let i = 0; i < 7; i++) {
                         let mazeRow = [];
-                        for(let j = 0; j < 7; j++) {
+                        for (let j = 0; j < 7; j++) {
                             mazeRow.push(
                                 {
                                     'tile': module.tileMaze[i][j],
@@ -8775,112 +8766,111 @@ const parseData = [
                         maze.push(mazeRow);
                     }
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for(let i = 0; i < 7; i++) {
+                    for (let i = 0; i < 7; i++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let j = 0; j < 7; j++) {
+                        for (let j = 0; j < 7; j++) {
                             let currentCell = maze[i][j];
                             let cellColor = '';
                             let td = $('<td>')
-                            .css('position', 'relative')
-                            .css('border', 'none')
-                            .css('width', '50px')
-                            .css('height', '50px')
-                            .css('background-color', '#103A86')
-                            .appendTo(tr);
+                                .css('position', 'relative')
+                                .css('border', 'none')
+                                .css('width', '50px')
+                                .css('height', '50px')
+                                .css('background-color', '#103A86')
+                                .appendTo(tr);
 
-                            if(colorIndexes.includes(i.toString().concat(j))){
+                            if (colorIndexes.includes(i.toString().concat(j)))
                                 cellColor = cornerColors[colorIndexes.indexOf(i.toString().concat(j))][0];
-                            }
 
                             let tile;
                             let rotation;
                             let number = currentCell.number == '-' ? ' ' : currentCell.number;
-                            switch(currentCell.tile) {
+                            switch (currentCell.tile) {
                                 case '╔':
                                 case '╚':
                                 case '╝':
                                 case '╗':
                                     tile = cellColor != '' ? `L tile ${cellColor}` : 'L tile';
-                                    rotation = [0,90,180,270]['╚╔╗╝'.indexOf(currentCell.tile)]
+                                    rotation = [0, 90, 180, 270]['╚╔╗╝'.indexOf(currentCell.tile)]
                                     break;
                                 case '═':
                                 case '║':
                                     tile = 'I tile';
-                                    rotation = [0,90]['║═'.indexOf(currentCell.tile)]
+                                    rotation = [0, 90]['║═'.indexOf(currentCell.tile)]
                                     break;
                                 case '╠':
                                 case '╩':
                                 case '╦':
                                 case '╣':
                                     tile = 'T tile';
-                                    rotation = [0,90,180,270]['╦╣╩╠'.indexOf(currentCell.tile)]
+                                    rotation = [0, 90, 180, 270]['╦╣╩╠'.indexOf(currentCell.tile)]
                                     break;
                             }
 
                             $('<img>')
-                            .attr('src', `img/The Tile Maze/${tile}.png`)
-                            .css('transform', `rotate(${rotation}deg)`)
-                            .css('height', '50px')
-                            .css('width', '50px')
-                            .css('vertical-align', 'middle')
-                            .appendTo(td);
+                                .attr('src', `img/The Tile Maze/${tile}.png`)
+                                .css('transform', `rotate(${rotation}deg)`)
+                                .css('height', '50px')
+                                .css('width', '50px')
+                                .css('vertical-align', 'middle')
+                                .appendTo(td);
 
                             $('<div>')
-                            .text(number)
-                            .css('position', 'absolute')
-                            .css('left', '50%')
-                            .css('top', '50%')
-                            .css('transform', 'translate(-50%, -50%)')
-                            .css('font-weight', 'bold')
-                            .appendTo(td)
+                                .text(number)
+                                .css('position', 'absolute')
+                                .css('left', '50%')
+                                .css('top', '50%')
+                                .css('transform', 'translate(-50%, -50%)')
+                                .css('font-weight', 'bold')
+                                .appendTo(td);
                         }
                     }
                     module.push({ label: 'Generated Maze:', obj: table });
 
                     let div = $('<div>')
-                    .css('width', '50px')
-                    .css('height', '50px')
-                    .css('position', 'relative')
-                    .css('background-color', '#103A86');
+                        .css('width', '50px')
+                        .css('height', '50px')
+                        .css('position', 'relative')
+                        .css('background-color', '#103A86');
                     let tile;
                     let rotation;
                     let number = module.extraNumber == '-' ? ' ' : module.extraNumber;
-                    switch(module.extraTile) {
+                    switch (module.extraTile) {
                         case '╔':
                         case '╚':
                         case '╝':
                         case '╗':
                             tile = 'L tile';
-                            rotation = [0,90,180,270]['╚╔╗╝'.indexOf(module.extraTile)]
+                            rotation = [0, 90, 180, 270]['╚╔╗╝'.indexOf(module.extraTile)]
                             break;
                         case '═':
                         case '║':
                             tile = 'I tile';
-                            rotation = [0,180]['║═'.indexOf(module.extraTile)]
+                            rotation = [0, 180]['║═'.indexOf(module.extraTile)]
                             break;
                         case '╠':
                         case '╩':
                         case '╦':
                         case '╣':
                             tile = 'T tile';
-                            rotation = [0,90,180,270]['╦╣╩╠'.indexOf(module.extraTile)]
+                            rotation = [0, 90, 180, 270]['╦╣╩╠'.indexOf(module.extraTile)]
                             break;
                     }
 
                     $('<img>')
-                    .attr('src', `img/The TIle Maze/${tile}.png`)
-                    .css('transform', `rotate(${rotation}deg)`)
-                    .css('width', '50px').css('height', '50px')
-                    .appendTo(div);
+                        .attr('src', `img/The TIle Maze/${tile}.png`)
+                        .css('transform', `rotate(${rotation}deg)`)
+                        .css('width', '50px').css('height', '50px')
+                        .appendTo(div);
 
                     $('<div>')
-                    .text(number)
-                    .css('position', 'absolute')
-                    .css('left', '50%')
-                    .css('top', '50%')
-                    .css('transform', 'translate(-50%, -50%)')
-                    .css('font-weight', 'bold')
-                    .appendTo(div);
+                        .text(number)
+                        .css('position', 'absolute')
+                        .css('left', '50%')
+                        .css('top', '50%')
+                        .css('transform', 'translate(-50%, -50%)')
+                        .css('font-weight', 'bold')
+                        .appendTo(div);
                     module.push({ label: 'Extra tile:', obj: div });
                     return true;
                 }
@@ -8972,9 +8962,9 @@ const parseData = [
         ]
     },
     {
-      moduleID: "UNO",
-      loggingTag: "UNO!",
-      displayName: "UNO!"
+        moduleID: "UNO",
+        loggingTag: "UNO!",
+        displayName: "UNO!"
     },
     {
         moduleID: "USA",
