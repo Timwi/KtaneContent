@@ -4256,6 +4256,136 @@ const parseData = [
         ]
     },
     {
+        moduleID: ["BlueHuffmanCipherModule", "YellowHuffmanCipherModule"],
+        displayName: ["Blue Huffman Cipher", "Yellow Huffman Cipher"],
+        loggingTag: ["Blue Huffman Cipher", "Yellow Huffman Cipher"],
+        matches: [
+            {
+                regex: /^Letters (.*)$/,
+                handler: function (matches, module) { module.HuffmanPages = [{ labels: ['Letters on module:', matches[1].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')] }]; return true; }
+            },
+            {
+                regex: /^Combining (\d+) (\d+) (.*)$/,
+                handler: function (matches, module) { module.HuffmanPages.push({ label: `Combining #${parseInt(matches[1])} and #${parseInt(matches[2])}`, svg: matches[3] }); return true; }
+            },
+            {
+                regex: /^Final ([01]) (.*)$/,
+                handler: function (matches, module) {
+                    module.HuffmanTree = matches[2];
+                    module.HuffmanCount = 0;
+                    if (matches[1] === '1')
+                        for (var i = 0; i < 51; i++)
+                            module.HuffmanPages.push({ depth: i, svg: true });
+                    else
+                        module.HuffmanPages.push({ label: 'Final tree', svg: true });
+                    return true;
+                }
+            },
+            {
+                regex: /^Binary ([01]) (.*)$/,
+                handler: function (matches, module) {
+                    let allPieces = matches[2].split(';').map(str => str.split('='));
+                    let table = `<table style='border: 2px solid black; margin: .5cm auto; text-align: center;'>`;
+                    for (let i = 0; i < (((allPieces.length + 6) / 7) | 0); i++) {
+                        let pieces = allPieces.slice(7 * i, 7 * (i + 1));
+                        table += `<tr>${pieces.map(p => `<td style='border: 1px solid black; border-top-width: 2px'>${p[0]}</td>`).join('')}</tr>`;
+                        table += `<tr style='font-weight: bold'>${pieces.map(p => `<td style='border: 1px solid black; padding: .1cm .3cm'>${p[1]}</td>`).join('')}</tr>`;
+                    }
+                    table += `</table>`;
+                    module.HuffmanPages.push({ label: `Encrypted data to binary`, table: table, svg: matches[1] === '1' });
+                    module.HuffmanBinary = allPieces.map(p => p[1].replace(/[^01]/g, '')).join('');
+                    return true;
+                }
+            },
+            {
+                regex: /^Decode (\d+) (\d+) ([A-Z])$/,
+                handler: function (matches, module) {
+                    module.HuffmanPages.push({
+                        s: matches[1] | 0,
+                        e: matches[2] | 0,
+                        c: module.HuffmanCount,
+                        svg: true
+                    });
+                    module.HuffmanCount++;
+                    return true;
+                }
+            },
+            {
+                regex: /^Solution ([A-Z]+)$/,
+                handler: function (matches, module) {
+                    module.HuffmanPages.push({ label: `Solution: ${matches[1]}`, svg: true });
+
+                    let div = document.createElement('div');
+                    div.innerHTML = `
+                        <div class='top' style='position: relative; background: #eef; padding: .1cm .25cm; margin: 0 auto .5cm; min-height: 1.5cm'>
+                            <button type='button' class='left' style='position: absolute; left: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>◀</button>
+                            <button type='button' class='right' style='position: absolute; right: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>▶</button>
+                            <div class='label' style='text-align: center; font-weight: bold; font-size: 18pt; position: absolute; left: 1.2cm; right: 1.2cm; top: 50%; transform: translateY(-50%)'></div>
+                        </div>
+                        <div class='bottom'></div>
+                    `;
+                    let label = div.querySelector('.label');
+                    let bottom = div.querySelector('.bottom');
+
+                    let curPage = 0;
+                    function setPage() {
+                        let page = module.HuffmanPages[curPage];
+                        bottom.innerHTML = `${page.table || ''}${'svg' in page ? page.svg === true ? module.HuffmanTree : page.svg === false ? '' : page.svg : ''}`;
+                        if (page.labels) {
+                            label.innerHTML = page.labels.map((_, ix) => `<div class='s-${ix}'></div>`).join('');
+                            page.labels.forEach((lbl, ix) => { label.querySelector(`.s-${ix}`).innerText = lbl; });
+                        }
+                        else if (page.label)
+                            label.innerText = page.label;
+                        else if ('depth' in page) {
+                            //console.log(Array.from(bottom.querySelectorAll('*')).map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.className), cn: e.className })));
+                            Array.from(bottom.querySelectorAll('*'))
+                                .map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.getAttribute('class')) }))
+                                .filter(inf => inf.match !== null && parseInt(inf.match[1]) >= page.depth)
+                                .forEach(inf => {
+                                    if (parseInt(inf.match[1]) === page.depth) {
+                                        if (inf.elem.nodeName === 'circle')
+                                            inf.elem.setAttribute('fill', '#f88');
+                                    }
+                                    else
+                                        inf.elem.setAttribute('opacity', '0');
+                                });
+                            let restBinary = module.HuffmanBinary.substr(page.depth + 1);
+                            if (restBinary.length > 11)
+                                restBinary = restBinary.substr(0, 10) + "...";
+                            let prevBinary = module.HuffmanBinary.substr(0, page.depth);
+                            if (prevBinary.length > 11)
+                                prevBinary = "..." + prevBinary.substr(prevBinary.length - 10);
+                            label.innerHTML = `<div>Decoding tree...</div><div>${prevBinary}<span style='margin:0 .1cm; padding:0 .1cm; background: #fdd; border: 2px solid #a00;'>${module.HuffmanBinary[page.depth]}</span>${restBinary}</div>`;
+                        }
+                        else {
+                            let highlights = Array(page.e - page.s + 1).fill(null).map((_, ix) => `.node-b${module.HuffmanBinary.substr(page.s, ix).split('').reverse().join('')}`).join(',');
+                            let restBinary = module.HuffmanBinary.substr(page.e);
+                            if (restBinary.length > 15)
+                                restBinary = restBinary.substr(0, 10) + "...";
+                            label.innerHTML = `${matches[1].substr(0, page.c)}<span style='margin:0 .1cm; padding:0 .1cm; background: #fdd; border: 2px solid #a00;'>${module.HuffmanBinary.substr(page.s, page.e - page.s)}</span>${restBinary}<br>→ ${matches[1][page.c]}`;
+                            Array.from(bottom.querySelectorAll(highlights)).forEach(elem => { elem.style.fill = '#fc8'; });
+                        }
+                    }
+
+                    div.querySelector('.left').onclick = function () {
+                        curPage = Math.max(curPage - 1, 0);
+                        setPage();
+                    };
+                    div.querySelector('.right').onclick = function () {
+                        curPage = Math.min(curPage + 1, module.HuffmanPages.length - 1);
+                        setPage();
+                    };
+
+                    module.push({ obj: div, nobullet: true });
+                    setPage();
+                    return true;
+                }
+            },
+            { regex: /.+/ }
+        ]
+    },
+    {
         moduleID: "hunting",
         loggingTag: "Hunting",
         matches: [
