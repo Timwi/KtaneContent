@@ -3962,6 +3962,76 @@ const parseData = [
         ]
     },
     {
+        moduleID: "GameOfColors",
+        loggingTag: "Game of Colors",
+        matches: [
+            {
+                regex: /^The (?:goal )?grid for (magenta|yellow|cyan) is:$/,
+                handler: function (matches, module) {
+                    const color = {
+                        "magenta": "#FF00FF",
+                        "yellow": "#FFFF00",
+                        "cyan": "#00FFFF"
+                    }[matches[1]];
+                    let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let x = 0; x < 5; x++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let y = 0; y < 5; y++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', 'thick')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .css('background-color', grid[x][y] == '.' ? "#000000" : color)
+                                .appendTo(tr);
+                        }
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^The final answer is:$/,
+                handler: function(matches, module) {
+                    const colorCodes = {
+                        'R': "#FF0000",
+                        'G': "#00FF00",
+                        'B': "#0000FF",
+                        'M': "#FF00FF",
+                        'Y': "#FFFF00",
+                        'C': "#00FFFF",
+                        'W': "#FFFFFF",
+                        'K': "#000000"
+                    };
+                    let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for(let x = 0; x < 5; x++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let y = 0; y < 5; y++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', 'thick')
+                                .css('width', '25px')
+                                .css('height', '25px')
+                                .css('background-color', colorCodes[grid[x][y]])
+                                .appendTo(tr);
+                        }
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: ["GameOfLifeCruel", "GameOfLifeSimple", "LifeIteration"],
         loggingTag: ["Game of Life Cruel", "Game of Life Simple", "Life Iteration"],
         matches: [
