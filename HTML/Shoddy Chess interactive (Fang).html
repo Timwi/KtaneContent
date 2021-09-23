@@ -29,6 +29,7 @@
     </style>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script>
+        let previousMoves = [];
         $(function() {
             var row;
             var chessboard = $(".chessboard");
@@ -44,8 +45,17 @@
 
                             if (element.text() == "" && selectedSquare.length == 0)
                                 return;
-
+                            if(selectedSquare.text() == element.text()) {
+                                selectedSquare.removeClass("selected");
+                                return;
+                            }
                             if (selectedSquare.length == 1) {
+                                previousMoves.push({
+                                    'From': selectedSquare,
+                                    'To': element,
+                                    'ToPrev': element.text().toString(),
+                                    'FromPrev': selectedSquare.text().toString()
+                                });
                                 var selectedText = selectedSquare.text();
                                 var elementText = selectedSquare.text() != "" ? "" : element.text();
                                 selectedSquare.text(elementText);
@@ -132,7 +142,18 @@
             $(".reset").click(function() {
                 $(".black.square, .white.square").each(function() { $(this).text($(this).data("original")); }).removeClass("selected");
             });
+
+            $(".undo").click(function() {
+                if(previousMoves.length == 0) return;
+                var move = previousMoves[previousMoves.length - 1];
+                move.From.text(move.FromPrev);
+                move.To.text(move.ToPrev);
+                move.To.removeClass("selected");
+                previousMoves.pop();
+            });
         });
+
+        $(document).keydown(function (e) { if(e.which === 90 && (e.ctrlKey || e.metaKey)) { $(".undo").click(); } })
 
         window.onbeforeunload = function() {
                 return true;
@@ -586,12 +607,11 @@
                     </h3>
                     <div class="chessboard"></div>
                     <br>
-                    <p><button class="reset">Reset Board</button></p>
+                    <p><button class="reset">Reset Board</button> <button class="undo" title="ctrl+z">Undo Move</button></p>
                 </div>
                 <div class="page-footer relative-footer">Page 4 of 4</div>
             </div>
         </div>
-    
     </div>
 </body>
 </html>
