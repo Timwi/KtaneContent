@@ -7487,6 +7487,39 @@ const parseData = [
         ]
     },
     {
+        displayName: "Repo Selector",
+        moduleID: "qkRepoSelector",
+        loggingTag: "Repo Selector",
+        matches: [
+            {
+                regex: /Modules sorted by (.+): (.+)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[1], obj: `<ul>${matches[2]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /All bomb modules \(A-Z\): (.+)/,
+                handler: function (matches, module) {
+                    module.push({ label: "All bomb modules: (A-Z)", obj: `<ul>${matches[1]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /Light is (.+), Selector modules ordered by their sort keys: (.+)/,
+                handler: function (matches, module) {
+                    module.push(`Light is ${matches[1]}`)
+                    module.push({ label: 'Selector modules ordered by their sort keys', obj: `<ul>${matches[2]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /(?:Waiting for service to finish)|(?:Service finished, generating question)|(?:Modules successfully fetched)/,
+                handler: function (matches, module) {return true}
+            },
+            {
+                regex: /^((?!(?:Modules sorted by)|(?:All bomb modules)|(?:Light is)).)*$/
+            }
+        ]
+    },
+    {
         moduleID: "resistors",
         loggingTag: "Resistors",
         matches: [
