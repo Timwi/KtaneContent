@@ -629,13 +629,13 @@ const parseData = [
                 }
             },
             {
-                regex: /Unable to get the real module for (.+?) \((.+?)\). IDs found: (.+?). This/,
+                regex: /Unable to get the real module for (.+?) \((.+?)\). IDs found: (.*?). This/,
                 handler: matches => {
                     const modId = matches[1];
                     const data = parseData.find(e => e.moduleID == modId);
                     if (data) {
-                        const ids = matches[3].split(", ").map(e => e.replace(/^\"|\"$/g, ""));
-                        data.error = `<strong>Demand-Based Mod Loading:</strong> Unable to get the real module for <code>${modId}</code> (<code>${matches[2]}</code>). IDs found:<ul>${ids.map(e => `<li><code>${e}</code></li>`).join("")}</ul>`;
+                        const ids = matches[3].split(", ").map(e => e.replace(/^\"|\"$/g, "").trim()).filter(e => e);
+                        data.error = `<strong>Demand-Based Mod Loading:</strong> Unable to get the real module for <code>${modId}</code> (<code>${matches[2]}</code>). ${ids.length ? `IDs found:<ul>${ids.map(e => `<li><code>${e}</code></li>`).join("")}</ul>` : "No IDs found."}`;
                     }
                 }
             }
