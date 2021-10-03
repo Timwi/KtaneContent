@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wendithap&#x2019;n — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .wd-loading {
+            margin-top: 50px;
+            font-size: 16pt;
+            font-weight: 700;
+        }
+
+        .wd-input {
+            display: none;
+            margin-top: 30px;
+            padding: 14px 20px 10px;
+            border: 0;
+            outline: 0;
+            background-color: #ddd;
+            border-radius: 6px;
+            width: 100%;
+            font-family: 'Special Elite', 'Courier New', monospace;
+            font-size: 18pt;
+        }
+
+        .wd-output {
+            text-align: center;
+            margin-top: 28px;
+        }
+        
+        .wd-output > div:not(.no-results) {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 190px;
+            padding: 15px;
+            vertical-align: top;
+        }
+
+        .wd-output > .no-results {
+            font-size: 22pt;
+            opacity: 0.7;
+        }
+
+        .wd-output > div > span {
+            width: 100%;
+            line-height: 100%;
+        }
+
+        .wd-output > div > span:nth-child(1) {
+            font-size: 22pt;
+            font-weight: 700;
+        }
+
+        .wd-output > div > span:nth-child(2) {
+            font-size: 16pt;
+        }
+    </style>
+    <script>
+        const load = async () => {
+            const request = await fetch("https://ktane.timwi.de/json/raw");
+            const data = (await request.json()).KtaneModules;
+            $(".wd-loading").remove();
+            let maxlength = 0;
+            data.forEach(m => {
+                if (m.Name.length > maxlength) maxlength = m.Name.length;
+            });
+            const input = $(".wd-input").show().attr({ maxlength }).on("input", () => {
+                const output = $(".wd-output").empty();
+                const format = s => s.toLowerCase().replace(/ /g, "").trim();
+                const val = format(input.val());
+                if (val.length) {
+                    const eq = (n) => format(n.Name) == val;
+                    const mods = data.filter((m) => m.Symbol && !m.TranslationOf && (format(m.Name).indexOf(val) > -1 || format(m.ModuleID).indexOf(val) > -1)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
+                    mods.forEach((m) => output.append($("<div/>").append($("<span/>").text(new Date(m.Published).toLocaleDateString()), $("<span/>").text(m.Name))));
+                    if (!mods.length) output.append($("<div/>").addClass("no-results").html("No mods found"));
+                }
+            });
+        };
+        load();
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wendithap&#x2019;n</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wendithap'n.svg" class="diagram">
+                <h2>On the Subject of Wendithap&#x2019;n</h2>
+                <p class="flavour-text">You know, this question type originated from Louder! Faster! Funnier! and Mock 2, but eventually made its way into &#x201c;You Don&#x2019;t Know Jack 4&#x201d; in Germany, which Jellvision eventually turned into Volume 6: &#x201c;The Lost Gold&#x201d; in English<span style="opacity: 0.9;">.</span> <span style="opacity: 0.7;">B</span><span style="opacity: 0.6;">u</span><span style="opacity: 0.5;">t</span> <span style="opacity: 0.3;">&#x201c;</span><span style="opacity: 0.2;">T</span><span style="opacity: 0.1;">h</span></p>
+
+                <div class="wd-loading">Loading&#x2026;</div>
+                <input class="wd-input" type="text" placeholder="Enter module name here&#x2026;" />
+                <div class="wd-output"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
