@@ -1060,6 +1060,12 @@ function Bomb(seed) {
                     .appendTo(moduleInfo);
             }
 
+            if (parseData.moduleData.error) {
+                $("<p>")
+                    .html(parseData.moduleData.error)
+                    .appendTo(moduleInfo);
+            }
+
             // Listing
             var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
                 .appendTo(modules)
