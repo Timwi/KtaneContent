@@ -399,7 +399,7 @@ e.onload = function()
             });
         };
 
-        $("td, th, li, .highlightable, .stroke-highlightable").each(function() {
+        $("td:not(.nohighlight), th:not(.nohighlight), li:not(.nohighlight), .highlightable, .stroke-highlightable").each(function() {
             makeHighlightable($(this));
         });
 
