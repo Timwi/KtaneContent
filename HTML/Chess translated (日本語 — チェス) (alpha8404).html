@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>チェス — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table.chess h4 {
+            margin: 0;
+        }
+        table.chess p {
+            margin: 0;
+        }
+        p,ul {
+            margin: 0;
+        }
+        .chess-horizontal {
+            padding-left: 100px;
+            clear: both;
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 62px;
+            grid-gap: 5px;
+            padding-top: 10px;
+        }
+        .chess-vertical {
+            display:grid;
+            grid-auto-flow: row;
+            grid-auto-rows: 62px;
+            grid-gap: 5px;
+            padding-left: 30px;
+            padding-top: 45px;
+        }
+        #chess{
+            float:right;
+            margin: 20px 200px 0 0;
+        }
+        div.rules {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            font-size: .9em;
+        }
+        div.rules div {
+            padding: 8px;
+        }
+        div.rules img {
+            display: block;
+            width: 70%;
+            margin: 0 auto 1em;
+            background-color: white;
+        }
+        div.rules .onlyInst {
+            margin-top: 6em;
+        }
+    </style>
+    <script>
+        var defaultRules = null;
+
+        function getDefaultRules(){
+            if (defaultRules !== null)
+            return;
+            defaultRules = {}
+            for (var rule = 1; rule <=6; rule++){
+                defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+            }
+        }
+
+        function setDefaultRules()
+        {
+            getDefaultRules()
+            for( var i = 1; i <= 6; i++){
+                var span = document.getElementById(`rule${i}`)
+
+                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5)
+            }
+        }
+
+        function setRules(rnd)
+        {
+            getDefaultRules()
+            var order = [1,2,3,4,5,6]
+            rnd.shuffleFisherYates(order)
+            var ind = order.indexOf(5)
+
+            var invertX = rnd.nextInt() % 2 == 0;
+            var invertY = rnd.nextInt() % 2 == 0;
+            var swap = rnd.nextInt() % 2 == 0;
+            var invertField = rnd.nextInt() % 2 == 1;
+            var invertSerial = rnd.nextInt() % 2 == 0;
+            for (var i = 0; i < 6; i++){
+                var span = document.getElementById(`rule${i+1}`)
+                var inner = defaultRules[order[i]].replace("{i}",i+1);
+                switch(order[i]){
+                    case 1: inner = inner.replace("{j}",ind+1); break;
+                    case 2: inner = inner.replace("奇数", invertSerial == true ? "偶数" : "奇数"); break;
+                    case 5: inner = inner.replace("白", invertField == true ? "黒" : "白"); break;
+                }
+                span.innerHTML = inner;
+            }
+
+            var letters = ['a','b','c','d','e','f']
+            var numbers = ['1','2','3','4','5','6']
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            for (var i = 1; i <= 6; i++){
+                if(!swap){
+                    document.getElementById(`horizontal${i}`).innerText = letters[i-1]
+                    document.getElementById(`vertical${i}`).innerText = numbers[i-1]
+                }else{
+                    document.getElementById(`horizontal${i}`).innerText = numbers[i-1]
+                    document.getElementById(`vertical${i}`).innerText = letters[i-1]
+                }
+            }
+
+        }
+    </script>
+
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">チェス</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Chess.svg" class="diagram">
+                <h2>モジュール詳細：チェス</h2>
+                <p class="flavour-text">圧迫した状況では、チェスは海戦ゲームのように感じることがある。</p>
+
+                <p>このモジュールは、<strong>６×６のチェス盤</strong> <i>(次のページを参照)</i>を想定しており、チェス駒は通常通りの動きをする<i>(ページ3を参照)</i>。</p>
+                <p>モジュールには、ディスプレイとaからf、１から６の１２このボタンがある。</p>
+
+                <ul>
+                    <li>チェス駒が配置されている座標が表示される。</li>
+                    <li>下の段の１から６までの数字を押して、６つの座標を表示する。下部のLEDは、表示している座標のボタンを示している。</li>
+                    <li>以下の表を参照して、各位置に特定のチェスの駒を割り当てる。</li>
+                    <li>６つのチェス駒の移動可能なマスは、３６マスのうち３５マスを埋める。</li>
+                    <li>チェス駒は他の駒を飛び越えて移動することはできない。</li>
+                    <li>余った１つの座標を入力してモジュールを解除する。</li>
+                    <li>座標を入力するには、座標の英字を押して、その後に座標の数字を押す。</li>
+                </ul>
+
+                <span>表を使用し、各位置の駒の種類を特定する</span>
+                <table class="chess">
+                    <tr>
+                        <td id = "rule1">
+                            <h4>座標#{i}：君主制vs神権政治</h4>
+                            <p>座標#{j}の駒がクイーンの場合は、キングになる。</p>
+                            <p>それ以外の場合は、ビショップになる。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id = "rule2">
+                            <h4>座標#{i}：陸軍司令官</h4>
+                            <p>シリアルナンバーの最後の数字が奇数の場合は、ルークになる。</p>
+                            <p>それ以外の場合は、ナイトになる。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id = "rule3">
+                            <h4>座標#{i}：摂政の問題</h4>
+                            <p>チェス盤上に配置されたルークが２つ未満の場合は、クイーンになる。</p>
+                            <p>それ以外の場合は、キングになる。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id = "rule4">
+                            <h4>座標#{i}：鉄の塔</h4>
+                            <p>ルークを配置する。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id = "rule5">
+                            <h4>座標#{i}：善と悪の対立</h4>
+                            <p>そのセルが白い場合は、クイーンになる。</p>
+                            <p>それ以外の場合は、ルークになる。</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id = "rule6">
+                            <h4>座標#{i}：セプター・ソード・クロシエ</h4>
+                            <p>チェス盤上に他のクイーンがない場合は、クイーンになる。</p>
+                            <p>それ以外の場合、チェス盤上に他のナイトがいない場合は、ナイトになる。</p>
+                            <p>それ以外の場合は、ビショップになる。</p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">チェス</span>
+            </div>
+            <div class="page-content">
+                <h4>チェス盤</h4>
+                <p>下のチェス盤を想定する必要がある。</p>
+                <img src="img/Chess/ChessBoard.png" id="chess">
+                <div class="chess-vertical">
+                    <span id="vertical6">6</span>
+                    <span id="vertical5">5</span>
+                    <span id="vertical4">4</span>
+                    <span id="vertical3">3</span>
+                    <span id="vertical2">2</span>
+                    <span id="vertical1">1</span>
+                </div>
+                <div class="chess-horizontal">
+                    <span id="horizontal1">a</span>
+                    <span id="horizontal2">b</span>
+                    <span id="horizontal3">c</span>
+                    <span id="horizontal4">d</span>
+                    <span id="horizontal5">e</span>
+                    <span id="horizontal6">f</span>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">チェス</span>
+            </div>
+            <div class="page-content">
+                <h4>チェス駒の移動ルール</h4>
+                <div class="rules">
+                    <div>
+                        <img src="img/Chess/king.svg">
+                        <p><strong>キング</strong>: 縦・横・斜めのすべての方向に、1マスだけ移動できる。</p>
+                    </div>
+                    <div>
+                        <img src="img/Chess/queen.svg">
+                        <p><strong>クイーン</strong>: 縦・横・斜めのすべての方向の任意のマス（どこでも好きなマス）に移動できる。</p>
+                    </div>
+                    <div>
+                        <img src="img/Chess/rook.svg">
+                        <p><strong>ルーク</strong>: 縦・横の方向の任意のマス（どこでも好きなマス）に移動できる。</p>
+                    </div>
+                    <div>
+                        <img src="img/Chess/bishop.svg">
+                        <p><strong>ビショップ</strong>: 斜め方向の任意のマス（どこでも好きなマス）に移動できる。</p>
+                    </div>
+                    <div>
+                        <img src="img/Chess/knight.svg">
+                    </div>
+                    <div>
+                        <p class="onlyInst"><strong>ナイト</strong>: 最大8箇所のうちの任意のマス（どこでも好きなマス）に移動できる。アルファベットの「Y」の字を、4方向に広げたような動きである。ナイトは敵味方を問わず他の駒を飛び越すことができる。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
