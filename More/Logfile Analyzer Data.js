@@ -627,6 +627,18 @@ const parseData = [
                             break;
                     }
                 }
+            },
+            {
+                regex: /Unable to get the real module for (.+?) \((.+?)\). IDs found: (.*?). This/,
+                handler: matches => {
+                    const modId = matches[1];
+                    const steamId = matches[2];
+                    const ids = matches[3].split(", ").map(e => e.replace(/^\"|\"$/g, "").trim()).filter(e => e);
+                    console.warn(`Unable to get the real module for ${modId} (${steamId}); found: ${ids.length ? ids.join(", ") : "[none]"}`);
+
+                    const data = parseData.find(e => e.moduleID == modId);
+                    if (data) data.error = `<strong>Demand-Based Mod Loading:</strong> Unable to get the real module for <code>${modId}</code> (<code>${steamId}</code>). ${ids.length ? `IDs found:<ul>${ids.map(e => `<li><code>${e}</code></li>`).join("")}</ul>` : "No IDs found."}`;
+                }
             }
         ]
     },
@@ -7483,6 +7495,39 @@ const parseData = [
             },
             {
                 regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Repo Selector",
+        moduleID: "qkRepoSelector",
+        loggingTag: "Repo Selector",
+        matches: [
+            {
+                regex: /Modules sorted by (.+): (.+)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[1], obj: `<ul>${matches[2]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /All bomb modules \(A-Z\): (.+)/,
+                handler: function (matches, module) {
+                    module.push({ label: "All bomb modules: (A-Z)", obj: `<ul>${matches[1]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /Light is (.+), Selector modules ordered by their sort keys: (.+)/,
+                handler: function (matches, module) {
+                    module.push(`Light is ${matches[1]}`)
+                    module.push({ label: 'Selector modules ordered by their sort keys', obj: `<ul>${matches[2]}</ul>`, expandable: true })
+                }
+            },
+            {
+                regex: /(?:Waiting for service to finish)|(?:Service finished, generating question)|(?:Modules successfully fetched)/,
+                handler: function (matches, module) {return true}
+            },
+            {
+                regex: /^((?!(?:Modules sorted by)|(?:All bomb modules)|(?:Light is)).)*$/
             }
         ]
     },
