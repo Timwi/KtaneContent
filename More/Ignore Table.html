@@ -2,7 +2,14 @@
 <head>
     <title>Ignore list table</title>
     <link href="../HTML/css/font.css" rel="stylesheet" type="text/css" />
+    <script src="../HTML/js/jquery.3.1.1.min.js"></script>
     <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            /* justify-content: center; */
+        }
         body {
             font-family: "Trebuchet MS";
         }
@@ -25,6 +32,10 @@
         }
         #ignore-table th img {
             display: block;
+
+			height: 32px;
+			width: 32px;
+			object-fit: none;
         }
 
         #ignore-table th {
@@ -87,150 +98,184 @@
         }
     </style>
     <script>
-        const JSON_URL = "https://ktane.timwi.de/json/raw";
+        $(function() {
+            const JSON_URL = "https://ktane.timwi.de/json/raw";
+            var ignoreJson = null;
+            var ignorees = [];
 
-        function elApplyArg($el, arg) {
-            if (arg instanceof HTMLElement) {
-                $el.appendChild(arg);
-            } else if (typeof arg !== "object") {
-                $el.appendChild(document.createTextNode(arg));
-            } else if (Array.isArray(arg)) {
-                for(const a of arg) {
-                    elApplyArg($el, a);
+            function elApplyArg($el, arg) {
+                if (arg instanceof HTMLElement) {
+                    $el.appendChild(arg);
+                } else if (typeof arg !== "object") {
+                    $el.appendChild(document.createTextNode(arg));
+                } else if (Array.isArray(arg)) {
+                    for(const a of arg) {
+                        elApplyArg($el, a);
+                    }
+                } else {
+                    for (const attr in arg) {
+                        if (typeof arg[attr] === "function") $el[attr] = arg[attr];
+                        else if (arg[attr] !== undefined && arg[attr] !== null)
+                            $el.setAttribute(attr, arg[attr]);
+                    }
                 }
-            } else {
-                for (const attr in arg) {
-                    if (typeof arg[attr] === "function") $el[attr] = arg[attr];
-                    else if (arg[attr] !== undefined && arg[attr] !== null)
-                        $el.setAttribute(attr, arg[attr]);
+
+            }
+            function el(tagName, className, ...args) {
+                const $el = document.createElement(tagName);
+                if (className) $el.className = className;
+                for (const arg of args) {
+                    elApplyArg($el, arg);
                 }
+                return $el;
             }
 
-        }
-        function el(tagName, className, ...args) {
-            const $el = document.createElement(tagName);
-            if (className) $el.className = className;
-            for (const arg of args) {
-                elApplyArg($el, arg);
+
+            function fetchJSON() {
+                return fetch(JSON_URL)
+                .then((v) => v.json())
+                .then((json) => {
+                    const ignorers = json.KtaneModules.filter(
+                        (module) => module.IgnoreProcessed || module.Ignore
+                    );
+                    const ignoreesNames = ignorers.flatMap(
+                        (module) => module.IgnoreProcessed || module.Ignore
+                    );
+                    // Ignoree should include non-boss after filtering is implemented.
+                    // const ignorees = json.KtaneModules.filter(module => ignoreesNames.includes(module.DisplayName || module.Name));
+                    const ignorees = json.KtaneModules.filter(
+                        (module) => module.Quirks && (module.Quirks.includes("SolvesAtEnd") || module.Quirks.includes("NeedsOtherSolves") ||
+                                    module.Quirks.includes("SolvesBeforeSome") || module.Quirks.includes("SolvesWithOthers") ||
+                                    module.Quirks.includes("WillSolveSuddenly ") || module.Quirks.includes("TimeDependent "))
+                    );
+                    ignorees.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
+                    ignorers.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
+                    return {
+                        ignorers: ignorers,
+                        ignorees: ignorees,
+                    };
+                });
             }
-            return $el;
-        }
 
-        function fetchJSON() {
-            return fetch(JSON_URL)
-            .then((v) => v.json())
-            .then((json) => {
-                const ignorers = json.KtaneModules.filter(
-                    (module) => module.IgnoreProcessed || module.Ignore
+            function createTable(json, $table) {
+                let elIgnorees = [];
+                const $thead = el("thead", null,
+                    el("tr", null, el("th", "corner"),
+                        json.ignorees.map((ignoree, i) => {
+                            elIgnorees[i] = el("th", null,
+                                el("img", null,
+                                    {
+                                        src: "https://ktane.timwi.de/iconsprite",
+                                        title: ignoree.DisplayName || ignoree.Name,
+                                        style: `object-position: -${ignoree.X * 32}px -${ignoree.Y * 32}px`,
+                                    },
+                                ),
+                            );
+                            return elIgnorees[i];
+                        })
+                    )
                 );
-                const ignoreesNames = ignorers.flatMap(
-                    (module) => module.IgnoreProcessed || module.Ignore
-                );
-                // Ignoree should include non-boss after filtering is implemented.
-                // const ignorees = json.KtaneModules.filter(module => ignoreesNames.includes(module.DisplayName || module.Name));
-                const ignorees = json.KtaneModules.filter(
-                    (module) => module.SolvesAtEnd || module.NeedsOtherSolves || module.SolvesBeforeSome || module.IsPseudoNeedy || module.IsTimeSensitive
-                );
-                ignorees.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
-                ignorers.sort((e1, e2) => e1.SortKey.localeCompare(e2.SortKey));
-                return {
-                    ignorers: ignorers,
-                    ignorees: ignorees,
-                };
-            });
-        }
+                ignorees = elIgnorees;
 
-        function createTable(json, $table) {
-            let elIgnorees = [];
-            const $thead = el("thead", null,
-                el("tr", null, el("th", "corner"),
-                    json.ignorees.map((ignoree, i) => {
-                        elIgnorees[i] = el("th", null,
+                $table.appendChild($thead);
+                createRows(json, ignorees, "");
+            }
+
+            function createRows(json, elIgnorees, filterName) {
+                let table = document.getElementById("ignore-table");
+                let body = table.getElementsByTagName("tbody")[0];
+                if (body)
+                    table.removeChild(body);
+                let elCells = [];
+                let elIgnorers = [];
+                let $tooltip = document.getElementById("tooltip");
+                let ignorers = json.ignorers.filter(
+                    (mod) => mod.Name.includes(filterName)
+                );
+                if (filterName.length > 0)
+                    $(".hstack h1")[0].innerHTML = `Ignore Table: ${filterName}`;
+                else
+                    $(".hstack h1")[0].innerHTML = "Table of modules that ignore one another";
+
+                const $tbody = el("tbody", null,
+                    ignorers.map((ignorer, i) => {
+                        elCells[i] = [];
+                        elIgnorers[i] = el("th", null,
                             el("img", null,
                                 {
-                                    src: `../Icons/${encodeURIComponent(ignoree.FileName ?? ignoree.Name)}.png`,
-                                    title: ignoree.DisplayName || ignoree.Name,
+                                    src: "https://ktane.timwi.de/iconsprite",
+                                    title: ignorer.DisplayName || ignorer.Name,
+                                    style: `object-position: -${ignorer.X * 32}px -${ignorer.Y * 32}px`,
                                 },
                             ),
                         );
-                        return elIgnorees[i];
-                    })
-                )
-            );
+                        elIgnorers[i].addEventListener("click", e => {
+                            if (filterName.length > 0)
+                                createRows(ignoreJson, ignorees, "");
+                            else
+                                createRows(ignoreJson, ignorees, ignorer.DisplayName || ignorer.Name);
+                        });
 
-            let elCells = [];
-            let elIgnorers = [];
-            let $tooltip = document.getElementById("tooltip");
-            const $tbody = el("tbody", null,
-                json.ignorers.map((ignorer, i) => {
-                    elCells[i] = [];
-                    elIgnorers[i] = el("th", null,
-                        el("img", null,
-                            {
-                                src: `../Icons/${encodeURIComponent(ignorer.FileName ?? ignorer.Name)}.png`,
-                                title: ignorer.DisplayName || ignorer.Name,
-                            },
-                        ),
-                    );
+                        return el("tr", null, elIgnorers[i],
+                            json.ignorees.map((ignoree, j) => {
+                                const isIgnored = (ignorer.IgnoreProcessed || ignorer.Ignore).includes(ignoree.DisplayName || ignoree.Name);
 
-                    return el("tr", null, elIgnorers[i],
-                        json.ignorees.map((ignoree, j) => {
-                            const isIgnored = (ignorer.IgnoreProcessed || ignorer.Ignore).includes(ignoree.DisplayName || ignoree.Name);
+                                const $el = el("td", isIgnored ? "ignored" : null);
 
-                            const $el = el("td", isIgnored ? "ignored" : null);
+                                elCells[i][j] = $el;
 
-                            elCells[i][j] = $el;
+                                $el.addEventListener("mousemove", e => {
+                                    elIgnorers[i].classList.add("hover");
+                                    elIgnorees[j].classList.add("hover");
+                                    for(let di = 0; di < ignorers.length; di++) {
+                                        elCells[di][j].classList.add("hover");
+                                    }
+                                    for(let dj = 0; dj < json.ignorees.length; dj++) {
+                                        elCells[i][dj].classList.add("hover");
+                                    }
+                                    if(!isIgnored) {
+                                        $tooltip.style.display = "none";
+                                    } else {
+                                        $tooltip.style.display = "block";
+                                    }
+                                    $tooltip.textContent = `${ignorer.DisplayName || ignorer.Name} ignores ${ignoree.DisplayName || ignoree.Name}`;
+                                    $tooltip.style.top = e.pageY + 16;
+                                    $tooltip.style.left = Math.min(e.pageX + 16, window.scrollX + window.screen.width - $tooltip.offsetWidth - 32);
+                                });
 
-                            $el.addEventListener("mousemove", e => {
-                                elIgnorers[i].classList.add("hover");
-                                elIgnorees[j].classList.add("hover");
-                                for(let di = 0; di < json.ignorers.length; di++) {
-                                    elCells[di][j].classList.add("hover");
-                                }
-                                for(let dj = 0; dj < json.ignorees.length; dj++) {
-                                    elCells[i][dj].classList.add("hover");
-                                }
-                                if(!isIgnored) {
+
+                                $el.addEventListener("mouseout", e => {
+                                    elIgnorers[i].classList.remove("hover");
+                                    elIgnorees[j].classList.remove("hover");
+                                    for(let di = 0; di < ignorers.length; di++) {
+                                        elCells[di][j].classList.remove("hover");
+                                    }
+                                    for(let dj = 0; dj < json.ignorees.length; dj++) {
+                                        elCells[i][dj].classList.remove("hover");
+                                    }
                                     $tooltip.style.display = "none";
-                                } else {
-                                    $tooltip.style.display = "block";
-                                }
-                                $tooltip.textContent = `${ignorer.DisplayName || ignorer.Name} ignores ${ignoree.DisplayName || ignoree.Name}`;
-                                $tooltip.style.top = e.pageY + 16;
-                                $tooltip.style.left = Math.min(e.pageX + 16, window.scrollX + window.screen.width - $tooltip.offsetWidth - 32);
-                            });
-
-
-                            $el.addEventListener("mouseout", e => {
-                                elIgnorers[i].classList.remove("hover");
-                                elIgnorees[j].classList.remove("hover");
-                                for(let di = 0; di < json.ignorers.length; di++) {
-                                    elCells[di][j].classList.remove("hover");
-                                }
-                                for(let dj = 0; dj < json.ignorees.length; dj++) {
-                                    elCells[i][dj].classList.remove("hover");
-                                }
-                                $tooltip.style.display = "none";
+                                })
+                                return $el;
                             })
-                            return $el;
-                        })
-                    );
-                })
-            );
+                        );
+                    })
+                );
+                table.appendChild($tbody);
+            }
 
-            $table.appendChild($thead);
-            $table.appendChild($tbody);
-        }
-
-        window.addEventListener("load", () => {
             fetchJSON().then((json) => {
+                ignoreJson = json;
                 createTable(json, document.getElementById("ignore-table"));
             });
         });
     </script>
 </head>
 <body>
-    <h1>Table of modules that ignore one another</h1>
+    <div class="hstack">
+        <span style="width: 55mm">Click an icon on the left side to focus on that module.</span>
+        <div style="width: 5mm"></div>
+        <h1>Table of modules that ignore one another</h1>
+    </div>
     <table id="ignore-table"></table>
     <div id="tooltip"></div>
     <!--V1-->
