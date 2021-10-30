@@ -6626,6 +6626,22 @@ const parseData = [
         ]
     },
     {
+        moduleID: "NavyButtonModule",
+        loggingTag: "The Navy Button",
+        matches: [
+            {
+                regex: /(Puzzle (?:grid|solution):)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[1], obj: pre(readMultiple(7)) });
+					return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "neutralization",
         loggingTag: "Neutralization",
         matches: [
