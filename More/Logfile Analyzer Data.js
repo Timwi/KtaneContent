@@ -1247,6 +1247,77 @@ const parseData = [
         ]
     },
     {
+        moduleID: "algorithmia",
+        loggingTag: "Algorithmia",
+        matches: [
+            {
+                regex: /^The walls of the generated maze are as follows:$/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[0], obj: pre(readMultiple(9).replace(/\[Algorithmia #\d+\] /g, "")) });
+                    return true;
+                }
+            },
+            {
+                regex: /^==MAZE GENERATION==$/,
+                handler: function (_, module) {
+                    module.generatingMaze = true;
+                    module.algorithmiaMaze = [];
+                    return true;
+                }
+            },
+            {
+                regex: /^The maze is being generated using (.+)$/,
+                handler: function (matches, module) {
+                    readLine();
+                    module.push(matches[0]);
+                    return true;
+                }
+            },
+            {
+                regex: /^(.+\.) Aborting algorithm\.$/,
+                handler: function (matches, module) {
+                    module.generatingMaze = false;
+                    module.algorithmiaMaze.push(matches[0])
+                    module.push(["Maze Generation", module.algorithmiaMaze]);
+                    readLine();
+                    return true;
+                }
+            },
+            {
+                regex: /^The goal position is at (.+)\./,
+                handler: function (matches, module) {
+                    module.algorithmiaMoving = true;
+                    module.push(matches[0]);
+                    module.algorithmiaMoves = [];
+                    module.push(["Moves", module.algorithmiaMoves]);
+                    return true;
+                }
+            },
+            {
+                regex: /^Goal position reached. Module solved.$/,
+                handler: function (matches, module) {
+                    module.push(matches[0]);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    if(module.generatingMaze) {
+                        module.algorithmiaMaze.push(matches[0]);
+                        return true;
+                    }
+                    if(module.algorithmiaMoving) {
+                        module.algorithmiaMoves.push(matches[0]);
+                        return true;
+                    }
+                    module.push(matches[0]);
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         moduleID: "Keypad",
         loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
         matches: [
