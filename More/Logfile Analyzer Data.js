@@ -4841,8 +4841,8 @@ const parseData = [
             {
                 regex: /^(Solution|Codings|New codings):$/,
                 handler: function (matches, module) {
-                    var lines = readLines(4).map(l => l.split(' '));
-                    module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
+                    var lines = readLines(6).map(l => l.replace(/\[Kyudoku #\d+\] /g, "").trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
+                    module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse; text-align: center;'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
                     return true;
                 }
             },
