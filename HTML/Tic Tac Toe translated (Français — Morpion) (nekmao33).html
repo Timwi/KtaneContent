@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Morpion — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setRules(rnd)
+        {
+            // This increases randomness
+            for (var i = rnd.next(0, 10); i > 0; i--)
+                rnd.nextDouble();
+
+            var conditionTypes = rnd.shuffleFisherYates(['s', 'p', 'i', 'b']);
+
+            var conditions = {
+                's': [
+                    "le dernier chiffre du numéro de série est pair",
+                    "le troisième caractère du numéro de série est un chiffre pair",
+                    "le premier caractère du numéro de série est une lettre",
+                    "le deuxième caractère du numéro de série est une lettre",
+                    "le numéro de série contient une voyelle",
+                    "le numéro de série contient un chiffre pair",
+                    "le numéro de série contient un caractère en double",
+                    "le numéro de série contient trois lettres et trois chiffres"
+                ],
+                'p': [
+                    "la bombe a un port parallèle",
+                    "la bombe a un port série",
+                    "la bombe a un port PS/2",
+                    "la bombe a un port stéréo RCA",
+                    "la bombe a un port RJ-45",
+                    "la bombe a un port DVI-D",
+                    "la bombe a un port en double",
+                    "la bombe a une plaque de port vide",
+                    "la bombe a un nombre pair de ports",
+                    "la bombe a un nombre impair de ports",
+                    "la bombe a un nombre pair plaques de ports",
+                    "la bombe a un nombre impair plaques de ports",
+                    "la bombe a un nombre pair de types de ports distincts",
+                    "la bombe a un nombre impair de types de ports distincts"
+                ],
+                'i': [
+                    "la bombe a un indicateur allumé",
+                    "la bombe a un indicateur éteint",
+                    "la bombe a un indicateur avec une voyelle",
+                    "la bombe a un nombre pair d'indicateurs",
+                    "la bombe a un nombre impair d'indicateurs",
+                    "la bombe a un nombre pair d'indicateurs allumés",
+                    "la bombe a un nombre impair d'indicateurs allumés",
+                    "la bombe a un nombre pair d'indicateurs éteints",
+                    "la bombe a un nombre impair d'indicateurs éteints",
+                ],
+                'b': [
+                    "la bombe a des piles AA",
+                    "la bombe a des piles D",
+                    "la bombe a un nombre pair de piles",
+                    "la bombe a un nombre impair de piles",
+                    "la bombe a un nombre pair de porte-piles",
+                    "la bombe a un nombre impair de porte-piles",
+                ]
+            };
+            var comparisons = {
+                's': [
+                    ["le numéro de série contient plus de lettres que de chiffres", "le numéro de série contient plus de chiffres que de lettres", "le numéro de série contient trois chiffres et trois lettres."],
+                    ["le premier chiffre du numéro de série est plus grand que le second", "le premier chiffre du numéro de série est plus petit que le second", "le premier chiffre du numéro de série est égal au second"],
+                    ["le premier chiffre du numéro de série est plus grand que le dernier", "le premier chiffre du numéro de série est plus petit que le dernier", "le premier chiffre du numéro de série est égal au dernier"],
+                    ["le numéro de série contient plus de voyelles que de consonnes", "le numéro de série contient plus de consonnes que de voyelles", "le numéro de série contient autant de consonnes que de voyelles"],
+                    ["la première lettre du numéro de série vient alphabétiquement avant la deuxième", "la première lettre du numéro de série vient alphabétiquement après la deuxième", "la première et la deuxième lettre du numéro de série sont les mêmes"],
+                    ["la première lettre du numéro de série vient alphabétiquement avant la dernière", "la première lettre du numéro de série vient alphabétiquement après la dernière", "la première et la dernière lettre du numéro de série sont les mêmes"],
+                    ["le quatrième caractère vient alphabétiquement avant le cinquième", "le quatrième caractère vient alphabétiquement après le cinquième", "le quatrième et le cinquième caractère du numéro de série sont les mêmes"],
+                    {
+                        'p': [
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de ports", "le premier chiffre du numéro de série est plus petit que le nombre de ports", "le premier chiffre du numéro de série est égal au nombre de ports"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de plaques de ports", "le premier chiffre du numéro de série est plus petit que le nombre plaques de ports", "le premier chiffre du numéro de série est égal au nombre plaques de ports"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre de ports", "le dernier chiffre du numéro de série est plus petit que le nombre de ports", "le dernier chiffre du numéro de série est égal au nombre de ports"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre de plaques de ports", "le dernier chiffre du numéro de série est plus petit que le nombre plaques de ports", "le dernier chiffre du numéro de série est égal au nombre plaques de ports"],
+                        ],
+                        'i': [
+                            ["le premier chiffre du numéro de série est plus grand que le nombre d'indicateurs", "le premier chiffre du numéro de série est plus petit que le nombre d'indicateurs", "le premier chiffre du numéro de série est égal au nombre d'indicateurs"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre d'indicateurs allumés", "le premier chiffre du numéro de série est plus petit que le nombre d'indicateurs allumés", "le premier chiffre du numéro de série est égal au nombre d'indicateurs allumés"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre d'indicateurs éteints", "le premier chiffre du numéro de série est plus petit que le nombre d'indicateurs éteints", "le premier chiffre du numéro de série est égal au nombre d'indicateurs éteints"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre d'indicateurs", "le dernier chiffre du numéro de série est plus petit que le nombre d'indicateurs", "le dernier chiffre du numéro de série est égal au nombre d'indicateurs"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre d'indicateurs allumés", "le dernier chiffre du numéro de série est plus petit que le nombre d'indicateurs allumés", "le dernier chiffre du numéro de série est égal au nombre d'indicateurs allumés"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre d'indicateurs éteints", "le dernier chiffre du numéro de série est plus petit que le nombre d'indicateurs éteints", "le dernier chiffre du numéro de série est égal au nombre d'indicateurs éteints"],
+                        ],
+                        'b': [
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de piles", "le premier chiffre du numéro de série est plus petit que le nombre de piles", "le premier chiffre du numéro de série est égal au nombre de piles"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de piles AA", "le premier chiffre du numéro de série est plus petit que le nombre de piles AA", "le premier chiffre du numéro de série est égal au nombre de piles AA"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de piles D", "le premier chiffre du numéro de série est plus petit que le nombre de piles D", "le premier chiffre du numéro de série est égal au nombre de piles D"],
+                            ["le premier chiffre du numéro de série est plus grand que le nombre de porte-piles", "le premier chiffre du numéro de série est plus petit que le nombre de porte-piles", "le premier chiffre du numéro de série est égal au nombre de porte-piles"],
+                            ["le denier chiffre du numéro de série est plus grand que le nombre de piles", "le dernier chiffre du numéro de série est plus petit que le nombre de piles", "le dernier chiffre du numéro de série est égal au nombre de piles"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre de piles AA", "le dernier chiffre du numéro de série est plus petit que le nombre de piles AA", "le dernier chiffre du numéro de série est égal au nombre de piles AA"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre de piles D", "le dernier chiffre du numéro de série est plus petit que le nombre de piles D", "le dernier chiffre du numéro de série est égal au nombre de piles D"],
+                            ["le dernier chiffre du numéro de série est plus grand que le nombre de porte-piles", "le dernier chiffre du numéro de série est plus petit que le nombre de porte-piles", "le dernier chiffre du numéro de série est égal au nombre de porte-piles"],
+                        ],
+                    }
+                ],
+                'p': [
+                    {
+                        'i': [
+                            ["la bombe a plus de ports que d'indicateurs", "la bombe a plus d'indicateurs que de ports", "la bombe a autant de ports que d'indicateurs"],
+                            ["la bombe a plus de plaque de ports que d'indicateurs", "la bombe a plus d'indicateurs que de plaque de ports", "la bombe a autant de plaque de ports que d'indicateurs"],
+                            ["la bombe a plus de ports que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de ports", "la bombe a autant de ports que d'indicateurs allumés"],
+                            ["la bombe a plus de plaque de ports que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de plaque de ports", "la bombe a autant de plaque de ports que d'indicateurs allumés"],
+                            ["la bombe a plus de ports que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de ports", "la bombe a autant de ports que d'indicateurs éteints"],
+                            ["la bombe a plus de plaque de ports que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de plaque de ports", "la bombe a autant de plaque de ports que d'indicateurs éteints"],
+                        ],
+                        'b': [
+                            ["la bombe a plus de ports que de piles", "la bombe a plus de piles que de ports", "la bombe a autant de ports que de piles"],
+                            ["la bombe a plus de ports que de piles AA", "la bombe a plus de piles AA que de ports", "la bombe a autant de ports que de piles AA"],
+                            ["la bombe a plus de ports que de piles D", "la bombe a plus de piles D que de ports", "la bombe a autant de ports que de piles D"],
+                            ["la bombe a plus de ports que de porte-piles", "la bombe a plus de porte-piles que de ports", "la bombe a autant de ports que de porte-piles"],
+
+                            ["la bombe a plus de plaque de ports que de piles", "la bombe a plus de piles que de plaque de ports", "la bombe a autant de plaque de ports que de piles"],
+                            ["la bombe a plus de plaque de ports que de piles AA", "la bombe a plus de piles AA que de plaque de ports", "la bombe a autant de plaque de ports que de piles AA"],
+                            ["la bombe a plus de plaque de ports que de piles D", "la bombe a plus de piles D que de plaque de ports", "la bombe a autant de plaque de ports que de piles D"],
+                            ["la bombe a plus de plaque de ports que de porte-piles", "la bombe a plus de porte-piles que de plaque de ports", "la bombe a autant de plaque de ports que de porte-piles"],
+
+                            ["la bombe a plus de types de ports distincts que de piles", "la bombe a plus de piles que de types de ports distincts", "la bombe a autant de types de ports distincts que de piles"],
+                            ["la bombe a plus de types de ports distincts que de piles AA", "la bombe a plus de piles AA que de types de ports distincts", "la bombe a autant de types de ports distincts que de piles AA"],
+                            ["la bombe a plus de types de ports distincts que de piles D", "la bombe a plus de piles D que de types de ports distincts", "la bombe a autant de types de ports distincts que de piles D"],
+                            ["la bombe a plus de types de ports distincts que de porte-piles", "la bombe a plus de porte-piles que de types de ports distincts", "la bombe a autant de types de ports distincts que de porte-piles"],
+                        ]
+                    }
+                ],
+                'i': [
+                    ["la bombe a plus d'indicateurs éteints que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que d'indicateurs éteints", "la bombe a autant d'indicateurs éteints que d'indicateurs allumés"],
+                    ["la bombe a plus d'indicateurs avec une voyelle que d'indicateurs sans", "la bombe a plus d'indicateurs sans voyelle que d'indicateurs avec", "la bombe a autant d'indicateur avec et sans une voyelle"],
+                    {
+                        'b': [
+                            ["la bombe a plus de piles que d'indicateurs", "la bombe a plus d'indicateurs que de piles", "la bombe a autant de piles que d'indicateurs"],
+                            ["la bombe a plus de piles que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de piles", "la bombe a autant de piles que d'indicateurs allumés"],
+                            ["la bombe a plus de piles que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de piles", "la bombe a autant de piles que d'indicateurs éteints"],
+                            ["la bombe a plus de porte-piles que d'indicateurs", "la bombe a plus d'indicateurs que de porte-piles", "la bombe a autant de porte-piles que d'indicateurs"],
+                            ["la bombe a plus de porte-piles que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de porte-piles", "la bombe a autant de porte-piles que d'indicateurs allumés"],
+                            ["la bombe a plus de porte-piles que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de porte-piles", "la bombe a autant de porte-piles que d'indicateurs éteints"],
+                            ["la bombe a plus de piles AA que d'indicateurs", "la bombe a plus d'indicateurs que de piles AA", "la bombe a autant de piles AA que d'indicateurs"],
+                            ["la bombe a plus de piles AA que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de piles AA", "la bombe a autant de piles AA que d'indicateurs allumés"],
+                            ["la bombe a plus de piles AA que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de piles AA", "la bombe a autant de piles AA que d'indicateurs éteints"],
+                            ["la bombe a plus de piles D que d'indicateurs", "la bombe a plus d'indicateurs que de piles D", "la bombe a autant de piles D que d'indicateurs"],
+                            ["la bombe a plus de piles D que d'indicateurs allumés", "la bombe a plus d'indicateurs allumés que de piles D", "la bombe a autant de piles D que d'indicateurs allumés"],
+                            ["la bombe a plus de piles D que d'indicateurs éteints", "la bombe a plus d'indicateurs éteints que de piles D", "la bombe a autant de piles D que d'indicateurs éteints"],
+                        ]
+                    }
+                ],
+                'b': [
+                    ["la bombe a plus de piles AA que de piles D", "la bombe a plus de piles D que de piles AA", "la bombe a autant de piles AA que de piles D"],
+                ],
+            };
+            var ports = ["parallèle", "série", "PS/2", "DVI-D", "stéréo RCA", "RJ-45"];
+            for (var i = 0; i < ports.length; i++)
+            {
+                for (var j = 0; j < comparisons['s'].length; j++)
+                    if ('p' in comparisons['s'][j])
+                    {
+                        comparisons['s'][j]['p'].push([`le premier chiffre du numéro de série est plus grand que le nombre de ports ${ports[i]}`, `le premier chiffre du numéro de série est plus petit que le nombre de ports ${ports[i]}`, `le premier chiffre du numéro de série est égal au nombre de ports ${ports[i]}`]);
+                        comparisons['s'][j]['p'].push([`le dernier chiffre du numéro de série est plus grand que le nombre de ports ${ports[i]}`, `le dernier chiffre du numéro de série est plus petit que le nombre de ports ${ports[i]}`, `le dernier chiffre du numéro de série est égal au nombre de ports ${ports[i]}`]);
+                    }
+                for (var j = i + 1; j < ports.length; j++)
+                    comparisons['p'].push([`la bombe a plus de ports ${ports[i]} que de ports ${ports[j]}`, `la bombe a plus de ports ${ports[j]} que de ports ${ports[i]}`, `la bombe a autants de ports ${ports[i]} que de ports ${ports[j]}`]);
+            }
+
+            document.getElementById('condition-1').innerText = 'Si ' + pickRandom(rnd, conditions[conditionTypes[0]]);
+            document.getElementById('condition-2').innerText = 'Si ' + pickRandom(rnd, conditions[conditionTypes[1]]);
+
+            var c1 = conditionTypes[2];
+            var c2 = conditionTypes[3];
+            var list = [];
+            for (var i = 0; i < comparisons[c1].length; i++)
+                if (Array.isArray(comparisons[c1][i]))
+                    list.push(comparisons[c1][i]);
+                else if (c2 in comparisons[c1][i])
+                    for (var j = 0; j < comparisons[c1][i][c2].length; j++)
+                        list.push(comparisons[c1][i][c2][j]);
+            for (var i = 0; i < comparisons[c2].length; i++)
+                if (Array.isArray(comparisons[c2][i]))
+                    list.push(comparisons[c2][i]);
+                else if (c1 in comparisons[c2][i])
+                    for (var j = 0; j < comparisons[c2][i][c1].length; j++)
+                        list.push(comparisons[c2][i][c1][j]);
+            var comparison = pickRandom(rnd, list);
+            document.getElementById('condition-3a').innerText = 'Si ' + comparison[0];
+            document.getElementById('condition-3b').innerText = 'Si ' + comparison[1];
+            document.getElementById('condition-3c').innerText = 'Si ' + comparison[2];
+
+            var cells = Array.from(document.getElementsByClassName('number-row')).map(tr => Array.from(tr.getElementsByClassName('number')));
+            var digits = rnd.shuffleFisherYates('123456789'.split(''));
+            for (var column = 0; column < 6; column++)
+            {
+                for (var i = 0; i < cells.length; i++)
+                    cells[i][column].innerText = digits[i];
+                rnd.shuffleFisherYates(digits);
+            }
+        }
+
+        function pickRandom(rnd, list)
+        {
+            return list[rnd.next(0, list.length)];
+        }
+
+        function setDefaultRules()
+        {
+            document.getElementById("condition-1").innerText = "Si le dernier chiffre du numéro de série est pair";
+            document.getElementById("condition-2").innerText = "S'il y a au moins un port parallèle est présent";
+            document.getElementById("condition-3a").innerText = "S'il y a plus d'indicateurs éteints que d'indicateurs allumés";
+            document.getElementById("condition-3b").innerText = "S'il y a plus d'indicateurs allumés que d'indicateurs éteints";
+            document.getElementById("condition-3c").innerText = "S'il y a autant d'indicateurs éteints que d'indicateurs allumés";
+            var digits = "933981566712782158457896141673875244618439229525394367";
+            var tds = document.getElementsByClassName('number');
+            for (var i = 0; i < tds.length; i++)
+                tds[i].innerText = digits.substr(i, 1);
+        }
+    </script>
+    <style>
+        .ttt-table {
+            width: 100%;
+        }
+        .ttt-table td {
+            text-align: center;
+        }
+        .ruleseed-active .condition {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .dark table, table {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Morpion</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Tic Tac Toe.svg" class="diagram">
+                <h2>À propos du Morpion</h2>
+                <p class="flavour-text">Toutes ces années à faire égalité au morpion pourraient finalement servir.</p>
+
+                <p>Pour désamorcer ce module, les neuf boutons doivent être remplis de "X" et de "O".</p>
+                <p>L'écran intitulé «&nbsp;Up Next&nbsp;:&nbsp;» affiche un «&nbsp;X&nbsp;» ou un «&nbsp;O&nbsp;». Le clavier affiche certains chiffres entre 1 et 9 et certains «&nbsp;X&nbsp;» et «&nbsp;O&nbsp;» déjà placés. Après avoir placé un symbole, le clavier s'éteint.</p>
+                <p>Les chiffres du tableau de la page suivante indiquent l'emplacement sur le clavier où chaque symbole doit être placé.</p>
+                <p>Utiliser les règles ci-dessous pour déterminer la ligne de départ :</p>
+                <ol>
+                    <li><span class='condition' id="condition-1">le dernier chiffre du numéro de série est pair</span>, la ligne de départ est soit 5,&nbsp;6,&nbsp;7,&nbsp;8,&nbsp;ou&nbsp;9. Sinon, la ligne de départ est soit 1,&nbsp;2,&nbsp;3,&nbsp;ou&nbsp;4.</li>
+                    <li><span class='condition' id="condition-2">il y a au moins un port parallèle</span>, utilisez les valeurs paires.  Sinon, utilisez les valeurs impaires.</li>
+                    <li><span class='condition' id="condition-3a">il y a plus d'indicateurs éteints que d'indicateurs allumés</span>, la ligne de départ est la plus petite valeur restante de la règle&nbsp;2.</li>
+                    <li><span class='condition' id="condition-3b">il y a plus d'indicateurs allumés que d'indicateurs éteints</span>, la ligne de départ est la plus grande valeur restante de la règle&nbsp;2.</li>
+                    <li><span class='condition' id="condition-3c">il y a autant d'indicateurs éteints que d'indicateurs allumés</span>, la ligne de départ est la moyenne des valeurs restantes de la règle&nbsp;2.</li>
+                </ol>
+
+                <p>
+                    Dans le tableau, déterminer la bonne colonne en fonction du nombre de «&nbsp;X&nbsp;» et de «&nbsp;O&nbsp;» déjà présents sur le tableau. Commencer par la ligne de départ et descendre la colonne choisie jusqu'à atteindre un chiffre correspondant à une place non remplie sur le clavier. Si la ligne&nbsp;9 est dépassée, continuer à la ligne&nbsp;1.
+                </p>
+
+                <p>
+                    Si placer le symbole à cet endroit peut provoquer un morpion, vous DEVEZ appuyer sur «&nbsp;PASS&nbsp;» et continuer sur la <u>même</u> ligne ; sinon, placer le symbole en appuyant sur l'emplacement du clavier et passer à la ligne <u>suivante</u> du tableau.
+                </p>
+
+                <p>
+                    Deux «&nbsp;PASS&nbsp;» consécutifs entraîneront le placement (et l'affichage) d'un symbole dans l'un des espaces disponibles. Cela peut entraîner morpion, mais n'entraînera pas d'erreur. Dans ce cas, passer à la ligne <u>suivante</u> du tableau.
+                </p>
+
+                <p>
+                    Lors d'une erreur, la ligne se remet à la ligne de départ initiale et le clavier affiche les pièces placées et les numéros restants. Tous les placements précédents sont conservés jusqu'à ce que le module soit désamorcé.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 sur 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tic Tac Toe</span>
+            </div>
+            <div class="page-content">
+                <p><strong>Tableau 1</strong></p>
+                <table class='ttt-table'>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>Plus de «&nbsp;X&nbsp;»</td>
+                        <td colspan=2>«&nbsp;X&nbsp;» = «&nbsp;O&nbsp;»</td>
+                        <td colspan=2>Plus de «&nbsp;O&nbsp;»</td>
+                    </tr>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>Placer un :</td>
+                        <td colspan=2>Placer un :</td>
+                        <td colspan=2>Placer un :</td>
+                    </tr>
+                    <tr>
+                        <th>LIGNE</th>
+                        <th>«&nbsp;X&nbsp;»</th>
+                        <th>«&nbsp;O&nbsp;»</th>
+                        <th>«&nbsp;X&nbsp;»</th>
+                        <th>«&nbsp;O&nbsp;»</th>
+                        <th>«&nbsp;X&nbsp;»</th>
+                        <th>«&nbsp;O&nbsp;»</th>
+                    </tr>
+                    <tr class='number-row'><th>1</th><td class='number'>9</td><td class='number'>3</td><td class='number'>3</td><td class='number'>9</td><td class='number'>8</td><td class='number'>1</td></tr>
+                    <tr class='number-row'><th>2</th><td class='number'>5</td><td class='number'>6</td><td class='number'>6</td><td class='number'>7</td><td class='number'>1</td><td class='number'>2</td></tr>
+                    <tr class='number-row'><th>3</th><td class='number'>7</td><td class='number'>8</td><td class='number'>2</td><td class='number'>1</td><td class='number'>5</td><td class='number'>8</td></tr>
+                    <tr class='number-row'><th>4</th><td class='number'>4</td><td class='number'>5</td><td class='number'>7</td><td class='number'>8</td><td class='number'>9</td><td class='number'>6</td></tr>
+                    <tr class='number-row'><th>5</th><td class='number'>1</td><td class='number'>4</td><td class='number'>1</td><td class='number'>6</td><td class='number'>7</td><td class='number'>3</td></tr>
+                    <tr class='number-row'><th>6</th><td class='number'>8</td><td class='number'>7</td><td class='number'>5</td><td class='number'>2</td><td class='number'>4</td><td class='number'>4</td></tr>
+                    <tr class='number-row'><th>7</th><td class='number'>6</td><td class='number'>1</td><td class='number'>8</td><td class='number'>4</td><td class='number'>3</td><td class='number'>9</td></tr>
+                    <tr class='number-row'><th>8</th><td class='number'>2</td><td class='number'>2</td><td class='number'>9</td><td class='number'>5</td><td class='number'>2</td><td class='number'>5</td></tr>
+                    <tr class='number-row'><th>9</th><td class='number'>3</td><td class='number'>9</td><td class='number'>4</td><td class='number'>3</td><td class='number'>6</td><td class='number'>7</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 sur 2</div>
+        </div>
+    </div>
+</body>
+</html>
