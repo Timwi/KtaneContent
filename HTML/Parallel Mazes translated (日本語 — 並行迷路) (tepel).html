@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>並行迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            requirejs(["js/Parallel%20Mazes/expert-client"]);
+        });
+    </script>
+    <style>
+        #module {
+            width: 641px;
+            height: 641px;
+            background-image: url("img/Parallel%20Mazes/ModuleBackground.png");
+            background-size: contain;
+            position: relative;
+            user-select: none;
+        }
+
+        #module>* {
+            position: relative;
+            font-family: Consolas, monospace;
+            color: yellow;
+            font-weight: bold;
+            font-size: 42px;
+        }
+
+        #console-div {
+            top: 64px;
+            left: 72px;
+        }
+
+        #login-div,
+        #error-div {
+            top: 192px;
+            width: 100%;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #login-div>*,
+        #error-div>* {
+            margin: 8px;
+        }
+
+        #map-table-container {
+            position: relative;
+            top: 120px;
+            left: 128px;
+            width: max-content;
+        }
+
+        #map-table td {
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border: solid #0000 8px;
+        }
+
+        #map-table .wall-0 {
+            border-right-color: #CCCCCCFF;
+        }
+
+        #map-table .wall-1 {
+            border-top-color: #CCCCCCFF;
+        }
+
+        #map-table .wall-2 {
+            border-left-color: #CCCCCCFF;
+        }
+
+        #map-table .wall-3 {
+            border-bottom-color: #CCCCCCFF;
+        }
+
+        .dir-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #444444;
+            font-size: 40px;
+            width: 32px;
+            height: 92px;
+            position: relative;
+            padding-bottom: 4px;
+            z-index: 1;
+        }
+
+        .dir-button:hover,
+        #disconnect-button:hover {
+            outline: solid 8px red;
+            cursor: pointer;
+        }
+
+        #right-button {
+            top: 112px;
+            left: 16px;
+        }
+
+        #up-button {
+            transform: rotate(-0.25turn);
+            top: -80px;
+            left: -192px;
+        }
+
+        #left-button {
+            transform: rotate(0.5turn);
+            top: 112px;
+            left: -400px;
+        }
+
+        #down-button {
+            transform: rotate(0.25turn);
+            top: 272px;
+            left: -256px;
+        }
+
+        #locker {
+            top: -32px;
+            position: relative;
+            left: -208px;
+            transform: rotate(0.25turn);
+            font-size: 124px;
+            color: #0f0;
+        }
+
+        #disconnect-button {
+            transform: rotate(0.25turn);
+            position: relative;
+            top: 272px;
+            left: -320px;
+            font-size: 48px;
+            background-color: #444444;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: red;
+            cursor: pointer;
+        }
+
+        #player {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+        }
+
+        @keyframes rotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #finish {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-image: url("img/Parallel%20Mazes/finish.svg");
+            background-size: cover;
+            animation: rotate 4s linear infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">並行迷路</span>
+            </div>
+            <div class="page-content">
+                <h2>モジュール詳細：並行迷路</h2>
+                <p class="flavour-text">処理担当とは何か、分析担当とは何か、境界がわからなくなってくる。</p>
+                <div id="module">
+                    <div id="console-div"></div>
+                    <div id="login-div" style="display: none;">
+                        <label>GAME ID:</label>
+                        <input id="login-input" type="text" placeholder="ABC012">
+                        <button id="login-button">LOGIN</button>
+                    </div>
+                    <div id="error-div" style="display: none;">
+                        <div id="error-label"></div>
+                        <button id="retry-button">Retry</button>
+                    </div>
+                    <div id="map-table-container" style="display: none;">
+                        <table style="position: relative;">
+                            <tbody id="map-table"></tbody>
+                        </table>
+                        <div class="dir-button" id="right-button">&gt;</div>
+                        <div class="dir-button" id="up-button">&gt;</div>
+                        <div class="dir-button" id="left-button">&gt;</div>
+                        <div class="dir-button" id="down-button">&gt;</div>
+                        <div id="locker">MOVE</div>
+                        <!-- <div id="disconnect-button">X</div> -->
+                        <div id="player"></div>
+                        <div id="finish"></div>
+                    </div>
+                </div>
+                <ul>
+                <li>ステップ1: モジュールに表示される「GAME ID」をマニュアルに入力する。</li>
+                <li>ステップ2: マニュアルに表示される「EXPERT ID」をモジュールに入力する。</li>
+                <li>ステップ3: 白の正方形を移動させて、赤の三角形で示されるゴールまで導く。</li>
+            </ul>
+                <p>
+                    移動は緑色で「MOVE」と記載されている方のみ行う事ができる。モジュール上にはマニュアルの迷路の壁が表示されており、マニュアルにはモジュールの迷路の壁が表示されている。「X」ボタンを押すと、現在接続されているマニュアルとの接続を解除することができる。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+
+</html>
