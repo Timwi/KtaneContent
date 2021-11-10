@@ -4791,11 +4791,6 @@ const parseData = [
         ]
     },
     {
-        moduleID: "JukeboxWAV",
-        loggingTag: "Jukebox.WAV",
-        displayName: "Jukebox.WAV."
-    },
-    {
         moduleID: "keepClicking",
         loggingTag: "Keep Clicking",
         matches: [
@@ -8343,6 +8338,11 @@ const parseData = [
                 }
             }
         ]
+    },
+    {
+        displayName: "Shuffled Strings",
+        moduleID: "shuffledStrings",
+        loggingTag: "String Order"
     },
     {
         moduleID: "SillySlots",
