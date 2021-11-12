@@ -5854,6 +5854,23 @@ const parseData = [
         ]
     },
     {
+        displayName: 'Mazeseeker',
+        loggingTag: 'Mazeseeker',
+        moduleID: 'GSMazeseeker',
+        matches: [
+            {
+                regex: /The maze is as follows:/,
+                handler: function(matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(13)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Memory",
         moduleID: "Memory",
         loggingTag: "MemoryComponent",
@@ -6699,7 +6716,7 @@ const parseData = [
                 regex: /(Puzzle (?:grid|solution):)/,
                 handler: function (matches, module) {
                     module.push({ label: matches[1], obj: pre(readMultiple(7)) });
-					return true;
+                    return true;
                 }
             },
             {
