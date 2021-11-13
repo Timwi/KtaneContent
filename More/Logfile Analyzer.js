@@ -1140,7 +1140,7 @@ function Bomb(seed) {
             const faceParent = $("<div>").css("position", "relative");
             caseHTML.replaceWith(faceParent);
 
-            const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s" };
+            const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s", "will-change": "transform" };
             let svg = $SVG("<svg>")
                 .css(faceStyle)
                 .appendTo(faceParent);
