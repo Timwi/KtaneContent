@@ -1247,6 +1247,77 @@ const parseData = [
         ]
     },
     {
+        moduleID: "algorithmia",
+        loggingTag: "Algorithmia",
+        matches: [
+            {
+                regex: /^The walls of the generated maze are as follows:$/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[0], obj: pre(readMultiple(9).replace(/\[Algorithmia #\d+\] /g, "")) });
+                    return true;
+                }
+            },
+            {
+                regex: /^==MAZE GENERATION==$/,
+                handler: function (_, module) {
+                    module.generatingMaze = true;
+                    module.algorithmiaMaze = [];
+                    return true;
+                }
+            },
+            {
+                regex: /^The maze is being generated using (.+)$/,
+                handler: function (matches, module) {
+                    readLine();
+                    module.push(matches[0]);
+                    return true;
+                }
+            },
+            {
+                regex: /^(.+\.) Aborting algorithm\.$/,
+                handler: function (matches, module) {
+                    module.generatingMaze = false;
+                    module.algorithmiaMaze.push(matches[0])
+                    module.push(["Maze Generation", module.algorithmiaMaze]);
+                    readLine();
+                    return true;
+                }
+            },
+            {
+                regex: /^The goal position is at (.+)\./,
+                handler: function (matches, module) {
+                    module.algorithmiaMoving = true;
+                    module.push(matches[0]);
+                    module.algorithmiaMoves = [];
+                    module.push(["Moves", module.algorithmiaMoves]);
+                    return true;
+                }
+            },
+            {
+                regex: /^Goal position reached. Module solved.$/,
+                handler: function (matches, module) {
+                    module.push(matches[0]);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    if(module.generatingMaze) {
+                        module.algorithmiaMaze.push(matches[0]);
+                        return true;
+                    }
+                    if(module.algorithmiaMoving) {
+                        module.algorithmiaMoves.push(matches[0]);
+                        return true;
+                    }
+                    module.push(matches[0]);
+                    return true;
+                }
+            }
+        ]
+    },
+    {
         moduleID: "Keypad",
         loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
         matches: [
@@ -4720,11 +4791,6 @@ const parseData = [
         ]
     },
     {
-        moduleID: "JukeboxWAV",
-        loggingTag: "Jukebox.WAV",
-        displayName: "Jukebox.WAV."
-    },
-    {
         moduleID: "keepClicking",
         loggingTag: "Keep Clicking",
         matches: [
@@ -4770,8 +4836,8 @@ const parseData = [
             {
                 regex: /^(Solution|Codings|New codings):$/,
                 handler: function (matches, module) {
-                    var lines = readLines(4).map(l => l.split(' '));
-                    module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
+                    var lines = readLines(6).map(l => l.replace(/\[Kyudoku #\d+\] /g, "").trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
+                    module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse; text-align: center;'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
                     return true;
                 }
             },
@@ -5788,6 +5854,23 @@ const parseData = [
         ]
     },
     {
+        displayName: 'Mazeseeker',
+        loggingTag: 'Mazeseeker',
+        moduleID: 'GSMazeseeker',
+        matches: [
+            {
+                regex: /The maze is as follows:/,
+                handler: function(matches, module) {
+                    module.push({ label: matches.input, obj: pre(readMultiple(13)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Memory",
         moduleID: "Memory",
         loggingTag: "MemoryComponent",
@@ -6622,6 +6705,22 @@ const parseData = [
             },
             {
                 regex: /Last serial digit|Skull path/
+            }
+        ]
+    },
+    {
+        moduleID: "NavyButtonModule",
+        loggingTag: "The Navy Button",
+        matches: [
+            {
+                regex: /(Puzzle (?:grid|solution):)/,
+                handler: function (matches, module) {
+                    module.push({ label: matches[1], obj: pre(readMultiple(7)) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
             }
         ]
     },
@@ -8256,6 +8355,11 @@ const parseData = [
                 }
             }
         ]
+    },
+    {
+        displayName: "Shuffled Strings",
+        moduleID: "shuffledStrings",
+        loggingTag: "String Order"
     },
     {
         moduleID: "SillySlots",

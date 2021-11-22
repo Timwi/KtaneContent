@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>SMBH — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script id="accretion-disk-vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 a_Position;
+        attribute vec2 a_TextureCoord;
+
+        varying highp vec2 v_TextureCoord;
+
+        void main() {
+            gl_Position = a_Position;
+            v_TextureCoord = a_TextureCoord;
+        }
+    </script>
+    <script id="accretion-disk-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying highp vec2 v_TextureCoord;
+
+        uniform sampler2D u_Noise_0;
+        uniform sampler2D u_Noise_1;
+        uniform sampler2D u_Noise_2;
+        uniform float u_Time;
+
+        const float PI = 3.1415926535897932384626433832795;
+
+        float lerp(float x, float y, float alpha) {
+            return (1.0 - alpha) * x + alpha * y;
+        }
+
+        void main() {
+            vec2 vec_from_center = v_TextureCoord - 0.5;
+            float r = length(vec_from_center);
+            if (r > 0.5) {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+                return;
+            } else if (r < 0.25) {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                return;
+            }
+            float alpha = min(1.0, (0.5 - r) * 20.0);
+            float blackness = max(0.0, 1.0 - (r - 0.25) * 50.0);
+            float angle = atan(vec_from_center.y, vec_from_center.x) / 2.0 / PI;
+
+            vec2 pos_0 = vec2(angle + u_Time / 5.0, (r - 0.25) * 4.0);
+            vec4 noise_0 = texture2D(u_Noise_0, pos_0);
+            float n0 = (noise_0.r + noise_0.g + noise_0.b) / 3.0;
+
+            vec2 pos_1 = vec2(angle + u_Time / 7.0, (r - 0.25) * 4.0);
+            vec4 noise_1 = texture2D(u_Noise_1, pos_1);
+            float n1 = (noise_1.r + noise_1.g + noise_1.b) / 3.0;
+
+            vec2 pos_2 = vec2(angle + u_Time / 11.0, (r - 0.25) * 4.0);
+            vec4 noise_2 = texture2D(u_Noise_2, pos_2);
+            float n2 = (noise_2.r + noise_2.g + noise_2.b) / 3.0;
+
+            float a = alpha * (n0 + n1 + n2) / 3.0;
+            gl_FragColor = vec4(0.0, 0.0, 0.0, lerp(a, 1.0, blackness));
+        }
+    </script>
+    <script src="js/Supermassive%20Black%20Hole/accretion-disk.js"></script>
+    <script>
+        const svgNS = "http://www.w3.org/2000/svg";
+        const INTERVAL_SIZE = 25;
+        const TICK_RADIUS = 8;
+        const ROW_ITEMS_COUNT = 4;
+        const colors = ["橙", "白", "赤", "黄", "緑", "青"];
+        const colorsForeground = {
+            "青": "white",
+            "緑": "white",
+            "赤": "white",
+        };
+        const colorsToCSS = {
+            橙: "orange",
+            白: "white",
+            赤: "red",
+            黄: "yellow",
+            緑: "green",
+            青: "blue"
+        }
+        const alternatives = ["h-r-t", "h-r"];
+
+        function setRules(rnd) {
+            for (let i = rnd.next(0, 10); i > 0; i--) rnd.nextDouble();
+            /** @type {string[]} */
+            const pool = rnd.shuffleArray(["t-t", "h-rh-r", "t-h-r", "h--r", alternatives[rnd.next(0, alternatives.length)], "t--t"]);
+            const c = ["h-rt", "tt", "th-r"][rnd.next(0, 3)];
+            /** @type {string[]} */
+            const bhAB = [...pool.slice(0, 5), ...new Array(7).fill(""), c, ...new Array(23).fill("")];
+            /** @type {{ [size: number]: string[] }} */
+            const codes = rnd.shuffleArray(generateBHCodes(rnd, bhAB));
+            for (let i = 0; i < bhAB.length; i++) {
+                if (bhAB[i]) continue;
+                bhAB[i] = codes.pop();
+            }
+            const table = document.getElementById("bhAB-table");
+            table.innerHTML = "";
+            for (let i = 0; i < Math.ceil(36 / ROW_ITEMS_COUNT); i++) {
+                const tr = table.appendChild(document.createElement("tr"));
+                for (let j = 0; j < ROW_ITEMS_COUNT; j++) {
+                    const index = i * ROW_ITEMS_COUNT + j;
+                    if (index >= bhAB.length) break;
+                    const origin = index < 10 ? index : `${index} (${String.fromCharCode(55 + index)})`;
+                    const code = bhAB[index];
+                    const td = tr.appendChild(document.createElement("td"));
+                    const originDiv = td.appendChild(document.createElement("div"));
+                    originDiv.innerText = origin;
+                    td.appendChild(createCode(code));
+                }
+            }
+            generateTwoColorTable(rnd);
+            generateThreeColorTables(rnd);
+        }
+
+        function generateBHCodes(rnd, bhAB) {
+            const variants = {};
+            const addVariant = (code) => {
+                if (variants[code.length]) variants[code.length].push(code);
+                else variants[code.length] = [code];
+            };
+            addVariant("t");
+            addVariant("h-r");
+            addVariant("h--r");
+            let minVariant = 0;
+            const codes = [];
+            while (true) {
+                const vars = variants[minVariant];
+                if (!vars || !vars.length) {
+                    minVariant += 1;
+                    continue;
+                }
+                const variantIndex = rnd.next(0, vars.length);
+                const prevCode = vars[variantIndex];
+                if (prevCode.length > 1 && bhAB.indexOf(prevCode) === -1) codes.push(prevCode);
+                if (codes.length >= bhAB.length - 6) return codes;
+                vars[variantIndex] = vars[vars.length - 1];
+                vars.pop();
+                const lastTickIndex = prevCode.lastIndexOf("-");
+                addVariant(prevCode + "-t");
+                addVariant(prevCode + "-h-r");
+                addVariant(prevCode + "-h--r");
+                if (prevCode.length - lastTickIndex < 3) {
+                    addVariant(prevCode + "t");
+                    addVariant(prevCode + "h-r");
+                    addVariant(prevCode + "h--r");
+                }
+            }
+        }
+
+        function generateTwoColorTable(rnd) {
+            const table = document.getElementById("two-color-table");
+            table.innerHTML = "";
+            const firstTr = table.appendChild(document.createElement("tr"));
+            const secondTr = table.appendChild(document.createElement("tr"));
+            const rows = colors.map(() => table.appendChild(document.createElement("tr")));
+            const topRowColors = rnd.shuffleArray(colors);
+            let columnIndex = 0;
+            for (const diskType of ["円状", "扇状", "動的"]) {
+                const td = firstTr.appendChild(document.createElement("td"));
+                td.colSpan = 2;
+                td.innerText = diskType;
+                for (const dir of ["時計", "反時計"]) {
+                    const topColor = topRowColors[columnIndex];
+                    const columnColors = [topColor, ...rnd.shuffleArray(colors.filter((c) => c !== topColor))];
+                    columnIndex += 1;
+                    const dirTd = secondTr.appendChild(document.createElement("td"));
+                    dirTd.innerText = dir;
+                    for (let i = 0; i < 3; i++) {
+                        const colorTd = rows[i].appendChild(document.createElement("td"));
+                        const cl = columnColors[i];
+                        colorTd.innerText = cl;
+                        colorTd.style.background = colorsToCSS[cl];
+                        colorTd.style.color = colorsForeground[cl] || "black";
+                        colorTd.style.fontWeight = "bold";
+                    }
+                }
+            }
+        }
+
+        function generateThreeColorData(rnd) {
+            const chars = rnd.shuffleArray(new Array(36).fill(null).map((_, i) => i < 10 ? i : String.fromCharCode(55 + i)));
+            const generated = {};
+            const cs = colors.map(c => c[0]);
+            for (let i1 = 0; i1 < cs.length; i1++) {
+                for (let i2 = i1 + 1; i2 < cs.length; i2++) {
+                    for (let i3 = i2 + 1; i3 < cs.length; i3++) {
+                        const [c1, c2, c3] = [i1, i2, i3].map(i => cs[i]);
+                        const clr = sortString(c1 + c2 + c3);
+                        generated[clr] = chars.pop();
+                    }
+                }
+            }
+            return generated;
+        }
+
+        function generateThreeColorTables(rnd) {
+            const container = document.getElementById("three-color-tables-container");
+            container.innerHTML = "";
+            const generated = generateThreeColorData(rnd);
+            for (const color of colors) {
+                const tableContainer = container.appendChild(document.createElement("div"));
+                const h4 = tableContainer.appendChild(document.createElement("h4"));
+                h4.innerText = `色のうちの1つが${color}である場合`;
+                const table = tableContainer.appendChild(document.createElement("table"));
+                const tableBody = table.appendChild(document.createElement("tbody"));
+                const otherColors = colors.filter(c => c !== color);
+                const firstTr = tableBody.appendChild(document.createElement("tr"));
+                const emptyTd = firstTr.appendChild(document.createElement("td"));
+                for (const color2 of otherColors) {
+                    const c2 = color2[0];
+                    const colTd = firstTr.appendChild(document.createElement("td"));
+                    colTd.innerText = c2;
+                    colTd.style.background = colorsToCSS[color2];
+                    colTd.style.color = colorsForeground[color2] || "black";
+                    const tr = tableBody.appendChild(document.createElement("tr"));
+                    const firstTd = tr.appendChild(document.createElement("td"));
+                    firstTd.innerText = c2;
+                    firstTd.style.background = colorsToCSS[color2];
+                    firstTd.style.color = colorsForeground[color2] || "black";
+                    for (const color3 of otherColors) {
+                        const c3 = color3[0];
+                        const td = tr.appendChild(document.createElement("td"));
+                        if (c2 === c3) {
+                            td.classList.add("empty-cell");
+                            td.style.backgroundColor = colorsToCSS[color];
+                            continue;
+                        }
+                        const clr = sortString(color[0] + c2 + c3);
+                        td.innerText = generated[clr];
+                    }
+                }
+            }
+        }
+
+        function sortString(str) {
+            const chars = [...str];
+            chars.sort();
+            return chars.join("");
+        }
+
+        function createCode(code) {
+            const split = code.split("-");
+            const intervals = split.length;
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("width", ((intervals + 1) * INTERVAL_SIZE).toString(10));
+            svg.setAttribute("height", "32");
+            svg.setAttribute("fill", "none");
+            svg.setAttribute("stroke-width", "1");
+            svg.setAttribute("stroke-linecap", "round");
+            svg.setAttribute("stroke-linejoin", "round");
+            const path = document.createElementNS(svgNS, "path");
+            let pathCode = "";
+            for (let dotIndex = 0; dotIndex < intervals + 1; dotIndex++) {
+                const center = dotIndex * INTERVAL_SIZE + INTERVAL_SIZE / 2;
+                const circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("cx", center);
+                circle.setAttribute("cy", 6);
+                circle.setAttribute("r", 5);
+                svg.appendChild(circle);
+            }
+            let prevHoldX = 0;
+            for (let partIndex = 0; partIndex < split.length; partIndex++) {
+                const part = split[partIndex];
+                const xOffset = (partIndex + .5) * INTERVAL_SIZE;
+                const actionInterval = INTERVAL_SIZE / (part.length + 1);
+                for (let actionIndex = 0; actionIndex < part.length; actionIndex++) {
+                    const action = part[actionIndex];
+                    if (action === "t") pathCode += `M${xOffset + (actionIndex + 1) * actionInterval} 21v10`;
+                    else if (action === "h") {
+                        prevHoldX = xOffset + (actionIndex + 1) * actionInterval;
+                        pathCode += `M${prevHoldX} 21v10`;
+                    } else if (action === "r") pathCode += `M${xOffset + (actionIndex + 1) * actionInterval} 21v10H${prevHoldX}`;
+                }
+            }
+            path.setAttribute("d", pathCode);
+            svg.appendChild(path);
+            return svg;
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            createAccretionDisk("accretion-disk");
+            function render(now) {
+                renderAccretionDisk();
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        });
+    </script>
+    <style>
+        table {
+            margin: auto;
+            text-align: center;
+        }
+
+        #bhAB-table td {
+            font-weight: bold;
+            font-size: 24px;
+            font-family: 'Consolas';
+        }
+
+        #bhAB-table svg circle { fill: #000; }
+        .dark #bhAB-table svg circle { fill: #DDD; }
+        #bhAB-table svg path { stroke: #000; }
+        .dark #bhAB-table svg path { stroke: #DDD; }
+
+        .less-font {
+            font-size: 15px;
+        }
+
+        #three-color-tables-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+
+        #three-color-tables-container div {
+            flex-basis: 34%;
+        }
+
+        #three-color-tables-container table {
+            border: none;
+            font-weight: bold;
+        }
+
+        #three-color-tables-container tr:first-child td:first-child {
+            border-top: none;
+            border-left: none;
+        }
+
+        #three-color-tables-container tr:not(:first-child) td:not(:first-child) {
+            font-family: 'Consolas';
+        }
+
+        .empty-cell {
+            background-image: url("img/Supermassive Black Hole/empty-cell-bg.png");
+        }
+
+        #single-colored-table td:first-child {
+            font-weight: bold;
+        }
+
+        #two-color-table tr:nth-child(2) td {
+            border-bottom: solid 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">超巨大ブラックホール</span>
+            </div>
+            <div class="page-content">
+                <div class="diagram" style="position: relative;">
+                    <img src="img/Component/Supermassive Black Hole.svg" style="position: relative;">
+                    <canvas id="accretion-disk" width="216" height="216" style="position: absolute; top: -25%; left: -25%; width: 150%; height: 150%;"></canvas>
+                </div>
+                <h2>モジュール詳細：SMBH</h2>
+                <p class="flavour-text">ニュートンの第三法則。何かは置き去りにしなければならない。</p>
+                <p>
+                    このモジュールには、超巨大ブラックホール(SMBH)が含まれる。モジュールを解除するには、正しい12桁の三十六進数の数字を入力する。
+                    降着円盤が出現してから1分以内に入力した場合、2桁分の入力としてカウントする。
+                    入力はSMBHに降着円盤が出現しているときのみ可能である。
+                </p>
+                <p>
+                    入力方法については「付録：BHSCIIテーブル」を参照する。
+                    それぞれの点はカウントダウンタイマーの秒数が切り替わる瞬間(以下ティック)を表しており、時間は左から右に流れるとする。
+                    縦棒は、モジュールを短い間押すことを示している。これは、2つのティックの間に押されなければならない。
+                    カギ括弧は、1つ以上のティックをまたいでモジュールを長押しすることを示している。
+                    以下のルールによって36以上の数字を入力するように指示している場合、代わりに36で割った時のあまりを入力する。
+                </p>
+                <p>
+                    三十六進数の桁のいずれにも当てはまらない入力がされた場合、SMBHは「?」を表示する。誤った三十六進数の桁が入力場合、入力された文字が表示される。いずれの場合もミスが記録される。
+                </p>
+                <h3>降着円盤がない場合</h3>
+                <p>入力はSMBHに降着円盤が出現していない場合、降着円盤が出現するまで待つ。</p>
+                <h3>特殊なケース: 未解除のブラックホールモジュールがある場合</h3>
+                <p>
+                    爆弾に少なくとも1つの解除されていないブラックホール(Black Hole)モジュールがある場合、降着円盤の色は無視する(ただし、入力時に降着円盤が出現している必要がある)。
+                    この場合、ブラックホールモジュールにこれまでに入力された数字の合計を入力する。
+                    また、降着円盤はブラックホールモジュールに数字が入力されない限り出現しなくなる。
+                    さらに、降着円盤が出現してから1分以内に正しい入力が合った場合、2桁ではなく3桁分の入力としてカウントする。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">超巨大ブラックホール</span>
+            </div>
+            <div class="page-content">
+                <h3>降着円盤が1色</h3>
+                <p>降着円盤が1色で、毎秒色が切り替わらない場合、次のテーブルを利用して送信する桁を決定する。</p>
+                <table id="single-colored-table">
+                    <tr>
+                        <td style="background: orange; color: black;">橙</td>
+                        <td>解除されたモジュールの数</td>
+                    </tr>
+                    <tr>
+                        <td style="background: white; color: black;">白</td>
+                        <td>ミスの総数 + 2ファクタの一の位の合計(2ファクタがない場合は0を加える)</td>
+                    </tr>
+                    <tr>
+                        <td style="background: red; color: white;">赤</td>
+                        <td>シリアルポートとパラレルポートの合計を6で割った時のあまりに1加算する。<br>その位置のシリアルナンバーの英数字を送信する。</td>
+                    </tr>
+                    <tr>
+                        <td style="background: yellow; color: black;">黄</td>
+                        <td>爆弾の電圧を整数に切り下げた値。爆弾に電圧メーターがない場合、シリアルナンバーの数字の合計 + モジュールの総数。</td>
+                    </tr>
+                    <tr>
+                        <td style="background: green; color: white;">緑</td>
+                        <td>ポートの数</td>
+                    </tr>
+                    <tr>
+                        <td style="background: blue; color: white;">青</td>
+                        <td>爆弾開始時の残り分数 + 2ファクタの最上位の位の合計(2ファクタがない場合は0を加える)</td>
+                    </tr>
+                </table>
+                <h3>降着円盤が2色</h3>
+                <p>降着円盤は次のうち、いずれかの方法で複数の色を表示する。</p>
+                <ul>
+                    <li>円状 - それぞれの色が円状の形を成している。</li>
+                    <li>扇状 - それぞれの色が円を扇形に分割している。</li>
+                    <li>動的 - 色が毎秒変化する。</li>
+                </ul>
+                <p>降着円盤は時計回りの場合と反時計回りの場合がある。</p>
+                <p>
+                    これらのパラメータを使って、以下のテーブルの正しい列を特定する。
+                    その列の色のうち、降着円盤の2色に含まれない、最も上部にある色を3つ目の色とする。
+                    続きは次のページを参照する。
+                </p>
+                <table>
+                    <tbody id="two-color-table"></tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+        <div class="page page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">超巨大ブラックホール</span>
+            </div>
+            <div class="page-content">
+                <h3>降着円盤が3色</h3>
+                <p>3つの色を使ってSMBHに入力する英数字を特定する。</p>
+                <div id="three-color-tables-container"></div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">超巨大ブラックホール</span>
+            </div>
+            <div class="page-content">
+                <h2>付録：BHSCIIテーブル</h2>
+                <p>(数字と大文字の英字のみ)</p>
+                <table>
+                    <tbody id="bhAB-table"></tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+
+</html>

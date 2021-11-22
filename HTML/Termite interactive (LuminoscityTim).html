@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Termite — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            const interactive = $("table.interactive");
+            let saveStates = [];
+            let currentState = 0;
+
+            // Based on code from Samfundev's Game of Life interactive
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            for (let y = 0; y < 10; y++) {
+                const row = $("<tr>").appendTo(interactive);
+                for (let x = 0; x < 10; x++) {
+                    if (x == 0 && y == 0) {
+                        $("<th>").appendTo(row);
+                    } else if (y == 0 && x > 0) {
+                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                    } else if (y > 0 && x == 0) {
+                        $("<th>").text(y).appendTo(row);
+                    } else {
+                        $("<td>").click(function() {
+                            $(this).toggleClass("white");
+                        }).contextmenu(function() {
+                            $(this).toggleClass("dot");
+                            return false;
+                        }).append('<div class="box"></div>').appendTo(row);
+                    }
+                }
+            }
+
+            $("button.reset-all").click(function() {
+                $("table.interactive td").removeClass("white dot");
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.reset-grid").click(function() {
+                $("table.interactive td").removeClass("white dot");
+            });
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .interactive-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+            border: none;
+            background: none;
+        }
+
+        table.interactive td {
+            border: rgb(99, 99, 99) 8px solid;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+        }
+
+        table.interactive td > .box {
+            background: black;
+            transition: background 0.2s;
+
+            position: relative;
+            width: 35px;
+            height: 35px;
+        }
+
+        table.interactive td.white > .box {
+            background: white;
+        }
+
+        table.interactive td > .box::after {
+            position: absolute;
+            top: 17.5px;
+            left: 17.5px;
+
+            content: '';
+            width: 0px;
+            height: 0px;
+            background: white;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+
+        table.interactive td.dot > .box::after {
+            top: 12.5px;
+            left: 12.5px;
+
+            width: 10px;
+            height: 10px;
+        }
+
+        table.interactive td.white.dot > .box::after {
+            background: black;
+        }
+
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Termite</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Termite.svg" class="diagram">
+                <h2>On the Subject of Termites</h2>
+                <p class="flavour-text">Bugged module. Pls fix. <img src="img/Termite/K.svg" style="width:15px"></p>
+                <ul style="font-size:13.5px"><li>This module consists of a 9 by 9 grid of cells, each with an LED. At the centre of this grid is a termite facing north.</li>
+                    <li>Once active, the termite will begin to move forwards.<br>Once it leaves a cell, the on/off state of its LED is toggled.</li>
+                    <li>If the termite enters a cell with a lit LED, it will turn to its left or right according to its instruction tape before moving to the next cell and the next instruction in the tape.<br>If there are no more instructions in the tape, it is rewound to its first instruction.</li></ul>
+                    <p>To defuse this module, construct the instruction tape used by the termite and determine its path around the grid, then select the point at the edge of the grid from which the termite escapes.</p>
+                    <h2>Instruction Tape</h2>
+                    <ol style="font-size:13.5px"><li>Interpret the first character of the serial number as a base 36 digit, and zero-index into the table, in reading order, to obtain the first set of instructions.</li>
+                        <li>The second set of instructions lies in the cell of table whose row is equal to the number of batteries modulo 6, where the top row is row 0, and whose column is equal to the number of ports modulo 6, where the left column is column 0.</li>
+                        <li>Take the sum of the digits in the serial number and the number of indicators modulo 36, and zero-index into the table, in reading order, to obtain the third set of instructions.</li>
+                        <li>Concatenate the three sets of instructions in the order they were obtained.</li>
+                        <li>If the tape has an even number of instructions, remove the last.</li>
+                        <li>The tape is checked from left to right for substrings of three inputs repeated twice in a row. If one is discovered, the latter substring is inverted.</li>
+                        <li>The following substrings of instructions are invalid:
+                            <ul>
+                                <li>LLRR</li>
+                                <li>RRLL</li>
+                                <li>LRLR</li>
+                                <li>RLRL</li>
+                            </ul>
+                            The tape is checked from left to right for invalid substrings.<br>If one is discovered, the last instruction in the invalid substring is inverted.</li>
+                    </ol>
+                    <table class="centered"><tr><th>R</th><th>LLR</th><th>RLR</th><th>RL</th><th>RLRR</th><th>LRLL</th></tr>
+                        <tr><th>LRRL</th><th>RR</th><th>LRLL</th><th>RRLR</th><th>LRR</th><th>LL</th></tr>
+                        <tr><th>RLLR</th><th>LRL</th><th>RLRR</th><th>RRL</th><th>R</th><th>LLRL</th></tr>
+                        <tr><th>L</th><th>RLRR</th><th>RL</th><th>LLRL</th><th>LRR</th><th>L</th></tr>
+                        <tr><th>LRRL</th><th>LR</th><th>LLR</th><th>RLLR</th><th>RLL</th><th>LRL</th></tr>
+                        <tr><th>RR</th><th>RLL</th><th>LR</th><th>RLR</th><th>LL</th><th>RLL</th></tr>
+                    </table>
+                </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Termite</span>
+            </div>
+            <div class="page-content">
+
+                <div class="interactive-container">
+                    <div class="buttons">
+                        <button class="reset-all">Reset All</button>
+                        <button class="reset-saves">Reset Saves</button>
+                        <button class="reset-grid">Reset Grid</button>
+                    </div>
+                    <table class="interactive"></table>
+
+                    <div class="saves buttons">
+                        <button class="save">Save</button>
+                    </div>
+                </div>
+                <h3>Controls</h3>
+                <ul>
+                    <li><em>Click</em> a cell to toggle between occupied and empty.</li>
+                    <li><em>Right-Click</em> a cell to mark it with a dot.</li>
+                    <li>Use the buttons to save the state, reset saves, reset the grid, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
