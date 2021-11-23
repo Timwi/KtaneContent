@@ -4522,7 +4522,6 @@ const parseData = [
                         else if (page.label)
                             label.innerText = page.label;
                         else if ('depth' in page) {
-                            //console.log(Array.from(bottom.querySelectorAll('*')).map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.className), cn: e.className })));
                             Array.from(bottom.querySelectorAll('*'))
                                 .map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.getAttribute('class')) }))
                                 .filter(inf => inf.match !== null && parseInt(inf.match[1]) >= page.depth)
