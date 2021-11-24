@@ -543,6 +543,31 @@
                         ]
                     ]
                 },
+                'Gadgetron': {
+                    'CSS': 'flags gadgetron',
+                    'RandomizeRight': true,
+                    'RandomizeLeft': true,
+                    'Groups': ['names', 'codons'],
+                    'Items': [
+                        [
+                            ['Blaster', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Blaster.png">', '<img src="../HTML/img/Gadgetron Vendor/Blaster.png">'],
+                            ['Bomb Glove', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Bomb Glove.png">', '<img src="../HTML/img/Gadgetron Vendor/BombGlove.png">'],
+                            ['Decoy Glove', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Decoy Glove.png">', '<img src="../HTML/img/Gadgetron Vendor/DecoyGlove.png">'],
+                            ['Devastator', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Devastator.png">', '<img src="../HTML/img/Gadgetron Vendor/Devastator.png">'],
+                            ['Drone Device', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Drone Device.png">', '<img src="../HTML/img/Gadgetron Vendor/DroneDevice.png">'],
+                            ['Glove of Doom', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Glove Of Doom.png">', '<img src="../HTML/img/Gadgetron Vendor/GloveOfDoom.png">'],
+                            ['Mine Glove', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Mine Glove.png">', '<img src="../HTML/img/Gadgetron Vendor/MineGlove.png">'],
+                            ['Morph-O-Ray', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Morph-O-Ray.png">', '<img src="../HTML/img/Gadgetron Vendor/MorphORay.png">'],
+                            ['Pyrocitor', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Pyrocitor.png">', '<img src="../HTML/img/Gadgetron Vendor/Pyrocitor.png">'],
+                            ['R.Y.N.O.', '<img src="../HTML/img/Gadgetron Vendor/Weapons/R.Y.N.O.png">', '<img src="../HTML/img/Gadgetron Vendor/RYNO.png">'],
+                            ['Suck Cannon', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Suck Cannon.png">', '<img src="../HTML/img/Gadgetron Vendor/SuckCannon.png">'],
+                            ['Taunter', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Taunter.png">', '<img src="../HTML/img/Gadgetron Vendor/Taunter.png">'],
+                            ['Tesla Claw', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Tesla Claw.png">', '<img src="../HTML/img/Gadgetron Vendor/TeslaClaw.png">'],
+                            ['Visibomb', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Visibomb Gun.png">', '<img src="../HTML/img/Gadgetron Vendor/Visibomb.png">'],
+                            ['Walloper', '<img src="../HTML/img/Gadgetron Vendor/Weapons/Walloper.png">', '<img src="../HTML/img/Gadgetron Vendor/Walloper.png">']
+                        ]
+                    ]
+                },
                 'Genetic Sequence': {
                     'CSS': 'textonly',
                     'RandomizeRight': true,
@@ -657,6 +682,7 @@
                 },
                 'Hypercube': {
                     'CSS': 'textonly hypercube',
+                    'DelayShowWrongRight': 3.5,
                     'RandomizeRight': true,
                     'Groups': ['letters', 'rotations'],
                     // IMPORTANT: All quizzes with videos require the VideoPath property.
@@ -963,6 +989,7 @@
                 },
                 'Ultracube': {
                     'CSS': 'textonly hypercube',
+                    'DelayShowWrongRight': 4.5,
                     'RandomizeRight': true,
                     'Groups': ['letters', 'rotations'],
                     // IMPORTANT: All quizzes with videos require the VideoPath property.
@@ -1509,9 +1536,27 @@
                 let first = mode < 2 ? (1 - mode) : ((Math.random() * 2) | 0);
                 if (hasSounds) first = 0;
 
-                document.getElementById('challenge').innerHTML = item [ first ? 0 : 1 ];
+                let ansIx = ((Math.random() * (item.length - 1)) | 0) + 1;
+                document.getElementById('challenge').innerHTML = item [ first ? 0 : ansIx ];
 
-                const answers = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ first ? 1 : 0 ] }));
+                let answers = [];
+                for (let i = 1; i < item.length; ++i) {
+                    const a = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ first ? i : 0 ] }));
+                    for (let j = 0; j < a.length; ++j)
+                        if (answers)
+                            answers.push(a[j]);
+                }
+                function onlyUnique(value, index, self) {
+                    for (let i = 0; i < self.length; ++i) {
+                        if (self[i].correct == value.correct && self[i].item == value.item)
+                            if (i === index)
+                                return true;
+                            else
+                                return false;
+                    }
+                    return false;
+                }
+                answers = answers.filter(onlyUnique);
 
                 if (first ? inf.RandomizeRight : inf.RandomizeLeft)
                     for (let i = answers.length - 1; i > 0; i--) {
@@ -1534,8 +1579,19 @@
                             timeout = setTimeout(showQuestion, 700);
                         } else {
                             btn.classList.add('wrong');
-                            document.getElementById('answers').querySelector('button.correct-answer').classList.add('correct');
-                            timeout = setTimeout(showQuestion, 1500);
+                            document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
+                                item.classList.add('correct');
+                            });
+                            if (inf.DelayShowWrongRight && first) {
+                                let t = Math.floor(inf.DelayShowWrongRight * 1000);
+                                timeout = setTimeout(showQuestion, t);
+                            }
+                            else if (inf.DelayShowWrongLeft && !first) {
+                                let t = Math.floor(inf.DelayShowWrongLeft * 1000);
+                                timeout = setTimeout(showQuestion, t);
+                            }
+                            else
+                                timeout = setTimeout(showQuestion, 1500);
                         }
                         return false;
                     };
@@ -1699,6 +1755,10 @@
         .hypercube #answers video { width: 9cm; }
         .hypercube #challenge video { width: 12cm; }
 
+        .gadgetron #answers img { width: 20mm; }
+        .gadgetron #challenge { font-size: 40pt; }
+        .gadgetron #challenge img { width: 30mm; }
+
         .textonly #answers { font-size: 16pt; }
         .textonly #challenge {font-size: 50pt;}
 
@@ -1708,6 +1768,7 @@
         .laundry #challenge img { width: 5cm; margin: .25cm 0; }
 
         .morse #answers { font-size: 32pt; }
+        .morse #answers.left button, .morse #challenge.left { font-family: 'Inconsolata'; }
 
         .semaphores #answers { font-size: 32pt; }
         .semaphores #answers button { background: #04a; }
