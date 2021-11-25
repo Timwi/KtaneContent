@@ -12,18 +12,41 @@
     <script src="js/ruleseed.js"></script>
 
     <script>
-        function setDefaultRules(rnd) { setRules(rnd); }
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            const maze = render4DMaze(rnd);
+            renderWallRefTable(maze);
+            updateRuleSeedHeaders(rnd.seed);
+        }
 
         function createMap(size, dims, _default) {
             if (dims === 0) return _default;
             return new Array(size).fill(null).map(() => createMap(size, dims - 1, _default));
         }
 
-        function setRules(rnd) {
-            const MAP_SIZE = 5;
+        function createCell(tr, color) {
+            const cell = tr.appendChild(document.createElement("td"));
+            cell.classList.add("cell");
+            const faces = cell.appendChild(document.createElement("div"));
+            faces.classList.add("face");
+            faces.style.borderColor = color;
+        }
+
+        const MAP_SIZE = 5;
+
+        const DIRECTIONS = [
+            [1, 0, 0, 0], [-1, 0, 0, 0],
+            [0, 1, 0, 0], [0, -1, 0, 0],
+            [0, 0, 1, 0], [0, 0, -1, 0],
+            [0, 0, 0, 1], [0, 0, 0, -1],
+        ];
+
+        function render4DMaze(rnd) {
             const COLORS = ["black", "red", "green", "blue", "magenta", "yellow", "cyan"];
-            const DIMENSIONS = 4;
-            const maze = createMap(MAP_SIZE, DIMENSIONS, 0);
+            const maze = createMap(MAP_SIZE, 4, 0);
             const startX = rnd.next(0, MAP_SIZE);
             const startY = rnd.next(0, MAP_SIZE);
             const startZ = rnd.next(0, MAP_SIZE);
@@ -31,12 +54,6 @@
             // console.log(startX, startY, startZ, startW);
             maze[startX][startY][startZ][startW] = 1;
             const q = [[startX, startY, startZ, startW]];
-            const directions = [
-                [1, 0, 0, 0], [-1, 0, 0, 0],
-                [0, 1, 0, 0], [0, -1, 0, 0],
-                [0, 0, 1, 0], [0, 0, -1, 0],
-                [0, 0, 0, 1], [0, 0, 0, -1],
-            ];
             while (q.length > 0) {
                 const i = rnd.next(0, q.length);
                 const [x, y, z, w] = q[i];
@@ -44,7 +61,7 @@
                 q.pop();
                 if (maze[x][y][z][w] !== 1) continue;
                 maze[x][y][z][w] = 2;
-                for (const [dx, dy, dz, dw] of directions) {
+                for (const [dx, dy, dz, dw] of DIRECTIONS) {
                     const nx = (x + MAP_SIZE + dx) % MAP_SIZE;
                     const ny = (y + MAP_SIZE + dy) % MAP_SIZE;
                     const nz = (z + MAP_SIZE + dz) % MAP_SIZE;
@@ -76,6 +93,8 @@
             const mapTable = document.getElementById("map");
             mapTable.innerHTML = "";
             for (let y = MAP_SIZE - 1; y >= 0; y--) {
+                const emptyRow = mapTable.appendChild(document.createElement("tr"));
+                emptyRow.appendChild(document.createElement("td"));
                 for (let z = MAP_SIZE - 1; z >= 0; z--) {
                     const row = mapTable.appendChild(document.createElement("tr"));
                     if (z === MAP_SIZE - 1) {
@@ -87,15 +106,8 @@
                     zCoord.innerText = z + 1;
                     row.appendChild(document.createElement("td"));
                     for (let w = 0; w < MAP_SIZE; w++) {
-                        for (let x = 0; x < MAP_SIZE; x++) {
-                            const cell = row.appendChild(document.createElement("td"));
-                            cell.style.backgroundColor = maze[x][y][z][w];
-                            const border = "16px solid white";
-                            if (z === MAP_SIZE - 1) cell.style.borderTop = border;
-                            if (z === 0) cell.style.borderBottom = border;
-                            if (x === 0) cell.style.borderLeft = border;
-                            if (x === MAP_SIZE - 1) cell.style.borderRight = border;
-                        }
+                        for (let x = 0; x < MAP_SIZE; x++) createCell(row, maze[x][y][z][w]);
+                        row.appendChild(document.createElement("td"));
                     }
                 }
             }
@@ -112,6 +124,7 @@
             xLegend.innerText = "X";
             xLegend.className = "bold";
             for (let i = 0; i < 25; i++) {
+                if (i % 5 === 0 && i > 0) xRow.appendChild(document.createElement("td"))
                 const td = xRow.appendChild(document.createElement("td"));
                 td.innerText = (i % 5 + 1).toString();
             }
@@ -124,13 +137,137 @@
                 const td = wRow.appendChild(document.createElement("td"));
                 td.colSpan = 5;
                 td.innerText = i;
+                wRow.appendChild(document.createElement("td"));
+            }
+            return maze;
+        }
+
+        function generateWallReferenceData(maze) {
+            const cells = [];
+            const colorSorting = "RGBCMYK";
+            const dupCls = new Set();
+            const nonDupCls = new Set();
+            for (let x = 0; x < maze.length; x++) {
+                for (let y = 0; y < maze[x].length; y++) {
+                    for (let z = 0; z < maze[x][y].length; z++) {
+                        for (let w = 0; w < maze[x][y][z].length; w++) {
+                            if (maze[x][y][z][w] !== "black") continue;
+                            const adj = DIRECTIONS.map(([dx, dy, dz, dw]) => {
+                                const nx = (x + MAP_SIZE + dx) % MAP_SIZE;
+                                const ny = (y + MAP_SIZE + dy) % MAP_SIZE;
+                                const nz = (z + MAP_SIZE + dz) % MAP_SIZE;
+                                const nw = (w + MAP_SIZE + dw) % MAP_SIZE;
+                                const color = maze[nx][ny][nz][nw];
+                                return color === "black" ? "K" : color[0].toUpperCase();
+                            });
+                            const colors = adj.sort((a, b) => colorSorting.indexOf(a) - colorSorting.indexOf(b)).join("");
+                            if (nonDupCls.has(colors)) {
+                                nonDupCls.delete(colors);
+                                dupCls.add(colors);
+                            } else if (!dupCls.has(colors)) nonDupCls.add(colors);
+                            cells.push({ coord: [x, y, z, w].map((a) => a + 1).join(","), colors });
+                        }
+                    }
+                }
+            }
+            cells.sort((a, b) => {
+                for (let i = 0; i < DIRECTIONS.length; i++) {
+                    const ai = colorSorting.indexOf(a.colors[i]);
+                    const bi = colorSorting.indexOf(b.colors[i]);
+                    if (ai === bi) continue;
+                    return ai < bi ? -1 : 1;
+                }
+                return a.coord < b.coord ? -1 : 1;
+            });
+            return cells.map((cell) => ({ ...cell, dup: dupCls.has(cell.colors) }));
+        }
+
+        let extraPages = [];
+
+        function renderWallRefTable(maze) {
+            const wallRefData = generateWallReferenceData(maze);
+            const PER_PAGE_ROWS_COUNT = 27;
+            const PER_ROW_CELLS_COUNT = 6;
+            const pagesCount = Math.ceil(wallRefData.length / (PER_PAGE_ROWS_COUNT * PER_ROW_CELLS_COUNT));
+            for (let i = 0; i < 2; i++) document.getElementById(`page-footer-${i}`).innerText = `Page ${i + 1} of ${pagesCount + 2}`;
+            const pagesContainer = document.getElementById("pages-container");
+            for (let pageIndex = 0; pageIndex < pagesCount; pageIndex += 1) {
+                const tableId = `wall-ref-table-${pageIndex}`;
+                let tbody;
+                if (extraPages.length <= pageIndex) {
+                    const page = pagesContainer.appendChild(document.createElement("div"));
+                    page.classList.add("page", `page-bg-${(Math.floor(Math.random() * 6) + 1).toString(10).padStart(2, "0")}`, "wall-ref-page");
+                    page.id = `wall-ref-page-${pageIndex}`;
+                    const header = page.appendChild(document.createElement("div"));
+                    header.classList.add("page-header");
+                    const headerTitle = header.appendChild(document.createElement("span"));
+                    headerTitle.classList.add("page-page-header-doc-title");
+                    headerTitle.innerText = "Keep Talking and Nobody Explodes Mod";
+                    const headerSection = header.appendChild(document.createElement("span"));
+                    headerSection.classList.add("page-header-section-title");
+                    headerSection.innerText = "4D Maze";
+                    const content = page.appendChild(document.createElement("div"));
+                    content.classList.add("page-content");
+                    const table = content.appendChild(document.createElement("table"));
+                    tbody = table.appendChild(document.createElement("tbody"));
+                    tbody.id = tableId;
+                    extraPages.push(page);
+                    const footer = page.appendChild(document.createElement("div"));
+                    footer.classList.add("page-footer", "relative-footer");
+                    footer.id = `wall-ref-page-footer-${pageIndex}`;
+                    footer.innerText = `Page ${pageIndex + 3} of ${pagesCount + 2}`;
+                    let div = document.createElement("div");
+                    div.className = "ruleseed-header";
+                    page.insertBefore(div, page.firstChild);
+                    div = document.createElement("div");
+                    div.className = "ruleseed-header";
+                    page.insertBefore(div, null);
+                } else {
+                    document.getElementById(`wall-ref-page-footer-${pageIndex}`).innerText = `Page ${pageIndex + 3} of ${pagesCount + 2}`;
+                    tbody = document.getElementById(tableId);
+                }
+                tbody.innerHTML = "";
+                for (let rowIndex = 0; rowIndex < PER_PAGE_ROWS_COUNT; rowIndex += 1) {
+                    const offset = (pageIndex * PER_PAGE_ROWS_COUNT + rowIndex) * PER_ROW_CELLS_COUNT;
+                    if (wallRefData.length <= offset) break;
+                    const tr = tbody.appendChild(document.createElement("tr"));
+                    for (let columnIndex = 0; columnIndex < PER_ROW_CELLS_COUNT; columnIndex += 1) {
+                        const index = offset + columnIndex;
+                        const td = tr.appendChild(document.createElement("td"));
+                        if (wallRefData.length <= index) continue;
+                        td.innerText = `${wallRefData[index].coord} ${wallRefData[index].colors}`;
+                        if (wallRefData[index].dup) td.classList.add("duplicate");
+                    }
+                }
+            }
+            for (let pageIndex = pagesCount; pageIndex < extraPages.length; pageIndex += 1) {
+                pagesContainer.removeChild(document.getElementById(`wall-ref-page-${pageIndex}`));
+            }
+            extraPages = extraPages.slice(0, pagesCount);
+        }
+
+        function updateRuleSeedHeaders(seed) {
+            if (seed === 1) {
+                document.body.classList.remove("ruleseed-active");
+                for (const x of document.getElementsByClassName('page-header-section-title')) {
+                    x.classList.remove("ruleseed-seeded");
+                    x.innerText = "4D Maze";
+                }
+                return;
+            }
+            document.body.classList.add("ruleseed-active");
+            for (const x of document.getElementsByClassName("ruleseed-header")) x.innerText = "RULE SEED: " + seed;
+            for (const x of document.getElementsByClassName("page-header-section-title")) {
+                x.classList.add("ruleseed-seeded");
+                x.innerText = "4D Maze — rule seed: " + seed;
             }
         }
     </script>
+
     <style>
         #map td {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             padding: 0;
             border-color: white;
             border-width: 0;
@@ -146,11 +283,38 @@
             font-weight: bold;
             font-size: 16px !important;
         }
+
+        .cell {
+            background-color: black;
+        }
+
+        .cell .face {
+            width: 6px;
+            height: 6px;
+            border: solid 4px;
+            border-radius: 4px;
+            margin: 2px;
+        }
+
+        .wall-ref-page td {
+            font-size: 12px;
+            height: 7mm;
+        }
+
+        .wall-ref-page td.duplicate {
+            color: gray;
+        }
+
+        .wall-ref-page table {
+            width: 192mm;
+            position: relative;
+            right: 7mm;
+        }
     </style>
 </head>
 
 <body>
-    <div class="section">
+    <div class="section" id="pages-container">
         <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -160,14 +324,22 @@
                 <img src="img/Component/4D Maze.svg" class="diagram">
                 <h2>On the Subject of 4D Maze</h2>
                 <p class="flavour-text">How to imagine a 4-dimensional space? Easy! Imagine N-dimensional space, and then imagine that N is equal to four.</p>
-                <p>Defuser starts at a random position and orientation in a 4D maze. On the module, this maze is displayed as a projection onto a 120-degree cubic retina. Determine the location of the defuser using the colors of the surrounding walls. The maze map is cyclic: moving off one of the edges will take the defuser to the space on the opposite side.</p>
-                <p>To defuse the module, go to the shown coordinates and press display. Coordinates format is (X;Y;Z;W). Use the buttons on the right of the module to rotate (<b>L</b>eft/<b>R</b>ight; <b>U</b>p/<b>D</b>own; <b>A</b>na/<b>K</b>ata) and the large button on the bottom to move <b>F</b>orward.</p>
+                <p>
+                    Defuser starts at a random position and orientation in a 4D maze. On the module, this maze is displayed as a projection onto a 120-degree cubic retina.
+                    Determine the location of the defuser using the colors of the surrounding walls.
+                    The maze map is cyclic: moving off one of the edges will take the defuser to the space on the opposite side.
+                </p>
+                <p>
+                    To defuse the module, go to the shown coordinates and press display. Coordinates format is (X;Y;Z;W).
+                    Use the buttons on the right of the module to rotate (<b>L</b>eft/<b>R</b>ight; <b>U</b>p/<b>D</b>own; <b>A</b>na/<b>K</b>ata)
+                    and the large button on the bottom to move <b>F</b>orward.
+                </p>
                 <table style="margin: auto;">
                     <tbody id="map">
                     </tbody>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
+            <div class="page-footer relative-footer" id="page-footer-0">Page 1 of 2</div>
         </div>
         <div class="page page-bg-04">
             <div class="page-header">
@@ -175,12 +347,34 @@
                 <span class="page-header-section-title">4D Maze</span>
             </div>
             <div class="page-content" style="font-size: 15px;">
-                <p>The module has a button for switching the display mode. The normal mode only shows the walls adjacent to the defuser. The advanced mode has a higher display range. Advanced mode is enabled by default. Default mode can be changed in mod settings.</p>
+                <p>
+                    The module has a button for switching the display mode. The normal mode only shows the walls adjacent to the defuser.
+                    The advanced mode has a higher display range. Advanced mode is enabled by default. Default mode can be changed in mod settings.
+                </p>
                 <p>The module has a button for toggling the wiggle mode. Wiggle mode is enabled by default. Default mode can be changed in mod settings.</p>
                 <p>Repeated pressing of the rotation or movement buttons will add these actions to the queue. The larger the queue, the faster the animation will be.</p>
-                <p>When a module is solved, it will automatically walk through the maze at random. Press the coordinate display again to disable automatic movement. If automatic movement is disabled, the rotation and movement buttons will become active again. The automatic activation of this movement can be disabled in mod settings.</p>
+                <p>
+                    When a module is solved, it will automatically walk through the maze at random. Press the coordinate display again to disable automatic movement.
+                    If automatic movement is disabled, the rotation and movement buttons will become active again.
+                    The automatic activation of this movement can be disabled in mod settings.
+                </p>
+                <p style="margin-bottom: 0;">
+                    The following pages contain the "Wall Reference" table.
+                    Each cell of the table contains a coordinate in the format X,Y,Z,W and the colors of the walls that are adjacent to this coordinate.
+                    Possible colors:
+                </p>
+                <ul style="margin: 0;">
+                    <li>R - red;</li>
+                    <li>G - green;</li>
+                    <li>B - blue;</li>
+                    <li>C - cyan;</li>
+                    <li>M - magenta;</li>
+                    <li>Y - yellow;</li>
+                    <li>K - black (means no wall).</li>
+                </ul>
+                <p style="margin-top: 0;">Walls are sorted by RGBCMYK. Cells are sorted by walls. Cells with duplicate walls are colored gray.</p>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
+            <div class="page-footer relative-footer" id="page-footer-1">Page 2 of 2</div>
         </div>
     </div>
 </body>
