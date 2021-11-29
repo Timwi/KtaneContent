@@ -9361,11 +9361,6 @@ const parseData = [
         ]
     },
     {
-        moduleID: "UNO",
-        loggingTag: "UNO!",
-        displayName: "UNO!"
-    },
-    {
         moduleID: "USA",
         loggingTag: "USA Maze",
         displayName: "USA Maze",
@@ -9879,12 +9874,6 @@ const parseData = [
         moduleID: "WordSearchModulePL",
         icon: "Word Search",
         loggingTag: "Word Search PL"
-    },
-    {
-        displayName: "The World's Largest Button",
-        moduleID: "WorldsLargestButton",
-        icon: "The World's Largest Button",
-        loggingTag: "The World's Largest Button"
     },
     {
         displayName: ["X-Ray", "Not X-Ray"],
