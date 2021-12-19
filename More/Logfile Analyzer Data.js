@@ -6861,6 +6861,32 @@ const parseData = [
                 return /Defuser moves/.test(nextLine);
             },
         }, {
+            regex: /Disconnecting expert/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Expert disconnected/.test(nextLine);
+            },
+        }, {
+            regex: /^.*moves.*Strike\!/,
+            handler: function (matches, module) {
+                module.push({
+                    label: [
+                        '<img height="20px" src="TDSBombRenderer/images/strike.png">',
+                        `<span style="font-weight:bold;font-size:20px">${matches[0]}</span>`,
+                    ].join(" "),
+                });
+                return true;
+            },
+        }, {
+            regex: /^.*ERROR:.*$/,
+            handler: function (matches, module) {
+                module.push({
+                    label: `<span style="background-color:black;color:red;font-size:24px">${matches[0]}</span>`
+                });
+                return true;
+            },
+        }, {
             regex: /^.*$/
         }],
     },
