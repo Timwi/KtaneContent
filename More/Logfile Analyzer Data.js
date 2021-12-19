@@ -6829,7 +6829,7 @@ const parseData = [
                 return true;
             },
         }, {
-            regex: /Connecting to server$/,
+            regex: /Connecting to server/,
             handler: function (matches, module) {
                 const nextLine = readLine();
                 linen -= 1;
@@ -6843,7 +6843,7 @@ const parseData = [
                 return /Game created/.test(nextLine);
             },
         }, {
-            regex: /Connecting to expert/,
+            regex: /Connecting to expert (\d{7})/,
             handler: function (matches, module) {
                 const nextLine = readLine();
                 if (/Expert connected/.test(nextLine)) {
