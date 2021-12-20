@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Mapas de bits — Módulo de Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+            //  is this a puzzle what are you planning Timwi im scared rn :c
+
+            var edgeworkVariables = [
+                'indicadores', 'indicadores encendidos', 'indicadores apagados', 'indicators con una vocal', 'indicadores sin vocales',
+                'puertos', 'placas', 'placas no vacías', 'tipos de puertos', 'tipos de puerto que solamente aparezcan una vez en la bomba', 'tipos de puerto duplicados',
+                'pilas', 'portapilas', 'pilas de tipo AA', 'pilas de tipo D',
+                'letras en el número de serie', 'consonantes en el número de serie', 'vocales en el número de serie',
+                'dígitos en el número de serie', 'dígitos impares en el número de serie', 'dígitos pares en el número de serie',
+                'módulos en la bomba (incluyendo needys)', 'módulos en la bomba sin needys',
+                'módulos resueltos en la bomba', 'módulos sin resolver en la bomba que no sean needys',
+
+                // Note: variables that start with "the" are handled specially by later code to ensure grammatical sentences. not today.
+                'el primer dígito numérico del número de serie', 'el penúltimo dígito numérico del número de serie',
+                'el último dígito numérico del número de serie', 'la suma de los dígitos del número de serie',
+                'el dígito de la unidad del secundero en el reloj de la bomba',
+                'el dígito de la decena del secundero en el reloj de la bomba',
+                'el dígito de la unidad del minutero en el reloj de la bomba',
+                'el dígito de la decena del minutero en el reloj de la bomba'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['completamente blanco o negro', 'completamente blanco', 'completamente negro'][rnd.next(0, 3)];
+
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: 'Si exactamente una fila o columna es completamente blanca o negra' },
+                { extra: 'R', name: 'Si exactamente una fila es completamente blanca o negra' },
+                { extra: 'C', name: 'Si exactamente una columna es completamente blanca o negra' },
+                { extra: 'S', name: 'Si hay un cuadrado 3×3 que es completamente blanco o negro' },
+                { extra: 'T', name: `Si hay un cuadrado 2×2 que es ${type2x2}` },
+                { extra: '', name: `Si hay exactamente tantos cuadrantes con más píxeles blancos como ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Si hay más cuadrantes con más píxeles blancos que ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Si hay menos cuadrantes con más píxeles blancos que ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Si hay exactamente tantos cuadrantes con más píxeles negros como ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Si hay más cuadrantes con más píxeles negros que ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Si hay menos cuadrantes con más píxeles negros que ${edgeworkVariables[edgeworkVariableIx++]}` },
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches. what.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1} o menos` : `${16 - pixelCount1} o más`;
+            var blackWhite = rnd.next(0, 2) === 0 ? 'blancos' : 'negros';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? 'blancos' : 'negros';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `Si no hay ningún cuadrante que tenga ${moreOrLess} píxeles ${blackWhite}` },
+                    { extra: 'Q', name: `Si exactamente un cuadrante tiene ${moreOrLess} píxeles ${blackWhite}` },
+                    { extra: '', name: `Si más de un cuadrante tiene  ${moreOrLess} píxeles ${blackWhite}` },
+                ],
+                [
+                    { name: 'Si hay menos cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros', extra: '' },
+                    { name: 'Si hay más cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros', extra: '' },
+                    { name: 'Si hay exactamente tantos cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros', extra: '' },
+                ],
+                [
+                    { name: `Si todo el mapa tiene ${64 - pixelCount2} o más píxeles ${blackWhite2}`, extra: '' },
+                    { name: `Si todo el mapa tiene ${pixelCount2} o menos píxeles ${blackWhite2}`, extra: '' },
+                    { name: `Si todo el mapa tiene entre ${pixelCount2 + 1} y ${63 - pixelCount2} píxeles ${blackWhite2}`, extra: '' },
+                ],
+                [
+                    { name: 'Si ningún cuadrante tiene 8 píxeles blancos y negros', extra: '' },
+                    { name: 'Si exactamente un cuadrante tiene 8 píxeles blancos y negros', extra: 'Q' },
+                    { name: 'Si más de un cuadrante tiene 8 píxeles blancos y negros', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = `el número de ${startRule}`;
+
+            var solutions = [
+                'el número de cuadrantes con más píxeles negros',
+                'el número de cuadrantes con más píxeles blancos',
+                'el número de cuadrantes con 8 píxeles blancos y negros',
+                'el número total de píxeles blancos',
+                'el número total de píxeles negro',
+                'el número más pequeño de píxeles negros en cualquier cuadrante',
+                'el número más grande de píxeles negros en cualquier cuadrante',
+                'el número más pequeño de píxeles blancos en cualquier cuadrante',
+                'el número más grande de píxeles blancos en cualquier cuadrante',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    'el número de píxeles blancos en los otros 3 cuadrantes',
+                    'el número de píxeles negros en los otros 3 cuadrantes',
+                    'el número de píxeles blancos en el cuadrante diagonalmente opuesto',
+                    'el número de píxeles negros en el cuadrante diagonalmente opuesto',
+                    'el número de píxeles blancos en el cuadrante horizontalmente opuesto',
+                    'el número de píxeles negros en el cuadrante horizontalmente opuesto',
+                    'el número de píxeles blancos en el cuadrante verticalmente opuesto',
+                    'el número de píxeles negros en el cuadrante verticalmente opuesto'
+                ],
+                'R': [
+                    'su coordenada y, contando desde el 1 desde arriba a abajo',
+                    'su coordenada y, contando desde el 1 desde abajo a arriba'
+                ],
+                'C': [
+                    'su coordenada x, contando desde el 1 desde izquierda a derecha',
+                    'su coordenada x, contando desde el 1 desde derecha a izquierda'
+                ],
+                'L': [
+                    'su coordenada x ó y, empezando del 1 de arriba/la izquierda a abajo/la derecha',
+                    'su coordenada x ó y, empezando del 1 de abajo/la derecha a arriba/la izquierda'
+                ],
+                'S': [
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) del centro del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) del centro del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) del centro del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) del centro del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la derecha del último cuadrado en orden de lectura'
+                ],
+                'T': [
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de arriba a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de arriba a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la izquierda del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la izquierda del último cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la derecha del primer cuadrado en orden de lectura',
+                    'la coordenada x (contando desde el 1 desde izquierda a derecha) de la esquina de abajo a la derecha del último cuadrado en orden de lectura',
+                    'la coordenada y (contando desde el 1 desde arriba a abajo) de la esquina de abajo a la derecha del último cuadrado en orden de lectura'
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `${conditions[i].name}, la respuesta es ${solution}.`;
+            }
+        }
+    </script>
+    <style>
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Mapas de bits</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Bitmaps.svg">
+                <h2>En caso de los mapas de bits</h2>
+                <p class="flavour-text">Alrededor de 18 trillones de combinaciones, solamente algunas de ellas importan.</p>
+                <ul>
+                    <li>El módulo muestra un mapa de bits de 64 píxeles dividido en cuatro "cuadrantes". Cada píxel o está iluminado (diremos que es "blanco" aunque pueda estar en otro color) o apagado ("negro").</li>
+                    <li>Abajo hay 4 botones: 1, 2, 3, y 4.</li>
+                    <li>En la tabla siguiente, empieza en la regla cuyo número sea igual <span id='start-rule'>al último dígito del número de serie</span><span id='start-rule-modulo'> (suma/resta&nbsp;10&nbsp;para&nbsp;llevarlo&nbsp;al&nbsp;rango&nbsp;0–9)</span>.</li>
+                    <li>Ves yendo por las reglas (vete a la primera si estás en la final) hasta que te encuentres una condición que sea verdadera.</li>
+                    <li>Calcula la respuesta de la regla que procede. Suma o resta 4 repetidamente hasta que la respuesta esté entre el 1 y el 4, y pulsa el botón correspondiente en el módulo para que se desactive.</li>
+                </ul>
+                <table>
+                    <tr><th>#</th><th>Rule</th></tr>
+                    <tr><th>0</th><td class="rule">Si exactamente un cuadrante tiene 5 o menos píxeles blancos, la respuesta es el número de píxeles blancos en los otros 3 cuadrantes. </td></tr>
+                    <tr><th>1</th><td class="rule">Si hay exactamente tantos cuadrantes con más píxeles negros como indicadores encendidos, la respuesta es el número de pilas.</td></tr>
+                    <tr><th>2</th><td class="rule">Si exactamente una fila o columna es completamente blanca o negra, la respuesta es su coordenada x ó y (empezando del 1 desde arriba/la izquierda).</td></tr>
+                    <tr><th>3</th><td class="rule">Si hay menos cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros, la respuesta es el número de cuadrantes con más píxeles negros.</td></tr>
+                    <tr><th>4</th><td class="rule">Si todo el mapa tiene 36 o más píxeles blancos, la respuesta es el número total de píxeles blancos.</td></tr>
+                    <tr><th>5</th><td class="rule">Si hay más cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros, la respuesta es el número más pequeño de píxeles negros en cualquier cuadrante.</td></tr>
+                    <tr><th>6</th><td class="rule">Si exactamente un cuadrante tiene 5 o menos píxeles negros, la respuesta es el número de píxeles negros en los otros 3 cuadrantes.</td></tr>
+                    <tr><th>7</th><td class="rule">Si hay exactamente tantos cuadrantes con más píxeles negros como indicadores apagados, la respuesta es el número de puertos.</td></tr>
+                    <tr><th>8</th><td class="rule">Si hay un cuadrado 3×3 que es completamente blanco o negro, la respuesta es la coordenada x (empezando desde el 1) del centro del primer cuadrado en orden de lectura.</td></tr>
+                    <tr><th>9</th><td class="rule">Si hay exactamente tantos cuadrantes con más píxeles blancos que cuadrantes con más píxeles negros, la respuesta primer dígito numérico del número de serie.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 1</div>
+        </div>
+    </div>
+</body>
+</html>
