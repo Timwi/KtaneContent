@@ -1,7 +1,10 @@
 ﻿<html>
 <head>
     <title>Ignore list table</title>
-    <link href="../HTML/css/font.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../HTML/css/font.css">
+    <!-- <link rel="stylesheet" type="text/css" href="../HTML/css/normalize.css"> -->
+    <link rel="stylesheet" type="text/css" href="../HTML/css/main.css">
+    <script src="../HTML/js/ktane-utils.js"></script>
     <script src="../HTML/js/jquery.3.1.1.min.js"></script>
     <style>
         .hstack {
@@ -10,8 +13,15 @@
             align-items: center;
             /* justify-content: center; */
         }
+        .hstack h1 { margin-bottom: 20px; }
+        .dark table, table, .dark td, td, .dark th, th {
+            padding: 1px;
+            border: none;
+        }
         body {
+            padding: 6px;
             font-family: "Trebuchet MS";
+            background-image: linear-gradient(white, white);
         }
         #ignore-table {
             border-collapse: collapse;
@@ -24,9 +34,6 @@
             overflow:visible;
             padding: 0;
         }
-        #ignore-table td.corner {
-            border: none;
-        }
         #ignore-table td.ignored {
             background: #cdf;
         }
@@ -38,9 +45,8 @@
 			object-fit: none;
         }
 
-        #ignore-table th {
-            background-color: white;
-        }
+        #ignore-table th { background-color: white; }
+        .dark #ignore-table th { background-color: #363D47; }
         #ignore-table thead th {
             position: -webkit-sticky;
             position: sticky;
@@ -96,9 +102,17 @@
             text-align: center;
             border-bottom: 1px solid #888;
         }
+        #optionsMenu {
+            z-index: 3;
+        }
+        .list-title {
+            font-weight: bold;
+            font-size: 20pt;
+        }
     </style>
     <script>
         $(function() {
+            // const JSON_URL = "http://localhost:8990/json/raw";
             const JSON_URL = "https://ktane.timwi.de/json/raw";
             var ignoreJson = null;
             var ignorees = [];
@@ -197,6 +211,7 @@
                 else
                     $(".hstack h1")[0].innerHTML = "Table of modules that ignore one another";
 
+                let list = "";
                 const $tbody = el("tbody", null,
                     ignorers.map((ignorer, i) => {
                         elCells[i] = [];
@@ -209,12 +224,20 @@
                                 },
                             ),
                         );
-                        elIgnorers[i].addEventListener("click", e => {
-                            if (filterName.length > 0)
+                        if (filterName.length > 0) {
+                            elIgnorers[i].addEventListener("click", e => {
                                 createRows(ignoreJson, ignorees, "");
-                            else
+                            });
+                            let name = (ignorer.DisplayName || ignorer.Name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            list = `<span class="list-title">${name}</span> ignores:`;
+                            (ignorer.IgnoreProcessed || ignorer.Ignore).forEach((item, i) => {
+                                list += `<br>${item.replace(/</g, '&lt;').replace(/>/g, '&gt;')}`;
+                            });
+                        }
+                        else
+                            elIgnorers[i].addEventListener("click", e => {
                                 createRows(ignoreJson, ignorees, ignorer.DisplayName || ignorer.Name);
-                        });
+                            });
 
                         return el("tr", null, elIgnorers[i],
                             json.ignorees.map((ignoree, j) => {
@@ -261,23 +284,29 @@
                     })
                 );
                 table.appendChild($tbody);
+                $("#iglist").html(list);
             }
 
             fetchJSON().then((json) => {
                 ignoreJson = json;
                 createTable(json, document.getElementById("ignore-table"));
             });
+            let darkModeEnabled = localStorage.getItem('ktane-dark-mode');
+            if (darkModeEnabled == null ? false : darkModeEnabled == "true") {
+                $("body").addClass("dark");
+            };
         });
     </script>
 </head>
 <body>
-    <div class="hstack">
+    <div class="hstack" style="line-height: 1.2">
         <span style="width: 55mm">Click an icon on the left side to focus on that module.</span>
         <div style="width: 5mm"></div>
         <h1>Table of modules that ignore one another</h1>
     </div>
     <table id="ignore-table"></table>
+    <p id="iglist"></p>
     <div id="tooltip"></div>
-    <!--V1-->
+    <!--V3-->
 </body>
 </html>
