@@ -305,7 +305,7 @@ e.onload = function()
                             element.css("fill", element.data('origFill'));
                         }
                         element.removeClass("svgIsHighlighted");
-                        return;
+                        return false;
                     }
 
                     let ix = -1;
