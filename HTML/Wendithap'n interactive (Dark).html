@@ -32,6 +32,11 @@
             font-size: 18pt;
         }
 
+        .dark .wd-input {
+            background-color: #333;
+            color: #fff;
+        }
+
         .wd-output {
             text-align: center;
             margin-top: 28px;
@@ -67,20 +72,17 @@
     </style>
     <script>
         const load = async () => {
+            const validTypes = ["Regular", "Needy"];
             const request = await fetch("https://ktane.timwi.de/json/raw");
             const data = (await request.json()).KtaneModules;
             $(".wd-loading").remove();
-            let maxlength = 0;
-            data.forEach(m => {
-                if (m.Name.length > maxlength) maxlength = m.Name.length;
-            });
-            const input = $(".wd-input").show().attr({ maxlength }).on("input", () => {
+            const format = s => s.toLowerCase().replace(/ /g, "").trim();
+            const input = $(".wd-input").show().attr("maxlength", Math.max(...data.map(e => Math.max(e.Name.length, e.ModuleID.length)))).on("input", () => {
                 const output = $(".wd-output").empty();
-                const format = s => s.toLowerCase().replace(/ /g, "").trim();
                 const val = format(input.val());
                 if (val.length) {
                     const eq = (n) => format(n.Name) == val;
-                    const mods = data.filter((m) => m.Symbol && !m.TranslationOf && (format(m.Name).indexOf(val) > -1 || format(m.ModuleID).indexOf(val) > -1)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
+                    const mods = data.filter(m => validTypes.includes(m.Type) && !m.TranslationOf && (format(m.Name).indexOf(val) > -1 || format(m.ModuleID).indexOf(val) > -1)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
                     mods.forEach((m) => output.append($("<div/>").append($("<span/>").text(new Date(m.Published).toLocaleDateString()), $("<span/>").text(m.Name))));
                     if (!mods.length) output.append($("<div/>").addClass("no-results").html("No mods found"));
                 }

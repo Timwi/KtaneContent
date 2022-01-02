@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Double Écoute — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaults = null;
+        
+        function getDefaults()
+        {
+            if(defaults !== null)
+                return;
+                
+            defaults = {};
+            
+            for(var i = 1; i <= 3; i++)
+                defaults[`cond-${i}`] = document.getElementById(`cond-${i}`).innerText;
+        }
+        
+        function setDefaultRules()
+        {
+            getDefaults();
+            for(var i = 1; i <= 3; i++)
+                document.getElementById(`cond-${i}`).innerText = defaults[`cond-${i}`];
+        }
+        
+        function setRules(rnd)
+        {
+            getDefaults();
+            
+            var soundNames = ["Arcade","Stylo à bille","Plage","Page qui tourne","Moteur de voiture","Casino","Bip de censure","Tronçonneuse","Air comprimé","Vache","Internet","Fermeture de porte","Hotte","Explosion de feu d'artifice","Verre brisé","Hélicoptère","Marimba","Armes médiévales","Hautbois","Sonnerie de téléphone","Radio scanner de police",
+    "Chaîne en fer","Rechargement de Glock 19","Saxophone","Servomoteur","Machine à coudre","Match de football","Jouet qui couine","Supermarché","Tennis de table","Hululement de chouette","Radio de Taxi","Tissu qui se déchire","Chant de gorge","Rossignol","Nonnes tibétaines","Gare","Tuba","Aspirateur","Cascade","Fermeture éclair"];
+            var indicatorNames = ["BOB", "CAR", "CLR", "FRK", "FRQ", "IND", "MSA", "NSA", "SIG", "SND", "TRN"];
+            var portNames = ["Parallèle", "Série", "PS/2", "RJ-45", "DVI-D", "Stéréo RCA"];
+            
+            var conditionIndicesUsed = new Array(3);
+            
+            for(var i = 0; i < 3; i++)
+            {
+                var condIndex = -1;
+                while(condIndex == -1 || conditionIndicesUsed.includes(condIndex))
+                    condIndex = rnd.nextMax(7);
+            
+                var condType = condIndex;
+                conditionIndicesUsed[i] = condIndex;
+                var parameter;
+
+                if(condIndex < 2)
+                    parameter = rnd.nextMax(11);
+                else
+                    parameter = rnd.nextMax(6);
+
+                var soundCondition = "";
+                var otherwiseCondition = "";
+                var condition;
+                var span = document.getElementById(`cond-${i+1}`);
+                
+                if(i == 0)
+                {
+                    var soundArr = new Array();
+                    soundArr.push(rnd.nextMax(41));
+                    soundArr.push(-1);
+                    while(soundArr[1] == -1 || soundArr[1] == soundArr[0])
+                        soundArr[1] = rnd.nextMax(41);
+                        
+                    condition = {type: condType, conditionParam: parameter};
+                    soundCondition = ` et au moins l'un des sons était ${soundNames[soundArr[0]]} ou ${soundNames[soundArr[1]]}`;
+                    otherwiseCondition = `S`;
+                }
+                else
+                {
+                    condition = {type: condType, conditionParam: parameter};
+                    otherwiseCondition = `Sinon, s`;
+                    soundCondition = ``;
+                }
+                
+                switch(condition.type)
+                {
+                    case 0: span.innerText = `${otherwiseCondition}i la bombe a un indicateur allumé ${indicatorNames[condition.conditionParam]}${soundCondition}`;break;
+                    case 1: span.innerText = `${otherwiseCondition}i la bombe a un indicateur éteint ${indicatorNames[condition.conditionParam]}${soundCondition}`;break;
+                    case 2: span.innerText = `${otherwiseCondition}i la bombe a un port ${portNames[condition.conditionParam]}${soundCondition}`;break;
+                    case 3: span.innerText = `${otherwiseCondition}i la bombe a une plaque de ports vide ${soundCondition}`;break;
+                    case 4: span.innerText = `${otherwiseCondition}i la bombe a au moins ${(condition.conditionParam % 3) + 2} piles${soundCondition}`;break;
+                    case 5: span.innerText = `${otherwiseCondition}i le dernier chiffre du numéro de série est ${(condition.parameter % 2 == 0) ? "pair" : "impair"}${soundCondition}`;break;
+                    case 6: span.innerText = `${otherwiseCondition}i le numéro de série de la bombe ${(condition.parameter % 2 == 0) ? "ne contient pas" : "contient"} de voyelle${soundCondition}`
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Double Écoute</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Double Listening.svg" class="diagram">
+                <h2>À propos de la Double Écoute</h2>
+                <p class="flavour-text">"Je ne connais pas la différence, c'est l'arcade ou le casino ?" "Oui."</p>
+
+                <p>Ce module consiste en un bouton play, un bouton carré et noir de validation, et cinq écrans affichant chacun un chiffre. Presser 
+                le bouton play jouera deux sons du module Écoute en même temps. Le bouton play a un temps de recharge 
+                de 3 secondes. Utiliser le <a href="https://ktane.timwi.de/HTML/Listening%20translated%20(Fran%C3%A7ais%20%E2%80%94%20%C3%89coute)%20(nekmao33).html">manuel original de l'Écoute</a> pour obtenir deux codes de cinq caractères, chaque code correspondant à l'un des sons.</p>
+
+                <p>En utilisant la première condition du Tableau A s'appliquant, convertir chaque caractère de chaque code en binaire. 
+                Réaliser une opération Ou Exclusif<sup>*</sup> sur les deux codes binaires puis utiliser 
+                les écrans sur le module pour entrer la réponse.</p>
+
+                <h3>Tableau A</h3>
+                <table style="margin-bottom: 17px;">
+                    <tr>
+                        <th rowspan="2">Condition</th>
+                        <th colspan="4">Symbole</th>
+                    </tr>
+                    <tr>
+                        <th>#</th>
+                        <th>$</th>
+                        <th>&amp;</th>
+                        <th>*</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left"><span class='condition' id='cond-1'>Si la bombe a au moins trois piles et qu'au moins un des sons était Plage ou Cascade</span></th>
+                        <td>0</td><td>0</td><td>1</td><td>1</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left;width:60%"><span class='condition' id='cond-2'>Sinon, si la bombe a une plaque de ports vide</span></th>
+                        <td>0</td><td>1</td><td>0</td><td>1</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left"><span class='condition' id='cond-3'>Sinon, si le dernier chiffre du numéro de série est impair</span></th>
+                        <td>1</td><td>0</td><td>1</td><td>0</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left">Sinon</th>
+                        <td>1</td><td>1</td><td>0</td><td>0</td>
+                    </tr>
+                </table>
+                <p>À NOTER : Certains sons peuvent avoir leur volume ajusté pour éviter qu'ils n'en couvrent d'autre.</p>
+                <p><sup>*</sup>Pour réaliser une opération Ou Exclusif, considérer chaque chiffre de chaque code un à la fois. 
+                Le résultat pour telle position est 1 si les deux chiffres à telle position sont différents. Sinon, le 
+                résultat pour cette position est 0.</p>
+            </div>
+        <div class="page-footer relative-footer">Page 1 sur 1</div>
+        </div>
+    </div>
+</body>
+</html>
