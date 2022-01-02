@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Two-Factor Authentication — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .area {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 300px;
+            margin: 60px auto;
+            max-width: 100%;
+        }
+
+        .print {
+            margin: 60px 0;
+            display: none;
+        }
+
+        @media print {
+            .area {
+                display: none;
+            }
+
+            .print {
+                display: block;
+            }
+        }
+
+        .timer {
+            flex-shrink: 0;
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .timer>canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+        }
+
+        .dark .timer>canvas {
+            filter: invert(0.8);
+            -webkit-filter: invert(0.8);
+        }
+
+        .timer>.label {
+            position: relative;
+            text-align: center;
+            font-weight: 700;
+            font-size: 20px;
+            transform: translateY(3px);
+        }
+
+        .passcode {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 36px;
+        }
+    </style>
+    <script>
+        window.addEventListener("load", () => {
+            const Timer = new class {
+                constructor() {
+                    this.LINE_WIDTH = 6;
+                    this.CANVAS_SIZE = 50;
+
+                    this.label = document.querySelector(".timer>.label");
+                    this.canvas = document.querySelector(".timer>canvas");
+                    this.ctx = this.canvas.getContext("2d");
+                    this.ctx.lineWidth = this.LINE_WIDTH;
+                    this.ctx.strokeStyle = "#000";
+                }
+
+                setTime(time, limit) {
+                    this.label.innerText = Math.ceil(time / 1000);
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.beginPath();
+                    const start = -Math.PI / 2;
+                    this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, this.CANVAS_SIZE / 2 - this.LINE_WIDTH / 2, start, start + 2 * Math.PI * (time / limit));
+                    this.ctx.stroke();
+                }
+            };
+
+            const PasscodeManager = new class {
+                constructor() {
+                    this.PASSCODE_LENGTH = 6;
+                    this.RESET_TIME = 15 * 1000;
+
+                    this.NUMBER_MAP = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+                    this.update();
+                }
+
+                get time() {
+                    return Date.now();
+                }
+
+                get timeSinceReset() {
+                    return this.time % this.RESET_TIME;
+                }
+
+                get timeUntilReset() {
+                    return this.RESET_TIME - this.timeSinceReset;
+                }
+
+                get currentSeed() {
+                    return Math.floor(this.time / this.RESET_TIME);
+                }
+
+                createPasscode(rnd) {
+                    let code = "";
+                    for (let i = 0; i < this.PASSCODE_LENGTH; i++) code += rnd.nextMax(10);
+                    return code;
+                }
+
+                randomFakeNumber(code, rnd) {
+                    const list = [];
+                    for (let i = 0; i < 10; i++) if (!code.includes(i)) list.push(i);
+                    return list[rnd.nextMax(list.length)];
+                }
+
+                regenerate() {
+                    const rnd = new MonoRandom(this.currentSeed);
+                    const code = this.createPasscode(rnd);
+                    document.querySelector(".passcode").innerText = code;
+                    const chosen = code.charAt(rnd.nextMax(code.length));
+                    document.querySelector(".flavour-text").innerHTML = `You're sure it was ${code}? With ${chosen === "8" ? "an" : "a"} ${this.NUMBER_MAP[chosen]}? I was pretty sure you said "${this.NUMBER_MAP[this.randomFakeNumber(code, rnd)]}"!`;
+                }
+
+                update() {
+                    const seed = this.currentSeed;
+                    if (seed != this.lastSeed) {
+                        this.lastSeed = seed;
+                        this.regenerate();
+                    }
+                    Timer.setTime(this.timeUntilReset, this.RESET_TIME);
+                    requestAnimationFrame(this.update.bind(this));
+                }
+            };
+        });
+
+        // we're only using ruleseed.js for MonoRandom, but it's still expecting these functions
+        window.setDefaultRules = window.setRules = () => {};
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Two-Factor Authentication</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Two-Factor%20Authentication.svg" class="diagram">
+                <h2>On the Subject of Two-Factor Authentication</h2>
+                <p class="flavour-text"></p>
+
+                <p>On the module are 6 number scrollers. Upon activation, input the current 6-digit code shown below to deactivate the module.</p>
+                <p>The code will change every 15 seconds, so be careful and make sure the code is correct before the module's timer runs out.</p>
+                <p>Use the arrow buttons to increment the number up or down, or use your keyboard to type the numbers.</p>
+
+                <div class="area">
+                    <div class="timer">
+                        <canvas width="50" height="50"></canvas>
+                        <div class="label"></div>
+                    </div>
+                    <div class="passcode"></div>
+                </div>
+                <div class="print">Visit <a href="https://ktane.timwi.de/HTML/Two-Factor%20Authentication.html">ktane.timwi.de/HTML/Two-Factor%20Authentication.html</a> to acquire your two-factor code.</div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

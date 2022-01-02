@@ -12,7 +12,7 @@
 
 let protocol = location.protocol;
 let e = document.createElement("script");
-e.src = "js/jquery.3.1.1.min.js";
+e.src = "../HTML/js/jquery.3.1.1.min.js";
 e.onload = function()
 {
     $(function()
@@ -305,7 +305,7 @@ e.onload = function()
                             element.css("fill", element.data('origFill'));
                         }
                         element.removeClass("svgIsHighlighted");
-                        return;
+                        return false;
                     }
 
                     let ix = -1;
