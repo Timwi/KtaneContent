@@ -8,6 +8,67 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setRules(rnd)
+        {
+            var initial = [];
+            for (var i = 0; i < (1 << 6); i++)
+                initial.push(i);
+            var list = [];
+            do
+            {
+                var num = pickRandomAndRemove(rnd, initial);
+                var num2 = pickRandomAndRemove(rnd, initial);
+                var num3 = pickRandomAndRemove(rnd, initial);
+
+                var a = num << 6 | num2;
+                var a2 = num << 6 | num3;
+
+                var num4 = pickRandomAndRemove(rnd, initial);
+                var num5 = pickRandomAndRemove(rnd, initial);
+                var num6 = pickRandomAndRemove(rnd, initial);
+
+                var a3 = num5 << 6 | num4;
+                var a4 = num6 << 6 | num4;
+
+                list.push(intToBoolArray(a, 12));
+                list.push(intToBoolArray(a2, 12));
+                list.push(intToBoolArray(a3, 12));
+                list.push(intToBoolArray(a4, 12));
+            }
+            while (list.length < 8);
+
+            var rules = [];
+            for (var i = 0; i < 8; i++)
+                rules.push(pickRandomAndRemove(rnd, list));
+
+            Array.from(document.getElementsByClassName('knob-rule-table')).forEach((x, ruleIx) =>
+                Array.from(x.getElementsByTagName('td')).forEach((y, ledIx) =>
+                    y.innerText = rules[ruleIx][ledIx] ? 'X' : '\u00a0'));
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function pickRandomAndRemove(rnd, list)
+        {
+            var ix = rnd.next(0, list.length);
+            var item = list[ix];
+            list.splice(ix, 1);
+            return item;
+        }
+
+        function intToBoolArray(a, arraySize)
+        {
+            var array = [];
+            for (var i = 0; i < arraySize; i++)
+            {
+                array.push((a & 1) == 1);
+                a >>= 1;
+            }
+            return array;
+        }
+    </script>
     <style>
         table {
             margin-right: .5cm;
