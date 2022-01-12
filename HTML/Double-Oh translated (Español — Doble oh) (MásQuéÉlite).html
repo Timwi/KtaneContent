@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Doble oh — Módulo de Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        td {
+            text-align: center;
+        }
+        body {
+            -webkit-print-color-adjust:exact;
+        }
+        table.double-oh {
+            margin: 0 auto 1em;
+            border: 2mm solid;
+        }
+        table.double-oh col {
+            width: 25%;
+        }
+        table.double-oh td {
+            height: 35px;
+            width: 35px;
+            white-space: nowrap;
+            border-right: .5mm dotted;
+            border-bottom: .5mm dotted;
+        }
+        table.double-oh tr:nth-child(3n) td {
+            border-bottom: 1.5mm solid;
+        }
+        table.double-oh td:nth-child(3n) {
+            border-right: 1.5mm solid;
+        }
+        .note {
+            font-weight: bold;
+        }
+        .goal {
+            font-weight: bold;
+        }
+        .page-content.double-oh-content {
+            font-size: 90%;
+        }
+        .dark table, .dark td {  border-color: #CCC; }
+        .strike { text-decoration: line-through; }
+    </style>
+    <script>
+        let sudokus = [
+            'abcdefghighiabcdefdefghiabcbcaefdhighigbcaefdefdhigbcacabfdeighighcabfdefdeighcab',
+            'abcdefghiighabcdefdefhigabcbcaefdighhigbcaefdefdghibcacabfdehigghicabfdefdeighcab',
+            'abcdefghifdehigabcighabcefdefdighcabghicabdefcabfdehighigbcafdebcaefdighdefghibca',
+            'abcdefghihigabcfdeefdighabcbcafdeighghibcaefddefhigbcacabefdhigighcabdeffdeghicab',
+            'abcdefghidefghiabcghiabcdeffdeighcabighcabfdecabfdeighhigbcaefdbcaefdhigefdhigbca',
+            'abcdefghihgiabcdefedfghiabcbcahfgeidgiebdacfhdfhciebgacabfghideihdeabfcgfegicdhab',
+            'abcdefghihigabcfdeefdighabcbcafdeighgeibhacfddhfcigbeacabhfdeigigheabdcffdegcihab',
+            'abcdefghihgfabicdeedihcgabfbfaciehgddigbhaefccehgfdbiaiabedhfcggcdfabiehfheigcdab',
+            'abcdefghihgfabicededigchabfbiacdgefhghebfadiccfdhiebgafabigdhceicheabfdgdegfhciab',
+            'abcdefghigihabcdefdfeghiabcbcahfdeighdiegacfbegfcibhdacabidefghihdfagbcefegbchiad',
+            'abcdefghigihabcdfedfegihabcbcafgeidhfhgidacebiedchbfgacabefghidegihadbcfhdfbcieag',
+            'abcdefghihigabcfdeefdighabcbcafdeighdeighacfbghfcibdeacabhfgeidigheadbcffdebcihag',
+            'abcdefghiiehabgcfdfdghicabebgaidefchhiefcadgbcfdghbieaeabcfdhigghfeaibdcdcibgheaf',
+            'abcdefghiheiabgdfcdfgihcabebiafcehdgfhegdacibgcdhibfeaeabcfhigdigheadbcfcdfbgieah',
+            'abcdefghiifhabgcdeegdhicabfhiacdbefgdcfegahibgebfhidcafaeichbgdbhigadfeccdgbfeiah',
+            'abcdefghifihabgcdeedgihcafbigabfhecddhbecaigfcefgidhbahaecdbfiggfdhaibecbcifgedah',
+            'abcdefghigeiabhcdffdhgciabebcaidehfghiefgcdabdgfhabieceabcidfghifdehgbcachgbfaeid',
+            'abcdefghihfeaigbdcgidbchafefgaedbcihdcbghieafehifacdbgbaghfeicdiehcbdfgacdfigaheb',
+            'abcdefghiidhcgbfaeefghiabcdghiabcdeffaeidhcgbbcdefghiadefghiabccgbfaeidhhiabcdefg',
+            'abcdefghigdhcibafeefihgabdcihgfbdceafaeichdgbbcdeaghifceaghifbddgbafeichhifbdceag',
+            'abcdefghighiabcdefdefghiabcfdehigcabcabfdehighigcabfdeighbcaefdefdighbcabcaefdigh',
+            'abcdefghihigcabfdeefdighbcacabfdehigighbcaefddefghiabcbcaefdighghiabcdeffdehigcab',
+            'abcdefghihigcabefdfdeighbcacabfdehigighbcadefefdghiabcbcaefdighghiabcfdedefhigcab',
+            'abcdefghihigcabefdfdeighbcacabefdhigighbcafdedefghiabcbcafdeighghiabcdefefdhigcab',
+            'abcdefghiighcabfdeefdhigbcagaifbcdehhdeigacfbbcfehdaigdeagfihbcchbadeigffigbchead',
+            'abcdefghighiabcdefdefghiabcefdhigcabcabefdhighigcabefdighbcafdefdeighbcabcafdeigh',
+            'abcdefghihdiabgecfegfchiabdcfheidbgabeagfhdicdigbcahfeicehabfdgfhdigecabgabfdcieh',
+            'abcdefghieihabgfcddgfcihabefcdhgebiabeaidchgfghibfaedcidgeabcfhcfeghidabhabfcdieg',
+            'abcdefghihigabcfdedefhigcabfdecabhigcabighefdighfdebcabcaghidefghiefdabcefdbcaigh',
+            'abcdefghighicabdeffdeighabccabhigfdeighfdecabefdbcaighdefabchigbcaghiefdhigefdbca',
+            'abcdefghiighcabdeffdeghiabccabighfdehigfdecabefdbcaighdefabchigbcahigefdghiefdbca',
+            'abcdefghiighcabdeffdeghiabccabhigfdeghifdecabefdbcahigdefabcighbcaighefdhigefdbca',
+            'abcdefghiighcabefdefdghiabccabighdefhigfdecabdefbcaighfdeabchigbcahigfdeghiefdbca',
+            'abcdefghighicabefdefdighabciabhdgcefdghfceiabcefbiadghfieabdhcgbdaghcfiehcgefibda',
+            'abcdefghighicabefdefdighabchageidbcfidefbchagbcfghaidefghadecibdeabcifghcibhfgdea',
+            'abcdefghiighcabefdefdghiabcghifdecabdefbcahigcabhigdefhigefdbcafdeabcighbcaighfde',
+            'abcdefghiighcabefdefdghiabcghiefdcabfdebcahigcabhigfdehigfdebcadefabcighbcaighdef',
+            'abcdefghihigabcfdedefhigcabefdcabhigcabighdefighefdbcabcaghiefdghifdeabcfdebcaigh',
+            'abcdefghighicabdeffdeighabccabhigefdighefdcabdefbcaighefdabchigbcaghifdehigfdebca',
+            'abcdefghighicabefdefdighabchabeigdcfigefdchabdcfbhaigefdhabecigbeagcifdhcighfdbea',
+            'abcdefghighicabefdefdighabciahfdgcebdgfbceiahcebhiadgfhieafdbcgfdagbchiebcgehifda',
+            'abcdefghighfiabecdeidcghabfhaiecgdfbfgebdihacdcbfhaigecdhafebigieagbcfdhbfghidcea',
+            'abcdefghighicabdeffdeighabcighefdcabdefbcaighcabhigefdhigfdebcaefdabchigbcaghifde',
+            'abcdefghighicabdeffdeighabchigefdcabdefbcahigcabghiefdighfdebcaefdabcighbcahigfde',
+            'abcdefghiighcabdeffdeghiabcghiefdcabdefbcahigcabhigefdhigfdebcaefdabcighbcaighfde',
+            'abcdefghigheiabcfdifdcghabecghefdiabfdibcaegheabhigfdchigfdcbeadefabihcgbcaghedif',
+            'abcdefghifdihagebceghibcafdhigbcedafdefghacibcabfdihegifdeghbcabceafdighghacibfde',
+            'abcdefghighicabdeffdeighabcighefdbcadefabcighbcahigefdhigfdecabefdbcahigcabghifde',
+            'abcdefghighicabdeffdeighabchigefdbcadefabchigbcaghiefdighfdecabefdbcaighcabhigfde',
+            'abcdefghiighcabdeffdeghiabcghiefdbcadefabchigbcahigefdhigfdecabefdbcaighcabighfde',
+            'abcdefghidefighabcghiabcdefighbcaefdfdeghicabcabfdeighhigefdbcabcahigfdeefdcabhig',
+            'abcdefghidefighabcighabcfdefdebcaighghifdecabcabhigdefhigefdbcabcaghiefdefdcabhig',
+            'abcdefghihifabgcdedeghicfabcdefabhiggabichefdifhgdebcabgachideffhiegdabcecdbfaigh',
+            'abcdefghiighcabefdefdghiabcghiefdbcafdeabchigbcahigfdehigfdecabdefbcaighcabighdef',
+            'abcdefghighibcadeffdeighbcabcahigefdighefdcabdefcabighefdabchigcabghifdehigfdeabc',
+            'abcdefghifdgahibceiehbcgdafhiecabfdgdafighebccgbfdehiabcagfdiehghiebcafdefdhiacgb',
+            'abcdefghiefdighabcghicabefdbcaefdighfdeghicabhigabcdefdefhigbcaighbcafdecabfdehig',
+            'abcdefghifheaigbcddigbchaefidhcgbfaebcaefidghgefhadibchadibcefgcgbfdehiaefighacdb',
+            'abcdefghihidagcfbegefhibacdfgebcdiahcdaghiefbbhifaedgcdagibhcefichefgbdaefbcdahig',
+            'abcdefghihigabcfdedefhigcabghibcadeffdeighabccabefdhigighcabefdefdghibcabcafdeigh',
+            'abcdefghifhiacgbdegdehbiafchgacfbeiddefighcabicbeadfghbahgicdefefdbhaicgcigfdehba',
+            'abcdefghihidacgebfgefbhiadcegahidfcbcdbfgeiahifhcabdgebaegfchiddhiebacfgfcgidhbea',
+            'abcdefghidefhigabcighabcdefcabfdehigfdeighcabghicabfdebcaghiefdefdbcaighhigefdbca',
+            'abcdefghifdeighcabhigbcaefdehiabgdcfgabfdciehcfdhiebgadgfeabhicichgfdabebeachifdg',
+            'abcdefghifdeighcabhigbcaefdehdaigbcfgaifbcdehcfbhdeigaigfeadhbcbchgfiadedeachbfig',
+            'abcdefghiefdhigabcighabcfdecabefdhigfdeighcabghicabdefbcaghiefddefbcaighhigfdebca',
+            'abcdefghidefghiabcghiabcdefeabfdgichfdgicheabicheabfdgbgahiecfdcfdbgahiehiecfdbga',
+            'abcdefghifdehigcabighbcaefdhigabcdefcabfdeighefdghibcadefcabhigghiefdabcbcaighfde',
+            'abcdefghifdehigcabighbcaefdhigabcfdecabefdighdefghibcaefdcabhigghifdeabcbcaighdef',
+            'abcdefghiefdhigcabighbcafdehigabcefdcabfdeighdefghibcafdecabhigghiefdabcbcaighdef',
+            'abcdefghidefghiabcghiabcdefeadfigbchfigbcheadbcheadfigigahdecfbcfbigahdehdecfbiga',
+            'abcdefghidefhigabcighabcdefcabfdeighfdeghicabhigcabfdebcaighefdefdbcahigghiefdbca',
+            'abcdefghiefdhigabcighabcfdecabfdeighdefghicabhigcabefdbcaighdeffdebcahigghiefdbca',
+            'abcdefghidefghiabcghiabcdeffabidecghidecghfabcghfabidebiahfgecdecdbiahfghfgecdbia',
+            'abcdefghidefghiabcghiabcdeffaeidhcgbidhcgbfaecgbfaeidhhiaefgbcdbcdhiaefgefgbcdhia',
+            'abcdefghidefghicabhigcabefdcabhigdeffdebcahigighfdebcaefdighabcghiabcfdebcaefdigh',
+            'abcdefghihdeaigfbcgfibchadeegafbdichicfghedabdhbcaiegfbagefchidcehidabfgfidhgbcea',
+        ];
+        let validPairs = [ [0, 2], [0, 4], [1, 2], [1, 4], [3, 4], [4, 18], [4, 24], [17, 18], [20, 21], [20, 22], [20, 23], [20, 24], [21, 25], [22, 25], [23, 25], [24, 25], [28, 29], [28, 30], [28, 31], [28, 32], [28, 33], [28, 34], [28, 35], [28, 36], [28, 38], [28, 39], [28, 40], [28, 42], [28, 43], [28, 44], [28, 47], [28, 48], [28, 49], [28, 53], [28, 54], [29, 37], [30, 37], [31, 37], [32, 37], [33, 37], [34, 37], [35, 37], [36, 37], [37, 38], [37, 39], [37, 40], [37, 41], [37, 42], [37, 43], [37, 44], [37, 45], [37, 46], [37, 47], [37, 48], [37, 49], [37, 50], [37, 51], [37, 53], [37, 54], [52, 53], [52, 54], [53, 55], [54, 55], [62, 63], [62, 64], [63, 65], [63, 71], [63, 72], [64, 65], [64, 71], [64, 72], [66, 67], [66, 68], [66, 69], [67, 70], [67, 73], [67, 74], [68, 70], [68, 73], [68, 74], [69, 70], [69, 73], [69, 74], [75, 76] ];
+
+        function setDefaultRules()
+        {
+            setGrid('60,2,15,57,36,83,48,71,24,88,46,31,70,22,64,7,55,13,74,27,53,5,41,18,86,30,62,52,10,4,43,85,37,61,28,76,33,65,78,21,0,56,12,44,87,47,81,26,68,14,72,50,3,35,6,38,42,84,63,20,75,17,51,25,73,67,16,58,1,34,82,40,11,54,80,32,77,45,23,66,8'.split(','));
+        }
+
+        function setRules(rnd)
+        {
+            // Add extra randomness
+            for (var i = rnd.next(0, 10); i > 0; i--)
+                rnd.nextDouble();
+
+            function renumber(grid)
+            {
+                let gridInt = grid.split('').map(ch => ch.charCodeAt(0) - 97);  // 97 = 'a'
+                let middleChar = gridInt[40];
+                let numbering = rnd.shuffleFisherYates([...Array(9).keys()].slice(1));
+                numbering.splice(middleChar, 0, 0);
+                return gridInt.map(i => numbering[i]);
+            }
+            let randomPair = validPairs [ rnd.next(0, validPairs.length) ].map(ix => renumber(sudokus[ix]));
+            setGrid([...Array(81).keys()].map(ix => randomPair[0][ix]*10 + randomPair[1][ix]));
+        }
+
+        function setGrid(grid)
+        {
+            let tds = document.getElementsByClassName('cuadrado'); <!--Why not translating the classes as well-->
+            for (let i = 0; i < 81; i++)
+                tds[i].innerText = grid[i] < 10 ? `0${grid[i]}` : grid[i];
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod de Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Doble oh</span>
+            </div>
+            <div class="page-content double-oh-content">
+                <h2>En caso de Doble oh</h2>
+                <img class='diagram' src='img/Component/Double-Oh.svg'>
+                <p class='flavour-text' >
+                    <span class="strike">Un módulo, por favor. Agitado, y bastante.</span><br><b>Maldita pieza de basura; pantalla rota, botones rotos...</b>
+                <ul>
+                    <li>Se muestra una pantalla con un número de dos dígitos, a la vez que también cinco botones. Usándolos, pon la pantalla a 00 (la celda del centro de la tabla de abajo), y luego pulsa el botón submit.
+                    <li>Cuatro de los cinco botones cambia el número de la pantalla. Siguiendo la tabla de abajo, consistiendo en una tabla 3×3 de tablas 3×3, los botones realizarán lo siguiente:
+                    <li>El botón “↕” mueve a la siguiente posición hacia arriba o abajo en la tabla pequeña actual, moviéndose al otro lado si llega a uno (ejemplo: de 00 a 85 a 14 a 00)
+                    <li>El botón “↔” mueve a la siguiente posición izquierda o derecha en la tabla pequeña actual, moviéndose al otro lado si llega a uno (ejemplo: de 00 a 56 a 21 a 00)
+                    <li>El botón “⇕” mueve a la misma posición en la tabla 3×3 grande arriba o abajo, moviéndose al otro lado si llega a uno (ejemplo: de 00 a 22 a 58 a 00)
+                    <li>El botón “⇔” mueve a la misma posición en la tabla 3×3 grande izquierda o derecha, moviéndose al otro lado si llega a uno (ejemplo: de 00 a 44 a 65 a 00)
+                    <li>El botón “▣” es el botón submit. Al pulsarlo, el módulo se desavará si está el 00 en la pantalla, y dará un fallo si no.
+                </ul>
+                <p class='note'>NOTA: este módulo es viejo, y el último dígito se glitchea cuando el primero es cero.
+                    Además, el cableado de por dentro está funcionando de manera extraña, haciendo que las funciones de
+                    los botones se intercambien unas con otras. Afortunadamente, el sistema está hecho para que solamente
+                    se registre un fallo real en la bomba si, al pulsar el botón submit, el número es menor que 10.
+                <table class='double-oh'>
+                    <tr><td class='cuadrado'>60<td class='cuadrado'>02<td class='cuadrado'>15<td class='cuadrado'>57<td class='cuadrado'>36<td class='cuadrado'>83<td class='cuadrado'>48<td class='cuadrado'>71<td class='cuadrado'>24</tr>
+                    <tr><td class='cuadrado'>88<td class='cuadrado'>46<td class='cuadrado'>31<td class='cuadrado'>70<td class='cuadrado'>22<td class='cuadrado'>64<td class='cuadrado'>07<td class='cuadrado'>55<td class='cuadrado'>13</tr>
+                    <tr><td class='cuadrado'>74<td class='cuadrado'>27<td class='cuadrado'>53<td class='cuadrado'>05<td class='cuadrado'>41<td class='cuadrado'>18<td class='cuadrado'>86<td class='cuadrado'>30<td class='cuadrado'>62</tr>
+                    <tr><td class='cuadrado'>52<td class='cuadrado'>10<td class='cuadrado'>04<td class='cuadrado'>43<td class='cuadrado'>85<td class='cuadrado'>37<td class='cuadrado'>61<td class='cuadrado'>28<td class='cuadrado'>76</tr>
+                    <tr><td class='cuadrado'>33<td class='cuadrado'>65<td class='cuadrado'>78<td class='cuadrado'>21<td class='goal cuadrado'>00<td class='cuadrado'>56<td class='cuadrado'>12<td class='cuadrado'>44<td class='cuadrado'>87</tr>
+                    <tr><td class='cuadrado'>47<td class='cuadrado'>81<td class='cuadrado'>26<td class='cuadrado'>68<td class='cuadrado'>14<td class='cuadrado'>72<td class='cuadrado'>50<td class='cuadrado'>03<td class='cuadrado'>35</tr>
+                    <tr><td class='cuadrado'>06<td class='cuadrado'>38<td class='cuadrado'>42<td class='cuadrado'>84<td class='cuadrado'>63<td class='cuadrado'>20<td class='cuadrado'>75<td class='cuadrado'>17<td class='cuadrado'>51</tr>
+                    <tr><td class='cuadrado'>25<td class='cuadrado'>73<td class='cuadrado'>67<td class='cuadrado'>16<td class='cuadrado'>58<td class='cuadrado'>01<td class='cuadrado'>34<td class='cuadrado'>82<td class='cuadrado'>40</tr>
+                    <tr><td class='cuadrado'>11<td class='cuadrado'>54<td class='cuadrado'>80<td class='cuadrado'>32<td class='cuadrado'>77<td class='cuadrado'>45<td class='cuadrado'>23<td class='cuadrado'>66<td class='cuadrado'>08</tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 1</div>
+        </div>
+    </div>
+</body>
+</html>

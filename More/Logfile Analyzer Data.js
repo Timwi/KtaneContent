@@ -6780,6 +6780,117 @@ const parseData = [
         ]
     },
     {
+        displayName: "Parallel Mazes",
+        moduleID: "parallel_mazes",
+        loggingTag: "Parallel Mazes",
+        matches: [{
+            regex: /^(Defuser|Expert) maze: (.+)$/,
+            handler: function (matches, module) {
+                const nonWallBorderColor = "#ffffff22";
+                const data = matches[2].split(";").map(s => s.split(" ").map(v => Number(v)));
+                const table = $("<table>").css("border-collapse", "collapse").css("text-align", "center");
+                const firstTr = $("<tr>").appendTo(table);
+                $("<td>").appendTo(firstTr);
+                for (let i = 0; i < 7; i++) {
+                    $("<td>").text(String.fromCharCode(i + "A".charCodeAt(0))).appendTo(firstTr);
+                }
+                let start, end;
+                const startPosText = readLine();
+                const match1 = startPosText.match(/start position: ([A-G])([1-7])/);
+                if (match1 && startPosText.includes(matches[1])) {
+                    start = { x: match1[1].charCodeAt(0) - "A".charCodeAt(0), y: Number(match1[2]) - 1 };
+                    const endPosText = readLine();
+                    const match2 = endPosText.match(/finish position: ([A-G])([1-7])/);
+                    if (match2 && endPosText.includes(matches[1])) {
+                        end = { x: match2[1].charCodeAt(0) - "A".charCodeAt(0), y: Number(match2[2]) - 1 };
+                    } else linen -= 2;
+                } else linen -= 1;
+                for (let row = 0; row < 7; row++) {
+                    const tr = $("<tr>").appendTo(table);
+                    $("<td>").text(row + 1).appendTo(tr);
+                    for (let col = 0; col < 7; col++) {
+                        const td = $("<td>")
+                            .css("color", "white")
+                            .css("background-color", "black")
+                            .css("border", "solid white")
+                            .css("width", "24px")
+                            .css("height", "24px")
+                            .appendTo(tr);
+                        if (start && start.x === col && start.y === row) td.text("S");
+                        if (end && end.x === col && end.y === row) td.append("F");
+                        const v = data[col][row];
+                        if ((v & (1 << 0)) > 0) td.css("border-right-color", nonWallBorderColor);
+                        if ((v & (1 << 1)) > 0) td.css("border-top-color", nonWallBorderColor);
+                        if ((v & (1 << 2)) > 0) td.css("border-left-color", nonWallBorderColor);
+                        if ((v & (1 << 3)) > 0) td.css("border-bottom-color", nonWallBorderColor);
+                    }
+                }
+                module.push({ label: matches[1] + " maze", obj: table });
+                return true;
+            },
+        }, {
+            regex: /Connecting to server/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Connected to server/.test(nextLine);
+            },
+        }, {
+            regex: /Connected to server/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Game created/.test(nextLine);
+            },
+        }, {
+            regex: /Connecting to expert (\d{7})/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                if (/Expert connected/.test(nextLine)) {
+                    module.push({ label: `Expert ${matches[1]} connected` });
+                    return true;
+                }
+                linen -= 1;
+                return false;
+            },
+        }, {
+            regex: /Moving/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Defuser moves/.test(nextLine);
+            },
+        }, {
+            regex: /Disconnecting expert/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Expert disconnected/.test(nextLine);
+            },
+        }, {
+            regex: /^.*moves.*Strike\!/,
+            handler: function (matches, module) {
+                module.push({
+                    label: [
+                        '<img height="20px" src="TDSBombRenderer/images/strike.png">',
+                        `<span style="font-weight:bold;font-size:20px">${matches[0]}</span>`,
+                    ].join(" "),
+                });
+                return true;
+            },
+        }, {
+            regex: /^.*ERROR:.*$/,
+            handler: function (matches, module) {
+                module.push({
+                    label: `<span style="background-color:black;color:red;font-size:24px">${matches[0]}</span>`
+                });
+                return true;
+            },
+        }, {
+            regex: /^.*$/
+        }],
+    },
+    {
         moduleID: "Password",
         loggingTag: "PasswordComponent"
     },

@@ -12,7 +12,7 @@
 
 let protocol = location.protocol;
 let e = document.createElement("script");
-e.src = "js/jquery.3.1.1.min.js";
+e.src = "../HTML/js/jquery.3.1.1.min.js";
 e.onload = function()
 {
     $(function()
@@ -45,7 +45,7 @@ e.onload = function()
             </div>
             <div class='option-group'>
                 <h3>Dark Mode</h3>
-                <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled' accesskey='w'>Enabled</label> (Alt-W)</div>
+                <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled'>Enabled</label> (Alt-W)</div>
             </div>
         </div>`).appendTo("body");
 
@@ -131,22 +131,33 @@ e.onload = function()
         $(document).keydown(function(event)
         {
             // Only accept shortcuts with Alt or Ctrl+Shift
-            if (!event.altKey && !(event.shiftKey && event.ctrlKey))
+            if (!event.altKey && !(event.shiftKey && (event.ctrlKey || event.metaKey)))
                 return;
 
+            let k = event.key.toLowerCase();
             // Alt-O: Open options menu
-            if (event.keyCode === 0x4F)
+            if (k == "o" || event.keyCode === 0x4F)
             {
                 options.toggleClass('open');
             }
             // Alt-C: Clear highlights
-            else if (event.keyCode === 67)
+            else if (k == "c" || event.keyCode === 67)
             {
                 clearHighlights.click();
             }
-            else if (event.keyCode >= 48 && event.keyCode <= 57)
+            // Alt-W: Dark mode
+            else if (k == "w" || event.keyCode === 87)
             {
-                colorSelect.val(event.keyCode - 48).change();
+                $('#dark-mode-enabled').click();
+            }
+            else {
+                let n = parseInt(event.key);
+                if (n >= 0 && n <= 9) {
+                    colorSelect.val(n).change();
+                }
+                else if (event.keyCode >= 48 && event.keyCode <= 57) {
+                    colorSelect.val(event.keyCode - 48).change();
+                }
             }
         });
 
@@ -305,7 +316,7 @@ e.onload = function()
                             element.css("fill", element.data('origFill'));
                         }
                         element.removeClass("svgIsHighlighted");
-                        return;
+                        return false;
                     }
 
                     let ix = -1;
