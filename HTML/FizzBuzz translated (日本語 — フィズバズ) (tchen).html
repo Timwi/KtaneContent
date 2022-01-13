@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>フィズバズ — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table.fizz-buzz {
+            border: none;
+        }
+        table.fizz-buzz th {
+            text-align: right;
+        }
+        table.fizz-buzz td, table.fizz-buzz th.corner {
+            text-align: center;
+        }
+        table.fizz-buzz tr.rotated > th {
+            position: relative;
+            text-align: left;
+            height: 4em;
+            min-width: 30px;
+        }
+        table.fizz-buzz tr.rotated > th > span.text {
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%) rotate(-50deg);
+            transform-origin: middle center;
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        @media screen and (max-width: 900px) {
+            table.fizz-buzz {
+                font-size: 80%;
+            }
+        }
+    </style>
+    <script>
+        var DefaultTable = [
+            [7, 3, 2, 4, 5], // ≥ 3 battery holders present
+            [3, 4, 9, 2, 8], // Serial & parallel ports present
+            [4, 5, 8, 8, 2], // 3 letters & 3 digits in serial number
+            [2, 3, 7, 9, 1], // DVI & Stereo RCA ports present
+            [1, 2, 2, 5, 3], // ≥ 5 batteries present
+            [3, 1, 8, 3, 4], // None of the above
+            [6, 6, 1, 2, 8] // ≥ 2 strikes
+        ];
+
+        function GenerateOffsetTable(rnd) {
+            if (rnd.seed === 1) {
+                return DefaultTable.slice(0);
+            }
+            var rules = [];
+            for (var i = 0; i < 7; i++) {
+                rules.push([]);
+            }
+            for (var i = 0; i < 5; i++) {
+                let list = generateIntList(1, 10);
+                list = rnd.shuffleFisherYates(list);
+                list.splice(0, 3);
+                list.push(list[rnd.next(0, 6)]);
+                for (var j = 0; j < 7; j++) {
+                    rules[j][i] = list[j];
+                }
+            }
+            return rules;
+        }
+
+        function generateIntList(min, max) {
+            var result = [];
+            for (var i = min; i < max; i++) {
+                result.push(i);
+            }
+            return result;
+        }
+
+        var divisibilityRules = [
+            [ 2, 4, 5, 8 ],
+            [ 3, 7, 9, 11 ]
+        ];
+        var NumNames = [null, "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一"]
+
+        function GenerateDivisibilityRules(rnd) {
+            if (rnd.seed === 1) {
+                return [ 3, 5 ];
+            }
+            var result = [
+                divisibilityRules[0][rnd.next(0, divisibilityRules[0].length)],
+                divisibilityRules[1][rnd.next(0, divisibilityRules[1].length)]
+            ];
+            result.sort((a, b) => a - b);
+            return result;
+        }
+
+        var ports = ["PS/2", "DVI-D", "ステレオRCA", "RJ-45"];
+        var indicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK", "NLL"];
+
+        var ruleSet1 = [
+            {
+                Id: "AtLeast2Strikes",
+                RuleText: "二つ以上のミスが記録されている。"
+            },
+            {
+                Id: "LessThanOneThirdStartingTime",
+                RuleText: "タイマーの残り時間が開始時間の1/3より少ない。"
+            },
+            {
+                Id: "MoreThanTwoThirdsModulesSolved",
+                RuleText: "爆弾のモジュール数の2/3よりも多くのモジュールが解除されている。"
+            }
+        ];
+
+        var ruleSet2 = [
+            {
+                Id: "SerialAndParallelPortPresent",
+                RuleText: "それぞれ一つ以上のシリアルポートとパラレルポートの<u>両方</u>が存在する。"
+            },
+            {
+                Id: "ThreeLettersAndThreeDigitsInSerialNumber",
+                RuleText: "シリアルナンバーに3つの英字と3つの数字が含まれる。"
+            },
+            {
+                Id: "SerialNumberHasVowel",
+                RuleText: "シリアルナンバーに母音が含まれる。"
+            },
+            {
+                Id: "GreenNumberPresent",
+                RuleText: "このモジュールに緑色の数字がある。"
+            }
+        ];
+
+        var ruleSet3 = [
+            {
+                Id: "AtLeastXBatteryHoldersPresent",
+                RuleText: a => `${a}個以上のバッテリーホルダーが存在する。`,
+                GenRule: rnd => [ rnd.next(2, 4) ],
+            },
+            {
+                Id: "AtLeastXBatteriesPresent",
+                RuleText: a => `${a}個以上のバッテリーが存在する。`,
+                GenRule: rnd => [ rnd.next(4, 6) ],
+            },
+            {
+                Id: "XAndYPortsPresent",
+                RuleText: (a, b) => `それぞれ一つ以上の${a}と${b}の<u>両方</u>が存在する。`,
+                GenRule: rnd => {
+                    var port1Index = rnd.next(0, 4);
+                    var port2Index;
+                    do { port2Index = rnd.next(0, 4); } while (port2Index === port1Index);
+                    var port1 = ports[port1Index];
+                    var port2 = ports[port2Index];
+                    return [
+                        port1, port2
+                    ]
+                },
+            },
+            {
+                Id: "IndicatorXPresent",
+                RuleText: (a, b) => `点灯し${a}${b}のインジケーターが存在する。`,
+                GenRule: rnd => {
+                    var label = indicators[rnd.next(0, indicators.length)];
+                    var lit = rnd.next(0, 2) === 0;
+                    return [lit ? "た" : "ていない", label]
+                },
+            },
+        ];
+
+        function GenerateRuleSet(rnd) {
+            if (rnd.seed === 1) {
+                return [
+                    ruleSet3[0].RuleText(3),
+                    ruleSet2[0].RuleText,
+                    ruleSet2[1].RuleText,
+                    ruleSet3[2].RuleText("DVI-D", "ステレオ RCA"),
+                    ruleSet3[1].RuleText(5),
+                    "上記のいずれも該当しない。",
+                    ruleSet1[0].RuleText
+                ];
+            }
+            var result = [];
+
+            var ix1 = rnd.next(0, ruleSet2.length);
+            var ix2;
+            do { ix2 = rnd.next(0, ruleSet2.length); } while (ix2 === ix1);
+            result.push(ruleSet2[ix1].RuleText);
+            result.push(ruleSet2[ix2].RuleText);
+
+            var ix1 = rnd.next(0, ruleSet3.length);
+            var ix2, ix3;
+            do { ix2 = rnd.next(0, ruleSet3.length); } while (ix2 === ix1);
+            do { ix3 = rnd.next(0, ruleSet3.length); } while (ix3 === ix1 || ix3 === ix2);
+            var rs3Rule1 = ruleSet3[ix1];
+            var rs3Rule2 = ruleSet3[ix2];
+            var rs3Rule3 = ruleSet3[ix3];
+            var rs3Rule1Configs = rs3Rule1.GenRule(rnd);
+            var rs3Rule2Configs = rs3Rule2.GenRule(rnd);
+            var rs3Rule3Configs = rs3Rule3.GenRule(rnd);
+            result.push(rs3Rule1.RuleText(rs3Rule1Configs[0], rs3Rule1Configs[1]));
+            result.push(rs3Rule2.RuleText(rs3Rule2Configs[0], rs3Rule2Configs[1]));
+            result.push(rs3Rule3.RuleText(rs3Rule3Configs[0], rs3Rule3Configs[1]));
+
+            result = rnd.shuffleFisherYates(result); // After this, they are in the same order as C#
+
+            result.push("None of the above apply.");
+            result.push(ruleSet1[rnd.next(0, ruleSet1.length)].RuleText);
+
+            return result;
+        }
+
+        function setRules(rnd) {
+            var nums = document.getElementsByClassName("rule-num");
+            var conditions = document.getElementsByClassName("rule-condition");
+            var table = GenerateOffsetTable(rnd);
+            var ruleSet = GenerateRuleSet(rnd);
+
+            var divisibilityRules = GenerateDivisibilityRules(rnd);
+            for (var el of document.getElementsByClassName("rule-div-1")) el.innerHTML = NumNames[divisibilityRules[0]];
+            for (var el of document.getElementsByClassName("rule-div-2")) el.innerHTML = NumNames[divisibilityRules[1]];
+
+            var ix = ruleSet.indexOf("上記のいずれも該当しない。");
+            var noneRule = ruleSet.splice(ix, 1)[0];
+            var noneNums = table.splice(ix, 1)[0];
+
+            var newRuleSet = [];
+            var newTable = [];
+            var indices;
+            if (rnd.seed === 1) {
+                indices = [0, 1, 2, 3, 5, 4];
+            } else {
+                indices = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(indices);
+            }
+            for (var i = 0; i < 6; i++) {
+                newRuleSet.push(ruleSet[indices[i]]);
+                newTable.push(table[indices[i]]);
+            }
+
+            newRuleSet.push(noneRule);
+            newTable.push(noneNums);
+
+            for (var i = 0; i < 7; i++) {
+                conditions[i].innerHTML = newRuleSet[i];
+                for (var j = 0; j < 5; j++) {
+                    nums[i * 5 + j].innerHTML = newTable[i][j];
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">フィズバズ</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/FizzBuzz.svg" class="diagram">
+            <h2>モジュール詳細：フィズバズ</h2>
+            <p class="flavour-text">なんで学校でやった問題がここで出されるんだ? まって...何かおかしい...</p>
+            <ul>
+                <li>このモジュールには、3つのディスプレーがあり、それぞれに7桁の数字が表示されている。</li>
+                <li>それぞれの数字について、数字の色に対応する列を見る。条件を満たしている段の数字を記録する。
+                <li>記録された数字の合計をとる。表示されている数字のそれぞれの桁にその合計を加算して新しい7桁の数字(あるいは最初の数字が0の場合6桁以下の数字)を取得する。<b>この計算をするときには他の桁に繰り上がらないので注意する</b>。</li>
+                <li>
+                    新しい数字が<span class="rule-div-1">三</span>の倍数でも<span class="rule-div-2">五</span>の倍数でもない場合、何もしない。<br>
+                    新しい数字が<span class="rule-div-1">三</span>の倍数であるが、<span class="rule-div-2">五</span>の倍数ではない場合、ボタンを押してディスプレーを「FIZZ」に変更する。<br>
+                    新しい数字が<span class="rule-div-2">五</span>の倍数であるが、<span class="rule-div-1">三</span>の倍数ではない場合、ボタンを押してディスプレーを「BUZZ」に変更する。<br>
+                    新しい数字が<span class="rule-div-1">三</span>の倍数であり、<span class="rule-div-2">五</span>の倍数でもある場合、ボタンを押してディスプレーを「FIZZBUZZ」に変更する。</li>
+                <li>他の数字にも同様の変更を行い、3つ全ての数字のディスプレイが正しい状態にしたら、「SUBMIT」ボタンを押す。</li>
+            </ul>
+
+            <table class='fizz-buzz'>
+                <tr class='rotated'>
+                    <th class='corner'>条件
+                    <th><span class='text'>赤</span>
+                    <th><span class='text'>緑</span>
+                    <th><span class='text'>青</span>
+                    <th><span class='text'>黄</span>
+                    <th><span class='text'>白</span>
+                </tr>
+
+                <tr><th><span class="rule-condition">バッテリーホルダーが3つ以上である。</span><td class="rule-num">7<td class="rule-num">3<td class="rule-num">2<td class="rule-num">4<td class="rule-num">5</tr>
+                <tr><th><span class="rule-condition">シリアルポートとパラレルポートの<u>両方</u>が存在する。</span><td class="rule-num">3<td class="rule-num">4<td class="rule-num">9<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">シリアルナンバーに3つの数字と3つの英字が含まれる。</span><td class="rule-num">4<td class="rule-num">5<td class="rule-num">8<td class="rule-num">8<td class="rule-num">2</tr>
+                <tr><th><span class="rule-condition">At least one DVI-D <u>and</u> Stereo RCA port is present on the bomb.</span><td class="rule-num">2<td class="rule-num">3<td class="rule-num">7<td class="rule-num">9<td class="rule-num">1</tr>
+                <tr><th><span class="rule-condition">2 or more strikes are present on the bomb.                           </span><td class="rule-num">6<td class="rule-num">6<td class="rule-num">1<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">5 or more batteries are present on the bomb.                         </span><td class="rule-num">1<td class="rule-num">2<td class="rule-num">2<td class="rule-num">5<td class="rule-num">3</tr>
+                <tr><th><span class="rule-condition">None of the above apply.                                             </span><td class="rule-num">3<td class="rule-num">1<td class="rule-num">8<td class="rule-num">3<td class="rule-num">4</tr>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+</div>
+</body>
+</html>
