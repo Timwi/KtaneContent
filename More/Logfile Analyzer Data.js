@@ -3209,7 +3209,7 @@ const parseData = [
         loggingTag: "Extended Boolean Venn Diagram",
         matches: [
             {
-                regex: /Final buttons to press \(\d+ total buttons\): (.+)/,
+                regex: /Final buttons to press \(\d+ total buttons?\): (.+)/,
                 handler: function (matches, module) {
                     let segments = matches[1].split(', ');
                     let segmentColors = 'O, A, B, C, AB, AC, BC, ABC, D, AD, BD, CD, ABD, ACD, BCD, ABCD, E, AE, BE, CE, ABE, ACE, BCE, ABCE, DE, ADE, BDE, CDE, ABDE, ACDE, BCDE, ABCDE'.split(', ').map(x => segments.includes(x) ? 'rgb(127, 255, 127)' : 'rgb(255, 127, 127)');
