@@ -9352,6 +9352,56 @@ const parseData = [
         ]
     },
     {
+        displayName: "Towers",
+        moduleID: "Towers",
+        loggingTag: "Towers",
+        matches: [
+            {
+                regex: /^The puzzle is as follows:$/,
+                handler: function(_, module) {
+                    let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
+                    module.digits = [];
+                    module.grid = grid;
+                    return true;
+                }
+            },
+            {
+                regex: /^The clues along the (top|left|bottom|right) are ((?:\d ?){5})\.$/,
+                handler: function(matches, module) {
+                    module.digits.push(matches[2].split(' '));
+                    if(matches[1] !== "right") {
+                        return true;
+                    }
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 7; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 7; j++) {
+                            let td = $('<td>').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').appendTo(tr);
+                            if(i === 0 || i === 6 || j === 0 || j === 6) {
+                                td.css('border', 'none');
+                            }
+                            if((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
+                                td.text(module.digits[i === 0 ? 0 : 2][j - 1]);
+                                continue;
+                            }
+                            if((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
+                                td.text(module.digits[j === 0 ? 1 : 3][i - 1]);
+                                continue;
+                            }
+                            if(i !== 0 && i !== 6 && j !== 0 && j !== 6)
+                                td.text(module.grid[i - 1][j - 1]);
+                        }
+                    }
+                    module.push({ label: "The puzzle is as follows:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+            }
+        ]
+    },
+    {
         displayName: "The Twin",
         moduleID: "TheTwinModule",
         loggingTag: "The Twin",
