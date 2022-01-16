@@ -9024,6 +9024,40 @@ const parseData = [
         ]
     },
     {
+        displayName: "Termite",
+        moduleID: "termite",
+        loggingTag: "Termite",
+        matches: [
+            {
+                regex: /(The termite makes the moves:) (.+)/,
+                handler: function (matches, module) {
+                    let div = $('<div>');
+                    div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll" });
+                    module.push({ label: matches[1], obj: div });
+                    return true;
+                }
+            },
+            {
+                //I = Light cyan | O = dark cyan
+                regex: /The initial grid:/,
+                handler: function(matches, module) {
+                    let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 9; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 9; j++)
+                            $('<td>').text(' ').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').css('background-color', lines[i][j] === 'I' ? '#00D9B9' : '#005B52').appendTo(tr);
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "TetraVex",
         moduleID: "ksmTetraVex",
         loggingTag: "TetraVex",
