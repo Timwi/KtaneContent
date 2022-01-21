@@ -8,11 +8,63 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            function makeSVG(tag, attrs) {
+                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (var k in attrs)
+                    el.setAttribute(k, attrs[k]);
+                return el;
+            }
+
+            let order = [
+                [1,4,7,10,13,16,2,5,8,11,14,17,3,6,9,12,15,18], //braille
+                [1,2,7,8,13,14,3,4,9,10,15,16,5,6,11,12,17,18], //reading
+                [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]  //merged
+            ];
+            for (let i = 0; i < 3; i++) {
+                let chart = (i==0) ? $("svg.braille") : ((i==1) ? $("svg.reading") : $("svg.merged"));
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        let idx = r * 6 + c;
+                        let offset = c > 3 ? 56 : (c > 1 ? 28 : 0);
+                        let rad = 51;
+                        let circle = makeSVG("circle", {
+                            cx: (rad + c * (rad*2+5) + offset + 2), cy: (rad + r * (rad*2+5) + 2), r: rad
+                        });
+                        chart[0].appendChild(circle);
+                        let text = makeSVG("text", {
+                            x: (rad + c * (rad*2+5) + offset + 1), y: (rad + r * (rad*2+5) + 22)
+                        });
+                        text.textContent = order[i][idx];
+                        chart[0].appendChild(text);
+
+                        let circle2 = makeSVG("circle", {
+                            class: "highlightable", stroke: "transparent",
+                            cx: (rad + c * (rad*2+5) + offset + 2), cy: (rad + r * (rad*2+5) + 2), r: rad
+                        });
+                        chart[0].appendChild(circle2);
+                    }
+                }
+            }
+        });
+    </script>
     <style>
         table {
             margin-left: auto;
             margin-right: auto;
         }
+         table.orderTable {
+            border: hidden;
+            margin: 0%
+         }
+         .orderTable td {
+            border: hidden;
+            font-size: 11pt;
+            text-align: center;
+         }
+
         table.braille-table th, table.braille-table td {
             text-align: center;
         }
@@ -20,8 +72,24 @@
             margin: 0 auto;
             display: block;
         }
+        svg.circles { width: 100%; }
+        svg.circles text {
+            text-anchor: middle;
+            font-family: "Inconsolata";
+            font-size: 52pt;
+        }
+        svg.circles circle {
+            stroke: #000;
+            fill: transparent;
+            stroke-width: 2;
+        }
+        .dark svg.circles circle { stroke: #DDD; }
+        .dark svg.circles text { fill: #DDD; }
         svg.braille-pattern {
             width: 1cm;
+        }
+        .dark svg.braille-pattern {
+            filter: invert(85%);
         }
     </style>
 </head>
@@ -42,11 +110,20 @@
                 <li>The pulses represent Braille, where a raised dot will be represented by the inside of the ring being raised, while a flat space will be represented by the area laying flat.</li>
                 <li>The pattern of the flashes spell a 3-glyph Braille word, but in one of three orders. The orders are specified below.</li>
                 </ul>
-                <table style="border: hidden; text-align: center; margin: 0%">
+                <table class="orderTable">
                 <tr>
-                <td style="border: hidden;"><p style="font-size: 11pt">Standard Braille Order</p><img src="img/Touch Transmission/StandardBrailleOrder.svg" width=200></td>
-                <td style="border: hidden;"><p style="font-size: 11pt">Individual Reading Order</p><img src="img/Touch Transmission/IndividualReadingOrder.svg" width=200></td>
-                <td style="border: hidden;"><p style="font-size: 11pt">Merged Reading Order</p><img src="img/Touch Transmission/MergedReadingOrder.svg" width=200></td>
+                    <td class="nohighlight"><p>Standard Braille Order</p>
+                        <svg class="circles braille" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 350">
+                        </svg>
+                    </td>
+                    <td class="nohighlight"><p>Individual Reading Order</p>
+                        <svg class="circles reading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 350">
+                        </svg>
+                    </td>
+                    <td class="nohighlight"><p>Merged Reading Order</p>
+                        <svg class="circles merged" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 350">
+                        </svg>
+                    </td>
                 </tr>
                 </table>
                 <ul>

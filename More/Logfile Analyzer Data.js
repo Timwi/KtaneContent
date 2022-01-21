@@ -1303,11 +1303,11 @@ const parseData = [
             {
                 regex: /.+/,
                 handler: function (matches, module) {
-                    if(module.generatingMaze) {
+                    if (module.generatingMaze) {
                         module.algorithmiaMaze.push(matches[0]);
                         return true;
                     }
-                    if(module.algorithmiaMoving) {
+                    if (module.algorithmiaMoving) {
                         module.algorithmiaMoves.push(matches[0]);
                         return true;
                     }
@@ -1898,59 +1898,6 @@ const parseData = [
                 regex: /The program is (\W+)/,
                 handler: function (matches, module) {
                     module.push({ label: "The program is:", obj: pre(matches[1]) });
-                    return true;
-                }
-            },
-            {
-                regex: /.+/
-            }
-        ]
-    },
-    {
-        displayName: "The Brown Button",
-        moduleID: "BrownButtonModule",
-        loggingTag: "The Brown Button",
-        matches: [
-            {
-                regex: /^Chose net: \((.*)\)$/,
-                handler: function (matches, module) {
-                    let coords = matches[1].split('), (')
-                        .map(str => str.split(', ').map(c => parseInt(c)))
-                        .map(arr => ({ x: arr[0], y: arr[1], z: arr[2] }));
-                    for (let c of coords)
-                        c.p = { x: 21 * c.x - 15 * c.y, y: -5 * c.x - 6 * c.y - 24 * c.z };
-                    module.BrownButtonInfo = { coords: coords };
-                    return true;
-                }
-            },
-            {
-                regex: /^(Cube|The correct cell to submit is) \((.*)\)(?: (corresponds to|is displaying) (.*))?\.$/,
-                handler: function (matches, module) {
-                    let inf = module.BrownButtonInfo;
-                    let coords = matches[2].split(', ').map(c => parseInt(c));
-                    let ix = inf.coords.findIndex(c => c.x === coords[0] && c.y === coords[1] && c.z === coords[2]);
-                    let isSolution = matches[1] !== 'Cube';
-                    if (!isSolution) {
-                        if (matches[3] === 'corresponds to')
-                            inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4] - 1];
-                        else
-                            inf.coords[ix].label2 = matches[4];
-                    }
-                    else {
-                        inf.coords[ix].label2 = 'solution';
-                        inf.coords[ix].isSolution = true;
-                        inf.coords.sort((one, two) => (two.y - one.y) || (one.z - two.z) || (two.x - one.x));
-
-                        let cubes = inf.coords.map(c => `<g transform='translate(${c.p.x} ${c.p.y})'><path d='M 21,-5 6,-11 m -21,5 21,-5 m 0,-24 v 24' fill='none' stroke='black' stroke-width='.5' opacity='.2' /><text x='3' y='-14'>${c.label}</text>${c.label2 ? `<text x='3' y='${c.label2.length === 1 ? -7 : -9}' font-size='${c.label2.length === 1 ? 6 : 4}' fill='${c.isSolution ? '#0a0' : '#a00'}'>${c.label2}</text>` : ''}<path opacity='.3' d='m 0,-24 -15,-6 21,-5 15,6 z M 0 0 -15,-6 v -24 l 15,6 z m 0,0 v -24 l 21,-5 v 24 z' fill='#eee' stroke='#000' stroke-width='.5' /></g>`).join('');
-                        inf.coords.sort((one, two) => one.p.x - two.p.x);
-                        let minX = inf.coords[0].p.x;
-                        let maxX = inf.coords[7].p.x;
-                        inf.coords.sort((one, two) => one.p.y - two.p.y);
-                        let minY = inf.coords[0].p.y;
-                        let maxY = inf.coords[7].p.y;
-                        let svg = `<svg viewBox='${minX - 16} ${minY - 36} ${maxX - minX + 138} ${maxY - minY + 37}' stroke-linejoin='round' text-anchor='middle' font-size='9'>${cubes}</svg>`;
-                        module.push({ label: 'Chosen net:', obj: $(svg) });
-                    }
                     return true;
                 }
             },
@@ -3262,7 +3209,7 @@ const parseData = [
         loggingTag: "Extended Boolean Venn Diagram",
         matches: [
             {
-                regex: /Final buttons to press \(\d+ total buttons\): (.+)/,
+                regex: /Final buttons to press \(\d+ total buttons?\): (.+)/,
                 handler: function (matches, module) {
                     let segments = matches[1].split(', ');
                     let segmentColors = 'O, A, B, C, AB, AC, BC, ABC, D, AD, BD, CD, ABD, ACD, BCD, ABCD, E, AE, BE, CE, ABE, ACE, BCE, ABCE, DE, ADE, BDE, CDE, ABDE, ACDE, BCDE, ABCDE'.split(', ').map(x => segments.includes(x) ? 'rgb(127, 255, 127)' : 'rgb(255, 127, 127)');
@@ -3274,7 +3221,7 @@ const parseData = [
                         <path stroke-width=".674591" fill="red" d="M376.299 437.575c-1.18-1.54-4.159-5.032-6.618-7.76l-4.47-4.957.546-5.498c.3-3.024.546-8.884.546-13.022 0-6.684.12-7.459 1.078-6.945 1.277.684 10.028 8.521 11.212 10.04.896 1.152 1.121 22.032.3 27.805l-.447 3.139z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M272.872 387.007v-8.078l7.454.353c4.099.195 7.632.533 7.851.752.22.219-1.238 1.835-3.237 3.592-2 1.756-5.533 5.053-7.852 7.326l-4.216 4.134z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M378.804 456.192c.657-3.246 1.313-6.51 1.456-7.252.208-1.071.809-.532 2.924 2.625l2.662 3.974-3.66 3.278c-2.013 1.803-3.866 3.278-4.119 3.278-.252 0 .08-2.656.737-5.903z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M350.857 469.684c5.362-11.963 9.914-25.069 12.125-34.91.667-2.968 1.308-5.524 1.426-5.68.388-.515 3.636 2.89 8.748 9.172l5.038 6.191-1.383 7.639c-2.295 12.669-2.154 12.38-7.338 14.986-4.763 2.393-16.76 6.481-19.022 6.481-1.28 0-1.264-.153.406-3.879z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M240.72 461.263c-3.67-1.573-4.742-2.329-4.463-3.149.978-2.877 10.351-21.651 10.802-21.637.284.01 1.36 2.666 2.392 5.903l1.877 5.886-2.036 5.734c-1.12 3.154-2.04 6.569-2.045 7.589-.012 2.292-.469 2.269-6.526-.326z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M314.027 386c-2.78-1.35-8.08-3.573-11.78-4.937l-6.724-2.481 5.37-3.441c2.955-1.893 5.637-3.441 5.963-3.441 2.366 0 29.32 9.184 28.63 9.756-.254.21-14.752 6.458-15.73 6.78-.37.121-2.949-.885-5.73-2.236z" transform="scale(.26458)"/>
                         <path stroke-width=".674591" fill="red" d="M254.51 466.289c-4.92-1.66-5.188-1.852-4.84-3.481.7-3.276 3.047-10.974 3.273-10.735 1.1 1.169 8.1 16.079 7.526 16.033-.413-.033-3.095-.851-5.96-1.817z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="m250.914 438.1-1.763-5.78 3.26-5.367c2.862-4.712 11.275-16.372 16.517-22.89l1.79-2.227.458 4.664a213.96 213.96 0 0 0 1.092 8.889l.633 4.225-6.146 6.906c-3.38 3.797-7.71 9.257-9.62 12.133-1.91 2.875-3.694 5.228-3.965 5.228-.27 0-1.286-2.601-2.256-5.78z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M354.498 414.343c-8.097-7.37-20.402-16.836-27.708-21.312l-4.27-2.618 3.003-1.502c1.651-.826 5.507-2.516 8.566-3.755l5.564-2.252 6.242 3.163c3.433 1.74 8.723 4.696 11.756 6.569l5.515 3.405.477 4.46c.505 4.711-.145 18.844-.927 20.14-.287.476-3.388-1.9-8.218-6.298z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M274.673 414.03c-.224-1.948-.611-6.025-.86-9.06l-.453-5.52 2.251-2.842c2.845-3.591 16.188-15.464 17.38-15.464 1.669 0 11.198 3.456 17.137 6.216l5.916 2.749-8.18 4.658c-11.661 6.64-19.736 12.213-28.338 19.558-2.09 1.786-3.946 3.247-4.123 3.247-.177 0-.505-1.594-.73-3.542z" transform="scale(.26458)"/><path stroke-width=".674591" fill="red" d="M286.027 474.108c-1.855-.31-7.134-1.374-11.73-2.364l-8.358-1.802-1.96-3.08c-1.079-1.694-3.627-6.487-5.662-10.65l-3.702-7.57 1.679-3.311c1.94-3.828 8.155-12.164 13.341-17.894l3.588-3.963 2.222 9.902c2.69 11.995 6.52 23.78 10.952 33.714 1.818 4.074 3.237 7.446 3.154 7.495-.083.048-1.67-.167-3.524-.477z" transform="scale(.26458)"/>
                         <path stroke-width=".674591" fill="red" d="M301.205 476.204c-3.525-.35-6.807-.781-7.293-.959-1.002-.365-5.263-9.277-8.586-17.96-2.91-7.602-6.167-19.107-8.065-28.489l-1.52-7.514 2.728-2.36c6.22-5.387 12.022-9.79 19.026-14.443 7.18-4.77 20.695-12.542 21.811-12.542 1.157 0 16.956 10.795 23.409 15.994 3.722 3 9.637 8.173 13.143 11.498l6.375 6.044-1.57 7.012c-2.665 11.908-7.386 25.313-13.664 38.8l-1.608 3.456-5.397.821c-7.012 1.067-30.581 1.457-38.789.642z" transform="scale(.26458)"/>`);
-                    for(let i = 0; i < 32; i++) {
+                    for (let i = 0; i < 32; i++) {
                         let elem = svg.find("path, circle").eq(i);
                         elem.attr("fill", segmentColors[i]);
                     }
@@ -4089,9 +4036,9 @@ const parseData = [
                     }[matches[1]];
                     let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for(let x = 0; x < 5; x++) {
+                    for (let x = 0; x < 5; x++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let y = 0; y < 5; y++) {
+                        for (let y = 0; y < 5; y++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -4109,7 +4056,7 @@ const parseData = [
             },
             {
                 regex: /^The final answer is:$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     const colorCodes = {
                         'R': "#FF0000",
                         'G': "#00FF00",
@@ -4122,9 +4069,9 @@ const parseData = [
                     };
                     let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for(let x = 0; x < 5; x++) {
+                    for (let x = 0; x < 5; x++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let y = 0; y < 5; y++) {
+                        for (let y = 0; y < 5; y++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -4522,7 +4469,6 @@ const parseData = [
                         else if (page.label)
                             label.innerText = page.label;
                         else if ('depth' in page) {
-                            //console.log(Array.from(bottom.querySelectorAll('*')).map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.className), cn: e.className })));
                             Array.from(bottom.querySelectorAll('*'))
                                 .map(e => ({ elem: e, match: /\bnode-d(\d+)\b/.exec(e.getAttribute('class')) }))
                                 .filter(inf => inf.match !== null && parseInt(inf.match[1]) >= page.depth)
@@ -5860,7 +5806,7 @@ const parseData = [
         matches: [
             {
                 regex: /The maze is as follows:/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.push({ label: matches.input, obj: pre(readMultiple(13)) });
                     return true;
                 }
@@ -6834,6 +6780,117 @@ const parseData = [
         ]
     },
     {
+        displayName: "Parallel Mazes",
+        moduleID: "parallel_mazes",
+        loggingTag: "Parallel Mazes",
+        matches: [{
+            regex: /^(Defuser|Expert) maze: (.+)$/,
+            handler: function (matches, module) {
+                const nonWallBorderColor = "#ffffff22";
+                const data = matches[2].split(";").map(s => s.split(" ").map(v => Number(v)));
+                const table = $("<table>").css("border-collapse", "collapse").css("text-align", "center");
+                const firstTr = $("<tr>").appendTo(table);
+                $("<td>").appendTo(firstTr);
+                for (let i = 0; i < 7; i++) {
+                    $("<td>").text(String.fromCharCode(i + "A".charCodeAt(0))).appendTo(firstTr);
+                }
+                let start, end;
+                const startPosText = readLine();
+                const match1 = startPosText.match(/start position: ([A-G])([1-7])/);
+                if (match1 && startPosText.includes(matches[1])) {
+                    start = { x: match1[1].charCodeAt(0) - "A".charCodeAt(0), y: Number(match1[2]) - 1 };
+                    const endPosText = readLine();
+                    const match2 = endPosText.match(/finish position: ([A-G])([1-7])/);
+                    if (match2 && endPosText.includes(matches[1])) {
+                        end = { x: match2[1].charCodeAt(0) - "A".charCodeAt(0), y: Number(match2[2]) - 1 };
+                    } else linen -= 2;
+                } else linen -= 1;
+                for (let row = 0; row < 7; row++) {
+                    const tr = $("<tr>").appendTo(table);
+                    $("<td>").text(row + 1).appendTo(tr);
+                    for (let col = 0; col < 7; col++) {
+                        const td = $("<td>")
+                            .css("color", "white")
+                            .css("background-color", "black")
+                            .css("border", "solid white")
+                            .css("width", "24px")
+                            .css("height", "24px")
+                            .appendTo(tr);
+                        if (start && start.x === col && start.y === row) td.text("S");
+                        if (end && end.x === col && end.y === row) td.append("F");
+                        const v = data[col][row];
+                        if ((v & (1 << 0)) > 0) td.css("border-right-color", nonWallBorderColor);
+                        if ((v & (1 << 1)) > 0) td.css("border-top-color", nonWallBorderColor);
+                        if ((v & (1 << 2)) > 0) td.css("border-left-color", nonWallBorderColor);
+                        if ((v & (1 << 3)) > 0) td.css("border-bottom-color", nonWallBorderColor);
+                    }
+                }
+                module.push({ label: matches[1] + " maze", obj: table });
+                return true;
+            },
+        }, {
+            regex: /Connecting to server/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Connected to server/.test(nextLine);
+            },
+        }, {
+            regex: /Connected to server/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Game created/.test(nextLine);
+            },
+        }, {
+            regex: /Connecting to expert (\d{7})/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                if (/Expert connected/.test(nextLine)) {
+                    module.push({ label: `Expert ${matches[1]} connected` });
+                    return true;
+                }
+                linen -= 1;
+                return false;
+            },
+        }, {
+            regex: /Moving/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Defuser moves/.test(nextLine);
+            },
+        }, {
+            regex: /Disconnecting expert/,
+            handler: function (matches, module) {
+                const nextLine = readLine();
+                linen -= 1;
+                return /Expert disconnected/.test(nextLine);
+            },
+        }, {
+            regex: /^.*moves.*Strike\!/,
+            handler: function (matches, module) {
+                module.push({
+                    label: [
+                        '<img height="20px" src="TDSBombRenderer/images/strike.png">',
+                        `<span style="font-weight:bold;font-size:20px">${matches[0]}</span>`,
+                    ].join(" "),
+                });
+                return true;
+            },
+        }, {
+            regex: /^.*ERROR:.*$/,
+            handler: function (matches, module) {
+                module.push({
+                    label: `<span style="background-color:black;color:red;font-size:24px">${matches[0]}</span>`
+                });
+                return true;
+            },
+        }, {
+            regex: /^.*$/
+        }],
+    },
+    {
         moduleID: "Password",
         loggingTag: "PasswordComponent"
     },
@@ -7623,7 +7680,7 @@ const parseData = [
             },
             {
                 regex: /(?:Waiting for service to finish)|(?:Service finished, generating question)|(?:Modules successfully fetched)/,
-                handler: function (matches, module) {return true}
+                handler: function (matches, module) { return true; }
             },
             {
                 regex: /^((?!(?:Modules sorted by)|(?:All bomb modules)|(?:Light is)).)*$/
@@ -8967,6 +9024,40 @@ const parseData = [
         ]
     },
     {
+        displayName: "Termite",
+        moduleID: "termite",
+        loggingTag: "Termite",
+        matches: [
+            {
+                regex: /(The termite makes the moves:) (.+)/,
+                handler: function (matches, module) {
+                    let div = $('<div>');
+                    div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll" });
+                    module.push({ label: matches[1], obj: div });
+                    return true;
+                }
+            },
+            {
+                //I = Light cyan | O = dark cyan
+                regex: /The initial grid:/,
+                handler: function(matches, module) {
+                    let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 9; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 9; j++)
+                            $('<td>').text(' ').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').css('background-color', lines[i][j] === 'I' ? '#00D9B9' : '#005B52').appendTo(tr);
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "TetraVex",
         moduleID: "ksmTetraVex",
         loggingTag: "TetraVex",
@@ -9261,6 +9352,56 @@ const parseData = [
         ]
     },
     {
+        displayName: "Towers",
+        moduleID: "Towers",
+        loggingTag: "Towers",
+        matches: [
+            {
+                regex: /^The puzzle is as follows:$/,
+                handler: function(_, module) {
+                    let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
+                    module.digits = [];
+                    module.grid = grid;
+                    return true;
+                }
+            },
+            {
+                regex: /^The clues along the (top|left|bottom|right) are ((?:\d ?){5})\.$/,
+                handler: function(matches, module) {
+                    module.digits.push(matches[2].split(' '));
+                    if(matches[1] !== "right") {
+                        return true;
+                    }
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 7; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 7; j++) {
+                            let td = $('<td>').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').appendTo(tr);
+                            if(i === 0 || i === 6 || j === 0 || j === 6) {
+                                td.css('border', 'none');
+                            }
+                            if((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
+                                td.text(module.digits[i === 0 ? 0 : 2][j - 1]);
+                                continue;
+                            }
+                            if((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
+                                td.text(module.digits[j === 0 ? 1 : 3][i - 1]);
+                                continue;
+                            }
+                            if(i !== 0 && i !== 6 && j !== 0 && j !== 6)
+                                td.text(module.grid[i - 1][j - 1]);
+                        }
+                    }
+                    module.push({ label: "The puzzle is as follows:", obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+            }
+        ]
+    },
+    {
         displayName: "The Twin",
         moduleID: "TheTwinModule",
         loggingTag: "The Twin",
@@ -9276,6 +9417,79 @@ const parseData = [
             },
             {
                 regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Twister",
+        moduleID: "TwisterModule",
+        loggingTag: "Twister",
+        matches: [
+            {
+                regex: /Placement #\d+ is a (.*) at (.*) dot #(\d) for Player (\d)/,
+                handler: function (matches, module) {
+                    if (!("TwisterPages" in module))
+                        module.TwisterPages = [];
+                    module.TwisterPages.push({ message: matches[0], bodyPart: matches[1], color: matches[2], position: matches[3] - 1, player: matches[4] });
+                }
+            },
+            {
+                regex: /All stages have been completed./,
+                handler: function (matches, module) {
+                    let paths = {
+                        hand: "m 33.961965,3.1344485 c -1.281461,0.6831352 -1.417781,3.301051 -1.47376,4.5779368 -0.195897,4.4732847 0.159077,8.9592367 0.157284,13.4201347 0,1.293413 0.219141,5.093277 -1.316481,5.626155 -2.043972,0.709297 -2.364685,-3.507735 -2.59647,-4.650572 C 27.910401,18.054338 27.808017,13.880772 26.964107,9.8399697 26.707113,8.6094162 26.192304,6.2250386 24.626006,6.0401756 22.488118,5.7878392 22.888842,9.7529351 23.036264,10.985594 c 0.510046,4.264718 1.21071,8.528496 1.904067,12.765501 0.179358,1.096021 0.707461,3.77089 -0.658681,4.319967 -1.188948,0.477885 -1.970938,-0.819609 -2.394811,-1.701407 -1.28437,-2.671917 -1.781489,-5.656267 -3.07556,-8.34603 -0.450657,-0.936741 -1.876014,-3.240095 -3.115505,-2.034398 -0.845333,0.822278 -0.275945,2.535598 -0.05139,3.506701 0.734362,3.175988 2.232213,6.152963 2.956508,9.328622 0.422342,1.851817 0.87281,3.694633 1.203215,5.564447 1.120759,6.342816 1.603375,15.45231 9.077194,17.641754 1.610207,0.471663 3.238013,0.68884 4.909812,0.688193 1.712205,-6.59e-4 3.65404,-0.312761 5.237124,-0.988345 3.587593,-1.531046 5.148256,-4.260236 7.23607,-7.343593 1.96768,-2.90628 3.896742,-5.881302 6.229069,-8.518684 1.034338,-1.169681 5.036815,-4.229795 3.327222,-6.005506 -0.768709,-0.798505 -2.114173,-0.610123 -3.044905,-0.227987 -2.310071,0.948576 -3.543245,2.893025 -5.24351,4.583962 -0.906511,0.901441 -2.660626,1.964092 -3.3318,0.16956 -0.566755,-1.515825 0.04294,-4.146667 0.220458,-5.727455 0.508648,-4.531429 1.396997,-9.048941 1.820715,-13.583802 0.147303,-1.576096 1.236777,-5.6743949 -0.833027,-6.4475156 -1.920558,-0.7173308 -2.499417,2.4309566 -2.815942,3.6652976 -0.954303,3.721829 -1.155765,7.577308 -2.171282,11.29255 -0.276579,1.011422 -0.92959,3.349467 -2.372084,3.031318 -1.61435,-0.355965 -1.148566,-3.326883 -1.148566,-4.504255 0,-4.652384 0.699802,-9.62568 0.09422,-14.2384354 -0.19002,-1.4465543 -0.312766,-6.1916633 -3.032959,-4.7416051 z",
+                        foot: "m 39.097924,1.3134231 c -4.216353,0.87897 -3.057448,7.35411 1.105825,6.47124 4.169592,-0.88424 3.007686,-7.32875998 -1.105825,-6.47124 m 9.464282,1.60022 c -1.710079,0.39535 -3.267713,1.49351 -3.84053,3.21509 -1.119885,3.36561 1.760789,7.7756869 5.592473,6.8564309 1.74357,-0.418287 3.271346,-1.34214 3.960433,-3.0650309 1.477066,-3.69241 -1.677537,-7.93921 -5.712376,-7.00649 m -17.994932,1.08535 c -4.19907,0.9178 -2.406085,7.2452549 1.737725,6.2875629 4.171014,-0.9639949 2.404696,-7.1929829 -1.737725,-6.2875629 m -6.63495,5.07348 c -4.30357,1.1907499 -2.635354,7.5282799 1.57975,6.4227399 3.974035,-1.04232 2.336087,-7.5061999 -1.57975,-6.4227399 m 14.691675,4.0742039 c -1.993644,0.262523 -4.012881,0.761929 -5.845075,1.636669 -1.252568,0.598014 -2.691483,1.453622 -3.678527,2.432862 -6.79065,6.73716 -5.007001,16.422607 -2.016013,24.614874 1.902587,5.211124 5.123334,13.425508 12.01354,12.432635 1.181179,-0.170297 2.21244,-0.692088 3.158868,-1.399026 4.146212,-3.096942 3.162343,-9.270608 1.079443,-13.245259 -1.091765,-2.083374 -2.779886,-4.29376 -2.683995,-6.792925 0.09652,-2.517647 1.799335,-3.8944 3.26945,-5.6871 2.546399,-3.104998 4.586804,-7.974104 1.337101,-11.373583 -0.787663,-0.824077 -1.499499,-1.394572 -2.527442,-1.887533 -1.308191,-0.627382 -2.648767,-0.92368 -4.10735,-0.731614 m -19.430924,3.334047 c -4.109467,0.950014 -2.381932,7.262063 1.737725,6.30979 4.100556,-0.948008 2.380288,-7.2617 -1.737725,-6.30979 z"
+                    };
+                    let div = document.createElement('div');
+                    div.innerHTML = `
+                        <div class='top' style='position: relative; background: #eef; padding: .1cm .25cm; margin: 0 auto .5cm; min-height: 1.5cm'>
+                            <button type='button' class='left' style='position: absolute; left: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>◀</button>
+                            <button type='button' class='right' style='position: absolute; right: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>▶</button>
+                            <div class='label' style='text-align: center; font-weight: bold; font-size: 18pt; position: absolute; left: 1.2cm; right: 1.2cm; top: 50%; transform: translateY(-50%)'></div>
+                        </div>
+                        <div class='bottom'></div>
+                    `;
+                    let label = div.querySelector('.label');
+                    let bottom = div.querySelector('.bottom');
+                    let curPage = 0;
+                    function setPage() {
+                        label.innerText = module.TwisterPages[curPage].message;
+                        let allDots = Array(24).fill(null);
+                        let colorNames = ["green", "yellow", "blue", "red"];
+                        for (let page = 0; page <= curPage; page++) {
+                            let bp = module.TwisterPages[page].bodyPart + " " + module.TwisterPages[page].player;
+                            let ix = allDots.indexOf(bp);
+                            if (ix !== -1)
+                                allDots[ix] = null;
+                            allDots[colorNames.indexOf(module.TwisterPages[page].color) + 4 * module.TwisterPages[page].position] = bp;
+                        }
+                        let svg = "";
+                        let colors = ["#00c850", "#ffb400", "#0096ff", "#ff3200"];
+                        for (let dot = 0; dot < 24; dot++) {
+                            svg += `<circle cx='${35 + 55 * (dot % 4)}' cy='${27 + 48 * ((dot / 4) | 0)}' r='20' fill='${colors[dot % 4]}' stroke='black' stroke-width='1.5'/>`;
+                            if (allDots[dot] !== null) {
+                                let data = allDots[dot].split(" ");
+                                //svg += `<path d='${paths[data[1]]}' fill='#a102ed' transform='translate(${55 * (dot % 4)}, ${48 * ((dot / 4) | 0)})'/>`;
+                                svg += `<path d='${paths[data[1]]}' fill='#a102ed' transform='translate(${55 * (dot % 4) + (data[0] === "right" ? 70 : 0)}, ${48 * ((dot / 4) | 0)})${data[0] === "right" ? " scale(-1 1)" : ""}'/>`;
+                                svg += `<text fill='white' stroke='black' stroke-width='1.5' paint-order='stroke' x='${35 + 55 * (dot % 4)}' y='${40 + 48 * ((dot / 4) | 0)}'>${data[2]}</text>`;
+                            }
+                        }
+                        bottom.innerHTML = `<svg viewBox='-30 0 300 296' text-anchor='middle'>${svg}</svg>`;
+                    }
+
+                    div.querySelector('.left').onclick = function () {
+                        curPage = Math.max(curPage - 1, 0);
+                        setPage();
+                    };
+                    div.querySelector('.right').onclick = function () {
+                        curPage = Math.min(curPage + 1, module.TwisterPages.length - 1);
+                        setPage();
+                    };
+
+                    module.push({ obj: div, nobullet: true });
+                    setPage();
+                    return true;
+                }
             }
         ]
     },
@@ -9340,11 +9554,6 @@ const parseData = [
                 }
             }
         ]
-    },
-    {
-        moduleID: "UNO",
-        loggingTag: "UNO!",
-        displayName: "UNO!"
     },
     {
         moduleID: "USA",
@@ -9860,12 +10069,6 @@ const parseData = [
         moduleID: "WordSearchModulePL",
         icon: "Word Search",
         loggingTag: "Word Search PL"
-    },
-    {
-        displayName: "The World's Largest Button",
-        moduleID: "WorldsLargestButton",
-        icon: "The World's Largest Button",
-        loggingTag: "The World's Largest Button"
     },
     {
         displayName: ["X-Ray", "Not X-Ray"],
