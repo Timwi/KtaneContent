@@ -3209,7 +3209,7 @@ const parseData = [
         loggingTag: "Extended Boolean Venn Diagram",
         matches: [
             {
-                regex: /Final buttons to press \(\d+ total buttons\): (.+)/,
+                regex: /Final buttons to press \(\d+ total buttons?\): (.+)/,
                 handler: function (matches, module) {
                     let segments = matches[1].split(', ');
                     let segmentColors = 'O, A, B, C, AB, AC, BC, ABC, D, AD, BD, CD, ABD, ACD, BCD, ABCD, E, AE, BE, CE, ABE, ACE, BCE, ABCE, DE, ADE, BDE, CDE, ABDE, ACDE, BCDE, ABCDE'.split(', ').map(x => segments.includes(x) ? 'rgb(127, 255, 127)' : 'rgb(255, 127, 127)');
@@ -9024,6 +9024,40 @@ const parseData = [
         ]
     },
     {
+        displayName: "Termite",
+        moduleID: "termite",
+        loggingTag: "Termite",
+        matches: [
+            {
+                regex: /(The termite makes the moves:) (.+)/,
+                handler: function (matches, module) {
+                    let div = $('<div>');
+                    div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll" });
+                    module.push({ label: matches[1], obj: div });
+                    return true;
+                }
+            },
+            {
+                //I = Light cyan | O = dark cyan
+                regex: /The initial grid:/,
+                handler: function(matches, module) {
+                    let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 9; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 9; j++)
+                            $('<td>').text(' ').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').css('background-color', lines[i][j] === 'I' ? '#00D9B9' : '#005B52').appendTo(tr);
+                    }
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "TetraVex",
         moduleID: "ksmTetraVex",
         loggingTag: "TetraVex",
@@ -9309,6 +9343,56 @@ const parseData = [
                         .css('font-weight', 'bold')
                         .appendTo(div);
                     module.push({ label: 'Extra tile:', obj: div });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+            }
+        ]
+    },
+    {
+        displayName: "Towers",
+        moduleID: "Towers",
+        loggingTag: "Towers",
+        matches: [
+            {
+                regex: /^The puzzle is as follows:$/,
+                handler: function(_, module) {
+                    let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
+                    module.digits = [];
+                    module.grid = grid;
+                    return true;
+                }
+            },
+            {
+                regex: /^The clues along the (top|left|bottom|right) are ((?:\d ?){5})\.$/,
+                handler: function(matches, module) {
+                    module.digits.push(matches[2].split(' '));
+                    if(matches[1] !== "right") {
+                        return true;
+                    }
+                    let table = $('<table>').css('table-collapse', 'collapse');
+                    for(let i = 0; i < 7; i++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for(let j = 0; j < 7; j++) {
+                            let td = $('<td>').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').appendTo(tr);
+                            if(i === 0 || i === 6 || j === 0 || j === 6) {
+                                td.css('border', 'none');
+                            }
+                            if((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
+                                td.text(module.digits[i === 0 ? 0 : 2][j - 1]);
+                                continue;
+                            }
+                            if((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
+                                td.text(module.digits[j === 0 ? 1 : 3][i - 1]);
+                                continue;
+                            }
+                            if(i !== 0 && i !== 6 && j !== 0 && j !== 6)
+                                td.text(module.grid[i - 1][j - 1]);
+                        }
+                    }
+                    module.push({ label: "The puzzle is as follows:", obj: table });
                     return true;
                 }
             },
