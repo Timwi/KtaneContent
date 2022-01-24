@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/main.css" />
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <script src='js/ruleseed.js'></script>
     <script>
         const HYPERCUBES_COUNT = 10;
@@ -33,6 +34,13 @@
             for (let j = 0; j < 6; j++) acc[axis + axles[j]] = [i, j];
             return acc;
         }, {});
+
+        function makeSVG(tag, attrs) {
+            var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
 
         function randInt(from, to, rnd) {
             if (rnd) return rnd.next(from, to);
@@ -138,6 +146,16 @@
                         }
                     }
                 }
+                for (let i = 0; i < 7; i++) {
+                    let svg = $('<svg class="highlight-pair" viewbox="0 0 24.2 18.6" xmlns="http://www.w3.org/2000/svg">');
+                    svg.appendTo(div);
+                    let highlight = makeSVG("path", {
+                        d: "M5.4 18.6l-5.3-2.7v-6.6l5.3-2.7l5.3 2.7v6.6z M18.8 12l-5.3-2.7v-6.6l5.3-2.7l5.3 2.7v6.6z", fill: "transparent",
+                        stroke: "none", class: "highlightable"
+                    });
+                    svg.append(highlight);
+                }
+
                 const rareContainer = document.getElementById(`rare-symbols-${hypercubeIndex}`);
                 rareContainer.innerHTML = "";
                 const hypercubeRareSymbols = shuffled(rareSymbols.slice(hypercubeIndex * 8, hypercubeIndex * 8 + 8), buildingRnd);
@@ -145,6 +163,7 @@
                 for (let i = 0; i < 8; i++) {
                     const span = rareContainer.appendChild(document.createElement("span"));
                     span.classList.add("icon");
+                    span.classList.add("highlightable");
                     const symbolId = hypercubeRareSymbols[i];
                     const yy = -symbolId % SYMBOLS_GROUP_SIZE;
                     const xx = -Math.floor(symbolId / SYMBOLS_GROUP_SIZE);
@@ -170,40 +189,74 @@
             background-image: url("img/Pattern%20Hypercube/connection.svg");
             background-size: contain;
         }
+        .dark .connection { filter: invert(85%); }
+
+        .highlight-pair {
+            position: absolute;
+            width: 182px;
+        }
 
         .connection:nth-child(1) {
             left: 0px;
             top: 100px;
+        }
+        .highlight-pair:nth-child(8) {
+            left: 19px;
+            top: 120px;
         }
 
         .connection:nth-child(2) {
             left: 200px;
             top: 0px;
         }
+        .highlight-pair:nth-child(9) {
+            left: 219px;
+            top: 20px;
+        }
 
         .connection:nth-child(3) {
             left: 0px;
             top: 220px;
+        }
+        .highlight-pair:nth-child(10) {
+            left: 19px;
+            top: 240px;
         }
 
         .connection:nth-child(4) {
             left: 200px;
             top: 120px;
         }
+        .highlight-pair:nth-child(11) {
+            left: 219px;
+            top: 140px;
+        }
 
         .connection:nth-child(5) {
             left: 400px;
             top: 20px;
+        }
+        .highlight-pair:nth-child(12) {
+            left: 419px;
+            top: 40px;
         }
 
         .connection:nth-child(6) {
             left: 200px;
             top: 240px;
         }
+        .highlight-pair:nth-child(13) {
+            left: 219px;
+            top: 260px;
+        }
 
         .connection:nth-child(7) {
             left: 400px;
             top: 140px;
+        }
+        .highlight-pair:nth-child(14) {
+            left: 419px;
+            top: 160px;
         }
 
         .icon {
@@ -261,6 +314,9 @@
             position: relative;
             margin-left: 32px;
         }
+        .rare-symbols .icon { z-index: 1; }
+        .ktane-highlight { z-index: 2; }
+        .dark .rare-symbols .icon { filter: invert(85%); }
 
         .cube-header {
             display: flex;
