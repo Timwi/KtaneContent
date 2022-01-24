@@ -25,6 +25,7 @@
         var start;
         let movementList = [];
         let answerList = [];
+        let generating = false;
         let movementWasFree = true;
         let modeWasSolve = true;
         let saveStates = [];
@@ -72,12 +73,18 @@
         }
         //This function is taken from the module source code
         function generate() {
+            generating = true;
             let currentRow = 0;
             let currentColumn = 0;
             let direction = 1;
             let done = false;
             let startAgain = true;
             while (startAgain) {
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[x][y] = 0;
+                        origGameGrid[x][y] = 0;
+                    }
                 answerList = [];
                 for (let i = 0; i < moves; i++) {
                     done = false;
@@ -118,11 +125,6 @@
                     }
                 }
                 if (currentRow != 3 || currentColumn != 3) {
-                    for (let y = 0; y < rows; y++)
-                        for (let x = 0; x < cols; x++) {
-                            gameGrid[x][y] = 0;
-                            origGameGrid[x][y] = 0;
-                        }
                     currentRow = 0;
                     currentColumn = 0;
                 }
@@ -135,6 +137,7 @@
                     origGameGrid[x][y] = gameGrid[x][y];
                     grid.children().eq(y+1).children().eq(x+1).text(gameGrid[x][y]);
                 }
+            generating = false;
         }
 
         //This function is based on the module source code
@@ -382,6 +385,8 @@
             $(this).toggleClass("play");
         });
         $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
             $(this).toggleClass("play");
             if (mode() == MODE_PLAY) {
                 modeWasSolve = $(".read-solve").hasClass("solve");
