@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>サイモンの歌唱 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .dark table, table {
+            border: none;
+        }
+        li {
+            margin: .75em 0;
+        }
+        h3 {
+            margin: 1.5em 0 .5em;
+        }
+        table.binary td:nth-child(3n+1):not(:first-child), table.binary th:nth-child(3n+1):not(:first-child) {
+            border-left: 3px solid black;
+        }
+        .keys-diagram {
+            display: block;
+            width: 10cm;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            var candidateFallbacks = rnd.shuffleFisherYates([
+                "バッテリーの数が奇数",
+                "インジケーターの数が奇数",
+                "ポートの数が奇数",
+                "シリアルナンバーの英字の数が奇数",
+                "ポートプレートの数が奇数",
+                "シリアルナンバーの最初の数字が奇数",
+                "異なるポートの種類の数が奇数",
+                "シリアルナンバーの最後の数字が奇数",
+                "点灯したインジケーターの数が奇数",
+                "点灯していないインジケーターの数が奇数",
+                "バッテリーホルダーの数が奇数",
+                "バッテリーの数が偶数",
+                "インジケーターの数が偶数",
+                "ポートの数が偶数",
+                "シリアルナンバーの英字の数が偶数",
+                "ポートプレートの数が偶数",
+                "シリアルナンバーの最初の数字が偶数",
+                "異なるポートの種類の数が偶数",
+                "シリアルナンバーの最後の数字が偶数",
+                "点灯したインジケーターの数が偶数",
+                "点灯していないインジケーターの数が偶数",
+                "バッテリーホルダーの数が偶数",
+            ]);
+
+            var candidateRules = rnd.shuffleFisherYates([
+                "モジュールは現在ステージ{stage}である。",
+                "これが4桁の二進数中の{digit}番目の数字である場合：{fallback}。それ以外：この数字の{digit}つめの色が{flavour}鍵を示している。",
+                "これが8つの数字の最初である場合：{fallback}。それ以外：前回の数字は{0or1}である。",
+                "インジケーターが存在しない場合：{fallback}。それ以外：4桁の数におけるこの数の位置は、点灯したインジケーターまたは点灯していないインジケーターの数のうち、大きい方と一致する。",
+                "4桁の数におけるこの数の位置はポートプレートの数と一致する。",
+                "現在が最初のステージの場合：{fallback}。それ以外：前回のステージでちょうど{3to5}番目の色の点滅が{flavour}鍵を示している。",
+                "ポートプレートが存在しない場合：{fallback}。それ以外：4桁の数におけるこの数の位置は、ポートが最も多く存在するポートプレートのポートの数と一致する。",
+                "現在のステージ数が{element}の数と一致する。",
+                "バッテリーホルダーが無い場合：{fallback}。それ以外：4桁の数におけるこの数の位置はバッテリーの数と一致する。",
+                "これが、4桁の数における{first}番目または{second}番目の数字である。",
+                "4桁の数におけるもう一つの色が{key1}または{key2}を示している。",
+                "この桁が1番目であれば、素数である。",
+                "現在が最初のステージの場合：{fallback}。それ以外：前回のステージにおける4桁の数の{operator}が5より{was-were}。",
+                "モジュールは現在ステージ{stage}ではない。",
+                "現在が最初のステージの場合：{fallback}。それ以外：前回のステージの連続して点滅した2色が{flavour}鍵を示している。",
+                "別の4桁の数における色は{key3}または{key4}を示している。",
+                "別の数字の{digit}番目の色は{flavour}鍵を示している。",
+                "これが4桁の二進数における{third}または{fourth}番目の桁を示している。",
+            ]);
+
+            var candidateElements = rnd.shuffleFisherYates([
+                "バッテリー",
+                "バッテリーホルダー",
+                "インジケーター",
+                "シリアルナンバーの英字の数から1を引いた時",
+                "点灯していないインジケーター",
+                "ポート",
+                "異なるポートの種類",
+                "ポートプレート",
+                "シリアルナンバーの数字の数から1を引いた時",
+                "点灯したインジケーター",
+            ]);
+
+            var fallbackIx = 0;
+            var elementIx = 0;
+            var digitOrder = rnd.shuffleFisherYates(["4", "2", "1", "3"]);
+            var keys = rnd.shuffleFisherYates("ド,ド♯/レ♭,ファ♯/ソ♭,レ♯/ミ♭,ソ,ラ♯/シ♭,レ,ソ,ソ♯/ラ♭,ラ,ファ,シ".split(','));
+            var operator = rnd.next(0, 4);
+
+            var tds = document.getElementsByClassName('rule');
+            for (var i = 0; i < 12; i++)
+            {
+                var digit = ["3", "2", "1", "4"][rnd.next(0, 4)];
+                tds[i].innerText = candidateRules[i].replace(/\{(.*?)\}/g, (_, varName) => {
+                    switch (varName)
+                    {
+                        case "first": return digitOrder[0];
+                        case "second": return digitOrder[1];
+                        case "third": return digitOrder[2];
+                        case "fourth": return digitOrder[3];
+
+                        case "digit": return digit;
+                        case "0or1": return 1-rnd.next(0, 2);
+                        case "element": return candidateElements[elementIx++];
+                        case "stage": return ["1", "3", "2"][rnd.next(0, 3)];
+                        case "flavour": return ["黒", "白"][rnd.next(0, 2)];
+                        case "3to5": return rnd.next(3, 6);
+                        case "operator": return ["両方", "一方(両方ではない)", "一方(もしくは両方)", "両方"][operator];
+                        case "was-were": return ["小さくない", "小さい", "小さい", "小さい"][operator];
+                        case "key1": return keys[0];
+                        case "key2": return keys[1];
+                        case "key3": return keys[2];
+                        case "key4": return keys[3];
+
+                        case "fallback": return candidateFallbacks[fallbackIx++];
+                    }
+                    return "INVALID";
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">サイモンの歌唱</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Simon Sings.svg">
+                <h2>モジュール詳細：サイモンの歌唱</h2>
+                <p class="flavour-text">
+
+                    ピッチも無ェ　ライトも無ェ　 サイモン呼んでも現れねェ<br>
+                    おらこんな運命いやだ　おらこんな爆発いやだ　はよ解除するだ</p>
+
+                <ul>
+                    <li>このモジュールは、色付きの鍵盤が付いた円形状のピアノを含んでいる。モジュールの中心には、いくつかの鍵盤の色に光るライトがある。</li>
+                    <li>ライトは8色のシーケンスを順に再生する。黒は繰り返しの間の空白を表す。どの鍵盤がどの色かを特定し、下の表1からそれらを二進数に変換する。表の条件が真なら、その桁は1であり、そうでなければ0である。4つのグループそれぞれでが1つの4桁の2進数を構成する。</li>
+                    <li>モジュールは3ステージで構成される。各ステージで、2つの2進数は表2により押すべき2つの新しいピアノの鍵盤を示している。各ステージで、前のステージの鍵盤に加えて新しい鍵盤を押す。</li>
+                    <li>鍵盤には2オクターブあり、1つはホイールの左半分に、もう1つは右半分に配置されている。押すべきキーはそれぞれ前のキーの反対側にある。シリアルナンバーに母音がある場合は左から、そうでない場合は右から始める。</li>
+                    <li>ミスが記録されると、現在のステージの入力がリセットされる。中央のライトを長押ししてモジュール全体をリセットする(ステージ2-3のみ利用可能)。</li>
+                </ul>
+
+                <h3>表1</h3>
+                <table>
+                    <tr><th>ド</th><td class='rule'>これが4桁の二進数の最初または最後の数である。</td></tr>
+                    <tr><th>ド♯/レ♭</th><td class='rule'>これが4桁の二進数の二番目または三番目の数である。</td></tr>
+                    <tr><th>レ</th><td class='rule'>これが8つの数字の最初である場合：シリアルナンバーの最後の数字が奇数である。それ以外：前回の数字は0である。</td></tr>
+                    <tr><th>レ♯/ミ♭</th><td class='rule'>4桁の数におけるこの数の位置はポートプレートの数と一致する。</td></tr>
+                    <tr><th>ミ</th><td class='rule'>ポートプレートが無い場合：バッテリーの数が奇数。それ以外：4桁の数におけるこの数の位置はポートが最も多く存在するポートプレートのポートの数と一致する。</td></tr>
+                    <tr><th>ファ</th><td class='rule'>モジュールは現在ステージ3である。</td></tr>
+                    <tr><th>ファ♯/ソ♭</th><td class='rule'>現在のステージ数がシリアルナンバーの英字の数から1を引いた数と一致する。</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-2 page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">サイモンの歌唱</span>
+            </div>
+            <div class="page-content">
+
+                <table>
+                    <tr><th>ソ</th><td class='rule'>これが4桁の数における1番目の数字である場合：インジケーターの数が奇数。それ以外：この数字の1番目の色は黒鍵を示している。</td></tr>
+                    <tr><th>ソ♯/ラ♭</th><td class='rule'>モジュールは現在ステージ1である場合：ポートの数が奇数。それ以外：前回のステージの連続して点滅した2色が黒鍵を示している。</td></tr>
+                    <tr><th>ラ</th><td class='rule'>モジュールは現在ステージ1である場合：インジケーターの数が偶数。それ以外：前回のステージにおける4桁の数の一方(もしくは両方)が5より小さい。</td></tr>
+                    <tr><th>ラ♯/シ♭</th><td class='rule'>この4桁の数のもう一つの色がファまたはファ♯/ソ♭である。</td></tr>
+                    <tr><th>シ</th><td class='rule'>この桁が1番目であれば、素数である。</td></tr>
+                </table>
+
+                <h3>表2</h3>
+                <table class='binary'>
+                    <tr><th>二進数</th><th>#</th><th>鍵盤</th><th>二進数</th><th>#</th><th>鍵盤</th><th>二進数</th><th>#</th><th>意味</th></tr>
+                    <tr><td>0000</td><td>0</td><td>ド</td><td>0110</td><td>6</td><td>ファ♯</td><td>1100</td><td>12</td><td>この数の1番目の鍵盤</td></tr>
+                    <tr><td>0001</td><td>1</td><td>ド♯</td><td>0111</td><td>7</td><td>ソ</td><td>1101</td><td>13</td><td>この数の2番目の鍵盤</td></tr>
+                    <tr><td>0010</td><td>2</td><td>レ</td><td>1000</td><td>8</td><td>ソ♯</td><td>1110</td><td>14</td><td>この数の3番目の鍵盤</td></tr>
+                    <tr><td>0011</td><td>3</td><td>レ♯</td><td>1001</td><td>9</td><td>ラ</td><td>1111</td><td>15</td><td>この数の4番目の鍵盤</td></tr>
+                    <tr><td>0100</td><td>4</td><td>ミ</td><td>1010</td><td>10</td><td>ラ♯</td><td class='corner'></td><td class='corner'></td></tr>
+                    <tr><td>0101</td><td>5</td><td>ファ</td><td>1011</td><td>11</td><td>シ</td><td class='corner'></td><td class='corner'></td></tr>
+                </table>
+
+                <h3>鍵盤/音階チャート</h3>
+                <img src='img/Simon Sings/Keyboard(ja).svg' class='keys-diagram'/>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
