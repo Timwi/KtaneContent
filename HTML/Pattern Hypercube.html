@@ -1,0 +1,472 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Pattern Hypercube — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css" />
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        const HYPERCUBES_COUNT = 10;
+        const SYMBOLS_COUNT = HYPERCUBES_COUNT * 8 + 8 * 5;
+        const COMMON_SYMBOLS_COUNT = 40;
+
+        const AXIS = ["X", "-X", "Y", "-Y", "Z", "-Z", "W", "-W"];
+        const SYMBOLS_GROUP_SIZE = 12;
+        const SYMBOLS = new Array(SYMBOLS_COUNT).fill(0).map((_, i) => i);
+
+        /** @type {{ [s: string]: [number, number] }} */
+        const AXLES_TO_INDICES = [
+            ["-W", ["-Z", "Z", "X", "-X", "Y", "-Y"]],
+            ["-X", ["-Z", "Z", "-W", "W", "Y", "-Y"]],
+            ["X", ["-Z", "Z", "W", "-W", "Y", "-Y"]],
+            ["-Y", ["-Z", "Z", "X", "-X", "-W", "W"]],
+            ["Y", ["-Z", "Z", "X", "-X", "W", "-W"]],
+            ["-Z", ["W", "-W", "X", "-X", "Y", "-Y"]],
+            ["Z", ["-W", "W", "X", "-X", "Y", "-Y"]],
+            ["W", ["-Z", "Z", "-X", "X", "Y", "-Y"]],
+        ].reduce((acc, [axis, axles], i) => {
+            for (let j = 0; j < 6; j++) acc[axis + axles[j]] = [i, j];
+            return acc;
+        }, {});
+
+        function makeSVG(tag, attrs) {
+            var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
+
+        function randInt(from, to, rnd) {
+            if (rnd) return rnd.next(from, to);
+            return Math.floor(Math.random() * (to - from)) + from;
+        }
+
+        function shuffled(arr, rnd) {
+            if (rnd) return rnd.shuffleArray(arr);
+            const res = [...arr];
+            for (let i = 0; i < arr.length; i++) {
+                const j = randInt(0, arr.length);
+                [res[i], res[j]] = [res[j], res[i]];
+            }
+            return res;
+        }
+
+        function areOnSameAxis(face1, face2) {
+            return face1[face1.length - 1] === face2[face2.length - 1];
+        }
+
+        function negativeAxis(ax) {
+            if (ax.startsWith("-")) return ax[1];
+            return `-${ax}`;
+        }
+
+        function setDefaultRules() {
+            const rnd = new MonoRandom(1);
+            const commonSymbols = [
+                20, 21, 22, 23, 0, 1, 2, 10,
+                11, 12, 13, 5, 7, 8, 15, 18,
+                30, 113, 114, 33, 37, 45, 48, 52,
+                57, 65, 66, 67, 73, 105, 107, 83,
+                87, 92, 96, 97, 98, 100, 103, 104,
+            ];
+            runGenerator(rnd, commonSymbols);
+        }
+
+        function setRules(rnd) {
+            runGenerator(rnd, rnd.shuffleArray(SYMBOLS).slice(0, 40));
+        }
+
+        function runGenerator(rnd, commonSymbols) {
+            const commonSymbolsSet = new Set(commonSymbols);
+            const rareSymbols = rnd.shuffleArray(SYMBOLS.filter((s) => !commonSymbolsSet.has(s)));
+            console.log(rareSymbols.join(", "));
+            const symbols = [];
+            for (let hypercubeIndex = 0; hypercubeIndex < HYPERCUBES_COUNT; hypercubeIndex++) {
+                symbols.push([]);
+                const commons = rnd.shuffleArray(commonSymbols);
+                console.log(`HC: ${hypercubeIndex}`);
+                for (let hyperfaceIndex = 0; hyperfaceIndex < 8; hyperfaceIndex++) {
+                    symbols[hypercubeIndex].push([]);
+                    const hyperfaceCommons = commons.slice(hyperfaceIndex * 5, hyperfaceIndex * 5 + 5);
+                    const uncommon = rareSymbols[hypercubeIndex * 8 + hyperfaceIndex];
+                    symbols[hypercubeIndex][hyperfaceIndex] = rnd.shuffleArray([...hyperfaceCommons, uncommon]);
+                    console.log(symbols[hypercubeIndex][hyperfaceIndex].join(", "));
+                    // placeholder:
+                    // symbols[hypercubeIndex][hyperfaceIndex] = new Array(6).fill(0).map((_, i) => hyperfaceIndex * 6 + i);
+                }
+            }
+            const buildingRnd = null;
+            // const buildingRnd = rnd;
+            for (let hypercubeIndex = 0; hypercubeIndex < 10; hypercubeIndex++) {
+                const hyperfaces = shuffled(AXIS, buildingRnd);
+                const usedHyperfaces = [hyperfaces.pop()];
+                if (areOnSameAxis(hyperfaces[0], usedHyperfaces[0])) {
+                    const rndInd = randInt(1, hyperfaces.length, buildingRnd);
+                    [hyperfaces[0], hyperfaces[rndInd]] = [hyperfaces[rndInd], hyperfaces[0]];
+                }
+                const div = document.getElementById(`hypernet-${hypercubeIndex}`);
+                div.innerHTML = "";
+                for (let i = 0; i < 7; i++) {
+                    let hyperface = hyperfaces[i];
+                    const possibleHyperfaces = usedHyperfaces.filter((ax) => !areOnSameAxis(ax, hyperface));
+                    let otherHyperface = possibleHyperfaces[randInt(0, possibleHyperfaces.length, buildingRnd)];
+                    let freeAxis = AXIS.filter((ax) => !areOnSameAxis(ax, hyperface) && !areOnSameAxis(ax, otherHyperface));
+                    usedHyperfaces.push(hyperface);
+                    if (randInt(0, 2, buildingRnd) === 0) [hyperface, otherHyperface] = [otherHyperface, hyperface];
+                    const topAxis = freeAxis[randInt(0, freeAxis.length, buildingRnd)];
+                    const rightAxis = freeAxis.filter((ax) => !areOnSameAxis(ax, topAxis))[randInt(0, 2, buildingRnd)];
+                    const patterns = [
+                        hyperface + negativeAxis(otherHyperface),
+                        hyperface + rightAxis,
+                        hyperface + topAxis,
+                        otherHyperface + hyperface,
+                        otherHyperface + rightAxis,
+                        otherHyperface + topAxis,
+                    ];
+                    const connection = div.appendChild(document.createElement("div"));
+                    connection.classList.add("connection");
+                    let patternIndex = 0;
+                    for (const cube of ["first", "second"]) {
+                        for (const facePos of ["left", "right", "up"]) {
+                            const faceDiv = connection.appendChild(document.createElement("div"));
+                            faceDiv.classList.add("icon", cube, facePos);
+                            const face = patterns[patternIndex++];
+                            const [j, k] = AXLES_TO_INDICES[face];
+                            const symbolId = symbols[hypercubeIndex][j][k];
+                            if (hypercubeIndex === 2) console.log(face, symbolId);
+                            const yy = -symbolId % SYMBOLS_GROUP_SIZE;
+                            const xx = -Math.floor(symbolId / SYMBOLS_GROUP_SIZE);
+                            faceDiv.style.backgroundPosition = `${xx * 40}px ${yy * 40}px`;
+                        }
+                    }
+                }
+                for (let i = 0; i < 7; i++) {
+                    let svg = $('<svg class="highlight-pair" viewbox="0 0 24.2 18.6" xmlns="http://www.w3.org/2000/svg">');
+                    svg.appendTo(div);
+                    let highlight = makeSVG("path", {
+                        d: "M5.4 18.6l-5.3-2.7v-6.6l5.3-2.7l5.3 2.7v6.6z M18.8 12l-5.3-2.7v-6.6l5.3-2.7l5.3 2.7v6.6z", fill: "transparent",
+                        stroke: "none", class: "highlightable"
+                    });
+                    svg.append(highlight);
+                }
+
+                const rareContainer = document.getElementById(`rare-symbols-${hypercubeIndex}`);
+                rareContainer.innerHTML = "";
+                const hypercubeRareSymbols = shuffled(rareSymbols.slice(hypercubeIndex * 8, hypercubeIndex * 8 + 8), buildingRnd);
+                console.log(hypercubeRareSymbols.join(", "));
+                for (let i = 0; i < 8; i++) {
+                    const span = rareContainer.appendChild(document.createElement("span"));
+                    span.classList.add("icon");
+                    span.classList.add("highlightable");
+                    const symbolId = hypercubeRareSymbols[i];
+                    const yy = -symbolId % SYMBOLS_GROUP_SIZE;
+                    const xx = -Math.floor(symbolId / SYMBOLS_GROUP_SIZE);
+                    span.style.backgroundPosition = `${xx * 40}px ${yy * 40}px`;
+                    span.style.left = `${i * 40}px`;
+                }
+            }
+            setTimeout(() => window.scrollTo(0, 0), 1);
+        }
+    </script>
+    <style>
+        .hypernet {
+            position: relative;
+            width: 620px;
+            height: 420px;
+            margin: -16px 32px;
+        }
+
+        .connection {
+            position: absolute;
+            width: 220px;
+            height: 180px;
+            background-image: url("img/Pattern%20Hypercube/connection.svg");
+            background-size: contain;
+        }
+        .dark .connection { filter: invert(85%); }
+
+        .highlight-pair {
+            position: absolute;
+            width: 182px;
+        }
+
+        .connection:nth-child(1) {
+            left: 0px;
+            top: 100px;
+        }
+        .highlight-pair:nth-child(8) {
+            left: 19px;
+            top: 120px;
+        }
+
+        .connection:nth-child(2) {
+            left: 200px;
+            top: 0px;
+        }
+        .highlight-pair:nth-child(9) {
+            left: 219px;
+            top: 20px;
+        }
+
+        .connection:nth-child(3) {
+            left: 0px;
+            top: 220px;
+        }
+        .highlight-pair:nth-child(10) {
+            left: 19px;
+            top: 240px;
+        }
+
+        .connection:nth-child(4) {
+            left: 200px;
+            top: 120px;
+        }
+        .highlight-pair:nth-child(11) {
+            left: 219px;
+            top: 140px;
+        }
+
+        .connection:nth-child(5) {
+            left: 400px;
+            top: 20px;
+        }
+        .highlight-pair:nth-child(12) {
+            left: 419px;
+            top: 40px;
+        }
+
+        .connection:nth-child(6) {
+            left: 200px;
+            top: 240px;
+        }
+        .highlight-pair:nth-child(13) {
+            left: 219px;
+            top: 260px;
+        }
+
+        .connection:nth-child(7) {
+            left: 400px;
+            top: 140px;
+        }
+        .highlight-pair:nth-child(14) {
+            left: 419px;
+            top: 160px;
+        }
+
+        .icon {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url("img/Pattern%20Hypercube/symbols.svg");
+            background-size: 400px 480px;
+        }
+
+        .icon.left {
+            transform: rotateX(30deg) rotateY(45deg);
+        }
+
+        .icon.right {
+            transform: rotateX(30deg) rotateY(-45deg);
+        }
+
+        .icon.up {
+            transform: rotateX(60deg) rotateZ(-45deg);
+        }
+
+        .icon.first.left {
+            left: 20px;
+            top: 105px;
+        }
+
+        .icon.first.right {
+            left: 60px;
+            top: 105px;
+        }
+
+        .icon.first.up {
+            left: 40px;
+            top: 70px;
+        }
+
+        .icon.second.left {
+            left: 120px;
+            top: 55px;
+        }
+
+        .icon.second.right {
+            left: 160px;
+            top: 55px;
+        }
+
+        .icon.second.up {
+            left: 140px;
+            top: 20px;
+        }
+
+        .rare-symbols {
+            height: 40px;
+            position: relative;
+            margin-left: 32px;
+        }
+        .rare-symbols .icon { z-index: 1; }
+        .ktane-highlight { z-index: 2; }
+        .dark .rare-symbols .icon { filter: invert(85%); }
+
+        .cube-header {
+            display: flex;
+            align-items: center;
+            height: 40px;
+        }
+
+        .cube-header:not(:first-child) {
+            margin-top: 48px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Pattern Hypercube.svg" class="diagram">
+                <h2>On the Subject of Pattern Hypercube</h2>
+                <p class="flavour-text">What's your favorite shape? Mine is cube.<br />Not tesseract, that's for sure! Because there is no such thing.</p>
+                <p>The module has a hypercube. To solve the module, place the correct symbols on each hypersurface and give the hypersurfaces the correct orientation.</p>
+                <p>
+                    The two hypersurfaces contain symbols. One of these hypersurfaces is completely transparent, while the other is partially transparent.
+                    The partially transparent hypersurface has already been placed, while the fully transparent one is the currently selected hypersurface.
+                </p>
+                <p>The module has two modes: 3D and 4D. You can switch between modes using the buttons on the top of the module.</p>
+                <p>
+                    There are also "&lt;" and "&gt;" buttons on the top. When 3D mode is active they change the symbols of the currently selected hypersurface.
+                    When 4D mode is active these buttons are used to switch between different hypersurfaces.
+                </p>
+                <p>
+                    On the right are the rotation buttons.
+                    To use them, first select the first rotation axis on the left buttons, and then press the second rotation axis on the right buttons.
+                    Using two identical axes does not produce rotation. When 4D mode is active, these buttons rotate the hypercube.
+                    When 3D mode is active, the currently selected hypersurface is rotated.
+                    Please note that in 3D mode the rotation is not relative to the axes of the module, as is the case for 4D mode, but relative to the hypersurface itself.
+                    Therefore, W-axis rotation is disabled for 3D mode.
+                </p>
+                <p>
+                    One of the symbols of each hypersurface is unique. On the following pages, unique symbols are drawn next to the hypercube number.
+                    Under the number of the hypercube there are 7 links of its hypersurfaces, these pairs are enough to recreate the full hypercube.
+                    To determine a hypercube located on a module, find a unique symbol on the placed hypersurface.
+                </p>
+                <p>
+                    To place symbols on the currently selected hypersurface, press the "SUBMIT" button.
+                    When all 8 hypercube hypersurfaces are correctly placed the module will be solved.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 6</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="cube-header">
+                    <h3>Hypercube #1/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-0"></div>
+                </div>
+                <div id="hypernet-0" class="hypernet"></div>
+                <div class="cube-header">
+                    <h3>Hypercube #2/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-1"></div>
+                </div>
+                <div id="hypernet-1" class="hypernet"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 6</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="cube-header">
+                    <h3>Hypercube #3/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-2"></div>
+                </div>
+                <div id="hypernet-2" class="hypernet"></div>
+                <div class="cube-header">
+                    <h3>Hypercube #4/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-3"></div>
+                </div>
+                <div id="hypernet-3" class="hypernet"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="cube-header">
+                    <h3>Hypercube #5/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-4"></div>
+                </div>
+                <div id="hypernet-4" class="hypernet"></div>
+                <div class="cube-header">
+                    <h3>Hypercube #6/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-5"></div>
+                </div>
+                <div id="hypernet-5" class="hypernet"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 6</div>
+        </div>
+        <div class="page page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="cube-header">
+                    <h3>Hypercube #7/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-6"></div>
+                </div>
+                <div id="hypernet-6" class="hypernet"></div>
+                <div class="cube-header">
+                    <h3>Hypercube #8/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-7"></div>
+                </div>
+                <div id="hypernet-7" class="hypernet"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 5 of 6</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pattern Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="cube-header">
+                    <h3>Hypercube #9/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-8"></div>
+                </div>
+                <div id="hypernet-8" class="hypernet"></div>
+                <div class="cube-header">
+                    <h3>Hypercube #10/10</h3>
+                    <div class="rare-symbols" id="rare-symbols-9"></div>
+                </div>
+                <div id="hypernet-9" class="hypernet"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 6 of 6</div>
+        </div>
+    </div>
+</body>
+
+</html>
