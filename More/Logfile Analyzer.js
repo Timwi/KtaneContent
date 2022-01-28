@@ -1,3 +1,8 @@
+// Dark mode
+if (localStorage.getItem("theme") == "dark") {
+    document.documentElement.classList.add("dark-mode");
+}
+
 class Groups {
     constructor() {
         this.groups = [];
