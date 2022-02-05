@@ -174,7 +174,8 @@ e.onload = function()
                     ".ktane-highlight-svg { width: 50px; height: 50px; }" +
                     ".ktane-highlight-pen { fill: !0!; }" +
                     ".ktane-highlight-btn { position: fixed; top: 5px; width: 50px; height: 50px; border: 3px solid transparent; border-radius: 10px; }" +
-                    ".ktane-highlight-btn.selected { border-color: #4c6; }")
+                    ".ktane-highlight-btn.selected { border-color: #4c6; }" +
+                    "@media print { .ktane-highlight-btn { display: none; }  }")
                     .replace(/!0!/g, colors[color].color));
             };
 
