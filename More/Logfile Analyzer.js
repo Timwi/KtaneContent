@@ -1253,8 +1253,6 @@ function generateParseDataKeys(field)
     parseData.forEach((moduleData, index) => {
         if (parseKeys[field][moduleData[field]] !== undefined) {
             return;
-        } else if (Array.isArray(moduleData[field])) {
-            moduleData[field].forEach((individual, secondIndex) => parseKeys[field][individual] = [index, secondIndex]);
         } else if (moduleData[field] !== undefined) {
             parseKeys[field][moduleData[field]] = index;
         }
@@ -1268,23 +1266,34 @@ function getModuleData(value, field = "loggingTag") {
         generateParseDataKeys(field);
 
 
-    if (Array.isArray(parseKeys[field][value])) {
-        const singleModuleData = Object.assign({}, parseData[parseKeys[field][value][0]]);
-        const index = parseKeys[field][value][1];
-        const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
-
-        for (const field of fields) {
-            if (!Array.isArray(singleModuleData[field])) continue;
-
-            singleModuleData[field] = singleModuleData[field][index];
-        }
-        return singleModuleData;
-    } else if (parseKeys[field][value] !== undefined) {
+    if (parseKeys[field][value] !== undefined) {
         return Object.assign({}, parseData[parseKeys[field][value]]);
     }
 
     return null;
 }
+
+parseData = parseData.flatMap(data => {
+    if (!Array.isArray(data.moduleID)) {
+        return [data];
+    }
+
+    const multiple = [];
+    const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
+    for (let i = 0; i < data.moduleID.length; i++) {
+        const singleData = {};
+        for (const field of fields) {
+            if (!Array.isArray(data[field])) continue;
+
+            singleData[field] = data[field][i];
+        }
+
+        singleData.matches = data.matches;
+        multiple.push(singleData);
+    }
+
+    return multiple;
+});
 
 // Read Logfile
 var readwarning = false;
@@ -1405,7 +1414,7 @@ function parseLog(opt) {
 
         $.get("../json/raw", function(websiteData) {
             for (const module of websiteData.KtaneModules) {
-                const matches = parseData.filter(data => Array.isArray(data.moduleID) ? data.moduleID.includes(module.ModuleID) : data.moduleID == module.ModuleID);
+                const matches = parseData.filter(data => data.moduleID == module.ModuleID);
                 if (matches.length === 0) {
                     websiteParseData.push({
                         moduleID: module.ModuleID,
@@ -1421,14 +1430,7 @@ function parseLog(opt) {
                     }
 
                     match.repo = module;
-                    if (Array.isArray(match.moduleID)) {
-                        if (match.iconPosition == null)
-                            match.iconPosition = [];
-
-                        match.iconPosition[match.moduleID.indexOf(module.ModuleID)] = { X: module.X, Y: module.Y };
-                    } else {
-                        match.iconPosition = { X: module.X, Y: module.Y };
-                    }
+                    match.iconPosition = { X: module.X, Y: module.Y };
                 }
             }
         }, "json")
