@@ -1017,12 +1017,15 @@ function Bomb(seed) {
             return 0;
         });
 
+        const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "");
         function GetManual(parseData) {
             const moduleData = parseData.moduleData;
-            let manual = (moduleData.repo?.FileName || moduleData.repo?.Name || moduleData.displayName)
+            const repoName = moduleData.repo?.Name;
+            let manual = (moduleData.repo?.FileName || repoName || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
 
+            let preferredManual = preferredManuals[repoName];
             if (parseData.tree && parseData.tree.length != 0 && typeof parseData.tree[0] === "string" && parseData.tree[0].startsWith("Language is ")) {
                 manual += ` (${parseData.tree[0].split(" ")[2]} — *)`;
 
@@ -1031,12 +1034,15 @@ function Bomb(seed) {
                     .replace("Vent Gas", "Venting Gas")
                     .replace("Passwords", "Password")
                     .replace("Who's on First", "Who’s on First")
-                    .replace(" Translated", " translated");
+                    .replace(" Translated", " translated")
+                    + ".html";
+            } else if (preferredManual !== undefined) {
+                manual = repoName + " " + preferredManual.replace(/ \((HTML|PDF)\)$/, (_, type) => "." + type.toLowerCase());
+            } else {
+                manual += ".html";
             }
 
-            manual += ".html";
-
-            if (ruleSeed != 1)
+            if (ruleSeed != 1 && manual.endsWith(".html"))
                 manual += "#" + ruleSeed;
 
             return manual;
