@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Pitch Perfect — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        const tones = [
+            65.41, 69.30, 73.42, 77.78, 82.41, 87.31, 92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
+            130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
+            261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
+            523.25, 554.37, 587.33, 622.25, 659.26, 698.46, 739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
+            1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53
+        ];
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+        let context = null;
+
+        function playSound(samples) {
+            let buf = new Float32Array(samples.length)
+            for (let i = 0; i < samples.length; i++)
+                buf[i] = samples[i]
+            let buffer = context.createBuffer(1, buf.length, context.sampleRate)
+            buffer.copyToChannel(buf, 0)
+            let source = context.createBufferSource();
+            source.buffer = buffer;
+            source.connect(context.destination);
+            source.start(0);
+        }
+
+        function sineWaveAt(time, freq) {
+            let sampleFreq = context.sampleRate / freq
+            return Math.sin(time / (sampleFreq / (Math.PI * 2)))
+        }
+
+        function playTone(freq, time, volume) {
+            context = new AudioContext();
+            let samples = [];
+            let fadeT = context.sampleRate * 0.10;
+            let endT = context.sampleRate * time;
+            for (let i = 0; i < endT; i++) {
+                let v = i < fadeT ? (i / fadeT) : (i > endT - fadeT ? ((endT - i) / fadeT) : 1);
+                samples[i] = sineWaveAt(i, freq) * volume * v;
+            }
+            playSound(samples);
+        }
+
+        function loadSample(url) {
+          context = new AudioContext();
+          return fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(buffer => context.decodeAudioData(buffer));
+        }
+
+        let startPlay = [];
+        function playSample(i, button, sample, sampleNote, noteToPlay) {
+            const source = context.createBufferSource();
+            const gainNode = context.createGain();
+            gainNode.gain.value = 0.5;
+            gainNode.connect(context.destination);
+            source.buffer = sample;
+            source.playbackRate.value = 2 ** ((noteToPlay - sampleNote) / 12);
+            source.connect(gainNode);
+            source.start(0);
+            source.onended = function() {
+                let time = Date.now() - startPlay[i];
+                let end = 3000 / source.playbackRate.value;
+                if (time > end)
+                    button.removeClass("playing");
+            };
+        }
+
+        $("table.sounds td").each(function(i) {
+            var elem = $(this);
+            startPlay[i] = Date.now();
+
+            var button = $("<a href='#' class='play-button'>▶</a>").click(function() {
+                let note = (i%5) * 12 + Math.floor(i / 5);
+                if (document.querySelector("#timbre-sine").checked) {
+                    if (!button.hasClass("playing")) {
+                        button.addClass("playing");
+                        playTone(tones[note], 2.5, 0.2);
+
+                        tooSoon = setTimeout(function() {
+                            button.removeClass("playing");
+                        }, 2500);
+                    }
+                }
+                else {
+                    if (!button.hasClass("too-soon")) {
+                        startPlay[i] = Date.now();
+                        button.addClass("playing too-soon");
+                        setTimeout(function() {
+                            button.removeClass("too-soon");
+                        }, 600);
+                        if (note >= 24)
+                            loadSample('audio/Pitch Perfect/PianoC.mp3')
+                              .then(sample => playSample(i, button, sample, 60, note + 24));
+                        else
+                            loadSample('audio/Pitch Perfect/PianoLowC.mp3')
+                              .then(sample => playSample(i, button, sample, 36, note + 24));
+                    }
+
+                }
+                return false;
+            }).prependTo(elem);
+        });
+        $("#lab-piano").click(function() { $("#timbre-piano").click(); });
+        $("#lab-sine").click(function() { $("#timbre-sine").click(); });
+    });
+    </script>
+    <style>
+        .dark table, table {
+            margin: auto;
+            border: none;
+        }
+        td { text-align: center; }
+        @font-face {
+            font-family: 'OpusStd';
+            src: url('font/OpusStd.otf');
+        }
+
+        .ms {
+            font-family: 'OpusStd';
+            font-size: 1.2em;
+            position: relative;
+            top: -0.4em;
+        }
+        body:not(.dark) tr.black { background-color: #444; color: white; }
+        .dark tr.white { background-color: #999; color: black; }
+
+        .dark a, a {
+            display: inline-block;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+
+            background: #008;
+            border-radius: 50%;
+            width: 2em;
+            height: 2em;
+            text-align: center;
+            padding-left: .1em;
+            padding-top: .22em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pitch Perfect</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Pitch Perfect.svg" class="diagram">
+                <h2>On the Subject of Pitch Perfect</h2>
+                <p class="flavour-text">Here's to hoping your defuser has the 1/10000 chance of having perfect pitch...</p>
+                <ul>
+                    <li>This module consists of a speaker, a button that plays a specific note, names of pitches that can be cycled, and a submit button.
+                    <ul>
+                        <li>There are a few other items on the module that can be used to help solve the module, but they aren't strictly required
+                            to solve the module. Information on how to use these items is listed in <em>Extra Features</em></li>
+                    </ul></li>
+                    <li>The play button will play a note. Use the arrow buttons to input the pitch name of the played note.</li>
+                    <li>Do this three times to solve the module.</li>
+                </ul>
+                <h3>Extra Features</h3>
+                <ul>
+                    <li>You are allowed to make mistakes, since the occurrence of one having perfect pitch is quite rare, but avoid making too many.
+                        If a mistake is made, the module will "fake strike" and the top screen will show an 'X'. Additionally, the note name
+                        will turn red. If another mistake is made after two fake strikes, a real strike will be issued to the bomb.</li>
+                    <li>Real strikes will reset the module, requiring you to restart from the first stage again, but fake strikes will not.</li>
+                    <li>The pitch name screen can be tapped once to play the note displayed on the screen as a reference pitch.
+                        If tapped, you won't be able to play another reference pitch unless the module resets.
+                        This reference pitch's availability is indicated by a speaker image on the top screen.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Pitch Perfect</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <input type="radio" id="timbre-piano" name="soundtype" value="piano" checked>
+                    <label id="lab-piano" for="timbre-piano">Piano</label>
+                </div>
+                <div>
+                    <input type="radio" id="timbre-sine" name="soundtype" value="sine">
+                    <label id="lab-sine" for="timbre-sine">Sine</label>
+                </div>
+                <table class="sounds">
+                    <tr>
+                        <th class="empty"></th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+                    </tr>
+                    <tr class="white">
+                        <th>C</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="black">
+                        <th>C♯/D♭</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                        <th>D</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="black">
+                        <th>D♯/E♭</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                        <th>E</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                        <th>F</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="black">
+                        <th>F♯/G♭</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                        <th>G</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="black">
+                        <th>G♯/A♭</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                       <th>A</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="black">
+                        <th>A♯/B♭</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr class="white">
+                        <th>B</th><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
