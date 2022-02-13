@@ -1,0 +1,445 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Maths Rapides — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .ruleseed-active .left-right {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function setDefaultRules()
+        {
+            let rulesHtml = document.getElementsByClassName('rule');
+            rulesHtml[0].innerText = 'S\'il y a un voyant MSA allumé, ajouter 20 à votre nombre.';
+            rulesHtml[1].innerText = 'S\'il y a un port série présent, ajouter 14 à votre nombre.';
+            rulesHtml[2].innerText = 'Si le numéro de série contient la lettre F, A, S ou T, soustraire 5 à votre nombre.';
+            rulesHtml[3].innerText = 'S\'il y a un port RJ-45 présent, ajouter 27 à votre nombre.';
+            rulesHtml[4].innerText = 'Si la bombe a plus de 3 piles, soustraire 15 à votre nombre.';
+
+            let candidateLetters = ['A', 'B', 'C', 'D', 'E', 'G', 'K', 'N', 'P', 'S', 'T', 'X', 'Z'];
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers =
+                [ 25, 11, 53, 97,  2, 42, 51, 97, 12, 86, 55, 73, 33,
+                  54,  7, 32, 19, 84, 33, 27, 78, 26, 46,  9, 13, 58,
+                  86, 37, 44,  1,  5, 26, 93, 49, 18, 69, 23, 40, 22,
+                  54, 28, 77, 93, 11,  0, 35, 61, 27, 48, 13, 72, 80,
+                  99, 36, 23, 95, 67,  5, 26, 17, 44, 60, 26, 41, 67,
+                  74, 95,  3,  4, 56, 23, 54, 29, 52, 38, 10, 76, 98,
+                  88, 46, 37, 96,  2, 52, 81, 37, 12, 70, 14, 36, 78,
+                  54, 43, 12, 65, 94,  3, 47, 23, 16, 62, 73, 46, 21,
+                   7, 33, 26,  1, 67, 26, 27, 77, 83, 14, 27, 93,  9,
+                  63, 64, 94, 27, 48, 84, 33, 10, 16, 74, 43, 99,  4,
+                  35, 39,  3, 25, 47, 62, 38, 45, 88, 48, 34, 31, 27,
+                  67, 30, 27, 71,  9, 11, 44, 37, 18, 40, 32, 15, 78,
+                  13, 23, 26, 85, 92, 12, 73, 56, 81,  7, 75, 47, 99 ];
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            lrs[0].innerText = 'Lettre à droite\xa0:';
+            lrs[1].innerText = 'Lettre à gauche\xa0:';
+        }
+
+        function setRules(rnd)
+        {
+            let candidates = {
+                's': [
+                    "le dernier chiffre du numéro de série est pair",
+                    "le numéro de série contient une voyelle",
+                    function(rnd) {
+                        let values = rnd.shuffleFisherYates([...Array(36).keys()]).slice(0, 4);
+                        let letterNames = values.filter(v => v >= 10).map(v => String.fromCodePoint(55 + v));
+                        let digitNames = values.filter(v => v < 10);
+                        switch (digitNames.length)
+                        {
+                            case 0: return `le numéro de série contient la lettre ${letterNames[0]}, ${letterNames[1]}, ${letterNames[2]} ou ${letterNames[3]}`;
+                            case 1: return `le numéro de série contient la lettre ${letterNames[0]}, ${letterNames[1]} ou ${letterNames[2]} ou le chiffre ${digitNames[0]}`;
+                            case 2: return `le numéro de série contient la lettre ${letterNames[0]} ou ${letterNames[1]}, ou le chiffre ${digitNames[0]} ou ${digitNames[1]}`;
+                            case 3: return `le numéro de série contient la lettre ${letterNames[0]} ou le chiffre ${digitNames[0]}, ${digitNames[1]} ou ${digitNames[2]}`;
+                            case 4: return `le numéro de série contient le chiffre ${digitNames[0]}, ${digitNames[1]}, ${digitNames[2]} ou ${digitNames[3]}`;
+                        }
+                    }
+                ],
+                'p': [
+                    "la bombe a un port parallèle",
+                    "la bombe a un port série",
+                    "la bombe a un port PS/2",
+                    "la bombe a un port Stéréo RCA",
+                    "la bombe a un port RJ-45",
+                    "la bombe a un port DVI-D",
+                    "la bombe a un port en double",
+                    "la bombe a une plaque de port vide"
+                ],
+                'i': [
+                    "la bombe a un indicateur SND",
+                    "la bombe a un indicateur CLR",
+                    "la bombe a un indicateur CAR",
+                    "la bombe a un indicateur IND",
+                    "la bombe a un indicateur FRQ",
+                    "la bombe a un indicateur SIG",
+                    "la bombe a un indicateur NSA",
+                    "la bombe a un indicateur MSA",
+                    "la bombe a un indicateur TRN",
+                    "la bombe a un indicateur BOB",
+                    "la bombe a un indicateur FRK",
+                    "la bombe a un indicateur SND allumé",
+                    "la bombe a un indicateur CLR allumé",
+                    "la bombe a un indicateur CAR allumé",
+                    "la bombe a un indicateur IND allumé",
+                    "la bombe a un indicateur FRQ allumé",
+                    "la bombe a un indicateur SIG allumé",
+                    "la bombe a un indicateur NSA allumé",
+                    "la bombe a un indicateur MSA allumé",
+                    "la bombe a un indicateur TRN allumé",
+                    "la bombe a un indicateur BOB allumé",
+                    "la bombe a un indicateur FRK allumé",
+                    "la bombe a un indicateur SND éteint",
+                    "la bombe a un indicateur CLR éteint",
+                    "la bombe a un indicateur CAR éteint",
+                    "la bombe a un indicateur IND éteint",
+                    "la bombe a un indicateur FRQ éteint",
+                    "la bombe a un indicateur SIG éteint",
+                    "la bombe a un indicateur NSA éteint",
+                    "la bombe a un indicateur MSA éteint",
+                    "la bombe a un indicateur TRN éteint",
+                    "la bombe a un indicateur BOB éteint",
+                    "la bombe a un indicateur FRK éteint"
+                ],
+                'b': [
+                    function (rnd) { return `la bombe a plus de ${rnd.next(2, 5)} piles`; },
+                    function (rnd) { return `la bombe a moins de ${rnd.next(2, 5)} piles`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `la bombe a entre ${min} et ${rnd.next(min+1, min+3)} piles`; },
+                    function (rnd) { return `la bombe a plus de ${rnd.next(2, 5)} porte-piles`; },
+                    function (rnd) { return `la bombe a moins de ${rnd.next(2, 5)} porte-piles`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `la bombe a entre ${min} et ${rnd.next(min+1, min+3)} porte-piles`; }
+                ]
+            };
+            let rules = [];
+            let offsets = rnd.shuffleFisherYates([...Array(60).keys()].map(i => i < 30 ? i-30 : i-29));
+            let ruleTypes = ['s', 'p', 'i', 'b'];
+            ruleTypes.push(['s', 'p', 'i', 'b'][rnd.next(0, 4)]);
+            for (let ruleType of ruleTypes)
+            {
+                let ix = rnd.next(0, candidates[ruleType].length);
+                rules.push(candidates[ruleType][ix]);
+                candidates[ruleType].splice(ix, 1);
+            }
+            rnd.shuffleFisherYates(rules);
+
+            let rulesHtml = document.getElementsByClassName('rule');
+            for (let i = 0; i < 5; i++)
+            {
+                let ruleStr = typeof rules[i] === 'function' ? rules[i](rnd) : rules[i];
+                rulesHtml[i].innerText = `Si ${ruleStr}, ${offsets[i] < 0 ? 'soustraire' : 'ajouter'} ${Math.abs(offsets[i])} à votre nombre.`;
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            if (rnd.next(0, 2) != 0)
+            {
+                lrs[0].innerText = 'Lettre à gauche\xa0:';
+                lrs[1].innerText = 'Lettre à droite\xa0:';
+            }
+            else
+            {
+                lrs[0].innerText = 'Lettre à droite\xa0:';
+                lrs[1].innerText = 'Lettre à gauche\xa0:';
+            }
+
+            let candidateLetters = rnd.shuffleFisherYates(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']).slice(0, 13).sort();
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers = rnd.shuffleFisherYates([...Array(200).keys()].map(i => i % 100));
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Maths Rapides</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Fast Math.svg" class="diagram">
+                <h2>À propos des Maths Rapides</h2>
+                <p class="flavour-text">
+                    Il faut aller vite !
+                </p>
+
+                <ul>
+                    <li>Deux lettres s'affichent à l'écran. Utiliser le pavé numérique, puis le bouton «&nbsp;submit&nbsp;» pour désarmer le module. Le module aura entre 3 et 5 étapes avant d'être désarmé.</li>
+                    <li>Si le compte à rebours atteint 0, une erreur sera enregistrée et le module sera réinitialisé.</li>
+                    <li>Quand une étape est terminée, le chronomètre redémarre et deux nouvelles lettres s'affichent à l'écran.</li>
+                    <li>
+                        Suivre ces règles avant de soumettre votre réponse&nbsp;:
+                        <ul>
+                            <li class='rule'>S'il y a un voyant MSA allumé, ajouter 20 à votre nombre.</li>
+                            <li class='rule'>S'il y a un port série présent, ajouter 14 à votre nombre.</li>
+                            <li class='rule'>Si le numéro de série contient la lettre F, A, S ou T, soustraire 5 à votre nombre.</li>
+                            <li class='rule'>S'il y a un port RJ-45 présent, ajouter 27 à votre nombre.</li>
+                            <li class='rule'>Si la bombe a plus de 3 piles, soustraire 15 à votre nombre.</li>
+                        </ul>
+                    </li>
+                    <li><i>Si le nombre total est supérieur à 99, utiliser les deux derniers chiffres du nombre total. Si le nombre total est inférieur à 0, ajouter 50 au nombre total.</i></li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th class="repeaters-spacer left-right" colspan="2">Lettre à droite&nbsp;:</th>
+                        <th class='letter-col'>A</th>
+                        <th class='letter-col'>B</th>
+                        <th class='letter-col'>C</th>
+                        <th class='letter-col'>D</th>
+                        <th class='letter-col'>E</th>
+                        <th class='letter-col'>G</th>
+                        <th class='letter-col'>K</th>
+                        <th class='letter-col'>N</th>
+                        <th class='letter-col'>P</th>
+                        <th class='letter-col'>S</th>
+                        <th class='letter-col'>T</th>
+                        <th class='letter-col'>X</th>
+                        <th class='letter-col'>Z</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="13" class='left-right'>Lettre à gauche&nbsp;:</th>
+                        <th class='letter-row'>A</th>
+                        <td class='number'>25</td>
+                        <td class='number'>11</td>
+                        <td class='number'>53</td>
+                        <td class='number'>97</td>
+                        <td class='number'>02</td>
+                        <td class='number'>42</td>
+                        <td class='number'>51</td>
+                        <td class='number'>97</td>
+                        <td class='number'>12</td>
+                        <td class='number'>86</td>
+                        <td class='number'>55</td>
+                        <td class='number'>73</td>
+                        <td class='number'>33</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>B</th>
+                        <td class='number'>54</td>
+                        <td class='number'>07</td>
+                        <td class='number'>32</td>
+                        <td class='number'>19</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>27</td>
+                        <td class='number'>78</td>
+                        <td class='number'>26</td>
+                        <td class='number'>46</td>
+                        <td class='number'>09</td>
+                        <td class='number'>13</td>
+                        <td class='number'>58</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>C</th>
+                        <td class='number'>86</td>
+                        <td class='number'>37</td>
+                        <td class='number'>44</td>
+                        <td class='number'>01</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>93</td>
+                        <td class='number'>49</td>
+                        <td class='number'>18</td>
+                        <td class='number'>69</td>
+                        <td class='number'>23</td>
+                        <td class='number'>40</td>
+                        <td class='number'>22</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>D</th>
+                        <td class='number'>54</td>
+                        <td class='number'>28</td>
+                        <td class='number'>77</td>
+                        <td class='number'>93</td>
+                        <td class='number'>11</td>
+                        <td class='number'>00</td>
+                        <td class='number'>35</td>
+                        <td class='number'>61</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>13</td>
+                        <td class='number'>72</td>
+                        <td class='number'>80</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>E</th>
+                        <td class='number'>99</td>
+                        <td class='number'>36</td>
+                        <td class='number'>23</td>
+                        <td class='number'>95</td>
+                        <td class='number'>67</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>17</td>
+                        <td class='number'>44</td>
+                        <td class='number'>60</td>
+                        <td class='number'>26</td>
+                        <td class='number'>41</td>
+                        <td class='number'>67</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>G</th>
+                        <td class='number'>74</td>
+                        <td class='number'>95</td>
+                        <td class='number'>03</td>
+                        <td class='number'>04</td>
+                        <td class='number'>56</td>
+                        <td class='number'>23</td>
+                        <td class='number'>54</td>
+                        <td class='number'>29</td>
+                        <td class='number'>52</td>
+                        <td class='number'>38</td>
+                        <td class='number'>10</td>
+                        <td class='number'>76</td>
+                        <td class='number'>98</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>K</th>
+                        <td class='number'>88</td>
+                        <td class='number'>46</td>
+                        <td class='number'>37</td>
+                        <td class='number'>96</td>
+                        <td class='number'>02</td>
+                        <td class='number'>52</td>
+                        <td class='number'>81</td>
+                        <td class='number'>37</td>
+                        <td class='number'>12</td>
+                        <td class='number'>70</td>
+                        <td class='number'>14</td>
+                        <td class='number'>36</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>N</th>
+                        <td class='number'>54</td>
+                        <td class='number'>43</td>
+                        <td class='number'>12</td>
+                        <td class='number'>65</td>
+                        <td class='number'>94</td>
+                        <td class='number'>03</td>
+                        <td class='number'>47</td>
+                        <td class='number'>23</td>
+                        <td class='number'>16</td>
+                        <td class='number'>62</td>
+                        <td class='number'>73</td>
+                        <td class='number'>46</td>
+                        <td class='number'>21</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>P</th>
+                        <td class='number'>07</td>
+                        <td class='number'>33</td>
+                        <td class='number'>26</td>
+                        <td class='number'>01</td>
+                        <td class='number'>67</td>
+                        <td class='number'>26</td>
+                        <td class='number'>27</td>
+                        <td class='number'>77</td>
+                        <td class='number'>83</td>
+                        <td class='number'>14</td>
+                        <td class='number'>27</td>
+                        <td class='number'>93</td>
+                        <td class='number'>09</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>S</th>
+                        <td class='number'>63</td>
+                        <td class='number'>64</td>
+                        <td class='number'>94</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>10</td>
+                        <td class='number'>16</td>
+                        <td class='number'>74</td>
+                        <td class='number'>43</td>
+                        <td class='number'>99</td>
+                        <td class='number'>04</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>T</th>
+                        <td class='number'>35</td>
+                        <td class='number'>39</td>
+                        <td class='number'>03</td>
+                        <td class='number'>25</td>
+                        <td class='number'>47</td>
+                        <td class='number'>62</td>
+                        <td class='number'>38</td>
+                        <td class='number'>45</td>
+                        <td class='number'>88</td>
+                        <td class='number'>48</td>
+                        <td class='number'>34</td>
+                        <td class='number'>31</td>
+                        <td class='number'>27</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>X</th>
+                        <td class='number'>67</td>
+                        <td class='number'>30</td>
+                        <td class='number'>27</td>
+                        <td class='number'>71</td>
+                        <td class='number'>09</td>
+                        <td class='number'>11</td>
+                        <td class='number'>44</td>
+                        <td class='number'>37</td>
+                        <td class='number'>18</td>
+                        <td class='number'>40</td>
+                        <td class='number'>32</td>
+                        <td class='number'>15</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>Z</th>
+                        <td class='number'>13</td>
+                        <td class='number'>23</td>
+                        <td class='number'>26</td>
+                        <td class='number'>85</td>
+                        <td class='number'>92</td>
+                        <td class='number'>12</td>
+                        <td class='number'>73</td>
+                        <td class='number'>56</td>
+                        <td class='number'>81</td>
+                        <td class='number'>07</td>
+                        <td class='number'>75</td>
+                        <td class='number'>47</td>
+                        <td class='number'>99</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 sur 1</div>
+        </div>
+    </div>
+</body>
+</html>

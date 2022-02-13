@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Carrés Dépigmentés — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        body.ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        svg#flowchart {
+            width: 85%;
+            margin: 0 auto;
+            display: block;
+        }
+        .dark svg text { fill: #DDD; }
+        .dark svg path { stroke: #DDD; }
+
+        ul {
+            margin-bottom: .5em;
+            padding-left: 1.25em;
+        }
+
+        @media print {
+            svg#flowchart {
+                width: 82%;
+            }
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 50);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            var direction = rnd.next(0, 8);
+            document.getElementById('rule-start').innerText = ['haut à gauche', 'haut à droite', 'bas à gauche', 'bas à droite'][direction % 4];
+            document.getElementById('rule-dir1').innerText = ['au-dessous', 'au-dessous', 'au-dessus', 'au-dessus', 'à droite', 'à gauche', 'à droite', 'à gauche'][direction];
+            document.getElementById('rule-dir-colrow1').innerText = ['colonne', 'ligne'][(direction / 4)|0];
+            document.getElementById('rule-dir-colrow2').innerText = ['colonnes', 'lignes'][(direction / 4)|0];
+            document.getElementById('rule-dir2').innerText = ['gauche à doite', 'droite à gauche', 'gauche à droite', 'droite à gauche', 'haut en bas', 'haut en bas', 'bas en haut', 'bas en haut'][direction];
+
+            var convert = function(coord)
+            {
+                return String.fromCharCode(0x41 + (coord % 4)) + String.fromCharCode(0x31 + (coord / 4)|0);
+            }
+
+            var c1 = rnd.next(0, 16);
+            var c2 = rnd.next(0, 15);
+            if (c2 >= c1)
+                c2++;
+
+            document.getElementById('initial-col').innerText = convert(c1);
+            document.getElementById('initial-row').innerText = convert(c2);
+
+            var colorNames = ['R', 'V', 'B', 'J', 'M'];
+            var subsets = [];
+            for (var i = 0; i < 32; i++)
+            {
+                var colors = [];
+                for (var j = 0; j < 5; j++)
+                    if ((i & (1 << j)) != 0)
+                        colors.push(colorNames[j]);
+                rnd.shuffleFisherYates(colors);
+                subsets.push(colors);
+            }
+            rnd.shuffleFisherYates(subsets);
+
+            var svg, paths, missingCells, pointedAt = new Array(36);
+            do
+            {
+                svg = '';
+                paths = [];
+                missingCells = [];
+
+                var ixs = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='${5 + 15*ixs[i]}' y='-2.5' font-size='4'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    missingCells.push(ixs[5] + 6*i);
+
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='-2.5' y='${5 + 15*ixs[i]}' font-size='4' text-anchor='end'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    if (missingCells.indexOf(i + 6*ixs[5]) === -1)
+                        missingCells.push(i + 6*ixs[5]);
+
+                for (var ix = 0; ix < 36; ix++)
+                    pointedAt[ix] = false;
+
+                rnd.shuffleFisherYates(missingCells);
+                missingCells = missingCells.slice(0, 4);
+
+                function pointsAt(px, dir)
+                {
+                    var x = px % 6;
+                    var y = (px / 6)|0;
+                    do
+                    {
+                        x += [0, 1, 0, -1][dir];
+                        y += [-1, 0, 1, 0][dir];
+                        if (x < 0 || x >= 6 || y < 0 || y >= 6)
+                            return null;
+                    }
+                    while (missingCells.indexOf(x + 6*y) >= 0);
+                    return x + 6*y;
+                }
+
+                for (var ix = 0; ix < 36; ix++)
+                {
+                    if (missingCells.indexOf(ix) >= 0)
+                        continue;
+
+                    var x = ix % 6;
+                    var y = (ix / 6)|0;
+                    var dirs = [];
+                    for (var dir = 0; dir < 4; dir++)
+                        if (pointsAt(ix, dir) !== null)
+                            dirs.push(dir);
+                    rnd.shuffleFisherYates(dirs);
+                    dirs = dirs.slice(0, 2);    // 0 = no, 1 = yes
+
+                    var sbstIx = ix - missingCells.filter(cel => cel < ix).length;
+                    svg += `<text transform='translate(${5 + 15*x}, ${5 + 15*y}) rotate(-45)' x='0' y='1'>${subsets[sbstIx].join('')}</text>`;
+                    if (subsets[sbstIx].length === 0)
+                        dirs[1] = null;
+                    else if (subsets[sbstIx].length === 5)
+                        dirs[0] = null;
+
+                    var path = `M${x*15} ${y*15}`;
+                    path += (dirs.indexOf(0) >= 0) ? 'h3l2-2 2 2h3' : 'h10';
+                    path += (dirs.indexOf(1) >= 0) ? 'v3l2 2-2 2v3' : 'v10';
+                    path += (dirs.indexOf(2) >= 0) ? 'h-3l-2 2-2-2h-3' : 'h-10';
+                    path += (dirs.indexOf(3) >= 0) ? 'v-3l-2-2 2-2z' : 'z';
+                    paths.push({ pathData: path, ix: ix });
+
+                    for (var yn = 0; yn < 2; yn++)
+                    {
+                        if (dirs[yn] === null)
+                            continue;
+                        pointedAt[pointsAt(ix, dirs[yn])] = true;
+                        svg += `<text x='${[5, 9, 5, 1][dirs[yn]] + x*15}' y='${[1.5, 6, 10.5, 6][dirs[yn]] + y*15}' text-anchor='${['middle', 'start', 'middle', 'end'][dirs[yn]]}'>${['N', 'P'][yn]}</text>`;
+                    }
+                }
+            }
+            while (pointedAt.filter((p, pIx) => !p && (missingCells.indexOf(pIx) < 0)).length);
+            for (var pIx = 0; pIx < paths.length; pIx++)
+                svg += `<path fill='none' stroke='black' stroke-width='.3' d='${paths[pIx].pathData}' />`;
+
+            document.getElementById('flowchart-inner').innerHTML = svg;
+
+            setLinks(`#${rnd.seed}`);
+        }
+
+        function setLinks(hash)
+        {
+            document.querySelectorAll('.link > a').forEach(lnk => {
+                lnk.setAttribute('href', /^(.*?)(#.*)?$/.exec(lnk.getAttribute('href'))[1] + hash);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Carrés Dépigmentés</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Decolored Squares.svg">
+                <h2>À propos des Carrés Dépigmentés</h2>
+                <p class="flavour-text">Une structure ne peut pas tenir sans fondation. La logique est le fondement de la fonction. La fonction est l'essence du contrôle.</p>
+                <p class="appendix-reference" id="appendix-reference">Voir l'annexe des <span class="link"><a href="Colored%20Squares%20translated%20(Français%20—%20Carrés%20Colorés)%20(noi2coco).html">Carrés Colorés</a></span> pour identifier les modules de la famille des Carrés Colorés.</p>
+
+                <ul>
+                    <li>Au départ, s'il n'y a pas trois couleurs qui apparaissent exactement deux fois chacune et deux qui apparaissent exactement 5 fois chacune, vous êtes en présence d'un module différent.</li>
+                    <li>Trouver votre position de départ dans le schéma suivant. La colonne est la couleur de <span class='rule' id='initial-col'>B1</span>, la ligne celle de <span class='rule' id='initial-row'>B4</span> (les lettres sont les colonnes de gauche à droite, les chiffres les lignes de haut en bas). À réévaluer en cas d'erreur.</li>
+                    <li>Regarder le carré en <span class='rule' id='rule-start'>haut à gauche</span>. Si sa couleur figure dans la cellule de votre schéma actuel, suivre la flèche «&nbsp;P&nbsp;» et taper sur la case&nbsp;; sinon, suivre la flèche «&nbsp;N&nbsp;». Passer ensuite à la case suivante.</li>
+                    <li>La «&nbsp;case suivante&nbsp;» est celle qui se trouve <span class='rule' id='rule-dir1'>à droite</span> de la case actuelle. Après chaque <span class='rule' id='rule-dir-colrow1'>ligne</span> complète, continuer à traiter les <span class='rule' id='rule-dir-colrow2'>lignes</span> restantes de <span class='rule' id='rule-dir2'>haut en bas</span>.</li>
+                    <li>Les couleurs sont <strong>B</strong> (bleu), <strong>V</strong> (vert), <strong>M</strong> (magenta), <strong>R</strong> (rouge) et <strong>J</strong> (jaune).
+                </ul>
+
+                <svg id='flowchart' viewBox='-5.5 -5.5 91.5 91.5' font-family='Special Elite' font-size='2.5' text-anchor='middle'>
+                    <g id='flowchart-inner'></g>
+                    <g>
+                        <rect class='highlightable'  x='1'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='76' width='8' height='8' fill='transparent' />
+                    </g>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 1 sur 1</div>
+        </div>
+    </div>
+</body>
+</html>
