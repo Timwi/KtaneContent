@@ -1017,7 +1017,7 @@ function Bomb(seed) {
             return 0;
         });
 
-        const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "");
+        const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
         function GetManual(parseData) {
             const moduleData = parseData.moduleData;
             const repoName = moduleData.repo?.Name;
@@ -1304,7 +1304,7 @@ parseData = parseData.flatMap(data => {
 // Read Logfile
 var readwarning = false;
 var buildwarning = false;
-var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1");
+var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost");
 var linen = 0;
 var lines = [];
 var bombgroup;
