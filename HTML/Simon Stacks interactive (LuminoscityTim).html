@@ -11,6 +11,21 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
         table {
             margin: 1em auto;
         }
@@ -41,6 +56,72 @@
             justify-content: center;
             align-content: center;
             flex-direction: column;
+        }
+        svg path.hexagon:not(.black) { fill: #FFF; }
+        svg path.hexagon.black { fill: #000; }
+        svg path.hexbg {
+            stroke: none;
+            fill: none;
+        }
+        .dark svg path.hexbg { fill: rgba(200,200,200,0.4); }
+
+        .hexgrids svg.hexagons {
+            height: 300px;
+            width: 300px;
+        }
+        .hexgrids svg.hexagons path {
+            stroke-width: 2px;
+        }
+        .page-bg-02 .page-content {
+            margin: 0;
+        }
+        .grid1, .grid0 {
+            padding: 3mm;
+            width: 84mm;
+        }
+
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+            font-family: "Special Elite";
+            padding-top: 3px;
+        }
+        button.reset-board, button.reset-all, button.reset-saves, button.save {
+            padding-left: 2px;
+            padding-bottom: 0px;
+            padding-right: 2px;
+        }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 30px;
+        }
+        button.colorblind {
+            font-size: 13px;
+            padding: 2px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
         }
     </style>
     <script>
@@ -126,6 +207,106 @@
                     }
                 }
             }
+
+            $(".grid0, .grid1").each(function(i) {
+                let grid = $(this);
+                let svg = $(
+                    '<svg class="hexagons" viewbox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">' +
+                    '<defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs>' +
+                    '<path filter="url(#blur)" class="hexbg" d="M18 60l91-50l91 50v100l-91 50l-91-50Z">'
+                );
+                let rowStart2 = [55,36,17,36,55];
+                for (var c = 0; c < 5; c++) {
+                    for (var r = 0; r < rows[c]; r++) {
+                        let x1 = 34 + c*33;
+                        let y1 = rowStart2[c] + r*38;
+                        let x2 = 53 + c*33;
+                        let x3 = 64 + c*33;
+                        let y3 = rowStart2[c] + r*38 + 17;
+                        let y4 = rowStart2[c] + r*38 + 34;
+                        let x6 = 23 + c*33;
+                        let hex = makeSVG("path", {
+                            d:`M ${x1},${y1}, ${x2},${y1}, ${x3},${y3}, ${x2},${y4}, ${x1},${y4}, ${x6},${y3} z`,
+                            class:"hexagon"
+                        });
+                        svg.append(hex);
+                    }
+                }
+                grid.append(svg);
+
+                $("<div>").css("height", "4mm").appendTo(grid);
+                let saves = $("<div>").addClass("saves buttons").appendTo(grid);
+                $("<button>").addClass("save").text("Save").appendTo(saves);
+                $("<div>").css("height", "4mm").appendTo(grid);
+                let btns = $("<div>").addClass("buttons").appendTo(grid);
+                $("<button>").addClass("reset-grid").text("Reset Grid").appendTo(btns);
+                $("<button>").addClass("reset-saves").text("Reset Saves").appendTo(btns);
+                $("<button>").addClass("reset-all").text("Reset All").appendTo(btns);
+            });
+            $("svg path.hexagon").click(function() {
+                $(this).toggleClass("black");
+            });
+
+            let saveStates = [ [],[] ];
+            let currentState = [0,0];
+
+            function removeFutureSaves(t) {
+                if (currentState[t] < saveStates[t].length - 1) {
+                    for (let i = currentState[t] + 1; i < saveStates[t].length; i++) {
+                        saveStates[t][i].remove();
+                    }
+
+                    saveStates[t].splice(currentState[t] + 1, saveStates[t].length - currentState[t]);
+                }
+            }
+
+            let resetButton = $("button.reset-all");
+            for (let t = 0; t < resetButton.length; t++) {
+                resetButton[t].addEventListener("click", function() {
+                    $(`.grid${t} .hexagon`).removeClass("black");
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetSavesButton = $("button.reset-saves");
+            for (let t = 0; t < resetSavesButton.length; t++) {
+                resetSavesButton[t].addEventListener("click", function() {
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetGridButton = $("button.reset-grid");
+            for (let t = 0; t < resetGridButton.length; t++) {
+                resetGridButton[t].addEventListener("click", function() {
+                    $(`.grid${t} .hexagon`).removeClass("black");
+                });
+            }
+
+            let saveButton = $("button.save");
+            for (let t = 0; t < saveButton.length; t++) {
+                saveButton[t].addEventListener("click", function() {
+                    removeFutureSaves(t);
+
+                    let saveState = Array.from($(`.grid${t} .hexagon`)).map(x => $(x)).map(x => x.attr("class") || "");
+                    console.log(saveStates[t]);
+                    let stateNumber = saveStates[t].length;
+                    currentState[t] = stateNumber;
+
+                    let button = $("<button>").text(stateNumber + 1).click(function() {
+                        $(`.grid${t} .hexagon`).each((i, x) => $(x).attr("class", saveState[i]));
+                        currentState[t] = stateNumber;
+                    }).addClass("flash").appendTo(`.grid${t} .saves`);
+                    setTimeout(() => {
+                        button.removeClass("flash");
+                    }, 100);
+
+                    saveStates[t].push(button);
+                });
+            }
         });
     </script>
 </head>
@@ -169,9 +350,24 @@
                     <li>Repeat the steps above using the added flash.</li>
                 </ul>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
+    </div>
+    <div class="section">
         <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Stacks</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap hexgrids">
+                    <div class="grid0"></div>
+                    <div class="grid1"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Simon Stacks</span>
@@ -199,7 +395,7 @@
                     <tr> <td></td><td></td><td></td><td></td><td></td> </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
     </div>
 </body>
