@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <style>
-        .dark img:not(.diagram) { filter: invert(87%); }
+        .dark img:not(.diagram) { filter: invert(93%); }
         .page {
             background-repeat: repeat-y;
             background-position: top;
@@ -40,6 +40,9 @@
                 .selectables div div.selected {
                     background-color: lightgray;
                 }
+                .dark .selectables div div.selected {
+                    background-color: #777;
+                }
 
         .mysticInteractive {
             display: inline-grid;
@@ -64,19 +67,19 @@
                 }
 
                 .selectables div div:not(.left) {
-                    border-left: 3pt dashed;
+                    border-left: 2pt dashed;
                 }
 
                 .selectables div div:not(.up) {
-                    border-top: 3pt dashed;
+                    border-top: 2pt dashed;
                 }
 
                 .selectables div div:not(.down) {
-                    border-bottom: 3pt dashed;
+                    border-bottom: 2pt dashed;
                 }
 
                 .selectables div div:not(.right) {
-                    border-right: 3pt dashed;
+                    border-right: 2pt dashed;
                 }
 
         .left {
@@ -251,9 +254,10 @@
                         <div onclick="selectTile(12)" class="down option"></div>
                         <div onclick="selectTile(13)" class="up option"></div>
                         <div onclick="selectTile(14)" class="option"></div>
-                        <div onclick="selectTile(15)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/key.png"></div>
-                        <div onclick="selectTile(16)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/marker.png"></div>
+                        <div onclick="selectTile(15)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/key1.png"></div>
+                        <div onclick="selectTile(16)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/key2.png"></div>
                         <div onclick="selectTile(17)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/exit.png"></div>
+                        <div onclick="selectTile(18)" class="option"><img class="fullwidth" src="img/Mystic%20Maze%20interactive%20(VFlyer)/marker.png"></div>
                     </div>
                 </div>
                 <div>
@@ -347,9 +351,10 @@
                     </div>
                 </div>
                 <script>
-                    var keyHTML = "<img class=\"fullwidth\" src=\"img/Mystic%20Maze%20interactive%20(VFlyer)/key.png\" width=\"100%\">";
-                    var markerHTML = "<img class=\"fullwidth\" src=\"img/Mystic%20Maze%20interactive%20(VFlyer)/marker.png\" width=\"100%\">";
-                    var exitHTML = "<img class=\"fullwidth\" src=\"img/Mystic%20Maze%20interactive%20(VFlyer)/exit.png\">";
+                    var key1HTML = "<img class='fullwidth' src='img/Mystic%20Maze%20interactive%20(VFlyer)/key1.png' width='100%'>";
+                    var key2HTML = "<img class='fullwidth' src='img/Mystic%20Maze%20interactive%20(VFlyer)/key2.png' width='100%'>";
+                    var markerHTML = "<img class='fullwidth' src='img/Mystic%20Maze%20interactive%20(VFlyer)/marker.png' width='100%'>";
+                    var exitHTML = "<img class='fullwidth' src='img/Mystic%20Maze%20interactive%20(VFlyer)/exit.png'>";
 
                     var selectedIdx = 14;
                     var mazeTemp = [
@@ -364,8 +369,9 @@
 
                     // Used for showing images.
                     var idxExit = -1;
+                    var idxKey1 = -1;
+                    var idxKey2 = -1;
                     var allIdxMarkers = [];
-                    var allIdxKeys = [];
 
                     // Used for rendering walls, check if the wall index matches any of the given values.
                     var leftWallIdx = [0, 1, 3, 4, 6, 8, 11];
@@ -380,11 +386,8 @@
                     function fillTile(idx) {
                         switch (selectedIdx) {
                             case 15:
-                                var keyIdx = allIdxKeys.indexOf(idx)
-                                if (keyIdx == -1) {
-                                    allIdxKeys.push(idx);
-                                    if (allIdxKeys.length > 2)
-                                        allIdxKeys.shift();
+                                if (idx != idxKey1) {
+                                    idxKey1 = idx;
 
                                     var markerIdx = allIdxMarkers.indexOf(idx);
                                     if (markerIdx != -1)
@@ -392,26 +395,28 @@
 
                                     if (idx == idxExit)
                                         idxExit = -1;
-
+                                    if (idx == idxKey2)
+                                        idxKey2 = -1;
                                 }
                                 else {
-                                    allIdxKeys.splice(keyIdx, 1);
+                                    idxKey1 = -1;
                                 }
                                 break;
                             case 16:
-                                var markerIdx = allIdxMarkers.indexOf(idx);
-                                if (markerIdx == -1) {
-                                    allIdxMarkers.push(idx);
+                                if (idx != idxKey2) {
+                                    idxKey2 = idx;
 
-                                    var keyIdx = allIdxKeys.indexOf(idx);
-                                    if (keyIdx != -1)
-                                        allIdxKeys.splice(keyIdx, 1);
+                                    var markerIdx = allIdxMarkers.indexOf(idx);
+                                    if (markerIdx != -1)
+                                        allIdxMarkers.splice(markerIdx, 1);
 
                                     if (idx == idxExit)
                                         idxExit = -1;
+                                    if (idx == idxKey1)
+                                        idxKey1 = -1;
                                 }
                                 else {
-                                    allIdxMarkers.splice(markerIdx, 1);
+                                    idxKey2 = -1;
                                 }
                                 break;
                             case 17:
@@ -421,12 +426,29 @@
                                     var markerIdx = allIdxMarkers.indexOf(idx);
                                     if (markerIdx != -1)
                                         allIdxMarkers.splice(markerIdx, 1);
-                                    var keyIdx = allIdxMarkers.indexOf(idx);
-                                    if (keyIdx != -1)
-                                        allIdxMarkers.splice(keyIdx, 1);
+                                    if (idx == idxKey1)
+                                        idxKey1 = -1;
+                                    if (idx == idxKey2)
+                                        idxKey2 = -1;
                                 }
                                 else
                                     idxExit = -1;
+                                break;
+                            case 18:
+                                var markerIdx = allIdxMarkers.indexOf(idx);
+                                if (markerIdx == -1) {
+                                    allIdxMarkers.push(idx);
+
+                                    if (idx == idxExit)
+                                        idxExit = -1;
+                                    if (idx == idxKey1)
+                                        idxKey1 = -1;
+                                    if (idx == idxKey2)
+                                        idxKey2 = -1;
+                                }
+                                else {
+                                    allIdxMarkers.splice(markerIdx, 1);
+                                }
                                 break;
                             default:
                                 mazeTemp[idx] = selectedIdx;
@@ -445,7 +467,8 @@
                             14, 14, 14, 14, 14, 14, 14, 14,
                             14, 14, 14, 14, 14, 14, 14, 14];
                         idxExit = -1;
-                        allIdxKeys.splice(0, allIdxKeys.length);
+                        idxKey1 = -1;
+                        idxKey2 = -1;
                         allIdxMarkers.splice(0, allIdxMarkers.length);
                         UpdateMaze();
                     }
@@ -459,12 +482,15 @@
                             }
                         }
                         // Shift all of the keys, exits, and markers left
-                        for (var x = 0; x < allIdxKeys.length; x++) {
-                            var rowTempIdx = Math.floor(allIdxKeys[x] / 8);
-                            var colTempIdx = allIdxKeys[x] % 8 + 7;
-
-                            allIdxKeys[x] = rowTempIdx * 8 + colTempIdx % 8;
-
+                        if (idxKey1 != -1) {
+                            var rowTempIdx = Math.floor(idxKey1 / 8);
+                            var colTempIdx = idxKey1 % 8 + 7;
+                            idxKey1 = rowTempIdx * 8 + colTempIdx % 8;
+                        }
+                        if (idxKey2 != -1) {
+                            var rowTempIdx = Math.floor(idxKey2 / 8);
+                            var colTempIdx = idxKey2 % 8 + 7;
+                            idxKey2 = rowTempIdx * 8 + colTempIdx % 8;
                         }
                         for (var x = 0; x < allIdxMarkers.length; x++) {
                             var rowTempIdx = Math.floor(allIdxMarkers[x] / 8);
@@ -490,12 +516,15 @@
                             }
                         }
                         // Shift all of the keys, exits, and markers right
-                        for (var x = 0; x < allIdxKeys.length; x++) {
-                            var rowTempIdx = Math.floor(allIdxKeys[x] / 8);
-                            var colTempIdx = allIdxKeys[x] % 8 + 1;
-
-                            allIdxKeys[x] = rowTempIdx * 8 + colTempIdx % 8;
-
+                        if (idxKey1 != -1) {
+                            var rowTempIdx = Math.floor(idxKey1 / 8);
+                            var colTempIdx = idxKey1 % 8 + 1;
+                            idxKey1 = rowTempIdx * 8 + colTempIdx % 8;
+                        }
+                        if (idxKey2 != -1) {
+                            var rowTempIdx = Math.floor(idxKey2 / 8);
+                            var colTempIdx = idxKey2 % 8 + 1;
+                            idxKey2 = rowTempIdx * 8 + colTempIdx % 8;
                         }
                         for (var x = 0; x < allIdxMarkers.length; x++) {
                             var rowTempIdx = Math.floor(allIdxMarkers[x] / 8);
@@ -526,12 +555,15 @@
                             var colTempIdx = idxExit % 8;
                             idxExit = rowTempIdx * 8 + colTempIdx % 8;
                         }
-                        for (var x = 0; x < allIdxKeys.length; x++) {
-                            var rowTempIdx = (Math.floor(allIdxKeys[x] / 8) + 1) % 8;
-                            var colTempIdx = allIdxKeys[x] % 8;
-
-                            allIdxKeys[x] = rowTempIdx * 8 + colTempIdx % 8;
-
+                        if (idxKey1 != -1) {
+                            var rowTempIdx = (Math.floor(idxKey1 / 8) + 1) % 8;
+                            var colTempIdx = idxKey1 % 8;
+                            idxKey1 = rowTempIdx * 8 + colTempIdx % 8;
+                        }
+                        if (idxKey2 != -1) {
+                            var rowTempIdx = (Math.floor(idxKey2 / 8) + 1) % 8;
+                            var colTempIdx = idxKey2 % 8;
+                            idxKey2 = rowTempIdx * 8 + colTempIdx % 8;
                         }
                         for (var x = 0; x < allIdxMarkers.length; x++) {
                             var rowTempIdx = (Math.floor(allIdxMarkers[x] / 8) + 1) % 8;
@@ -557,12 +589,15 @@
                             var colTempIdx = idxExit % 8;
                             idxExit = rowTempIdx * 8 + colTempIdx % 8;
                         }
-                        for (var x = 0; x < allIdxKeys.length; x++) {
-                            var rowTempIdx = (Math.floor(allIdxKeys[x] / 8) + 7) % 8;
-                            var colTempIdx = allIdxKeys[x] % 8;
-
-                            allIdxKeys[x] = rowTempIdx * 8 + colTempIdx % 8;
-
+                        if (idxKey1 != -1) {
+                            var rowTempIdx = (Math.floor(idxKey1 / 8) + 7) % 8;
+                            var colTempIdx = idxKey1 % 8;
+                            idxKey1 = rowTempIdx * 8 + colTempIdx % 8;
+                        }
+                        if (idxKey2 != -1) {
+                            var rowTempIdx = (Math.floor(idxKey2 / 8) + 7) % 8;
+                            var colTempIdx = idxKey2 % 8;
+                            idxKey2 = rowTempIdx * 8 + colTempIdx % 8;
                         }
                         for (var x = 0; x < allIdxMarkers.length; x++) {
                             var rowTempIdx = (Math.floor(allIdxMarkers[x] / 8) + 7) % 8;
@@ -602,8 +637,10 @@
                             mazeCells[x].style = styleModifier;
 
                             // Update the visuals for the exit and keys
-                            if (allIdxKeys.includes(x))
-                                mazeCells[x].innerHTML = keyHTML;
+                            if (x == idxKey1)
+                                mazeCells[x].innerHTML = key1HTML;
+                            else if (x == idxKey2)
+                                mazeCells[x].innerHTML = key2HTML;
                             else if (allIdxMarkers.includes(x))
                                 mazeCells[x].innerHTML = markerHTML;
                             else if (x == idxExit)
