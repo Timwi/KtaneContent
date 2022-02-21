@@ -33,6 +33,9 @@
         ];
 
         let patterns = $(".patterns");
+        const gridGroups = [];
+        const gridRotations = [];
+
         function makeSVG(tag, attrs) {
             var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
             for (var k in attrs)
@@ -41,7 +44,12 @@
         }
         pattern.forEach((pat, i) => {
             let pair = $("<div>").text(String.fromCharCode(65 + i) + ".").appendTo(patterns);
-            let table = $('<svg class="gridsvg" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">').appendTo(pair);
+            let table = $('<svg class="gridsvg" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">').appendTo(pair).click(function(event) {
+                if (!(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey))
+                    clickGrid(i);
+            });
+            gridGroups[i] = table;
+            gridRotations[i] = 0;
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     let black = pat.includes(r*cols + c);
@@ -59,6 +67,24 @@
                     table.append(highlight);
                 }
             }
+        });
+        function clickGrid(index) {
+            if (document.querySelector("#rotate-left").checked) {
+                gridRotations[index]--;
+            } else {
+                gridRotations[index]++;
+            }
+
+            const grid = gridGroups[index];
+            grid.css("transform", `rotate(${gridRotations[index] * 90}deg)`);
+        }
+
+        $(".reset-rotations").click(function() {
+            gridRotations.forEach((item, i) => {
+                gridRotations[i] = 0;
+                const grid = gridGroups[i];
+                grid.css("transform", "rotate(0deg)");
+            });
         });
     });
     </script>
@@ -109,6 +135,17 @@
                     <li>Use the left/right arrows to input the letter that corresponds to the correct grid below.</li>
                     <li>When you are done, press Submit to disarm the module.</li>
                 </ul>
+                <div style="position: relative; height: 0; left:85mm; top: 1.5mm">
+                    <button class="reset-rotations">Reset Rotations</button>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-left" name="rotate" value="left">
+                    <label for="rotate-left">Rotate 90° Counterclockwise</label>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-right" name="rotate" value="right" checked>
+                    <label for="rotate-right">Rotate 90° Clockwise</label>
+                </div>
                 <div class="patterns"></div>
                 <div class="page-footer relative-footer">Page 1 of 1</div>
             </div>
