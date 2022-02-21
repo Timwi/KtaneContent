@@ -11,63 +11,70 @@
     <script src="js/ruleseed.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <style>
-        .dark.maintable, .maintable {
+        .dark .maintable, .maintable {
             margin-left: auto;
             margin-right: auto;
             border: none !important;
         }
-        .dark.maintablecell, .maintablecell {
+        .dark .maintablecell, .maintablecell {
             border: none !important;
             width: 150px;
             height: 150px;
         }
-        .subtable td {
-            width: 20px;
-            height: 20px;
-        }
-        .black {
-            background-color: black;
-        }
-        td :not(.black) {
-            background-color: white;
-        }
+        svg { transition: 0.5s; }
+        rect.black { fill: black; }
+        rect.white { fill: white; }
     </style>
     <script>
         function setDefaultRules(rnd) { setRules(rnd); }
+
+        const rows = 5;
+        const cols = 5;
+        const gridGroups = [];
+        const gridRotations = [];
+
+        function makeSVG(tag, attrs) {
+            var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
         function removeAllChildNodes(parent) {
             while (parent.firstChild) {
                 parent.removeChild(parent.firstChild);
             }
         }
-
         function setRules(rnd)
         {
-            let subtables = document.getElementsByClassName('subtable');
+            let subtables = document.getElementsByClassName('maintablecell');
             let grids = [];
             for (let gridIx = 0; gridIx < 9; gridIx++)
             {
                 removeAllChildNodes(subtables[gridIx]);
-                for (let r = 0; r < 5; r++) {
-                    let tr = $("<tr>").appendTo(subtables[gridIx]);
-                    for (let c = 0; c < 5; c++)
-                        $("<td>").appendTo(tr);
-                }
+                let table = $('<svg class="gridsvg" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">')
+                .appendTo(subtables[gridIx]).click(function(event) {
+                    if (!(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey))
+                        clickGrid(gridIx);
+                });
+                gridGroups[gridIx] = table;
+                gridRotations[gridIx] = 0;
+
                 let grid = [];
                 function findGrid()
                 {
-                    if (grid.length % 5 == 0)
-                        for (let prevRow = 0; prevRow*5 < grid.length-5; prevRow++)
-                            if (Array.from(Array(5).keys()).every(x => grid[prevRow*5 + x] === grid[grid.length-5 + x]))
+                    if (grid.length % cols == 0)
+                        for (let prevRow = 0; prevRow*cols < grid.length-cols; prevRow++)
+                            if (Array.from(Array(cols).keys()).every(x => grid[prevRow*cols + x] === grid[grid.length-cols + x]))
                                 return false;
-                    if (grid.length == 25)
+                    if (grid.length == cols*rows)
                     {
-                        for (let col = 0; col < 5; col++)
+                        for (let col = 0; col < cols; col++)
                             for (let col2 = 0; col2 < col; col2++)
-                                if (Array.from(Array(5).keys()).every(y => grid[y*5 + col] === grid[y*5 + col2]))
+                                if (Array.from(Array(cols).keys()).every(y => grid[y*cols + col] === grid[y*cols + col2]))
                                     return false;
 
                         return grids.every(gr => {
-                            for (let j = 0; j < 25; j++)
+                            for (let j = 0; j < cols*rows; j++)
                                 if (gr[j] !== grid[j])
                                     return true;
                             return false;
@@ -94,8 +101,22 @@
                 }
 
                 let tds = subtables[gridIx].getElementsByTagName('td');
-                for (let i = 0; i < 25; i++)
-                    tds[i].className = grid[i] ? 'black' : '';
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        let square = makeSVG("rect", {
+                            fill: "white", x:(20*c), y:(20*r), height:20, width:20, stroke:"black", "stroke-width": 0.5
+                        });
+                        let rect = makeSVG("rect", {
+                            class: (grid[r*cols + c] ? "black" : "white"), x:(20*c + 2), y:(20*r + 2), height:16, width:16, stroke:"none"
+                        });
+                        let highlight = makeSVG("rect", {
+                            class: "highlightable", x:(20*c), y:(20*r), height:20, width:20, fill: "transparent"
+                        });
+                        table.append(square);
+                        table.append(rect);
+                        table.append(highlight);
+                    }
+                }
 
                 for (let rot = 0; rot < 4; rot++)
                 {
@@ -103,6 +124,25 @@
                     grid = grid.map((_, i) => grid[(i%5)*5 + 4-((i/5)|0)]);
                 }
             }
+
+            $(".reset-rotations").click(function() {
+                gridRotations.forEach((item, i) => {
+                    gridRotations[i] = 0;
+                    const grid = gridGroups[i];
+                    grid.css("transform", "rotate(0deg)");
+                });
+            });
+        }
+
+        function clickGrid(index) {
+            if (document.querySelector("#rotate-left").checked) {
+                gridRotations[index]--;
+            } else {
+                gridRotations[index]++;
+            }
+
+            const grid = gridGroups[index];
+            grid.css("transform", `rotate(${gridRotations[index] * 90}deg)`);
         }
     </script>
 </head>
@@ -129,21 +169,32 @@
                     <li><strong>Yellow:</strong> Cycle text right by 4.</li>
                     <li><strong>Brown:</strong> Invert all letters.</li>
                 </ul>
+                <div style="position: relative; height: 0; left:85mm; top: 1.5mm">
+                    <button class="reset-rotations">Reset Rotations</button>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-left" name="rotate" value="left">
+                    <label for="rotate-left">Rotate 90° Counterclockwise</label>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-right" name="rotate" value="right" checked>
+                    <label for="rotate-right">Rotate 90° Clockwise</label>
+                </div>
                 <table class='maintable'>
                     <tr>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
                     </tr>
                     <tr>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
                     </tr>
                     <tr>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
-                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
                     </tr>
                 </table>
             </div>
