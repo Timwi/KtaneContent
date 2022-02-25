@@ -182,7 +182,7 @@
         }
 
         /* Only if the grid can fit on the page should it be sticky. */
-        @media screen and (min-height: 650px) {
+        @media screen and (min-height: 715px) {
             .left-wrapper {
                 position: sticky;
                 top: 1em;
@@ -200,6 +200,15 @@
             var selected;
             var helm = $(".height");
             var welm = $(".width");
+            let undos = [];
+            let redos = [];
+
+            function massChange(changes) {
+                changes.forEach(function(change) {
+                    var cell = change.cell;
+                    cell.toggleClass("marked", change.state != "").children("span").text(change.state);
+                });
+            }
 
             $(document).click(function() {
                 selected = null;
@@ -207,7 +216,7 @@
                 updateSelection();
             }).keydown(function(event) {
                 let k = event.key.toLowerCase();
-                if (!selected) {
+                if (!selected && k != "z" && k != "y") {
                     selected = welm;
                     updateSelection();
                 }
@@ -219,17 +228,47 @@
                 } else if (k == "h") {
                     selected = helm;
                     updateSelection();
+                } else if (k == "z") {
+                    if (undos.length > 0) {
+                        var state = undos[undos.length - 1];
+                        var redo = [];
+
+                        state.forEach(function(change) {
+                            redo.push({cell: change.cell, state: change.cell[0].children[0].textContent});
+                        });
+                        massChange(state);
+
+                        undos.splice(undos.length - 1, 1);
+                        redos.push(redo);
+                    }
+                } else if (k == "y") {
+                    if (redos.length > 0) {
+                        state = redos[redos.length - 1];
+                        var undo = [];
+
+                        state.forEach(function(change) {
+                            undo.push({cell: change.cell, state: change.cell[0].children[0].textContent});
+                        });
+                        massChange(state);
+
+                        redos.splice(redos.length - 1, 1);
+                        undos.push(undo);
+                    }
                 } else if (selected.hasClass("cell")) {
                     n = parseInt(event.key);
                     if (n && n < 9) {
-                        $(".grid td.marked span").each(function() {
-                            if ($(this).text() == n.toString()) {
-                                $(this).text("").parent().removeClass("marked");
-                            }
-                        });
+                        undos.push([{cell: selected, state: selected.children("span").text()}]);
+                        redos = [];
+                        // $(".grid td.marked span").each(function() {
+                        //     if ($(this).text() == n.toString()) {
+                        //         $(this).text("").parent().removeClass("marked");
+                        //     }
+                        // });
                         selected.children("span").text(n);
                         selected.addClass("marked");
                     } else if (event.key == "Backspace" || event.key == "Delete") {
+                        undos.push([{cell: selected, state: selected.children("span").text()}]);
+                        redos = [];
                         selected.children("span").text("");
                         selected.removeClass("marked");
                     }
@@ -262,19 +301,20 @@
             for (var i = 0; i < 8; i++) {
                 var row = $("<tr>").appendTo(grid);
                 for (var n = 0; n < 8; n++) {
-                    $("<td>").appendTo(row).click(function(event) {
+                    let cell = $("<td>").appendTo(row).click(function(event) {
                         selected = $(this);
                         updateSelection();
 
                         event.stopPropagation();
                     }).contextmenu(function(event) {
                         var span = $(this).children("span");
+                        undos.push([{cell: $(this), state: span.text()}]);
                         if (span.text() == "") {
-                            $(".grid td.marked span").each(function() {
-                                if ($(this).text() == mark.toString()) {
-                                    $(this).text("").parent().removeClass("marked");
-                                }
-                            });
+                            // $(".grid td.marked span").each(function() {
+                            //     if ($(this).text() == mark.toString()) {
+                            //         $(this).text("").parent().removeClass("marked");
+                            //     }
+                            // });
                             span.text(mark);
                             mark = Math.min(mark + 1, 8);
                             $(".mark").text(mark);
@@ -283,6 +323,7 @@
                             span.text("");
                             $(this).removeClass("marked");
                         }
+                        redos = [];
 
                         event.preventDefault();
                         event.stopPropagation();
@@ -317,7 +358,17 @@
             });
 
             function resetGrid() {
-                $(".marked").removeClass("marked").children("span").text("");
+                var undo = [];
+
+                $(".marked").each(function() {
+                    var cell = $(this);
+                    undo.push({
+                        cell: cell, state: cell[0].children[0].textContent
+                    });
+                    cell.removeClass("marked").children("span").text("");
+                });
+
+                undos.push(undo);
             }
 
             $(".reset").click(function() {
@@ -412,6 +463,9 @@
                     <tr>
                         <td>1-8<br>Right-Click</td>
                         <td>Marks a square with a number.<br>(Only if a number is absent)</td>
+                    </tr>
+                    <tr>
+                        <td>Z or Y</td><td>Undo or Redo.</td>
                     </tr>
                 </table>
             </div>
