@@ -75,7 +75,7 @@ const blacklist = [
 ];
 
 // All of the data used for parsing
-const parseData = [
+let parseData = [
     {
         loggingTag: "State",
         matches: [
@@ -10069,6 +10069,58 @@ const parseData = [
         moduleID: "WordSearchModulePL",
         icon: "Word Search",
         loggingTag: "Word Search PL"
+    },
+    {
+        moduleID: "Wordle",
+        loggingTag: "Wordle",
+        matches: [
+            {
+                regex: /Board reset/,
+                handler: (_, module) => {
+                    const board = document.createElement("div");
+                    board.style.display = "inline-block";
+                    board.style.backgroundColor = "#121213";
+                    board.style.padding = "8px";
+                    board.style.margin = "20px 0";
+                    module.board = board;
+                    module.push({ obj: board });
+                    return true;
+                }
+            },
+            {
+                regex: /Board reveal start/,
+                handler: (_, module) => {
+                    const row = document.createElement("div");
+                    row.style.whiteSpace = "nowrap";
+                    module.row = row;
+                    module.board.append(row);
+                    return true;
+                }
+            },
+            {
+                regex: /Board reveal letter (.) (.+)/,
+                handler: (matches, module) => {
+                    const cell = document.createElement("div");
+                    cell.style.display = "inline-block";
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.fontSize = "30px";
+                    cell.style.fontWeight = 900;
+                    cell.style.textAlign = "center";
+                    cell.style.lineHeight = "40px";
+                    cell.style.margin = "2px";
+                    cell.style.width = "40px";
+                    cell.style.height = "40px";
+                    cell.innerText = matches[1];
+                    const state = matches[2];
+                    cell.style.backgroundColor = "#" + (state === "correct" ? "538d4e" : state === "present" ? "b59f3b" : "3a3a3c");
+                    module.row.append(cell);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
     },
     {
         displayName: ["X-Ray", "Not X-Ray"],
