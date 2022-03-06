@@ -75,7 +75,7 @@ const blacklist = [
 ];
 
 // All of the data used for parsing
-const parseData = [
+let parseData = [
     {
         loggingTag: "State",
         matches: [

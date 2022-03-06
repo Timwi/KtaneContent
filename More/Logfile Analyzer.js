@@ -1017,12 +1017,15 @@ function Bomb(seed) {
             return 0;
         });
 
+        const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
         function GetManual(parseData) {
             const moduleData = parseData.moduleData;
-            let manual = (moduleData.repo?.FileName || moduleData.repo?.Name || moduleData.displayName)
+            const repoName = moduleData.repo?.Name;
+            let manual = (moduleData.repo?.FileName || repoName || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
 
+            let preferredManual = preferredManuals[repoName];
             if (parseData.tree && parseData.tree.length != 0 && typeof parseData.tree[0] === "string" && parseData.tree[0].startsWith("Language is ")) {
                 manual += ` (${parseData.tree[0].split(" ")[2]} — *)`;
 
@@ -1031,12 +1034,15 @@ function Bomb(seed) {
                     .replace("Vent Gas", "Venting Gas")
                     .replace("Passwords", "Password")
                     .replace("Who's on First", "Who’s on First")
-                    .replace(" Translated", " translated");
+                    .replace(" Translated", " translated")
+                    + ".html";
+            } else if (preferredManual !== undefined) {
+                manual = repoName + " " + preferredManual.replace(/ \((HTML|PDF)\)$/, (_, type) => "." + type.toLowerCase());
+            } else {
+                manual += ".html";
             }
 
-            manual += ".html";
-
-            if (ruleSeed != 1)
+            if (ruleSeed != 1 && manual.endsWith(".html"))
                 manual += "#" + ruleSeed;
 
             return manual;
@@ -1253,8 +1259,6 @@ function generateParseDataKeys(field)
     parseData.forEach((moduleData, index) => {
         if (parseKeys[field][moduleData[field]] !== undefined) {
             return;
-        } else if (Array.isArray(moduleData[field])) {
-            moduleData[field].forEach((individual, secondIndex) => parseKeys[field][individual] = [index, secondIndex]);
         } else if (moduleData[field] !== undefined) {
             parseKeys[field][moduleData[field]] = index;
         }
@@ -1268,28 +1272,39 @@ function getModuleData(value, field = "loggingTag") {
         generateParseDataKeys(field);
 
 
-    if (Array.isArray(parseKeys[field][value])) {
-        const singleModuleData = Object.assign({}, parseData[parseKeys[field][value][0]]);
-        const index = parseKeys[field][value][1];
-        const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
-
-        for (const field of fields) {
-            if (!Array.isArray(singleModuleData[field])) continue;
-
-            singleModuleData[field] = singleModuleData[field][index];
-        }
-        return singleModuleData;
-    } else if (parseKeys[field][value] !== undefined) {
+    if (parseKeys[field][value] !== undefined) {
         return Object.assign({}, parseData[parseKeys[field][value]]);
     }
 
     return null;
 }
 
+parseData = parseData.flatMap(data => {
+    if (!Array.isArray(data.moduleID)) {
+        return [data];
+    }
+
+    const multiple = [];
+    const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
+    for (let i = 0; i < data.moduleID.length; i++) {
+        const singleData = {};
+        for (const field of fields) {
+            if (!Array.isArray(data[field])) continue;
+
+            singleData[field] = data[field][i];
+        }
+
+        singleData.matches = data.matches;
+        multiple.push(singleData);
+    }
+
+    return multiple;
+});
+
 // Read Logfile
 var readwarning = false;
 var buildwarning = false;
-var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1");
+var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost");
 var linen = 0;
 var lines = [];
 var bombgroup;
@@ -1405,7 +1420,7 @@ function parseLog(opt) {
 
         $.get("../json/raw", function(websiteData) {
             for (const module of websiteData.KtaneModules) {
-                const matches = parseData.filter(data => Array.isArray(data.moduleID) ? data.moduleID.includes(module.ModuleID) : data.moduleID == module.ModuleID);
+                const matches = parseData.filter(data => data.moduleID == module.ModuleID);
                 if (matches.length === 0) {
                     websiteParseData.push({
                         moduleID: module.ModuleID,
@@ -1421,14 +1436,7 @@ function parseLog(opt) {
                     }
 
                     match.repo = module;
-                    if (Array.isArray(match.moduleID)) {
-                        if (match.iconPosition == null)
-                            match.iconPosition = [];
-
-                        match.iconPosition[match.moduleID.indexOf(module.ModuleID)] = { X: module.X, Y: module.Y };
-                    } else {
-                        match.iconPosition = { X: module.X, Y: module.Y };
-                    }
+                    match.iconPosition = { X: module.X, Y: module.Y };
                 }
             }
         }, "json")
