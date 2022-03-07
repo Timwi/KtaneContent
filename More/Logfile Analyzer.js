@@ -1712,6 +1712,19 @@ $(function() {
         readPaste(clipText);
         pasteButton.show();
         pasteBox.hide();
+    }).on("keydown", function(event) {
+        if (!event.altKey || event.shiftKey || event.ctrlKey || event.metaKey)
+            return;
+        let k = event.key.toLowerCase();
+        if (k == "w" || event.keyCode === 87)
+        {
+            if(!confirm("Refresh to toggle dark mode?")) return;
+            if(document.documentElement.classList.contains("dark-mode"))
+                localStorage.removeItem('theme');
+            else
+                localStorage.setItem('theme', "dark");
+            location.reload();
+        }
     });
 
     pasteBox.on("blur", function() {
