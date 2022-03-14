@@ -1494,13 +1494,8 @@ function parseLog(opt) {
                 // The Rules module runs into this edge case and so we need to make sure we find the one that has a module ID (if it exists).
                 if (id !== null && obj?.moduleID == undefined) {
                     var potentialModules = parseData.filter(data => data.loggingTag == loggingTag && data.moduleID !== undefined);
-                    switch (potentialModules.length) {
-                        case 1:
-                            obj = potentialModules[0];
-                            break;
-                        default:
-                            obj = null;
-                            break;
+                    if (potentialModules.length === 1) {
+                        obj = potentialModules[0];
                     }
                 }
 
