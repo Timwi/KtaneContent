@@ -1198,6 +1198,8 @@ function Bomb(seed) {
                 if (image.css("image-render") == null) {
                     image.css("image-rendering", "pixelated");
                 }
+
+                image.on("error", () => image.attr("xlink:href", "../Icons/blank.png"));
             }
             const backFace = svg;
 
