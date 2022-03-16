@@ -119,7 +119,7 @@ window.BombRenderer = class {
             var totalBombWidth = g(0) + g(1);
             var totalBombHeight = g(2) + g(3);
             //console.log(totalBombWidth, width, totalBombHeight, height);
-            var scale = Math.min(width / (totalBombWidth * 200), height / (totalBombHeight * 200)) * (camera.fov * Math.PI / 180) * 0.8;
+            var scale = Math.max(Math.min(width / (totalBombWidth * 200), height / (totalBombHeight * 200)) * (camera.fov * Math.PI / 180) * 0.8, 1);
             this.bombgroup.scale.set(scale, scale, scale);
         };
         this.onresize();
