@@ -1434,14 +1434,15 @@ function parseLog(opt) {
                         iconPosition: { X: module.X, Y: module.Y },
                         repo: module
                     });
-                } else if (matches.length === 1) {
-                    const match = matches[0];
-                    if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
-                        console.warn(`Unnecessary module: ${module.Name}`);
-                    }
+                } else if (matches.length >= 1) {
+                    for (const match of matches) {
+                        if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
+                            console.warn(`Unnecessary module: ${module.Name}`);
+                        }
 
-                    match.repo = module;
-                    match.iconPosition = { X: module.X, Y: module.Y };
+                        match.repo = module;
+                        match.iconPosition = { X: module.X, Y: module.Y };
+                    }
                 }
             }
         }, "json")
