@@ -296,7 +296,7 @@ window.BombRenderer = class {
                 }
 
                 if (this.iconSprite.complete) onLoad();
-                else this.iconSprite.onload = onLoad;
+                else this.iconSprite.addEventListener("load", onLoad);
 
                 break;
         }
