@@ -1186,7 +1186,7 @@ function Bomb(seed) {
                 const y = this.Anchors[moduleIndex][1] * -1 * 100;
 
                 let image;
-                if (matchingModules.length >= 1) {
+                if (module.iconPosition !== undefined) {
                     const imageSVG = $SVG(`<svg viewBox="0 0 32 32" x=${x} y=${y} width=22 height=22>`).appendTo(svg);
                     image = $SVG(`<image x=${-module.moduleData.iconPosition.X * 32} y=${-module.moduleData.iconPosition.Y * 32} href="../iconsprite">`).appendTo(imageSVG);
                 } else {
