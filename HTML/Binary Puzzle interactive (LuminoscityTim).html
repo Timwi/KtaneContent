@@ -33,6 +33,13 @@
         const MODE_SOLVE = 1;
         const MODE_PLAY = 2;
 
+        const directions = {
+            Up: [0, -1],
+            Left: [-1, 0],
+            Down: [0, 1],
+            Right: [1, 0]
+        };
+
         function selectNone() {
             selected = null;
             updateSelection();
@@ -182,6 +189,19 @@
                 sizeDec();
             else if (k == "=" || k == "+")
                 sizeInc();
+            else if (event.key.startsWith("Arrow")) {
+                let direction = directions[event.key.substring(5)];
+                let x = currX + direction[0];
+                let y = currY + direction[1];
+                if (x >= 0 && x < _size && y >= 0 && y < _size) {
+                    selected = grid.children().eq(y + 1).children().eq(x + 1);
+                    updateSelection();
+                    currX = x;
+                    currY = y;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }
             else if (!event.shiftKey) {
                 n = parseInt(event.key);
                 if (k == " " || k == "enter" || (n >= 0 && n <= 1 && !event.altKey)) {
@@ -266,7 +286,7 @@
             return new Range(0, _size).Enumerate().map(x => gameGrid[x][y])
         }
         function getCol(x) {
-            return gameGrid[x];
+            return new Range(0, _size).Enumerate().map(y => gameGrid[x][y])
         }
         function checkSolution() {
             if (mode() == MODE_PLAY) {
@@ -287,12 +307,12 @@
                 for (let i = 0; i < _size; i++) {
                     if (row[i].filter(e => e == 1).length != _size >> 1) return false;
                     if (col[i].filter(e => e == 1).length != _size >> 1) return false;
-                    if (row[i].some((el, j) => {
-                        j >= 2 && el == row[j-1] && el == row[j-2]
-                    })) return false;
-                    if (col[i].some((el, j) => {
-                        j >= 2 && el == col[j-1] && el == col[j-2]
-                    })) return false;
+                    if (row[i].some((el, j) =>
+                        j >= 2 && el == row[i][j-1] && el == row[i][j-2]
+                    )) return false;
+                    if (col[i].some((el, j) =>
+                        j >= 2 && el == col[i][j-1] && el == col[i][j-2]
+                    )) return false;
                     for (let j = 0; j < i; j++)
                         if (row[i].every((el, k) => el == row[j][k])) return false;
                     for (let j = 0; j < i; j++)
@@ -399,6 +419,8 @@
                     }
                 }
                 updateGrid();
+                $(".netsquare").removeClass("locked");
+                $(".netsquare.zero, .netsquare.one").addClass("locked");
             }
             resetPos();
         });
@@ -428,19 +450,18 @@
                 $(".sizeHolder").removeClass("invisible");
                 generate();
                 updateGrid();
+                $(".netsquare").removeClass("locked");
                 $(".netsquare.zero, .netsquare.one").addClass("locked");
             }
             else {
                 $("button.read-solve").prop('disabled', false);
-                $(".netsquare").removeClass("locked");
-                if (modeWasSolve)
-                    $(".netsquare.zero, .netsquare.one").addClass("locked");
-                else
+                if (!modeWasSolve) {
+                    $(".netsquare").removeClass("locked");
                     $("button.read-solve").removeClass("solve");
+                }
                 $(".sizeHolder").addClass("invisible");
                 $(".solution").addClass("invisible");
             }
-            $(".reset-grid").click();
         });
         $("<button>").addClass("show-sol").appendTo(tools).click(function() {
             $(this).toggleClass("show");
@@ -521,13 +542,14 @@
                 $(".netsquare, .tools button, .sizeHolder, .hstack.just-left").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $(".tools button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
                 currentState = stateNumber;
-                _size = s_size;
-                sizeNumber.text(_size);
+                for (var i = 0; i < 2; i++)
+                    if (_size > s_size) sizeDec();
+                    else if (_size < s_size) sizeInc();
                 selected = s_selected;
                 currX = s_currX;
                 currY = s_currY;
                 modeWasSolve = s_modeWasSolve;
-                resultList = [];
+                solList = Array(s_solList.length);
                 Object.assign(solList, s_solList);
                 for (let y = 0; y < _size; y++) {
                     for (let x = 0; x < _size; x++) {
