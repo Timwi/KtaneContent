@@ -59,6 +59,7 @@
             ];
             const borders = ["BlueBorder", "GoldBorder", "GreenBorder", "PurpleBorder", "WhiteBorder"];
             const borderTitle = ["Blue Border", "Gold Border", "Green Border", "Purple Border", "White Border"];
+            const pageExtra = { };
 
             const ROWS_PER_PAGE = 7;
             const IMAGES_PER_ROW = 3;
@@ -72,6 +73,8 @@
                 let numNames = names[b].length;
                 let rows = Math.ceil(numNames / IMAGES_PER_ROW);
                 let header = true;
+                let idx1 = 0;
+                let idx2 = 0;
                 for (let p = 0; p < rows;) {
                     let page = $("<div>").addClass(`page page-bg-0${pageNum % 7 + 1}`).appendTo(body);
                     $('<div class="page-header"><span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span><span class="page-header-section-title">Plant Identification</span></div>')
@@ -86,34 +89,34 @@
 
                     let table = $("<table>").appendTo(content);
                     let r = p;
-                    let overCount = 0;
-                    let extra = 0;
-                    for (; r < (p + ROWS_PER_PAGE - (header ? 1 : 0)) && r < rows; r++) {
+                    let extra = pageNum in pageExtra ? pageExtra[pageNum] : 0;
+                    for (; r < (p + ROWS_PER_PAGE + extra) && r < rows; r++) {
                         let tr = $("<tr>").appendTo(table);
                         for (let i = 0; i < IMAGES_PER_ROW; i++) {
-                            let idx = r * IMAGES_PER_ROW + i;
-                            if (idx < numNames)
-                                $("<th>").text(names[b][idx]).appendTo(tr);
+                            if (idx1 < numNames) {
+                                $("<th>").text(names[b][idx1]).appendTo(tr);
+                                idx1++;
+                            }
                             else
                                 $("<th>").addClass("empty").appendTo(tr);
                         }
                         let tr2 = $("<tr>").appendTo(table);
                         for (let i = 0; i < IMAGES_PER_ROW; i++) {
-                            let idx = r * IMAGES_PER_ROW + i;
-                            if (idx < numNames) {
+                            if (idx2 < numNames) {
                                 let td = $("<td>").appendTo(tr2);
-                                let imageSp = images[b][idx].split(" ");
+                                let imageSp = images[b][idx2].split(" ");
                                 let pl1 = imageSp.slice(-1) == "pl1";
                                 if (pl1) imageSp.pop();
                                 $(`<img src="img/Plant Identification/Packets/${imageSp.join(" ")}.png" class="${pl1 ? 'plant1' : 'plant2'}">`)
                                     .appendTo(td);
+                                idx2++;
                             }
                             else
                                 $("<td>").addClass("empty").appendTo(tr);
                         }
                     }
                     header = false;
-                    p = r + 1;
+                    p = r;
                     $("<div>").addClass("page-footer relative-footer").text(`Page ${pageNum} of ${PAGES}`).appendTo(page);
                     pageNum++;
                 }
@@ -127,6 +130,7 @@
         }
         table, td, th {
             text-align: center;
+            padding: 2px 2px 2px 2px;
         }
         img.plant1 {
             height: 100px;
