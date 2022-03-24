@@ -47,7 +47,9 @@
         .borderless {
             border: none;
         }
-
+        .fixed-width {
+            font-family: 'Courier New', Courier, monospace;
+        }
         #interactive {
             font-size: 13px;
         }
@@ -79,7 +81,7 @@
         
         .dark img:not(.diagram) { filter: invert(87%); }
     </style>
-</head> 
+</head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
@@ -126,7 +128,7 @@
                     <p>Using the operator corresponding to the position of the current cipher dial (starting with <span class="bold">AND</span> = 1), find the truth values of each pair; the encrypted letter depends on whether each is true or false.</p>
 
                     <table>
-                        <tr><th>B<sub>1</sub></th><th>B<sub>2</sub></th><th>AND (P1)</th><th>OR (P2)</th><th>XOR (P3)</th><th>⇒ (P4)</th><th>NAND (P5)</th><th>NOR (P6)</th><th>XNOR (P7)</th><th>⇐ (P8)</th></tr>
+                        <tr><th>B<sub>1</sub></th><th>B<sub>2</sub></th><th>AND (P1)</th><th>OR (P2)</th><th>XOR (P3)</th><th>IMP ⇒ (P4)</th><th>NAND (P5)</th><th>NOR (P6)</th><th>XNOR (P7)</th><th>IMPBY ⇐ (P8)</th></tr>
                         <tr><th>1</th><th>1</th><th>T</th><th>T</th><th>F</th><th>T</th><th>F</th><th>F</th><th>T</th><th>T</th></tr>
                         <tr><th>1</th><th>0</th><th>F</th><th>T</th><th>T</th><th>F</th><th>T</th><th>F</th><th>F</th><th>T</th></tr>
                         <tr><th>0</th><th>1</th><th>F</th><th>T</th><th>T</th><th>T</th><th>T</th><th>F</th><th>F</th><th>F</th></tr>
@@ -141,7 +143,7 @@
                         <tr>        <th>F</th><td>M</td><td>E</td><td>B</td><td>K</td><td>D</td><td>Z</td><td>S</td><td>L</td><td>J</td><td>X</td><td>N</td><td>F</td><td>T</td><td>U</td><td>W</td><td>R</td><td>I</td><td>O</td><td>G</td><td>C</td><td>Y</td><td>H</td><td>P</td><td>A</td><td>Q</td><td>V</td></tr>
                     </table>
                 </div>
-                <br><br>
+                <br>
                 <h4>1/NE: Caesar Cipher</h4>
                 <div class="alpha">
                     <p>Each letter in the word has been shifted <span class="bold">right(+)</span> through the alphabet by the number of 45° clockwise rotations, <span class="bold">of the individual dials.</span></p>
@@ -161,8 +163,7 @@
             <div class="page-content">
                 <h4>2/E: Playfair Cipher</h4>
                 <div class = "alpha">
-                    <ul>
-                        The indexing of the lists start at zero.
+                    <ul><li>The indexing of the lists start at zero.</li>
                         <li>
                             If the last dial is pointing east, use the word corresponding to <span class="bold">R<sub>1</sub></span>.<br>
                             Use the word corresponding <span class="bold">R<sub>n+1</sub></span>.
@@ -225,11 +226,11 @@
                 <div class="alpha">
                     <p>Normal rules from <a href="https://ktane.timwi.de/HTML/Pigpen%20Cycle.html" target="_blank">Pigpen Cycle</a> applies.</p>
                     <p>If the LED corresponding to this cipher is unlit, use cipher I. <br>Otherwise, use cipher II.</p>
-                    <br><br>
+                    <br>
                 </div>
                 <img src="img/Pigpen/pigpen1.svg" width="40%" style="float: left;">
                 <img src="img/Pigpen/pigpen2.svg" width="40%" style="float: right;">
-                <br><br>
+                <br>
             </div>
             <div class="page-footer relative-footer">Page 4 of 10</div>
         </div>
@@ -384,7 +385,7 @@
                             0 000 001 010 011 100 101 110 111 1 (Before LED Rule)<br>
                             0 111 001 101 011 011 101 001 111 1 (After LED Rule)<br>
                         </code>
-                        <br><br>
+                        <br>
                         <code>01110011010110111010011111</code><br>
                         <code>ABCDEFGHIJKLMNOPQRSTUVWXYZ</code><br>
                         <code>Shift right by 8: Decrypted: UOPQAESV</code>
@@ -583,7 +584,7 @@
         const interactive = $("#interactive");
 
         // Make the cyclers
-        function makeCycler(namesA, namesB, letterno, controls = true)
+        function makeCycler(namesA, namesB, letterno)
         {
             let positionA = 0;
             let positionB = 0;
@@ -594,8 +595,8 @@
             {
                 for (let i = 0; i < 26; i++)
                 {
-                    topRow.children().eq(i).text(setA[nameA][0][mod26(i + positionA)]);
-                    bottomRow.children().eq(i).text(setB[nameB][0][mod26(i + positionB)]);
+                    topRow.children().eq(i+1).text(setA[nameA][0][mod26(i + positionA)]);
+                    bottomRow.children().eq(i+1).text(setB[nameB][0][mod26(i + positionB)]);
                 }
             };
 
@@ -629,25 +630,34 @@
             
             const selectorRow = 
                 $("<tr>").appendTo(interactive);
-                $("<td colspan=26>")
+                $("<td colspan=28>")
                     .append("Letter " + letterno)
                     .append("  //  ")
                     .append(selectorA).append(" Offset ").append(offsetA)
                     .append("  //  ")
                     .append(selectorB).append(" Offset ").append(offsetB)
                     .appendTo(selectorRow);
-                
+
+            const shiftLeftA  = $("<button>").text("←").click(() => { positionA++; offsetA.val(mod26(positionA)).trigger('change'); update(); });
+            const shiftRightA = $("<button>").text("→").click(() => { positionA--; offsetA.val(mod26(positionA)).trigger('change'); update(); });
+            const shiftLeftB  = $("<button>").text("←").click(() => { positionB++; offsetB.val(mod26(positionB)).trigger('change'); update(); });
+            const shiftRightB = $("<button>").text("→").click(() => { positionB--; offsetB.val(mod26(positionB)).trigger('change'); update(); });
+
             const topRow = $("<tr>").appendTo(interactive);
+            $("<td>").addClass("borderless").append(shiftLeftA).appendTo(topRow);
             for (let i = 0; i < 26; i++)
             {
-                $("<td>").appendTo(topRow);
+                $("<td>").addClass("fixed-width").appendTo(topRow);
             }
-            
+            $("<td>").addClass("borderless").append(shiftRightA).appendTo(topRow);
+
             const bottomRow = $("<tr>").appendTo(interactive);
+            $("<td>").addClass("borderless").append(shiftLeftB).appendTo(bottomRow);
             for (let i = 0; i < 26; i++)
             {
-                $("<td>").appendTo(bottomRow);
+                $("<td>").addClass("fixed-width").appendTo(bottomRow);
             }
+            $("<td>").addClass("borderless").append(shiftRightB).appendTo(bottomRow);
             update();
         }
 
