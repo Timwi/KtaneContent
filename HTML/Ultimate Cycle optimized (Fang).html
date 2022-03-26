@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -49,6 +49,10 @@
         }
         .fixed-width {
             font-family: 'Courier New', Courier, monospace;
+        }
+        .center {
+            text-align: center;
+            margin: auto;
         }
         #interactive {
             font-size: 13px;
@@ -333,7 +337,7 @@
                     <p>
                         The keyword used depends on the rotations of the dials adjacent to the one corresponding to this cipher:
                     </p><ul>
-                        The indexing of the lists start at zero.
+                        <li>The indexing of the lists start at zero.</li>
                         <li>If the first dial is pointing west, use the keyword corresponding to <strong>6 + R<sub>2</sub></strong>.</li>
                         <li>If the last dial is pointing west, use the keyword corresponding to <strong>6 + R<sub>7</sub></strong>.</li>
                         <li>Otherwise, use the keyword corresponding to <strong>R<sub>n-1</sub> + R<sub>n+1</sub></strong>.</li>
@@ -582,21 +586,22 @@
         }
 
         const interactive = $("#interactive");
-
+        
         // Make the cyclers
-        function makeCycler(namesA, namesB, letterno)
+        function makeCycler(namesA, namesB)
         {
-            let positionA = 0;
-            let positionB = 0;
             let nameA = namesA[0];
             let nameB = namesB[0];
-
+            
             const update = () =>
             {
-                for (let i = 0; i < 26; i++)
+                for (let j = 0; j < 8; j++)
                 {
-                    topRow.children().eq(i+1).text(setA[nameA][0][mod26(i + positionA)]);
-                    bottomRow.children().eq(i+1).text(setB[nameB][0][mod26(i + positionB)]);
+                    for (let i = 0; i < 26; i++)
+                    {
+                        topRow[j].children().eq(i+1).text(setA[nameA][0][mod26(i + positionA[j])]);
+                        bottomRow[j].children().eq(i+1).text(setB[nameB][0][mod26(i + positionB[j])]);
+                    }
                 }
             };
 
@@ -605,69 +610,84 @@
             {
                 $("<option>").attr("value", nameA).text(nameA).appendTo(selectorA);
             }
-            selectorA.change(() => { nameA = selectorA.val(); update(); });
-            
+            selectorA.change(() => { nameA = selectorA.val(); update();});
             const selectorB = $("<select>");
             for (const nameB of namesB)
             {
                 $("<option>").attr("value", nameB).text(nameB).appendTo(selectorB);
             }
-            selectorB.change(() => { nameB = selectorB.val(); update(); });
+            selectorB.change(() => { nameB = selectorB.val(); update();});
             
-            const offsetA = $("<select>");
-            for (let i = 0; i < 26; i++)
+            $("<tr>").appendTo(interactive);
+            $("<td colspan=14>").addClass("center").append("List A: ").append(selectorA).appendTo(interactive);
+            $("<td colspan=14>").addClass("center").append("List B: ").append(selectorB).appendTo(interactive);
+                
+            const offsetA = [];
+            const offsetB = [];
+            const positionA = [];
+            const positionB = [];
+            const shiftLeftA  = [];
+            const shiftRightA = [];
+            const shiftLeftB  = [];
+            const shiftRightB = [];
+            const topRow = [];
+            const bottomRow = [];
+            
+            for (let l = 0; l < 8; l++) 
             {
-                $("<option>").attr("value", i).text(i).appendTo(offsetA);
-            }
-            offsetA.change(() => { positionA = Number(offsetA.val()); update(); });
-            
-            const offsetB = $("<select>");
-            for (let i = 0; i < 26; i++)
-            {
-                $("<option>").attr("value", i).text(i).appendTo(offsetB);
-            }
-            offsetB.change(() => { positionB = Number(offsetB.val()); update(); });
-            
-            const selectorRow = 
+                positionA[l] = 0;
+                positionB[l] = 0;
+
+                offsetA[l] = $("<select>");
+                for (let i = 0; i < 26; i++)
+                {
+                    $("<option>").attr("value", i).text(i).appendTo(offsetA[l]);
+                }
+                offsetA[l].change(() => { positionA[l] = Number(offsetA[l].val()); update(); });
+                
+                offsetB[l] = $("<select>");
+                for (let i = 0; i < 26; i++)
+                {
+                    $("<option>").attr("value", i).text(i).appendTo(offsetB[l]);
+                }
+                offsetB[l].change(() => { positionB[l] = Number(offsetB[l].val()); update(); });
+                
                 $("<tr>").appendTo(interactive);
-                $("<td colspan=28>")
-                    .append("Letter " + letterno)
-                    .append("  //  ")
-                    .append(selectorA).append(" Offset ").append(offsetA)
-                    .append("  //  ")
-                    .append(selectorB).append(" Offset ").append(offsetB)
-                    .appendTo(selectorRow);
+                    $("<td colspan=28>")
+                        .append("Letter " + (l+1) + " - ")
+                        .append(" Offset ").append(offsetA[l])
+                        .append(" // ")
+                        .append(" Offset ").append(offsetB[l])
+                        .appendTo(interactive);
 
-            const shiftLeftA  = $("<button>").text("←").click(() => { positionA++; offsetA.val(mod26(positionA)).trigger('change'); update(); });
-            const shiftRightA = $("<button>").text("→").click(() => { positionA--; offsetA.val(mod26(positionA)).trigger('change'); update(); });
-            const shiftLeftB  = $("<button>").text("←").click(() => { positionB++; offsetB.val(mod26(positionB)).trigger('change'); update(); });
-            const shiftRightB = $("<button>").text("→").click(() => { positionB--; offsetB.val(mod26(positionB)).trigger('change'); update(); });
+                shiftLeftA[l]  = $("<button>").text("←").click(() => { for (let r = l; r < 8; r++) { positionA[r]++; offsetA[r].val(mod26(positionA[r])).trigger('change'); } update(); });
+                shiftRightA[l] = $("<button>").text("→").click(() => { for (let r = l; r < 8; r++) { positionA[r]--; offsetA[r].val(mod26(positionA[r])).trigger('change'); } update(); });
+                shiftLeftB[l]  = $("<button>").text("←").click(() => { for (let r = l; r < 8; r++) { positionB[r]++; offsetB[r].val(mod26(positionB[r])).trigger('change'); } update(); });
+                shiftRightB[l] = $("<button>").text("→").click(() => { for (let r = l; r < 8; r++) { positionB[r]--; offsetB[r].val(mod26(positionB[r])).trigger('change'); } update(); });
 
-            const topRow = $("<tr>").appendTo(interactive);
-            $("<td>").addClass("borderless").append(shiftLeftA).appendTo(topRow);
-            for (let i = 0; i < 26; i++)
-            {
-                $("<td>").addClass("fixed-width").appendTo(topRow);
+                topRow[l] = $("<tr>").appendTo(interactive);
+                $("<td>").addClass("borderless").append(shiftLeftA[l]).appendTo(topRow[l]);
+                for (let i = 0; i < 26; i++)
+                {
+                    $("<td>").addClass("fixed-width").appendTo(topRow[l]);
+                }
+                $("<td>").addClass("borderless").append(shiftRightA[l]).appendTo(topRow[l]);
+
+                bottomRow[l] = $("<tr>").appendTo(interactive);
+                $("<td>").addClass("borderless").append(shiftLeftB[l]).appendTo(bottomRow[l]);
+                for (let i = 0; i < 26; i++)
+                {
+                    $("<td>").addClass("fixed-width").appendTo(bottomRow[l]);
+                }
+                $("<td>").addClass("borderless").append(shiftRightB[l]).appendTo(bottomRow[l]);
             }
-            $("<td>").addClass("borderless").append(shiftRightA).appendTo(topRow);
-
-            const bottomRow = $("<tr>").appendTo(interactive);
-            $("<td>").addClass("borderless").append(shiftLeftB).appendTo(bottomRow);
-            for (let i = 0; i < 26; i++)
-            {
-                $("<td>").addClass("fixed-width").appendTo(bottomRow);
-            }
-            $("<td>").addClass("borderless").append(shiftRightB).appendTo(bottomRow);
             update();
         }
 
         // Make the rotors
         const seta = Object.keys(setA);
         const setb = Object.keys(setB);
-        for (let i = 0; i < 8; i++)
-        {
-            makeCycler(seta, setb, i + 1);
-        }
+        makeCycler(seta, setb);
     </script>
 </body>
 </html>
