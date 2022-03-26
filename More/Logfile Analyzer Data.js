@@ -5396,6 +5396,46 @@ let parseData = [
         ]
     },
     {
+        moduleID: ["MahjongQuizEasy", "MahjongQuizHard", "MahjongQuizScrambled"],
+        loggingTag: ["Mahjong Quiz Easy", "Mahjong Quiz Hard", "Mahjong Quiz Scrambled"],
+        matches: [
+            {
+                regex: /(Given hand:|Scrambled hand:|Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ((\d[mpsz] ?)+).*$/,
+                handler: function (matches, module) {
+                    const tiles = matches[2].trim().split(' ');
+                    let div = $('<div>');
+                    tiles.forEach(tile => {
+                        div.append(`<img src='../HTML/img/Mahjong Quiz/${tile.charAt(0)}${tile.charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                    });
+                    module.push({ label: matches[1], obj: div });
+                }
+            },
+            {
+                regex: /(Explanation:) (.*)$/,
+                handler: function (matches, module) {
+                    let div = $(`<div style='display: flex;'>`);
+                    const tileStrings = matches[2].replace(/\s/g, "").split("|").filter(x => x != "");
+                    for (var i = 0; i < tileStrings.length; i++) {
+                        const tiles = tileStrings[i].match(/.{2}/g);
+                        if (i == 0) {
+                            div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[0].charAt(0)}${tiles[0].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                            div.append(`<span style='padding-top: 4px;'>-><span>`);
+                        } else {
+                            for (var j = 0; j < tiles.length; j++) {
+                                if (j == tiles.length - 1) {
+                                    div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[j].charAt(0)}${tiles[j].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
+                                } else {
+                                    div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[j].charAt(0)}${tiles[j].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                                }
+                            }
+                        }
+                    }
+                    module.push({ label: matches[1], obj: div });
+                }
+            }
+        ]
+    },
+    {
         moduleID: "MarbleTumbleModule",
         loggingTag: "Marble Tumble",
         matches: [
