@@ -5402,10 +5402,16 @@ let parseData = [
             {
                 regex: /(Given hand:|Scrambled hand:|Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ((\d[mpsz] ?)+).*$/,
                 handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
                     const tiles = matches[2].trim().split(' ');
                     let div = $('<div>');
                     tiles.forEach(tile => {
-                        div.append(`<img src='../HTML/img/Mahjong Quiz/${tile.charAt(0)}${tile.charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                        div.append(`<img src='../HTML/img/Mahjong/${fileNames[tile]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
                     });
                     module.push({ label: matches[1], obj: div });
                 }
@@ -5413,19 +5419,25 @@ let parseData = [
             {
                 regex: /(Explanation:) (.*)$/,
                 handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
                     let div = $(`<div style='display: flex;'>`);
                     const tileStrings = matches[2].replace(/\s/g, "").split("|").filter(x => x != "");
                     for (var i = 0; i < tileStrings.length; i++) {
                         const tiles = tileStrings[i].match(/.{2}/g);
                         if (i == 0) {
-                            div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[0].charAt(0)}${tiles[0].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                            div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
                             div.append(`<span style='padding-top: 4px;'>-><span>`);
                         } else {
                             for (var j = 0; j < tiles.length; j++) {
                                 if (j == tiles.length - 1) {
-                                    div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[j].charAt(0)}${tiles[j].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
                                 } else {
-                                    div.append(`<img src='../HTML/img/Mahjong Quiz/${tiles[j].charAt(0)}${tiles[j].charAt(1)}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
                                 }
                             }
                         }
