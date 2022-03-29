@@ -8,11 +8,130 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-        svg text { text-anchor: start; }
-        .dark svg path, .dark svg circle, .dark svg text:not(.blue) {
-            fill: #DDD;
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                'If the number is odd, double it. Otherwise, halve it.',
+                'If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash either red, yellow, or blue.',
+                'Square the number.',
+                'Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.',
+                'Triple the number and take the digital root until the number is a single digit.',
+                'Subtract the number from 10.'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
         }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `If the number is divisible by ${m}, divide it by ${m}; otherwise, multiply it by ${m}.`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "red", "orange", "yellow", "green", "blue", "purple", "white" ];
+                    return `If the number is divisible by ${m}, divide it by ${m}. Otherwise, add the number of lights that flash either ${colorNames[colors[0]]}, ${colorNames[colors[1]]}, or ${colorNames[colors[2]]}.`;
+                },
+                rnd => `Square the number.`,
+                rnd => `Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `Replace ${which === 1
+                        ? '+’s with −’s (and vice versa) and ×’s with /’s (and vice versa)'
+                        : '+’s with ×’s (and vice versa) and −’s with /’s (and vice versa)'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `Multiply the number by ${m} and take the digital root.`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `Subtract the number from ${m}.`;
+                },
+                rnd => `Multiply the number by <var>n<${''}/var> + 1, where <var>n<${''}/var> is equal to the number of ports that contain this character.`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `Take the number modulo ${m}, and use its factorial.`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `Replace the number by the number of ${['lit ', 'unlit ', ''][indMode]}indicators that contain this character.`;
+                },
+                rnd => `Multiply the number by <var>n<${''}/var>, where <var>n<${''}/var> is the number of distinct serial number characters.`,
+                rnd => `Replace the number with the number of 1’s that appear in this number’s binary conversion.`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `Replace the number with the number of ${['1’s', '2’s', '1’s and 2’s'][whichDigits]} that appear in this number’s ternary conversion.`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${[`Multiply the number by <var>n<${''}/var> + 1, where <var>n<${''}/var> is`, 'Add'][op]} the number of ${['port plates', 'distinct port types', 'battery holders'][whichEdgework]} on the bomb.`;
+                },
+                rnd => `Replace the character with the number of dots that appear in this characters’s <a href='https://ktane.timwi.de/HTML/Braille.html'>Braille<${''}/a> representation. (1..9 = A..H, 0 = J)`,
+                rnd => `Replace the character with the number of colored regions within the <a href='https://ktane.timwi.de/HTML/Maritime%20Flags.html'>maritime signalling flag<${''}/a> for the character.`,
+                rnd => `Replace the character with the number of shapes that appear in the character’s <a href='https://ktane.timwi.de/HTML/Zoni.html'>Zoni<${''}/a> symbol.`,
+                rnd => `Replace the character with <var>d<${''}/var> + 3×<var>s<${''}/var>, where <var>d<${''}/var> is the number of dots and <var>s<${''}/var> the number of dashes in the character’s Morse code representation.`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `Replace the character with the number of segments that would be ${['off', 'on'][useOn]} in the <a href='https://ktane.timwi.de/HTML/14.html'>14-segment display<${''}/a> for the character.`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `${['Prepend', 'Append'][append]} the ${['6th', '3rd'][snValue]} character of the serial number to this number.`;
+                },
+                rnd => `Add the number to the total number of letters across all displayed colors.`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `If the character appears in the serial number, divide it by <var>n<${''}/var> + 1, where <var>n<${''}/var> is the number of times it appears in the serial number. Otherwise, multiply by ${m}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `If the character in Morse Code reversed is a number from 0–9 or a letter from A–Z, use that character’s base-36 value instead. Otherwise, use the number plus the number of ${['ports', 'port plates', 'batteries', 'battery holders', 'indicators', 'lit indicators', 'unlit indicators'][which]}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `If the character is a digit, add the number of ${['ports', 'port plates', 'batteries', 'battery holders', 'indicators', 'lit indicators', 'unlit indicators'][which]}. Otherwise, replace the character with <var>d<${''}/var> + 3×<var>s<${''}/var>, where <var>d<${''}/var> is the number of dots and <var>s<${''}/var> the number of lines in the character’s Pigpen representation.`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `Multiply the number by the number of ${['digits', 'letters'][letters]} in the serial number.`;
+                },
+                rnd => `Add the last digit of the rule seed.`,
+                rnd => `Replace the value with 1 + the number of times the character is contained in the names of the colors of all LEDs.`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `Add the current ${['day', 'month', 'year'][which]} when the bomb activated.`;
+                },
+                rnd => `Replace the value with the index of the character’s first occurrence within the text “0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9” (not counting spaces).`,
+                rnd => `If the character is a letter, replace it with its score in <a href='http://ktane.timwi.de/HTML/Scrabble%20Scramble.html'>English Scrabble<${''}/a>.`,
+                rnd => `Replace the number with the <a href='https://ktane.timwi.de/HTML/%C3%9Cbermodule.html'>extended tap code<${''}/a> for the character, read as a two-digit number.`,
+                rnd => `Replace the character with the number of modules on the bomb whose name contains the character.`,
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = shuffledRules[i];
+        }
+    </script>
+    <style>
+        .small-font {
+            font-size: 11pt;
+        }
+        .dark .ondark { filter: invert(85%); }
     </style>
 </head>
 <body>
@@ -26,54 +145,56 @@
                 <img src="img/Component/Color Morse.svg" class="diagram">
                 <h2>On the Subject of Color Morse</h2>
                 <p class="flavour-text">--&nbsp;.-&nbsp;-&nbsp;.... / ..&nbsp;... / ..-.&nbsp;..-&nbsp;-.&nbsp;!</p>
-                <ul>
-                    <li>There are three flashing lights of different colors and operations and parentheses surrounding them.</li>
-                    <li>Each flashing light displays a single number/letter in Morse code. If it displays a letter, consider it as a number with value equal to the letter's numeric position in the alphabet plus 9 (A=10, B=11, etc.).</li>
-                    <li>For each number, apply the color's special operation found in the table below that corresponds to the color of the light for that number. If the color of the light is white, do nothing to the number.</li>
-                    <li>Use the (potentially) new numbers in place of the lights in the mathematical expression to get a single result.
-                        <ul>
-                            <li>If the result is negative, make sure to send a hyphen before the rest of the number.</li>
-                            <li>If the result is not an integer, consider only the integer part of the number. </li>
-                            <li>If the result's absolute value is greater than 999, consider only the three least significant digits.</li>
-                            <li>If more than one of the previous rules apply, apply them in order.</li>
-                        </ul>
-                    </li>
-                    <li>Using the buttons, enter the result in Morse code using the blank button as a digit separator.</li>
-                    <li>Upon a strike, any characters you have entered so far are NOT reset.</li>
-                </ul>
-                <table>
-                    <thead><tr>
-                        <td><b>Color</b></td>
-                        <td><b>Action</b></td>
-                    </tr></thead>
-                    <tr>
-                        <td>Red</td>
-                        <td>If the number is odd, double it. Otherwise, halve it.</td>
-                    </tr>
-                    <tr>
-                        <td>Orange</td>
-                        <td>If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash with primary colors*.</td>
-                    </tr>
-                    <tr>
-                        <td>Yellow</td>
-                        <td>Square the number.</td>
-                    </tr>
-                    <tr>
-                        <td>Green</td>
-                        <td>Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.</td>
-                    </tr>
-                    <tr>
-                        <td>Blue</td>
-                        <td>Triple the number and take the digital root until the number is a single digit**.</td>
-                    </tr>
-                    <tr>
-                        <td>Purple</td>
-                        <td>Subtract the number from 10.</td>
-                    </tr>
-                </table>
-                <br>
-                <p>* The primary colors are red, blue, and yellow.</p>
-                <p>** The digital root of a number is the sum of all of its digits.</p>
+                <div class="small-font">
+                    <ul>
+                        <li>There are three flashing lights of different colors and operations and parentheses surrounding them.</li>
+                        <li>Each flashing light displays a single number/letter in Morse code. If it displays a letter, consider it as a number with value equal to the letter's numeric position in the alphabet plus 9 (A=10, B=11, etc.).</li>
+                        <li>For each number, apply the color's special operation found in the table below that corresponds to the color of the light for that number. If the color of the light is white, do nothing to the number.</li>
+                        <li>Use the (potentially) new numbers in place of the lights in the mathematical expression to get a single result.
+                            <ul>
+                                <li>If the result is not an integer, consider only the integer part of the number. </li>
+                                <li>If the result is negative, make sure to send a hyphen before the rest of the number.</li>
+                                <li>If the result's absolute value is greater than 999, consider only the three least significant digits.</li>
+                                <li>If more than one of the previous rules apply, apply them in order.</li>
+                                <li>Disregard any leading zeros.</li>
+                            </ul>
+                        </li>
+                        <li>Using the buttons, enter the result in Morse code using the blank button as a digit separator.</li>
+                        <li>Upon a strike, any characters you have entered so far are reset.</li>
+                    </ul>
+                    <p id='rule-seeded-explanation'>If a rule refers to a <em>number</em>, it refers to the base-36 value (A=10, ..., Z=35).
+                        If a rule refers to a <em>character</em>, it refers to the digit or letter shown in Morse code.</p>
+                    <table class="color-morse">
+                        <thead><tr>
+                            <td><b>Color</b></td>
+                            <td><b>Action</b></td>
+                        </tr></thead>
+                        <tbody><tr>
+                            <td>Red</td>
+                            <td class="color-morse-rules">If the number is odd, double it. Otherwise, halve it.</td>
+                        </tr>
+                        <tr>
+                            <td>Orange</td>
+                            <td class="color-morse-rules">If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash with primary colors.</td>
+                        </tr>
+                        <tr>
+                            <td>Yellow</td>
+                            <td class="color-morse-rules">Square the number.</td>
+                        </tr>
+                        <tr>
+                            <td>Green</td>
+                            <td class="color-morse-rules">Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.</td>
+                        </tr>
+                        <tr>
+                            <td>Blue</td>
+                            <td class="color-morse-rules">Triple the number and take the digital root until the number is a single digit.</td>
+                        </tr>
+                        <tr>
+                            <td>Purple</td>
+                            <td class="color-morse-rules">Subtract the number from 10.</td>
+                        </tr>
+                    </tbody></table>
+                </div>
             </div>
            <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
