@@ -5809,6 +5809,139 @@ let parseData = [
         ]
     },
     {
+        displayName: "Mazematics",
+        moduleID: "mazematics",
+        loggingTag: "Mazematics",
+        matches: [
+            {
+                regex: /[A-Z][a-z]+ = (\d)/,
+                handler: function (matches, module) {
+                    module.Counter = ++module.Counter | 0;
+                    (module.Log ??= []).push({obj: this.names[module.Counter]+": "+matches[1]});
+                    (module.ShapeNumbers ??= []).push(matches[1]);
+                    return true;
+                },
+                names: ["Circle","Square","Mountain","Triangle","Diamond","Hexagon","Star","Heart"]
+            },
+            {
+                regex: /STRIKE!/,
+                handler: function (_, module) {
+                    module.Struck = true;
+                }
+            },
+            {
+                regex: /Attempted/,
+                handler: function (_, module) {
+                    module.Rule49 = true;
+                }
+            },
+            {
+                regex: /BEGIN|MODULE RESET/,
+                handler: function (_, module) {
+                    (module.CoordsGroups ??= []).push([]);
+                    (module.Strikes ??= []).push([]);
+                    const sn = module.ShapeNumbers;
+                    module.newSNOrder = [sn[0], sn[4], sn[3], sn[7], sn[5], sn[1], sn[6], sn[2]];
+                }
+            },
+            {
+                regex: /SOLVED!/,
+                handler: function (_, module) {
+                    module.Solved = true;
+                    module.JSON = {
+                        shapeNumbers: module.newSNOrder.join(''),
+                        coordsGroups: module.CoordsGroups,
+                        strikes: (module.Strikes ?? []),
+                        solved: module.Solved
+                    }
+                    const style = "font-size:large;font-style:italic;font-family:wingdings";
+                    module.push({label:`<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`});
+                    for (const line of module.Log) module.push(line);
+                    return true;
+                }
+            },
+            {
+                regex: /([A-Z][0-9])[^,]+(-?\d)/,
+                handler: function (matches, module) {
+                    let correctLine = matches.input;
+                    const currentStrikes = module.Strikes[module.Strikes.length-1];
+                    if (module.Rule49)
+                    {
+                        currentStrikes.push(matches[1][0] + module.CurrentRow);
+                        module.Struck = false;
+                        module.Rule49 = false;
+                        /*module.CoordsGroups.push([]);
+                        module.Strikes.push([]);*/
+                    }
+                    else
+                    {
+                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length-1];
+                        if (!currentMoves.length)
+                        {
+                            currentMoves.push(matches[1]);
+                            module.CurrentRow = +matches[1][1];
+                        }
+                        else
+                        {
+                            const goodCoordinate = this.fixCoordinate(currentMoves, arguments, this.shapes, this.shapesSign);
+                            currentMoves.push(goodCoordinate);
+                            correctLine = matches.input.replace(matches[1], goodCoordinate);
+                            if (module.Struck) { currentStrikes.push(goodCoordinate); module.Struck = false; }
+                        }
+                    }
+                    module.Log.push(correctLine);
+                    return true;
+                },
+                fixCoordinate: (cm, hArgs, s, ss) => {
+                    const [matches, module] = hArgs;
+                    const [curr, next] = [cm[cm.length-1], matches[1]];
+                    if (curr[0] === next[0])
+                    {
+                        const letters = "ABCDEFGH"
+                        const toNumber = l => letters.search(l)
+                        const toCoordsFixed = c => [module.CurrentRow-1, toNumber(c[0])] //<a, b>
+                        const maintainInRange = n => (n+8)%8 //ensures n € [0,7], n € Z
+                        const getValueOfPossibleCells = c => {
+                            const indexUp    = maintainInRange(c[0]-1)*8+c[1]
+                                , indexDown  = maintainInRange(c[0]+1)*8+c[1];
+                            return [ss[indexUp]  +module.newSNOrder[s[indexUp]],
+                                    ss[indexDown]+module.newSNOrder[s[indexDown]]];
+                        }
+                        const clue = matches[2]
+                        const dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
+                        if (!(dir[0] ^ dir[1])) { console.error("Fatal."); throw new Error(); }
+                        module.CurrentRow = maintainInRange(module.CurrentRow-1+Math.ceil(Math.tan(dir[1])-1))+1;
+                    }
+                    return `${next[0]}${module.CurrentRow}`;
+                },
+                shapes: [
+                    4, 6, 2, 5, 0, 1, 7, 3,
+                    7, 3, 1, 0, 2, 5, 4, 6,
+                    6, 7, 5, 2, 1, 0, 3, 4,
+                    3, 4, 0, 1, 6, 2, 5, 7,
+                    2, 5, 6, 3, 7, 4, 1, 0,
+                    1, 0, 4, 7, 3, 6, 2, 5,
+                    0, 1, 3, 4, 5, 7, 6, 2,
+                    5, 2, 7, 6, 4, 3, 0, 1 ],
+                shapesSign: [
+                    '+', '+', '-', '-', '+', '+', '-', '-',
+                    '-', '+', '-', '-', '+', '+', '-', '+',
+                    '+', '-', '+', '+', '-', '-', '+', '-',
+                    '+', '-', '-', '+', '-', '+', '+', '-',
+                    '-', '+', '+', '-', '+', '-', '-', '+',
+                    '-', '+', '-', '+', '-', '-', '+', '+',
+                    '+', '-', '+', '+', '-', '+', '-', '-',
+                    '-', '-', '+', '-', '+', '-', '+', '+' ]
+            },
+            {
+                regex: /.+/,
+                handler (matched, module) {
+                    module.Log.push(matched.input);
+                }
+            }
+        ]
+    },
+    {
         moduleID: "MazeScrambler",
         loggingTag: "Maze Scrambler",
         matches: [

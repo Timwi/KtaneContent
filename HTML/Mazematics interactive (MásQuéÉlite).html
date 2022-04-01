@@ -25,7 +25,7 @@
         }
         @keyframes glow { 60%{filter: drop-shadow(0px 0px 10px #111)} }
         @keyframes glowdark { 60%{filter: drop-shadow(0px 0px 10px #DDD)} }
-        * *:not(code, textarea) { font-family: "Special Elite" }
+        * *:not(code) { font-family: "Special Elite" }
         body {
             --red: rgba(255,0,0,0.5);
             --orange: rgba(255,165,0,0.5);
@@ -73,7 +73,6 @@
         }
             #inputs>* {
                 display: flex;
-                justify-content: space-between;
                 width: 100%;
                 user-select: none;
             }
@@ -93,6 +92,7 @@
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             padding-bottom: 2px;
+            margin-right: 65px;
         }
         #prev, #next {
             border: 3px solid transparent;
@@ -123,7 +123,7 @@
         .red { background-color: var(--red) }
         .orange { background-color: var(--orange) }
         .blue { background-color: var(--blue) }
-        .green-grey { background: linear-gradient(to right,var(--gray)25%,var(--green)55%) }
+        .grey-green { background: linear-gradient(to right,var(--gray) 25%,var(--green) 55%) }
         .cyan { background-color: var(--cyan) }
         
         .pair {
@@ -158,27 +158,10 @@
         }
         svg path { stroke-width: 2.5 }
 
-        #legend-section { display: none; }
-        textarea {
-            width: 665px;
-            height: 735px;
-            resize: none;
-            overflow: hidden;
-            margin: 0;
-            outline: none;
-            line-height: 18px;
-            font-family: "Lucida Console", monospace;
-        }
-        #primary-content { width: 672px; height: 730px; }
-        table { position: relative }
-        #arrowMap { position: absolute; z-index: 1; }
-
-        #button-row {
-            flex: auto;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: baseline;
-        }
+        #legend-section { display: none }
+        #arrowMap { position: absolute }
+        .buttons { align-items: baseline }
+        
         code {
             font-family: monospace;
             background-color: #DDD;
@@ -217,6 +200,11 @@
             padding: 5px;
             margin: 0 5px;
         }
+        #tip {
+            font-size: small;
+            text-align: center;
+            font-style: italic;
+        }
 
         .dark svg, .dark svg rect, .dark svg circle { stroke: #DDD }
         .dark .arrowInstance { filter: drop-shadow(0px 0px 2px #444) }
@@ -224,7 +212,7 @@
         .dark svg text { fill: #DDD }
         .dark code { background-color: #555 }
         .dark input { border: none }
-        .dark input, .dark textarea {
+        .dark input {
             background-color: #444;
             color: #DDD;
         }
@@ -244,26 +232,18 @@
                 <p class="flavour-text">Which number was star again? Bruh.</p>
                 <p style="margin-top:15px">See the <a href="Mazematics.html">original manual</a> for instructions.</p>
                 <div id="inputs">
-                    <div>
-                        <span id="button-row">
-                            <span>
-                                <label>
-                                    <span style="display:inline-block;">Toggle numbers</span>
-                                    <input type="checkbox">
-                                </label>
-                                <label style="margin-left:25px">
-                                    <span style="display:inline-block;margin-right:4px">Hide colors</span>
-                                    <input type="checkbox">
-                                </label>
-                            </span>
-                            <span>
-                                <button id="reset">Reset</button>
-                                <label>
-                                    <input type="checkbox">
-                                    <span style="display:inline-block;margin-left:17px">Analyze log</span>
-                                </label>
-                            </span>
+                    <div class="buttons layout-evenly">
+                        <span>
+                            <label>
+                                <span style="display:inline-block;">Toggle numbers</span>
+                                <input type="checkbox">
+                            </label>
+                            <label style="margin-left:25px">
+                                <span style="display:inline-block;margin-right:4px">Hide colors</span>
+                                <input type="checkbox">
+                            </label>
                         </span>
+                        <button id="reset">Reset</button>
                         <span>
                             <button id="prev">Prev</button>
                             <button id="next">Next</button>
@@ -296,10 +276,7 @@
                         <polygon id="mountain" points="30,6 5,50 55,50"/>
                     </defs>
                 </svg>
-                <div>
-                    <textarea style="display:none"></textarea>
-                    <div id="primary-content"></div>
-                </div>
+                <div id="primary-content"></div>
                 <div>
                     <br>
                     <h3>Recall:</h3>
@@ -323,9 +300,10 @@
                             <span class="red legend-item">Strike</span>&gt;
                             <span class="orange legend-item">Start+End</span>&gt;
                             <span class="blue legend-item">Start</span>&vert;
-                            <span class="green-grey legend-item">End&nbsp;/&nbsp;Solved</span>&gt;
+                            <span class="grey-green legend-item">End&nbsp;/&nbsp;Solved</span>&gt;
                             <span class="cyan legend-item">Step</span>
                         </div>
+                        <p id="tip">Tip: when in doubt, start with the <span class="orange"><strong>orange</strong></span> arrow; end with the <span class="red"><strong>red</strong></span> one. <span class="grey-green"><em>Arrows are ordered by color</em>.</span></p>
                     </div>
                 </div>
             </div>
@@ -369,7 +347,7 @@
             if (edge) createArrow(true);
         }
         
-        function handleData(moves, numbers, strikes, solved) {
+        function handleData(numbers, moves, strikes, solved) {
             removeCellsColor();
             removeArrows();
             toggleNumbers(false);
@@ -384,8 +362,8 @@
                     for (let i = 1; i < moves.length; i++) {
                         if (prev === curr) { console.error(`ERROR ${prev}: Two same coordinates in a row\nPlease report this error to MásQuéÉlite#2406`); throw new Error(); };
                         [prev, curr] = [toCoords(moves[i-1]), toCoords(moves[i])];
-                        let pos = +(curr[0] - prev[0] === 0); //(left right) or (up down)?
-                        edge.push(Math.abs(prev[pos] - curr[pos]) !== 1); //am I wrapping around?
+                        let pos = +(curr[0] - prev[0] === 0);                      //(left right) or (up down)?
+                        edge.push(Math.abs(prev[pos] - curr[pos]) !== 1);          //am I wrapping around?
                         yield edge[i-1] ^ (prev[pos] > curr[pos]) ? 0+pos : 2+pos; //(right down) or (left up)?
                     }
                 }
@@ -400,7 +378,7 @@
 
             let prev, curr = toCoords(moves[0])
               , movedCell = getCell(curr)
-              , strikedCells = strikes.map(cell => rows[toCoords(cell)[0]].children[toCoords(cell)[1]])
+              , strikedCells = strikes.map(cell => getCell(toCoords(cell)))
             const startingCell = movedCell;
             startingCell.style.backgroundColor = colors.blue;
 
@@ -430,12 +408,12 @@
             if (checkboxes[1].checked) handleCheckbox(1, 1);
         }
 
-        function updatePageStatus() {
+        function updatePageStatus() { //TODO: reemplazar todos los innerHTML por textContent
             const curr = logCase.current;
             pagesText.innerHTML = `${curr}/${logCase.max}`;
             prev.setAttribute("style", `animation:glow${document.body.className} 4s linear 0s 2`);
             next.setAttribute("style", `animation:glow${document.body.className} 4s linear 0s 2`);
-            handleData(logCase.cg[curr-1], logCase.sn, logCase.s[curr-1], logCase.solved[curr-1]);
+            handleData(logCase.sn, logCase.cg[curr-1], logCase.s[curr-1], (logCase.sd && curr === logCase.max));
         }
 
         function handlePageArrows(dir) {
@@ -446,68 +424,10 @@
             updatePageStatus();
         }
 
-        //PageCase factory
-        function handleNewPage(coordsGroups, moveGroups, strikes, shapeNumbers) {
-            logCase = new PageCase(coordsGroups, moveGroups, strikes, shapeNumbers);
+        function handleHash(hash) {
+            const hashObj = JSON.parse(decodeURI(hash));
+            logCase = new PageCase(hashObj.shapeNumbers, hashObj.coordsGroups, hashObj.strikes, hashObj.solved);
             updatePageStatus();
-        }
-
-        function parseTextarea(log) {
-            const [header, movements] = log.split("BEGIN")
-                , retrievedPairs = header.match(/[A-Z][a-z]+ = \d/g)
-                , initialConditions = [retrievedPairs[0], retrievedPairs[4], retrievedPairs[3], retrievedPairs[7], retrievedPairs[5], retrievedPairs[1], retrievedPairs[6], retrievedPairs[2]]
-                , shapeNumbers = initialConditions.map(s => s.split(" = ")[1]).join("")
-                , moveGroups = movements.split("MODULE RESET")
-                , coordsGroups = moveGroups.map(group => group.match(/[A-Z][0-9]/g))
-                , fixedCoordsGroups = coordsGroups.map((cg,i) => fixCoordinates(cg, moveGroups[i], shapeNumbers))
-                , fixedMoveGroups = moveGroups.map((mg,i) => fixRawLog(mg, i, fixedCoordsGroups))
-                , strikes = fixedMoveGroups.map(group => Array.from(group.matchAll(/^STRIKE[\s\S]+?([A-Z][0-9])/mg), match => match[1]));
-
-            handleNewPage(fixedCoordsGroups, fixedMoveGroups, strikes, shapeNumbers);
-        }
-
-        //I shouldn't be making this function but whatever.
-        //fixes a bug the module has when displaying which coordinates have been visites: it doesn't show them properly
-        function fixCoordinates(moves, movesRaw, shapeNumbers) {
-            let movesExcerpt = movesRaw
-              , currentRow = +moves[0][1];
-            const letters = "ABCDEFGH"
-                , toNumber = l => letters.search(l)
-                , toCoordsFixed = c => [currentRow-1, toNumber(c[0])]
-                , maintainInRange = n => (n+8)%8; //ensures n € [0,7], n € Z
-
-            for (let i = 1; i < moves.length; i++) {
-                let [curr, next] = [moves[i-1], moves[i]]
-                  , goodCoordinate = `${next[0]}${currentRow}`;
-                movesExcerpt = movesExcerpt.slice(movesExcerpt.search(/[A-Z][0-9]/)+2);
-                if (curr[0] === next[0]) {
-                    const nextExcerpt = movesExcerpt.slice(movesExcerpt.search(/[A-Z][0-9]/)+2)
-                        , getValueOfPossibleCells = c => {
-                            const indexTop    = maintainInRange(c[0]-1)*8+c[1]
-                                , indexBottom = maintainInRange(c[0]+1)*8+c[1];
-
-                            return [shapesSign[indexTop]   +shapeNumbers[shapes[indexTop]],
-                                    shapesSign[indexBottom]+shapeNumbers[shapes[indexBottom]]];
-                          }
-                        , clue = nextExcerpt.slice(2).match(/-?\d/)[0]
-                        , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
-                    if (!(dir[0] ^ dir[1])) { console.error(`ERROR ${curr}:Did you try to fix the log manually? You don't need to!\nIf you feel this is an error, please contact MásQuéÉlite#2406`); throw new Error(); };
-                    currentRow = maintainInRange(currentRow-1+Math.ceil(Math.tan(dir[1])-1))+1;
-                    goodCoordinate = `${next[0]}${currentRow}`;
-                }
-                moves[i] = goodCoordinate;
-            }
-            return moves;
-        }
-
-        //same here.
-        //since I use the raw log as well, I have to fix it too
-        function fixRawLog(group, groupIndex, fixedcgs) {
-            Array.from(
-                group.matchAll(/[A-Z][0-9]/g), m => m.index).forEach((coordIndex, coordGroupIndex) =>
-                    group = group.slice(0, coordIndex) + fixedcgs[groupIndex][coordGroupIndex] + group.slice(coordIndex+2)
-            )
-            return group;
         }
         
         function alterCellContent(data) {
@@ -526,7 +446,6 @@
         
         function buildPrimaryContent() {
             const ns = "http://www.w3.org/2000/svg"
-                , primaryContent = document.querySelector("#primary-content")
                 , table = document.createElement("table");
 
             for (let r = 0; r < 8; r++) { //table construction
@@ -571,14 +490,9 @@
             primaryContent.appendChild(svg);
             primaryContent.appendChild(table);
             
-            /*
-            checkboxes[0].checked = +sessionStorage.getItem("chk1");
-            checkboxes[1].checked = +sessionStorage.getItem("chk2");
-            logCase = JSON.parse(sessionStorage.getItem("log"));
-            */
-            manageInteractiveElements(logCase);
-            if (logCase) updatePageStatus();
-            //test();
+            const hash = window.location.hash;
+            manageInteractiveElements(hash);
+            if (hash) handleHash(hash.slice(1));
         }
 
         //#region MAIN
@@ -586,17 +500,16 @@
         //#region Classes
         
         //encapsulation for page-related variables
-        //refer to: @function parseTextarea
+        //refer to: @function handleHash
         class PageCase {
-            constructor(cg, mg, s, sn) {
+            constructor(sn, cg, s, sd) {
                 this.max = cg.length;
                 this.current = 1;
-                this.mg = mg;
-                this.solved = this.mg.map(m => m.slice(-10).includes("SOLVED!"));
 
-                this.cg = cg;
                 this.sn = sn;
+                this.cg = cg;
                 this.s  = s;
+                this.sd = sd;
             }
         }
 
@@ -626,7 +539,6 @@
 
             , inputs = document.querySelectorAll("input:not([type])")
             , checkboxes = document.querySelectorAll("input[type]")
-            , textarea = document.querySelector("textarea")
             , primaryContent = document.querySelector("#primary-content")
             , pagesText = document.querySelector("#pages")
             , [prev, next] = [document.querySelector("#prev"), document.querySelector("#next")]
@@ -655,26 +567,6 @@
         let cellsColor = []
           , isFirstInput = true
           , logCase;
-        
-        textarea.placeholder = `PASTE THE ENTIRE LOG HERE (then, uncheck the box)
-!!! Don't worry if the log is faulty: I got you covered !!!
-Circle = ?
-Square = ?
-Triangle = ?
-Needle = ?
-Diamond = ?
-Hexagon = ?
-Star = ?
-Heart = ?
-Restricted values are (...)
-Initial value: ??
-Goal value: ??
-BEGIN
-Starting maze coordinate: XX (cell is equal to ?)
-Moved value changed from XX --> XX
-Moved to: XX (cell is equal to XX)
-Moved value changed from XX --> XX
-etc...`;
         //#endregion
 
         //#region Listeners
@@ -691,17 +583,6 @@ etc...`;
             });
         });
         checkboxes.forEach((chk, i) =>chk.addEventListener("input", ()=>handleCheckbox(chk.checked,i)));
-        textarea.addEventListener("input", () => {
-            try {
-                if (textarea.value) parseTextarea(textarea.value); 
-                else resetAll("textarea");
-                textarea.style.borderColor = 'unset';
-            }
-            catch {
-                resetAll("textarea");
-                textarea.style.borderColor = 'red';
-            }
-        });
         document.querySelector("#reset").onclick = ()=>resetAll();
         prev.addEventListener('click', ()=>handlePageArrows(-1));
         next.addEventListener('click', ()=>handlePageArrows(1));
@@ -721,15 +602,6 @@ etc...`;
                     }
                     else
                         setCellsColor();
-                    break;
-                case 2:
-                    if (chkd) {
-                        primaryContent.style.display = "none";
-                        textarea.style.display = "inherit";
-                    } else {
-                        primaryContent.style.display = "inherit";
-                        textarea.style.display = "none";
-                    }
                     break;
             }
         }
@@ -791,61 +663,8 @@ etc...`;
             removeCellsColor();
             removeArrows();
             logCase = null;
-            if (!from) {
-                textarea.value = "";
-                textarea.style.borderColor = "unset";
-                checkboxes.forEach((chk,i) => { if (chk.checked) handleCheckbox(0, i) });
-            }
+            checkboxes.forEach((chk,i) => { if (chk.checked) handleCheckbox(0, i) });
             manageInteractiveElements(false, from);
-        }
-        
-        function test() {
-          parseTextarea(`Circle = 8
-Square = 3
-Triangle = 4
-Needle = 7
-Diamond = 9
-Hexagon = 5
-Star = 6
-Heart = 1
-Restricted values are Multiples of 7
-Initial value: 24
-Goal value: 28
-BEGIN
-Starting maze coordinate: H2 (cell is equal to 6)
-Current value changed from 24 --> 30
-Moved to: H2 (cell is equal to -1)
-Current value changed from 30 --> 29
-Moved to: A2 (cell is equal to 5)
-Current value changed from 29 --> 34
-Moved to: A2 (cell is equal to -4)
-Current value changed from 34 --> 30
-Moved to: B2 (cell is equal to 1)
-Current value changed from 30 --> 31
-MODULE RESET
-Starting maze coordinate: H2 (cell is equal to 6)
-Current value changed from 24 --> 30
-Moved to: H2 (cell is equal to -1)
-Current value changed from 30 --> 29
-Moved to: A2 (cell is equal to 5)
-Current value changed from 29 --> 34
-Moved to: A2 (cell is equal to -3)
-Current value changed from 34 --> 31
-Moved to: B2 (cell is equal to -7)
-Current value changed from 31 --> 24
-Moved to: C2 (cell is equal to 4)
-Current value changed from 24 --> 28
-SOLVED!`)
-
-/*
-            for (let d = 0; d < 4; d++) {
-                for (let i = -1; i < 9; i++) {
-                    for (let j = -1; j < 9; j++) {
-                        generateArrow(d, [i,j], true, false, d*4+i*40+j/(4*10*10)*360);
-                    }
-                }
-            }*/
-
         }
     </script>
 </body>
