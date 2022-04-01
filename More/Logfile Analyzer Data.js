@@ -5854,7 +5854,7 @@ let parseData = [
                         strikes: (module.Strikes ?? []),
                         solved: module.Solved
                     }
-                    const style = "font-size:large;font-style:italic;font-family:wingdings";
+                    const style = "font-size:large;font-style:italic";
                     module.push({label:`<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`});
                     for (const line of module.Log) module.push(line);
                     return true;
