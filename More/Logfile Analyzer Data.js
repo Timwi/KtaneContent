@@ -5417,6 +5417,12 @@ let parseData = [
                 }
             },
             {
+                regex: /(Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ?$/,
+                handler: function (matches, module) {
+                    module.push(matches[0] + ' No tiles');
+                }
+            },
+            {
                 regex: /(Explanation:) (.*)$/,
                 handler: function (matches, module) {
                     const fileNames = {
