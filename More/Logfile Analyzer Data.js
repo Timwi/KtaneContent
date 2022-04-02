@@ -5815,6 +5815,149 @@ let parseData = [
         ]
     },
     {
+        displayName: "Mazematics",
+        moduleID: "mazematics",
+        loggingTag: "Mazematics",
+        matches: [
+            {
+                regex: /[A-Z][a-z]+ = (\d)/,
+                handler: function (matches, module) {
+                    if (typeof module.Counter !== "number") {
+                        module.push();
+                        module.Counter = 0;
+                    } else module.Counter++;
+                    module.push(this.names[module.Counter]+": "+matches[1]);
+                    (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
+                    return true;
+                },
+                names: ["Circle","Square","Mountain","Triangle","Diamond","Hexagon","Star","Heart"],
+                order: [0,4,3,7,5,1,6,2]
+            },
+            {
+                regex: /STRIKE!/,
+                handler: function (_, module) {
+                    module.Struck = true;
+                }
+            },
+            {
+                regex: /Attempted/,
+                handler: function (_, module) {
+                    module.Rule49 = true;
+                }
+            },
+            {
+                regex: /BEGIN|MODULE RESET/,
+                handler: function (_, module) {
+                    (module.CoordsGroups ??= []).push([]);
+                    (module.Strikes ??= []).push([]);
+                    module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
+                    module.push([["ATTEMPT "+(module.Attempts+1)],[]]);
+                    module.Section = [];
+                    return true;
+                }
+            },
+            {
+                regex: /SOLVED!/,
+                handler: function (matched, module) {
+                    module.Solved = true;
+                    module.push(matched.input);
+                }
+            },
+            {
+                regex: /([A-Z][0-9])[^,]+(-?\d)/,
+                handler: function (matches, module) {
+                    let correctLine = matches.input;
+                    const currentStrikes = module.Strikes[module.Strikes.length-1];
+                    if (module.Rule49) {
+                        currentStrikes.push(matches[1][0] + module.CurrentRow);
+                        [module.Struck, module.Rule49] = [false, false];
+                    }
+                    else {
+                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length-1];
+                        if (!currentMoves.length) {
+                            currentMoves.push(matches[1]);
+                            module.CurrentRow = +matches[1][1];
+                        }
+                        else {
+                            const goodCoordinate = this.fixCoordinate(currentMoves, arguments, this.shapes, this.shapesSign);
+                            currentMoves.push(goodCoordinate);
+                            correctLine = matches.input.replace(matches[1], goodCoordinate);
+                            if (module.Struck) { currentStrikes.push(goodCoordinate); module.Struck = false; }
+                        }
+                    }
+                    module.Section.push(correctLine);
+                    return true;
+                },
+                //I shouldn't be making this function but whatever.
+                //fixes a bug the module has when displaying which coordinates have been visites: it doesn't show them properly
+                fixCoordinate: (cm, hArgs, s, ss) => {
+                    const [matches, module] = hArgs
+                        , [curr, next] = [cm[cm.length-1], matches[1]];
+                    if (curr[0] === next[0]) {
+                        const letters = "ABCDEFGH"
+                            , toNumber = l => letters.search(l)
+                            , toCoordsFixed = c => [module.CurrentRow-1, toNumber(c[0])] //<a, b>
+                            , maintainInRange = n => (n+8)%8 //ensures n € [0,7], n € Z
+                            , getValueOfPossibleCells = c => {
+                                const indexUp    = maintainInRange(c[0]-1)*8+c[1]
+                                    , indexDown  = maintainInRange(c[0]+1)*8+c[1];
+                                return [ss[indexUp]  +module.shapeNumbers[s[indexUp]],
+                                        ss[indexDown]+module.shapeNumbers[s[indexDown]]];
+                            }
+                            , clue = matches[2]
+                            , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
+                        module.CurrentRow = maintainInRange(module.CurrentRow-1+Math.ceil(Math.tan(dir[1])-1))+1;
+                    }
+                    return `${next[0]}${module.CurrentRow}`;
+                },
+                shapes: [
+                    4, 6, 2, 5, 0, 1, 7, 3,
+                    7, 3, 1, 0, 2, 5, 4, 6,
+                    6, 7, 5, 2, 1, 0, 3, 4,
+                    3, 4, 0, 1, 6, 2, 5, 7,
+                    2, 5, 6, 3, 7, 4, 1, 0,
+                    1, 0, 4, 7, 3, 6, 2, 5,
+                    0, 1, 3, 4, 5, 7, 6, 2,
+                    5, 2, 7, 6, 4, 3, 0, 1 ],
+                shapesSign: [
+                    '+', '+', '-', '-', '+', '+', '-', '-',
+                    '-', '+', '-', '-', '+', '+', '-', '+',
+                    '+', '-', '+', '+', '-', '-', '+', '-',
+                    '+', '-', '-', '+', '-', '+', '+', '-',
+                    '-', '+', '+', '-', '+', '-', '-', '+',
+                    '-', '+', '-', '+', '-', '-', '+', '+',
+                    '+', '-', '+', '+', '-', '+', '-', '-',
+                    '-', '-', '+', '-', '+', '-', '+', '+' ]
+            },
+            {
+                regex: /.+/, //this is fairly expensive, but the module doesn't guarantee a consistent log ending.
+                handler: function (matched, module) {
+                    if (module.Section) {
+                        module.Section.push(matched.input);
+                        module.JSON = {
+                            shapeNumbers: module.shapeNumbers,
+                            coordsGroups: module.CoordsGroups,
+                            strikes: module.Strikes,
+                            solved: module.Solved,
+                            restricted: module.Restricted
+                        }
+                        const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
+                        module[0] = {label:`<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`};
+                        module[module.length-1][1] = module.Section;
+                    } else {
+                        if (!module.Restricted && matched.input.includes("Restricted"))
+                            module.Restricted = this.detectRestriction(matched.input);
+                        module.push(matched.input);
+                    }
+                },
+                detectRestriction: line => {
+                    for (let i = 0; i < 4; i++)
+                        if (line.includes(["Triangular", "Multiples", "Primes", "Fibonacci"][i])) return i;
+                }
+            }
+        ]
+    },
+    {
         moduleID: "MazeScrambler",
         loggingTag: "Maze Scrambler",
         matches: [
