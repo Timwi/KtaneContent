@@ -5396,6 +5396,64 @@ let parseData = [
         ]
     },
     {
+        moduleID: ["MahjongQuizEasy", "MahjongQuizHard", "MahjongQuizScrambled"],
+        loggingTag: ["Mahjong Quiz Easy", "Mahjong Quiz Hard", "Mahjong Quiz Scrambled"],
+        matches: [
+            {
+                regex: /(Given hand:|Scrambled hand:|Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ((\d[mpsz] ?)+).*$/,
+                handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
+                    const tiles = matches[2].trim().split(' ');
+                    let div = $('<div>');
+                    tiles.forEach(tile => {
+                        div.append(`<img src='../HTML/img/Mahjong/${fileNames[tile]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                    });
+                    module.push({ label: matches[1], obj: div });
+                }
+            },
+            {
+                regex: /(Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ?$/,
+                handler: function (matches, module) {
+                    module.push(matches[0] + ' No tiles');
+                }
+            },
+            {
+                regex: /(Explanation:) (.*)$/,
+                handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
+                    let div = $(`<div style='display: flex;'>`);
+                    const tileStrings = matches[2].replace(/\s/g, "").split("|").filter(x => x != "");
+                    for (var i = 0; i < tileStrings.length; i++) {
+                        const tiles = tileStrings[i].match(/.{2}/g);
+                        if (i == 0) {
+                            div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                            div.append(`<span style='padding-top: 4px;'>-><span>`);
+                        } else {
+                            for (var j = 0; j < tiles.length; j++) {
+                                if (j == tiles.length - 1) {
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
+                                } else {
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                                }
+                            }
+                        }
+                    }
+                    module.push({ label: matches[1], obj: div });
+                }
+            }
+        ]
+    },
+    {
         moduleID: "MarbleTumbleModule",
         loggingTag: "Marble Tumble",
         matches: [
@@ -5753,6 +5811,149 @@ let parseData = [
             },
             {
                 regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Mazematics",
+        moduleID: "mazematics",
+        loggingTag: "Mazematics",
+        matches: [
+            {
+                regex: /[A-Z][a-z]+ = (\d)/,
+                handler: function (matches, module) {
+                    if (typeof module.Counter !== "number") {
+                        module.push();
+                        module.Counter = 0;
+                    } else module.Counter++;
+                    module.push(this.names[module.Counter]+": "+matches[1]);
+                    (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
+                    return true;
+                },
+                names: ["Circle","Square","Mountain","Triangle","Diamond","Hexagon","Star","Heart"],
+                order: [0,4,3,7,5,1,6,2]
+            },
+            {
+                regex: /STRIKE!/,
+                handler: function (_, module) {
+                    module.Struck = true;
+                }
+            },
+            {
+                regex: /Attempted/,
+                handler: function (_, module) {
+                    module.Rule49 = true;
+                }
+            },
+            {
+                regex: /BEGIN|MODULE RESET/,
+                handler: function (_, module) {
+                    (module.CoordsGroups ??= []).push([]);
+                    (module.Strikes ??= []).push([]);
+                    module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
+                    module.push([["ATTEMPT "+(module.Attempts+1)],[]]);
+                    module.Section = [];
+                    return true;
+                }
+            },
+            {
+                regex: /SOLVED!/,
+                handler: function (matched, module) {
+                    module.Solved = true;
+                    module.push(matched.input);
+                }
+            },
+            {
+                regex: /([A-Z][0-9])[^,]+(-?\d)/,
+                handler: function (matches, module) {
+                    let correctLine = matches.input;
+                    const currentStrikes = module.Strikes[module.Strikes.length-1];
+                    if (module.Rule49) {
+                        currentStrikes.push(matches[1][0] + module.CurrentRow);
+                        [module.Struck, module.Rule49] = [false, false];
+                    }
+                    else {
+                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length-1];
+                        if (!currentMoves.length) {
+                            currentMoves.push(matches[1]);
+                            module.CurrentRow = +matches[1][1];
+                        }
+                        else {
+                            const goodCoordinate = this.fixCoordinate(currentMoves, arguments, this.shapes, this.shapesSign);
+                            currentMoves.push(goodCoordinate);
+                            correctLine = matches.input.replace(matches[1], goodCoordinate);
+                            if (module.Struck) { currentStrikes.push(goodCoordinate); module.Struck = false; }
+                        }
+                    }
+                    module.Section.push(correctLine);
+                    return true;
+                },
+                //I shouldn't be making this function but whatever.
+                //fixes a bug the module has when displaying which coordinates have been visites: it doesn't show them properly
+                fixCoordinate: (cm, hArgs, s, ss) => {
+                    const [matches, module] = hArgs
+                        , [curr, next] = [cm[cm.length-1], matches[1]];
+                    if (curr[0] === next[0]) {
+                        const letters = "ABCDEFGH"
+                            , toNumber = l => letters.search(l)
+                            , toCoordsFixed = c => [module.CurrentRow-1, toNumber(c[0])] //<a, b>
+                            , maintainInRange = n => (n+8)%8 //ensures n € [0,7], n € Z
+                            , getValueOfPossibleCells = c => {
+                                const indexUp    = maintainInRange(c[0]-1)*8+c[1]
+                                    , indexDown  = maintainInRange(c[0]+1)*8+c[1];
+                                return [ss[indexUp]  +module.shapeNumbers[s[indexUp]],
+                                        ss[indexDown]+module.shapeNumbers[s[indexDown]]];
+                            }
+                            , clue = matches[2]
+                            , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
+                        module.CurrentRow = maintainInRange(module.CurrentRow-1+Math.ceil(Math.tan(dir[1])-1))+1;
+                    }
+                    return `${next[0]}${module.CurrentRow}`;
+                },
+                shapes: [
+                    4, 6, 2, 5, 0, 1, 7, 3,
+                    7, 3, 1, 0, 2, 5, 4, 6,
+                    6, 7, 5, 2, 1, 0, 3, 4,
+                    3, 4, 0, 1, 6, 2, 5, 7,
+                    2, 5, 6, 3, 7, 4, 1, 0,
+                    1, 0, 4, 7, 3, 6, 2, 5,
+                    0, 1, 3, 4, 5, 7, 6, 2,
+                    5, 2, 7, 6, 4, 3, 0, 1 ],
+                shapesSign: [
+                    '+', '+', '-', '-', '+', '+', '-', '-',
+                    '-', '+', '-', '-', '+', '+', '-', '+',
+                    '+', '-', '+', '+', '-', '-', '+', '-',
+                    '+', '-', '-', '+', '-', '+', '+', '-',
+                    '-', '+', '+', '-', '+', '-', '-', '+',
+                    '-', '+', '-', '+', '-', '-', '+', '+',
+                    '+', '-', '+', '+', '-', '+', '-', '-',
+                    '-', '-', '+', '-', '+', '-', '+', '+' ]
+            },
+            {
+                regex: /.+/, //this is fairly expensive, but the module doesn't guarantee a consistent log ending.
+                handler: function (matched, module) {
+                    if (module.Section) {
+                        module.Section.push(matched.input);
+                        module.JSON = {
+                            shapeNumbers: module.shapeNumbers,
+                            coordsGroups: module.CoordsGroups,
+                            strikes: module.Strikes,
+                            solved: module.Solved,
+                            restricted: module.Restricted
+                        }
+                        const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
+                        module[0] = {label:`<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`};
+                        module[module.length-1][1] = module.Section;
+                    } else {
+                        if (!module.Restricted && matched.input.includes("Restricted"))
+                            module.Restricted = this.detectRestriction(matched.input);
+                        module.push(matched.input);
+                    }
+                },
+                detectRestriction: line => {
+                    for (let i = 0; i < 4; i++)
+                        if (line.includes(["Triangular", "Multiples", "Primes", "Fibonacci"][i])) return i;
+                }
             }
         ]
     },
