@@ -1,21 +1,38 @@
-function makeSvgElem(tag, attrs) {
+/**
+ * Creates a tag that goes in an <svg> block.
+ * @param {string} tag - Type of element (text, rect, circle, etc.).
+ * @param {dictionary} attrs - Attributes to set in the new element. e.g. {class:"highlightable", r:5, cx:4, cy:12}.
+ */
+ function makeSvgElem(tag, attrs) {
     let el = document.createElementNS('http://www.w3.org/2000/svg', tag);
     for (let k in attrs)
         el.setAttribute(k, attrs[k]);
     return el;
 }
 
-function hexagonPathV(x, y, side) {
-    let dx = Math.round(1000 * side * 0.8660254) / 1000.0;
-    let dy = Math.round(1000 * side * 0.5) / 1000.0;
-    let tx = Math.round(1000 * x) / 1000.0;
-    let ty = Math.round(1000 * y) / 1000.0;
-    return `M${tx} ${ty}l${dx}-${dy}l${dx} ${dy}v${side}l-${dx} ${dy}l-${dx}-${dy}z`;
-}
-function hexagonPathH(x, y, side) {
-    let dx = Math.round(1000 * side * 0.5) / 1000.0;
-    let dy = Math.round(1000 * side * 0.8660254) / 1000.0;
-    let tx = Math.round(1000 * x) / 1000.0;
-    let ty = Math.round(1000 * y) / 1000.0;
-    return `M${tx} ${ty}h${side}l${dx} ${dy}l-${dx} ${dy}h-${side}l-${dx}-${dy}z`;
+/**
+ * Makes a perfect regular polygon with verticies all lying on a circle.
+ * @param {float} radius - Radius of the invisible circle (and the polygon).
+ * @param {float} cx - x coordinate of center of polygon.
+ * @param {float} cy - y coordinate of center of polygon.
+ * @param {float} numSides - Number of sides of the polygon.
+ * @param {float} rot - Rotation angle in degrees of the whole polygon.
+ * @param {dictionary} attrs - Attributes to set in the new element. e.g. {class:"highlightable", fill:"#000"}.
+ */
+function regularPolygon(radius, cx = 0, cy = 0, numSides = 3, rot = 0, attrs = null) {
+    let n = Math.max(3, numSides);
+    let r = Math.max(1e-6, radius);
+    let angle = Math.PI / 180 * (rot - 90);
+    let dTheta = 2 * Math.PI / n;
+    let vert = [];
+    for (let i = 0; i < n; i++) {
+        let a = i*dTheta + angle;
+        let x = cx + r * Math.cos(a);
+        let y = cy + r * Math.sin(a);
+        vert.push([x, y]);
+    }
+
+    let el = makeSvgElem("polygon", attrs);
+    el.setAttribute("points", vert.join(" "));
+    return el;
 }
