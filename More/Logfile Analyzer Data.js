@@ -1907,6 +1907,59 @@ let parseData = [
         ]
     },
     {
+        displayName: "Brown's Shadow",
+        moduleID: "brownsShadow",
+        loggingTag: "Brown's Shadow",
+        matches: [
+            {
+                regex: /^Chose net: \((.*)\)$/,
+                handler: function (matches, module) {
+                    let coords = matches[1].split('), (')
+                        .map(str => str.split(', ').map(c => parseInt(c)))
+                        .map(arr => ({ x: arr[0], y: arr[1], z: arr[2] }));
+                    for (let c of coords)
+                        c.p = { x: 21 * c.x - 15 * c.y, y: -5 * c.x - 6 * c.y - 24 * c.z };
+                    module.BrownsShadowInfo = { coords: coords };
+                    return true;
+                }
+            },
+            {
+                regex: /^(Cube|The correct cell to submit is) \((.*)\)(?: (corresponds to|is displaying) (.*))?\.$/,
+                handler: function (matches, module) {
+                    let inf = module.BrownsShadowInfo;
+                    let coords = matches[2].split(', ').map(c => parseInt(c));
+                    let ix = inf.coords.findIndex(c => c.x === coords[0] && c.y === coords[1] && c.z === coords[2]);
+                    let isSolution = matches[1] !== 'Cube';
+                    if (!isSolution) {
+                        if (matches[3] === 'corresponds to')
+                            inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4] - 1];
+                        else
+                            inf.coords[ix].label2 = matches[4];
+                    }
+                    else {
+                        inf.coords[ix].label2 = 'solution';
+                        inf.coords[ix].isSolution = true;
+                        inf.coords.sort((one, two) => (two.y - one.y) || (one.z - two.z) || (two.x - one.x));
+
+                        let cubes = inf.coords.map(c => `<g transform='translate(${c.p.x} ${c.p.y})'><path d='M 21,-5 6,-11 m -21,5 21,-5 m 0,-24 v 24' fill='none' stroke='black' stroke-width='.5' opacity='.2' /><text x='3' y='-14'>${c.label}</text>${c.label2 ? `<text x='3' y='${c.label2.length === 1 ? -7 : -9}' font-size='${c.label2.length === 1 ? 6 : 4}' fill='${c.isSolution ? '#0a0' : '#a00'}'>${c.label2}</text>` : ''}<path opacity='.3' d='m 0,-24 -15,-6 21,-5 15,6 z M 0 0 -15,-6 v -24 l 15,6 z m 0,0 v -24 l 21,-5 v 24 z' fill='#eee' stroke='#000' stroke-width='.5' /></g>`).join('');
+                        inf.coords.sort((one, two) => one.p.x - two.p.x);
+                        let minX = inf.coords[0].p.x;
+                        let maxX = inf.coords[7].p.x;
+                        inf.coords.sort((one, two) => one.p.y - two.p.y);
+                        let minY = inf.coords[0].p.y;
+                        let maxY = inf.coords[7].p.y;
+                        let svg = `<svg viewBox='${minX - 16} ${minY - 36} ${maxX - minX + 138} ${maxY - minY + 37}' stroke-linejoin='round' text-anchor='middle' font-size='9'>${cubes}</svg>`;
+                        module.push({ label: 'Chosen net:', obj: $(svg) });
+                    }
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Button Grid",
         moduleID: "buttonGrid",
         loggingTag: "Button Grids"
