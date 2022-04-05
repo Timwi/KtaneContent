@@ -1932,7 +1932,7 @@ let parseData = [
                     let isSolution = matches[1] !== 'Cube';
                     if (!isSolution) {
                         if (matches[3] === 'corresponds to')
-                            inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4] - 1];
+                            inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4]];
                         else
                             inf.coords[ix].label2 = matches[4];
                     }
