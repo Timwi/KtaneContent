@@ -9396,6 +9396,11 @@ let parseData = [
         loggingTag: "ButtonComponent"
     },
     {
+        displayName: "The Grand Prix",
+        moduleID: "KritGrandPrix",
+        loggingTag: "Grand Prix"
+    },
+    {
         displayName: "The Time Keeper",
         moduleID: "timeKeeper",
         loggingTag: "TimeKeeper"
