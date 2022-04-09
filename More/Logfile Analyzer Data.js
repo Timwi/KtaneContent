@@ -3499,20 +3499,13 @@ let parseData = [
         loggingTag: "Floor Lights",
         matches: [
             {
-                regex: /^-{58}$/,
+                regex: /^Stage (\d+): (Generated ((?:[RGB] at [ABCDEF][1-6](?:|, )){3}))$/,
                 handler: function (matches, module) {
-                    module.push(module.FloorLightsStage);
-                    return true;
-                }
-            },
-            {
-                regex: /^Tile patterns for Stage (\d+):$/,
-                handler: function (matches, module) {
-                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let stageInfo = matches[3].split(", ").map(x => x[0].concat(x.slice(4, 7)).split(' ')).map(x => [x[0]].concat(x[1] = (x[1][1] - 1) * 6 +  "ABCDEF".indexOf(x[1][0])));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for (let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < 6; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for (let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < 6; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3520,39 +3513,38 @@ let parseData = [
                                 .css('border-width', '1px')
                                 .css('width', '15px')
                                 .css('height', '15px')
+                                .css('background-color', '#858585')
                                 .appendTo(tr);
-                            switch (lights[row][col]) {
-                                case 'R':
-                                    td.css('background-color', '#FF0000')
-                                    break;
-                                case 'G':
-                                    td.css('background-color', '#00FF00')
-                                    break;
-                                case 'B':
-                                    td.css('background-color', '#0000FF')
-                                    break;
-                                case 'Y':
-                                    td.css('background-color', '#FFFF00')
-                                    break;
-                                default:
-                                    td.css('background-color', '#858585');
-                                    break;
-                            }
+
+                                for(let i = 0; i < 3; i++) {
+                                    if(stageInfo[i][1] ==  row * 6 + col) {
+                                        switch(stageInfo[i][0]) {
+                                            case 'R':
+                                                td.css('background-color', '#FF0000')
+                                                break;
+                                            case 'G':
+                                                td.css('background-color', '#00FF00')
+                                                break;
+                                            case 'B':
+                                                td.css('background-color', '#0000FF')
+                                                break
+                                        }
+                                    }
+                                }
                         }
                     }
-
-                    module.FloorLightsStage = ["Stage " + matches[1], [{ label: "Tile patterns:", obj: table, nobullet: true }]];
+                    module.FloorLightsStage = [`Stage ${matches[1]}:`, table, matches[2]];
                     return true;
                 }
             },
             {
-                regex: /^(Correct toggle patterns for this stage:)|(You submitted these toggles:)|(Correct toggles to submit:)$/,
+                regex: /^Grid: ([#*]{36})$/,
                 handler: function (matches, module) {
-                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let grid = Array.from(new Array(6), (_, i) => matches[1].slice(i * 6, i * 6 + 6))
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for (let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < grid.length; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for (let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < grid.length; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3561,40 +3553,47 @@ let parseData = [
                                 .css('width', '15px')
                                 .css('height', '15px')
                                 .appendTo(tr);
-                            switch (lights[row][col]) {
-                                case '1':
+                            switch (grid[row][col]) {
+                                case '#':
                                     td.css('background-color', '#FFFF00')
                                     break;
-                                case '0':
+                                case '*':
                                     td.css('background-color', '#858585')
                                     break;
                             }
                         }
                     }
-                    switch (matches[0]) {
-                        case "Correct toggle patterns for this stage:":
-                            module.FloorLightsStage[1].push({ label: matches[0], obj: table });
-                            break;
-                        case "Correct toggles to submit:":
-                            module.FloorLightsAnswer = lights;
-                            module.FloorLightsStage = ["Answer", [{ label: matches[0], obj: table }]]
-                            module.FloorLightsAttempts = 1
-                            break;
-                        case "You submitted these toggles:":
-                            module.FloorLightsStage = ["Attempt " + module.FloorLightsAttempts, [{ label: matches[0], obj: table }]]
-                            if (module.FloorLightsAnswer.every((val, index) => val === lights[index])) {
-                                readLines(1);
-                                module.FloorLightsStage[1].push("That was correct. Module solves.");
-                                module.push(module.FloorLightsStage);
+                    module.push([module.FloorLightsStage[0], [{label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
+                    return true;
+                }
+            },
+            {
+                regex: /^Submitted ([#*]{36})\.$/,
+                handler: function (matches, module) {
+                    let grid = Array.from(new Array(6), (_, i) => matches[1].slice(i * 6, i * 6 + 6))
+                    let table = $('<table>').css('border-collapse', 'collapse');
+                    for (let row = 0; row < grid.length; row++) {
+                        let tr = $('<tr>').appendTo(table);
+                        for (let col = 0; col < grid.length; col++) {
+                            let td = $('<td>')
+                                .text(' ')
+                                .css('text-align', 'center')
+                                .css('border', 'solid')
+                                .css('border-width', '1px')
+                                .css('width', '15px')
+                                .css('height', '15px')
+                                .appendTo(tr);
+                            switch (grid[row][col]) {
+                                case '#':
+                                    td.css('background-color', '#FFFF00')
+                                    break;
+                                case '*':
+                                    td.css('background-color', '#858585')
+                                    break;
                             }
-                            else {
-                                let result = readLines(3).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
-                                module.FloorLightsStage[1].push(result[1]);
-                                module.FloorLightsStage[1].push(result[2]);
-                            }
-                            module.FloorLightsAttempts++;
-                            break;
+                        }
                     }
+                    module.push({ label: 'Submitted:', obj: table })
                     return true;
                 }
             },
