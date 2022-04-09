@@ -10381,6 +10381,27 @@ let parseData = [
         ]
     },
     {
+        displayName: "Wumbo",
+        moduleID: "wumbo",
+        loggingTag: "Wumbo",
+        matches: [
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    if (module.length === 0) {
+                        let button;
+                        module.push({ obj: button = $(`<button style='background: #ccf; border: 1px solid #88d; width: 3cm; height: 1cm; text-align: center;'>Show Log</button>`), nobullet: true });
+                        button.click(() => {
+                            button.parent().prop('outerHTML', module.hidden.map(o => `<li>${o}</li>`).join(""));
+                        });
+                        module.hidden = [];
+                    }
+                    module.hidden.push(`<span>${matches[0]}</span>`);
+                }
+            }
+        ]
+    },
+    {
         displayName: ["X-Ray", "Not X-Ray"],
         moduleID: ["XRayModule", "NotXRayModule"],
         loggingTag: ["X-Ray", "Not X-Ray"],
