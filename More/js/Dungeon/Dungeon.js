@@ -194,7 +194,7 @@ class DungeonMap {
                     )
                     .append(
                         $(`<div>`)
-                            .css("background-image", 'url("./img/Dungeon/Skull.png")')
+                            .css("background-image", 'url("./img/Dungeon/Stairs.png")')
                             .css("background-repeat", 'no-repeat')
                             .css("background-size", "auto 100%")
                             .css("width", "min-content")
