@@ -3243,6 +3243,129 @@ let parseData = [
         ]
     },
     {
+        displayName: "Dungeon",
+        moduleID: "dungeon",
+        loggingTag: "Dungeon",
+        matches: [
+            {
+                regex: /^Stage ([1-9]|1[0-5])$/,
+                handler: function (matches, module) {
+                    let stage = parseInt(matches[1]);
+                    let lines = readLines(2);
+
+                    if (stage === 1) {
+                        module.lines = [];
+                        let button;
+                        module.push({ obj: button = $(`<button style='background: #ccf; border: 1px solid #88d; width: 5cm; height: 1cm; text-align: center;'>Show Original Log</button>`), nobullet: true });
+                        button.click(() => {
+                            module.html.hide();
+                            button.parent().prop('outerHTML', module.lines.map(l => `<li>${l}</li>`).join(""));
+                        });
+                        module.push({ obj: module.html = $(`<div>`), nobullet: true });
+                    }
+                    let callback = () => {
+                        let map = stage === 1 ? new DungeonMap(module.html) : module.map;
+                        map.addStageData(stage, /^\[Dungeon #\d+\] Roll = (\d)$/.exec(lines[0])[1], /^\[Dungeon #\d+\] Level = (\d)$/.exec(lines[1])[1]);
+                        module.map = map;
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    module.lines.push(matches[0]);
+                    module.lines.push(/^\[Dungeon #\d+\] (Roll = \d)$/.exec(lines[0])[1])
+                    module.lines.push(/^\[Dungeon #\d+\] (Level = \d)$/.exec(lines[1])[1]);
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Stage 16$/,
+                handler: function (matches, module) {
+                    let lines = readLines(2);
+
+                    let callback = () => {
+                        module.html.parent().after($(`<li>Module solved!</li>`));
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    module.lines.push(matches[0]);
+                    module.lines.push(/^\[Dungeon #\d+\] (Roll = \d)$/.exec(lines[0])?.[1] ?? "");
+                    module.lines.push(/^\[Dungeon #\d+\] (Level = \d)$/.exec(lines[1])?.[1] ?? "");
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Fighting (.+)$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addFight(matches[1]);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^End of fight : Last monster fought = (\d+)$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addNum(matches[1]);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Wrong action : the action #(.+) against that monster was (.+)\.$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addStrike(`Action #${matches[1]} was ${matches[2]}.`);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Wrong move : the roll is (\d), the correct direction was (.+)\.$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addMoveStrike();
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+                    throw "Unexpected log message";
+                }
+            }
+        ]
+    },
+    {
         displayName: "Echolocation",
         moduleID: "echolocation",
         loggingTag: "Echolocation",
