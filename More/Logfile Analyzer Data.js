@@ -4226,6 +4226,122 @@ let parseData = [
         displayName: "The Giant’s Drink"
     },
     {
+        displayName: "The Grand Prix",
+        moduleID: "KritGrandPrix",
+        loggingTag: "Grand Prix",
+        matches: [
+            {
+                regex: /^\(Initial\) The starting order is: (.+)\.$/,
+                handler: function (matches, module) {
+                    module.startup = matches[1];
+                    module.stages = $(`<table style='width: 100%; border: black solid 2px; text-align: center;'><tr><th style="border-right: black solid 2px;">#:</th><th style="border-right: gray solid 1px;">Flag:</th><th style="border-right: gray solid 1px;">Sector:</th><th style="border-right: gray solid 1px;">Driver:</th><th>Action</th></tr></table>`);
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Initial\) The starting deltas are as follows: $/,
+                handler: function (_, module) {
+                    let lines = readLines(20);
+
+                    let offsets = [0.0];
+                    for (let i = 1; i < 20; ++i)
+                    offsets[i] = offsets[i - 1] + parseFloat(lines[i]);
+                    offsets = offsets.map(i => i.toFixed(3));
+                    offsets[0] = lines[0] = "Inter.";
+                    
+                    module.startup = $(`<table style='border: black solid 2px; text-align: center;'><tr><th>#:</th><th>NAME:</th><th>DELTA:</th><th>OFFSET:</th></tr>${module.startup.split(", ").map((m, i) => `<tr style='border: black solid 2px;'><td style="border-right: black solid 2px;">${i + 1}</td><td style="border-right: gray solid 1px;">${m}</td><td style="border-right: gray solid 1px;">${lines[i]}</td><td>${offsets[i]}</td></tr>`).join("")}</table>`);
+                    module.push("Beginning standings:");
+                    module.push({ obj: module.startup, nobullet: true });
+                    module.push("Stages:");
+                    module.push({ obj: module.stages, nobullet: true });
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Lap (\d+)\) Lap info:$/,
+                handler: function (matches, module) {
+                    let lines = readLines(4);
+
+                    let color = /^\[Grand Prix #\d+\]: \(Lap \d+\) The flag shown this lap is (.+)$/.exec(lines[0])[1];
+                    let sector = /^\[Grand Prix #\d+\]: \(Lap \d+\) The associated sector is sector (.+)$/.exec(lines[1])[1];
+                    let driver = /^\[Grand Prix #\d+\]: \(Lap \d+\) The driver associated with the flag is (.+)\.$/.exec(lines[2])?.[1] ?? "N/A";
+                    let action = /^\[Grand Prix #\d+\]: \(Lap \d+\) (.*)$/.exec(lines[3])[1];
+
+                    let affected = "";
+                    if (color == "Yellow")
+                        affected = /^\[Grand Prix #\d+\]: \(Lap \d+\) The drivers involved with this are: (.*)$/.exec(readLine())[1];
+                        
+                    let struct;
+                    module.stages.append(struct = $(`
+                    <tr style='border: black solid 2px;'>
+                        <th style="border-right: black solid 2px;">${matches[1]}</th>
+                        <td style="border-right: gray solid 1px;">${color}</td>
+                        <td style="border-right: gray solid 1px;">${sector}</td>
+                        <td style='${driver == "N/A" ? "background-color: #fbb; " : ""}border-right: gray solid 1px'>${driver}</td>
+                        <td${action != "" ? "" : " style='background-color: #fbb;'"}>
+                            ${action != "" ? `<ul>
+                                <li class="expandable">
+                                    <a href="#" class="expander">View</a>
+                                    <ul style="padding: 0;">
+                                        <li class="no-bullet">${action}</li>
+                                        ${affected != "" ? `<li class="no-bullet">Drivers involved: ${affected}</li>` : ""}
+                                    </ul>
+                                </li>
+                            </ul>` : "N/A"}
+                        </td>
+                    </tr>`));
+
+                    let expanders = struct.find(".expander");
+                    for (let i = 0; i < expanders.length; i++)
+                        $(expanders[i]).on("click", function () { $(expanders[i]).parent().toggleClass("expanded"); return false; });
+
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Lap (\d+)\) Arrived at green flag lap\.$/,
+                handler: function(matches, module){
+                    module.stages.append(struct = $(`
+                    <tr style='border: black solid 2px;'>
+                        <th style="border-right: black solid 2px;">${matches[1]}</th>
+                        <td style="border-right: gray solid 1px;">Green</td>
+                        <td style='background-color: #fbb; border-right: gray solid 1px;'>N/A</td>
+                        <td style='background-color: #fbb; border-right: gray solid 1px;'>N/A</td>
+                        <td style='background-color: #fbb;'>N/A</td>
+                    </tr>`));
+
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Final lap\) The exptected result is (.+)$/,
+                handler: function(matches, module){
+                    module.push("Expected results:");
+                    module.push({obj:$(`<table style='border: black solid 2px; text-align: center;'>${matches[1].split(", ").map((m, i) => `<tr style='border: black solid 2px;'><th style="border-right: black solid 2px;">${i + 1}</th><td>${m}</td></tr>`).join("")}</table>`), nobullet:true});
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Final lap\) (.+)$/,
+                handler: function(matches, module){
+                    module.push(matches[1]);
+
+                    return true;
+                }
+            },
+            {
+                regex: /^(\(Initial\) (Total lap count: \d+|The green flag lap is at lap \d+)|\(Final lap\) Reached the final lap\.)$/,
+                handler: function(_, _){
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Grid Matching",
         moduleID: "GridMatching",
         loggingTag: "Grid Matching",
