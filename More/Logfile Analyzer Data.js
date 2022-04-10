@@ -3547,7 +3547,7 @@ let parseData = [
             {
                 regex: /^Stage (\d+): (Generated ((?:[RGB] at [ABCDEF][1-6](?:|, )){3}))$/,
                 handler: function (matches, module) {
-                    let stageInfo = matches[3].split(", ").map(x => x[0].concat(x.slice(4, 7)).split(' ')).map(x => [x[0]].concat(x[1] = (x[1][1] - 1) * 6 +  "ABCDEF".indexOf(x[1][0])));
+                    let stageInfo = matches[3].split(", ").map(x => x[0].concat(x.slice(4, 7)).split(' ')).map(x => [x[0]].concat(x[1] = (x[1][1] - 1) * 6 + "ABCDEF".indexOf(x[1][0])));
                     let table = $('<table>').css('border-collapse', 'collapse');
                     for (let row = 0; row < 6; row++) {
                         let tr = $('<tr>').appendTo(table);
@@ -3562,21 +3562,21 @@ let parseData = [
                                 .css('background-color', '#858585')
                                 .appendTo(tr);
 
-                                for(let i = 0; i < 3; i++) {
-                                    if(stageInfo[i][1] ==  row * 6 + col) {
-                                        switch(stageInfo[i][0]) {
-                                            case 'R':
-                                                td.css('background-color', '#FF0000')
-                                                break;
-                                            case 'G':
-                                                td.css('background-color', '#00FF00')
-                                                break;
-                                            case 'B':
-                                                td.css('background-color', '#0000FF')
-                                                break
-                                        }
+                            for (let i = 0; i < 3; i++) {
+                                if (stageInfo[i][1] == row * 6 + col) {
+                                    switch (stageInfo[i][0]) {
+                                        case 'R':
+                                            td.css('background-color', '#FF0000')
+                                            break;
+                                        case 'G':
+                                            td.css('background-color', '#00FF00')
+                                            break;
+                                        case 'B':
+                                            td.css('background-color', '#0000FF')
+                                            break
                                     }
                                 }
+                            }
                         }
                     }
                     module.FloorLightsStage = [`Stage ${matches[1]}:`, table, matches[2]];
@@ -3609,7 +3609,7 @@ let parseData = [
                             }
                         }
                     }
-                    module.push([module.FloorLightsStage[0], [{label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
+                    module.push([module.FloorLightsStage[0], [{ label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
                     return true;
                 }
             },
@@ -6040,12 +6040,12 @@ let parseData = [
                         module.push();
                         module.Counter = 0;
                     } else module.Counter++;
-                    module.push(this.names[module.Counter]+": "+matches[1]);
+                    module.push(this.names[module.Counter] + ": " + matches[1]);
                     (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
                     return true;
                 },
-                names: ["Circle","Square","Mountain","Triangle","Diamond","Hexagon","Star","Heart"],
-                order: [0,4,3,7,5,1,6,2]
+                names: ["Circle", "Square", "Mountain", "Triangle", "Diamond", "Hexagon", "Star", "Heart"],
+                order: [0, 4, 3, 7, 5, 1, 6, 2]
             },
             {
                 regex: /STRIKE!/,
@@ -6065,7 +6065,7 @@ let parseData = [
                     (module.CoordsGroups ??= []).push([]);
                     (module.Strikes ??= []).push([]);
                     module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
-                    module.push([["ATTEMPT "+(module.Attempts+1)],[]]);
+                    module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
                     module.Section = [];
                     return true;
                 }
@@ -6081,13 +6081,13 @@ let parseData = [
                 regex: /([A-Z][0-9])[^,]+(-?\d)/,
                 handler: function (matches, module) {
                     let correctLine = matches.input;
-                    const currentStrikes = module.Strikes[module.Strikes.length-1];
+                    const currentStrikes = module.Strikes[module.Strikes.length - 1];
                     if (module.Rule49) {
                         currentStrikes.push(matches[1][0] + module.CurrentRow);
                         [module.Struck, module.Rule49] = [false, false];
                     }
                     else {
-                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length-1];
+                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length - 1];
                         if (!currentMoves.length) {
                             currentMoves.push(matches[1]);
                             module.CurrentRow = +matches[1][1];
@@ -6106,21 +6106,21 @@ let parseData = [
                 //fixes a bug the module has when displaying which coordinates have been visites: it doesn't show them properly
                 fixCoordinate: (cm, hArgs, s, ss) => {
                     const [matches, module] = hArgs
-                        , [curr, next] = [cm[cm.length-1], matches[1]];
+                        , [curr, next] = [cm[cm.length - 1], matches[1]];
                     if (curr[0] === next[0]) {
                         const letters = "ABCDEFGH"
                             , toNumber = l => letters.search(l)
-                            , toCoordsFixed = c => [module.CurrentRow-1, toNumber(c[0])] //<a, b>
-                            , maintainInRange = n => (n+8)%8 //ensures n € [0,7], n € Z
+                            , toCoordsFixed = c => [module.CurrentRow - 1, toNumber(c[0])] //<a, b>
+                            , maintainInRange = n => (n + 8) % 8 //ensures n € [0,7], n € Z
                             , getValueOfPossibleCells = c => {
-                                const indexUp    = maintainInRange(c[0]-1)*8+c[1]
-                                    , indexDown  = maintainInRange(c[0]+1)*8+c[1];
-                                return [ss[indexUp]  +module.shapeNumbers[s[indexUp]],
-                                        ss[indexDown]+module.shapeNumbers[s[indexDown]]];
+                                const indexUp = maintainInRange(c[0] - 1) * 8 + c[1]
+                                    , indexDown = maintainInRange(c[0] + 1) * 8 + c[1];
+                                return [ss[indexUp] + module.shapeNumbers[s[indexUp]],
+                                ss[indexDown] + module.shapeNumbers[s[indexDown]]];
                             }
                             , clue = matches[2]
                             , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
-                        module.CurrentRow = maintainInRange(module.CurrentRow-1+Math.ceil(Math.tan(dir[1])-1))+1;
+                        module.CurrentRow = maintainInRange(module.CurrentRow - 1 + Math.ceil(Math.tan(dir[1]) - 1)) + 1;
                     }
                     return `${next[0]}${module.CurrentRow}`;
                 },
@@ -6132,7 +6132,7 @@ let parseData = [
                     2, 5, 6, 3, 7, 4, 1, 0,
                     1, 0, 4, 7, 3, 6, 2, 5,
                     0, 1, 3, 4, 5, 7, 6, 2,
-                    5, 2, 7, 6, 4, 3, 0, 1 ],
+                    5, 2, 7, 6, 4, 3, 0, 1],
                 shapesSign: [
                     '+', '+', '-', '-', '+', '+', '-', '-',
                     '-', '+', '-', '-', '+', '+', '-', '+',
@@ -6141,7 +6141,7 @@ let parseData = [
                     '-', '+', '+', '-', '+', '-', '-', '+',
                     '-', '+', '-', '+', '-', '-', '+', '+',
                     '+', '-', '+', '+', '-', '+', '-', '-',
-                    '-', '-', '+', '-', '+', '-', '+', '+' ]
+                    '-', '-', '+', '-', '+', '-', '+', '+']
             },
             {
                 regex: /.+/, //this is fairly expensive, but the module doesn't guarantee a consistent log ending.
@@ -6156,8 +6156,8 @@ let parseData = [
                             restricted: module.Restricted
                         }
                         const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                        module[0] = {label:`<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`};
-                        module[module.length-1][1] = module.Section;
+                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                        module[module.length - 1][1] = module.Section;
                     } else {
                         if (!module.Restricted && matched.input.includes("Restricted"))
                             module.Restricted = this.detectRestriction(matched.input);
@@ -9455,12 +9455,12 @@ let parseData = [
             {
                 //I = Light cyan | O = dark cyan
                 regex: /The initial grid:/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
                     let table = $('<table>').css('table-collapse', 'collapse');
-                    for(let i = 0; i < 9; i++) {
+                    for (let i = 0; i < 9; i++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let j = 0; j < 9; j++)
+                        for (let j = 0; j < 9; j++)
                             $('<td>').text(' ').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').css('background-color', lines[i][j] === 'I' ? '#00D9B9' : '#005B52').appendTo(tr);
                     }
                     module.push({ label: matches[0], obj: table });
@@ -9555,11 +9555,6 @@ let parseData = [
         displayName: "The Button",
         moduleID: "BigButton",
         loggingTag: "ButtonComponent"
-    },
-    {
-        displayName: "The Grand Prix",
-        moduleID: "KritGrandPrix",
-        loggingTag: "Grand Prix"
     },
     {
         displayName: "The Time Keeper",
@@ -9778,7 +9773,7 @@ let parseData = [
         matches: [
             {
                 regex: /^The puzzle is as follows:$/,
-                handler: function(_, module) {
+                handler: function (_, module) {
                     let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
                     module.digits = [];
                     module.grid = grid;
@@ -9787,28 +9782,28 @@ let parseData = [
             },
             {
                 regex: /^The clues along the (top|left|bottom|right) are ((?:\d ?){5})\.$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.digits.push(matches[2].split(' '));
-                    if(matches[1] !== "right") {
+                    if (matches[1] !== "right") {
                         return true;
                     }
                     let table = $('<table>').css('table-collapse', 'collapse');
-                    for(let i = 0; i < 7; i++) {
+                    for (let i = 0; i < 7; i++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let j = 0; j < 7; j++) {
+                        for (let j = 0; j < 7; j++) {
                             let td = $('<td>').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').appendTo(tr);
-                            if(i === 0 || i === 6 || j === 0 || j === 6) {
+                            if (i === 0 || i === 6 || j === 0 || j === 6) {
                                 td.css('border', 'none');
                             }
-                            if((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
+                            if ((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
                                 td.text(module.digits[i === 0 ? 0 : 2][j - 1]);
                                 continue;
                             }
-                            if((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
+                            if ((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
                                 td.text(module.digits[j === 0 ? 1 : 3][i - 1]);
                                 continue;
                             }
-                            if(i !== 0 && i !== 6 && j !== 0 && j !== 6)
+                            if (i !== 0 && i !== 6 && j !== 0 && j !== 6)
                                 td.text(module.grid[i - 1][j - 1]);
                         }
                     }
