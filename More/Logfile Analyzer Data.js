@@ -1330,6 +1330,52 @@ let parseData = [
         ]
     },
     {
+        moduleID: "ArithmeticCipherModule",
+        displayName: "Arithmetic Cipher",
+        loggingTag: "Arithmetic Cipher",
+        matches: [
+            {
+                regex: /^Frequency table:$/,
+                handler: function (matches, module)
+                {
+                    let lines = readLines(2);
+                    function p(n) {
+                        return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix+n) < 26 ? String.fromCharCode(65+ix+n) : ['EOF', 'total'][ix+n-26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n+14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
+                    }
+                    let table = $(`<div><table>${p(0)}</table><table>${p(14)}</table></div>`);
+                    table.find('table').css({ width: '100%', marginBottom: '.1cm' });
+                    table.find('td,th').css({ border: '1px solid black', padding: '.05cm .1cm' });
+                    table.find('th').css({ background: '#eee' });
+                    module.push({ label: 'Frequency table:', obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^(?:Start values|After (formulas|column removals)):$/,
+                handler: function (matches, module)
+                {
+                    let lines = readLines(3).map(line => line.replace(/^\[Arithmetic Cipher #\d+\] (High|Low|Code): /, ''));
+                    let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v|0) : [0, 0];
+                    function mark(str) {
+                        if (shifts[1] !== 0)
+                            str = str.substr(0, shifts[0] + 1) + `<span style='background: hsl(230, 100%, 90%)'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
+                        if (shifts[0] !== 0)
+                            str = `<span style='background: hsl(0, 100%, 90%)'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
+                        return str;
+                    }
+                    let table = $(`<table><tr><th>High:</th><td class='m'>${mark(lines[0])}</td></tr><tr><th>Low:</th><td class='m'>${mark(lines[1])}</td></tr><tr><th>Code:</th><td class='m'>${mark(lines[2])}</td></tr></table>`);
+                    table.find('table').css({ width: '100%', marginBottom: '.1cm' });
+                    table.find('td,th').css({ border: '1px solid black', padding: '.05cm .2cm' });
+                    table.find('td.m').css({ fontFamily: 'monospace', fontSize: '14pt' });
+                    table.find('th').css({ background: '#eee' });
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            { regex: /.+/ }
+        ]
+    },
+    {
         moduleID: "asciiArt",
         loggingTag: "Ascii Art",
         displayName: "ASCII Art"
