@@ -3707,9 +3707,9 @@ let parseData = [
                 }
             },
             {
-                regex: /^Grid: ([#*]{36})$/,
+                regex: /^(Submitted|Grid:) ([#*]{36})\.?$/,
                 handler: function (matches, module) {
-                    let grid = Array.from(new Array(6), (_, i) => matches[1].slice(i * 6, i * 6 + 6))
+                    let grid = Array.from(new Array(6), (_, i) => matches[2].slice(i * 6, i * 6 + 6))
                     let table = $('<table>').css('border-collapse', 'collapse');
                     for (let row = 0; row < grid.length; row++) {
                         let tr = $('<tr>').appendTo(table);
@@ -3732,37 +3732,12 @@ let parseData = [
                             }
                         }
                     }
-                    module.push([module.FloorLightsStage[0], [{ label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
-                    return true;
-                }
-            },
-            {
-                regex: /^Submitted ([#*]{36})\.$/,
-                handler: function (matches, module) {
-                    let grid = Array.from(new Array(6), (_, i) => matches[1].slice(i * 6, i * 6 + 6))
-                    let table = $('<table>').css('border-collapse', 'collapse');
-                    for (let row = 0; row < grid.length; row++) {
-                        let tr = $('<tr>').appendTo(table);
-                        for (let col = 0; col < grid.length; col++) {
-                            let td = $('<td>')
-                                .text(' ')
-                                .css('text-align', 'center')
-                                .css('border', 'solid')
-                                .css('border-width', '1px')
-                                .css('width', '15px')
-                                .css('height', '15px')
-                                .appendTo(tr);
-                            switch (grid[row][col]) {
-                                case '#':
-                                    td.css('background-color', '#FFFF00')
-                                    break;
-                                case '*':
-                                    td.css('background-color', '#858585')
-                                    break;
-                            }
-                        }
+                    if(matches[1] === 'Grid:') {
+                        module.push([module.FloorLightsStage[0], [{ label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
                     }
-                    module.push({ label: 'Submitted:', obj: table })
+                    else {
+                        module.push({ label: 'Submitted:', obj: table })
+                    }
                     return true;
                 }
             },
