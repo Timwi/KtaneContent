@@ -45,6 +45,8 @@
         let currY = 0;
         let grid = $(".the-grid");
         var selected = "";
+        let saveStates = [];
+        let currentState = 0;
 
         function selectNone() {
             selected = "";
@@ -132,6 +134,58 @@
             grid.children().eq(currY).children().eq(0).addClass("selected");
             grid.children().eq(rows - 1).children().eq(currX).addClass("selected");
         }
+
+        $(".reset-grid").click(function() {
+            $(".symbolcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            grid.children().eq(rows - 2).children().eq(1).click();
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $(".symbolcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            grid.children().eq(rows - 2).children().eq(1).click();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".the-grid .cell, .the-grid .symbolcell div")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".the-grid .cell, .the-grid .symbolcell div").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
     });
     </script>
     <style>
@@ -194,7 +248,7 @@
         }
 
         div.the-grid {
-            height: 560px;
+            height: 400px;
             width: 400px;
         }
         div.cell {
@@ -248,6 +302,32 @@
         .vulture { background-image: url("img/Following Orders/Vulture.png"); }
         .dark .ankh, .dark .cloth, .dark .cup, .dark .sieve, .dark .vulture {
             filter: invert(85%);
+        }
+
+        button {
+            font-family: "Special Elite";
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-grid, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
         }
     </style>
 </head>
@@ -420,13 +500,21 @@
                         <div class="the-grid"></div>
                     </div>
                 </div>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-all">Reset All</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-grid">Reset Grid</button>
+                </div>
 
                 <h3>Interactive Grid</h3>
                 <ul>
                     <li>Select one of the <b>glyphs</b> above the grid then click on the <b>left</b> or <b>bottom</b> cells to place/remove a glyph.</li>
                     <li>Click a main cell to change position in the grid.</li>
                     <li>Click a <b>left</b> or <b>bottom</b> cell when no glyph tool is selected to change only the row of column of the position.</li>
-                    <li>Save features coming soon...</li>
+                    <li>You can save the current state of the grid, reset the grid, reset the saves, or reset everything using the buttons.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 3 of 3</div>
