@@ -1182,22 +1182,27 @@ function Bomb(seed) {
 
                 // The X axis needs to be flipped for the back face, so we multiply it by -1.
                 // And the Y axis is always upside down, so we always multiply it by -1.
-                const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
-                const y = this.Anchors[moduleIndex][1] * -1;
-                const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=.22 height=.22>`).appendTo(svg);
-                $SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
+                const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1) * 100;
+                const y = this.Anchors[moduleIndex][1] * -1 * 100;
+
+                let image;
+                if (module.iconPosition !== undefined) {
+                    const imageSVG = $SVG(`<svg viewBox="0 0 32 32" x=${x} y=${y} width=22 height=22>`).appendTo(svg);
+                    image = $SVG(`<image x=${-module.moduleData.iconPosition.X * 32} y=${-module.moduleData.iconPosition.Y * 32} href="../iconsprite">`).appendTo(imageSVG);
+                } else {
+                    image = $SVG(`<image x=${x} y=${y} href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=22 height=22>`).appendTo(svg);
+                }
+
+                $SVG(`<rect x=${x} y=${y} width=22 height=22 stroke=black stroke-width=0.5 fill=none>`).appendTo(svg);
 
                 for (let j = 0; j < 4; j++) {
-                    viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 0.22));
+                    viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 22));
                 }
                 svg.attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${Math.abs(viewBox[0]) + viewBox[2]} ${Math.abs(viewBox[1]) + viewBox[3]}`);
                 svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
 
-                // Attempt to make the image pixelated
-                image.css("image-rendering", "crisp-edges");
-                if (image.css("image-render") == null) {
-                    image.css("image-rendering", "pixelated");
-                }
+                image.css("image-rendering", "pixelated");
+                image.on("error", () => image.attr("href", "../Icons/blank.png"));
             }
             const backFace = svg;
 
@@ -1429,14 +1434,15 @@ function parseLog(opt) {
                         iconPosition: { X: module.X, Y: module.Y },
                         repo: module
                     });
-                } else if (matches.length === 1) {
-                    const match = matches[0];
-                    if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
-                        console.warn(`Unnecessary module: ${module.Name}`);
-                    }
+                } else if (matches.length >= 1) {
+                    for (const match of matches) {
+                        if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
+                            console.warn(`Unnecessary module: ${module.Name}`);
+                        }
 
-                    match.repo = module;
-                    match.iconPosition = { X: module.X, Y: module.Y };
+                        match.repo = module;
+                        match.iconPosition = { X: module.X, Y: module.Y };
+                    }
                 }
             }
         }, "json")
@@ -1494,13 +1500,8 @@ function parseLog(opt) {
                 // The Rules module runs into this edge case and so we need to make sure we find the one that has a module ID (if it exists).
                 if (id !== null && obj?.moduleID == undefined) {
                     var potentialModules = parseData.filter(data => data.loggingTag == loggingTag && data.moduleID !== undefined);
-                    switch (potentialModules.length) {
-                        case 1:
-                            obj = potentialModules[0];
-                            break;
-                        default:
-                            obj = null;
-                            break;
+                    if (potentialModules.length === 1) {
+                        obj = potentialModules[0];
                     }
                 }
 
