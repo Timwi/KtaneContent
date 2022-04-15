@@ -119,7 +119,7 @@ window.BombRenderer = class {
             var totalBombWidth = g(0) + g(1);
             var totalBombHeight = g(2) + g(3);
             //console.log(totalBombWidth, width, totalBombHeight, height);
-            var scale = Math.min(width / (totalBombWidth * 200), height / (totalBombHeight * 200)) * (camera.fov * Math.PI / 180) * 0.8;
+            var scale = Math.max(Math.min(width / (totalBombWidth * 200), height / (totalBombHeight * 200)) * (camera.fov * Math.PI / 180) * 0.8, 1);
             this.bombgroup.scale.set(scale, scale, scale);
         };
         this.onresize();
@@ -178,6 +178,10 @@ window.BombRenderer = class {
             .on("mouseup", () => r())
             .on("touchend", () => r());
         r();*/
+
+
+        this.iconSprite = new Image();
+        this.iconSprite.src = "../iconsprite";
     }
 
     createModuleBox(module, anchor, rear) {
@@ -240,17 +244,15 @@ window.BombRenderer = class {
                 break;
             case "module":
                 var data = module.data;
-                var geticonurl = (n) => (this.useMainPath ? "../.." : "..") + "/Icons/" + encodeURIComponent(n) + ".png";
-                var iconImg = new Image();
-                iconImg.src = geticonurl((data.repo ? data.repo.FileName || data.repo.Name : data.displayName));
-                var isBlank = false;
-                iconImg.onload = () => {
+                var isBlank = data.iconPosition.X == 0 & data.iconPosition.Y == 0;
+
+                const onLoad = () => {
                     var canvas = document.createElement("canvas");
                     canvas.width = 300;
                     canvas.height = 300;
                     var ctx = canvas.getContext("2d");
                     ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(iconImg, 0, 0, 300, 300); //have to draw to a canvas at a larger scale to make pixelated
+                    ctx.drawImage(this.iconSprite, data.iconPosition.X * 32, data.iconPosition.Y * 32, 32, 32, 0, 0, 300, 300); //have to draw to a canvas at a larger scale to make pixelated
 
 
                     const drawStatusLight = (r, g, b) => {
@@ -291,19 +293,18 @@ window.BombRenderer = class {
                     var icon = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.19), new this.MeshMaterial({ map: texture, transparent: true }));
                     group.add(icon);
                     icon.position.z = 0.035;
-                };
-                iconImg.onerror = () => {
-                    iconImg.src = geticonurl("blank");
-                    iconImg.onerror = null;
-                    isBlank = true;
-                };
+                }
+
+                if (this.iconSprite.complete) onLoad();
+                else this.iconSprite.addEventListener("load", onLoad);
+
                 break;
         }
     }
 
     loadMainAssetsAsync() {
         return new Promise(async (resolve, reject) => {
-            this.emptyComponent = await this.loadModelWithTexture("Component_Empty(Clone) 0", "Gameplay-KT-Mobile-Diffuse 0");
+            this.emptyComponent = await this.loadModelWithTexture("Component_empty(Clone) 0", "Gameplay-KT-Mobile-Diffuse 0");
             this.batteryDHolder = await this.loadModelWithTexture("Widgets_Battery_D_Holder(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
             this.batteryAAHolder = await this.loadModelWithTexture("Battery_2AA_Holder(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");
             this.batteryD = await this.loadModelWithTexture("Battery_D(Clone) 0", "Gameplay-KT-Mobile-Diffuse 1");

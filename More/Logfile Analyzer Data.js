@@ -1330,6 +1330,52 @@ let parseData = [
         ]
     },
     {
+        moduleID: "ArithmeticCipherModule",
+        displayName: "Arithmetic Cipher",
+        loggingTag: "Arithmetic Cipher",
+        matches: [
+            {
+                regex: /^Frequency table:$/,
+                handler: function (matches, module)
+                {
+                    let lines = readLines(2);
+                    function p(n) {
+                        return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix+n) < 26 ? String.fromCharCode(65+ix+n) : ['EOF', 'total'][ix+n-26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n+14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
+                    }
+                    let table = $(`<div><table>${p(0)}</table><table>${p(14)}</table></div>`);
+                    table.find('table').css({ width: '100%', marginBottom: '.1cm' });
+                    table.find('td,th').css({ border: '1px solid black', padding: '.05cm .1cm' });
+                    table.find('th').css({ background: '#eee' });
+                    module.push({ label: 'Frequency table:', obj: table });
+                    return true;
+                }
+            },
+            {
+                regex: /^(?:Start values|After (formulas|column removals)):$/,
+                handler: function (matches, module)
+                {
+                    let lines = readLines(3).map(line => line.replace(/^\[Arithmetic Cipher #\d+\] (High|Low|Code): /, ''));
+                    let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v|0) : [0, 0];
+                    function mark(str) {
+                        if (shifts[1] !== 0)
+                            str = str.substr(0, shifts[0] + 1) + `<span style='background: hsl(230, 100%, 90%)'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
+                        if (shifts[0] !== 0)
+                            str = `<span style='background: hsl(0, 100%, 90%)'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
+                        return str;
+                    }
+                    let table = $(`<table><tr><th>High:</th><td class='m'>${mark(lines[0])}</td></tr><tr><th>Low:</th><td class='m'>${mark(lines[1])}</td></tr><tr><th>Code:</th><td class='m'>${mark(lines[2])}</td></tr></table>`);
+                    table.find('table').css({ width: '100%', marginBottom: '.1cm' });
+                    table.find('td,th').css({ border: '1px solid black', padding: '.05cm .2cm' });
+                    table.find('td.m').css({ fontFamily: 'monospace', fontSize: '14pt' });
+                    table.find('th').css({ background: '#eee' });
+                    module.push({ label: matches[0], obj: table });
+                    return true;
+                }
+            },
+            { regex: /.+/ }
+        ]
+    },
+    {
         moduleID: "asciiArt",
         loggingTag: "Ascii Art",
         displayName: "ASCII Art"
@@ -1898,6 +1944,59 @@ let parseData = [
                 regex: /The program is (\W+)/,
                 handler: function (matches, module) {
                     module.push({ label: "The program is:", obj: pre(matches[1]) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Brown's Shadow",
+        moduleID: "brownsShadow",
+        loggingTag: "Brown's Shadow",
+        matches: [
+            {
+                regex: /^Chose net: \((.*)\)$/,
+                handler: function (matches, module) {
+                    let coords = matches[1].split('), (')
+                        .map(str => str.split(', ').map(c => parseInt(c)))
+                        .map(arr => ({ x: arr[0], y: arr[1], z: arr[2] }));
+                    for (let c of coords)
+                        c.p = { x: 21 * c.x - 15 * c.y, y: -5 * c.x - 6 * c.y - 24 * c.z };
+                    module.BrownsShadowInfo = { coords: coords };
+                    return true;
+                }
+            },
+            {
+                regex: /^(Cube|The correct cell to submit is) \((.*)\)(?: (corresponds to|is displaying) (.*))?\.$/,
+                handler: function (matches, module) {
+                    let inf = module.BrownsShadowInfo;
+                    let coords = matches[2].split(', ').map(c => parseInt(c));
+                    let ix = inf.coords.findIndex(c => c.x === coords[0] && c.y === coords[1] && c.z === coords[2]);
+                    let isSolution = matches[1] !== 'Cube';
+                    if (!isSolution) {
+                        if (matches[3] === 'corresponds to')
+                            inf.coords[ix].label = ['left', 'front', 'back', 'right', 'up', 'zig', 'down', 'zag'][matches[4]];
+                        else
+                            inf.coords[ix].label2 = matches[4];
+                    }
+                    else {
+                        inf.coords[ix].label2 = 'solution';
+                        inf.coords[ix].isSolution = true;
+                        inf.coords.sort((one, two) => (two.y - one.y) || (one.z - two.z) || (two.x - one.x));
+
+                        let cubes = inf.coords.map(c => `<g transform='translate(${c.p.x} ${c.p.y})'><path d='M 21,-5 6,-11 m -21,5 21,-5 m 0,-24 v 24' fill='none' stroke='black' stroke-width='.5' opacity='.2' /><text x='3' y='-14'>${c.label}</text>${c.label2 ? `<text x='3' y='${c.label2.length === 1 ? -7 : -9}' font-size='${c.label2.length === 1 ? 6 : 4}' fill='${c.isSolution ? '#0a0' : '#a00'}'>${c.label2}</text>` : ''}<path opacity='.3' d='m 0,-24 -15,-6 21,-5 15,6 z M 0 0 -15,-6 v -24 l 15,6 z m 0,0 v -24 l 21,-5 v 24 z' fill='#eee' stroke='#000' stroke-width='.5' /></g>`).join('');
+                        inf.coords.sort((one, two) => one.p.x - two.p.x);
+                        let minX = inf.coords[0].p.x;
+                        let maxX = inf.coords[7].p.x;
+                        inf.coords.sort((one, two) => one.p.y - two.p.y);
+                        let minY = inf.coords[0].p.y;
+                        let maxY = inf.coords[7].p.y;
+                        let svg = `<svg viewBox='${minX - 16} ${minY - 36} ${maxX - minX + 138} ${maxY - minY + 37}' stroke-linejoin='round' text-anchor='middle' font-size='9'>${cubes}</svg>`;
+                        module.push({ label: 'Chosen net:', obj: $(svg) });
+                    }
                     return true;
                 }
             },
@@ -3144,6 +3243,129 @@ let parseData = [
         ]
     },
     {
+        displayName: "Dungeon",
+        moduleID: "dungeon",
+        loggingTag: "Dungeon",
+        matches: [
+            {
+                regex: /^Stage ([1-9]|1[0-5])$/,
+                handler: function (matches, module) {
+                    let stage = parseInt(matches[1]);
+                    let lines = readLines(2);
+
+                    if (stage === 1) {
+                        module.lines = [];
+                        let button;
+                        module.push({ obj: button = $(`<button style='background: #ccf; border: 1px solid #88d; width: 5cm; height: 1cm; text-align: center;'>Show Original Log</button>`), nobullet: true });
+                        button.click(() => {
+                            module.html.hide();
+                            button.parent().prop('outerHTML', module.lines.map(l => `<li>${l}</li>`).join(""));
+                        });
+                        module.push({ obj: module.html = $(`<div>`), nobullet: true });
+                    }
+                    let callback = () => {
+                        let map = stage === 1 ? new DungeonMap(module.html) : module.map;
+                        map.addStageData(stage, /^\[Dungeon #\d+\] Roll = (\d)$/.exec(lines[0])[1], /^\[Dungeon #\d+\] Level = (\d)$/.exec(lines[1])[1]);
+                        module.map = map;
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    module.lines.push(matches[0]);
+                    module.lines.push(/^\[Dungeon #\d+\] (Roll = \d)$/.exec(lines[0])[1])
+                    module.lines.push(/^\[Dungeon #\d+\] (Level = \d)$/.exec(lines[1])[1]);
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Stage 16$/,
+                handler: function (matches, module) {
+                    let lines = readLines(2);
+
+                    let callback = () => {
+                        module.html.parent().after($(`<li>Module solved!</li>`));
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    module.lines.push(matches[0]);
+                    module.lines.push(/^\[Dungeon #\d+\] (Roll = \d)$/.exec(lines[0])?.[1] ?? "");
+                    module.lines.push(/^\[Dungeon #\d+\] (Level = \d)$/.exec(lines[1])?.[1] ?? "");
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Fighting (.+)$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addFight(matches[1]);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^End of fight : Last monster fought = (\d+)$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addNum(matches[1]);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Wrong action : the action #(.+) against that monster was (.+)\.$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addStrike(`Action #${matches[1]} was ${matches[2]}.`);
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /^Wrong move : the roll is (\d), the correct direction was (.+)\.$/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+
+                    let callback = () => {
+                        let map = module.map;
+                        map.addMoveStrike();
+                    };
+
+                    FileLoadCallbacks.Add("./js/Dungeon/Dungeon.js", callback)
+
+                    return true;
+                }
+            },
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    module.lines.push(matches[0]);
+                    throw "Unexpected log message";
+                }
+            }
+        ]
+    },
+    {
         displayName: "Echolocation",
         moduleID: "echolocation",
         loggingTag: "Echolocation",
@@ -3446,20 +3668,13 @@ let parseData = [
         loggingTag: "Floor Lights",
         matches: [
             {
-                regex: /^-{58}$/,
+                regex: /^Stage (\d+): (Generated ((?:[RGB] at [ABCDEF][1-6](?:|, )){3}))$/,
                 handler: function (matches, module) {
-                    module.push(module.FloorLightsStage);
-                    return true;
-                }
-            },
-            {
-                regex: /^Tile patterns for Stage (\d+):$/,
-                handler: function (matches, module) {
-                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let stageInfo = matches[3].split(", ").map(x => x[0].concat(x.slice(4, 7)).split(' ')).map(x => [x[0]].concat(x[1] = (x[1][1] - 1) * 6 + "ABCDEF".indexOf(x[1][0])));
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for (let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < 6; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for (let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < 6; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3467,39 +3682,38 @@ let parseData = [
                                 .css('border-width', '1px')
                                 .css('width', '15px')
                                 .css('height', '15px')
+                                .css('background-color', '#858585')
                                 .appendTo(tr);
-                            switch (lights[row][col]) {
-                                case 'R':
-                                    td.css('background-color', '#FF0000')
-                                    break;
-                                case 'G':
-                                    td.css('background-color', '#00FF00')
-                                    break;
-                                case 'B':
-                                    td.css('background-color', '#0000FF')
-                                    break;
-                                case 'Y':
-                                    td.css('background-color', '#FFFF00')
-                                    break;
-                                default:
-                                    td.css('background-color', '#858585');
-                                    break;
+
+                            for (let i = 0; i < 3; i++) {
+                                if (stageInfo[i][1] == row * 6 + col) {
+                                    switch (stageInfo[i][0]) {
+                                        case 'R':
+                                            td.css('background-color', '#FF0000')
+                                            break;
+                                        case 'G':
+                                            td.css('background-color', '#00FF00')
+                                            break;
+                                        case 'B':
+                                            td.css('background-color', '#0000FF')
+                                            break
+                                    }
+                                }
                             }
                         }
                     }
-
-                    module.FloorLightsStage = ["Stage " + matches[1], [{ label: "Tile patterns:", obj: table, nobullet: true }]];
+                    module.FloorLightsStage = [`Stage ${matches[1]}:`, table, matches[2]];
                     return true;
                 }
             },
             {
-                regex: /^(Correct toggle patterns for this stage:)|(You submitted these toggles:)|(Correct toggles to submit:)$/,
+                regex: /^(Submitted|Grid:) ([#*]{36})\.?$/,
                 handler: function (matches, module) {
-                    let lights = readLines(10).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
+                    let grid = Array.from(new Array(6), (_, i) => matches[2].slice(i * 6, i * 6 + 6))
                     let table = $('<table>').css('border-collapse', 'collapse');
-                    for (let row = 0; row < lights.length; row++) {
+                    for (let row = 0; row < grid.length; row++) {
                         let tr = $('<tr>').appendTo(table);
-                        for (let col = 0; col < lights.length; col++) {
+                        for (let col = 0; col < grid.length; col++) {
                             let td = $('<td>')
                                 .text(' ')
                                 .css('text-align', 'center')
@@ -3508,39 +3722,21 @@ let parseData = [
                                 .css('width', '15px')
                                 .css('height', '15px')
                                 .appendTo(tr);
-                            switch (lights[row][col]) {
-                                case '1':
+                            switch (grid[row][col]) {
+                                case '#':
                                     td.css('background-color', '#FFFF00')
                                     break;
-                                case '0':
+                                case '*':
                                     td.css('background-color', '#858585')
                                     break;
                             }
                         }
                     }
-                    switch (matches[0]) {
-                        case "Correct toggle patterns for this stage:":
-                            module.FloorLightsStage[1].push({ label: matches[0], obj: table });
-                            break;
-                        case "Correct toggles to submit:":
-                            module.FloorLightsAnswer = lights;
-                            module.FloorLightsStage = ["Answer", [{ label: matches[0], obj: table }]]
-                            module.FloorLightsAttempts = 1
-                            break;
-                        case "You submitted these toggles:":
-                            module.FloorLightsStage = ["Attempt " + module.FloorLightsAttempts, [{ label: matches[0], obj: table }]]
-                            if (module.FloorLightsAnswer.every((val, index) => val === lights[index])) {
-                                readLines(1);
-                                module.FloorLightsStage[1].push("That was correct. Module solves.");
-                                module.push(module.FloorLightsStage);
-                            }
-                            else {
-                                let result = readLines(3).map(x => x.replace(/^\[Floor Lights #\d+\] /g, ''));
-                                module.FloorLightsStage[1].push(result[1]);
-                                module.FloorLightsStage[1].push(result[2]);
-                            }
-                            module.FloorLightsAttempts++;
-                            break;
+                    if(matches[1] === 'Grid:') {
+                        module.push([module.FloorLightsStage[0], [{ label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
+                    }
+                    else {
+                        module.push({ label: 'Submitted:', obj: table })
                     }
                     return true;
                 }
@@ -4172,6 +4368,122 @@ let parseData = [
         moduleID: "giantsDrink",
         loggingTag: "The Giant's Drink",
         displayName: "The Giant’s Drink"
+    },
+    {
+        displayName: "The Grand Prix",
+        moduleID: "KritGrandPrix",
+        loggingTag: "Grand Prix",
+        matches: [
+            {
+                regex: /^\(Initial\) The starting order is: (.+)\.$/,
+                handler: function (matches, module) {
+                    module.startup = matches[1];
+                    module.stages = $(`<table style='width: 100%; border: black solid 2px; text-align: center;'><tr><th style="border-right: black solid 2px;">#:</th><th style="border-right: gray solid 1px;">Flag:</th><th style="border-right: gray solid 1px;">Sector:</th><th style="border-right: gray solid 1px;">Driver:</th><th>Action</th></tr></table>`);
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Initial\) The starting deltas are as follows: $/,
+                handler: function (_, module) {
+                    let lines = readLines(20);
+
+                    let offsets = [0.0];
+                    for (let i = 1; i < 20; ++i)
+                    offsets[i] = offsets[i - 1] + parseFloat(lines[i]);
+                    offsets = offsets.map(i => i.toFixed(3));
+                    offsets[0] = lines[0] = "Inter.";
+                    
+                    module.startup = $(`<table style='border: black solid 2px; text-align: center;'><tr><th>#:</th><th>NAME:</th><th>DELTA:</th><th>OFFSET:</th></tr>${module.startup.split(", ").map((m, i) => `<tr style='border: black solid 2px;'><td style="border-right: black solid 2px;">${i + 1}</td><td style="border-right: gray solid 1px;">${m}</td><td style="border-right: gray solid 1px;">${lines[i]}</td><td>${offsets[i]}</td></tr>`).join("")}</table>`);
+                    module.push("Beginning standings:");
+                    module.push({ obj: module.startup, nobullet: true });
+                    module.push("Stages:");
+                    module.push({ obj: module.stages, nobullet: true });
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Lap (\d+)\) Lap info:$/,
+                handler: function (matches, module) {
+                    let lines = readLines(4);
+
+                    let color = /^\[Grand Prix #\d+\]: \(Lap \d+\) The flag shown this lap is (.+)$/.exec(lines[0])[1];
+                    let sector = /^\[Grand Prix #\d+\]: \(Lap \d+\) The associated sector is sector (.+)$/.exec(lines[1])[1];
+                    let driver = /^\[Grand Prix #\d+\]: \(Lap \d+\) The driver associated with the flag is (.+)\.$/.exec(lines[2])?.[1] ?? "N/A";
+                    let action = /^\[Grand Prix #\d+\]: \(Lap \d+\) (.*)$/.exec(lines[3])[1];
+
+                    let affected = "";
+                    if (color == "Yellow")
+                        affected = /^\[Grand Prix #\d+\]: \(Lap \d+\) The drivers involved with this are: (.*)$/.exec(readLine())[1];
+                        
+                    let struct;
+                    module.stages.append(struct = $(`
+                    <tr style='border: black solid 2px;'>
+                        <th style="border-right: black solid 2px;">${matches[1]}</th>
+                        <td style="border-right: gray solid 1px;">${color}</td>
+                        <td style="border-right: gray solid 1px;">${sector}</td>
+                        <td style='${driver == "N/A" ? "background-color: #fbb; " : ""}border-right: gray solid 1px'>${driver}</td>
+                        <td${action != "" ? "" : " style='background-color: #fbb;'"}>
+                            ${action != "" ? `<ul>
+                                <li class="expandable">
+                                    <a href="#" class="expander">View</a>
+                                    <ul style="padding: 0;">
+                                        <li class="no-bullet">${action}</li>
+                                        ${affected != "" ? `<li class="no-bullet">Drivers involved: ${affected}</li>` : ""}
+                                    </ul>
+                                </li>
+                            </ul>` : "N/A"}
+                        </td>
+                    </tr>`));
+
+                    let expanders = struct.find(".expander");
+                    for (let i = 0; i < expanders.length; i++)
+                        $(expanders[i]).on("click", function () { $(expanders[i]).parent().toggleClass("expanded"); return false; });
+
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Lap (\d+)\) Arrived at green flag lap\.$/,
+                handler: function(matches, module){
+                    module.stages.append(struct = $(`
+                    <tr style='border: black solid 2px;'>
+                        <th style="border-right: black solid 2px;">${matches[1]}</th>
+                        <td style="border-right: gray solid 1px;">Green</td>
+                        <td style='background-color: #fbb; border-right: gray solid 1px;'>N/A</td>
+                        <td style='background-color: #fbb; border-right: gray solid 1px;'>N/A</td>
+                        <td style='background-color: #fbb;'>N/A</td>
+                    </tr>`));
+
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Final lap\) The exptected result is (.+)$/,
+                handler: function(matches, module){
+                    module.push("Expected results:");
+                    module.push({obj:$(`<table style='border: black solid 2px; text-align: center;'>${matches[1].split(", ").map((m, i) => `<tr style='border: black solid 2px;'><th style="border-right: black solid 2px;">${i + 1}</th><td>${m}</td></tr>`).join("")}</table>`), nobullet:true});
+                    
+                    return true;
+                }
+            },
+            {
+                regex: /^\(Final lap\) (.+)$/,
+                handler: function(matches, module){
+                    module.push(matches[1]);
+
+                    return true;
+                }
+            },
+            {
+                regex: /^(\(Initial\) (Total lap count: \d+|The green flag lap is at lap \d+)|\(Final lap\) Reached the final lap\.)$/,
+                handler: function(_, _){
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
     },
     {
         displayName: "Grid Matching",
@@ -5396,6 +5708,64 @@ let parseData = [
         ]
     },
     {
+        moduleID: ["MahjongQuizEasy", "MahjongQuizHard", "MahjongQuizScrambled"],
+        loggingTag: ["Mahjong Quiz Easy", "Mahjong Quiz Hard", "Mahjong Quiz Scrambled"],
+        matches: [
+            {
+                regex: /(Given hand:|Scrambled hand:|Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ((\d[mpsz] ?)+).*$/,
+                handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
+                    const tiles = matches[2].trim().split(' ');
+                    let div = $('<div>');
+                    tiles.forEach(tile => {
+                        div.append(`<img src='../HTML/img/Mahjong/${fileNames[tile]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                    });
+                    module.push({ label: matches[1], obj: div });
+                }
+            },
+            {
+                regex: /(Solution:|Strike! Answer submitted:|Solved! Answer submitted:) ?$/,
+                handler: function (matches, module) {
+                    module.push(matches[0] + ' No tiles');
+                }
+            },
+            {
+                regex: /(Explanation:) (.*)$/,
+                handler: function (matches, module) {
+                    const fileNames = {
+                        "1m": "Char 1", "2m": "Char 2", "3m": "Char 3", "4m": "Char 4", "5m": "Char 5", "6m": "Char 6", "7m": "Char 7", "8m": "Char 8", "9m": "Char 9",
+                        "1p": "Wheel 1", "2p": "Wheel 2", "3p": "Wheel 3", "4p": "Wheel 4", "5p": "Wheel 5", "6p": "Wheel 6", "7p": "Wheel 7", "8p": "Wheel 8", "9p": "Wheel 9",
+                        "1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
+                        "1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
+                    }
+                    let div = $(`<div style='display: flex;'>`);
+                    const tileStrings = matches[2].replace(/\s/g, "").split("|").filter(x => x != "");
+                    for (var i = 0; i < tileStrings.length; i++) {
+                        const tiles = tileStrings[i].match(/.{2}/g);
+                        if (i == 0) {
+                            div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                            div.append(`<span style='padding-top: 4px;'>-><span>`);
+                        } else {
+                            for (var j = 0; j < tiles.length; j++) {
+                                if (j == tiles.length - 1) {
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
+                                } else {
+                                    div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+                                }
+                            }
+                        }
+                    }
+                    module.push({ label: matches[1], obj: div });
+                }
+            }
+        ]
+    },
+    {
         moduleID: "MarbleTumbleModule",
         loggingTag: "Marble Tumble",
         matches: [
@@ -5753,6 +6123,149 @@ let parseData = [
             },
             {
                 regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Mazematics",
+        moduleID: "mazematics",
+        loggingTag: "Mazematics",
+        matches: [
+            {
+                regex: /[A-Z][a-z]+ = (\d)/,
+                handler: function (matches, module) {
+                    if (typeof module.Counter !== "number") {
+                        module.push();
+                        module.Counter = 0;
+                    } else module.Counter++;
+                    module.push(this.names[module.Counter] + ": " + matches[1]);
+                    (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
+                    return true;
+                },
+                names: ["Circle", "Square", "Mountain", "Triangle", "Diamond", "Hexagon", "Star", "Heart"],
+                order: [0, 4, 3, 7, 5, 1, 6, 2]
+            },
+            {
+                regex: /STRIKE!/,
+                handler: function (_, module) {
+                    module.Struck = true;
+                }
+            },
+            {
+                regex: /Attempted/,
+                handler: function (_, module) {
+                    module.Rule49 = true;
+                }
+            },
+            {
+                regex: /BEGIN|MODULE RESET/,
+                handler: function (_, module) {
+                    (module.CoordsGroups ??= []).push([]);
+                    (module.Strikes ??= []).push([]);
+                    module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
+                    module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
+                    module.Section = [];
+                    return true;
+                }
+            },
+            {
+                regex: /SOLVED!/,
+                handler: function (matched, module) {
+                    module.Solved = true;
+                    module.push(matched.input);
+                }
+            },
+            {
+                regex: /([A-Z][0-9])[^,]+(-?\d)/,
+                handler: function (matches, module) {
+                    let correctLine = matches.input;
+                    const currentStrikes = module.Strikes[module.Strikes.length - 1];
+                    if (module.Rule49) {
+                        currentStrikes.push(matches[1][0] + module.CurrentRow);
+                        [module.Struck, module.Rule49] = [false, false];
+                    }
+                    else {
+                        const currentMoves = module.CoordsGroups[module.CoordsGroups.length - 1];
+                        if (!currentMoves.length) {
+                            currentMoves.push(matches[1]);
+                            module.CurrentRow = +matches[1][1];
+                        }
+                        else {
+                            const goodCoordinate = this.fixCoordinate(currentMoves, arguments, this.shapes, this.shapesSign);
+                            currentMoves.push(goodCoordinate);
+                            correctLine = matches.input.replace(matches[1], goodCoordinate);
+                            if (module.Struck) { currentStrikes.push(goodCoordinate); module.Struck = false; }
+                        }
+                    }
+                    module.Section.push(correctLine);
+                    return true;
+                },
+                //I shouldn't be making this function but whatever.
+                //fixes a bug the module has when displaying which coordinates have been visites: it doesn't show them properly
+                fixCoordinate: (cm, hArgs, s, ss) => {
+                    const [matches, module] = hArgs
+                        , [curr, next] = [cm[cm.length - 1], matches[1]];
+                    if (curr[0] === next[0]) {
+                        const letters = "ABCDEFGH"
+                            , toNumber = l => letters.search(l)
+                            , toCoordsFixed = c => [module.CurrentRow - 1, toNumber(c[0])] //<a, b>
+                            , maintainInRange = n => (n + 8) % 8 //ensures n € [0,7], n € Z
+                            , getValueOfPossibleCells = c => {
+                                const indexUp = maintainInRange(c[0] - 1) * 8 + c[1]
+                                    , indexDown = maintainInRange(c[0] + 1) * 8 + c[1];
+                                return [ss[indexUp] + module.shapeNumbers[s[indexUp]],
+                                ss[indexDown] + module.shapeNumbers[s[indexDown]]];
+                            }
+                            , clue = matches[2]
+                            , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
+                        module.CurrentRow = maintainInRange(module.CurrentRow - 1 + Math.ceil(Math.tan(dir[1]) - 1)) + 1;
+                    }
+                    return `${next[0]}${module.CurrentRow}`;
+                },
+                shapes: [
+                    4, 6, 2, 5, 0, 1, 7, 3,
+                    7, 3, 1, 0, 2, 5, 4, 6,
+                    6, 7, 5, 2, 1, 0, 3, 4,
+                    3, 4, 0, 1, 6, 2, 5, 7,
+                    2, 5, 6, 3, 7, 4, 1, 0,
+                    1, 0, 4, 7, 3, 6, 2, 5,
+                    0, 1, 3, 4, 5, 7, 6, 2,
+                    5, 2, 7, 6, 4, 3, 0, 1],
+                shapesSign: [
+                    '+', '+', '-', '-', '+', '+', '-', '-',
+                    '-', '+', '-', '-', '+', '+', '-', '+',
+                    '+', '-', '+', '+', '-', '-', '+', '-',
+                    '+', '-', '-', '+', '-', '+', '+', '-',
+                    '-', '+', '+', '-', '+', '-', '-', '+',
+                    '-', '+', '-', '+', '-', '-', '+', '+',
+                    '+', '-', '+', '+', '-', '+', '-', '-',
+                    '-', '-', '+', '-', '+', '-', '+', '+']
+            },
+            {
+                regex: /.+/, //this is fairly expensive, but the module doesn't guarantee a consistent log ending.
+                handler: function (matched, module) {
+                    if (module.Section) {
+                        module.Section.push(matched.input);
+                        module.JSON = {
+                            shapeNumbers: module.shapeNumbers,
+                            coordsGroups: module.CoordsGroups,
+                            strikes: module.Strikes,
+                            solved: module.Solved,
+                            restricted: module.Restricted
+                        }
+                        const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
+                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                        module[module.length - 1][1] = module.Section;
+                    } else {
+                        if (!module.Restricted && matched.input.includes("Restricted"))
+                            module.Restricted = this.detectRestriction(matched.input);
+                        module.push(matched.input);
+                    }
+                },
+                detectRestriction: line => {
+                    for (let i = 0; i < 4; i++)
+                        if (line.includes(["Triangular", "Multiples", "Primes", "Fibonacci"][i])) return i;
+                }
             }
         ]
     },
@@ -9040,12 +9553,12 @@ let parseData = [
             {
                 //I = Light cyan | O = dark cyan
                 regex: /The initial grid:/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
                     let table = $('<table>').css('table-collapse', 'collapse');
-                    for(let i = 0; i < 9; i++) {
+                    for (let i = 0; i < 9; i++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let j = 0; j < 9; j++)
+                        for (let j = 0; j < 9; j++)
                             $('<td>').text(' ').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').css('background-color', lines[i][j] === 'I' ? '#00D9B9' : '#005B52').appendTo(tr);
                     }
                     module.push({ label: matches[0], obj: table });
@@ -9358,7 +9871,7 @@ let parseData = [
         matches: [
             {
                 regex: /^The puzzle is as follows:$/,
-                handler: function(_, module) {
+                handler: function (_, module) {
                     let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
                     module.digits = [];
                     module.grid = grid;
@@ -9367,28 +9880,28 @@ let parseData = [
             },
             {
                 regex: /^The clues along the (top|left|bottom|right) are ((?:\d ?){5})\.$/,
-                handler: function(matches, module) {
+                handler: function (matches, module) {
                     module.digits.push(matches[2].split(' '));
-                    if(matches[1] !== "right") {
+                    if (matches[1] !== "right") {
                         return true;
                     }
                     let table = $('<table>').css('table-collapse', 'collapse');
-                    for(let i = 0; i < 7; i++) {
+                    for (let i = 0; i < 7; i++) {
                         let tr = $('<tr>').appendTo(table);
-                        for(let j = 0; j < 7; j++) {
+                        for (let j = 0; j < 7; j++) {
                             let td = $('<td>').css('text-align', 'center').css('border', 'solid').css('border-width', 'thin').css('width', '25px').css('height', '25px').appendTo(tr);
-                            if(i === 0 || i === 6 || j === 0 || j === 6) {
+                            if (i === 0 || i === 6 || j === 0 || j === 6) {
                                 td.css('border', 'none');
                             }
-                            if((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
+                            if ((i === 0 || i === 6) && (j !== 0 || j !== 6)) {
                                 td.text(module.digits[i === 0 ? 0 : 2][j - 1]);
                                 continue;
                             }
-                            if((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
+                            if ((j === 0 || j === 6) && (i !== 0 || i !== 6)) {
                                 td.text(module.digits[j === 0 ? 1 : 3][i - 1]);
                                 continue;
                             }
-                            if(i !== 0 && i !== 6 && j !== 0 && j !== 6)
+                            if (i !== 0 && i !== 6 && j !== 0 && j !== 6)
                                 td.text(module.grid[i - 1][j - 1]);
                         }
                     }
@@ -10119,6 +10632,27 @@ let parseData = [
             },
             {
                 regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Wumbo",
+        moduleID: "wumbo",
+        loggingTag: "Wumbo",
+        matches: [
+            {
+                regex: /.+/,
+                handler: function (matches, module) {
+                    if (module.length === 0) {
+                        let button;
+                        module.push({ obj: button = $(`<button style='background: #ccf; border: 1px solid #88d; width: 3cm; height: 1cm; text-align: center;'>Show Log</button>`), nobullet: true });
+                        button.click(() => {
+                            button.parent().prop('outerHTML', module.hidden.map(o => `<li>${o}</li>`).join(""));
+                        });
+                        module.hidden = [];
+                    }
+                    module.hidden.push(`<span>${matches[0]}</span>`);
+                }
             }
         ]
     },
