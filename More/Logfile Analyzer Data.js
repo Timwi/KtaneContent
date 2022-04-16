@@ -2144,7 +2144,6 @@ let parseData = [
             {
                 regex: /to press/,
                 handler: function (matches, module) {
-                    console.log(matches);
                     const arr = [
                             ['-', '-', '-', '-', '-'],
                             ['-', '-', '-', '-', '-'],
@@ -2155,7 +2154,7 @@ let parseData = [
                         , positions = after.split(' ');
 
                     positions.pop();
-                    for (const position of positions) 
+                    for (const position of positions)
                         arr[Math.floor((position-1)/5)][(position-1)%5] = 'X';
 
                     module.push("Grid:");
@@ -4423,7 +4422,7 @@ let parseData = [
                     offsets[i] = offsets[i - 1] + parseFloat(lines[i]);
                     offsets = offsets.map(i => i.toFixed(3));
                     offsets[0] = lines[0] = "Inter.";
-                    
+
                     module.startup = $(`<table style='border: black solid 2px; text-align: center;'><tr><th>#:</th><th>NAME:</th><th>DELTA:</th><th>OFFSET:</th></tr>${module.startup.split(", ").map((m, i) => `<tr style='border: black solid 2px;'><td style="border-right: black solid 2px;">${i + 1}</td><td style="border-right: gray solid 1px;">${m}</td><td style="border-right: gray solid 1px;">${lines[i]}</td><td>${offsets[i]}</td></tr>`).join("")}</table>`);
                     module.push("Beginning standings:");
                     module.push({ obj: module.startup, nobullet: true });
@@ -4445,7 +4444,7 @@ let parseData = [
                     let affected = "";
                     if (color == "Yellow")
                         affected = /^\[Grand Prix #\d+\]: \(Lap \d+\) The drivers involved with this are: (.*)$/.exec(readLine())[1];
-                        
+
                     let struct;
                     module.stages.append(struct = $(`
                     <tr style='border: black solid 2px;'>
@@ -4493,7 +4492,7 @@ let parseData = [
                 handler: function(matches, module){
                     module.push("Expected results:");
                     module.push({obj:$(`<table style='border: black solid 2px; text-align: center;'>${matches[1].split(", ").map((m, i) => `<tr style='border: black solid 2px;'><th style="border-right: black solid 2px;">${i + 1}</th><td>${m}</td></tr>`).join("")}</table>`), nobullet:true});
-                    
+
                     return true;
                 }
             },
