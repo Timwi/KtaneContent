@@ -2138,6 +2138,37 @@ let parseData = [
         loggingTag: "ChordQualities"
     },
     {
+        moduleID: "colorGrid",
+        loggingTag: "Color Grid",
+        matches: [
+            {
+                regex: /to press/,
+                handler: function (matches, module) {
+                    console.log(matches);
+                    const arr = [
+                            ['-', '-', '-', '-', '-'],
+                            ['-', '-', '-', '-', '-'],
+                            ['-', '-', '-', '-', '-'],
+                            ['-', '-', '-', '-', '-'],
+                            ['-', '-', '-', '-', '-'] ]
+                        , after = matches.input.split(': ')[1]
+                        , positions = after.split(' ');
+
+                    positions.pop();
+                    for (const position of positions) 
+                        arr[Math.floor((position-1)/5)][(position-1)%5] = 'X';
+
+                    module.push("Grid:");
+                    for (const s of arr)
+                        module.push({label:`<code style='font-size:x-large'>${s.toString().replaceAll(',',' ')}</code>`});
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Color Morse",
         moduleID: "ColorMorseModule",
         loggingTag: "ColorMorse"
