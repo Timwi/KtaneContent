@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Concentration — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const rows = 5;
+        const cols = 3;
+        let rc = rows * cols;
+        let grid = $("#the-grid");
+        let tsData = Array(cols).fill().map(()=>Array(rows).fill().map(()=>Array(2).fill(0)));
+        let tsDataOrig = Array(cols).fill().map(()=>Array(rows).fill().map(()=>Array(2).fill(0)));
+        let coords1 = [0,0];
+        let coords2 = [0,0];
+        let currX = 0;
+        let currY = 0;
+        let cards = [];
+        let toSwap1 = null;
+        let toSwap2 = null;
+        let saveStates = [];
+        let currentState = 0;
+        let stageNumber = $(".stagenumber");
+        var currentStage = 0;
+        const MODE_READ = 0;
+        const MODE_SWAP = 1;
+
+        function mode() {
+            if ($("button.read-swap").hasClass("swap"))
+                return MODE_SWAP;
+            else
+                return MODE_READ;
+        }
+
+        function noSpecialKeys(event) {
+            return !(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey);
+        }
+
+        function selectNone() {
+            $("svg g.selected text").removeClass("blue");
+            $("svg g.selected").removeClass("selected");
+            waitingOnNext = false;
+        }
+
+        let down = false;
+        let waitingOnNext = false;
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down) return false;
+            down = true;
+            let sel = $("svg g.selected");
+            if (noSpecialKeys(event) && sel.length > 0) {
+                let k = event.key.toLowerCase();
+                n = parseInt(event.key, 10);
+                if (k == " " || k == "enter" || (n >= 0 && n <= 9)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (mode() != MODE_READ) {
+                        down = false;
+                        return false;
+                    }
+                    let valid = true;
+                    if (k == " " || k == "enter") {
+                        waitingOnNext = false;
+                    }
+                    else {
+                        if (!waitingOnNext && n == 1) {
+                            assignText(sel, n, true, false);
+                            waitingOnNext = true;
+                        }
+                        else {
+                            if (n > 0 || waitingOnNext)
+                                assignText(sel, n, false, waitingOnNext);
+                            else
+                                valid = false;
+
+                            waitingOnNext = false;
+                        }
+                    }
+
+                    if (valid && !waitingOnNext) {
+                        if (currX == cols - 1)
+                            currY = (currY + 1) % rows;
+                        currX = (currX + 1) % cols;
+                        selectNone();
+                        findCardAt(currX, currY).addClass("selected");
+                    }
+                }
+            }
+            down = false;
+        });
+
+        let gridRow = $("<div>").addClass("hstack").appendTo(grid);
+        let numbers = $("<div>").addClass("vstack").appendTo(gridRow);
+        $("<div>").addClass("cell numbers").css("height", "65px").appendTo(numbers);
+        let gridMain = $("<div>").addClass("vstack").appendTo(gridRow);
+        let letters = $("<div>").addClass("hstack").appendTo(gridMain);
+        for (let i = 0; i < cols; i++) {
+            $("<div>").addClass("cell letters").text(String.fromCharCode(65 + i)).appendTo(letters);
+        }
+        let svg = $('<svg viewbox="0 0 289 373" xmlns="http://www.w3.org/2000/svg">').appendTo(gridMain);
+        for (let y = 1; y <= rows; y++) {
+            $("<div>").addClass("cell numbers").text(y).appendTo(numbers);
+            for (let x = 1; x <= cols; x++) {
+                let tx = (x-1)*97 + 2;
+                let ty = (y-1)*75 + 6.5;
+                tsDataOrig[x-1][y-1][0] = tsData[x-1][y-1][0] = tx;
+                tsDataOrig[x-1][y-1][1] = tsData[x-1][y-1][1] = ty;
+
+                let card = makeSvgElem("g", {
+                    class: "card avrile", "fill-rule":"evenodd"
+                });
+
+                let cardBG = makeSvgElem("path", {
+                    d:cardBgPath(0.5, 0.5),
+                    fill: "#FFF371", stroke: "#FFF371", "stroke-width": "0.3"
+                });
+                let cardBorder = makeSvgElem("path", {
+                    d:cardBorderPath(0, 0),
+                    class:"card-border", fill: "#ED3327", stroke: "#ED3327", "stroke-width": "0.3"
+                });
+                let cardText = makeSvgElem("text", {
+                     fill: "#AF2B1E", x:46.5, y:48.5, class:(y > 3 ? "double" : "")
+                });
+                cardText.innerHTML = (y-1) * cols + x;
+                card.append(cardBG);
+                card.append(cardBorder);
+                card.append(cardText);
+                svg.append(card);
+
+                let element = $(card);
+                cards.push(element);
+                element.css("transform", `translate(${tx}px, ${ty}px)`);
+                element.data("xyTransform", [tx, ty]);
+
+                element.click(function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.which != 1) return false;
+                    if (mode() == MODE_READ) {
+                        selectNone();
+                        element.addClass("selected");
+                        findCardPos(element);
+                    }
+                    else {
+                        let selectedCards = $("svg g.selected");
+                        if (selectedCards.length > 0) {
+                            element.addClass("selected");
+                            coords2 = [x-1, y-1];
+                            toSwap2 = element;
+                            translateCards();
+                            coords1 = [0,0];
+                            coords2 = [0,0];
+                            toSwap1 = null;
+                            toSwap2 = null;
+                            selectNone();
+                        }
+                        else {
+                            element.addClass("selected");
+                            coords1 = [x-1, y-1];
+                            toSwap1 = element;
+                        }
+                        start = null;
+                    }
+                });
+            }
+        }
+
+        function assignText(card, n, blue, append) {
+            let tElem = card.find("text");
+            tElem.html(append ? ("1" + n) : n);
+            tElem.toggleClass("double", append);
+            tElem.toggleClass("blue", n == 1 && blue);
+        }
+
+        function cardBorderPath(x, y) {
+            return `M${x} ${y}s-.2-5 6.3-5h80s5.6-.8 5.6 5v60c.3 5.2-4.7 5-4.7 5h-81.7c-5.7 0-5.5-4.4-5.5-4.4z` +
+            "m4.9 6.04s7.1.4 7.1-6.82h67.75s-.57 6.82 7.17 6.82v47.6c-8.1 0-7.17 6.87-7.17 6.87h-68s.4-6.86-6.91-6.86z";
+        }
+
+        function cardBgPath(x, y) {
+            return `M${x} ${y}s-.2-5 6.3-5h79s5.6-.8 5.6 5v59c.3 5.2-4.7 5-4.7 5h-80.7c-5.7 0-5.5-4.4-5.5-4.4z`
+        }
+
+        function translateCards() {
+            if ($("svg g.selected").length > 1) {
+                let xy1 = [ tsData[ coords1[0] ][ coords1[1] ][0], tsData[ coords1[0] ][ coords1[1] ][1] ];
+                let xy2 = [ tsData[ coords2[0] ][ coords2[1] ][0], tsData[ coords2[0] ][ coords2[1] ][1] ];
+                toSwap1.css("transform", "translate(" + xy2[0] + "px," + xy2[1] + "px)");
+                toSwap1.data("xyTransform", xy2);
+                toSwap2.css("transform", "translate(" + xy1[0] + "px," + xy1[1] + "px)");
+                toSwap2.data("xyTransform", xy1);
+                tsData[ coords1[0] ][ coords1[1] ][0] = xy2[0];
+                tsData[ coords1[0] ][ coords1[1] ][1] = xy2[1];
+                tsData[ coords2[0] ][ coords2[1] ][0] = xy1[0];
+                tsData[ coords2[0] ][ coords2[1] ][1] = xy1[1];
+            }
+        }
+
+        function stageDec() {
+            currentStage = Math.max(0, currentStage - 1);
+            stageNumber.text(currentStage);
+        }
+        function stageInc() {
+            currentStage += 1;
+            stageNumber.text(currentStage);
+        }
+        $(".stagetext.minus").click(function() {
+            stageDec();
+        });
+        $(".stagetext.plus").click(function() {
+            stageInc();
+        });
+
+        function findCardAt(x, y) {
+            for (let c = 0; c < cards.length; c++) {
+                let xy = cards[c].data("xyTransform");
+                if (Math.abs(tsDataOrig[x][y][0] - xy[0]) + Math.abs(tsDataOrig[x][y][1] - xy[1]) < 2)
+                    return cards[c];
+            }
+            return null;
+        }
+        function findCardPos(card) {
+            let xy = card.data("xyTransform");
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    if (Math.abs(tsDataOrig[x][y][0] - xy[0]) + Math.abs(tsDataOrig[x][y][1] - xy[1]) < 2) {
+                        currX = x;
+                        currY = y;
+                        return;
+                    }
+                }
+            }
+        }
+
+        $("button.read-swap").click(function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $(this).toggleClass("swap");
+            selectNone();
+            if (mode() == MODE_READ) {
+                let tl = findCardAt(0, 0);
+                if (tl) tl.addClass("selected");
+                currX = currY = 0;
+            }
+        });
+        findCardAt(0, 0).addClass("selected");
+        currX = currY = 0;
+
+        function resetGrid() {
+            $("#the-grid svg g").each(function(i, e) {
+                let x = i % cols;
+                let y = Math.floor(i / cols);
+                let el = $(e);
+                el.css("transform", "translate(" + tsDataOrig[x][y][0] + "px," + tsDataOrig[x][y][1] + "px)");
+                el.find("text").html(i+1);
+                tsData[x][y][0] = tsDataOrig[x][y][0];
+                tsData[x][y][1] = tsDataOrig[x][y][1];
+                el.data("xyTransform", [ tsData[x][y][0], tsData[x][y][1] ]);
+            });
+            selectNone();
+        }
+        $(".reset-grid").click(function() {
+            resetGrid();
+        });
+
+        $(".reset-saves").click(function() {
+            if(!confirm("Are you sure you want to reset all saves?")) return;
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-future-saves").click(function() {
+            removeFutureSaves();
+        });
+
+        $(".reset-all").click(function() {
+            if(!confirm("Are you sure you want to reset everything?")) return;
+            resetGrid();
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            currentStage = 0;
+            stageNumber.text(currentStage);
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        let buttonID = 0;
+        let replaceID = "save0";
+
+        $("button.new-save").click(function() {
+            let saveStateText = Array.from($("#the-grid svg g text")).map(x => $(x)).map(x => x.html() || "");
+            let saveStatePos = Array.from($("#the-grid svg g")).map(x => $(x)).map(x => x.css("transform") || "");
+            let saveStateData = Array.from($("#the-grid svg g")).map(x => $(x)).map(x => x.data("xyTransform") || "");
+            //console.log(saveStates);
+            let stateNumber = saveStates.length;
+            let s_currentStage = currentStage;
+            let s_tsData = Array(cols).fill().map(()=>Array(rows).fill().map(()=>Array(2).fill(0)));
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    s_tsData[x][y][0] = tsData[x][y][0];
+                    s_tsData[x][y][1] = tsData[x][y][1];
+                }
+            }
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $("#the-grid svg g text").each((i, x) => $(x).html(saveStateText[i]));
+                $("#the-grid svg g").each((i, x) => $(x).css("transform", saveStatePos[i]));
+                $("#the-grid svg g").each((i, x) => $(x).data("xyTransform", saveStateData[i]));
+                currentState = stateNumber;
+                currentStage = s_currentStage;
+                stageNumber.text(s_currentStage);
+                for (let x = 0; x < cols; x++) {
+                    for (let y = 0; y < rows; y++) {
+                        tsData[x][y][0] = s_tsData[x][y][0];
+                        tsData[x][y][1] = s_tsData[x][y][1];
+                    }
+                }
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+                selectNone();
+            }).addClass("flash").appendTo(".saves");
+            button.attr('id', `save-${buttonID}`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            $(".saves button").removeClass("selected");
+            $(".replace-save").prop('disabled', true);
+            saveStates.push(button);
+            currentStage += 1;
+            stageNumber.text(currentStage);
+            buttonID += 1;
+        });
+
+        $("button.replace-save").click(function() {
+            let saveStateText = Array.from($("#the-grid svg g text")).map(x => $(x)).map(x => x.html() || "");
+            let saveStatePos = Array.from($("#the-grid svg g")).map(x => $(x)).map(x => x.css("transform") || "");
+            let saveStateData = Array.from($("#the-grid svg g")).map(x => $(x)).map(x => x.data("xyTransform") || "");
+            //console.log(saveStates);
+            let stateNumber = currentState;
+            let s_currentStage = currentStage;
+            let s_tsData = Array(cols).fill().map(()=>Array(rows).fill().map(()=>Array(2).fill(0)));
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    s_tsData[x][y][0] = tsData[x][y][0];
+                    s_tsData[x][y][1] = tsData[x][y][1];
+                }
+            }
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $("#the-grid svg g text").each((i, x) => $(x).html(saveStateText[i]));
+                $("#the-grid svg g").each((i, x) => $(x).css("transform", saveStatePos[i]));
+                $("#the-grid svg g").each((i, x) => $(x).data("xyTransform", saveStateData[i]));
+                currentState = stateNumber;
+                currentStage = s_currentStage;
+                stageNumber.text(s_currentStage);
+                for (let x = 0; x < cols; x++) {
+                    for (let y = 0; y < rows; y++) {
+                        tsData[x][y][0] = s_tsData[x][y][0];
+                        tsData[x][y][1] = s_tsData[x][y][1];
+                    }
+                }
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+                selectNone();
+            }).addClass("flash");
+            button.attr('id', `save-${buttonID}`);
+            setTimeout(() => {
+                button.removeClass("flash");
+                button.addClass("selected");
+            }, 100);
+
+            if (saveStates.length > currentState) {
+                saveStates.splice(currentState, 1, button);
+                let oldButton = document.getElementById(replaceID);
+                oldButton.parentNode.replaceChild(button[0], oldButton);
+                replaceID = `save-${buttonID}`;
+            }
+            else {
+                button.appendTo(".saves");
+                saveStates.push(button);
+            }
+
+            buttonID += 1;
+        });
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .avrile { font-family: "Inconsolata"; }
+
+        div.cell {
+            height: 68px;
+            width: 100px;
+            text-align: center;
+            position: relative;
+        }
+
+        div.cell:not(.nopointer) { cursor: pointer; }
+        div.cell:not(.move) {
+            font-size: 40px;
+        }
+        #the-grid {
+            width: 500px;
+        }
+        #the-grid svg {
+            width: 300px;
+            text-anchor: middle;
+            font-size: 50pt;
+            font-variation-settings: 'wdth' 100, 'wght' 900;
+        }
+        #the-grid svg g {
+            transition: transform 0.8s;
+        }
+        svg g.selected path.card-border {
+            fill: #44F;
+            stroke: #44F;
+            stroke-width: 3;
+        }
+
+        #the-grid svg text.double {
+            transform: translate(-2px, 0);
+        }
+        #the-grid svg text.blue {
+            fill: #44F;
+        }
+
+        .cell.numbers, .cell.letters {
+            border-width: 0;
+            height: 68px;
+            width: 100px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .cell.numbers { padding-top: 2mm; }
+        .tool {
+            box-sizing: border-box;
+            position: absolute;
+            height: 68px;
+            width: 100px;
+        }
+
+        .move, .stagetext {
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        .stagetext {
+            padding-top: 8px;
+        }
+        .stagenumber {
+            font-size: 35px;
+            height: 30px;
+            width: 42px;
+            position: relative;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .stagenumber.selected {
+            background-color: rgba(0, 0, 255, 0.4);
+        }
+        /* .stagetext.label {
+            padding-left: 130px;
+        } */
+        .move {
+            margin: 3px;
+            border: 1px solid;
+        }
+        .tool.selected {
+            margin: 2px;
+            border: red 2px dashed;
+        }
+        .saves button.selected {
+            background-color: #EE0;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:not([disabled]):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.save {
+            padding: 3px;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+
+        .stageholder {
+            height: 32px;
+            display: flex;
+            flex-direction: row;
+        }
+        .stageholder button {
+            height: 32px;
+        }
+        button.read-swap { width: 20mm; }
+        button.read-swap:not(.swap)::after {
+            content: 'Read';
+        }
+        button.read-swap.swap::after {
+            content: 'Swap';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Concentration</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Concentration.svg">
+                <h2>On the Subject of Concentration</h2>
+                <p class="flavour-text">Your focus determines your reality.</p>
+                <p>
+                    Take note of the order in which the numbers 1–15 appear on the cards.
+                    When the first module is solved, the cards will flip face-down.
+                </p>
+                <p>
+                    After each solved module (including the first), two cards are swapped.
+                    You may tap any card at any time to see the swap again (but the cards do not actually swap back).
+                </p>
+                <p>
+                    After every <a href="../More/Ignore%20Table.html">non-ignored module</a> is solved, up to a maximum of 106, the LED turns on.
+                    Tap the cards in the order 1–15, taking all the swaps into account.
+                </p>
+                <div class="stageholder hstack">
+                    <div class="stagetext label">Stage:</div>
+                    <div class="stagetext stagenumber">0</div>
+
+                    <button class="stagetext minus">-</button>
+                    <button class="stagetext plus">+</button>
+                    <div style="width: 20mm"></div>
+                    <button class="read-swap"></button>
+                </div>
+                <div class="hstack">
+                    <div id="the-grid"></div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left"><!-- hstack wrap just-left -->
+                    <button class="save replace-save gray" disabled>Replace<br>Save</button>
+                    <button class="save new-save">New<br>Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-grid">Reset Grid</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-future-saves">Delete Future Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Concentration</span>
+            </div>
+            <div class="page-content">
+                <h3>Grid Controls</h3>
+                <p>
+                    Click the <b>Read</b>/<b>Swap</b> button to switch between modes.
+                    <br>In <b>Read</b> mode:
+                </p>
+                <ul>
+                    <li>Click a <b>card</b> and type <b>1-15</b> on your keyboard to enter the number.</li>
+                    <li>Selection advances automatically or by pressing [Space] or [Enter]</li>
+                    <li>If on mobile, you can use Swap mode to put the cards in order for stage 0.</li>
+                </ul>
+                <p>In <b>Swap</b> mode:</p>
+                <ul>
+                    <li>Click a <b>card</b> to select it as the first of the pair to be swapped.</li>
+                    <li>Click outside the grid or on the <b>same card</b> to cancel.</li>
+                    <li>Click a second card to swap.</li>
+                    <li><b>Save</b> after every swap to preserve the stage number and each action taken at each stage.</li>
+                </ul>
+                <p>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> to increment the stage number.</p>
+                <p>
+                    Using the other buttons, you can save the current state of the grid (increments stage number), replace a selected save,
+                    reset the grid, delete the saves, delete saves after a selected one, or reset everything.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
