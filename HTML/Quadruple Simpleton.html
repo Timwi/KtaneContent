@@ -8,11 +8,10 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="jquery.3.1.1.min.js"></script>
     <script src="js/ruleseed.js"></script>
     <style>
-        .clone:hover {fill: blue}
-        .dark svg circle, .dark svg rect { stroke: #DDD; }
-        .dark svg text { fill: #DDD; }
+        text { user-select: none }
     </style>
 </head>
 <body>
@@ -29,120 +28,116 @@
                         <circle cx="305" cy="43" id="statusLight" r="15" visibility="hidden"/>
                     </g>
                     <g id="originalButton" visibility="hidden">
-                        <circle cx="174" cy="174" r="144" id="button" fill="none" stroke="black" stroke-width="3"/>
+                        <circle cx="174" cy="174" r="144" id="button" fill="white" stroke="black" stroke-width="3"/>
                         <text x="54" y="192" font-family="Special Elite" font-size="60" id="text">PUSH IT!</text>
                     </g>
                 </svg>
                 <h2>On the Subject of <span class='tuple'>Quadruple</span> Simpleton</h2>
                 <p class='flavour-text'><span class='tuple'>Quadruple</span> the buttons! <span class='tuple'>Quadruple</span> the fun!</p>
-                <p>Press the <span id='number'>four</span> buttons. I know you can do it!</p>
+                <p>Press the <span id='number'>four</span> buttons.<span id="newline"></span> I know you can do it!</p>
             </div>
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
     </div>
     <script>
+        const number = $("#number");
+
         function setDefaultRules()
         {
-            Array.prototype.forEach.call(document.getElementsByClassName("tuple"), function(word) {
-                word.innerText = "Quadruple";
-            });
-            document.getElementById("number").innerText = "four";
-            document.getElementById("number").style.fontWeight = "default";
+            $(".tuple").text("Quadruple");
+            number.text("four");
+            number.css("font-weight", "default");
 
             alterSVG(2);
         }
 
         function setRules(rnd)
         {
-            myNumber = rnd.nextMax(8) % 8 + 3; //[3, 10]
-            Array.prototype.forEach.call(document.getElementsByClassName("tuple"), function(word) {
-                word.innerText = `${myNumber*myNumber}-tuple`;
-            });
-            var names = ["nine", "sixteen", "twenty-five", "thirty-six", "forty-nine", "sixty-four", "eighty-one", "hundred"];
+            side = rnd.nextMax(9) % 9 + 3; //[3, 11]
+            $(".tuple").text(side * side + "-tuple");
+            var names = ["nine", "sixteen", "twenty-five", "thirty-six", "forty-nine", "sixty-four", "eighty-one", "hundred", "hundred and twenty-one"];
 
-            document.getElementById("number").innerText = names[myNumber-3];
-            if (names[myNumber-3] == "hundred") document.getElementById("number").style.fontWeight = "bold";
-            else document.getElementById("number").style.fontWeight = "default";
+            number.text(names[side-3]);
+            if (side >= 10) number.css("font-weight", "bold");
+            number.css("font-weight", "default");
 
-            alterSVG(myNumber);
+            alterSVG(side);
         }
 
         function alterSVG(n)
         {
-            var svg = document.getElementsByTagName('svg')[0];
-            var ns = 'http://www.w3.org/2000/svg';
+            const svg = $("svg");
             const SVGside = 338;
-
-            cleanSVG();
+            resetPage();
 
             radius = SVGside/((n+1)*2);
             if (n == 2) radius *= 1.25;
-            const buttonMargins = [90, 60, 47.5, 39, 33.5, 29.25, 26.3, 24, 21.8];
-            const hText = [-4.5, 13, 21, 26, 29.5, 31.5, 33.5, 35.5, 36.5];
-            const vText = [-1, -3, -5, -6, -6.5, -7, -7.5, -8, -8.5];
-            const textSize = [27, 18, 14, 12, 10, 9, 8, 7, 6.5];
-            var distance = SVGside - SVGside/n;
+            const buttonMargins = [90, 60, 47.5, 39, 33.5, 29.25, 26.3, 24, 21.8, 20.4]
+                , hText = [-4.5, 13, 21, 26, 29.5, 31.5, 33.5, 35.5, 36.5, 38]
+                , vText = [-1, -3, -5, -6, -6.5, -7, -7.5, -8, -8.5, -8.1]
+                , textSize = [27, 18, 14, 12, 10, 9, 8, 7, 6.5, 5.8]
+                , distance = SVGside - SVGside/n;
 
-            for (let i = 0; i < n*n; i++)
+            for (let i = 0; i < n * n; i++)
             {
-                let widthDistribution = i % n * distance / (n - 1) + buttonMargins[n-2];
-                let heightDistribution = Math.floor(i / n) * distance / (n - 1) + buttonMargins[n-2];
+                const widthDistribution = i % n * distance / (n - 1) + buttonMargins[n-2]
+                    , heightDistribution = Math.floor(i / n) * distance / (n - 1) + buttonMargins[n-2]
+                    , newCircle = $("#button").clone()
+                    , newText = $("#text").clone();
 
-                let newCircle = document.getElementById("button").cloneNode();
-                newCircle.setAttributeNS(null, 'r', radius);
-                newCircle.setAttributeNS(null, 'cx', widthDistribution);
-                newCircle.setAttributeNS(null, 'cy', heightDistribution);
-                newCircle.setAttributeNS(null, 'class', 'clone');
-                newCircle.setAttributeNS(null, 'cursor', 'pointer');
-                newCircle.setAttributeNS(null, 'onclick', 'handleClick()');
+                newCircle.attr(
+                {
+                    r: radius,
+                    cx: widthDistribution,
+                    cy: heightDistribution,
+                }).addClass("clone")
+                  .css("cursor", "pointer")
+                  .click(colorButtons);
 
-                let newText = document.getElementById("text").cloneNode();
-                newText.setAttributeNS(null, 'onclick', 'handleClick()');
-                newText.setAttributeNS(null, 'class', 'clone');
-                newText.setAttributeNS(null, 'cursor', 'pointer');
-                newText.setAttributeNS(null, 'onclick', 'fill="blue"');
-                newText.setAttributeNS(null, 'x', widthDistribution-50+hText[n-2]);
-                newText.setAttributeNS(null, 'y', heightDistribution+10+vText[n-2]);
-                newText.setAttributeNS(null, 'font-size', textSize[n-2]);
-                newText.innerHTML = "PUSH IT!";
+                newText.attr(
+                {
+                    x: widthDistribution-50+hText[n-2],
+                    y: heightDistribution+10+vText[n-2],
+                }).addClass("clone")
+                  .css("cursor", "pointer")
+                  .css("font-size", textSize[n-2])
+                  .text("PUSH IT!")
+                  .click(colorButtons);
 
-                svg.appendChild(newCircle);
-                svg.appendChild(newText);
-                if (n >= 7) newCircle.setAttributeNS(null, 'stroke-width', 2);
-                if (n == 2) newText.setAttributeNS(null, 'font-weight', 'bold');
+                svg.append(newCircle);
+                svg.append(newText);
+                if (n >= 7) newCircle.attr('stroke-width', 2);
+                if (n == 2) newText.attr('font-weight', 'bold');
             }
 
-            //document.getElementById("originalButton").remove();
-            statusLight = document.getElementById("statusLight");
-            if (n == 2) {
-                statusLight.setAttributeNS(null, 'visibility', 'visible');
-                statusLight.setAttributeNS(null, 'cx', SVGside/2);
-                statusLight.setAttributeNS(null, 'cy', SVGside/2);
-            } else statusLight.setAttributeNS(null, 'visibility', 'hidden');
+            $("#statusLight").attr(
+                {
+                    cx: SVGside/2,
+                    cy: SVGside/2
+                }
+            ).css("visibility", n == 2 ? "visible" : "hidden");
+            $("#originalButton").remove();
+            if (n >= 10)
+            {
+                svg.attr("transform", "scale(1.3) translate(0, 20)")
+                if (n == 11) $("#newline").html("<br>");
+            }
+            //for some reason resetPage() acts too late when onhashchange, but here's the workaround
+            if (!document.querySelector(".clone")) location.reload();
         }
 
-        function cleanSVG() {
-            for (let i = 0; i < 10; i++)
-                Array.prototype.forEach.call(document.getElementsByClassName("clone"), function(clone) {
-                clone.remove();
-            });
-            Array.prototype.forEach.call(document.getElementsByClassName("circle"), function(clone) {
-                clone.setAttributeNS(null, 'fill', 'white');
-            });
-            Array.prototype.forEach.call(document.getElementsByTagName("text"), function(clone) {
-                clone.setAttributeNS(null, 'fill', 'black');
-            });
+        function resetPage() {
+            console.log("cleaning");
+            $(".clone").remove();
+            $(".circle").css('fill', 'white');
+            $("text").css('fill', 'black');
+            $("svg").attr("transform", "");
         }
 
-        function handleClick() {
-            Array.prototype.forEach.call(document.getElementsByClassName("clone"), function(clone) {
-                clone.setAttributeNS(null, 'fill', 'blue');
-            });
-            Array.prototype.forEach.call(document.getElementsByTagName("text"), function(clone) {
-                clone.setAttributeNS(null, 'fill', 'white');
-            });
+        function colorButtons() {
+            $(".clone").css('fill', 'blue').css("cursor", "default");
+            $("text").css('fill', 'white').css("cursor", "default");
         }
-
     </script>
 </body>
 </html>
