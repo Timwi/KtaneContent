@@ -1,5 +1,8 @@
 /// Code based on Ut.cs from github.com/Timwi
 
+/**
+ * @todo doc
+ */
 function ShuffleFisherYates(list)
 {
     var i = list.length;
@@ -14,22 +17,18 @@ function ShuffleFisherYates(list)
     return list;
 }
 
-/// <summary>
-///     Given a set of values and a function that returns true when given this set, will efficiently remove items from
-///     this set which are not essential for making the function return true. The relative order of items is
-///     preserved. This method cannot generally guarantee that the result is optimal, but for some types of functions
-///     the result will be guaranteed optimal.</summary>
-/// <param name="items">
-///     The set of items to reduce.</param>
-/// <param name="test">
-///     The function that examines the set. Must always return the same value for the same set.</param>
-/// <param name="breadthFirst">
-///     A value selecting a breadth-first or a depth-first approach. Depth-first is best at quickly locating a single
-///     value which will be present in the final required set. Breadth-first is best at quickly placing a lower bound
-///     on the total number of individual items in the required set.</param>
-/// <returns>
-///     A hopefully smaller set of values that still causes the function to return true.</returns>
-// IEnumerable<T> items, Func<ReduceRequiredSetState, bool> test, bool breadthFirst = false
+/**
+ * Given a set of values and a function that returns true when given this set, will efficiently remove items from
+ *  this set which are not essential for making the function return true. The relative order of items is
+ *  preserved. This method cannot generally guarantee that the result is optimal, but for some types of functions
+ *  the result will be guaranteed optimal.
+ * @param {Array} items - The set of items to reduce.
+ * @param {Function} test - The function that examines the set. Must always return the same value for the same set.
+ * @param {boolean} breadthFirst - A value selecting a breadth-first or a depth-first approach. Depth-first is best at quickly locating a single
+ *  value which will be present in the final required set. Breadth-first is best at quickly placing a lower bound
+ *  on the total number of individual items in the required set.
+ * @returns {Function} A hopefully smaller set of values that still causes the function to return true.
+ */
 function ReduceRequiredSet(items, test, breadthFirst = false)
 {
     var state = new ReduceRequiredSetState(items);
@@ -65,6 +64,9 @@ function ReduceRequiredSet(items, test, breadthFirst = false)
     return state.SetToTest;
 }
 
+/**
+ * @todo doc
+ */
 function MaxElement(arr, func) {
     if (arr && arr.length > 0) {
         let max = arr[0];
@@ -81,6 +83,9 @@ function MaxElement(arr, func) {
     return null;
 }
 
+/**
+ * @todo doc
+ */
 function MinElement(arr, func) {
     if (arr && arr.length > 0) {
         let min = arr[0];
@@ -97,43 +102,54 @@ function MinElement(arr, func) {
     return null;
 }
 
-
-/// <summary>
-///     Encapsulates the state of the <see cref="Ut.ReduceRequiredSet"/> algorithm and exposes statistics about it.</summary>
+/**
+ * Encapsulates the state of the {@link ReduceRequiredSet} algorithm and exposes statistics about it.
+ * @class
+ */
 class ReduceRequiredSetState
 {
-    //protected List<Range> this.Ranges;
     //protected List<T> Items;
+    //protected List<Range> this.Ranges;
     //protected Range ExcludedRange, IncludedRange;
-
+    
+    /**
+     * @constructs
+     */
     constructor(items) {
         this.Items = items;
         this.Ranges = [];
         this.Ranges.push(new InclusiveRange(0, this.Items.length - 1));
     }
 
-    /// <summary>
-    ///     Enumerates every item that is known to be in the final required set. "Definitely" doesn't mean that there
-    ///     exists no subset resulting in "true" without these members. Rather, it means that the algorithm will
-    ///     definitely return these values, and maybe some others too.</summary>
+    
+    /**
+     * Enumerates every item that is known to be in the final required set. "Definitely" doesn't mean that there
+     *  exists no subset resulting in "true" without these members. Rather, it means that the algorithm will
+     *  definitely return these values, and maybe some others too.
+     */
     get DefinitelyRequired() { return this.Ranges.filter(r => r.Item1 == r.Item2).map(r => this.Items[r.Item1]); }
-    /// <summary>
-    ///     Gets the current number of partitions containing uncertain items. The more of these, the slower the
-    ///     algorithm will converge from here onwards.</summary>
-    get PartitionsCount() { return this.Ranges.length - this.Ranges.filter(r => r.Item1 == r.Item2).length; }
-    /// <summary>
-    ///     Gets the number of items in the smallest partition. This is the value that is halved upon a successful
-    ///     depth-first iteration.</summary>
+    /**
+     * Gets the current number of partitions containing uncertain items. The more of these, the slower the
+     *  algorithm will converge from here onwards.
+     */ 
+    get PartitionsCount() { return this.Ranges.length - this.Ranges.filter(r => r.Item1 == r.Item2).length; }    
+    /**
+     * Gets the number of items in the smallest partition. This is the value that is halved upon a successful
+     *  depth-first iteration.
+     */
     get SmallestPartitionSize() { return Math.min(this.Ranges.filter(r => r.Item1 != r.Item2).map(r => r.Item2 - r.Item1 + 1)); }
-    /// <summary>
-    ///     Gets the number of items in the largest partition. This is the value that is halved upon a successful
-    ///     breadth-first iteration.</summary>
+    /**
+     * Gets the number of items in the largest partition. This is the value that is halved upon a successful
+     *  breadth-first iteration.
+     */
     get LargestPartitionSize() { return Math.max(this.Ranges.map(r => r.Item2 - r.Item1 + 1)); }
-    /// <summary>Gets the total number of items about which the algorithm is currently undecided.</summary>
+    /**
+     * Gets the total number of items about which the algorithm is currently undecided.
+     */
     get ItemsRemaining() { return this.Ranges.filter(r => r.Item1 != r.Item2).map(r => r.Item2 - r.Item1 + 1).reduce((a,b) => a + b, 0); }
-
-    /// <summary>Gets the set of items for which the function should be evaluated in the current step.</summary>
-    //IEnumerable<T> SetToTest
+    /**
+     * Gets the set of items for which the function should be evaluated in the current step.
+     */
     get SetToTest() {
         let ranges = Array(this.Ranges.length);
         Object.assign(ranges, this.Ranges);
@@ -153,22 +169,43 @@ class ReduceRequiredSetState
         let b = a.map(i => this.Items[i]);
         return b;
     }
-
+    
+    /**
+     * @todo doc
+     */
     get AnyPartitions() { return this.Ranges.some(r => r.Item1 != r.Item2); }
+    /**
+     * @todo doc
+     */
     get LargestRange() { return MaxElement(this.Ranges, t => t.Item2 - t.Item1); }
+    /**
+     * @todo doc
+     */
     get SmallestRange() { return MinElement(this.Ranges.filter(r => r.Item1 != r.Item2), t => t.Item2 - t.Item1); }
 
+    /**
+     * @todo doc
+     */
     AddRange(range) { this.Ranges.push(range); }
+    /**
+     * @todo doc
+     */
     RemoveRange(range) {
         let i = this.Ranges.findIndex(r => r.Equals(range));
         if (i >= 0)
             this.Ranges.splice(i, 1);
     }
 
+    /**
+     * @todo doc
+     */
     ResetTemporarySplit()
     {
         this.ExcludedRange = this.IncludedRange = null;
     }
+    /**
+     * @todo doc
+     */
     ApplyTemporarySplit(rangeToSplit, splitRange)
     {
         this.ExcludedRange = rangeToSplit;
@@ -176,18 +213,32 @@ class ReduceRequiredSetState
     }
 }
 
+/**
+ * @todo doc
+ */
 class InclusiveRange
 {
+    /**
+     * @constructs
+     */
     constructor(item1, item2) {
         this.Item1 = item1;
         this.Item2 = item2;
     }
 
+    /**
+     * Compares an object with this {@link InclusiveRange} instance.
+     * @param {object} obj - The object to be compared.
+     * @returns {boolean} Whether the object is equal or not.
+     */
     Equals(obj)
     {
         return obj != null && obj.Item1 == this.Item1 && obj.Item2 == this.Item2;
     }
 
+    /**
+     * @todo doc
+     */
     Enumerate()
     {
         let start = this.Item1;
@@ -195,21 +246,37 @@ class InclusiveRange
     }
 }
 
+/**
+ * @todo doc
+ */
 class Range
 {
+    /**
+     * @constructs
+     */
     constructor(start, count) {
         this.Start = start;
         this.Count = count;
     }
 
+    /**
+     * Compares an object with this {@link Range} instance.
+     * @param {object} obj - The object to be compared.
+     * @returns {boolean} Whether the object is equal or not.
+     */
     Equals(obj)
     {
         return obj != null && obj.Start == this.Start && obj.Count == this.Count;
     }
 
+    /**
+     * @todo doc
+     */
     Enumerate()
     {
         let start = this.Start;
         return [...Array(this.Count).keys()].map(x => x + start)
     }
 }
+
+export { ShuffleFisherYates, ReduceRequiredSet, MaxElement, MinElement, ReduceRequiredSetState, InclusiveRange, Range };

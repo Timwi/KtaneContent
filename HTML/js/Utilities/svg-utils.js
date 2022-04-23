@@ -1,7 +1,10 @@
 /**
  * Creates a tag that goes in an <svg> block.
- * @param {string} tag - Type of element (text, rect, circle, etc.).
- * @param {dictionary} attrs - Attributes to set in the new element. e.g. {class:"highlightable", r:5, cx:4, cy:12}.
+ * @param {string} tag - Type of element.
+ * @example text, rect, circle
+ * @param {Dictionary} attrs - Attributes to set in the new element.
+ * @example class:"highlightable", r:5, cx:4, cy:12
+ * @returns {HTMLElement} The generated tag with the provided attributes.
  */
  function makeSvgElem(tag, attrs) {
     let el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -17,7 +20,8 @@
  * @param {float} cy - y coordinate of center of polygon.
  * @param {float} numSides - Number of sides of the polygon.
  * @param {float} rot - Rotation angle in degrees of the whole polygon.
- * @param {dictionary} attrs - Attributes to set in the new element. e.g. {class:"highlightable", fill:"#000"}.
+ * @param {Dictionary} attrs - Attributes to set in the new element. e.g. {class:"highlightable", fill:"#000"}.
+ * @returns {HTMLElement} A \<polygon> tag.
  */
 function regularPolygon(radius, cx = 0, cy = 0, numSides = 3, rot = 0, attrs = null) {
     let n = Math.max(3, numSides);
@@ -36,3 +40,5 @@ function regularPolygon(radius, cx = 0, cy = 0, numSides = 3, rot = 0, attrs = n
     el.setAttribute("points", vert.join(" "));
     return el;
 }
+
+export { makeSvgElem, regularPolygon };
