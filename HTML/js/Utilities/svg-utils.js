@@ -40,5 +40,3 @@ function regularPolygon(radius, cx = 0, cy = 0, numSides = 3, rot = 0, attrs = n
     el.setAttribute("points", vert.join(" "));
     return el;
 }
-
-export { makeSvgElem, regularPolygon };
