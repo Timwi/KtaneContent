@@ -63,7 +63,7 @@
             .instr-15 { background-position: -3.375cm -3.375cm; }
         .dark .instr { filter: invert(87%); }
 
-        /* INTERACTIVE */
+        /* -------------------------------------- INTERACTIVE */
 
         h3.interactive {
             text-align: center;
@@ -71,7 +71,10 @@
         }
         #interactive-container {
             display: flex;
+            align-items: center;
+            justify-content: center;
             height: 27rem;
+            position: relative;
         }
         div.interactive {
             display: grid;
@@ -80,8 +83,9 @@
             margin: auto;
             outline: 5px solid;
             border-radius: 10px;
+            position: absolute;
         }
-        div.interactive div {
+        div.interactive div { /* table children */
             outline: 2px solid;
             aspect-ratio: 1;
             cursor: pointer;
@@ -92,16 +96,15 @@
             grid-auto-rows: 3rem;
         }
         #color-pallet>span {
-            border: 3px solid;
             margin: 2px;
             border-radius: 10px;
             cursor: pointer;
         }
-        #color-pallet>span:nth-of-type(1) { background-color: rgba(68, 130, 255, 0.4) }
-        #color-pallet>span:nth-of-type(2) { background-color: rgba(223, 32, 32, 0.4)  }
-        #color-pallet>span:nth-of-type(3) { background-color: rgba(34, 195, 34, 0.4)  }
-        #color-pallet>span:nth-of-type(4) { background-color: rgba(223, 223, 32, 0.4) }
-        #color-pallet>span:nth-of-type(5) { background-color: rgba(223, 0, 223, 0.4)  }
+        #color-pallet>span:nth-of-type(1) { background-color: rgb(68, 130, 255) }
+        #color-pallet>span:nth-of-type(2) { background-color: rgb(223, 32, 32)  }
+        #color-pallet>span:nth-of-type(3) { background-color: rgb(34, 195, 34)  }
+        #color-pallet>span:nth-of-type(4) { background-color: rgb(223, 223, 32) }
+        #color-pallet>span:nth-of-type(5) { background-color: rgb(223, 0, 223)  }
         #color-pallet>span:nth-of-type(6) { background-color: rgba(0, 0, 0, 0)        }
         #options {
             display: flex;
@@ -114,6 +117,18 @@
             width: 70px;
             border-radius: 5px;
             border: none;
+        }
+
+        #buttons {
+            display: flex;
+            flex-flow: column wrap;
+            align-items: center;
+            gap: 5px
+        }
+        #pages {
+            display: flex;
+            justify-content: space-evenly;
+            width: 100%;
         }
     </style>
     <script>
@@ -173,29 +188,115 @@
             });
         }
 
-        // ---------------- INTERACTIVE ----------------
+        /* -------------------------------------- INTERACTIVE */
 
         $(() => {
-            const cells = $("div.interactive").children();
+            /* Transparent value */
             const EMPTY = "rgba(0, 0, 0, 0)";
-            let currentColor = EMPTY;
-            cells.css(("background-color", currentColor))
-            cells.click(e => {
-                const t = $(e.target)
-                if (t.css("background-color") === currentColor && currentColor !== EMPTY)
-                    t.css("background-color", "rgba(150, 150, 150, 0.5)");
-                else
-                    t.css("background-color", currentColor);
+            /* The colors at the bottom of the table. */
+            const $colors = $("#color-pallet").children();
+            /* "Reset" */
+            const $resetButton = $("#reset");
+            /* "1" "2" "3" "4" */
+            const $pageButtons = $("#pages").children();
+            /* "Next stage" */
+            const $layerButton = $("#new-layer");
+            /* Table template. */
+            const $tableRef = $("div.interactive");
+            $tableRef.css("display", "none");
+            /* Table layers. */
+            let tables = [];
+            /* Table layers' cells/children. */
+            let cells = [];
+            /* The div which contains the tables/layers. */
+            const $tablesContainer = $("#interactive-container");
+            /* How many layers have I got right now? */
+            let numberOfTables;
+            /* The currently selected color. */
+            let currentColor;
+
+            $colors.click(e => {
+                const t = $(e.target);
+                currentColor = t.css("background-color");
+                $colors.css("border", "3px solid"); //all elements
+                t.css("border", "solid 4px purple"); //one element
             });
 
-            const colors = $("#color-pallet").children();
-            colors.click(e=>currentColor = $(e.target).css("background-color"));
+            /* Sets the z-index of each present table to its index(+1) */
+            const resetZIndex = () => {
+                $(tables).each((i, el) => {
+                    el.css("z-index", i+1);
+                });
+            }
 
-            const resetButton = $("#options>button");
-            resetButton.click(() => {
-                let currentColor = EMPTY;
-                cells.css("background-color", currentColor);
-            });
+            /* What each click to the clicked button will do:
+                - Reset the z-index of all the present tables (resetZIndex()).
+                - Set a high z-index to the selected table. */
+            $pageButtons.click(function(){hoistLayer($(this))});
+
+            /* Hoists a layer to the very top.
+               Note: "" = "default". */
+            function hoistLayer($buttonClicked) {
+                const indexOfButtonPressed = $pageButtons.index($buttonClicked);
+                resetZIndex();
+                tables[indexOfButtonPressed].css("z-index", "9999");
+
+                $pageButtons.css({"border": "","border-radius": ""}); /* all elements */
+                $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); /* one element */
+            }
+
+            /* when it tries to remove something, if that element was already removed, then it will fail to remove it
+               and thus all the references to that element (and children of that element) will fail. That's why I reset the arrays after removing */
+            function resetAll() {
+                $pageButtons.css("visibility", "hidden");
+                $colors.css("border", "3px solid");
+                cells.forEach(c => c.remove());
+                tables.forEach(t => t.remove());
+                cells = [];
+                tables = [];
+                currentColor = EMPTY;
+                numberOfTables = 0;
+                makeTable();
+            }
+
+            /* Creates a new table/layer. */
+            function makeTable(notFirstTable) {
+                /* No more than 4 tables. */
+                if (numberOfTables >= 4) return;
+                /* We will have one more table. */
+                numberOfTables++;
+                /* Clone the reference table.
+                   And put it visible (the reference table is not visible, so by default the generated table is not as well). */
+                tables.push($tableRef.clone());
+                tables[numberOfTables-1].css("display", "");
+                /* Save the new table's children/cells */
+                cells.push(tables[numberOfTables-1].children());
+                /* The page button whose table is just created will be shown. (ie "show the button")
+                   All buttons are preset. */
+                $pageButtons.eq(numberOfTables-1).css("visibility", "visible");
+                /* Hoists the last layer created.
+                   It does so by calling the function as if the last page button was pressed. */
+                hoistLayer($pageButtons.eq(numberOfTables-1));
+                /* Color a cell. */
+                cells[numberOfTables-1].click(e => {
+                    const t = $(e.target);
+                    if (t.css("background-color") === currentColor && currentColor !== EMPTY)
+                        t.css("background-color", "rgba(230, 230, 230, 0.9)"); /* imitating the module's colors */
+                    else
+                        t.css("background-color", currentColor);
+                });
+                $(cells[numberOfTables-1]).contextmenu(e => {
+                    $(e.target).css("background-color", EMPTY);
+                    e.preventDefault();
+                });
+                /* Table ready: add it to the tree. */
+                $tablesContainer.append(tables[numberOfTables-1]);
+            }
+
+            $resetButton.click(resetAll);
+            $layerButton.click(makeTable);
+            $(window).on("beforeunload", ()=>"");
+            resetAll();
         });
     </script>
 </head>
@@ -237,7 +338,7 @@
             </div>
             <div class="page-footer relative-footer">Page 1 of 4</div>
         </div>
-        <!--Page 3-->
+        <!--Page 2-->
         <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -257,8 +358,30 @@
                     <span id="color-pallet">
                         <span></span><span></span><span></span><span></span><span></span><span></span>
                     </span>
-                    <button>Reset</button>
+                    <span id="buttons">
+                        <span id="pages">
+                            <button>1</button>
+                            <button>2</button>
+                            <button>3</button>
+                            <button>4</button>
+                        </span>
+                        <span>
+                            <button id="new-layer">Next stage</button>
+                            <button id="reset">Reset</button>
+                        </span>
+                    </span>
                 </div>
+                <br>
+                <h4>Instructions:</h4>
+                <ul>
+                    <li>Click a color and then on a cell to color that cell with said color.</li>
+                    <li>Click on that cell again with the same color to toggle its 'pressed' state.</li>
+                    <li>Right-click on that cell to delete its color (it won't delete the selection).</li>
+                    <li>Alternatively, you can also click the blank square to delete the color.</li>
+                    <li>Create layers on top of each other by pressing 'Next stage'.</li>
+                    <li>You can switch to other stage/layer by pressing the numbered buttons.</li>
+                    <li>Press 'Reset' to reset the colors, stages/layers, and the selection.</li>
+                </ul>
             </div>
             <div class="page-footer relative-footer">Page 2 of 4</div>
         </div>
@@ -323,7 +446,6 @@
                     </tbody>
                 </table>
             </div>
-
             <div class="page-footer relative-footer">Page 4 of 4</div>
         </div>
     </div>
