@@ -79,16 +79,25 @@
         div.interactive {
             display: grid;
             grid-template-columns: repeat(4, 5.5rem);
-            gap: 1px;
             margin: auto;
+            gap: 1px;
             outline: 5px solid;
-            border-radius: 10px;
+            border-radius: 5px;
             position: absolute;
         }
         div.interactive div { /* table children */
             outline: 2px solid;
+            color: black;
             aspect-ratio: 1;
             cursor: pointer;
+            font-size: 55px;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .dark div.interactive div {
+            outline: 2px solid #ddd;
         }
         #color-pallet {
             display: grid;
@@ -105,7 +114,7 @@
         #color-pallet>span:nth-of-type(3) { background-color: rgb(34, 195, 34)  }
         #color-pallet>span:nth-of-type(4) { background-color: rgb(223, 223, 32) }
         #color-pallet>span:nth-of-type(5) { background-color: rgb(223, 0, 223)  }
-        #color-pallet>span:nth-of-type(6) { background-color: rgba(0, 0, 0, 0)        }
+        #color-pallet>span:nth-of-type(6) { background-color: rgb(230, 230, 230) } /* imitating the module's colors */
         #options {
             display: flex;
             justify-content: space-around;
@@ -123,11 +132,12 @@
             display: flex;
             flex-flow: column wrap;
             align-items: center;
-            gap: 5px
+            gap: 5px;
         }
         #pages {
             display: flex;
-            justify-content: space-evenly;
+            flex-wrap: wrap;
+            justify-content: space-between;
             width: 100%;
         }
     </style>
@@ -187,12 +197,9 @@
                 lnk.setAttribute('href', /^(.*?)(#.*)?$/.exec(lnk.getAttribute('href'))[1] + hash);
             });
         }
-
-        /* -------------------------------------- INTERACTIVE */
-
+    </script>
+    <script>  /* -------------------------------------- INTERACTIVE */
         $(() => {
-            /* Transparent value */
-            const EMPTY = "rgba(0, 0, 0, 0)";
             /* The colors at the bottom of the table. */
             const $colors = $("#color-pallet").children();
             /* "Reset" */
@@ -204,16 +211,24 @@
             /* Table template. */
             const $tableRef = $("div.interactive");
             $tableRef.css("display", "none");
-            /* Table layers. */
-            let tables = [];
-            /* Table layers' cells/children. */
-            let cells = [];
+            /* Table layers.
+               It isn't by itself a $, but it contains $s */
+            let tables$ = [];
+            /* Table layers' cells/children.
+               It isn't by itself a $, but it contains $s */
+            let cells$ = [];
             /* The div which contains the tables/layers. */
             const $tablesContainer = $("#interactive-container");
             /* How many layers have I got right now? */
             let numberOfTables;
             /* The currently selected color. */
             let currentColor;
+            /* Which layer is the user now in? */
+            let indexOfButtonPressed;
+            /* The colors pressed in the 0th stage. It always has to be 4. */
+            let colorsPressed = Array.from({length:4},e=>"");
+            /* A registry reflecting which numbers the table already has (again, in the 0th stage). */
+            let numbersShown = Array.from({length:4},e=>false);
 
             $colors.click(e => {
                 const t = $(e.target);
@@ -223,11 +238,7 @@
             });
 
             /* Sets the z-index of each present table to its index(+1) */
-            const resetZIndex = () => {
-                $(tables).each((i, el) => {
-                    el.css("z-index", i+1);
-                });
-            }
+            const resetZIndex = () => $(tables$).each((i, el) => el.css("z-index", i));
 
             /* What each click to the clicked button will do:
                 - Reset the z-index of all the present tables (resetZIndex()).
@@ -237,12 +248,34 @@
             /* Hoists a layer to the very top.
                Note: "" = "default". */
             function hoistLayer($buttonClicked) {
-                const indexOfButtonPressed = $pageButtons.index($buttonClicked);
+                indexOfButtonPressed = $pageButtons.index($buttonClicked);
                 resetZIndex();
-                tables[indexOfButtonPressed].css("z-index", "9999");
+                tables$[indexOfButtonPressed].css("z-index", "9999");
 
                 $pageButtons.css({"border": "","border-radius": ""}); /* all elements */
                 $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); /* one element */
+
+                /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
+                if (indexOfButtonPressed) {
+                    $(tables$).each((i,e) => {
+                        if (i) e.css("visibility", "visible")
+                    });
+                    tables$[0].css("visibility", "hidden");
+                    tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
+                }
+                else {
+                    $(tables$).each((i,e) => {
+                        if (i) e.css("visibility", "hidden")
+                    });
+                    tables$[0].css("visibility", "visible");
+                }
+                if (indexOfButtonPressed <= 1) return;
+                cells$[indexOfButtonPressed-1].each(function() {
+                    const th = $(this);
+                    console.log(th);
+                    if (th.css("background-color") !== "rgb(230, 230, 230)")
+                        th.css("background-color", "rgba(0, 0, 0, 0)");
+                });
             }
 
             /* when it tries to remove something, if that element was already removed, then it will fail to remove it
@@ -250,53 +283,83 @@
             function resetAll() {
                 $pageButtons.css("visibility", "hidden");
                 $colors.css("border", "3px solid");
-                cells.forEach(c => c.remove());
-                tables.forEach(t => t.remove());
-                cells = [];
-                tables = [];
-                currentColor = EMPTY;
-                numberOfTables = 0;
+                cells$.forEach(c => c.remove());
+                tables$.forEach(t => t.remove());
+                cells$ = [];
+                tables$ = [];
+                colorsPressed = Array.from({length:4},e=>"");
+                numbersShown = Array.from({length:4},e=>false);
+                currentColor = null;
+                numberOfTables = -1;
                 makeTable();
             }
 
             /* Creates a new table/layer. */
             function makeTable(notFirstTable) {
-                /* No more than 4 tables. */
+                /* No more than 4 tables (well, 5 including 0). */
                 if (numberOfTables >= 4) return;
-                /* We will have one more table. */
+                /* Now we have one more table. */
                 numberOfTables++;
                 /* Clone the reference table.
                    And put it visible (the reference table is not visible, so by default the generated table is not as well). */
-                tables.push($tableRef.clone());
-                tables[numberOfTables-1].css("display", "");
+                tables$.push($tableRef.clone());
+                tables$[numberOfTables].css("display", "");
                 /* Save the new table's children/cells */
-                cells.push(tables[numberOfTables-1].children());
+                cells$.push(tables$[numberOfTables].children());
                 /* The page button whose table is just created will be shown. (ie "show the button")
                    All buttons are preset. */
-                $pageButtons.eq(numberOfTables-1).css("visibility", "visible");
+                $pageButtons.eq(numberOfTables).css("visibility", "visible");
                 /* Hoists the last layer created.
                    It does so by calling the function as if the last page button was pressed. */
-                hoistLayer($pageButtons.eq(numberOfTables-1));
+                hoistLayer($pageButtons.eq(numberOfTables));
                 /* Color a cell. */
-                cells[numberOfTables-1].click(e => {
+                cells$[numberOfTables].click(e => {
                     const t = $(e.target);
-                    if (t.css("background-color") === currentColor && currentColor !== EMPTY)
-                        t.css("background-color", "rgba(230, 230, 230, 0.9)"); /* imitating the module's colors */
-                    else
+                    if (t.css("background-color") === "rgba(0, 0, 0, 0)" && currentColor) { //fill
+                        /* This only applies for stage 0 */
+                        if (!indexOfButtonPressed) {
+                            /* No more than 4 buttons can be pressed on this layer, and only unique colors can be here. It also can't be the gray color. */
+                            if (!colorsPressed.includes("") || colorsPressed.includes(currentColor) || currentColor === "rgb(230, 230, 230)") return;
+                            /* Register the color pressed. */
+                            /* Returns the lowerst number that is not present on the table. (i.e. numbersShown) */
+                            let decideShownNumber = () => {
+                                for (let i = 1; i <= 4; i++)
+                                    if (!numbersShown[i-1]) return i;
+                            }
+                            let n = decideShownNumber();
+                            t.text(n);
+                            colorsPressed[n-1] = currentColor;
+                            numbersShown[n-1] = true;
+                        }
+                        /* Sets the cell to the color selected */
                         t.css("background-color", currentColor);
-                });
-                $(cells[numberOfTables-1]).contextmenu(e => {
-                    $(e.target).css("background-color", EMPTY);
-                    e.preventDefault();
+                    }
+                    else { //clear
+                        /* You can't delete a color if that color is on the grid, BUT you can if it's the same color as the one you have selected. */
+                        if (colorsPressed.includes(currentColor) && t.css("background-color") !== currentColor) return;
+                        /* Resets that color on colorsPressed and numbersShown, as well as the cell's text and color. */
+                        colorsPressed[colorsPressed.indexOf(t.css("background-color"))] = "";
+                        numbersShown[t.text()-1] = false;
+                        t.text("");
+                        t.css("background-color", "rgba(0, 0, 0, 0)");
+                    }
                 });
                 /* Table ready: add it to the tree. */
-                $tablesContainer.append(tables[numberOfTables-1]);
+                $tablesContainer.append(tables$[numberOfTables]);
             }
 
             $resetButton.click(resetAll);
             $layerButton.click(makeTable);
-            $(window).on("beforeunload", ()=>"");
+            //$(window).on("beforeunload", ()=>"");
             resetAll();
+
+            /* moar data. */
+            const stages = [
+                [5, 12, 1, 15, 14, 13, 7, 3, 9, 4, 6, 10, 16, 2, 8, 11],
+                [1, 14, 6, 7, 12, 15, 3, 10, 16, 4, 2, 11, 9, 8, 13, 5],
+                [16, 9, 7, 12, 6, 15, 3, 5, 11, 8, 13, 14, 2, 10, 1, 4],
+                [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
+            ];
         });
     </script>
 </head>
@@ -360,6 +423,7 @@
                     </span>
                     <span id="buttons">
                         <span id="pages">
+                            <button>0</button>
                             <button>1</button>
                             <button>2</button>
                             <button>3</button>
