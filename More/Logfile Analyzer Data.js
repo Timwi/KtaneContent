@@ -2140,9 +2140,9 @@ let parseData = [
     {
         moduleID: "colorGrid",
         loggingTag: "Color Grid",
-        matches: [
+        matches: [/*
             {
-                regex: /to press/,
+                regex: /order/,
                 handler: function (matches, module) {
                     const arr = [
                             ['-', '-', '-', '-', '-'],
@@ -2161,7 +2161,7 @@ let parseData = [
                     for (const s of arr)
                         module.push({label:`<code style='font-size:x-large'>${s.toString().replaceAll(',',' ')}</code>`});
                 }
-            },
+            },*/
             {
                 regex: /.+/
             }
