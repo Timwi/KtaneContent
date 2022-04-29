@@ -2142,24 +2142,18 @@ let parseData = [
         loggingTag: "Color Grid",
         matches: [
             {
-                regex: /to press/,
+                regex: /reading/,
                 handler: function (matches, module) {
-                    const arr = [
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'] ]
-                        , after = matches.input.split(': ')[1]
-                        , positions = after.split(' ');
-
-                    positions.pop();
-                    for (const position of positions)
-                        arr[Math.floor((position-1)/5)][(position-1)%5] = 'X';
-
-                    module.push("Grid:");
-                    for (const s of arr)
-                        module.push({label:`<code style='font-size:x-large'>${s.toString().replaceAll(',',' ')}</code>`});
+                    module.buttonGroup = [matches.input, []];
+                    for (let i = 0; i < 25; i++) {
+                        module.buttonGroup[1]
+                            .push(readLine()
+                                .replace(
+                                    /\[Color Grid #\d+\]/,
+                                    ((i+1)+"").padStart(2, '0')+"."));
+                    }
+                    module.push(module.buttonGroup);
+                    return true;
                 }
             },
             {
@@ -6162,18 +6156,27 @@ let parseData = [
         loggingTag: "Mazematics",
         matches: [
             {
-                regex: /[A-Z][a-z]+ = (\d)/,
+                regex: /([A-Z][a-z]+) = (\d)/,
                 handler: function (matches, module) {
+                    if (module[1] && module[1].includes(matches[1])) //start again. issue: 63b36c5ee42dc68938df17881421ec98bc6896e5 (LFA file id)
+                    {
+                        module.Counter = null;
+                        module.ShapeNumbers = null;
+                        module.push("-------------------------------------");
+                    }
+                    /*
+                    const regex = /[A-Z][a-z]+/;
+                    console.log(module[1].includes(matches[1]));*/
                     if (typeof module.Counter !== "number") {
-                        module.push();
+                        module.push(null);
                         module.Counter = 0;
                     } else module.Counter++;
-                    module.push(this.names[module.Counter] + ": " + matches[1]);
-                    (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
+                    module.push(this.names[module.Counter] + ": " + matches[2]);
+                    (module.ShapeNumbers ??= [])[this.order[module.Counter]] = matches[2];
                     return true;
                 },
                 names: ["Circle", "Square", "Mountain", "Triangle", "Diamond", "Hexagon", "Star", "Heart"],
-                order: [0, 4, 3, 7, 5, 1, 6, 2]
+                order: [0, 5, 7, 2, 1, 4, 6, 3]
             },
             {
                 regex: /STRIKE!/,
@@ -6193,21 +6196,29 @@ let parseData = [
                     (module.CoordsGroups ??= []).push([]);
                     (module.Strikes ??= []).push([]);
                     module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
-                    module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
+                    module.IsContinuing = false;
                     module.Section = [];
                     return true;
                 }
             },
             {
                 regex: /SOLVED!/,
-                handler: function (matched, module) {
+                handler: function (matches, module) {
                     module.Solved = true;
-                    module.push(matched.input);
+                    module.JSON["solved"] = module.Solved;
+                    const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
+                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                    module.push(matches.input);
+                    return true;
                 }
             },
             {
                 regex: /([A-Z][0-9])[^,]+(-?\d)/,
                 handler: function (matches, module) {
+                    if (!module.IsContinuing) {
+                        module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
+                        module.IsContinuing = true;
+                    }
                     let correctLine = matches.input;
                     const currentStrikes = module.Strikes[module.Strikes.length - 1];
                     if (module.Rule49) {
@@ -6243,8 +6254,8 @@ let parseData = [
                             , getValueOfPossibleCells = c => {
                                 const indexUp = maintainInRange(c[0] - 1) * 8 + c[1]
                                     , indexDown = maintainInRange(c[0] + 1) * 8 + c[1];
-                                return [ss[indexUp] + module.shapeNumbers[s[indexUp]],
-                                ss[indexDown] + module.shapeNumbers[s[indexDown]]];
+                                return [ss[indexUp] + module.ShapeNumbers[s[indexUp]],
+                                ss[indexDown] + module.ShapeNumbers[s[indexDown]]];
                             }
                             , clue = matches[2]
                             , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
@@ -6277,7 +6288,7 @@ let parseData = [
                     if (module.Section) {
                         module.Section.push(matched.input);
                         module.JSON = {
-                            shapeNumbers: module.shapeNumbers,
+                            shapeNumbers: module.ShapeNumbers,
                             coordsGroups: module.CoordsGroups,
                             strikes: module.Strikes,
                             solved: module.Solved,
