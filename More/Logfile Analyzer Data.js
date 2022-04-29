@@ -2144,7 +2144,6 @@ let parseData = [
             {
                 regex: /reading/,
                 handler: function (matches, module) {
-                    readLine();
                     module.buttonGroup = [matches.input, []];
                     for (let i = 0; i < 25; i++) {
                         module.buttonGroup[1]
