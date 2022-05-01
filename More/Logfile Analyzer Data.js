@@ -6218,7 +6218,7 @@ let parseData = [
                     module.Solved = true;
                     module.JSON["solved"] = module.Solved;
                     const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
                     module.push(matches.input);
                     return true;
                 }
@@ -6306,7 +6306,7 @@ let parseData = [
                             restricted: module.Restricted
                         }
                         const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
                         module[module.length - 1][1] = module.Section;
                     } else {
                         if (!module.Restricted && matched.input.includes("Restricted"))
