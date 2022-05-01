@@ -2146,14 +2146,25 @@ let parseData = [
                 handler: function (matches, module) {
                     module.buttonGroup = [matches.input, []];
                     for (let i = 0; i < 25; i++) {
-                        module.buttonGroup[1]
-                            .push(readLine()
-                                .replace(
-                                    /\[Color Grid #\d+\]/,
-                                    ((i+1)+"").padStart(2, '0')+"."));
+                        let line = readLine();
+                        module.buttonGroup[1].push(line.replace(/\[Color Grid #\d+\]/,((i+1)+"").padStart(2, '0')+"."));
                     }
-                    module.push(module.buttonGroup);
+                    module.push("The buttons are:", {obj: this.parseButtons(module.buttonGroup[1]), nobullet: true});
                     return true;
+                },
+                parseButtons: buttons => {
+                    let groups = "";
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = 0; j < 5; j++) {
+                            let color = /\[(\w+)\]/.exec(buttons[j*5+i])[1];
+                            color = color === "Inactive" ? "black" : color.toLowerCase();
+                            groups += `<circle r="9" cx="${10+20*i}" cy="${10+20*j}" fill="#363636"/>`;
+                            groups += `<rect width="10" height="10" x="${5+20*i}" y="${5+20*j}" transform="rotate(45 ${5+20*i+5} ${5+20*j+5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
+                        }
+                    }
+                    const css = {width: "250", height: "auto", display: "block", margin: "5px 0 10px"};
+                    const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
+                    return svg;
                 }
             },
             {
