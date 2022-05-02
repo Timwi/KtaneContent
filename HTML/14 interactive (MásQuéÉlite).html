@@ -15,59 +15,63 @@
             font-weight: bold;
             color: white;
             font-size: 12px;
-        }
-        path {
-            cursor: pointer;
-        }
+        }       
+        
+        path { cursor: pointer }
+        .dark svg text { fill: #DDD }
+        
         #int {
             margin: 20px auto;
             transform: scale(0.8);
+            stroke: silver;
         }
+        .dark #int { stroke: dimgray }
+        #colorPanel { stroke-width: 2 }
+        
+        .fill-black { fill: #000 }
+        .fill-blue { fill: #00f }
+        .fill-lime { fill: #0f0 }
+        .fill-cyan { fill: #0ff }
+        .fill-red { fill: #f00}
+        .fill-magenta { fill: #f0f }
+        .fill-yellow { fill: #ff0 }
+        .fill-white { fill: #ddd }
+
+        .selected {
+            stroke: purple;
+            stroke-width: 3;
+        }
+
         button {
             display: block;
             margin: 0 auto;
             padding: 5px 10px;
             user-select: none;
         }
-        .dark svg text { fill: #DDD; }
     </style>
     <script>
         $(() => {
-            //note: attr({}) RESETS (all) the attr(s), while attr() adds/modifies the attr
-            function resetStrokes(specialTreatment, panel = null) {
-                if (specialTreatment && panel === null) return;
-                segmentPanel.attr("stroke", PAGE_DEFAULT);
-                colorPanel.each(function() {
-                    if (!specialTreatment || $(this).attr("stroke") !== "purple") {
-                        $(this).attr({stroke: PAGE_DEFAULT, "stroke-width": "2"});
-                    }
-                });
+            function selectStroke($t) {
+                $colorPanel.removeClass("selected");
+                $t.addClass("selected");
             }
-            function selectStroke(p) {
-                currentPanel = p;
-                color = currentPanel.attr("fill");
-                resetStrokes(false);
-                currentPanel.attr({stroke: "purple", "stroke-width": "3"});
-                segmentPanel.attr("stroke-width", color);
+            function fillSegment($t) {
+                $t.removeClass()
+                $t.addClass(getFillClass($(".selected")));
             }
             function resetAll() {
-                segmentPanel.attr("fill", "#000");
-                resetStrokes(false);
-                color = "rgb(0,0,0)";
+                $segmentPanel.removeClass();
+                $segmentPanel.addClass("fill-black");
+                $colorPanel.removeClass("selected");
             }
-            const colorPanel = $("#colorPanel").children()
-                , segmentPanel = $("#segmentPanel").children()
+            const $colorPanel = $("#colorPanel").children()
+                , $segmentPanel = $("#segmentPanel").children()
                 , getDefaultStrokeColor = () => $(document.body).attr("class") ? "silver" : "dimgray"
-                , o = new MutationObserver(() => {
-                    PAGE_DEFAULT = getDefaultStrokeColor();
-                    resetStrokes(true, currentPanel);
-                });
-            let color, currentPanel, PAGE_DEFAULT = getDefaultStrokeColor();
+                , getFillClass = $el => /fill-\w+/.exec($el.attr("class"))[0];
 
-            o.observe(document.body, {attributes: true});
-            colorPanel.on("click", e => selectStroke($(e.target)));
-            segmentPanel.on("click", e => $(e.target).attr("fill", color));
-            $("button").on("click", resetAll)
+            $colorPanel.click(e => selectStroke($(e.target)));
+            $segmentPanel.click(e => fillSegment($(e.target)));
+            $("button").click(resetAll);
             
             resetAll();
         });
@@ -90,14 +94,14 @@
                 <h3>The interactive</h3>
                 <svg id="int" xmlns="http://www.w3.org/2000/svg" viewBox="23 65 300 215" fill="#FFF">
                     <g id="colorPanel">
-                        <path d="M284.612 69.517l14.743 25.537H269.87z" fill="#000"></path>
-                        <path d="M305.224 101.895l14.743 25.536h-29.486z" fill="#00F"></path>
-                        <path d="M284.612 125.566l-14.743-25.537h29.486z" fill="#0F0"></path>
-                        <path d="M263.696 157.943l-14.743-25.536h29.486z" fill="#0FF"></path>
-                        <path d="M263.696 101.895l14.743 25.536h-29.486z" fill="#F00"></path>
-                        <path d="M284.108 134.273l14.743 25.536h-29.486z" fill="#F0F"></path>
-                        <path d="M305.224 157.943l-14.743-25.536h29.486z" fill="#FF0"></path>
-                        <path d="M284.108 190.321l-14.743-25.536h29.486z" fill="#FFF"></path>
+                        <path d="M284.612 69.517l14.743 25.537H269.87z"   class="fill-black"></path>
+                        <path d="M305.224 101.895l14.743 25.536h-29.486z" class="fill-blue"></path>
+                        <path d="M284.612 125.566l-14.743-25.537h29.486z" class="fill-lime"></path>
+                        <path d="M263.696 157.943l-14.743-25.536h29.486z" class="fill-cyan"></path>
+                        <path d="M263.696 101.895l14.743 25.536h-29.486z" class="fill-red"></path>
+                        <path d="M284.108 134.273l14.743 25.536h-29.486z" class="fill-magenta"></path>
+                        <path d="M305.224 157.943l-14.743-25.536h29.486z" class="fill-yellow"></path>
+                        <path d="M284.108 190.321l-14.743-25.536h29.486z" class="fill-white"></path>
                     </g>
                     <g id="segmentPanel">
                         <path d="M66.161 154.23h35.84s0 0 0 0 0 0 0 0l16.17 17.92-16.17 17.92s0 0 0 0 0 0 0 0H66.16s0 0 0 0 0 0 0 0l-17.045-17.92 17.045-17.92s0 0 0 0 0 0 0 0z"></path>
