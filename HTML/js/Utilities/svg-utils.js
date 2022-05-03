@@ -57,7 +57,7 @@ function RegularPolygon(radius, cx = 0, cy = 0, numSides = 3, rot = 0, attrs = n
         vert.push([x, y]);
     }
 
-    let el = makeSvgElem("polygon", attrs);
+    let el = MakeSvgElem("polygon", attrs);
     el.setAttribute("points", vert.join(" "));
     return el;
 }
