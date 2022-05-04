@@ -690,9 +690,10 @@ let parseData = [
             {
                 regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     if (!module.TableData) {
                         module.TableData = [];
+                        module.JSONs = [];
+                        module.Stage = [];
                         module.CorrectValues = {};
                         module.CorrectValuesFull = {};
                         module.ListObject = {
@@ -716,6 +717,7 @@ let parseData = [
                             </tr>
                         </table>`)
                         };
+                        module.push({label:`<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>`});
                         module.push(module.ListObject);
                         module.SetCss = function () {
                             module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
@@ -725,6 +727,7 @@ let parseData = [
                     while (module.TableData.length <= matches[1])
                         module.TableData.push({});
                     module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+                    module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length-1]);
                     if (matches[2] === 'B') {
                         let ledColors = {
                             K: '#888',
@@ -747,6 +750,10 @@ let parseData = [
                             <td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
                         </tr>`));
                         module.SetCss();
+                        module.JSONs.push(module.Stage);
+                        module.Stage = [];
+                        console.log(JSON.stringify(module.JSONs));
+                        module[1] = {label:`<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>`};
                     }
                     return true;
                 }
@@ -754,7 +761,6 @@ let parseData = [
             {
                 regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     module.CorrectValuesFull[matches[1]] = matches[2];
                     module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
                     if (matches[1] === 'B') {
@@ -772,7 +778,6 @@ let parseData = [
             {
                 regex: /The correct submission is:|Incorrect Submission:/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     var colorList = {
                         R: '#FF0000',
                         G: '#00FF00',

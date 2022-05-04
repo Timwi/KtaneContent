@@ -9,67 +9,179 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="../../live.js"></script>
     <style>
         .appendix {
             text-align: center;
             font-weight: bold;
             color: white;
             font-size: 12px;
-        }
-        path {
-            cursor: pointer;
-        }
+        }       
+        
+        path { cursor: pointer }
+        .dark svg text { fill: #DDD }
+        
         #int {
-            margin: 20px auto;
             transform: scale(0.8);
+            stroke: silver;
         }
+        .dark #int { stroke: dimgray }
+        #colorPanel { stroke-width: 2 }
+        
+        .fill-black { fill: #000 }
+        .fill-blue { fill: #00f }
+        .fill-lime { fill: #0f0 }
+        .fill-cyan { fill: #0ff }
+        .fill-red { fill: #f00}
+        .fill-magenta { fill: #f0f }
+        .fill-yellow { fill: #ff0 }
+        .fill-white { fill: #ddd }
+
+        .selected {
+            stroke: purple;
+            stroke-width: 3;
+        }
+
         button {
-            display: block;
-            margin: 0 auto;
             padding: 5px 10px;
             user-select: none;
+            background-color: #C0C0C0;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
         }
-        .dark svg text { fill: #DDD; }
+
+        #reset {
+            display: block;
+            margin: 0 auto;
+            border-bottom: 3px black dashed;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            padding-bottom: 2px;
+        }
+        #buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5%;
+        }
+        #prev, #next {
+            border: 3px solid transparent;
+            visibility: hidden;
+        }
+            #prev:hover, #next:hover {
+                background-color: #aaa;
+                border: 3px black dashed;
+            }
+            #prev:active, #next:active {
+                background-color: #999;
+            }
+            #next { border-radius: 10px 20px 20px 10px }
+            #prev { border-radius: 20px 10px 10px 20px }
+        #table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+        }
+        #pages {
+            font-size: 1.17em;
+        }
     </style>
     <script>
         $(() => {
-            //note: attr({}) RESETS (all) the attr(s), while attr() adds/modifies the attr
-            function resetStrokes(specialTreatment, panel = null) {
-                if (specialTreatment && panel === null) return;
-                segmentPanel.attr("stroke", PAGE_DEFAULT);
-                colorPanel.each(function() {
-                    if (!specialTreatment || $(this).attr("stroke") !== "purple") {
-                        $(this).attr({stroke: PAGE_DEFAULT, "stroke-width": "2"});
-                    }
-                });
+            /* minified */
+            const mappings={0:[0,1,4,5,8,9,12,13],"-0":[2,3,6,7,10,11],1:[4,5,12],"-1":[0,1,2,3,6,7,8,9,10,11,13],2:[0,5,6,7,8,13],"-2":[1,2,3,4,9,10,11,12],3:[0,5,6,7,12,13],"-3":[1,2,3,4,8,9,10,11],4:[1,5,6,7,12],"-4":[0,2,3,4,8,9,10,11,13],5:[0,2,7,12,13],"-5":[1,3,4,5,6,8,9,10,11],6:[0,1,6,7,8,12,13],"-6":[2,3,4,5,9,10,11],7:[0,4,9],"-7":[1,2,3,5,6,7,8,10,11,12,13],8:[0,1,5,6,7,8,12,13],"-8":[2,3,4,9,10,11],9:[0,1,5,6,7,12,13],"-9":[2,3,4,8,9,10,11],A:[0,1,5,6,7,8,12],"-A":[2,3,4,9,10,11,13],B:[0,3,5,7,10,12,13],"-B":[1,2,4,6,8,9,11],C:[0,1,8,13],"-C":[2,3,4,5,6,7,9,10,11,12],D:[0,3,5,10,12,13],"-D":[1,2,4,6,7,8,9,11],E:[0,1,6,7,8,13],"-E":[2,3,4,5,9,10,11,12],F:[0,1,6,7,8],"-F":[2,3,4,5,9,10,11,12,13],G:[0,1,7,8,12,13],"-G":[2,3,4,5,6,9,10,11],H:[1,5,6,7,8,12],"-H":[0,2,3,4,9,10,11,13],I:[0,3,10,13],"-I":[1,2,4,5,6,7,8,9,11,12],J:[5,8,12,13],"-J":[0,1,2,3,4,6,7,9,10,11],K:[1,4,6,8,11],"-K":[0,2,3,5,7,9,10,12,13],L:[1,8,13],"-L":[0,2,3,4,5,6,7,9,10,11,12],M:[1,2,4,5,8,12],"-M":[0,3,6,7,9,10,11,13],N:[1,2,5,8,11,12],"-N":[0,3,4,6,7,9,10,13],O:[0,1,5,8,12,13],"-O":[2,3,4,6,7,9,10,11],P:[0,1,5,6,7,8],"-P":[2,3,4,9,10,11,12,13],Q:[0,1,5,8,11,12,13],"-Q":[2,3,4,6,7,9,10],R:[0,1,5,6,7,8,11],"-R":[2,3,4,9,10,12,13],S:[0,1,6,7,12,13],"-S":[2,3,4,5,8,9,10,11],T:[0,3,10],"-T":[1,2,4,5,6,7,8,9,11,12,13],U:[1,5,8,12,13],"-U":[0,2,3,4,6,7,9,10,11],V:[1,4,8,9],"-V":[0,2,3,5,6,7,10,11,12,13],W:[1,5,8,9,11,12],"-W":[0,2,3,4,6,7,10,13],X:[2,4,9,11],"-X":[0,1,3,5,6,7,8,10,12,13],Y:[2,4,10],"-Y":[0,1,3,5,6,7,8,9,11,12,13],Z:[0,4,9,13],"-Z":[1,2,3,5,6,7,8,10,11,12]};
+            /* Avoiding elseifs */
+            const colorConditions = {truetruetrue:"white",truetruefalse:"yellow",truefalsetrue:"magenta",falsetruetrue:"cyan",falsefalsetrue:"blue",falsetruefalse:"green",truefalsefalse:"red",falsefalsefalse:"black"};
+            
+            function selectStroke($color) {
+                $colorPanel.removeClass("selected");
+                $color.addClass("selected");
             }
-            function selectStroke(p) {
-                currentPanel = p;
-                color = currentPanel.attr("fill");
-                resetStrokes(false);
-                currentPanel.attr({stroke: "purple", "stroke-width": "3"});
-                segmentPanel.attr("stroke-width", color);
+            function fillSegment($segment) {
+                $segment.removeClass()
+                $segment.addClass(getFillClass($(".selected")));
             }
             function resetAll() {
-                segmentPanel.attr("fill", "#000");
-                resetStrokes(false);
-                color = "rgb(0,0,0)";
+                $segmentPanel.removeClass();
+                $segmentPanel.addClass("fill-black");
+                $colorPanel.removeClass("selected");
             }
-            const colorPanel = $("#colorPanel").children()
-                , segmentPanel = $("#segmentPanel").children()
-                , getDefaultStrokeColor = () => $(document.body).attr("class") ? "silver" : "dimgray"
-                , o = new MutationObserver(() => {
-                    PAGE_DEFAULT = getDefaultStrokeColor();
-                    resetStrokes(true, currentPanel);
-                });
-            let color, currentPanel, PAGE_DEFAULT = getDefaultStrokeColor();
+            const $colorPanel = $("#colorPanel").children()
+                , $segmentPanel = $("#segmentPanel").children()
+                , getFillClass = $el => /fill-\w+/.exec($el.attr("class"))[0];
 
-            o.observe(document.body, {attributes: true});
-            colorPanel.on("click", e => selectStroke($(e.target)));
-            segmentPanel.on("click", e => $(e.target).attr("fill", color));
-            $("button").on("click", resetAll)
+            $colorPanel.click(e => selectStroke($(e.target)));
+            $segmentPanel.click(e => fillSegment($(e.target)));
+            $("#reset").click(resetAll);
             
             resetAll();
+            let pageCounter = 0, stages;
+
+            if (window.location.hash) {
+                stages = JSON.parse(decodeURI(window.location.hash.slice(1)));
+
+                pageButton(0);
+
+                $("#prev").click(()=>pageButton(-1)).css("visibility", "visible");
+                $("#next").click(()=>pageButton(1)).css("visibility", "visible");
+            }
+
+            function pageButton(dir) {
+                let _ = pageCounter + dir;
+                if (_ < 0) pageCounter = 0;
+                else if (_ > stages.length-1) pageCounter = stages.length-1;
+                else pageCounter = _;
+                resetAll();
+                const segmentChannels = parseStages(stages);
+                const colors = getColorsFromChannels(segmentChannels);
+                fillSegments(colors[pageCounter]);
+                updateVisualPageCounter();
+            }
+
+            function updateVisualPageCounter() {
+                $("#pages").text(`${pageCounter+1}/${stages.length}`);
+            }
+            
+            function fillSegments(colors) {
+                for (let i = 0; i < 14; i++) {
+                    $segmentPanel.eq(i).addClass("fill-"+colors[i]);
+                }
+            }
+
+            function getColorsFromChannels(allChannels) {
+                segmentsColors = [];
+                for (const channels of allChannels) {
+                    segmentsColors.push(Array.from({length: 14}));
+                    for (let i = 0; i < 14; i++) {
+                        segmentsColors[segmentsColors.length-1][i] = colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
+                    }
+                }
+                return segmentsColors;
+            }
+
+            function parseStages(stages) {
+                const fillings = [];
+                for (const stage of stages) {
+                    fillings.push([[], [], []]);
+                    fillings[fillings.length-1][0] = getFills(stage[0], "red");
+                    fillings[fillings.length-1][1] = getFills(stage[1], "green");
+                    fillings[fillings.length-1][2] = getFills(stage[2], "blue");
+                }
+                return fillings;
+            }
+
+            function getFills(letter, channel) {
+                const segmentsFilled = Array.from({length: 14}, s => "false");
+                for (const segment of mappings[letter]) {
+                    segmentsFilled[segment] = "true";
+                }
+                return segmentsFilled;
+            }
         });
     </script>
 </head>
@@ -87,36 +199,45 @@
                 <p>Please consult the <a href="14.html">original manual</a> for instructions.</p>
                 <p>The full reference of the <a href="14%20altered%20embellished%20(Quinn%20Wuest).html">altered embellished</a> is here.</p>
 
-                <h3>The interactive</h3>
+                <div id="table-header">
+                    <h3>The interactive</h3>
+                    <span id="pages"></span>
+                </div>
+                <span id="buttons">
+                    <button id="reset">Reset</button>
+                    <span>
+                        <button id="prev">Prev</button>
+                        <button id="next">Next</button>
+                    </span>
+                </span>
                 <svg id="int" xmlns="http://www.w3.org/2000/svg" viewBox="23 65 300 215" fill="#FFF">
                     <g id="colorPanel">
-                        <path d="M284.612 69.517l14.743 25.537H269.87z" fill="#000"></path>
-                        <path d="M305.224 101.895l14.743 25.536h-29.486z" fill="#00F"></path>
-                        <path d="M284.612 125.566l-14.743-25.537h29.486z" fill="#0F0"></path>
-                        <path d="M263.696 157.943l-14.743-25.536h29.486z" fill="#0FF"></path>
-                        <path d="M263.696 101.895l14.743 25.536h-29.486z" fill="#F00"></path>
-                        <path d="M284.108 134.273l14.743 25.536h-29.486z" fill="#F0F"></path>
-                        <path d="M305.224 157.943l-14.743-25.536h29.486z" fill="#FF0"></path>
-                        <path d="M284.108 190.321l-14.743-25.536h29.486z" fill="#FFF"></path>
+                        <path d="M284.612 69.517l14.743 25.537H269.87z"   class="fill-black"></path>
+                        <path d="M305.224 101.895l14.743 25.536h-29.486z" class="fill-blue"></path>
+                        <path d="M284.612 125.566l-14.743-25.537h29.486z" class="fill-lime"></path>
+                        <path d="M263.696 157.943l-14.743-25.536h29.486z" class="fill-cyan"></path>
+                        <path d="M263.696 101.895l14.743 25.536h-29.486z" class="fill-red"></path>
+                        <path d="M284.108 134.273l14.743 25.536h-29.486z" class="fill-magenta"></path>
+                        <path d="M305.224 157.943l-14.743-25.536h29.486z" class="fill-yellow"></path>
+                        <path d="M284.108 190.321l-14.743-25.536h29.486z" class="fill-white"></path>
                     </g>
                     <g id="segmentPanel">
+                        <path d="M67.036 68.567h111.45v0s0 0 0 0l16.17 17.92-16.17 17.919h0v0H67.036v0s0 0 0 0L49.99 86.486l17.046-17.92v0z"></path>
+                        <path d="M60.47 112.264v35.839s0 0 0 0 0 0 0 0l-17.919 16.171-17.919-16.171s0 0 0 0 0 0 0 0v-35.839s0 0 0 0 0 0 0 0l17.92-17.045 17.919 17.045s0 0 0 0 0 0 0 0z"></path>
+                        <path d="M91.924 111.418l6.986 10.919v0s0 0 0 0l-.066 25.32-25.276.022s0 0 0 0v0l-6.986-10.92v0l.619-24.723 24.723-.618h0z"></path>
+                        <path d="M139.928 110.507v35.839s0 0 0 0l-17.92 16.171-17.92-16.171s0 0 0 0v0-35.839 0s0 0 0 0h35.84z"></path>
+                        <path d="M170.594 147.679l6.986-10.92v0s0 0 0 0l-.066-25.32-25.276-.021s0 0 0 0v0l-6.985 10.919v0l.618 24.724 24.723.618v0z"></path>
+                        <path d="M220.872 111.827v35.839s0 0 0 0 0 0 0 0l-17.92 16.171-17.92-16.171s0 0 0 0 0 0 0 0v-35.839s0 0 0 0 0 0 0 0l17.92-17.045 17.92 17.045s0 0 0 0 0 0 0 0z"></path>
                         <path d="M66.161 154.23h35.84s0 0 0 0 0 0 0 0l16.17 17.92-16.17 17.92s0 0 0 0 0 0 0 0H66.16s0 0 0 0 0 0 0 0l-17.045-17.92 17.045-17.92s0 0 0 0 0 0 0 0z"></path>
                         <path d="M143.005 154.23h35.839s0 0 0 0 0 0 0 0l16.17 17.92-16.17 17.92s0 0 0 0 0 0 0 0h-35.84s0 0 0 0 0 0 0 0l-17.045-17.92 17.046-17.92s0 0 0 0 0 0 0 0z"></path>
-                        <path d="M60.47 112.264v35.839s0 0 0 0 0 0 0 0l-17.919 16.171-17.919-16.171s0 0 0 0 0 0 0 0v-35.839s0 0 0 0 0 0 0 0l17.92-17.045 17.919 17.045s0 0 0 0 0 0 0 0z"></path>
                         <path d="M60.908 197.49v35.84s0 0 0 0 0 0 0 0l-17.92 16.17-17.919-16.17s0 0 0 0 0 0 0 0v-35.84s0 0 0 0 0 0 0 0l17.92-17.045 17.919 17.046s0 0 0 0 0 0 0 0z"></path>
-                        <path d="M220.872 111.827v35.839s0 0 0 0 0 0 0 0l-17.92 16.171-17.92-16.171s0 0 0 0 0 0 0 0v-35.839s0 0 0 0 0 0 0 0l17.92-17.045 17.92 17.045s0 0 0 0 0 0 0 0z"></path>
-                        <path d="M221.309 197.054v35.838s0 0 0 0 0 0 0 0l-17.92 16.172-17.92-16.172s0 0 0 0 0 0 0 0v-35.838s0 0 0 0 0 0 0 0l17.92-17.046 17.92 17.046s0 0 0 0 0 0 0 0z"></path>
-                        <path d="M67.036 68.567h111.45v0s0 0 0 0l16.17 17.92-16.17 17.919h0v0H67.036v0s0 0 0 0L49.99 86.486l17.046-17.92v0z"></path>
-                        <path d="M67.91 239.947h111.45v0s0 0 0 0l16.171 17.92-16.171 17.919v0H67.91v0s0 0 0 0l-17.046-17.92 17.046-17.92v0z"></path>
-                        <path d="M139.928 110.507v35.839s0 0 0 0l-17.92 16.171-17.92-16.171s0 0 0 0v0-35.839 0s0 0 0 0h35.84z"></path>
-                        <path d="M104.98 232.919v-35.84 0s0 0 0 0l17.92-16.17 17.92 16.17s0 0 0 0v35.84s0 0 0 0h-35.84z"></path>
-                        <path d="M91.924 111.418l6.986 10.919v0s0 0 0 0l-.066 25.32-25.276.022s0 0 0 0v0l-6.986-10.92v0l.619-24.723 24.723-.618h0z"></path>
-                        <path d="M171.47 196.644l6.985 10.92v0s0 0 0 0l-.066 25.32-25.276.021s0 0 0 0v0l-6.986-10.919v0l.618-24.723 24.724-.619v0z"></path>
                         <path d="M91.924 232.914l6.985-10.919v0s0 0 0 0l-.065-25.32-25.277-.022s0 0 0 0v0l-6.985 10.92v0l.618 24.723 24.724.618h0z"></path>
-                        <path d="M170.594 147.679l6.986-10.92v0s0 0 0 0l-.066-25.32-25.276-.021s0 0 0 0v0l-6.985 10.919v0l.618 24.724 24.723.618v0z"></path>
+                        <path d="M104.98 232.919v-35.84 0s0 0 0 0l17.92-16.17 17.92 16.17s0 0 0 0v35.84s0 0 0 0h-35.84z"></path>
+                        <path d="M171.47 196.644l6.985 10.92v0s0 0 0 0l-.066 25.32-25.276.021s0 0 0 0v0l-6.986-10.919v0l.618-24.723 24.724-.619v0z"></path>
+                        <path d="M221.309 197.054v35.838s0 0 0 0 0 0 0 0l-17.92 16.172-17.92-16.172s0 0 0 0 0 0 0 0v-35.838s0 0 0 0 0 0 0 0l17.92-17.046 17.92 17.046s0 0 0 0 0 0 0 0z"></path>
+                        <path d="M67.91 239.947h111.45v0s0 0 0 0l16.171 17.92-16.171 17.919v0H67.91v0s0 0 0 0l-17.046-17.92 17.046-17.92v0z"></path>
                     </g>
                 </svg>
-                <button>Reset</button>
             </div>
             <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
