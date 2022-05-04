@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Snowflakes — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        // let firstDate = new Date(2024, 0, 1);
+        let firstDate = new Date(new Date().getFullYear(), 0, 1);
+        let firstDay = firstDate.getDay();
+        const THURSDAY = 4;
+        const MONDAY = 1;
+        const TIME_PER_DAY = 1000 * 3600 * 24;
+        const TIME_PER_WEEK = TIME_PER_DAY * 7;
+        const cols = 13;
+        let dateText = $(".datetext");
+        let week = 1;
+        let weekLim = 1;
+
+        let tds = $(".snow-maze td");
+        for (let i = 0; i < tds.length; i++) {
+            let elem = $(tds[i]);
+            elem.html(i + 1);
+            let td = $(`td.sf${i + 1}`);
+            $("<div>").addClass("numberdisp").html(i + 1).prependTo(td);
+            elem.click(function(event) {
+                if (NoSpecialKeys(event)) {
+                    elem.toggleClass("gray");
+                    td.toggleClass("gray");
+                }
+            });
+        }
+
+        function highlightCell(week) {
+            let w = Math.min(52, Math.max(1, week));
+            let col = (w-1) % cols + 1;
+            let row = Math.floor((w-1) / cols) + 1;
+            $(".snow-maze td").removeClass("selected");
+            $(`.snow-maze tr:nth-child(${row}) td:nth-child(${col})`).addClass("selected");
+        }
+
+        function nextWeek(date, sub = false) {
+            let d = new Date(date);
+            d.setDate(d.getDate() + (sub ? -1 : 1));
+            while (d.getDay() != MONDAY || dayDiff(date, d) < 4) {
+                d.setDate(d.getDate() + (sub ? -1 : 1));
+            }
+            return d;
+        }
+        let currDate = new Date(firstDate);
+        if (firstDate.getDay() > THURSDAY || firstDate.getDay() < MONDAY)
+            while (currDate.getDay() != MONDAY)
+                currDate.setDate(currDate.getDate() + 1);
+        // let firstWeekFirstDate = new Date(currDate);
+
+        function dayDiff(d1, d2) {
+            return Math.abs(Math.floor((d2.getTime() - d1.getTime()) / TIME_PER_DAY));
+        }
+        function whatWeek(date) {
+            let add = 0;
+            if (firstDate.getDay() <= THURSDAY && firstDate.getDay() > MONDAY)
+                add = 1;
+            return UMod(Math.floor((date.getTime() - firstDate.getTime()) / TIME_PER_WEEK) + add, 52) + 1;
+        }
+
+        function weekDec() {
+            if (weekLim > 0) {
+                weekLim -= 1;
+                currDate = nextWeek(currDate, true);
+                showDateRangeFrom(currDate);
+                week = whatWeek(currDate);
+                highlightCell(week);
+            }
+        }
+        function weekInc() {
+            if (weekLim < 53) {
+                weekLim += 1;
+                currDate = nextWeek(currDate);
+                if (currDate.getFullYear() > firstDate.getFullYear()) {
+                    weekLim -= 1;
+                    currDate = nextWeek(currDate, true);
+                }
+                showDateRangeFrom(currDate);
+                week = weekLim > 52 ? 52 : whatWeek(currDate);
+                highlightCell(week);
+            }
+        }
+        function showDateRangeFrom(date, displayFirst = false) {
+            let d = nextWeek(date);
+            d.setDate(d.getDate() - 1);
+            dateText.text(`${date.toDateString()} – ${d.toDateString()}`);
+        }
+
+        WhenHoldDown($(".weektext.minus")[0], weekDec, 300, 1.07);
+        WhenHoldDown($(".weektext.plus")[0], weekInc, 300, 1.07);
+        weekInc();
+        weekDec();
+        highlightCell(week);
+        showDateRangeFrom(currDate, true);
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .weektext {
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        .weektext {
+            padding-top: 8px;
+        }
+        .weekdisplay {
+            min-width: 160px;
+            width: 300px;
+        }
+        .weekspacer1 {
+            width: 10px;
+        }
+        .weekspacer2 {
+            width: 10px;
+        }
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            height: 32px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 10px 8px 0 8px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        .weekholder {
+            height: 32px;
+        }
+
+        .hstack svg.axes {
+            min-width: 200px;
+            max-width: 220px;
+        }
+        .hstack svg.features {
+            min-width: 130px;
+            max-width: 144px;
+        }
+        .hstack svg.features text {
+             writing-mode: vertical-rl;
+             transform: scale(-1, -1);
+             font-size: 2px;
+             text-anchor: middle;
+        }
+        table {
+            width: 100%;
+        }
+        .dark svg path.black { stroke: #DDD; }
+        .dark svg text.black,
+        .dark svg marker path.black, .dark svg path.ondark {
+            fill: #DDD;
+        }
+        @font-face {
+            font-family: 'FauxSnow';
+            src: url('font/fauxsnow.ttf');
+        }
+        .snow-maze {
+            table-layout: fixed;
+        }
+        @media screen and (min-width: 900px) {
+            .snow-maze { margin-left: -5%; }
+        }
+        .snow-maze td {
+            text-align: center;
+            vertical-align: middle;
+            line-height: 50px;
+            font-size: 35px;
+            width: 50px;
+            padding: 8px 2px 0px 2px;
+            border-color: #999;
+        }
+        .descriptions td {
+            font-size: 11pt;
+            margin: 0;
+            padding: 1px;
+        }
+        .descriptions td.small { font-size: 10pt; }
+        .descriptions td:nth-child(2n-1) {
+            position: relative;
+            font-family: 'FauxSnow';
+            font-size: 140px;
+            line-height: 100px;
+        }
+        .descriptions td:nth-child(2n-1) .numberdisp {
+            font-family: "Special Elite";
+            position: absolute;
+            font-size: 20px;
+            line-height: 18px;
+            top: 4px;
+            left: 2px;
+        }
+        .descriptions td:nth-child(2) {
+            border-right-width: 4px;
+        }
+        .descriptions td:nth-child(2n) {
+            width: 40%;
+        }
+        .snow-maze td.gray, .descriptions td.gray {
+            background-color: #00000044;
+        }
+        .dark .snow-maze td.gray, .dark .descriptions td.gray {
+            background-color: #FFFFFF44;
+        }
+        .dark .snow-maze td {
+            border-color: #666;
+        }
+        td.top {
+            border-top: 5px solid;
+        }
+        td.bottom {
+            border-bottom: 5px solid;
+        }
+        td.right {
+            border-right: 5px solid;
+        }
+        td.left {
+            border-left: 5px solid;
+        }
+        td.selected { background-color: #00FF0077; }
+        .dark td.selected { background-color: #00FF0099; }
+        .dark td.top {
+            border-top-color: #DDD;
+        }
+        .dark td.bottom {
+            border-bottom-color: #DDD;
+        }
+        .dark td.left {
+            border-left-color: #DDD;
+        }
+        .dark td.right {
+            border-right-color: #DDD;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snowflakes</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Snowflakes.svg" class="diagram">
+                <h2>On the Subject of Snowflakes</h2>
+                <p class="flavour-text">Instead of a regular winter, you get a nuclear winter. Plenty of ash and rubble to play in, but no snow.</p>
+                <p>The current position in the maze is the one adjacent to all 4 snowflakes displayed, looping over.</p>
+                <table class='snow-maze'>
+                    <tr>
+                        <td class='top left'></td>
+                        <td class='top right'></td>
+                        <td class='top'></td>
+                        <td class='top right bottom'></td>
+                        <td class='top'></td>
+                        <td class='top'></td>
+                        <td class='top'></td>
+                        <td class='top'></td>
+                        <td class='top left bottom'></td>
+                        <td class='top'></td>
+                        <td class='top'></td>
+                        <td class='top'></td>
+                        <td class='top right left'></td>
+                    </tr>
+                    <tr>
+                        <td class='left right'></td>
+                        <td></td>
+                        <td class='bottom'></td>
+                        <td class='left'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom left'></td>
+                        <td class='right top'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom'></td>
+                        <td></td>
+                        <td class='left top right'></td>
+                        <td></td>
+                        <td class='right left'></td>
+                    </tr>
+                    <tr>
+                        <td class='left right'></td>
+                        <td></td>
+                        <td></td>
+                        <td class='left bottom'></td>
+                        <td class='bottom'></td>
+                        <td></td>
+                        <td class='left right'></td>
+                        <td></td>
+                        <td class='right'></td>
+                        <td></td>
+                        <td class='left'></td>
+                        <td></td>
+                        <td class='right left'></td>
+                    </tr>
+                    <tr>
+                        <td class='left bottom'></td>
+                        <td class='bottom right top'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom left right'></td>
+                        <td class='bottom right'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom'></td>
+                        <td class='bottom left'></td>
+                        <td class='bottom top'></td>
+                        <td class='right bottom'></td>
+                    </tr>
+                </table>
+                <p>Use the four buttons to navigate to the cell that corresponds to the current week. If a wall is hit, a strike will be incurred, and the module will reset.</p>
+                <p>
+                    After the first move, not moving for 5 seconds will submit the current position.
+                    If that is incorrect, a strike will be incurred, and the module will reset with a new starting position. The goal, however, will still be the same.
+                </p>
+                <p>
+                    Use the date finder below to find the current week. <b>Click a cell in the maze to highlight that snowflake in the table below.</b>
+                </p>
+                <div class="hstack">
+                    <div class="weekdisplay">
+                        <p>Bomb started on:<br><span class="datetext"></span></p>
+                        <div class="weekholder hstack just-left">
+                            <button class="weektext minus">-</button>
+                            <button class="weektext plus">+</button>
+                        </div>
+                        <p>
+                            Features are bumps, thorns, or other structures (branching or not) that come off of the straight line of the spoke.<br>
+                            <b>ns</b> = negative space
+                        </p>
+                    </div>
+                    <div class="weekspacer1"></div>
+                    <svg class="features" viewBox="-3.3 -1.5 20 26" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <marker id="g" refX="0" refY="0" orient="auto" overflow="visible">
+                                <path d="m-2 0-2 2 7-2-7-2Z" fill="#e10000" fill-rule="evenodd" stroke="context-stroke" stroke-width=".4pt"/>
+                            </marker>
+                        </defs>
+                        <text class="black" x="1" y="-4">5 features</text>
+                        <text class="black" x="1" y="-17">6 features</text>
+                        <g clip-path="url(#f)" transform="matrix(.35278 0 0 .35278 -195.92 -212.68)">
+                            <path class="ondark" d="M587.31 633.43c.06-.36.06-.69-.1-1-.13-.3-.3-.54-.5-.69-.5-.2-.47-.36.1-.52.2 0 .38-.15.56-.46.17-.3.25-.69.15-1.1-.05-.4-.1-.95-.1-1.59 0-.61-.03-1.18-.1-1.69 0-.4-.03-.72-.1-.92-.06-.2-.16-.23-.32-.03-.2.36-.69.54-1.48.54-.77-.13-.82-.33-.1-.64.28-.13.58-.46.9-.97.3-.51.53-1.1.68-1.74.13-.62.26-1.34.36-2.11.1-.77.16-1.38.16-1.9 0-1.1-.26-1.4-.82-.84-.62.62-1.23.9-1.8.74-.36 0-.54-.02-.54-.1 0-.13.18-.26.54-.41a4.57 4.57 0 0 0 1.67-1.9c.2-.36.38-.84.54-1.46.12-.61.2-1.23.2-1.8 0-1.04-.59-1.4-1.8-1.04a8.23 8.23 0 0 0-2.4 1.15c-.46.26-.52.18-.1-.3.35-.62 1.07-1.19 2.2-1.7.49-.2.92-.51 1.31-.98.38-.46.64-.9.8-1.3.12-.41.22-.93.3-1.54.08-.59.1-1.1 0-1.54-.13-.97-.59-1.08-1.36-.3-.33.33-.72.74-1.15 1.25-.41.49-.8.92-1.16 1.28-.33.33-.54.51-.64.46-.05-.02 0-.28.23-.8.21-.4.57-.99 1.13-1.74a21.7 21.7 0 0 1 1.7-1.92 3.06 3.06 0 0 1 2.2-.95c.82 0 1.54.31 2.1.95.56.54 1.13 1.18 1.74 1.92.6.72 1 1.31 1.2 1.75.21.48.3.74.21.8-.05.02-.28-.1-.64-.47-.33-.36-.74-.77-1.2-1.28-.44-.49-.85-.9-1.2-1.26-.78-.77-1.21-.66-1.37.31 0 .41 0 .92.06 1.54.02.6.1 1.1.25 1.54a4.56 4.56 0 0 0 2.1 2.28c.5.2.95.46 1.41.8.47.3.75.58.9.9.2.32.16.45-.2.3-.13-.13-.44-.3-.95-.56a7.47 7.47 0 0 0-1.46-.6 1.8 1.8 0 0 0-1.29.06c-.33.15-.5.48-.5 1 0 .56.07 1.15.25 1.8.18.6.33 1.1.49 1.45.2.34.46.7.82 1.1.35.36.66.65.94.8.29.13.44.26.44.4 0 .06-.13.11-.41.11-.7.13-1.28-.1-1.8-.74-.48-.41-.79-.13-.94.85 0 .48.05 1.12.2 1.89.16.77.28 1.46.44 2.1a6 6 0 0 0 .66 1.75c.31.5.62.84.9 1 .28.12.41.25.36.36-.02.1-.2.18-.56.25-.26 0-.54-.05-.85-.15-.26-.1-.46-.23-.62-.39-.15-.2-.25-.2-.33.03-.05.2-.1.51-.1.92 0 .49 0 1.05-.05 1.7a11 11 0 0 1-.16 1.56c0 .4.06.8.21 1.12.13.31.33.46.64.46.46.13.51.31.1.52-.2.13-.38.36-.54.7-.12.3-.2.63-.2 1m-2.44 38.9c.06-.15.1-.49.1-1.05 0-.57-.02-1.13-.1-1.7 0-.56-.04-1.02-.2-1.4-.13-.39-.31-.6-.54-.6-.46 0-.82.19-1.05.55-.05.12-.13.15-.2.05-.06-.1-.08-.33 0-.7 0-.76.3-1.2.94-1.35.2 0 .36-.18.52-.57.15-.38.23-.87.23-1.43.05-.56-.03-1.03-.34-1.41-.25-.38-.56-.6-.92-.6s-.74.09-1.18.24c-.4.13-.66.3-.82.51a3.5 3.5 0 0 0-.64 1.26c-.13.28-.2.05-.2-.74-.13-.77 0-1.39.4-1.88.37-.48.93-.74 1.7-.74a1.9 1.9 0 0 0 1.36-.95c.28-.61.05-1.18-.75-1.66a1.74 1.74 0 0 0-1.15-.44c-.41 0-.74.13-1.05.44-.2.2-.5.4-.9.64-.36.2-.7.33-.97.4-.7.14-1.36-.1-2-.74-.62-.61-.57-.9.2-.74a4.7 4.7 0 0 0 2 0 3.42 3.42 0 0 0 1.57-1.36 4.89 4.89 0 0 1 2.2-1.46c.85-.41 1.1-.41.74.1-.48.41-.51.85 0 1.36.36.36.67.23.95-.4.13-.3.2-.68.26-1.16.02-.5.05-.98.05-1.49 0-1.03-.28-1.62-.85-1.77a10.16 10.16 0 0 0-2.71.92 7.75 7.75 0 0 1-3.36.95c-.9 0-1.6.39-2.1 1.16-.2.36-.36.48-.5.38-.1-.1-.07-.36.09-.8.25-.97.79-1.53 1.56-1.69.33-.12.8-.23 1.36-.3.56-.06 1.08-.13 1.59-.2l1.4-.52c.52-.2.93-.44 1.21-.64a3.18 3.18 0 0 0 1.46-2c.16-.34.26-.7.34-1.08.05-.38.1-.77.1-1.13 0-.56-.31-.36-.95.64-.25.41-.59.85-.95 1.31-.33.46-.61.82-.84 1.1a4.62 4.62 0 0 1-2.21 1.47c-.4.12-.87.25-1.41.38l-1.3.26c-.36 0-.83 0-1.44-.06a5.46 5.46 0 0 1-1.51-.25 4.1 4.1 0 0 1-1.05-.44c-.2-.13-.26-.25-.1-.4.25-.29 0-.85-.85-1.7-.34-.33-.52-.54-.47-.62.03-.05.26.03.7.31.4.21.95.46 1.66.8.7.3 1.36.51 2 .66.62.21 1.29.31 1.95.23a2.88 2.88 0 0 0 1.52-.53 4.68 4.68 0 0 0 1.69-2.62c.13-.4.13-.84-.03-1.3-.13-.47-.36-.75-.72-.9-.35-.2-.8-.34-1.35-.34a4.4 4.4 0 0 0-1.5.21c-.81.2-.84.02 0-.62.37-.35.8-.59 1.37-.74.56-.13 1-.15 1.36 0 .35.13.69.31 1.05.54.36.2.64.36.87.51.46.49.92.36 1.36-.4.2-.37.25-.7.15-1-.1-.32-.33-.55-.7-.7-.76-.41-1.43-.57-2-.41-.2 0-.02-.18.55-.54.82-.33 1.48-.46 2-.3.12.12.3.25.5.38.21.1.4.2.55.36.26.12.38-.18.3-.95-.12-.77.03-1.44.54-2 .41-.49.85-.51 1.36 0 .46.62.62 1.28.41 2-.13.77-.05 1.1.3.95.16-.13.34-.26.6-.36.23-.1.4-.23.56-.39.41-.12 1.05-.05 1.9.31.36.2.59.36.7.44.1.05.04.1-.16.1a1.67 1.67 0 0 0-.82 0c-.36.05-.72.2-1.08.41-.82.36-1.05.92-.64 1.7.49.76.97.91 1.49.4.2-.13.46-.3.82-.51.36-.2.69-.39 1.05-.54.36-.13.8-.15 1.3 0 .52.13 1 .39 1.44.74.82.62.82.85-.1.62-.41-.13-.9-.2-1.46-.2-.49 0-.93.1-1.29.33-.33.13-.58.43-.79.9-.15.43-.18.86-.03 1.3.26 1.1.82 1.97 1.67 2.62.36.25.85.43 1.51.53.67.06 1.31 0 1.95-.23.62-.12 1.31-.36 2.05-.66.72-.3 1.31-.59 1.75-.8.33-.25.5-.38.56-.3.03.05-.1.25-.46.61-.82.82-1.1 1.38-.74 1.7.28.25-.13.53-1.26.84-.4.13-.92.2-1.54.25-.56.03-1.05.06-1.4.06l-1.32-.26c-.5-.1-1-.23-1.4-.38a5.93 5.93 0 0 1-1.19-.62 3.8 3.8 0 0 1-.92-.85l-.85-1.1c-.33-.46-.63-.9-.94-1.3-.62-.83-.95-1.06-.95-.65 0 .36 0 .72.05 1.13a4.83 4.83 0 0 0 1.74 3.07c.26.21.67.42 1.2.65.52.2 1.03.36 1.55.51l1.56.2c.56.06 1 .16 1.36.31.77.16 1.28.72 1.59 1.7.13.82 0 .97-.44.4-.2-.33-.54-.6-1-.81-.43-.2-.84-.34-1.2-.34a8.82 8.82 0 0 1-3.36-.92c-.56-.28-1.1-.51-1.64-.69a4.81 4.81 0 0 0-1.08-.26c-.56.13-.84.72-.84 1.77s.12 1.92.4 2.64c.16.62.47.77.95.4.42-.55.42-.99-.1-1.35-.12-.2-.15-.33 0-.38.13-.03.39.05.75.28.97.33 1.69.82 2.17 1.46a4.85 4.85 0 0 0 1.6 1.36c.61.13 1.27.15 2 0 .68-.05.76.18.2.74-.62.62-1.26.9-1.87.75-.36-.05-.72-.21-1.08-.41-.33-.21-.64-.44-.92-.64-.62-.62-1.34-.64-2.1 0-.83.46-1.13 1.02-.85 1.66.26.49.74.8 1.46.95.7 0 1.23.23 1.6.74.4.54.58 1.16.5 1.88-.12.69-.23.94-.3.74 0-.26-.2-.7-.65-1.26-.33-.48-1-.74-1.97-.74-.36 0-.66.18-.92.59-.23.36-.36.85-.36 1.4 0 .57.05 1.03.2 1.44.16.36.36.57.64.57.5.13.8.59.95 1.36 0 .76-.1 1-.33.64-.2-.36-.54-.54-1.02-.54-.21 0-.36.18-.5.59-.1.36-.17.84-.25 1.4v1.7c0 .54.03.9.1 1.05"/>
+                            <path d="m554.9 610.67 24.89-3.76" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.8 615.27 26.3 2.63" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.63 617.46 26.64 7.19" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m555.05 612.82 25.2-.5" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.51 620.45 28.13 10.17" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.98 642.59 25-.67" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.89 647.19 20.09 5.48" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.8 649.13 20.92 7.93" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.82 651.25 24.74 10.61" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m555 644.73 23.68 1.8" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                            <path d="m554.6 653.5 27.72 13.26" fill="none" stroke="#e10000" stroke-width=".79" marker-end="url(#g)"/>
+                        </g>
+                    </svg>
+                    <div class="weekspacer2"></div>
+                    <svg class="axes" viewBox="0 0 118.21 136.5" xmlns="http://www.w3.org/2000/svg" font-size="7">
+                        <defs>
+                            <marker id="y" refX="0" refY="0" orient="auto" overflow="visible">
+                                <path class="black" d="m3.45 0-5.18 3v-6Z" fill="#000" fill-rule="evenodd" stroke="context-stroke" stroke-width=".4pt"/>
+                            </marker>
+                            <marker id="z" refX="0" refY="0" orient="auto" overflow="visible">
+                                <path d="m0 0-3 3 10.5-3-10.5-3Z" fill="#F00" fill-rule="evenodd" stroke="context-stroke" stroke-width=".4pt"/>
+                            </marker>
+                        </defs>
+                        <text fill="#F00" x="18" y="12">main axes</text>
+                        <text fill="#00F" x="68" y="12">full length</text>
+                        <text class="black" x="20" y="30">off axes</text>
+                        <text fill="#00F" x="68" y="30">half length</text>
+                        <g fill="none" stroke-width="1.7">
+                            <path class="black" d="m59.12 68.25 17.6-30.48" stroke="#000" marker-end="url(#y)"/>
+                            <path class="black" d="m59.12 68.25 17.6 30.48" stroke="#000" marker-end="url(#y)"/>
+                            <path class="black" d="m59.12 68.25-17.6 30.48" stroke="#000" marker-end="url(#y)"/>
+                            <path class="black" d="m59.12 68.25-17.6-30.48" stroke="#000" marker-end="url(#y)"/>
+                            <path class="black" d="M59.12 68.25h35.2" stroke="#000" marker-end="url(#y)"/>
+                            <path class="black" d="M59.12 68.25h-35.2" stroke="#000" marker-end="url(#y)"/>
+                            <path d="m59.12 68.25 45.5-26.28" stroke="red" marker-end="url(#z)"/>
+                            <path d="m59.12 68.25 45.5 26.28" stroke="red" marker-end="url(#z)"/>
+                            <path d="m59.12 68.25-45.5 26.28" stroke="red" marker-end="url(#z)"/>
+                            <path d="m59.12 68.25-45.5-26.28" stroke="red" marker-end="url(#z)"/>
+                            <path d="m59.12 68.25v52.56" stroke="red" marker-end="url(#z)"/>
+                            <path d="m59.12 68.25v-52.56" stroke="red" marker-end="url(#z)"/>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snowflakes</span>
+            </div>
+            <div class="page-content">
+                <h2>Descriptions</h2>
+                <table class='descriptions'>
+                    <tr>
+                        <td class="sf1">A</td><td>6 spokes/no spokes. <b>ns</b> teardrop, <b>ns</b> fish, umbrella tip.</td>
+                        <td class="sf3">C</td><td>6 spokes. Outward umbrella, link to adjacent spokes, <b>ns</b> muffin top, short antennae, handlebars, tip is a point.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf6">F</td><td>6 spokes. On the main axis: <b>ns</b> banana on each side, <b>ns</b> oblong oval on each, antlers looping in lowercase b shape, tip is a point.</td>
+                        <td class="sf7">G</td><td>6 spokes. <b>ns</b> heart and diamond in main axis. Lobster claws. Tip splits into a claw.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf8">H</td><td>6 spokes. Piñata center. <b>ns</b> dart. Thorn. Pointy umbrella tip.</td>
+                        <td class="sf11">K</td><td>6 spokes. Outward mushroom, thorn, outward mushroom, thorn, pointy tip. The off axis is a <b>ns</b> baby.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf14">N</td><td>6 spokes. Large solid center. On off-axis, <b>ns</b> arrowhead, followed by <b>ns</b> spy plane/sharp boomerang.</td>
+                        <td class="sf16">P</td><td>6 spokes. Off-axis has <b>ns</b> V. Main axis tip is a tiny squeeze bottle.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf17">Q</td><td>6 spokes. Tip is a bell curve with a teardrop falling away from center.</td>
+                        <td class="sf21">U</td><td>6 spokes. Main axis tip is a large oval with <b>ns</b> C inside. Center is a revolver chamber.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf30">d</td><td>6 spokes. <b>ns</b> Closed flowers/acorns pointing towards center on off-axis.</td>
+                        <td class="sf31">e</td><td>6 spokes. <b>ns</b> small arrowhead pointing towards center on off-axis.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf34">h</td><td>6 spokes. Tip of main axis is egg surrounded by pincers. Many hooks.</td>
+                        <td class="sf40">n</td><td>6 spokes. <b>ns</b> egg inside each main axis. <b>ns</b> W near tip of main axis. 2 spirals between the tips.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf49">w</td><td>6 spokes/12 spokes. Huge solid center. Off-axis is capital T.</td>
+                        <td class="sf4">D</td><td>6 spokes. The off-axes are solid, main axis are negative.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snowflakes</span>
+            </div>
+            <div class="page-content">
+                <table class='descriptions'>
+                    <tr>
+                        <td class="sf12">L</td><td>6 spokes connected near the top. <b>ns</b> diamond near tip.</td>
+                        <td class="sf13">M</td><td>6 spokes. <b>ns</b> golf tee in main axis. <b>ns</b> big mushroom in off axis. Split tip.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf18">R</td><td>6 spokes connected near the top with whale tails halfway up and crab claws near the center.</td>
+                        <td class="sf19">S</td><td class="small">6 spokes connected near the top. Around the solid center are 12 <b>ns</b> corn kernels. Around that are 6 <b>ns</b> ovals on the off-axes.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf22">V</td><td class="small">6 spokes connected near the top. Main axes have 5 features and the tip is the head of a nail or bolt. 3rd feature from center is branching.</td>
+                        <td class="sf23">W</td><td>6 spokes connected near the top. Off axes have <b>ns</b> dog bones near the tip and <b>ns</b> hearts near the center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf28">b</td><td>6 spokes. Mostly solid hexagon. Main axes have 6 features and tiny light bulb tips.</td>
+                        <td class="sf29">c</td><td>6 spokes. Mostly solid hexagon. Main axes have a hollow tip and 4 features. 6 round <b>ns</b>es around the center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf32">f</td><td class="small">6 spokes. Mostly solid hexagon. Off axes have a person sitting and a smaller person crouching closer to the center. </td>
+                        <td class="sf33">g</td><td>6 spokes connected near the top. Mostly solid hexagon. Main axes have 1 thorn and 1 <b>ns</b> oval coming from each side.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf45">s</td><td class="small">No spokes, connected near the top. Mostly solid hexagon. Large colid center surrounded by 6 <b>ns</b> rounded hearts.</td>
+                        <td class="sf10">J</td><td>No spokes. Tip of main axis is bull skull. Center is dartboard/spider web.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf25">Y</td><td class="small">No spokes. Large solid center. Tiny perfect circles on main axes near the center. Tiny teardrops on off axes between the tips. Many <b>ns</b> shapes.</td>
+                        <td class="sf37">k</td><td>No spokes. <b>ns</b> guitar picks near the center. <b>ns</b> eggs in the tips. Sharp needles pointing towards the center. Many <b>ns</b> shapes.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf50">x</td><td>No spokes. Perfect ninja star/asterisk in the center. <b>ns</b> mountains on the main axes near the top.</td>
+                        <td class="sf15">O</td><td>6 spokes that don't touch. Main axes have 7 curvy features. 2 large hooks near the center of each spoke.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf26">Z</td><td>6 spokes that don't touch. Main axes have 6 sharp spikey features.</td>
+                        <td class="sf2">B</td><td>6 spokes that don't touch. Main axes have a circular <b>ns</b> and 5 features. Off axes have <b>ns</b> ovals near the center.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snowflakes</span>
+            </div>
+            <div class="page-content">
+                <table class='descriptions'>
+                    <tr>
+                        <td class="sf5">E</td><td>6 spokes that don't touch. Main axes have 4 features and a small rounded tip. Bottommost feature is branching.</td>
+                        <td class="sf9">I</td><td>6 spokes that don't touch. Tips almost touch to form a perfect circle. Main axes have large <b>ns</b>.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf20">T</td><td>6 spokes that don't touch. Main axes have 3 features that are nested umbrellas.</td>
+                        <td class="sf24">X</td><td>6 spokes that don't touch. Main axes have 6 features. Tip is tiny rounded point.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf27">a</td><td>6 spokes that don't touch. Very large number of sharp features. Main axes have 3 large branches.</td>
+                        <td class="sf51">y</td><td>6 spokes that don't touch. Tiny 2-tine forks on off axes. Main axes have 4 features.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf39">m</td><td>12 spokes. <b>ns</b> bells in main axes. <b>ns</b> V open toward the center near the center of off axes.</td>
+                        <td class="sf41">o</td><td>12 spokes. Off axes are pickaxes. Large umbrella arc at the tip curving towards the center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf44">r</td><td>12 spokes. Off axes have 4 round <b>ns</b>es near the tip and <b>ns</b> Vs near the center. Main axes have bottle openers near the tip.</td>
+                        <td class="sf42">p</td><td>12 spokes, perfect arrows on main axes.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf46">t</td><td>12 spokes. The tines at the tip of all 12 spokes point away from center. 3 tines on on main axes, 4 tines at tip of off axes.</td>
+                        <td class="sf47">u</td><td>12 spokes. Ship’s wheel near the center. Main axes don’t connect directly to the center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf35">i</td><td>12 spokes that don't touch. Off axes have a <b>ns</b> teardrop.</td>
+                        <td class="sf36">j</td><td>12 spokes that don't touch. Main axes have a <b>ns</b> bean near the center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf38">l</td><td>12 spokes that don't touch. Main axes have 3 features. Off axes have 1 feature.</td>
+                        <td class="sf43">q</td><td>12 spokes that don't touch. Off axes are half length mushrooms. Large solid center.</td>
+                    </tr>
+                    <tr>
+                        <td class="sf48">v</td><td>12 spokes that don't touch. Main axes have 4 features. Off axes have 5 features.</td>
+                        <td class="sf52">z</td><td>12 spokes that don't touch. Off axes are split apart at the tip and have 4 features. Main axes have 5 features.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>
