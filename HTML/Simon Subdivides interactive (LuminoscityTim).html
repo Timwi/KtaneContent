@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Simon Subdivides — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        let gridholder = $(".gridholder");
+        let grid = $("#the-grid");
+        const DIVISIONS = 4;
+        const DATA_COORDS = "diCoords";
+        const SZ_I = 0;
+        const X_I = 1;
+        const Y_I = 2;
+        const SCL_I = 3;
+        // const CX_I = 4;
+        // const CY_I = 5;
+        const MAX_SIZE = 3;
+        const SVG_CENTER = 56;
+        const SVG_SIZE = 112;
+        const RADIUS = 50;
+        const DIV_FACTOR = 2.25;
+        const SPREAD_FACTOR = 1.2;
+        const GRID_SIZE = 580;
+        let selected = null;
+        let transforms = {};
+        let squareID = 0;
+        let subsquares = [];
+        let buttonLoop = Array(4);
+        let loopI = 0;
+        let saveStates = [];
+        let currentState = 0;
+        let originalTran = {};
+
+        let svg0 = MakeSvgTag(SVG_SIZE,SVG_SIZE,0,0, {class:"grid"}).appendTo(grid);
+        let diamond0 = RegularPolygon(RADIUS, SVG_CENTER, SVG_CENTER, 4, 0, {class:"square blue size1"});
+        let di0 = $(diamond0);
+        let di0ID = assignID(svg0);
+        transforms[di0ID] = [0, GRID_SIZE / 2, GRID_SIZE / 2, GRID_SIZE - 10];
+        scaleAndPos(svg0, GRID_SIZE - 10, GRID_SIZE / 2, GRID_SIZE / 2);
+        attachClick(di0);
+        selected = di0;
+        updateSelection();
+        subsquares.push(svg0);
+        svg0.append(diamond0);
+        setTimeout(() => {
+            divide(di0);
+            subsquares.forEach((item, i) => {
+                item.addClass("original")
+                let tran = Array(4);
+                let id = item.attr("id");
+                Object.assign(tran, transforms[id]);
+                originalTran[id] = tran;
+            });
+        }, 100);
+
+        let tools = $(".tools");
+        $("<button>").text("Divide").click(function(event) {
+            if (selected) {
+                divide(selected);
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }).appendTo(tools);
+
+        const colors = ["red", "blue", "violet", "green"];
+        const sizes = ["size0", "size1", "size2", "size3"];
+        const colorLet = ["R", "B", "V", "G"];
+        colors.forEach((col, i) => {
+            $("<button>").addClass(`color ${colors[i]}`).text(colorLet[i]).click(function(event) {
+                if (selected) {
+                    removeColorClass(selected);
+                    selected.addClass(colors[i]);
+                    nextInLoop();
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }).appendTo(tools);
+        });
+
+        $(document).click(function() {
+            selectNone();
+        });
+
+        function nextInLoop() {
+            if (selectedIsInLoop()) {
+                loopI = (loopI + 1) % DIVISIONS;
+                selected = buttonLoop[loopI];
+                updateSelection();
+            }
+        }
+
+        function scaleAndPos(svg, w, x, y) {
+            let r = w / 2;
+            svg.css("left", (x - r) + "px");
+            svg.css("top", (y - r) + "px");
+            svg.css("width", w + "px");
+        }
+
+        function assignID(elem) {
+            let ids = `square${squareID}`;
+            let idp = `polygon${squareID}`;
+            elem.attr("id", ids);
+            elem.find("polygon").attr("id", idp);
+            squareID += 1;
+            return ids;
+        }
+
+        function selectedIsInLoop() {
+            if (selected)
+                for (let i = 0; i < buttonLoop.length; i++) {
+                    if (buttonLoop[i].attr("id") == selected.attr("id"))
+                        return true;
+                }
+            return false;
+        }
+
+        function selectNone() {
+            $(".square.selected").removeClass("selected");
+            selected = null;
+        }
+
+        function updateSelection() {
+            $(".square.selected").removeClass("selected");
+            if (selected) {
+                selected.addClass("selected");
+            }
+        }
+
+        function attachClick(child) {
+            child.click(function(event) {
+                selected = child;
+                updateSelection();
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        }
+
+        function divide(child) {
+            let parent = child.parent();
+            let idp = parent.attr("id");
+            let tran = transforms[idp];
+            let size = tran[SZ_I] + 1;
+            if (size <= MAX_SIZE) {
+                let xy = [ [0,-1],[1,0],[0,1],[-1,0] ];
+                let scale = tran[SCL_I] / DIV_FACTOR;
+                let which = hasWhichColorClass(child);
+                for (let i = 0; i < DIVISIONS; i++) {
+                    let dx = xy[i][0] * scale * SPREAD_FACTOR / DIV_FACTOR;
+                    let dy = xy[i][1] * scale * SPREAD_FACTOR / DIV_FACTOR;
+                    if (i == 0) {
+                        buttonLoop[i] = child;
+                        removeSizeClass(child);
+                        child.addClass(sizes[size]);
+                        transforms[idp] = [size, tran[X_I] + dx, tran[Y_I] + dy, scale];
+                        setTimeout(() => {
+                            scaleAndPos(parent, scale, tran[X_I] + dx, tran[Y_I] + dy);
+                        }, 50);
+                    }
+                    else {
+                        let svg = MakeSvgTag(SVG_SIZE,SVG_SIZE,0,0, {class:"grid"}).appendTo(grid);
+                        let diamond = RegularPolygon(RADIUS, SVG_CENTER, SVG_CENTER, 4, 0, {class:`square ${colors[which]} size${size}`});
+                        let di = $(diamond);
+                        buttonLoop[i] = di;
+                        scaleAndPos(svg, tran[SCL_I], tran[X_I], tran[Y_I]);
+                        subsquares.push(svg);
+                        svg.append(diamond);
+                        let id = assignID(svg);
+                        attachClick(di);
+                        transforms[id] = [size, tran[X_I] + dx, tran[Y_I] + dy, scale];
+                        setTimeout(() => {
+                            scaleAndPos(svg, scale, tran[X_I] + dx, tran[Y_I] + dy);
+                        }, 50);
+                    }
+                }
+                loopI = 0;
+            }
+        }
+
+        function removeColorClass(elem) {
+            colors.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+        function removeSizeClass(elem) {
+            sizes.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichColorClass(elem) {
+            for (let i = 0; i < colors.length; i++) {
+                if (elem.hasClass(colors[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function resetGrid() {
+            $("#the-grid svg:not(.original)").addClass("gone");
+            $("#the-grid svg.original").each(function(i, e) {
+                let elem = $(e);
+                let poly = elem.find("polygon");
+                let id = elem.attr("id");
+                let tran = originalTran[id];
+                Object.assign(transforms[id], tran);
+                scaleAndPos(elem, tran[SCL_I], tran[X_I], tran[Y_I]);
+                removeColorClass(poly);
+                poly.addClass("blue");
+                removeSizeClass(poly);
+                poly.addClass(sizes[1]);
+                buttonLoop[i] = poly;
+                loopI = 0;
+                selected = di0;
+                updateSelection();
+            });
+        }
+
+        let b1 = $("<button>").text("Reset Grid").addClass("reset-grid").click(function(event) {
+            resetGrid();
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        let b2 = $("<button>").text("Reset Saves").addClass("reset-saves").click(function(event) {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            $("#the-grid svg.gone").remove();
+            currentState = 0;
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        let b3 = $("<button>").text("Reset All").addClass("reset-all").click(function(event) {
+            resetGrid();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            $("#the-grid svg.gone").remove();
+            currentState = 0;
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function(event) {
+            removeFutureSaves();
+
+            let saveState = {};
+            let squareState = [];
+            $("#the-grid svg:not(.gone)").each(function(i, e) {
+                let elem = $(e);
+                let state = {};
+                let poly = elem.find("polygon");
+                state["color"] = colors[hasWhichColorClass(poly)];
+                let id = elem.attr("id");
+                state["ids"] = id;
+                state["tf"] = Array(4);
+                Object.assign(state["tf"], transforms[id]);
+                squareState.push(state);
+            });
+            saveState["sq"] = squareState;
+            saveState["selected"] = selected;
+            saveState["buttonLoop"] = Array(4);
+            Object.assign(saveState["buttonLoop"], buttonLoop);
+            saveState["loopI"] = loopI;
+
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function(event) {
+                $("#the-grid svg:not(.original)").addClass("gone");
+                saveState["sq"].forEach((st, i) => {
+                    let id = st["ids"];
+                    let tf = st["tf"];
+                    Object.assign(transforms[id], tf);
+                    let svg = $(`#${id}`);
+                    svg.removeClass("gone");
+                    let poly = svg.find("polygon");
+                    removeColorClass(poly);
+                    poly.addClass(st["color"]);
+                    removeSizeClass(poly);
+                    poly.addClass(sizes[ tf[SZ_I] ]);
+                    scaleAndPos(svg, tf[SCL_I], tf[X_I], tf[Y_I]);
+                });
+
+                selected = saveState["selected"];
+                updateSelection();
+                Object.assign(buttonLoop, saveState["buttonLoop"]);
+                loopI = saveState["loopI"];
+
+                currentState = stateNumber;
+                event.preventDefault();
+                event.stopPropagation();
+            }).addClass("flash").appendTo(`.saves`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hstack table {
+            width: 27%;
+            margin: 0.7em;
+            font-size: 9.5px;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .gridholder {
+            width: 580px;
+            height: 580px;
+            position: relative;
+        }
+        #the-grid {
+            width: 580px;
+            height: 580px;
+            position: relative;
+        }
+        #the-grid svg {
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+            transition: width 0.8s, height 0.8s, left 0.8s, top 0.8s;
+        }
+        #the-grid svg.gone {
+            display: none;
+        }
+
+        svg polygon.square {
+            pointer-events: all;
+            cursor: pointer;
+            stroke: #000;
+            stroke-width: 0;
+            transition: fill 0.5s;
+        }
+        svg polygon.square.selected {
+            stroke-dasharray: 15,6;
+        }
+        svg polygon.square.size0.selected { stroke-width: 2; }
+        svg polygon.square.size1.selected { stroke-width: 4; }
+        svg polygon.square.size2.selected { stroke-width: 8; }
+        svg polygon.square.size3.selected { stroke-width: 12; }
+
+        .dark svg polygon.square { stroke: #FFF; }
+        svg polygon.red { fill: #FF000099; }
+        svg polygon.blue { fill: #2222FF99; }
+        svg polygon.violet { fill: #BB00FF99; }
+        svg polygon.green { fill: #00EE0099; }
+
+        button.color {
+            padding: 5px 10px;
+            font-size: 27px;
+        }
+        button.red { background-color: #FF6666; }
+        button.blue { background-color: #5555FF; }
+        button.violet { background-color: #CC66FF; }
+        button.green { background-color: #66FF66; }
+
+        .dark table, table { border: none; }
+        td { text-align: center; }
+
+        button {
+            font-family: Special Elite;
+            font-size: 20px;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 4px;
+            transition: color 1s, background-color 1s;
+            margin: 1px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.save, .saves button {
+            padding: 5px 8px 2px 8px;
+        }
+        .gridholder button {
+            position: absolute;
+        }
+        .gridholder button.divide {
+            top: 20px;
+            right: 20px;
+        }
+        .gridholder button.reset-all {
+            top: 20px;
+            left: 20px;
+        }
+        .gridholder button.reset-grid {
+            bottom: 20px;
+            left: 20px;
+        }
+        .gridholder button.reset-saves {
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Subdivides</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Subdivides.svg" class="diagram">
+                <h2>On the Subject of Simon Subdivides</h2>
+                <p class="flavour-text">This is like one of those toys you played with as kid where you have one of those toys you played with as a kid, except this one is one of those toys you played with as a kid purchased like one those toys you played with as a kid.</p>
+                <p>Initially, this module consists of four cells, each distinctly coloured either red, green, blue, or violet. This initial configuration of four cells will be referred to as Generation One (G1).</p>
+                <p>These cells will flash in sequence with a long pause between repeats. This sequence of colours is to be used to construct a sequence of inputs:</p>
+                <ul>
+                    <li>
+                        If the cells are in their initial state, the initial colour is determined by the following:
+                        <ul>
+                            <li>The initial colour is the first of the letters B, G, R, or V to occur in the serial number.</li>
+                            <li>If none of the four letters occur in the serial number, the initial colour is the colour of the top cell.</li>
+                        </ul>
+                        Otherwise, the initial colour changes every two subdivisions:
+                        <ul>
+                            <li>Consider the G1 cell with the current initial colour.</li>
+                            <li>The new initial colour is the colour of the G1 cell at a 90&deg; clockwise rotation to that cell.</li>
+                        </ul>
+                        <li>
+                            Find the correct grid to use:
+                            <ul>
+                                <li>Take the last digit of the serial number.</li>
+                                <li>Add the number of subdivisions that have occurred on this module.</li>
+                                <li>If the sum exceeds 4, subtract 5 until it drops below 5.</li>
+                                <li>The correct grid is indicated by this number.</li>
+                            </ul>
+                        <li>
+                            Construct the input sequence using the grid:
+                            <ul>
+                                <li>The first direction in the input sequence is given by the row corresponding to the initial colour and the column corresponding to the colour of the first flashing cell.</li>
+                                <li>All other directions are given by the row corresponding to the previous flashing colour and the column corresponding to the current flashing colour.</li>
+                                <li>If the flashing cell does not belong to G1, multiple directions are added given by the row corresponding to the initial colour/colour of the previous flashing cell and the columns corresponding to the colours of the undivided cells of each of its generations, starting with G1.</li>
+                            </ul>
+                        </li>
+                    </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Subdivides</span>
+            </div>
+            <div class="page-content">
+                <h2>Grids</h2>
+                <div class="hstack">
+                    <table>
+                        <tr><th class="empty" colspan = "5">Grid 0</th></tr>
+                        <tr><th class="empty"></th><th>Red</th><th>Blue</th><th>Violet</th><th>Green</th></tr>
+                        <tr><th>Red</th><td>Down</td><td>Right</td><td>Left</td><td>Up</td></tr>
+                        <tr><th>Blue</th><td>Left</td><td>Up</td><td>Down</td><td>Right</td></tr>
+                        <tr><th>Violet</th><td>Right</td><td>Down</td><td>Up</td><td>Left</td></tr>
+                        <tr><th>Green</th><td>Up</td><td>Left</td><td>Right</td><td>Down</td></tr>
+                    </table>
+                    <table>
+                        <tr><th class="empty" colspan = "5">Grid 1</th></tr>
+                        <tr><th class="empty"></th><th>Red</th><th>Blue</th><th>Violet</th><th>Green</th></tr>
+                        <tr><th>Red</th><td>Up</td><td>Up</td><td>Down</td><td>Left</td></tr>
+                        <tr><th>Blue</th><td>Right</td><td>Down</td><td>Right</td><td>Left</td></tr>
+                        <tr><th>Violet</th><td>Left</td><td>Right</td><td>Down</td><td>Right</td></tr>
+                        <tr><th>Green</th><td>Left</td><td>Down</td><td>Up</td><td>Up</td></tr>
+                    </table>
+                    <table>
+                        <tr><th class="empty" colspan = "5">Grid 2</th></tr>
+                        <tr><th class="empty"></th><th>Red</th><th>Blue</th><th>Violet</th><th>Green</th></tr>
+                        <tr><th>Red</th><td>Right</td><td>Right</td><td>Right</td><td>Down</td></tr>
+                        <tr><th>Blue</th><td>Up</td><td>Up</td><td>Down</td><td>Left</td></tr>
+                        <tr><th>Violet</th><td>Right</td><td>Down</td><td>Up</td><td>Up</td></tr>
+                        <tr><th>Green</th><td>Down</td><td>Left</td><td>Left</td><td>Left</td></tr>
+                    </table>
+                    <table>
+                        <tr><th class="empty" colspan = "5">Grid 3</th></tr>
+                        <tr><th class="empty"></th><th>Red</th><th>Blue</th><th>Violet</th><th>Green</th></tr>
+                        <tr><th>Red</th><td>Left</td><td>Left</td><td>Up</td><td>Up</td></tr>
+                        <tr><th>Blue</th><td>Left</td><td>Right</td><td>Down</td><td>Up</td></tr>
+                        <tr><th>Violet</th><td>Down</td><td>Up</td><td>Left</td><td>Right</td></tr>
+                        <tr><th>Green</th><td>Down</td><td>Down</td><td>Right</td><td>Right</td></tr>
+                    </table>
+                    <table>
+                        <tr><th class="empty" colspan = "5">Grid 4</th></tr>
+                        <tr><th class="empty"></th><th>Red</th><th>Blue</th><th>Violet</th><th>Green</th></tr>
+                        <tr><th>Red</th><td>Down</td><td>Right</td><td>Down</td><td>Left</td></tr>
+                        <tr><th>Blue</th><td>Left</td><td>Up</td><td>Right</td><td>Up</td></tr>
+                        <tr><th>Violet</th><td>Up</td><td>Right</td><td>Up</td><td>Left</td></tr>
+                        <tr><th>Green</th><td>Left</td><td>Down</td><td>Right</td><td>Down</td></tr>
+                    </table>
+                </div>
+                <div class="hstack wrap">
+                    <div class="gridholder">
+                        <div id="the-grid"></div>
+                    </div>
+                    <div class="vstack tools"></div>
+                </div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">Save</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Subdivides</span>
+            </div>
+            <div class="page-content">
+                <p>For each direction in the input sequence, select the cell in that direction.<br>If that cell has subdivided, the next direction refers to the daughter cell relative to the subdivided parent cell.</p>
+                <p>If the sequence ends on a subdivided cell, wrap around to the beginning of the input sequence.</p>
+                <p>Once all of the correct inputs have been made:</p>
+                <ul>
+                    <li>If the last cell to be pressed is a G3 cell, the module will be defused.</li>
+                    <li>Otherwise the last cell to be pressed will subdivide into four cells of the next generation.</li>
+                </ul>
+                <p>If any input is incorrect, the module will immediately strike and generate a new sequence of flashing cells.</p>
+                <br>
+
+                <h3>Grid Controls</h3>
+                <ul>
+                    <li>Click a <b>diamond</b> to select it.</li>
+                    <li>Click a <b>color button</b> to change the color of a selected <b>diamond</b>.</li>
+                    <li>The selection advances automatically only if the selected <b>diamond</b> is from the most recent division.</li>
+                    <li>Click <b>Divide</b> to divide the selected <b>diamond</b>.</li>
+                    <li>Using the other buttons, you can save the current state of the grid, reset the grid, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
