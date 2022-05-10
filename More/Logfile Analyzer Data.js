@@ -690,9 +690,10 @@ let parseData = [
             {
                 regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     if (!module.TableData) {
                         module.TableData = [];
+                        module.JSONs = [];
+                        module.Stage = [];
                         module.CorrectValues = {};
                         module.CorrectValuesFull = {};
                         module.ListObject = {
@@ -716,6 +717,7 @@ let parseData = [
                             </tr>
                         </table>`)
                         };
+                        module.push({label:`<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>`});
                         module.push(module.ListObject);
                         module.SetCss = function () {
                             module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
@@ -725,6 +727,7 @@ let parseData = [
                     while (module.TableData.length <= matches[1])
                         module.TableData.push({});
                     module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+                    module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length-1]);
                     if (matches[2] === 'B') {
                         let ledColors = {
                             K: '#888',
@@ -747,6 +750,10 @@ let parseData = [
                             <td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
                         </tr>`));
                         module.SetCss();
+                        module.JSONs.push(module.Stage);
+                        module.Stage = [];
+                        console.log(JSON.stringify(module.JSONs));
+                        module[1] = {label:`<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>`};
                     }
                     return true;
                 }
@@ -754,7 +761,6 @@ let parseData = [
             {
                 regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     module.CorrectValuesFull[matches[1]] = matches[2];
                     module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
                     if (matches[1] === 'B') {
@@ -772,7 +778,6 @@ let parseData = [
             {
                 regex: /The correct submission is:|Incorrect Submission:/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     var colorList = {
                         R: '#FF0000',
                         G: '#00FF00',
@@ -2146,14 +2151,25 @@ let parseData = [
                 handler: function (matches, module) {
                     module.buttonGroup = [matches.input, []];
                     for (let i = 0; i < 25; i++) {
-                        module.buttonGroup[1]
-                            .push(readLine()
-                                .replace(
-                                    /\[Color Grid #\d+\]/,
-                                    ((i+1)+"").padStart(2, '0')+"."));
+                        let line = readLine();
+                        module.buttonGroup[1].push(line.replace(/\[Color Grid #\d+\]/,((i+1)+"").padStart(2, '0')+"."));
                     }
-                    module.push(module.buttonGroup);
+                    module.push("The buttons are:", {obj: this.parseButtons(module.buttonGroup[1]), nobullet: true});
                     return true;
+                },
+                parseButtons: buttons => {
+                    let groups = "";
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = 0; j < 5; j++) {
+                            let color = /\[(\w+)\]/.exec(buttons[j*5+i])[1];
+                            color = color === "Inactive" ? "black" : color.toLowerCase();
+                            groups += `<circle r="9" cx="${10+20*i}" cy="${10+20*j}" fill="#363636"/>`;
+                            groups += `<rect width="10" height="10" x="${5+20*i}" y="${5+20*j}" transform="rotate(45 ${5+20*i+5} ${5+20*j+5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
+                        }
+                    }
+                    const css = {width: "250", height: "auto", display: "block", margin: "5px 0 10px"};
+                    const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
+                    return svg;
                 }
             },
             {
@@ -6229,7 +6245,7 @@ let parseData = [
                     module.Solved = true;
                     module.JSON["solved"] = module.Solved;
                     const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
                     module.push(matches.input);
                     return true;
                 }
@@ -6317,7 +6333,7 @@ let parseData = [
                             restricted: module.Restricted
                         }
                         const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
                         module[module.length - 1][1] = module.Section;
                     } else {
                         if (!module.Restricted && matched.input.includes("Restricted"))
