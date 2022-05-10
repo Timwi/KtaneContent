@@ -1,21 +1,6 @@
-/// Code based on Ut.cs from github.com/Timwi
-
-/**
- * @todo doc
+/* Library for common set manipulation utilities.
+ * Code based on Ut.cs from github.com/Timwi
  */
-function ShuffleFisherYates(list)
-{
-    var i = list.length;
-    while (i > 1)
-    {
-        var index = Math.floor(Math.random() * i);
-        i--;
-        var value = list[index];
-        list[index] = list[i];
-        list[i] = value;
-    }
-    return list;
-}
 
 /**
  * Given a set of values and a function that returns true when given this set, will efficiently remove items from
@@ -65,44 +50,6 @@ function ReduceRequiredSet(items, test, breadthFirst = false)
 }
 
 /**
- * @todo doc
- */
-function MaxElement(arr, func) {
-    if (arr && arr.length > 0) {
-        let max = arr[0];
-        let mapped = arr.map(func);
-        let maxV = mapped[0];
-        for (let i = 1; i < arr.length; i++) {
-            if (mapped[i] > maxV) {
-                maxV = mapped[i];
-                max = arr[i];
-            }
-        }
-        return max;
-    }
-    return null;
-}
-
-/**
- * @todo doc
- */
-function MinElement(arr, func) {
-    if (arr && arr.length > 0) {
-        let min = arr[0];
-        let mapped = arr.map(func);
-        let minV = mapped[0];
-        for (let i = 1; i < arr.length; i++) {
-            if (mapped[i] < minV) {
-                minV = mapped[i];
-                min = arr[i];
-            }
-        }
-        return min;
-    }
-    return null;
-}
-
-/**
  * Encapsulates the state of the {@link ReduceRequiredSet} algorithm and exposes statistics about it.
  * @class
  */
@@ -111,7 +58,7 @@ class ReduceRequiredSetState
     //protected List<T> Items;
     //protected List<Range> this.Ranges;
     //protected Range ExcludedRange, IncludedRange;
-    
+
     /**
      * @constructs
      */
@@ -121,7 +68,38 @@ class ReduceRequiredSetState
         this.Ranges.push(new InclusiveRange(0, this.Items.length - 1));
     }
 
-    
+    _MaxElement(arr, func) {
+        if (arr && arr.length > 0) {
+            let max = arr[0];
+            let mapped = arr.map(func);
+            let maxV = mapped[0];
+            for (let i = 1; i < arr.length; i++) {
+                if (mapped[i] > maxV) {
+                    maxV = mapped[i];
+                    max = arr[i];
+                }
+            }
+            return max;
+        }
+        return null;
+    }
+
+    _MinElement(arr, func) {
+        if (arr && arr.length > 0) {
+            let min = arr[0];
+            let mapped = arr.map(func);
+            let minV = mapped[0];
+            for (let i = 1; i < arr.length; i++) {
+                if (mapped[i] < minV) {
+                    minV = mapped[i];
+                    min = arr[i];
+                }
+            }
+            return min;
+        }
+        return null;
+    }
+
     /**
      * Enumerates every item that is known to be in the final required set. "Definitely" doesn't mean that there
      *  exists no subset resulting in "true" without these members. Rather, it means that the algorithm will
@@ -131,8 +109,8 @@ class ReduceRequiredSetState
     /**
      * Gets the current number of partitions containing uncertain items. The more of these, the slower the
      *  algorithm will converge from here onwards.
-     */ 
-    get PartitionsCount() { return this.Ranges.length - this.Ranges.filter(r => r.Item1 == r.Item2).length; }    
+     */
+    get PartitionsCount() { return this.Ranges.length - this.Ranges.filter(r => r.Item1 == r.Item2).length; }
     /**
      * Gets the number of items in the smallest partition. This is the value that is halved upon a successful
      *  depth-first iteration.
@@ -169,7 +147,7 @@ class ReduceRequiredSetState
         let b = a.map(i => this.Items[i]);
         return b;
     }
-    
+
     /**
      * @todo doc
      */
@@ -177,11 +155,11 @@ class ReduceRequiredSetState
     /**
      * @todo doc
      */
-    get LargestRange() { return MaxElement(this.Ranges, t => t.Item2 - t.Item1); }
+    get LargestRange() { return this._MaxElement(this.Ranges, t => t.Item2 - t.Item1); }
     /**
      * @todo doc
      */
-    get SmallestRange() { return MinElement(this.Ranges.filter(r => r.Item1 != r.Item2), t => t.Item2 - t.Item1); }
+    get SmallestRange() { return this._MinElement(this.Ranges.filter(r => r.Item1 != r.Item2), t => t.Item2 - t.Item1); }
 
     /**
      * @todo doc
@@ -214,7 +192,8 @@ class ReduceRequiredSetState
 }
 
 /**
- * @todo doc
+ * Class for keeping track of a range of integers from item1 to item2
+ * @class
  */
 class InclusiveRange
 {
@@ -237,7 +216,8 @@ class InclusiveRange
     }
 
     /**
-     * @todo doc
+     * Make array of every integer in the range.
+     * @returns Array representing the range.
      */
     Enumerate()
     {
@@ -247,9 +227,10 @@ class InclusiveRange
 }
 
 /**
- * @todo doc
+ * Class for keeping track of a range of integers from a start value and count of how many integers it represents
+ * @class
  */
-class Range
+class CtRange
 {
     /**
      * @constructs
@@ -270,7 +251,8 @@ class Range
     }
 
     /**
-     * @todo doc
+     * Make array of every integer in the range.
+     * @returns Array representing the range.
      */
     Enumerate()
     {
