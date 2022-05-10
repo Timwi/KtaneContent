@@ -3267,6 +3267,28 @@ let parseData = [
         ]
     },
     {
+        displayName: "Dominosa",
+        moduleID: "DominosaModule",
+        loggingTag: "Dominosa",
+        matches: [
+            {
+                regex: /Solution:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 14; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Solution:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Dungeon",
         moduleID: "dungeon",
         loggingTag: "Dungeon",
