@@ -109,18 +109,26 @@
                 $colorPanel.removeClass("selected");
                 $color.addClass("selected");
             }
+
             function fillSegment($segment) {
                 $segment.removeClass()
                 $segment.addClass(getFillClass($(".selected")));
             }
+
             function resetAll() {
                 $segmentPanel.removeClass();
                 $segmentPanel.addClass("fill-black");
                 $colorPanel.removeClass("selected");
             }
+
+            function handleNoSelection() {
+                console.error("You didn't select any color!");
+                return ["fill-black"];
+            }
+
             const $colorPanel = $("#colorPanel").children()
                 , $segmentPanel = $("#segmentPanel").children()
-                , getFillClass = $el => (/fill-\w+/.exec($el.attr("class")) ?? ["fill-black"])[0];
+                , getFillClass = $el => (/fill-\w+/.exec($el.attr("class")) ?? handleNoSelection())[0];
 
             $colorPanel.click(e => selectStroke($(e.target)));
             $segmentPanel.click(e => fillSegment($(e.target)));
@@ -141,15 +149,12 @@
 
                 function pageButton(dir) {
                     let _ = pageCounter + dir;
-                    if (_ < 0) pageCounter = 0;
-                    else if (_ > stages.length-1) pageCounter = stages.length-1;
-                    else pageCounter = _;
+                    if (_ < 0 ||_ > stages.length-1) return;
+                    pageCounter = _;
                     resetAll();
-                    const segmentChannels = parseStages(stages);
-                    console.log(segmentChannels);
-                    const colors = getColorsFromChannels(segmentChannels);
-                    console.log(colors);
-                    fillSegments(colors[pageCounter]);
+                    const segmentChannels = parseStages(stages[pageCounter]);
+                    const segmentColors = getColorsFromChannels(segmentChannels);
+                    fillSegments(segmentColors);
                     updateVisualPageCounter();
                 }
 
@@ -163,25 +168,18 @@
                     }
                 }
 
-                function getColorsFromChannels(allChannels) {
-                    segmentsColors = [];
-                    for (const channels of allChannels) {
-                        segmentsColors.push(Array.from({length: 14}));
-                        for (let i = 0; i < 14; i++) {
-                            segmentsColors[segmentsColors.length-1][i] = j.colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
-                        }
-                    }
+                function getColorsFromChannels(channels) {
+                    segmentsColors = Array.from({length: 14});
+                    for (let i = 0; i < 14; i++)
+                        segmentsColors[i] = j.colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
                     return segmentsColors;
                 }
 
-                function parseStages(stages) {
-                    const fillings = [];
-                    for (const stage of stages) {
-                        fillings.push([[], [], []]);
-                        fillings[fillings.length-1][0] = getFills(stage[0]);
-                        fillings[fillings.length-1][1] = getFills(stage[1]);
-                        fillings[fillings.length-1][2] = getFills(stage[2]);
-                    }
+                function parseStages(stage) {
+                    const fillings = [[], [], []];
+                    fillings[0] = getFills(stage[0]); //red
+                    fillings[1] = getFills(stage[1]); //green
+                    fillings[2] = getFills(stage[2]); //blue
                     return fillings;
                 }
 
