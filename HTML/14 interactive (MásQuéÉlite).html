@@ -15,26 +15,38 @@
             font-weight: bold;
             color: white;
             font-size: 12px;
-        }       
-        
-        path { cursor: pointer }
+        }
+        path {
+            cursor: pointer;
+            marker: none;
+        }
+        text {
+            text-indent: 0;
+            text-align: start;
+            line-height: 125%;
+            text-transform: none;
+            marker: none;
+            -inkscape-font-specification: Special Elite;
+        }
+        td>img { width: 60% }
         .dark svg text { fill: #DDD }
-        
+
         #int {
             transform: scale(0.8);
             stroke: silver;
         }
         .dark #int { stroke: dimgray }
         #colorPanel { stroke-width: 2 }
-        
+
         .fill-black { fill: #000 }
         .fill-blue { fill: #00f }
-        .fill-lime { fill: #0f0 }
+        .fill-green { fill: #0f0 }
         .fill-cyan { fill: #0ff }
         .fill-red { fill: #f00}
         .fill-magenta { fill: #f0f }
         .fill-yellow { fill: #ff0 }
-        .fill-white { fill: #ddd }
+        .fill-white { fill: #fff }
+        .dark .fill-white { fill: #ddd }
 
         .selected {
             stroke: purple;
@@ -91,96 +103,97 @@
         }
     </style>
     <script>
+
         $(() => {
-            /* minified */
-            const mappings={0:[0,1,4,5,8,9,12,13],"-0":[2,3,6,7,10,11],1:[4,5,12],"-1":[0,1,2,3,6,7,8,9,10,11,13],2:[0,5,6,7,8,13],"-2":[1,2,3,4,9,10,11,12],3:[0,5,6,7,12,13],"-3":[1,2,3,4,8,9,10,11],4:[1,5,6,7,12],"-4":[0,2,3,4,8,9,10,11,13],5:[0,2,7,12,13],"-5":[1,3,4,5,6,8,9,10,11],6:[0,1,6,7,8,12,13],"-6":[2,3,4,5,9,10,11],7:[0,4,9],"-7":[1,2,3,5,6,7,8,10,11,12,13],8:[0,1,5,6,7,8,12,13],"-8":[2,3,4,9,10,11],9:[0,1,5,6,7,12,13],"-9":[2,3,4,8,9,10,11],A:[0,1,5,6,7,8,12],"-A":[2,3,4,9,10,11,13],B:[0,3,5,7,10,12,13],"-B":[1,2,4,6,8,9,11],C:[0,1,8,13],"-C":[2,3,4,5,6,7,9,10,11,12],D:[0,3,5,10,12,13],"-D":[1,2,4,6,7,8,9,11],E:[0,1,6,7,8,13],"-E":[2,3,4,5,9,10,11,12],F:[0,1,6,7,8],"-F":[2,3,4,5,9,10,11,12,13],G:[0,1,7,8,12,13],"-G":[2,3,4,5,6,9,10,11],H:[1,5,6,7,8,12],"-H":[0,2,3,4,9,10,11,13],I:[0,3,10,13],"-I":[1,2,4,5,6,7,8,9,11,12],J:[5,8,12,13],"-J":[0,1,2,3,4,6,7,9,10,11],K:[1,4,6,8,11],"-K":[0,2,3,5,7,9,10,12,13],L:[1,8,13],"-L":[0,2,3,4,5,6,7,9,10,11,12],M:[1,2,4,5,8,12],"-M":[0,3,6,7,9,10,11,13],N:[1,2,5,8,11,12],"-N":[0,3,4,6,7,9,10,13],O:[0,1,5,8,12,13],"-O":[2,3,4,6,7,9,10,11],P:[0,1,5,6,7,8],"-P":[2,3,4,9,10,11,12,13],Q:[0,1,5,8,11,12,13],"-Q":[2,3,4,6,7,9,10],R:[0,1,5,6,7,8,11],"-R":[2,3,4,9,10,12,13],S:[0,1,6,7,12,13],"-S":[2,3,4,5,8,9,10,11],T:[0,3,10],"-T":[1,2,4,5,6,7,8,9,11,12,13],U:[1,5,8,12,13],"-U":[0,2,3,4,6,7,9,10,11],V:[1,4,8,9],"-V":[0,2,3,5,6,7,10,11,12,13],W:[1,5,8,9,11,12],"-W":[0,2,3,4,6,7,10,13],X:[2,4,9,11],"-X":[0,1,3,5,6,7,8,10,12,13],Y:[2,4,10],"-Y":[0,1,3,5,6,7,8,9,11,12,13],Z:[0,4,9,13],"-Z":[1,2,3,5,6,7,8,10,11,12]};
-            /* Avoiding elseifs */
-            const colorConditions = {truetruetrue:"white",truetruefalse:"yellow",truefalsetrue:"magenta",falsetruetrue:"cyan",falsefalsetrue:"blue",falsetruefalse:"green",truefalsefalse:"red",falsefalsefalse:"black"};
-            
             function selectStroke($color) {
                 $colorPanel.removeClass("selected");
                 $color.addClass("selected");
             }
+
             function fillSegment($segment) {
                 $segment.removeClass()
                 $segment.addClass(getFillClass($(".selected")));
             }
+
             function resetAll() {
                 $segmentPanel.removeClass();
                 $segmentPanel.addClass("fill-black");
                 $colorPanel.removeClass("selected");
             }
+
+            function handleNoSelection() {
+                console.error("You didn't select any color!");
+                return ["fill-black"];
+            }
+
             const $colorPanel = $("#colorPanel").children()
                 , $segmentPanel = $("#segmentPanel").children()
-                , getFillClass = $el => /fill-\w+/.exec($el.attr("class"))[0];
+                , getFillClass = $el => (/fill-\w+/.exec($el.attr("class")) ?? handleNoSelection())[0];
 
             $colorPanel.click(e => selectStroke($(e.target)));
             $segmentPanel.click(e => fillSegment($(e.target)));
             $("#reset").click(resetAll);
-            
+
             resetAll();
-            let pageCounter = 0, stages;
+            $.get("data/14-interactive/segmentMap.json", j => {
+                let pageCounter = 0, stages;
 
-            if (window.location.hash) {
-                stages = JSON.parse(decodeURI(window.location.hash.slice(1)));
+                if (window.location.hash) {
+                    stages = JSON.parse(decodeURI(window.location.hash.slice(1)));
 
-                pageButton(0);
+                    pageButton(0);
 
-                $("#prev").click(()=>pageButton(-1)).css("visibility", "visible");
-                $("#next").click(()=>pageButton(1)).css("visibility", "visible");
-            }
-
-            function pageButton(dir) {
-                let _ = pageCounter + dir;
-                if (_ < 0) pageCounter = 0;
-                else if (_ > stages.length-1) pageCounter = stages.length-1;
-                else pageCounter = _;
-                resetAll();
-                const segmentChannels = parseStages(stages);
-                const colors = getColorsFromChannels(segmentChannels);
-                fillSegments(colors[pageCounter]);
-                updateVisualPageCounter();
-            }
-
-            function updateVisualPageCounter() {
-                $("#pages").text(`${pageCounter+1}/${stages.length}`);
-            }
-            
-            function fillSegments(colors) {
-                for (let i = 0; i < 14; i++) {
-                    $segmentPanel.eq(i).addClass("fill-"+colors[i]);
+                    $("#prev").click(()=>pageButton(-1)).css("visibility", "visible");
+                    $("#next").click(()=>pageButton(1)).css("visibility", "visible");
                 }
-            }
 
-            function getColorsFromChannels(allChannels) {
-                segmentsColors = [];
-                for (const channels of allChannels) {
-                    segmentsColors.push(Array.from({length: 14}));
+                function pageButton(dir) {
+                    let _ = pageCounter + dir;
+                    if (_ < 0 ||_ > stages.length-1) return;
+                    pageCounter = _;
+                    resetAll();
+                    const segmentChannels = parseStages(stages[pageCounter]);
+                    const segmentColors = getColorsFromChannels(segmentChannels);
+                    fillSegments(segmentColors);
+                    updateVisualPageCounter();
+                }
+
+                function updateVisualPageCounter() {
+                    $("#pages").text(`${pageCounter+1}/${stages.length}`);
+                }
+
+                function fillSegments(colors) {
                     for (let i = 0; i < 14; i++) {
-                        segmentsColors[segmentsColors.length-1][i] = colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
+                        $segmentPanel.eq(i).addClass("fill-"+colors[i]);
                     }
                 }
-                return segmentsColors;
-            }
 
-            function parseStages(stages) {
-                const fillings = [];
-                for (const stage of stages) {
-                    fillings.push([[], [], []]);
-                    fillings[fillings.length-1][0] = getFills(stage[0], "red");
-                    fillings[fillings.length-1][1] = getFills(stage[1], "green");
-                    fillings[fillings.length-1][2] = getFills(stage[2], "blue");
+                function getColorsFromChannels(channels) {
+                    segmentsColors = Array.from({length: 14});
+                    for (let i = 0; i < 14; i++)
+                        segmentsColors[i] = j.colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
+                    return segmentsColors;
                 }
-                return fillings;
-            }
 
-            function getFills(letter, channel) {
-                const segmentsFilled = Array.from({length: 14}, s => "false");
-                for (const segment of mappings[letter]) {
-                    segmentsFilled[segment] = "true";
+                function parseStages(stage) {
+                    const fillings = [[], [], []];
+                    fillings[0] = getFills(stage[0]); //red
+                    fillings[1] = getFills(stage[1]); //green
+                    fillings[2] = getFills(stage[2]); //blue
+                    return fillings;
                 }
-                return segmentsFilled;
-            }
+
+                function getFills(letter) {
+                    const segmentsFilled = Array.from({length:14})
+                        , isNegative = letter[0] === "-"
+                        , hasNumber = n => j.mappings[letter].indexOf(n) >= 0;
+                    letter = letter[letter.length-1];
+                    for (let i = 0; i < 14; i++) {
+                        segmentsFilled[i] = hasNumber(i) ^ isNegative ? "t" : "f";
+                    }
+                    return segmentsFilled;
+                }
+            });
         });
     </script>
 </head>
@@ -209,11 +222,11 @@
                         <button id="next">Next</button>
                     </span>
                 </span>
-                <svg id="int" xmlns="http://www.w3.org/2000/svg" viewBox="23 65 300 215" fill="#FFF">
+                <svg id="int" xmlns="http://www.w3.org/2000/svg" viewBox="23 65 300 215" fill="#fff">
                     <g id="colorPanel">
                         <path d="M284.612 69.517l14.743 25.537H269.87z"   class="fill-black"></path>
                         <path d="M305.224 101.895l14.743 25.536h-29.486z" class="fill-blue"></path>
-                        <path d="M284.612 125.566l-14.743-25.537h29.486z" class="fill-lime"></path>
+                        <path d="M284.612 125.566l-14.743-25.537h29.486z" class="fill-green"></path>
                         <path d="M263.696 157.943l-14.743-25.536h29.486z" class="fill-cyan"></path>
                         <path d="M263.696 101.895l14.743 25.536h-29.486z" class="fill-red"></path>
                         <path d="M284.108 134.273l14.743 25.536h-29.486z" class="fill-magenta"></path>
@@ -308,69 +321,60 @@
                     <path d="M-1-1h92v88H-1z"></path>
                     <path fill="#00f"
                         d="M70.121 33.404L50 51.59l-4.66 24.72c4.236 3.299 9.56 5.282 15.344 5.282 13.807 0 25-11.193 25-25 0-10.465-6.437-19.462-15.563-23.188z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="red"
                         d="M45.34 4.998c-13.807 0-25 11.193-25 25 0 1.154.067 2.294.219 3.406L45 41.59l25.121-8.186c.153-1.116.22-2.247.22-3.406 0-13.807-11.194-25-25.001-25z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="#0f0"
                         d="M20.559 33.404C11.433 37.13 4.996 46.127 4.996 56.592c0 13.807 11.193 25 25 25 5.785 0 11.108-1.983 15.344-5.281L40 51.59z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="#ff0"
                         d="M29.996 31.592c-3.342 0-6.523.623-9.437 1.812 1.222 8.987 7.238 16.442 15.375 19.75l9.375-16.28c-4.23-3.292-9.535-5.282-15.313-5.282z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="#f0f"
                         d="M60.684 31.592a25.038 25.038 0 0 0-15.375 5.281l9.437 16.281c8.137-3.308 14.153-10.763 15.375-19.75-2.914-1.19-6.095-1.812-9.437-1.812z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="#0ff"
                         d="M35.934 53.154a25.223 25.223 0 0 0-.25 3.438c0 8.022 3.781 15.144 9.656 19.719 5.875-4.575 9.656-11.697 9.656-19.72 0-1.166-.095-2.312-.25-3.437z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="#fff"
                         d="M45.309 36.873a24.955 24.955 0 0 0-9.375 16.281 24.893 24.893 0 0 0 9.406 1.844c3.333 0 6.499-.66 9.406-1.844-.909-6.614-4.412-12.371-9.437-16.28z"
-                        color="#000" style="marker:none"></path>
+                        ></path>
                     <path fill="none" stroke="gray" stroke-width=".4"
                         d="M45 21.59h55M30 36.59h70M60 41.59h40M45 51.59h55M20 56.59h80M45 66.59h55M60 76.59h40"
-                        color="#000" style="marker:none"></path><text x="102.5" y="23.22"
+                        color="#000" ></path><text x="102.5" y="23.22"
                         stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400"
                         letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="23.22">Red</tspan>
                     </text><text x="102.5" y="38.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="38.22">Yellow</tspan>
                     </text><text x="102.5" y="43.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="43.22">Magenta</tspan>
                     </text><text x="102.5" y="53.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="53.22">White</tspan>
                     </text><text x="102.5" y="58.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="58.22">Green</tspan>
                     </text><text x="102.5" y="68.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="68.22">Cyan</tspan>
                     </text><text x="102.5" y="78.22" stroke-width=".2" color="#000" font-family="Special Elite"
                         font-size="5" font-weight="400" letter-spacing="0"
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="78.22">Blue</tspan>
                     </text>
                     <path fill="none" stroke="gray" stroke-width=".4" d="M75 11.59h25" color="#000"
-                        style="marker:none"></path><text x="102.5" y="13.22" stroke-width=".2"
+                        ></path><text x="102.5" y="13.22" stroke-width=".2"
                         color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0"
-
-                        style="text-indent:0;text-align:start;line-height:125%;text-transform:none;marker:none;-inkscape-font-specification:Special Elite"
                         word-spacing="0">
                         <tspan x="102.5" y="13.22">Black</tspan>
                     </text>
@@ -387,100 +391,100 @@
             <div class="page-content">
                 <table class="appendix" style="background-color: black;">
                     <tr>
-                        <td><img src="img/14 Images/0.png" style="width: 60%"><br>0</td>
-                        <td><img src="img/14 Images/6.png" style="width: 60%"><br>6</td>
-                        <td><img src="img/14 Images/C.png" style="width: 60%"><br>C = 12</td>
-                        <td><img src="img/14 Images/I.png" style="width: 60%"><br>I = 18</td>
-                        <td><img src="img/14 Images/O.png" style="width: 60%"><br>O = 24</td>
-                        <td><img src="img/14 Images/U.png" style="width: 60%"><br>U = 30</td>
+                        <td><img src="img/14 Images/0.png"><br>0</td>
+                        <td><img src="img/14 Images/6.png"><br>6</td>
+                        <td><img src="img/14 Images/C.png"><br>C = 12</td>
+                        <td><img src="img/14 Images/I.png"><br>I = 18</td>
+                        <td><img src="img/14 Images/O.png"><br>O = 24</td>
+                        <td><img src="img/14 Images/U.png"><br>U = 30</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/0i.png" style="width: 60%"><br>-0</td>
-                        <td><img src="img/14 Images/6i.png" style="width: 60%"><br>-6</td>
-                        <td><img src="img/14 Images/Ci.png" style="width: 60%"><br>-C = -12</td>
-                        <td><img src="img/14 Images/Ii.png" style="width: 60%"><br>-I = -18</td>
-                        <td><img src="img/14 Images/Oi.png" style="width: 60%"><br>-O = -24</td>
-                        <td><img src="img/14 Images/Ui.png" style="width: 60%"><br>-U = -30</td>
+                        <td><img src="img/14 Images/0i.png"><br>-0</td>
+                        <td><img src="img/14 Images/6i.png"><br>-6</td>
+                        <td><img src="img/14 Images/Ci.png"><br>-C = -12</td>
+                        <td><img src="img/14 Images/Ii.png"><br>-I = -18</td>
+                        <td><img src="img/14 Images/Oi.png"><br>-O = -24</td>
+                        <td><img src="img/14 Images/Ui.png"><br>-U = -30</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/1.png" style="width: 60%"><br>1</td>
-                        <td><img src="img/14 Images/7.png" style="width: 60%"><br>7</td>
-                        <td><img src="img/14 Images/D.png" style="width: 60%"><br>D = 13</td>
-                        <td><img src="img/14 Images/J.png" style="width: 60%"><br>J = 19</td>
-                        <td><img src="img/14 Images/P.png" style="width: 60%"><br>P = 25</td>
-                        <td><img src="img/14 Images/V.png" style="width: 60%"><br>V = 31</td>
+                        <td><img src="img/14 Images/1.png"><br>1</td>
+                        <td><img src="img/14 Images/7.png"><br>7</td>
+                        <td><img src="img/14 Images/D.png"><br>D = 13</td>
+                        <td><img src="img/14 Images/J.png"><br>J = 19</td>
+                        <td><img src="img/14 Images/P.png"><br>P = 25</td>
+                        <td><img src="img/14 Images/V.png"><br>V = 31</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/1i.png" style="width: 60%"><br>-1</td>
-                        <td><img src="img/14 Images/7i.png" style="width: 60%"><br>-7</td>
-                        <td><img src="img/14 Images/Di.png" style="width: 60%"><br>-D = -13</td>
-                        <td><img src="img/14 Images/Ji.png" style="width: 60%"><br>-J = -19</td>
-                        <td><img src="img/14 Images/Pi.png" style="width: 60%"><br>-P = -25</td>
-                        <td><img src="img/14 Images/Vi.png" style="width: 60%"><br>-V = -31</td>
+                        <td><img src="img/14 Images/1i.png"><br>-1</td>
+                        <td><img src="img/14 Images/7i.png"><br>-7</td>
+                        <td><img src="img/14 Images/Di.png"><br>-D = -13</td>
+                        <td><img src="img/14 Images/Ji.png"><br>-J = -19</td>
+                        <td><img src="img/14 Images/Pi.png"><br>-P = -25</td>
+                        <td><img src="img/14 Images/Vi.png"><br>-V = -31</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/2.png" style="width: 60%"><br>2</td>
-                        <td><img src="img/14 Images/8.png" style="width: 60%"><br>8</td>
-                        <td><img src="img/14 Images/E.png" style="width: 60%"><br>E = 14</td>
-                        <td><img src="img/14 Images/K.png" style="width: 60%"><br>K = 20</td>
-                        <td><img src="img/14 Images/Q.png" style="width: 60%"><br>Q = 26</td>
-                        <td><img src="img/14 Images/W.png" style="width: 60%"><br>W = 32</td>
+                        <td><img src="img/14 Images/2.png"><br>2</td>
+                        <td><img src="img/14 Images/8.png"><br>8</td>
+                        <td><img src="img/14 Images/E.png"><br>E = 14</td>
+                        <td><img src="img/14 Images/K.png"><br>K = 20</td>
+                        <td><img src="img/14 Images/Q.png"><br>Q = 26</td>
+                        <td><img src="img/14 Images/W.png"><br>W = 32</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/2i.png" style="width: 60%"><br>-2</td>
-                        <td><img src="img/14 Images/8i.png" style="width: 60%"><br>-8</td>
-                        <td><img src="img/14 Images/Ei.png" style="width: 60%"><br>-E = -14</td>
-                        <td><img src="img/14 Images/Ki.png" style="width: 60%"><br>-K = -20</td>
-                        <td><img src="img/14 Images/Qi.png" style="width: 60%"><br>-Q = -26</td>
-                        <td><img src="img/14 Images/Wi.png" style="width: 60%"><br>-W = -32</td>
+                        <td><img src="img/14 Images/2i.png"><br>-2</td>
+                        <td><img src="img/14 Images/8i.png"><br>-8</td>
+                        <td><img src="img/14 Images/Ei.png"><br>-E = -14</td>
+                        <td><img src="img/14 Images/Ki.png"><br>-K = -20</td>
+                        <td><img src="img/14 Images/Qi.png"><br>-Q = -26</td>
+                        <td><img src="img/14 Images/Wi.png"><br>-W = -32</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/3.png" style="width: 60%"><br>3</td>
-                        <td><img src="img/14 Images/9.png" style="width: 60%"><br>9</td>
-                        <td><img src="img/14 Images/F.png" style="width: 60%"><br>F = 15</td>
-                        <td><img src="img/14 Images/L.png" style="width: 60%"><br>L = 21</td>
-                        <td><img src="img/14 Images/R.png" style="width: 60%"><br>R = 27</td>
-                        <td><img src="img/14 Images/X.png" style="width: 60%"><br>X = 33</td>
+                        <td><img src="img/14 Images/3.png"><br>3</td>
+                        <td><img src="img/14 Images/9.png"><br>9</td>
+                        <td><img src="img/14 Images/F.png"><br>F = 15</td>
+                        <td><img src="img/14 Images/L.png"><br>L = 21</td>
+                        <td><img src="img/14 Images/R.png"><br>R = 27</td>
+                        <td><img src="img/14 Images/X.png"><br>X = 33</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/3i.png" style="width: 60%"><br>-3</td>
-                        <td><img src="img/14 Images/9i.png" style="width: 60%"><br>-9</td>
-                        <td><img src="img/14 Images/Fi.png" style="width: 60%"><br>-F = -15</td>
-                        <td><img src="img/14 Images/Li.png" style="width: 60%"><br>-L = -21</td>
-                        <td><img src="img/14 Images/Ri.png" style="width: 60%"><br>-R = -27</td>
-                        <td><img src="img/14 Images/Xi.png" style="width: 60%"><br>-X = -33</td>
+                        <td><img src="img/14 Images/3i.png"><br>-3</td>
+                        <td><img src="img/14 Images/9i.png"><br>-9</td>
+                        <td><img src="img/14 Images/Fi.png"><br>-F = -15</td>
+                        <td><img src="img/14 Images/Li.png"><br>-L = -21</td>
+                        <td><img src="img/14 Images/Ri.png"><br>-R = -27</td>
+                        <td><img src="img/14 Images/Xi.png"><br>-X = -33</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/4.png" style="width: 60%"><br>4</td>
-                        <td><img src="img/14 Images/A.png" style="width: 60%"><br>A = 10</td>
-                        <td><img src="img/14 Images/G.png" style="width: 60%"><br>G = 16</td>
-                        <td><img src="img/14 Images/M.png" style="width: 60%"><br>M = 22</td>
-                        <td><img src="img/14 Images/S.png" style="width: 60%"><br>S = 28</td>
-                        <td><img src="img/14 Images/Y.png" style="width: 60%"><br>Y = 34</td>
+                        <td><img src="img/14 Images/4.png"><br>4</td>
+                        <td><img src="img/14 Images/A.png"><br>A = 10</td>
+                        <td><img src="img/14 Images/G.png"><br>G = 16</td>
+                        <td><img src="img/14 Images/M.png"><br>M = 22</td>
+                        <td><img src="img/14 Images/S.png"><br>S = 28</td>
+                        <td><img src="img/14 Images/Y.png"><br>Y = 34</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/4i.png" style="width: 60%"><br>-4</td>
-                        <td><img src="img/14 Images/Ai.png" style="width: 60%"><br>-A = -10</td>
-                        <td><img src="img/14 Images/Gi.png" style="width: 60%"><br>-G = -16</td>
-                        <td><img src="img/14 Images/Mi.png" style="width: 60%"><br>-M = -22</td>
-                        <td><img src="img/14 Images/Si.png" style="width: 60%"><br>-S = -28</td>
-                        <td><img src="img/14 Images/Yi.png" style="width: 60%"><br>-Y = -34</td>
+                        <td><img src="img/14 Images/4i.png"><br>-4</td>
+                        <td><img src="img/14 Images/Ai.png"><br>-A = -10</td>
+                        <td><img src="img/14 Images/Gi.png"><br>-G = -16</td>
+                        <td><img src="img/14 Images/Mi.png"><br>-M = -22</td>
+                        <td><img src="img/14 Images/Si.png"><br>-S = -28</td>
+                        <td><img src="img/14 Images/Yi.png"><br>-Y = -34</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/5.png" style="width: 60%"><br>5</td>
-                        <td><img src="img/14 Images/B.png" style="width: 60%"><br>B = 11</td>
-                        <td><img src="img/14 Images/H.png" style="width: 60%"><br>H = 17</td>
-                        <td><img src="img/14 Images/N.png" style="width: 60%"><br>N = 23</td>
-                        <td><img src="img/14 Images/T.png" style="width: 60%"><br>T = 29</td>
-                        <td><img src="img/14 Images/Z.png" style="width: 60%"><br>Z = 35</td>
+                        <td><img src="img/14 Images/5.png"><br>5</td>
+                        <td><img src="img/14 Images/B.png"><br>B = 11</td>
+                        <td><img src="img/14 Images/H.png"><br>H = 17</td>
+                        <td><img src="img/14 Images/N.png"><br>N = 23</td>
+                        <td><img src="img/14 Images/T.png"><br>T = 29</td>
+                        <td><img src="img/14 Images/Z.png"><br>Z = 35</td>
                     </tr>
                     <tr>
-                        <td><img src="img/14 Images/5i.png" style="width: 60%"><br>-5</td>
-                        <td><img src="img/14 Images/Bi.png" style="width: 60%"><br>-B = -11</td>
-                        <td><img src="img/14 Images/Hi.png" style="width: 60%"><br>-H = -17</td>
-                        <td><img src="img/14 Images/Ni.png" style="width: 60%"><br>-N = -23</td>
-                        <td><img src="img/14 Images/Ti.png" style="width: 60%"><br>-T = -29</td>
-                        <td><img src="img/14 Images/Zi.png" style="width: 60%"><br>-Z = -35</td>
+                        <td><img src="img/14 Images/5i.png"><br>-5</td>
+                        <td><img src="img/14 Images/Bi.png"><br>-B = -11</td>
+                        <td><img src="img/14 Images/Hi.png"><br>-H = -17</td>
+                        <td><img src="img/14 Images/Ni.png"><br>-N = -23</td>
+                        <td><img src="img/14 Images/Ti.png"><br>-T = -29</td>
+                        <td><img src="img/14 Images/Zi.png"><br>-Z = -35</td>
                     </tr>
                 </table>
             </div>
