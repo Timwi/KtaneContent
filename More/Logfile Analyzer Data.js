@@ -10414,6 +10414,40 @@ let parseData = [
         ]
     },
     {
+        displayName: "Wander",
+        moduleID: "WanderModule",
+        loggingTag: "Wander",
+        matches: [
+            {
+                regex: /Maze walls, before transformation:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 8; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Maze walls, before transformation:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Maze walls, after transformation:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 8; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Maze walls, after transformation:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         moduleID: "webDesign",
         loggingTag: "Web design",
         matches: [
