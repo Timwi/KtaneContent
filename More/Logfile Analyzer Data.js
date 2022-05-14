@@ -3488,6 +3488,40 @@ let parseData = [
         ]
     },
     {
+        displayName: "Evil Word Search",
+        moduleID: "EvilWordSearchModule",
+        loggingTag: "Evil Word Search",
+        matches: [
+            {
+                regex: /Grid A:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 5; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid A:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid B:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 5; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid B:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Extended Boolean Venn Diagram",
         moduleID: "extendedBooleanVenn",
         loggingTag: "Extended Boolean Venn Diagram",
