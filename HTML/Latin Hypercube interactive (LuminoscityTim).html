@@ -36,7 +36,7 @@
             selectedSymbol = "";
             selected = null;
             $("table.symbols td.selected").removeClass("selected");
-            $(".gridcell").removeClass("selected");
+            $(".gridcell").removeClass("selected selectedgray");
         }
         $(document).click(function(event) {
             selectNone();
@@ -94,14 +94,14 @@
                 event.stopPropagation();
             });
         });
-        function updatePosition() {
+        function updatePosition(x, y, g) {
             $(".gridcell.selected").removeClass("selected");
             let grids = bigGrid.children().filter(function(i, el) {
-                return i % cols == currG % cols || Math.floor(i / cols) == Math.floor(currG / cols);
+                return i % cols == g % cols || Math.floor(i / cols) == Math.floor(g / cols);
             });
             grids.each((i, el) => {
                 let item = $(el);
-                item.children().eq(1).children().eq(currY).children().eq(currX).addClass("selected");
+                item.children().eq(1).children().eq(y).children().eq(x).addClass("selected");
             });
         }
 
@@ -132,9 +132,14 @@
                             currG = g;
                             currX = x;
                             currY = y;
-                            updatePosition();
+                            $(".gridcell.selectedgray").removeClass("selectedgray");
+                            selected.parent().addClass("selectedgray")
                             event.preventDefault();
                             event.stopPropagation();
+                        }).hover(function() {   //hover
+                            updatePosition(x, y, g);
+                        }, function() {         //leave
+                            $(".gridcell.selected").removeClass("selected");
                         });
                     });
                 }
@@ -256,6 +261,8 @@
             background-position: center;
         }
         .cell.selected { background-color: rgba(255, 255, 0, 0.4); }
+        .cell.selectedgray { background-color: rgba(0, 0, 0, 0.2); }
+        .dark .cell.selectedgray { background-color: rgba(255, 255, 255, 0.35); }
         table.symbols td.selected { background-color: rgba(0, 0, 255, 0.4); }
         table.symbols td {
             width: 33px;
