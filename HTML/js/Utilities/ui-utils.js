@@ -34,3 +34,12 @@ function WhenHoldDown(btn, func, startTime, speedup = 1.2, min = 10) {
 function NoSpecialKeys(event) {
     return !(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey);
 }
+
+/**
+ * Checks if string represents a single letter A-Z or a-z.
+ * @param {String} str - String to check.
+ * @returns {Boolean} True if string represents a single letter.
+ */
+function IsLetter(str) {
+    return str.length === 1 && str.match(/[a-z]/i);;
+}
