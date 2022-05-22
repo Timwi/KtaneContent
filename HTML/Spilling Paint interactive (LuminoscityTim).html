@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Spilling Paint — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        var selectedButton;
+        let grid = $(".grid");
+        let movesNumber = $(".movesNumber");
+        const rows = 6;
+        const cols = 6;
+        let gameGrid = Array(rows).fill().map(()=>Array(cols).fill(0));
+        let origGameGrid = Array(rows).fill().map(()=>Array(cols).fill(0));
+        let currX = 0;
+        let currY = 0;
+        let moves = 7;
+        // let pressing = false;
+        let spillList = [];
+        let answerList = [];
+        let modeWasSolve = true;
+        let saveStates = [];
+        let currentState = 0;
+        let currVal = 0;
+        const MAX_MOVES = 36;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        const colorNumber = {
+            0: "white",
+            1: "red",
+            2: "orange",
+            3: "yellow",
+            4: "green",
+            5: "blue",
+            6: "purple"
+        }
+
+        const colorIndex = {
+            "w:": 0,
+            "r": 1,
+            "o": 2,
+            "y": 3,
+            "g": 4,
+            "b": 5,
+            "p": 6,
+            "m": 6
+        }
+
+        function resetSelection() {
+            selected = grid.children().eq(1).children().eq(1);
+            currX = currY = 0;
+            updateSelection();
+        }
+
+        function selectNone() {
+            $(".selected").removeClass("selected");
+            selected = null;
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        //This function is taken from the module source code
+        function generate() {
+            answerList = [];
+            let s_currVal = currVal;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    gameGrid[x][y] = 0;
+            let locations = ShuffleFisherYates(new CtRange(0, MAX_MOVES).Enumerate());
+            for (var i = 0; i < moves; i++) {
+                let rx = locations[i] % cols;
+                let ry = Math.floor(locations[i] / cols);
+                let c = Math.floor(Math.random() * (colors.length - 1));
+                currVal = c+1;
+                clickGrid(rx, ry);
+                answerList.unshift(`${colorLetterCap[(colors.length - 1 - c)]} ${String.fromCharCode(65 + rx)}${ry + 1}`);
+            }
+            updateGrid();
+            currVal = s_currVal;
+            $(".solution .str").text(answerList.join(", "));
+            updateGrid();
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    origGameGrid[x][y] = gameGrid[x][y];
+        }
+
+        let colors = ["white", "red", "orange", "yellow", "green", "blue", "purple"];
+        let colorLetter = ["w", "r", "o", "y", "g", "b", "p"];
+        let colorLetterCap = ["W", "R", "O", "Y", "G", "B", "P"];
+        function hasWhichColor(elem) {
+            for (var i = 0; i < colors.length; i++) {
+                if (elem.hasClass(colors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function playClick(which) {
+            if ($("button.sound").hasClass("play") && which >= 0 && which < audioClick.length)
+                audioClick[which][0].cloneNode().play();
+        }
+
+        function assignColor(elem) {
+            removeColorClass(elem);
+            elem.addClass(colors[currVal]);
+            playClick(currVal - 1);
+        }
+
+        function removeColorClass(elem) {
+            colors.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function updateGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+                    removeColorClass(elem);
+                    elem.addClass(colorNumber[ gameGrid[x][y] ]);
+                }
+            }
+        }
+
+        function clickGrid(x, y) {
+            for (let r = -1; r < 2; r++)
+                for (let c = -1; c < 2; c++) {
+                    if ((y + r < 0) || (y + r >= rows) || (x + c < 0) || (x + c >= cols)) { continue; }
+                    gameGrid[x + c][y + r] = (gameGrid[x + c][y + r] + currVal) % colors.length;
+                }
+        }
+
+        function isSolved() {
+            if (spillList.length != moves)
+                return false;
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+                    if (hasWhichColor(elem) > 0)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        function setPathText() {
+            $(".path .str").text(spillList.slice(0,moves).join(", "));
+            if (spillList.length > moves) {
+                let span = $("<span>").addClass("redspan").text(", " + spillList.slice(moves).join(", "));
+                $(".path .str").append(span);
+            }
+        }
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == " " || k == "w" || k == "r" || k == "o" || k == "y" || k == "g" || k == "b" || k == "p" || k == "m") {
+                if (mode() == MODE_READ) {
+                    if (selected && selected.hasClass("netsq") && NoSpecialKeys(event)) {
+                        if (k != " ") {
+                            gameGrid[currX][currY] = colorIndex[k];
+                            origGameGrid[currX][currY] = colorIndex[k];
+                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                            removeColorClass(elem);
+                            elem.addClass(colorNumber[ gameGrid[currX][currY] ]);
+                        }
+                        if (currX == rows - 1)
+                            currY = (currY + 1) % cols;
+                        currX = (currX + 1) % rows;
+                        var elem2 = grid.children().eq(currY+1).children().eq(currX+1);
+                        selected = elem2;
+                        updateSelection();
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }
+            }
+            else if (k == "-")
+                movesDec();
+            else if (k == "=" || k == "+")
+                movesInc();
+            down = false;
+        });
+
+        function movesDec() {
+            moves = Math.max(1, moves - 1);
+            movesNumber.text(moves);
+        }
+        function movesInc() {
+            moves = Math.min(MAX_MOVES, moves + 1);
+            movesNumber.text(moves);
+        }
+        $(".movestext.minus").click(function() {
+            movesDec();
+        });
+        $(".movestext.plus").click(function() {
+            movesInc();
+        });
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+        let resetButton = $(".reset-grid");
+        resetButton.click(function() {
+            if (mode() != MODE_READ)
+                spillList = [];
+                 $(".path .str").html("");
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        let n = origGameGrid[x][y];
+                        gameGrid[x][y] = n;
+                        var elem = grid.children().eq(y+1).children().eq(x+1);
+                        removeColorClass(elem);
+                        elem.addClass(colorNumber[ gameGrid[x][y] ]);
+                    }
+                }
+        });
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass("netsquare square netsq white").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+                        // pressing = true;
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            selected = $(this);
+                            updateSelection();
+                            assignColor(selected);
+                            origGameGrid[x-1][y-1] = gameGrid[x-1][y-1] = hasWhichColor(selected);
+                        }
+                        else if (currVal > 0) {
+                            spillList.push(`${colorLetterCap[currVal]} ${String.fromCharCode(64 + x)}${y}`);
+                            setPathText();
+                            clickGrid(x-1, y-1);
+                            updateGrid();
+                            if (isSolved()) {
+                                if ($("button.sound").hasClass("play"))
+                                    audioSolve[0].play();
+                            }
+                            else if ($("button.sound").hasClass("play")) {
+                                audioSquareSelect[0].cloneNode().play();
+                            }
+                        }
+                        // pressing = false;
+                    });
+                    if (x == 1 && y == 1) {
+                        selected = element;
+                        element.addClass("selected");
+                    }
+                });
+            }
+        }
+
+        let tools = $(".tools.colors");
+        let colorsSvg = MakeSvgTag(110, 468, 0, 0, {
+            "font-size":"30", "text-anchor":"middle"
+        }).appendTo(tools);
+        for (let i = 0; i < colors.length; i++) {
+            let circle = MakeSvgElem("circle", {
+                r:25 , cx:(i % 2 == 1 ? 35 : 75), cy:(i*55 + 105), stroke: "#888", "stroke-width":"6", class:colors[i]
+            });
+            let text = MakeSvgElem("text", {
+                class:colors[i], x:(i % 2 == 1 ? 35 : 75), y:(i*55 + 114)
+            });
+
+            colorsSvg.append(circle);
+            colorsSvg.append(text);
+            $(circle).click(function() {
+                removeColorClass(resetButton);
+                resetButton.addClass(colors[i]);
+                currVal = colorIndex[ colorLetter[i] ];
+                if ($("button.sound").hasClass("play"))
+                    audioColorSelect[0].cloneNode().play();
+            });
+        }
+
+        let audioSquareSelect = $("<audio>")
+            .attr("src", "audio/Spilling Paint/squareSelect.mp3")
+            .appendTo(grid);
+        let audioColorSelect = $("<audio>")
+            .attr("src", "audio/Spilling Paint/colorSelect.mp3")
+            .prop("volume", 0.9)
+            .appendTo(grid);
+        let audioReset = $("<audio>")
+            .attr("src", "audio/Spilling Paint/reset.mp3")
+            .prop("volume", 0.9)
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Sim Sings - Solve.ogg")
+            .prop("volume", 0.9)
+            .appendTo(grid);
+        let audioClick = [];
+        const audioClickName = [
+            "Not The Bulb/SelectBulb", "Not The Bulb/TapCode", "Not The Bulb/NonoClick", "Old Fogey/ButtonPress", "Old Fogey/BigButtonRelease", "Old Fogey/WireSnip"
+        ]
+        for (let i = 1; i < colors.length; i++) {
+            let audio = $("<audio>")
+                .attr("src", `audio/${audioClickName[i-1]}.wav`)
+                .prop("volume", 0.9)
+                .appendTo(grid);
+            audioClick.push(audio);
+        }
+
+        let buttons = $(".buttons");
+        $("<button>").addClass("colorblind-mode").appendTo(buttons).click(function() {
+            $(this).toggleClass("enable");
+            $("body").toggleClass("cblind");
+            colors.forEach((col, i) => {
+                if ($(this).hasClass("enable"))
+                    $(`svg text.${col}`).html(colorLetterCap[i]);
+                else
+                    $(`svg text.${col}`).html("");
+            });
+        });
+        $("<div>").css("height", "8mm").appendTo(buttons);
+
+        $("<button>").addClass("read-solve").appendTo(buttons).click(function() {
+            $(this).toggleClass("solve");
+            if (mode() == MODE_READ)
+                resetSelection();
+            else {
+                selectNone();
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++)
+                        origGameGrid[x][y] = gameGrid[x][y];
+                $(".reset-grid").click();
+            }
+        });
+        $("<button>").addClass("sound play").appendTo(buttons).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(buttons).click(function() {
+            $(this).toggleClass("play");
+            $("body").toggleClass("play-mode", $(this).hasClass("play"));
+            selectNone();
+            if (mode() == MODE_PLAY) {
+                modeWasSolve = $(".read-solve").hasClass("solve");
+                $("button.read-solve").prop('disabled', true);
+                $("button.read-solve").addClass("solve");
+                generate();
+            }
+            else {
+                $("button.read-solve").prop('disabled', false);
+                if (!modeWasSolve) {
+                    $("button.read-solve").removeClass("solve");
+                    resetSelection();
+                }
+            }
+            $(".reset-grid").click();
+        });
+        $("<button>").addClass("show-sol").appendTo(buttons).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").prop('disabled', false);
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("body").removeClass("solution-shown play-mode");
+            $("button.read-solve").removeClass("solve");
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = 0;
+                    origGameGrid[x][y] = 0;
+                    var elem = grid.children().eq(y+1).children().eq(x+1);
+                    removeColorClass(elem);
+                    elem.addClass(colorNumber[0]);
+                }
+            }
+            resetSelection();
+            spillList = [];
+            setPathText();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            moves = 7;
+            movesNumber.text(moves);
+            currVal = 0;
+            removeColorClass(resetButton);
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .buttons button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateDisable = Array.from($(".buttons button")).map(x => $(x)).map(x => x.prop("disabled") || false);
+            //console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gameGrid = Array(rows).fill().map(()=>Array(cols).fill(0));
+            let s_origGameGrid = Array(rows).fill().map(()=>Array(cols).fill(0));
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                }
+            let s_answerList = [];
+            let s_spillList = [];
+            Object.assign(s_spillList, spillList);
+            Object.assign(s_answerList, answerList);
+            let s_selected = selected;
+            let s_moves = moves;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_currVal = currVal;
+            let s_modeWasSolve = modeWasSolve;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".netsquare, .buttons button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".buttons button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
+                $("body").toggleClass("play-mode", mode() == MODE_PLAY);
+                $("body").toggleClass("solution-shown", $(".show-sol").hasClass("show"));
+                spillList = [];
+                answerList = [];
+                Object.assign(spillList, s_spillList);
+                Object.assign(answerList, s_answerList);
+                setPathText();
+                $(".solution .str").text(answerList.join(", "));
+                currentState = stateNumber;
+                moves = s_moves;
+                movesNumber.text(moves);
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                currVal = s_currVal;
+                removeColorClass(resetButton);
+                resetButton.addClass(colors[currVal]);
+                modeWasSolve = s_modeWasSolve;
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                    }
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 80px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+        .tools.colors { width: 105px; }
+        .tools.colors svg {
+            width: 110px;
+        }
+
+        .square-row {
+            height: 55px;
+            margin: 1.5px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .square-row.letters {
+            margin-left: 60px;
+        }
+        .solution, .path, .path .redspan {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            width: 100px;
+        }
+        .path span.redspan {
+            color: #D00;
+            display: inline;
+        }
+
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .path .redspan,
+        body:not(.solution-shown) .solution,
+        body:not(.play-mode) .solution {
+            color: transparent;
+        }
+
+        .square {
+            margin: 1.5px;
+            width: 55px;
+            height: 55px;
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.3s, color 0.3s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 18px;
+            border-width: 0;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .netsquare {
+            height: 55px;
+            width: 55px;
+            font-size: 35px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            color: black;
+            background-color: white;
+        }
+        .netsquare.selected {
+            border: 5px dashed black;
+            line-height: 55px;
+        }
+
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+        .movestext {
+            font-size: 20px;
+        }
+        .movestext {
+            padding-top: 8px;
+        }
+        .movesNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 52px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .movesHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button.reset-grid {
+            transition: background-color 0.5s;
+            margin-left: 65px;
+            padding: 10px 5px 5px 5px;
+            width: 200px;
+            font-size: 40px;
+        }
+        .red { background-color: #E93E3E; }
+        .orange { background-color: #FF9700; }
+        .yellow { background-color: #FBF441; }
+        .green { background-color: #60F658; }
+        .blue { background-color: #4276FE; }
+        .purple { background-color: #E660FF; }
+        .white { background-color: #FFFFFF; }
+        svg circle.red { fill: #E93E3E; }
+        svg circle.orange { fill: #FF9700; }
+        svg circle.yellow { fill: #FBF441; }
+        svg circle.green { fill: #60F658; }
+        svg circle.blue { fill :#4276FE }
+        svg circle.purple { fill: #E660FF; }
+        svg circle.white { fill: #FFFFFF; }
+        .tools.colors svg text {
+            user-select: none;
+            pointer-events: none;
+        }
+
+        body.cblind .netsquare.red::after { content: 'R' }
+        body.cblind .netsquare.orange::after { content: 'O' }
+        body.cblind .netsquare.yellow::after { content: 'Y' }
+        body.cblind .netsquare.green::after { content: 'G' }
+        body.cblind .netsquare.blue::after { content: 'B' }
+        body.cblind .netsquare.purple::after { content: 'P' }
+
+        .tools.colors svg circle {
+            cursor: pointer;
+        }
+        button:not([disabled]):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        button.colorblind-mode {
+            font-size: 12px;
+            padding: 3px 5px 1px 5px;
+        }
+        button.colorblind-mode:not(.enable)::before {
+            content: 'Colorblind\00a0Off';
+        }
+        button.colorblind-mode.enable::before {
+            content: 'Colorblind\00a0On';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Spilling Paint</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Spilling Paint.svg" class="diagram">
+                <h2>On the Subject of Spilling Paint</h2>
+                <p class="flavour-text">Where two wrongs make a right.</p>
+
+                <p>On the module is a 6×6 grid of cells, a color selector, and a reset button.</p>
+
+                <p>In order to solve the module, turn every cell white in <b>exactly 7</b> spills. If any cell is not white after 7 spills, or you press the reset button, the module will return to its original state.</p>
+
+                <p>Each color is assigned a value between 0 and 6, where white is 0, red is 1, orange is 2, yellow is 3, green is 4, blue is 5, and purple is 6.</p>
+
+                <p>In order to spill paint on the module, select the color of your choice from the selector, then press a cell on the module. When paint spills, the following occurs:</p>
+                <ul>
+                    <li>Paint will be applied to the pressed cell, as well as every adjacent cell, both orthogonally and diagonally.
+                        <ul>
+                            <li>The grid does not wrap around, so a spill in the top left corner only affects 4 cells.</li>
+                        </ul>
+                    </li>
+                    <li>The new color of a cell is calculated by summing the numerical value of both the current cell color and the color of the paint spilled, subtracting 7 if the total is greater than 6, and converting this value back into a color.</li>
+                </ul>
+                <h3>Interactive Controls</h3>
+                <p>Use the below interactive graphic to input the read and try out different solutions.</p>
+                <ul>
+                    <li>In <b>Read</b> mode, you can <b>press Space/W/R/O/Y/G/B/P(M)</b> on your keyboard or a click color buttons followed by squares to input the puzzle grid.</li>
+                    <li>In <b>Solve</b> mode, the grid behaves like the module.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Press the Manual/Generated button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles of 1 – 36 moves.</li>
+                    <li>Use the <b>-</b> / <b>+</b> buttons or press <b>[-]</b> / <b>[+]</b> to increment the number of moves in the generated puzzle.</li>
+                    <li>The solution you came up with in <b>Solve</b> mode as well as the solution to generaed puzzles can be <em>shown</em> or <em>hidden</em>.<br></li>
+                    <li>Colorblind mode adds text to colored items.</li>
+                    <li>Red text in the <b>Steps</b> string indicates moves that went over the move limit.</li>
+                    <li>Using the other buttons, you can save the current state of the grid, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Spilling Paint</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap">
+                    <div class="vstack tools buttons"></div>
+                    <div class="vstack">
+                        <button class="reset-grid">Reset</button>
+                        <div class="grid vstack just-left"></div>
+                    </div>
+                    <div class="vstack tools colors"></div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                    <div style="width: 8mm"></div>
+                    <div class="movesHolder hstack">
+                        <div class="movestext label">Moves:</div>
+                        <div class="movestext movesNumber">7</div>
+
+                        <button class="movestext minus">-</button>
+                        <button class="movestext plus">+</button>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <p class="path"><span>Steps:</span> <span class="str"></span></p>
+                <div style="height: 1mm"></div>
+                <p class="solution"><span>Solution:</span> <span class="str"></span></p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
