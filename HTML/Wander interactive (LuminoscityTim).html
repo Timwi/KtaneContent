@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wander — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <!-- <script src="js/Utilities/array-utils.js"></script> -->
+    <!-- <script src="js/Utilities/set-utils.js"></script> -->
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        const rows = 4;
+        const cols = 4;
+        let currX = 0;
+        let currY = 0;
+        let answerList = [];
+        let starState = [];
+        let transformStk = [];
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+
+        const fulldir = {
+            Up: [0, -1],
+            Left: [-1, 0],
+            Down: [0, 1],
+            Right: [1, 0],
+            w: [0, -1],
+            a: [-1, 0],
+            s: [0, 1],
+            d: [1, 0]
+        }
+        const directions = {
+            Up: [0, 0],
+            Left: [0, 0],
+            Down: [0, 1],
+            Right: [1, 0],
+            w: [0, 0],
+            a: [0, 0],
+            s: [0, 1],
+            d: [1, 0]
+        };
+        const walldir = {
+            Up: "h",
+            Left: "v",
+            Down: "h",
+            Right: "v",
+            w: "h",
+            a: "v",
+            s: "h",
+            d: "v"
+        }
+        const dirLetter = {
+            Up: "U",
+            Left: "L",
+            Down: "D",
+            Right: "R",
+            w: "U",
+            a: "L",
+            s: "D",
+            d: "R"
+        }
+
+        function makeStar() {
+            let svg = MakeSvgTag(150, 150, -123, -73);
+            let path = MakeSvgElem("path", {
+                d:"M8,0.703l-17.742-6.543c-14.364-5.297-25.687-16.619-30.983-30.982l-6.544-17.743  c-0.246-0.667-0.882-1.11-1.593-1.11c-0.711,0-1.347,0.443-1.593,1.11l-6.544,17.742c-5.297,14.364-16.62,25.686-30.983,30.983  l-17.743,6.543c-0.667,0.246-1.11,0.882-1.11,1.593c0,0.711,0.443,1.347,1.11,1.593l17.744,6.545  c14.363,5.297,25.685,16.619,30.982,30.982l6.544,17.744c0.246,0.667,0.882,1.11,1.593,1.11c0.711,0,1.347-0.443,1.593-1.11  l6.544-17.744c5.297-14.363,16.619-25.686,30.982-30.982l17.744-6.545c0.667-0.246,1.11-0.882,1.11-1.593z",
+                fill:"#DDD", class:"star"
+            });
+            svg.append(path);
+            return svg;
+        }
+
+        function selectNone() {
+            $(".selected").removeClass("selected");
+            selected = null;
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function mode() {
+            if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function arrowPressed(direction, type, fdir, dirLet) {
+            if (mode() == MODE_READ && $(".netsquare.selected").length > 0) {
+                let x = currX + direction[0];
+                let y = currY + direction[1];
+                let wallv = `v${letter(x-1)}${letter(x)}${y+1}`;
+                let wallh = `h${y}${y+1}${letter(x)}`;
+                if (type == "v" && x > 0 && x < cols && y >= 0 && y < rows) {
+                    $(`svg .wall.${wallv}`).toggleClass("solid");
+                    // console.log(wallq);
+                }
+                else if (type == "h" && x >= 0 && x < cols && y > 0 && y < rows) {
+                    $(`svg .wall.${wallh}`).toggleClass("solid");
+                    // console.log(wallq);
+                }
+            }
+            else if (mode() == MODE_SOLVE) {
+                for (let s = 0; s < starState.length; s++) {
+                    if ($(".wall-collide").hasClass("collide")) {
+                        let x = starState[s][0] + direction[0];
+                        let y = starState[s][1] + direction[1];
+                        let wallv = `v${letter(x-1)}${letter(x)}${y+1}`;
+                        let wallh = `h${y}${y+1}${letter(x)}`;
+                        if (starState[s][2] && type == "v") {
+                            if (x <= 0 || x >= cols || y < 0 || y >= rows || $(`svg .wall.${wallv}`).hasClass("solid")) {
+                                starState[s][2] = false;
+                            }
+                        }
+                        else if (starState[s][2] && type == "h") {
+                            if (x < 0 || x >= cols || y <= 0 || y >= rows || $(`svg .wall.${wallh}`).hasClass("solid")) {
+                                starState[s][2] = false;
+                            }
+                        }
+                    }
+                    starState[s][0] += fdir[0];
+                    starState[s][1] += fdir[1];
+                    if (starState[s][2] && (starState[s][0] < 0 || starState[s][1] < 0 || starState[s][0] >= cols || starState[s][1] >= rows))
+                        starState[s][2] = false;
+                }
+                $(".netsquare").addClass("destroy");
+                for (let s = 0; s < starState.length; s++) {
+                    if (starState[s][2])
+                        $(`.netsq${starState[s][0]}${starState[s][1]}`).removeClass("destroy");
+                }
+                answerList.push(dirLet);
+                $(".path .str").text(answerList.join(" "));
+            }
+        }
+
+        let down = false
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (event.key.startsWith("Arrow")) {
+                let direction = directions[event.key.substring(5)];
+                let wallt = walldir[event.key.substring(5)];
+                let fdir = fulldir[event.key.substring(5)];
+                let dirLet = dirLetter[event.key.substring(5)];
+                arrowPressed(direction, wallt, fdir, dirLet);
+                event.preventDefault();
+            } else if (NoSpecialKeys(event) && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                let direction = directions[k];
+                let wallt = walldir[k];
+                let fdir = fulldir[k];
+                let dirLet = dirLetter[k];
+                arrowPressed(direction, wallt, fdir, dirLet);
+            }
+            down = false;
+        });
+
+        function flipVertical(stack = true) {
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows/2; y++) {
+                    if (x < cols - 1) {
+                        let wl1 = `v${letter(x)}${letter(x+1)}${y + 1}`;
+                        let wl2 = `v${letter(x)}${letter(x+1)}${rows - y}`;
+                        let wall1 = $(`svg .wall.${wl1}`);
+                        let wall2 = $(`svg .wall.${wl2}`);
+                        wall1.removeClass(wl1).addClass(wl2);
+                        wall2.removeClass(wl2).addClass(wl1);
+                    }
+                    if (y < rows/2 - 1) {
+                        let wl1 = `h${y+1}${y+2}${letter(x)}`;
+                        let wl2 = `h${rows - y - 1}${rows - y}${letter(x)}`;
+                        let wall1 = $(`svg .wall.${wl1}`);
+                        let wall2 = $(`svg .wall.${wl2}`);
+                        wall1.removeClass(wl1).addClass(wl2);
+                        wall2.removeClass(wl2).addClass(wl1);
+                    }
+                }
+            }
+            if (stack) transformStk.push(flipVertical);
+        }
+
+        function flipHorizontal(stack = true) {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols/2; x++) {
+                    if (x < cols/2 - 1) {
+                        let wl1 = `v${letter(x)}${letter(x+1)}${y+1}`;
+                        let wl2 = `v${letter(cols - x - 2)}${letter(cols - x - 1)}${y+1}`;
+                        let wall1 = $(`svg .wall.${wl1}`);
+                        let wall2 = $(`svg .wall.${wl2}`);
+                        wall1.removeClass(wl1).addClass(wl2);
+                        wall2.removeClass(wl2).addClass(wl1);
+                    }
+                    if (y < rows - 1) {
+                        let wl1 = `h${y+1}${y+2}${letter(x)}`;
+                        let wl2 = `h${y+1}${y+2}${letter(cols - x - 1)}`;
+                        let wall1 = $(`svg .wall.${wl1}`);
+                        let wall2 = $(`svg .wall.${wl2}`);
+                        wall1.removeClass(wl1).addClass(wl2);
+                        wall2.removeClass(wl2).addClass(wl1);
+                    }
+                }
+            }
+            if (stack) transformStk.push(flipHorizontal);
+        }
+
+        function flipRowsCols(stack = true) {
+            for (let x = 0; x < cols - 1; x++) {
+                for (let y = 0; y <= x; y++) {
+                    let a = letter(x);
+                    let b = letter(x+1);
+                    let n1 = y+1;
+                    let wl1 = `v${a}${b}${n1}`;
+                    let wl2 = `h${toNum(a)}${toNum(b)}${letter(n1-1)}`;
+                    let wall1 = $(`svg .wall.${wl1}`);
+                    let wall2 = $(`svg .wall.${wl2}`);
+                    wall1.removeClass(wl1).addClass(wl2);
+                    wall2.removeClass(wl2).addClass(wl1);
+
+                    let wl3 = `h${n1}${n1+1}${b}`;
+                    let wl4 = `v${letter(n1-1)}${letter(n1)}${toNum(b)}`;
+                    let wall3 = $(`svg .wall.${wl3}`);
+                    let wall4 = $(`svg .wall.${wl4}`);
+                    wall3.removeClass(wl3).addClass(wl4);
+                    wall4.removeClass(wl4).addClass(wl3);
+                }
+            }
+            if (stack) transformStk.push(flipRowsCols);
+        }
+
+        function resetFlips() {
+            while (transformStk.length > 0) {
+                let func = transformStk.pop();
+                func(false);
+            }
+        }
+
+        function toggleStarAt(x, y) {
+            for (let s = 0; s < starState.length; s++) {
+                if (starState[s][0] == x && starState[s][1] == y) {
+                    starState[s][2] = !starState[s][2];
+                    return;
+                }
+            }
+            starState.push([x, y, true]);
+        }
+
+        function letter(i) {
+            return String.fromCharCode(65 + i);
+        }
+        function toNum(x) {
+            let code = x.toUpperCase().charCodeAt(0)
+            if (code > 64 && code < 91)
+                return code - 64;
+            return 0;
+        }
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(letter(i)).appendTo(row);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq${x-1}${y-1}`).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            selected = element;
+                            updateSelection();
+                        }
+                        else {
+                            element.toggleClass("destroy");
+                            toggleStarAt(x-1, y-1);
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                    if (x == 1 && y == 1) {
+                        selected = element;
+                        element.addClass("selected");
+                    }
+                });
+                makeStar().appendTo(square);
+                starState.push([x-1, y-1, true]);
+            }
+        }
+
+        let maze = $("svg.maze");
+        let mazeborder = MakeSvgElem("rect", {
+            x:0, y:0, width:400, height:400, fill:"none", class:"wall border",
+        });
+        maze.append(mazeborder);
+        for (let x = 0; x < cols; x++) {
+            for (let y = 0; y < rows; y++) {
+                if (x < cols - 1) {
+                    let vwall = MakeSvgElem("path", {
+                        d:`M${100 + x*100} ${y*100}v100`, fill:"none", class:`wall v${letter(x)}${letter(x+1)}${y+1}`, stroke:"transparent"
+                    });
+                    maze.append(vwall);
+                }
+                if (y < rows - 1) {
+                    let hwall = MakeSvgElem("path", {
+                        d:`M${x*100} ${100 + y*100}h100`, fill:"none", class:`wall h${y+1}${y+2}${letter(x)}`, stroke:"transparent"
+                    });
+                    maze.append(hwall);
+                }
+            }
+        }
+
+        $(".tools button").click(function(event) {
+            let q = this.className.split("-")[1];
+            let direction = directions[q];
+            let type = walldir[q];
+            let fdir = fulldir[q];
+            let dirLet = dirLetter[q];
+            arrowPressed(direction, type, fdir, dirLet);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        function selectMaze(rot) {
+            console.log(rot);
+            $("svg.maze").removeClass("rot0 rot1 rot2 rot3 rot4 rot5 rot6 rot7").addClass(rot);
+            resetFlips();
+            switch (rot) {
+                case "rot1":    //Red
+                    flipHorizontal();
+                    break;
+                case "rot2":    //Green
+                    flipVertical();
+                    break;
+                case "rot3":    //Blue
+                    flipRowsCols();
+                    break;
+                case "rot4":    //Yellow
+                    flipHorizontal();
+                    flipVertical();
+                    break;
+                case "rot5":    //Cyan
+                    flipVertical();
+                    flipRowsCols();
+                    break;
+                case "rot6":    //Magenta
+                    flipHorizontal();
+                    flipRowsCols();
+                    break;
+                case "rot7":    //White
+                    flipHorizontal();
+                    flipVertical();
+                    flipRowsCols();
+                    break;
+            }
+        }
+        $('#mazecolor').change(function() {
+            selectMaze(this.value);
+        });
+
+        $("button.read-solve").click(function() {
+            $(this).toggleClass("solve");
+        });
+
+        $("button.wall-collide").click(function() {
+            $(this).toggleClass("collide");
+            $("body").toggleClass("collide");
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        function resetStars() {
+            $(".netsquare").removeClass("destroy");
+            starState.splice(0);
+
+            for (let x = 0; x < cols; x++)
+                for (let y = 0; y < rows; y++)
+                    starState.push([x, y, true]);
+            answerList = [];
+            $(".path .str").text("");
+        }
+
+        $("button.reset-stars").click(function() {
+            resetStars();
+        });
+
+        $("button.reset-maze").click(function() {
+            $("svg.maze .wall").removeClass("solid");
+
+            $("#mazecolor").val("rot0");
+            selectMaze("rot0");
+        });
+
+        $("button.reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateWalls = Array.from($("svg.maze path.wall")).map(x => $(x)).map(x => x.hasClass("solid"));
+            let saveStateStars = Array.from($(".grid .netsquare")).map(x => $(x)).map(x => x.attr("class") || "");
+            // console.log(saveStates);
+            let stateNumber = saveStates.length;
+            let s_answerList = Array(answerList.length);
+            Object.assign(s_answerList, answerList);
+            let s_mazecolor = $("#mazecolor").val();
+            let s_starState = [];
+            for (let s = 0; s < starState.length; s++) {
+                let st = Array(3);
+                Object.assign(st, starState[s]);
+                s_starState.push(st);
+            }
+            let s_currX = currX;
+            let s_currY = currY;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $("svg.maze path.wall").each((i, x) => $(x).toggleClass("solid", saveStateWalls[i]));
+                $(".grid .netsquare").each((i, x) => $(x).attr("class", saveStateStars[i]));
+
+                answerList = Array(s_answerList.length);
+                Object.assign(answerList, s_answerList);
+                $(".path .str").text(answerList.join(" "));
+
+                starState.splice(0);
+                for (let s = 0; s < s_starState.length; s++) {
+                    let st = Array(3);
+                    Object.assign(st, s_starState[s]);
+                    starState.push(st);
+                }
+
+                $("#mazecolor").val(s_mazecolor);
+                selectMaze(s_mazecolor);
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(`.saves`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .button-spc { height: 45px; }
+
+        table {
+            margin: 1em auto;
+        }
+
+        .square-row {
+            height: 65px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .square-row.letters {
+            /* margin-left: 60px; */
+        }
+        svg.maze .wall {
+            stroke-width: 7px;
+        }
+        svg.maze .wall.border {
+            /* stroke: #F44; */
+            stroke-width: 8px;
+        }
+        /* svg.maze .wall.solid {
+            stroke: #F44;
+        } */
+        #mazecolor {
+            margin-bottom: 3mm;
+        }
+
+        .square {
+            width: 65px;
+            height: 65px;
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #777 1px dashed;
+            transition: background-color 0.3s, color 0.3s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 18px;
+            border-width: 0;
+            width: 65px;
+            height: 65px;
+            line-height: 55px;
+        }
+        .netsquare {
+            height: 65px;
+            width: 65px;
+            font-size: 35px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            color: black;
+            background-color: black;
+            position: relative;
+        }
+        .netsquare.selected {
+            background-color: #66F;
+            line-height: 65px;
+        }
+        .gridholder .square svg {
+            left: 0;
+            position: absolute;
+            height: 65px;
+            width: 65px;
+        }
+        .netsquare svg path.star { transition: 0.3s; }
+        .netsquare.destroy svg path.star {
+            fill: transparent;
+        }
+
+        .vspace { margin-top: 3mm; }
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        .tools button {
+            height: 50px;
+            font-size: 30px;
+            margin: 0;
+        }
+        button.btn-a, button.btn-d {
+            width: 54px;
+            font-size: 35px;
+            line-height: 40px;
+        }
+        button.btn-a {
+            margin-right: -2.5%;
+        }
+        button.btn-d {
+            margin-left: -2.5%;
+        }
+
+        .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str) {
+            display: inline-block;
+            width: 100px;
+        }
+
+        svg.rot0 path.wall.solid, svg.rot0 rect.wall {
+            stroke: #999;
+            stroke-width: 9;
+        }
+        svg.rot1 path.wall.solid, svg.rot1 rect.border.wall { stroke: #F44; }
+        svg.rot2 path.wall.solid, svg.rot2 rect.wall { stroke: #4F4; }
+        svg.rot3 path.wall.solid, svg.rot3 rect.wall { stroke :#22F }
+        svg.rot4 path.wall.solid, svg.rot4 rect.wall { stroke: #FF4; }
+        svg.rot5 path.wall.solid, svg.rot5 rect.wall { stroke: #2FF; }
+        svg.rot6 path.wall.solid, svg.rot6 rect.wall { stroke: #F4F; }
+        svg.rot7 path.wall.solid, svg.rot7 rect.wall { stroke: #FFF; }
+
+        .gridholder {
+            position: relative;
+            width: 360px;
+            height: 360px;
+        }
+        .gridholder svg {
+            width: 360px;
+            height: 360px;
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+        }
+        .gridholder svg.maze {
+            width: 264px;
+            height: 264px;
+            position: absolute;
+            left: 79px;
+            top: 61px;
+            user-select: none;
+            pointer-events: none;
+            transition: transform 1s;
+        }
+        .gridholder .grid {
+            left: 0px;
+            top: 0px;
+            /* border: 1px solid black; */
+            position: absolute;
+            width: 360px;
+            height: 360px;
+        }
+
+        svg.maze.rot1 { transform: scaleX(-1) }                 /* Red */
+        svg.maze.rot2 { transform: scaleY(-1); }                /* Green */
+        svg.maze.rot3 { transform: rotateZ(-90deg) scaleX(-1); }/* Blue */
+        svg.maze.rot4 { transform: rotateZ(180deg); }           /* Yellow */
+        svg.maze.rot5 { transform: rotateZ(90deg); }           /* Cyan */
+        svg.maze.rot6 { transform: rotateZ(-90deg); }            /* Magenta */
+        svg.maze.rot7 { transform: rotateZ(90deg) scaleX(-1); } /* White */
+
+        .tools.colors svg circle {
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.read-solve {
+            margin-bottom: 8mm;
+        }
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.wall-collide {
+            font-size: 12px;
+            padding: 3px 5px 1px 5px;
+        }
+        button.wall-collide.collide::before {
+            content: 'Wall Collisions Processed';
+        }
+        button.wall-collide:not(.collide)::before {
+            content: 'Wall Collisions Ignored';
+        }
+        body.collide span.star-collide::before {
+            content: 'on collisions with walls and edges of the grid.';
+        }
+        body:not(.collide) span.star-collide::before {
+            content: 'only on collisions with the edges of the grid.';
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Dominosa</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wander.svg" class="diagram">
+                <h2>On the Subject of Wanders</h2>
+                <p class="flavour-text">Look at the stars, look how they shine for you...</p>
+                <p>This module contains a screen with a colored maze and four arrow buttons. Identify the walls and color of the maze.</p>
+                <p>Apply transformations to the maze based on its RGB color components, in the order red, green, blue. (A maze with black walls will appear to be gray.)</p>
+                <ul>
+                    <li><em>Red:</em> Horizontally flip the maze.</li>
+                    <li><em>Green:</em> Vertically flip the maze.</li>
+                    <li><em>Blue:</em> Swap the rows and columns of the maze. (For example, A3 becomes C1.)</li>
+                </ul>
+                <p>After applying the necessary transformations to the maze, press the screen in the middle. The maze will disappear, and a large number will appear on the screen.</p>
+                <p>At this point, you will enter "path planning" mode, in which all positions in the maze will be filled in with a star. (These stars are not seen yet.) Moving in any given direction will cause all stars to move in that direction.</p>
+                <p>The number on the screen will show how many living stars there are. When a star collides with a wall, it is killed, and the number on the screen will update to show how many stars have survived the movement.</p>
+                <p>Move around in such a way that there is only one living star. At this point, a coordinate will appear at the bottom of the screen, representing the goal position. Move the living star to the goal position without colliding with a wall, then press the middle screen to submit.</p>
+                <p>Moving around in such a way that all stars die, attempting to submit when there are multiple living stars, or submitting when the single living star is not at the goal position will incur a strike and reset the module.</p>
+                <p>Any time you attempt to submit an answer, or cause all stars to die, the screen will play an animation, showing the list of movements you made.</p>
+                <p>Upon solving the module, the living star will turn green, and the true orientation of the maze will be revealed.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Dominosa</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap">
+                    <div class="gridholder">
+                        <svg viewbox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                            <defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs>
+                            <rect filter="url(#blur)" x="105" y="82" width="378" height="380" fill="#888"/>
+                        </svg>
+                        <div class="grid"></div>
+                        <svg class="maze rot0" viewbox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div style="width: 8mm"></div>
+                    <div class="vstack">
+                        <div class="hstack">
+                            <label for="mazecolor">Maze:&nbsp;</label>
+                            <select name="rotations" id="mazecolor">
+                                <option value="rot0">Gray</option>
+                                <option value="rot1">Red</option>
+                                <option value="rot2">Green</option>
+                                <option value="rot3">Blue</option>
+                                <option value="rot4">Yellow</option>
+                                <option value="rot5">Cyan</option>
+                                <option value="rot6">Magenta</option>
+                                <option value="rot7">White</option>
+                            </select>
+                        </div>
+                        <button class="read-solve"></button>
+                        <div class="hstack tools">
+                            <button class="btn-a">⯇</button>
+                            <div class="vstack">
+                                <button class="btn-w">▲</button>
+                                <div class="button-spc"></div>
+                                <button class="btn-s">▼</button>
+                            </div>
+                            <button class="btn-d">⯈</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div class="buttons vspace">
+                    <button class="reset-stars">Reset Stars</button>
+                    <button class="reset-maze">Reset Maze</button>
+                    <button class="reset-saves">Reset Saves</button>
+                </div>
+                <div style="height: 5mm"></div>
+                <p class="path"><span>Steps:</span> <span class="str"></span></p>
+
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>In <b>Read</b> mode, you can <b>click a cell</b> and press <b>WASD</b> or <b>Arrow keys</b> on your keyboard or use the arrow buttons to input the maze walls of each cell.</li>
+                    <li>Use the <b>Maze</b> color selector <b>only after</b> you have input the untransformed (gray) maze in <b>Read</b> mode.</li>
+                    <li>In <b>Solve</b> mode, the same direction controls move the stars, which are automatically destroyed <span class="star-collide"></span></li>
+                    <li>Clicking a star in <b>Solve</b> mode will toggle the star.</li>
+                    <li>Using the other buttons, you can save the current state of the stars and walls, reset the stars, reset the maze, or delete the saves.</li>
+                    <li>Note: Maze rotation is not saved.</li>
+                </ul>
+                <button class="wall-collide"></button>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
