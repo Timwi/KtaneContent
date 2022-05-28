@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Pathfinder — Keep Talking and Nobody Explodes Module</title>
+    <title>Numerical Knight Movement — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
@@ -18,36 +18,46 @@
         let origGameGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
         let currX = 0;
         let currY = 0;
-        let moves = 30;
+        let moves = 24;
         let prevPos = 0;
-        let prevFacing = 2;
         let pressing = false;
         var start;
         let movementList = [];
         let answerList = [];
         let generating = false;
-        let movementWasFree = true;
         let modeWasSolve = true;
         let saveStates = [];
         let currentState = 0;
         let rows = 4;
         let cols = 4;
+        let nTiles = rows * cols;
+        const MOV_RANGE = 9;
+        const MIN_MOVES = 2;
+        const MAX_MOVES = 41;
         const MODE_READ = 0;
         const MODE_SOLVE = 1;
         const MODE_PLAY = 2;
         const MOV_FREE = 0;
         const MOV_ENFORCE = 1;
 
-        const directions = {
-            Up: [0, -1],
-            Left: [-1, 0],
-            Down: [0, 1],
-            Right: [1, 0],
-            w: [0, -1],
-            a: [-1, 0],
-            s: [0, 1],
-            d: [1, 0]
-        };
+        const ValidTiles = [
+            [6, 9],
+            [8, 10, 7],
+            [9, 11, 4],
+            [5, 10],
+            [2, 10, 13],
+            [3, 11, 14, 12],
+            [0, 8, 15, 13],
+            [1, 9, 14],
+            [6, 14, 1],
+            [2, 0, 7, 15],
+            [1, 3, 4, 12],
+            [5, 13, 2],
+            [10, 5],
+            [4, 6, 11],
+            [5, 7, 8],
+            [9, 6]
+        ];
 
         function selectNone() {
             selected = null;
@@ -62,119 +72,57 @@
         }
 
         function resetPos() {
-            selected = grid.children().eq(1).children().eq(1);
-            selected.removeClass("fallen");
+            selected = null;
             updateSelection();
-            prevFacing = 2;
-            prevPos = 0;
             currX = currY = 0;
             movementList = [];
             $(".path .str").text("");
+            updateMovesLeft();
         }
         //This function is taken from the module source code
         function generate() {
             generating = true;
-            let currentRow = 0;
-            let currentColumn = 0;
-            let direction = 1;
-            let done = false;
-            let startAgain = true;
-            while (startAgain) {
-                for (let y = 0; y < rows; y++)
-                    for (let x = 0; x < cols; x++) {
-                        gameGrid[x][y] = 0;
-                        origGameGrid[x][y] = 0;
-                    }
-                answerList = [];
-                for (let i = 0; i < moves; i++) {
-                    done = false;
-                    while (!done) {
-                        let movement = Math.floor(Math.random() * 4);
-                        if (movement == 0 && currentRow != 0 && direction != 2) {
-                            currentRow--;
-                            answerList.push("U");
-                            gameGrid[currentColumn][currentRow]++;
-                            origGameGrid[currentColumn][currentRow]++;
-                            direction = movement;
-                            done = true;
-                        }
-                        else if (movement == 1 && currentColumn != 3 && direction != 3) {
-                            currentColumn++;
-                            answerList.push("R");
-                            gameGrid[currentColumn][currentRow]++;
-                            origGameGrid[currentColumn][currentRow]++;
-                            direction = movement;
-                            done = true;
-                        }
-                        else if (movement == 2 && currentRow != 3 && direction != 0) {
-                            currentRow++;
-                            answerList.push("D");
-                            gameGrid[currentColumn][currentRow]++;
-                            origGameGrid[currentColumn][currentRow]++;
-                            direction = movement;
-                            done = true;
-                        }
-                        else if (movement == 3 && currentColumn != 0 && direction != 1) {
-                            currentColumn--;
-                            answerList.push("L");
-                            gameGrid[currentColumn][currentRow]++;
-                            origGameGrid[currentColumn][currentRow]++;
-                            direction = movement;
-                            done = true;
-                        }
-                    }
-                }
-                if (currentRow != 3 || currentColumn != 3) {
-                    currentRow = 0;
-                    currentColumn = 0;
-                }
-                else
-                    startAgain = false;
-            }
-            $(".solution .str").text(answerList.join(" "));
+            answerList = [];
+            let mList = [];
+            let movementAmount = Math.floor(Math.random() * MOV_RANGE) + moves;
+
+            let all = $(".netsq");
+            all.text(0);
             for (let y = 0; y < rows; y++)
-                for (let x = 0; x < cols; x++) {
-                    origGameGrid[x][y] = gameGrid[x][y];
-                    grid.children().eq(y+1).children().eq(x+1).text(gameGrid[x][y]);
-                }
+                for (let x = 0; x < cols; x++)
+                    origGameGrid[x][y] = gameGrid[x][y] = 0;
+            for (let p = 0; p < movementAmount; p++) {
+                let start = (p == 0 ? Math.floor(Math.random() * nTiles) :
+                    ValidTiles[ mList[p-1] ][Math.floor(Math.random() * ValidTiles[ mList[p-1] ].length)]);
+                mList.push(start);
+                let xy = coordinate(start);
+                answerList.push(coordinateName(start));
+                gameGrid[ xy[0] ][ xy[1] ] += 1;
+                let n = gameGrid[ xy[0] ][ xy[1] ];
+                origGameGrid[ xy[0] ][ xy[1] ] = n;
+                grid.children().eq(xy[1]+1).children().eq(xy[0]+1).text(n);
+            }
+
+            $(".solution .str").text(answerList.join(" "));
             generating = false;
+        }
+
+        function coordinateName(pos) {
+            let coord = coordinate(pos);
+            return `${String.fromCharCode(65 + coord[0])}${coord[1] + 1}`;
+        }
+
+        function coordinate(pos) {
+            return [ pos % cols, Math.floor(pos / cols) ];
         }
 
         //This function is based on the module source code
         function attemptMove(pos) {
-            let facing = 0;
-            if ((prevPos == pos + 4 || (prevPos == pos - 1 && prevPos % 4 != 3) || prevPos == pos - 4 || (prevPos == pos + 1 && prevPos % 4 != 0)) &&
-                !pressing && gameGrid[pos % 4][Math.floor(pos / 4)] != 0)
-            {
-                let movementCache = "";
-                if (prevPos == pos + 4) {
-                    facing = 0;
-                    movementCache = "U";
-                }
-                else if (prevPos == pos - 1 && pos % 4 != 4) {
-                    facing = 1;
-                    movementCache = "R";
-                }
-                else if (prevPos == pos - 4) {
-                    facing = 2;
-                    movementCache = "D";
-                }
-                else {
-                    facing = 3;
-                    movementCache = "L";
-                }
-
-                if ((prevFacing + 2) % 4 == facing)
-                    facing = prevFacing;
-                else {
-                    if (movement() == MOV_ENFORCE) {
-                        movementList.push(movementCache);
-                        $(".path .str").text(movementList.join(" "));
-                    }
-                    prevFacing = facing;
-                    pressing = true;
-                    return true;
-                }
+            let x = pos % cols;
+            let y = Math.floor(pos / cols);
+            if ((selected == null) || (ValidTiles[prevPos].includes(pos) && !pressing && gameGrid[x][y] != 0)) {
+                pressing = true;
+                return true;
             }
             return false;
         }
@@ -185,28 +133,7 @@
                 return false;
             down = true;
             let k = event.key.toLowerCase();
-            if (event.key.startsWith("Arrow")) {
-                if (mode() != MODE_READ && !pressing) {
-                    let direction = directions[event.key.substring(5)];
-                    let x = currX + direction[0];
-                    let y = currY + direction[1];
-                    if (x >= 0 && x < cols && y >= 0 && y < rows)
-                        grid.children().eq(y + 1).children().eq(x + 1).click();
-                }
-                event.preventDefault();
-                event.stopPropagation();
-            } else if (k == "w" || k == "a" || k == "s" || k == "d") {
-                if (mode() != MODE_READ && !pressing) {
-                    let direction = directions[k];
-                    let x = currX + direction[0];
-                    let y = currY + direction[1];
-                    if (x >= 0 && x < cols && y >= 0 && y < rows)
-                        grid.children().eq(y + 1).children().eq(x + 1).click();
-                }
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            else if (k == "-")
+            if (k == "-")
                 movesDec();
             else if (k == "=" || k == "+")
                 movesInc();
@@ -227,17 +154,29 @@
                         }
                     }
                 }
+                updateMovesLeft();
             }
             down = false;
         });
+        function updateMoves() {
+            movesNumber.text(`${moves} - ${moves + MOV_RANGE - 1}`);
+        }
+
+        function updateMovesLeft() {
+            let sum = 0;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    sum += gameGrid[x][y];
+            $(".movesleft").text(`M: ${sum}`);
+        }
 
         function movesDec() {
-            moves = Math.max(10, moves - 2);
-            movesNumber.text(moves);
+            moves = Math.max(MIN_MOVES, moves - 1);
+            updateMoves();
         }
         function movesInc() {
-            moves = Math.min(60, moves + 2);
-            movesNumber.text(moves);
+            moves = Math.min(MAX_MOVES, moves + 1);
+            updateMoves();
         }
         $(".movestext.minus").click(function() {
             movesDec();
@@ -260,19 +199,23 @@
             else
                 return MOV_ENFORCE;
         }
-        let row = $("<div>").addClass("slab-row letters").appendTo(grid);
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
         for (var i = 0; i < cols; i++) {
             $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
         }
         for (let y = 1; y <= rows; y++) {
-            row = $("<div>").addClass("slab-row").appendTo(grid);
+            row = $("<div>").addClass("square-row").appendTo(grid);
             $("<div>").addClass("square numbers").text(y).appendTo(row);
             for (let x = 1; x <= cols; x++) {
-                let square = $("<div>").addClass("netsquare square netsq").text("0").appendTo(row).each(function(_, e) {
+                let color = (x + y % 2) % 2 == 1 ? "black" : "white";
+                let square = $("<div>").addClass(`netsquare square netsq ${color}`).text("0").appendTo(row).each(function(_, e) {
                     var element = $(e);
                     element.click(function(event) {
-                        let pos = (y-1)*4 + x-1;
-                        if (mode() != MODE_READ && (gameGrid[x-1][y-1] == 0 || !attemptMove(pos) && movement() == MOV_ENFORCE) ) {
+                        let pos = (y-1) * cols + x-1;
+                        if (mode() != MODE_READ && (gameGrid[x-1][y-1] == 0 ||
+                            ((mode() == MODE_PLAY || mode() == MODE_SOLVE && movement() == MOV_ENFORCE) && !attemptMove(pos))
+                        )) {
                             pressing = false;
                             return false;
                         }
@@ -290,22 +233,27 @@
                             let n = Math.max(0, gameGrid[x-1][y-1] - 1);
                             gameGrid[x-1][y-1] = n;
                             $(this).text(n);
+                            movementList.push(coordinateName(pos));
+                            $(".path .str").text(movementList.join(" "));
+
                             prevPos = pos;
                             let zeros = 0;
                             for (let r = 0; r < rows; r++)
                                 for (let c = 0; c < cols; c++)
                                     zeros += (gameGrid[c][r] == 0 ? 1 : 0);
-                            if (x == 4 && y == 4 && zeros == 16) {
+                            if (zeros == nTiles && (mode() == MODE_PLAY || mode() == MODE_SOLVE && movement() == MOV_ENFORCE)) {
                                 if ($("button.sound").hasClass("play"))
                                     audioSolve[0].play();
-                                setTimeout(function(){
-                                    grid.children().eq(4).children().eq(4).addClass("fallen").removeClass("selected");
-                                }, 500);
                             }
                             else if ($("button.sound").hasClass("play")) {
                                 let aud = audioStep[0].cloneNode();
                                 aud.volume = 0.3;
                                 aud.play();
+                            }
+                            if (zeros == nTiles) {
+                                setTimeout(function(){
+                                    element.addClass("fallen").removeClass("selected");
+                                }, 500);
                             }
 
                             setTimeout(function(){
@@ -317,6 +265,7 @@
                                 }
                             }, 150);
                         }
+                        updateMovesLeft();
                         pressing = false;
                     });
                     if (x == 1 && y == 1) {
@@ -325,62 +274,56 @@
                     }
                 });
             }
-            if (y == 2) {
-                $("<div>").addClass("netsquare reset-grid square ").text("↻").appendTo(row).click(function() {
-                    if (mode() != MODE_READ)
-                        for (let y = 0; y < rows; y++) {
-                            for (let x = 0; x < cols; x++) {
-                                let n = origGameGrid[x][y];
-                                gameGrid[x][y] = n;
-                                var elem = grid.children().eq(y+1).children().eq(x+1);
-                                elem.text(n);
-                                if (n == 0)
-                                    elem.addClass("fallen");
-                                else
-                                    elem.removeClass("fallen");
-                            }
+            if (y == 1) {
+                $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(row).click(function() {
+                    for (let y = 0; y < rows; y++) {
+                        for (let x = 0; x < cols; x++) {
+                            let n = origGameGrid[x][y];
+                            gameGrid[x][y] = n;
+                            var elem = grid.children().eq(y+1).children().eq(x+1);
+                            elem.text(n);
+                            if (n == 0 && mode() != MODE_READ)
+                                elem.addClass("fallen");
+                            else
+                                elem.removeClass("fallen");
                         }
+                    }
                     resetPos();
                 });
+            } else if (y == 2) {
+                $("<div>").addClass("movesleft square").text("M: 0").appendTo(row);
             }
-            else if (y == 4)
-                $("<div>").addClass("netsquare square nopointer").text("➞").appendTo(row);
         }
 
         let audioStep = $("<audio>")
-            .attr("src", "audio/Pathfinder/footstep.mp3")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
             .appendTo(grid);
         let audioSolve = $("<audio>")
-            .attr("src", "audio/Pathfinder/solve.mp3")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
             .prop("volume", 0.4)
             .appendTo(grid);
 
         var tools = $(".tools");
         $("<button>").addClass("read-solve").appendTo(tools).click(function() {
             $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     if (mode() != MODE_READ) {
-                        if ((x != 0 || y != 0) && gameGrid[x][y] == 0)
-                            grid.children().eq(y+1).children().eq(x+1).addClass("fallen");
-                    }
-                    else {
                         if (gameGrid[x][y] == 0)
-                            $(".netsquare").removeClass("fallen");
+                            grid.children().eq(y+1).children().eq(x+1).addClass("fallen");
                     }
                 }
             }
             if (mode() != MODE_READ) {
                 resetPos();
-                $("button.movement").prop('disabled', false);
-            }
-            else {
-                $("button.movement").prop('disabled', true);
+            } else {
+                $(".netsquare").removeClass("fallen");
             }
         });
-        $("<button>").addClass("movement").appendTo(tools).prop("disabled", true).click(function() {
+        $("<button>").addClass("movement").appendTo(tools).click(function() {
             $(this).toggleClass("free");
-            $("body").toggleClass("free");
+            $("body").toggleClass("free", $(this).hasClass("free"));
         });
         $("<button>").addClass("sound play").appendTo(tools).click(function() {
             $(this).toggleClass("play");
@@ -389,40 +332,20 @@
             if (generating)
                 return false;
             $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
             if (mode() == MODE_PLAY) {
                 modeWasSolve = $(".read-solve").hasClass("solve");
-                movementWasFree = movement() == MOV_FREE;
-                $("button.movement").prop('disabled', true);
-                $("button.movement").removeClass("free");
-                $("body").removeClass("free");
-                $("button.read-solve").prop('disabled', true);
-                $("button.read-solve").addClass("solve");
-                $(".solution").toggleClass("invisible", $(".path").hasClass("invisible"));
-                $(".movesHolder").removeClass("invisible");
                 generate();
             }
             else {
-                $("button.read-solve").prop('disabled', false);
-                if (modeWasSolve)
-                    $("button.movement").prop('disabled', false);
-                else {
-                    $("button.read-solve").removeClass("solve");
+                if (!modeWasSolve)
                     $(".netsquare").removeClass("fallen");
-                }
-                if (movementWasFree) {
-                    $("button.movement").addClass("free");
-                    $("body").addClass("free");
-                }
-                $(".movesHolder").addClass("invisible");
-                $(".solution").addClass("invisible");
             }
             $(".reset-grid").click();
         });
         $("<button>").addClass("show-sol").appendTo(tools).click(function() {
             $(this).toggleClass("show");
-            $(".path").toggleClass("invisible");
-            if (mode() == MODE_PLAY)
-                $(".solution").toggleClass("invisible", $(".path").hasClass("invisible"));
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
         });
 
         $(".reset-saves").click(function() {
@@ -431,17 +354,12 @@
             currentState = 0;
         });
         $(".reset-all").click(function() {
-            $("button.movement").prop('disabled', true);
-            $("button.read-solve").prop('disabled', false);
             $("button.movement").removeClass("free");
-            $("body").removeClass("free");
+            $("body").removeClass("free solution-shown solve play");
             $("button.sound").addClass("play");
             $("button.expert-play").removeClass("play");
             $("button.show-sol").removeClass("show");
             $("button.read-solve").removeClass("solve");
-            $(".path").addClass("invisible");
-            $(".solution").addClass("invisible");
-            $(".movesHolder").addClass("invisible");
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     gameGrid[x][y] = 0;
@@ -456,8 +374,8 @@
             saveStates.forEach(x => x.remove());
             saveStates = [];
             currentState = 0;
-            moves = 30;
-            movesNumber.text(moves);
+            moves = 24;
+            updateMoves();
         });
 
         function removeFutureSaves() {
@@ -473,7 +391,7 @@
             removeFutureSaves();
 
             let saveStateClass = Array.from($(".netsquare, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
-            let saveStateDisable = Array.from($(".tools button")).map(x => $(x)).map(x => x.prop("disabled") || false);
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
             console.log(saveStates);
             let stateNumber = saveStates.length;
             currentState = stateNumber;
@@ -493,31 +411,27 @@
             let s_moves = moves;
             let s_currX = currX;
             let s_currY = currY;
-            let s_prevPos = prevPos;
-            let s_prevFacing = prevFacing;
             let s_pressing = pressing;
-            let s_movementWasFree = movementWasFree;
+            let s_prevPos = prevPos;
             let s_modeWasSolve = modeWasSolve;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
                 $(".netsquare, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
-                $(".tools button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
-                movementList = [];
-                answerList = [];
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                movementList = Array(s_movementList.length);
+                answerList = Array(s_answerList.length);
                 Object.assign(movementList, s_movementList);
                 Object.assign(answerList, s_answerList);
                 $(".path .str").text(movementList.join(" "));
                 $(".solution .str").text(answerList.join(" "));
                 currentState = stateNumber;
                 moves = s_moves;
-                movesNumber.text(moves);
+                updateMoves();
                 selected = s_selected;
                 currX = s_currX;
                 currY = s_currY;
                 prevPos = s_prevPos;
-                prevFacing = s_prevFacing;
                 pressing = s_pressing;
-                movementWasFree = s_movementWasFree;
                 modeWasSolve = s_modeWasSolve;
                 for (let y = 0; y < rows; y++)
                     for (let x = 0; x < cols; x++) {
@@ -525,6 +439,7 @@
                         origGameGrid[x][y] = s_origGameGrid[x][y];
                         grid.children().eq(y+1).children().eq(x+1).text(gameGrid[x][y]);
                     }
+                updateMovesLeft();
             }).addClass("flash").appendTo(".saves");
             setTimeout(() => {
                 button.removeClass("flash");
@@ -535,21 +450,20 @@
     });
     </script>
     <style>
+        .aligncenter {
+            text-align: center;
+        }
+        .note {
+            text-align: center;
+            font-size: x-small;
+            font-style: italic;
+        }
+        th img {
+            height: auto;
+            width: 80%;
+        }
         table {
             margin: 1em auto;
-        }
-        .page-bg-01 {
-            background-image: url("img/Pathfinder/noise.png");
-        }
-        @media screen and (min-width: 900px) {
-            body.dark, body {
-                background: url("img/Pathfinder/background.jpg");
-            }
-        }
-        @font-face {
-            font-family: "Germania";
-            font-weight: bold;
-            src: local('Germania'), url(font/Germania.ttf);
         }
         .hstack {
             display: flex;
@@ -579,16 +493,13 @@
             margin: 10px;
         }
 
-        .slab-row {
+        .square-row {
             height: 76px;
             margin: 3px;
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: center;
-        }
-        .slab-row.letters {
-            margin-left: 83px;
         }
         .solution, .path {
             font-size: 20px;
@@ -598,12 +509,12 @@
             display: inline-block;
             min-width: 108px;
         }
-        body.free .path span.str::after {
-            content: 'Free Movement';
-        }
-        .invisible {
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
             color: transparent;
         }
+        body.free.solution-shown .path span.str { color: #F00; }
 
         .square {
             margin: 3px;
@@ -614,7 +525,7 @@
             user-select: none;
             text-align: center;
             border: #808080 1px solid;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.2s, color 0.2s;
             box-sizing: border-box;
         }
         .square.numbers, .letters .square {
@@ -626,25 +537,47 @@
             align-items: center;
             justify-content: center;
         }
+        .square.movesleft {
+            font-size: 20px;
+            line-height: 80px;
+            border: none;
+        }
+
         .netsquare {
             height: 76px;
             width: 76px;
-            font-size: 52px;
-            font-family: "Germania";
+            font-size: 50px;
+            line-height: 85px;
             font-weight: bold;
             cursor: pointer;
-            color: #FF3600;
             background-color: #13140E;
         }
-        .netsquare.selected {
-            background-color: #13147E;
+        .netsquare.black {
+            background-color: #000;
+            color: #DDD;
         }
+        .netsquare.white {
+            background-color: #FFF;
+            color: #222;
+        }
+        .netsquare.selected {
+            background-color: #13149E;
+            color: #DDD;
+        }
+        .netsquare.fallen:not(.selected),
         .netsquare.fallen:not(.selected) {
             cursor: default;
             transition: 1.2s;
-            color: transparent;
-            background-color: transparent;
+            color: #888;
+            background-color: #88888833;
             border-color: transparent;
+        }
+
+        .netsquare.reset-grid {
+            font-size: 70px;
+            padding-top: 2px;
+            color: #DDD;
+            background-color: #555;
         }
         .square.nopointer {
             cursor: default;
@@ -659,7 +592,7 @@
             position: relative;
             top: 2px;
             font-size: 35px;
-            width: 52px;
+            width: 128px;
             margin-left: 10px;
             margin-right: 10px;
             text-align: center;
@@ -690,10 +623,7 @@
             color: white;
             background-color: blue;
         }
-        button[disabled] {
-            user-select: none;
-            background-color: #555;
-        }
+        body.play button.read-solve::before,
         button.read-solve.solve::before {
             content: 'Solve';
         }
@@ -703,11 +633,20 @@
         button.movement, button.show-sol {
             padding: 3px 3px 1px 3px;
         }
-        button.movement.free::before {
+        button.movement.free::before,
+        body:not(.solve) button.movement::before {
             content: 'Free Movement';
         }
-        button.movement:not(.free)::before {
+        button.movement:not(.free)::before,
+        body.play button.movement::before {
             content: 'Enforced Movement';
+        }
+        body.play button.read-solve,
+        body.play button.movement,
+        body:not(.solve) button.movement {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
         }
         button.expert-play.play::before {
             content: 'Generated';
@@ -738,49 +677,29 @@
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Pathfinder</span>
+                <span class="page-header-section-title">Numerical Knight Movement</span>
             </div>
             <div class="page-content">
-                <img src="img/Component/Pathfinder.svg" class="diagram">
-                <h2>On the Subject of Pathfinders</h2>
-                <p class="flavour-text">Now entering: Lethal Lava Land. To tourists wishing to see the volcano, please take care with where you walk.</p>
-
-                <p>Each square has a number on it and stepping onto a square will cause its number to decrease by 1.
-                   If a square's number decreases to 0, it will disappear after you step off.</p>
-                <p>You must step on each square <b>exactly</b> as many times as the number shown on that square to make them all disappear.</p>
-                <p><b>Turning around on the squares or moving diagonally is forbidden.</b></p>
-                <p>You start on the top left square and <b>you must end at the bottom right to solve the module.</b> This module cannot strike.</p>
-                <p>You can reset the numbers on all of the squares by using the reset button <span style="font-size: 20px">[↻]</span> to the right.
-                   This will also reset your position back to the top left again.</p>
-                <h3>Keyboard Support</h3>
-
-                <p>This module has keyboard support, meaning that you can use your keyboard to move and reset. You can move using WASD or the arrow keys and reset with R.</p>
-
-                <div style="height: 5mm"></div>
-                <h3>Interactive Controls</h3>
-                <p>Use the below interactive graphic to input the read and try out different paths.</p>
-                <div style="height: 2mm"></div>
-                In <b>Read</b> mode, you can <b>press [0]-[9] on your keyboard</b> or click individual squares to input the puzzle grid.
-                <div style="height: 2mm"></div>
-                In <b>Solve</b> mode, the grid behaves like the module with options for <em>free</em> movement or <em>enforced</em> movement as the module demands.
-                <div style="height: 2mm"></div>
-                The sound effects can be muted.
-                <div style="height: 2mm"></div>
-                Press the 4th button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles of 10 – 60 moves.
-                <div style="height: 2mm"></div>
-                Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> to increment the number of moves in the generated puzzle.
-                <div style="height: 2mm"></div>
-                The solution you came up with in <b>Solve</b> mode as well as the solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.<br>
-                <b>Note: The path string can only be generated if Enforced Movement is enabled.</b>
-                <div style="height: 2mm"></div>
-                Using the other buttons, you can save the current state of the grid, delete the saves, or reset everything.
+                <img src="img/Component/Numerical Knight Movement.svg" class="diagram">
+                <h2>On the Subject of Numerical Knight Movement</h2>
+                <p class="flavour-text">Saying that the module is horsing around is an understatement.</p>
+                <p>The module consists of a 4×4 chessboard with numbers on each of the tiles. The sum of all the numbers on all of the tiles is between 24-32. This is the number of movements that the knight piece must perform on the chessboard.</p>
+                <p>You must move the knight piece in a certain way so that all of the tiles will have a count of zero. To start the movement, select any tile that is not a <b>“0”</b> tile. The knight piece will be represented on the tile with a gray-colored text. If you select on a <b>“0”</b> tile that the knight piece is not standing on, the module will perform a strike.</p>
+                <p>After pressing on a non-zero tile, the count of the tile that was pressed will decrease by one. You can move to another tile to continue your movement. However, only tiles that are a chess knight’s movement away are valid. Pressing on an invalid tile causes the module to register a strike.</p>
+                <p>In the case that you are stuck after moving, or if you just want to return to the original board, you can press the tile that the knight piece is currently standing on 2 times to reset your board back to the beginning. You can select another starting point after performing this.</p>
+                <table>
+                    <tr><th>Proper Knight Movement</th></tr>
+                    <tr><th><img src="img/Numerical Knight Movement/Knight Movement.png"></th></tr>
+                </table>
+                <p class="note">Inspired by Taurus Knight module from Pruz</p>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
-        <div class="page page-bg-01">
+
+        <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Pathfinder</span>
+                <span class="page-header-section-title">Numerical Knight Movement</span>
             </div>
             <div class="page-content">
                 <div class="hstack wrap">
@@ -795,18 +714,31 @@
                     <button class="reset-saves">Reset Saves</button>
                     <button class="reset-all">Reset All</button>
                     <div style="width: 8mm"></div>
-                    <div class="movesHolder hstack invisible">
+                    <div class="movesHolder hstack">
                         <div class="movestext label">Moves:</div>
-                        <div class="movestext movesNumber">30</div>
+                        <div class="movestext movesNumber">24 - 32</div>
 
                         <button class="movestext minus">-</button>
                         <button class="movestext plus">+</button>
                     </div>
                 </div>
                 <div style="height: 5mm"></div>
-                <div class="hstack just-left path invisible"><span>Path:</span><span class="str"></span></div>
+                <div class="hstack just-left path"><span>Path:</span><span class="str"></span></div>
                 <div style="height: 1mm"></div>
-                <div class="hstack just-left solution invisible"><span>Solution:</span><span class="str"></span></div>
+                <div class="hstack just-left solution"><span>Solution:</span><span class="str"></span></div>
+                <h3>Interactive Controls</h3>
+                <p>Use the above interactive graphic to input the read and try out different paths.</p>
+                <ul>
+                    <li>In <b>Read</b> mode, you can <b>press [0]-[9] on your keyboard</b> or click individual squares to input the puzzle grid.</li>
+                    <li>In <b>Solve</b> mode, the grid behaves like the module with options for <em>free</em> movement or <em>enforced</em> movement as the module demands.</li>
+                    <li>Your <b>Path</b> may be invalid if you turn off enforced movement in <b>Solve</b> mode</li>
+                    <li>The <b>↻</b> button resets the puzzle back to the starting state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Press the 4th button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles of 2 – 50 moves.</li>
+                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the number of moves in the generated puzzle.</li>
+                    <li>The solution you came up with in <b>Solve</b> mode as well as the solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.<br></li>
+                    <li>Using the other buttons, you can save the current state of the grid, delete the saves, or reset everything.</li>
+                </ul>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
