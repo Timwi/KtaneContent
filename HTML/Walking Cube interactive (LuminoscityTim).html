@@ -10,6 +10,8 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script src="js/ruleseed.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
     <style>
         .hstack {
             display: flex;
@@ -55,6 +57,9 @@
             text-align: center;
             padding: 0;
         }
+        .wc-table.borders td {
+            border: 1px solid #888;
+        }
 
         .obstruction {
             width: 100%;
@@ -66,6 +71,9 @@
         }
         .invisible {
             visibility: hidden;
+        }
+        .hidden {
+            display: none;
         }
 
         div.netsquare {
@@ -143,14 +151,14 @@
             height: 227px;
         }
         .colorbutton { color: black; }
-        .square.red, td.red, .colorbutton.red, .bg-red { background-color: hsl(0, 75%, 75%); }
-        .square.green, td.green, .colorbutton.green, .bg-green { background-color: hsl(120, 75%, 75%); }
-        .square.blue, td.blue, .colorbutton.blue, .bg-blue { background-color: hsl(220, 75%, 75%); }
-        .square.cyan, td.cyan, .colorbutton.cyan, .bg-cyan { background-color: hsl(180, 75%, 75%); }
-        .square.magenta, td.magenta, .colorbutton.magenta, .bg-magenta { background-color: hsl(300, 75%, 75%); }
-        .square.yellow, td.yellow, .colorbutton.yellow, .bg-yellow { background-color: hsl(60, 75%, 75%); }
-        .square.white, td.white, .colorbutton.white, .bg-white { background-color: #ffffff; }
-        .square.orange, td.orange, .colorbutton.orange, .bg-orange { background-color: hsl(31, 75%, 75%); }
+        .square.red, td.red .facediv, .colorbutton.red, .bg-red { background-color: hsl(0, 75%, 75%); }
+        .square.green, td.green .facediv, .colorbutton.green, .bg-green { background-color: hsl(120, 75%, 75%); }
+        .square.blue, td.blue .facediv, .colorbutton.blue, .bg-blue { background-color: hsl(220, 75%, 75%); }
+        .square.cyan, td.cyan .facediv, .colorbutton.cyan, .bg-cyan { background-color: hsl(180, 75%, 75%); }
+        .square.magenta, td.magenta .facediv, .colorbutton.magenta, .bg-magenta { background-color: hsl(300, 75%, 75%); }
+        .square.yellow, td.yellow .facediv, .colorbutton.yellow, .bg-yellow { background-color: hsl(60, 75%, 75%); }
+        .square.white, td.white .facediv, .colorbutton.white, .bg-white { background-color: #ffffff; }
+        .square.orange, td.orange .facediv, .colorbutton.orange, .bg-orange { background-color: hsl(31, 75%, 75%); }
         .square.black, td.black { background-color: black; }
         .colorbutton.black { background: black; color: white; }
         .bg-gray { background-color: hsl(0, 0%, 75%); }
@@ -343,7 +351,10 @@
         .leftpad {
             margin-left: 30px;
         }
-        .gridstack.leftpad, .gridstack .leftpad {.wc-table
+        .leftpad2 {
+            margin-left: 42px;
+        }
+        .gridstack.leftpad, .gridstack .leftpad {
             margin-left: 50px;
         }
         button {
@@ -450,7 +461,6 @@
 
         .stamp {
             cursor: pointer;
-            border: 1px solid black;
         }
         .netmark {
             border: 4px solid black;
@@ -600,6 +610,18 @@
             border: black 3px solid;
             font-size: 18px;
         }
+        button.show-tp {
+            font-size: 10pt;
+            width: 18mm;
+            text-align: center;
+            margin-right: 10mm;
+        }
+        button.show-tp:not(.shown)::after {
+            content: 'TP Help Hidden';
+        }
+        button.show-tp.shown::after {
+            content: 'TP Help Shown';
+        }
 
     </style>
     <script>
@@ -675,10 +697,6 @@
             }
         }
 
-        function noSpecialKeys(event) {
-            return !(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey);
-        }
-
         function showRules(colors, symbols) {
             let table1 = $(".wc-color-table");
             if (table1.find("tr").length > 0) {
@@ -692,7 +710,9 @@
                 if (r == 0) {
                     for (let c = 1; c <= 5; c++) {
                         $("<th>").text(`Page\n${c}`).addClass("pagenum").appendTo(row1);
-                        $("<th>").text(`Page\n${c}`).addClass("pagenum").appendTo(row2);
+                        let th = $("<th>").text(`Page\n`).addClass("pagenum").appendTo(row2);
+                        $("<span>").addClass("page-num").text(c).appendTo(th);
+                        $("<span>").addClass("page-let hidden").text(String.fromCharCode(64 + c)).appendTo(th);
                     }
                 }
                 else {
@@ -713,7 +733,7 @@
                             }
                         }).appendTo(row2);
                         let td1 = $("<td>").click(function(event) {
-                            if (noSpecialKeys(event)) {
+                            if (NoSpecialKeys(event)) {
                                 $(this).find(".facediv").toggleClass("chosen");
                                 if ($(this).find(".facediv").hasClass("chosen")) {
                                     $(this).find(".obstruction").addClass("invisible");
@@ -740,6 +760,7 @@
                         $("<div>").addClass("face symbol-0").appendTo(facediv);
                         $("<div>").addClass("obstruction").appendTo(td1);
                     }
+                    $("<th>").addClass("tp-row invisible").text(r).appendTo(row2);
                 }
             }
             $(".wc-color-table td").each(function (i) {
@@ -878,10 +899,6 @@
             return first;
         }
 
-        function UMod(n, d) {
-            return n - d * Math.floor(n / d);
-        }
-
         let netRotation = [0,0,0];
         let netflipX = [1,1,1];
         let netflipY = [1,1,1];
@@ -941,7 +958,7 @@
 
             $("svg.centered-img").each((i) => {
                 $("svg.centered-img").eq(i).dblclick(function(event) {
-                    if (noSpecialKeys(event)) {
+                    if (NoSpecialKeys(event)) {
                         flipNetShape(i + 1);
                     }
                 }).click(function(event) {
@@ -953,7 +970,6 @@
                     rotateFlipNetShape(i + 1, netRotation[i], netflipX[i], netflipY[i]);
                 });
             });
-
 
             $("button.rotatenet").click(function() {
                 let b = $(this);
@@ -973,7 +989,7 @@
             });
 
             $(".netshape").click(function(event) {
-                if (faceColors.includes(selected) && noSpecialKeys(event)) {
+                if (faceColors.includes(selected) && NoSpecialKeys(event)) {
                     let cell = $(this);
                     var whichColor = hasWhichColor(cell);
                     if (whichColor >= 0) {
@@ -1191,6 +1207,12 @@
                 selected = selectedCol = "netting";
             }
 
+            $("<button>").addClass("show-tp").appendTo(tools).click(function() {
+                $(this).toggleClass("shown");
+                $(".pagenum .page-num, .pagenum .page-let").toggleClass("hidden");
+                $(".wc-table").toggleClass("borders");
+                $(".wc-table .tp-row").toggleClass("invisible");
+            });
             $("<div>").addClass("stamp square netmark symbol-150").text("Net").appendTo(tools).click(function() {
                 selectNet();
             }).click();
@@ -1460,10 +1482,10 @@
                         <h3>Stamps</h3>
                         <table class="wc-table"></table>
                         <div style="height: 5mm"></div>
-                        <div class="tools"></div>
+                        <div class="tools hstack"></div>
                         <div style="height: 8mm"></div>
                     </div>
-                    <div class="vstack leftpad gridstack" style="width: 70mm">
+                    <div class="vstack leftpad2 gridstack" style="width: 70mm">
                         <h3 class="lWalkpath leftpad">Walking Path</h3>
                         <div class="gridholder"><div class="symbolboard"></div></div>
                         <div class="vstack colors" style="margin-top: 10px">
