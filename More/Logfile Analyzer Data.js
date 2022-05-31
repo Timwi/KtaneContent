@@ -690,9 +690,10 @@ let parseData = [
             {
                 regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     if (!module.TableData) {
                         module.TableData = [];
+                        module.JSONs = [];
+                        module.Stage = [];
                         module.CorrectValues = {};
                         module.CorrectValuesFull = {};
                         module.ListObject = {
@@ -716,6 +717,7 @@ let parseData = [
                             </tr>
                         </table>`)
                         };
+                        module.push({label:`<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>`});
                         module.push(module.ListObject);
                         module.SetCss = function () {
                             module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
@@ -725,6 +727,7 @@ let parseData = [
                     while (module.TableData.length <= matches[1])
                         module.TableData.push({});
                     module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+                    module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length-1]);
                     if (matches[2] === 'B') {
                         let ledColors = {
                             K: '#888',
@@ -747,6 +750,10 @@ let parseData = [
                             <td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
                         </tr>`));
                         module.SetCss();
+                        module.JSONs.push(module.Stage);
+                        module.Stage = [];
+                        console.log(JSON.stringify(module.JSONs));
+                        module[1] = {label:`<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>`};
                     }
                     return true;
                 }
@@ -754,7 +761,6 @@ let parseData = [
             {
                 regex: /The correct digit for the ([RGB]) channel is (-?\d+ \((standard|inverted) ([0-9A-Z])\))/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     module.CorrectValuesFull[matches[1]] = matches[2];
                     module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
                     if (matches[1] === 'B') {
@@ -772,7 +778,6 @@ let parseData = [
             {
                 regex: /The correct submission is:|Incorrect Submission:/,
                 handler: function (matches, module) {
-                    console.log(matches[0]);
                     var colorList = {
                         R: '#FF0000',
                         G: '#00FF00',
@@ -2142,24 +2147,29 @@ let parseData = [
         loggingTag: "Color Grid",
         matches: [
             {
-                regex: /to press/,
+                regex: /reading/,
                 handler: function (matches, module) {
-                    const arr = [
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'],
-                            ['-', '-', '-', '-', '-'] ]
-                        , after = matches.input.split(': ')[1]
-                        , positions = after.split(' ');
-
-                    positions.pop();
-                    for (const position of positions)
-                        arr[Math.floor((position-1)/5)][(position-1)%5] = 'X';
-
-                    module.push("Grid:");
-                    for (const s of arr)
-                        module.push({label:`<code style='font-size:x-large'>${s.toString().replaceAll(',',' ')}</code>`});
+                    module.buttonGroup = [matches.input, []];
+                    for (let i = 0; i < 25; i++) {
+                        let line = readLine();
+                        module.buttonGroup[1].push(line.replace(/\[Color Grid #\d+\]/,((i+1)+"").padStart(2, '0')+"."));
+                    }
+                    module.push("The buttons are:", {obj: this.parseButtons(module.buttonGroup[1]), nobullet: true});
+                    return true;
+                },
+                parseButtons: buttons => {
+                    let groups = "";
+                    for (let i = 0; i < 5; i++) {
+                        for (let j = 0; j < 5; j++) {
+                            let color = /\[(\w+)\]/.exec(buttons[j*5+i])[1];
+                            color = color === "Inactive" ? "black" : color.toLowerCase();
+                            groups += `<circle r="9" cx="${10+20*i}" cy="${10+20*j}" fill="#363636"/>`;
+                            groups += `<rect width="10" height="10" x="${5+20*i}" y="${5+20*j}" transform="rotate(45 ${5+20*i+5} ${5+20*j+5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
+                        }
+                    }
+                    const css = {width: "250", height: "auto", display: "block", margin: "5px 0 10px"};
+                    const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
+                    return svg;
                 }
             },
             {
@@ -3273,6 +3283,28 @@ let parseData = [
         ]
     },
     {
+        displayName: "Dominosa",
+        moduleID: "DominosaModule",
+        loggingTag: "Dominosa",
+        matches: [
+            {
+                regex: /Solution:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 14; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Solution:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Dungeon",
         moduleID: "dungeon",
         loggingTag: "Dungeon",
@@ -3452,6 +3484,40 @@ let parseData = [
                 handler: function (matches, module) {
                     module.push({ label: "Operand:", obj: pre(readMultiple(2)) });
                 }
+            }
+        ]
+    },
+    {
+        displayName: "Evil Word Search",
+        moduleID: "EvilWordSearchModule",
+        loggingTag: "Evil Word Search",
+        matches: [
+            {
+                regex: /Grid A:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 5; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid A:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid B:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 5; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid B:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
             }
         ]
     },
@@ -6162,18 +6228,27 @@ let parseData = [
         loggingTag: "Mazematics",
         matches: [
             {
-                regex: /[A-Z][a-z]+ = (\d)/,
+                regex: /([A-Z][a-z]+) = (\d)/,
                 handler: function (matches, module) {
+                    if (module[1] && module[1].includes(matches[1])) //start again. issue: 63b36c5ee42dc68938df17881421ec98bc6896e5 (LFA file id)
+                    {
+                        module.Counter = null;
+                        module.ShapeNumbers = null;
+                        module.push("-------------------------------------");
+                    }
+                    /*
+                    const regex = /[A-Z][a-z]+/;
+                    console.log(module[1].includes(matches[1]));*/
                     if (typeof module.Counter !== "number") {
-                        module.push();
+                        module.push(null);
                         module.Counter = 0;
                     } else module.Counter++;
-                    module.push(this.names[module.Counter] + ": " + matches[1]);
-                    (module.shapeNumbers ??= [])[this.order[module.Counter]] = matches[1];
+                    module.push(this.names[module.Counter] + ": " + matches[2]);
+                    (module.ShapeNumbers ??= [])[this.order[module.Counter]] = matches[2];
                     return true;
                 },
                 names: ["Circle", "Square", "Mountain", "Triangle", "Diamond", "Hexagon", "Star", "Heart"],
-                order: [0, 4, 3, 7, 5, 1, 6, 2]
+                order: [0, 5, 7, 2, 1, 4, 6, 3]
             },
             {
                 regex: /STRIKE!/,
@@ -6193,21 +6268,29 @@ let parseData = [
                     (module.CoordsGroups ??= []).push([]);
                     (module.Strikes ??= []).push([]);
                     module.Attempts = ++module.Attempts | 0; //equiv. to (var ??= 0)++ except it works
-                    module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
+                    module.IsContinuing = false;
                     module.Section = [];
                     return true;
                 }
             },
             {
                 regex: /SOLVED!/,
-                handler: function (matched, module) {
+                handler: function (matches, module) {
                     module.Solved = true;
-                    module.push(matched.input);
+                    module.JSON["solved"] = module.Solved;
+                    const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
+                    module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
+                    module.push(matches.input);
+                    return true;
                 }
             },
             {
                 regex: /([A-Z][0-9])[^,]+(-?\d)/,
                 handler: function (matches, module) {
+                    if (!module.IsContinuing) {
+                        module.push([["ATTEMPT " + (module.Attempts + 1)], []]);
+                        module.IsContinuing = true;
+                    }
                     let correctLine = matches.input;
                     const currentStrikes = module.Strikes[module.Strikes.length - 1];
                     if (module.Rule49) {
@@ -6243,8 +6326,8 @@ let parseData = [
                             , getValueOfPossibleCells = c => {
                                 const indexUp = maintainInRange(c[0] - 1) * 8 + c[1]
                                     , indexDown = maintainInRange(c[0] + 1) * 8 + c[1];
-                                return [ss[indexUp] + module.shapeNumbers[s[indexUp]],
-                                ss[indexDown] + module.shapeNumbers[s[indexDown]]];
+                                return [ss[indexUp] + module.ShapeNumbers[s[indexUp]],
+                                ss[indexDown] + module.ShapeNumbers[s[indexDown]]];
                             }
                             , clue = matches[2]
                             , dir = getValueOfPossibleCells(toCoordsFixed(curr)).map(possibility => possibility.includes(clue));
@@ -6277,14 +6360,14 @@ let parseData = [
                     if (module.Section) {
                         module.Section.push(matched.input);
                         module.JSON = {
-                            shapeNumbers: module.shapeNumbers,
+                            shapeNumbers: module.ShapeNumbers,
                             coordsGroups: module.CoordsGroups,
                             strikes: module.Strikes,
                             solved: module.Solved,
                             restricted: module.Restricted
                         }
                         const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>` };
+                        module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
                         module[module.length - 1][1] = module.Section;
                     } else {
                         if (!module.Restricted && matched.input.includes("Restricted"))
@@ -10356,6 +10439,40 @@ let parseData = [
                         };
                     }
                     module.Infos.push(json);
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
+        displayName: "Wander",
+        moduleID: "WanderModule",
+        loggingTag: "Wander",
+        matches: [
+            {
+                regex: /Maze walls, before transformation:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 8; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Maze walls, before transformation:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Maze walls, after transformation:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 8; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Maze walls, after transformation:", obj: pre(lines) });
                     return true;
                 }
             },

@@ -9,7 +9,9 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
-    <script src="js/Utilities/Ut.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
     <script>
     $(function() {
         var selected;
@@ -80,10 +82,6 @@
             }
         }
 
-        function noSpecialKeys(event) {
-            return !(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey);
-        }
-
         function resetPos() {
             selected = grid.children().eq(1).children().eq(1);
             updateSelection();
@@ -116,7 +114,7 @@
                         continue;
                     x = cell % _sizeW;
                     y = Math.floor(cell / _sizeW);
-                    let possibilities = new Range(0, COLOR_COUNT).Enumerate().filter(color =>
+                    let possibilities = new CtRange(0, COLOR_COUNT).Enumerate().filter(color =>
                         (x == 0 || board[cell - 1] != color) && (x == _sizeW - 1 || board[cell + 1] != color) && (y == 0 || board[cell - _sizeW] != color) && (y == _sizeH - 1 || board[cell + _sizeW] != color)
                     ).length;
                     if (possibilities < fewestPossibilities)
@@ -130,7 +128,7 @@
 
                 x = bestCell % _sizeW;
                 y = Math.floor(bestCell / _sizeW);
-                let parityCounts = new Range(0, 2).Enumerate().map(parity => board.filter(cl => cl != null && cl % 2 == parity).length);
+                let parityCounts = new CtRange(0, 2).Enumerate().map(parity => board.filter(cl => cl != null && cl % 2 == parity).length);
                 let offset = Math.floor(Math.random() * COLOR_COUNT);
                 for (let colorIter = 0; colorIter < COLOR_COUNT; colorIter++)
                 {
@@ -147,13 +145,13 @@
                     board[bestCell] = color;
 
                     // Make sure that placing this color hasn’t made it impossible to place the rest of the colors in the same ROW
-                    let numMissingColors = new Range(0, COLOR_COUNT).Enumerate().filter(clr => !(new Range(0, _sizeW).Enumerate().some(xx => board[xx + _sizeW * y] == clr))).length;
-                    if (numMissingColors > (new Range(0, _sizeW).Enumerate().filter(xx => board[xx + _sizeW * y] == null).length))
+                    let numMissingColors = new CtRange(0, COLOR_COUNT).Enumerate().filter(clr => !(new CtRange(0, _sizeW).Enumerate().some(xx => board[xx + _sizeW * y] == clr))).length;
+                    if (numMissingColors > (new CtRange(0, _sizeW).Enumerate().filter(xx => board[xx + _sizeW * y] == null).length))
                         continue;
 
                     // Make sure that placing this color hasn’t made it impossible to place the rest of the colors in the same COLUMN
-                    numMissingColors = new Range(0, COLOR_COUNT).Enumerate().filter(clr => !(new Range(0, _sizeH).Enumerate().some(yy => board[x + _sizeW * yy] == clr))).length;
-                    if (numMissingColors > (new Range(0, _sizeH).Enumerate().filter(yy => board[x + _sizeW * yy] == null).length))
+                    numMissingColors = new CtRange(0, COLOR_COUNT).Enumerate().filter(clr => !(new CtRange(0, _sizeH).Enumerate().some(yy => board[x + _sizeW * yy] == clr))).length;
+                    if (numMissingColors > (new CtRange(0, _sizeH).Enumerate().filter(yy => board[x + _sizeW * yy] == null).length))
                         continue;
 
                     // All checks passed: try this color
@@ -185,7 +183,7 @@
             updateGrid();
             $(".solution .str").text(solList.join(""));
 
-            let givens = ReduceRequiredSet(ShuffleFisherYates(new Range(0, _sizeW * _sizeH).Enumerate()), test =>
+            let givens = ReduceRequiredSet(ShuffleFisherYates(new CtRange(0, _sizeW * _sizeH).Enumerate()), test =>
             {
                 let board = Array(_sizeW * _sizeH).fill(null);
                 let s = test.SetToTest;
@@ -245,7 +243,7 @@
                 event.preventDefault();
                 event.stopPropagation();
             }
-            else if (noSpecialKeys(event) && (k == " " || k == "enter" || k == "y" || k == "p" || k == "w" || k == "k" || k == "b")) {
+            else if (NoSpecialKeys(event) && (k == " " || k == "enter" || k == "y" || k == "p" || k == "w" || k == "k" || k == "b")) {
                 let n = 0;
                 if (k == " " || k == "enter")
                     event.preventDefault();
@@ -322,10 +320,10 @@
                 return MODE_READ;
         }
         function getRow(y) {
-            return new Range(0, _sizeW).Enumerate().map(x => gameGrid[x][y])
+            return new CtRange(0, _sizeW).Enumerate().map(x => gameGrid[x][y])
         }
         function getCol(x) {
-            return new Range(0, _sizeH).Enumerate().map(y => gameGrid[x][y])
+            return new CtRange(0, _sizeH).Enumerate().map(y => gameGrid[x][y])
         }
         function parityCount(p) {
             if (p == "py")
@@ -431,7 +429,6 @@
                                 playYPWKSound(gameGrid[x-1][y-1]);
                         }
                         // updateResult();
-                        pressing = false;
                     });
                     if (x == 1 && y == 1) {
                         selected = element;
@@ -859,7 +856,7 @@
                 <div style="height: 2mm"></div>
                 The sound effects can be muted.
                 <div style="height: 2mm"></div>
-                Press the 3th button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles just like the module.
+                Press the Manual/Generated button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles just like the module.
                 <div style="height: 2mm"></div>
                 Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> to increment the size of the generated puzzle.
                 <div style="height: 2mm"></div>

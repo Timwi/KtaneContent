@@ -9,9 +9,11 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
-    <script src="js/Utilities/Ut.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
     <script>
     $(function() {
+
         var selected;
         let grid = $(".grid");
         let sizeNumber = $(".sizeNumber");
@@ -85,12 +87,12 @@
                     Remove(valid, current[ix - _size]);
 
                 // Check if the current row or column already contains enough 0’s or 1’s
-                let zeros = new Range(0, x).Enumerate().filter(c => !current[c + _size * y]).length;
+                let zeros = new CtRange(0, x).Enumerate().filter(c => !current[c + _size * y]).length;
                 if (zeros >= _size >> 1)
                     Remove(valid, false);
                 else if (x - zeros >= _size >> 1)
                     Remove(valid, true);
-                zeros = new Range(0, y).Enumerate().filter(r => !current[x + _size * r]).length;
+                zeros = new CtRange(0, y).Enumerate().filter(r => !current[x + _size * r]).length;
                 if (zeros == _size >> 1)
                     Remove(valid, false);
                 if (y - zeros == _size >> 1)
@@ -99,13 +101,13 @@
                 // Make sure that the row we just filled isn’t identical to an earlier row. We can check this one column early because the last digit is determined by the rest
                 if (x == _size - 2)
                     for (let r = 0; r < y; r++)
-                        if (new Range(0, _size - 2).Enumerate().every(c => current[c + _size * r] == current[c + _size * y]))
+                        if (new CtRange(0, _size - 2).Enumerate().every(c => current[c + _size * r] == current[c + _size * y]))
                             Remove(valid, current[_size - 2 + _size * r]);
 
                 // Make sure that the column we just filled isn’t identical to an earlier column. We can check this one row early because the last digit is determined by the rest
                 if (y == _size - 2)
                     for (let c = 0; c < x; c++)
-                        if (new Range(0, _size - 2).Enumerate().every(r => current[c + _size * r] == current[x + _size * r]))
+                        if (new CtRange(0, _size - 2).Enumerate().every(r => current[c + _size * r] == current[x + _size * r]))
                             Remove(valid, current[c + _size * (_size - 2)]);
 
                 if (valid.length > 1 && Math.floor(Math.random() * 2) == 0)
@@ -140,7 +142,7 @@
             $(".solution .str").text(solList.join(""));
 
             let _given = Array(_size * _size).fill(false);
-            var puzzleIxs = ReduceRequiredSet(ShuffleFisherYates(new Range(0, _solution.length).Enumerate()), test =>
+            var puzzleIxs = ReduceRequiredSet(ShuffleFisherYates(new CtRange(0, _solution.length).Enumerate()), test =>
             {
                 for (let ix = 0; ix < _size * _size; ix++)
                     _given[ix] = false;
@@ -203,7 +205,7 @@
                 event.stopPropagation();
             }
             else if (!event.shiftKey) {
-                n = parseInt(event.key);
+                let n = parseInt(event.key);
                 if (k == " " || k == "enter" || (n >= 0 && n <= 1 && !event.altKey)) {
                     if (k == " " || k == "enter") {
                         n = 0;
@@ -283,10 +285,10 @@
                 return MODE_READ;
         }
         function getRow(y) {
-            return new Range(0, _size).Enumerate().map(x => gameGrid[x][y])
+            return new CtRange(0, _size).Enumerate().map(x => gameGrid[x][y])
         }
         function getCol(x) {
-            return new Range(0, _size).Enumerate().map(y => gameGrid[x][y])
+            return new CtRange(0, _size).Enumerate().map(y => gameGrid[x][y])
         }
         function checkSolution() {
             if (mode() == MODE_PLAY) {
@@ -375,10 +377,6 @@
                             gameGrid[x-1][y-1] = (gameGrid[x-1][y-1] + 1) % 3;
                             updateGrid();
 
-                            let zeros = 0;
-                            for (let r = 0; r < _size; r++)
-                                for (let c = 0; c < _size; c++)
-                                    zeros += (gameGrid[c][r] == 0 ? 1 : 0);
                             if (checkSolution()) {
                                 if ($("button.sound").hasClass("play"))
                                     audioSolve[0].play();
@@ -387,7 +385,6 @@
                                 playZeroOneSound(gameGrid[x-1][y-1]);
                         }
                         // updateResult();
-                        pressing = false;
                     });
                     if (x == 1 && y == 1) {
                         selected = element;
