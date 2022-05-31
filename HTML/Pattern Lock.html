@@ -8,13 +8,115 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        let svgNG = $("svg.numgrid");
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                let num = MakeSvgElem("text", {
+                    x:(50 + r*100), y:(65 + c*100)
+                });
+                let box = MakeSvgElem("rect", {
+                    class:"highlightable", width:100, height:100, x:(r*100), y:(c*100), fill:"transparent"
+                });
+                num.innerHTML = (c*3 + r + 1);
+                svgNG.append(num);
+                svgNG.append(box);
+            }
+        }
+
+        let pattern = [
+            [0,1,11,10,3],[1,2,12,11,3],[11,12,22,21,3],[10,11,21,20,3],[0,2,22,20,3],[0,1,11,10,0,11],[1,2,12,11,1,12],
+            [11,12,22,21,11,22],[10,11,21,20,10,21],[0,2,22,20,0,22],[],[0,1,21,20,3],[0,2,12,10,3],[1,2,22,21,3],
+            [10,12,22,20,3],[0,2,11,22,20,3],[0,2,22,11,20,3],[0,2,22,20,11,3],[0,11,2,22,20,3],[0,11,20,3],[0,2,11,3],
+            [2,22,11,3],[20,11,22,3],[0,1,12,21,20,11,3],[0,11,2,12,21,10,3],[1,2,11,22,21,10,3],[10,1,2,11,22,21,3],[0,1,21,20,0,11,20],
+            [0,2,12,10,0,11,2],[2,22,21,1,2,11,22],[20,10,12,22,20,11,22],[0,11,10,21,20,3],[0,2,11,1,10,3],[1,12,11,22,21,3],[10,12,22,11,21,3],
+            [1,12,11,22,21,3],[10,1,11,2,12,3],[2,22,21,12,11,3],[0,2,12,1,11,3],[0,10,11,21,22,3],[20,10,11,1,2,3],[0,1,11,12,22,3],
+            [20,2,12,11,21,3],[0,11,1,10,3],[1,12,2,11,3],[11,22,12,21,3],[10,21,11,20,3],[0,1,10,11,3],[1,2,11,12,3],
+            [11,22,21,12,3],[10,11,20,21,3],[0,22,20,2,3],[10,0,1,21,20,10,11],[1,2,12,10,0,1,11],[11,1,2,22,21,11,12],[11,12,22,20,10,11,21]
+        ];
+        let p = 0;
+        let table = $("table.patterns");
+        function pX(coord) {
+            return coord % 10 * 10 + 2;
+        }
+        function pY(coord) {
+            return Math.floor(coord / 10) * 10 + 2;
+        }
+
+        for (let r = 2; r <= 9; r++) {
+            let tr = $("<tr>").appendTo(table);
+            $("<th>").html(r).appendTo(tr);
+            for (let c = 2; c <= 9; c++) {
+                if (c == r)
+                    $("<td>").addClass("black").appendTo(tr);
+                else {
+                    let td = $("<td>").appendTo(tr);
+                    let svg = MakeSvgTag(24,24).appendTo(td);
+                    for (var xx = 2; xx < 24; xx += 10) {
+                        for (var yy = 2; yy < 24; yy += 10) {
+                            let circ = MakeSvgElem("circle", {
+                                cx:xx, cy:yy, r:2
+                            });
+                            svg.append(circ);
+                        }
+                    }
+                    if (p < pattern.length && pattern[p].length > 0) {
+                        let pat = pattern[p];
+                        pathStr = `M${pX(pat[0])} ${pY(pat[0])}`;
+                        pat.forEach((coord, i) => {
+                            if (i > 0) {
+                                if (coord == 3)
+                                    pathStr += "z";
+                                else
+                                    pathStr += `L${pX(coord)} ${pY(coord)}`;
+                            }
+                        });
+
+                        let path = MakeSvgElem("path", {
+                            d:`${pathStr}`, "stroke-linejoin":"round"
+                        });
+                        svg.append(path);
+                    }
+                    p++;
+                }
+            }
+        }
+    });
+    </script>
     <style>
-        table {
+        .dark table, table {
             margin: 1em auto;
+            border: none;
+            width: 90%;
         }
-        .bigimage {
-            width: 80%;
+        .patterns td {
+            padding: 8px 0px 8px 0px;
+            line-height: 4px;
+            text-align: center;
         }
+        .patterns th, .dark .patterns th {
+            border: none;
+            font-size: 20px;
+        }
+        svg.numgrid { width: 30%; }
+        td svg { width: 70%; }
+        td svg path {
+            stroke: #000;
+            stroke-width: 1.5;
+            fill: none;
+        }
+        td svg circle { fill: #BBB; }
+        .dark td svg path { stroke: #DDD; }
+        .dark td svg circle { fill: #444; }
+        svg.numgrid path {
+            stroke: #888;
+            stroke-width: 2;
+        }
+        td.black { background-color: black; }
+        .dark svg text { fill: #DDD; }
     </style>
 </head>
 <body>
@@ -32,7 +134,9 @@
                     <li>There will be nine circles, of which one is red, one is green, and one is blue.</li>
                     <li>Red is always square one, but the module is sometimes rotated. The rest of the circles’ corresponding numbers follow the pattern below if red is in the top left. Otherwise, rotate the pattern such that square one is in the location of the red circle.</li>
                 </ul>
-                <img src="img/Pattern Lock/grid.png" width="25%" height="25%" style="display: block; margin-left:auto; margin-right:auto;">
+                <svg class="centered-img numgrid" viewbox="0 0 300 300" text-anchor="middle" font-size="50">
+                    <path d="M100 0v300 M200 0v300 M0 100h300 M0 200h300"/>
+                </svg>
                 <ul>
                     <li>The green and blue circles determine what pattern needs to be input.  In the chart on the following page, the position of the green determines the row, and the position of the blue determines the column.</li>
                     <li>The images in the chart treat square one as if in the top left. <b>This may not be the case on your bomb.</b></li>
@@ -48,9 +152,11 @@
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Pattern Lock</span>
             </div>
-            <br><br>
-            <img src="img/Pattern Lock/chart.png" style="display: block; margin-left:auto; margin-right:auto;" width="60%" height="60%">
-            <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+            <div class="page-content">
+                <table class="patterns">
+                    <tr><th class="corner"></th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+            </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
     </div>

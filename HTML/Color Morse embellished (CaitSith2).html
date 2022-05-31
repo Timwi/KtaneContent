@@ -8,6 +8,131 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                'If the number is odd, double it. Otherwise, halve it.',
+                'If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash either red, yellow, or blue.',
+                'Square the number.',
+                'Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.',
+                'Triple the number and take the digital root until the number is a single digit.',
+                'Subtract the number from 10.'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `If the number is divisible by ${m}, divide it by ${m}; otherwise, multiply it by ${m}.`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "red", "orange", "yellow", "green", "blue", "purple", "white" ];
+                    return `If the number is divisible by ${m}, divide it by ${m}. Otherwise, add the number of lights that flash either ${colorNames[colors[0]]}, ${colorNames[colors[1]]}, or ${colorNames[colors[2]]}.`;
+                },
+                rnd => `Square the number.`,
+                rnd => `Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `Replace ${which === 1
+                        ? '+’s with −’s (and vice versa) and ×’s with /’s (and vice versa)'
+                        : '+’s with ×’s (and vice versa) and −’s with /’s (and vice versa)'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `Multiply the number by ${m} and take the digital root.`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `Subtract the number from ${m}.`;
+                },
+                rnd => `Multiply the number by <var>n<${''}/var> + 1, where <var>n<${''}/var> is equal to the number of ports that contain this character.`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `Take the number modulo ${m}, and use its factorial.`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `Replace the number by the number of ${['lit ', 'unlit ', ''][indMode]}indicators that contain this character.`;
+                },
+                rnd => `Multiply the number by <var>n<${''}/var>, where <var>n<${''}/var> is the number of distinct serial number characters.`,
+                rnd => `Replace the number with the number of 1’s that appear in this number’s binary conversion.`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `Replace the number with the number of ${['1’s', '2’s', '1’s and 2’s'][whichDigits]} that appear in this number’s ternary conversion.`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${[`Multiply the number by <var>n<${''}/var> + 1, where <var>n<${''}/var> is`, 'Add'][op]} the number of ${['port plates', 'distinct port types', 'battery holders'][whichEdgework]} on the bomb.`;
+                },
+                rnd => `Replace the character with the number of dots that appear in this characters’s <a href='https://ktane.timwi.de/HTML/Braille.html'>Braille<${''}/a> representation. (1..9 = A..H, 0 = J)`,
+                rnd => `Replace the character with the number of colored regions within the <a href='https://ktane.timwi.de/HTML/Maritime%20Flags.html'>maritime signalling flag<${''}/a> for the character.`,
+                rnd => `Replace the character with the number of shapes that appear in the character’s <a href='https://ktane.timwi.de/HTML/Zoni.html'>Zoni<${''}/a> symbol.`,
+                rnd => `Replace the character with <var>d<${''}/var> + 3×<var>s<${''}/var>, where <var>d<${''}/var> is the number of dots and <var>s<${''}/var> the number of dashes in the character’s Morse code representation.`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `Replace the character with the number of segments that would be ${['off', 'on'][useOn]} in the <a href='https://ktane.timwi.de/HTML/14.html'>14-segment display<${''}/a> for the character.`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `${['Prepend', 'Append'][append]} the ${['6th', '3rd'][snValue]} character of the serial number to this number.`;
+                },
+                rnd => `Add the number to the total number of letters across all displayed colors.`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `If the character appears in the serial number, divide it by <var>n<${''}/var> + 1, where <var>n<${''}/var> is the number of times it appears in the serial number. Otherwise, multiply by ${m}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `If the character in Morse Code reversed is a number from 0–9 or a letter from A–Z, use that character’s base-36 value instead. Otherwise, use the number plus the number of ${['ports', 'port plates', 'batteries', 'battery holders', 'indicators', 'lit indicators', 'unlit indicators'][which]}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `If the character is a digit, add the number of ${['ports', 'port plates', 'batteries', 'battery holders', 'indicators', 'lit indicators', 'unlit indicators'][which]}. Otherwise, replace the character with <var>d<${''}/var> + 3×<var>s<${''}/var>, where <var>d<${''}/var> is the number of dots and <var>s<${''}/var> the number of lines in the character’s Pigpen representation.`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `Multiply the number by the number of ${['digits', 'letters'][letters]} in the serial number.`;
+                },
+                rnd => `Add the last digit of the rule seed.`,
+                rnd => `Replace the value with 1 + the number of times the character is contained in the names of the colors of all LEDs.`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `Add the current ${['day', 'month', 'year'][which]} when the bomb activated.`;
+                },
+                rnd => `Replace the value with the index of the character’s first occurrence within the text “0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9” (not counting spaces).`,
+                rnd => `If the character is a letter, replace it with its score in <a href='http://ktane.timwi.de/HTML/Scrabble%20Scramble.html'>English Scrabble<${''}/a>.`,
+                rnd => `Replace the number with the <a href='https://ktane.timwi.de/HTML/%C3%9Cbermodule.html'>extended tap code<${''}/a> for the character, read as a two-digit number.`,
+                rnd => `Replace the character with the number of modules on the bomb whose name contains the character.`,
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = shuffledRules[i];
+        }
+    </script>
+    <style>
+        .small-font {
+            font-size: 11pt;
+        }
+        .dark .ondark { filter: invert(85%); }
+    </style>
 </head>
 <body>
     <div class="section">
@@ -20,54 +145,56 @@
                 <img src="img/Component/Color Morse.svg" class="diagram">
                 <h2>On the Subject of Color Morse</h2>
                 <p class="flavour-text">--&nbsp;.-&nbsp;-&nbsp;.... / ..&nbsp;... / ..-.&nbsp;..-&nbsp;-.&nbsp;!</p>
-                <ul>
-                    <li>There are three flashing lights of different colors and operations and parentheses surrounding them.</li>
-                    <li>Each flashing light displays a single number/letter in Morse code. If it displays a letter, consider it as a number with value equal to the letter's numeric position in the alphabet plus 9 (A=10, B=11, etc.).</li>
-                    <li>For each number, apply the color's special operation found in the table below that corresponds to the color of the light for that number. If the color of the light is white, do nothing to the number.</li>
-                    <li>Use the (potentially) new numbers in place of the lights in the mathematical expression to get a single result.
-                        <ul>
-                            <li>If the result is negative, make sure to send a hyphen before the rest of the number.</li>
-                            <li>If the result is not an integer, consider only the integer part of the number. </li>
-                            <li>If the result's absolute value is greater than 999, consider only the three least significant digits.</li>
-                            <li>If more than one of the previous rules apply, apply them in order.</li>
-                        </ul>
-                    </li>
-                    <li>Using the buttons, enter the result in Morse code using the blank button as a digit separator.</li>
-                    <li>Upon a strike, any characters you have entered so far are NOT reset.</li>
-                </ul>
-                <table>
-                    <thead><tr>
-                        <td><b>Color</b></td>
-                        <td><b>Action</b></td>
-                    </tr></thead>
-                    <tr>
-                        <td>Red</td>
-                        <td>If the number is odd, double it. Otherwise, halve it.</td>
-                    </tr>
-                    <tr>
-                        <td>Orange</td>
-                        <td>If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash with primary colors*.</td>
-                    </tr>
-                    <tr>
-                        <td>Yellow</td>
-                        <td>Square the number.</td>
-                    </tr>
-                    <tr>
-                        <td>Green</td>
-                        <td>Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.</td>
-                    </tr>
-                    <tr>
-                        <td>Blue</td>
-                        <td>Triple the number and take the digital root until the number is a single digit**.</td>
-                    </tr>
-                    <tr>
-                        <td>Purple</td>
-                        <td>Subtract the number from 10.</td>
-                    </tr>
-                </table>
-                <br>
-                <p>* The primary colors are red, blue, and yellow.</p>
-                <p>** The digital root of a number is the sum of all of its digits.</p>
+                <div class="small-font">
+                    <ul>
+                        <li>There are three flashing lights of different colors and operations and parentheses surrounding them.</li>
+                        <li>Each flashing light displays a single number/letter in Morse code. If it displays a letter, consider it as a number with value equal to the letter's numeric position in the alphabet plus 9 (A=10, B=11, etc.).</li>
+                        <li>For each number, apply the color's special operation found in the table below that corresponds to the color of the light for that number. If the color of the light is white, do nothing to the number.</li>
+                        <li>Use the (potentially) new numbers in place of the lights in the mathematical expression to get a single result.
+                            <ul>
+                                <li>If the result is not an integer, consider only the integer part of the number. </li>
+                                <li>If the result is negative, make sure to send a hyphen before the rest of the number.</li>
+                                <li>If the result's absolute value is greater than 999, consider only the three least significant digits.</li>
+                                <li>If more than one of the previous rules apply, apply them in order.</li>
+                                <li>Disregard any leading zeros.</li>
+                            </ul>
+                        </li>
+                        <li>Using the buttons, enter the result in Morse code using the blank button as a digit separator.</li>
+                        <li>Upon a strike, any characters you have entered so far are reset.</li>
+                    </ul>
+                    <p id='rule-seeded-explanation'>If a rule refers to a <em>number</em>, it refers to the base-36 value (A=10, ..., Z=35).
+                        If a rule refers to a <em>character</em>, it refers to the digit or letter shown in Morse code.</p>
+                    <table class="color-morse">
+                        <thead><tr>
+                            <td><b>Color</b></td>
+                            <td><b>Action</b></td>
+                        </tr></thead>
+                        <tbody><tr>
+                            <td>Red</td>
+                            <td class="color-morse-rules">If the number is odd, double it. Otherwise, halve it.</td>
+                        </tr>
+                        <tr>
+                            <td>Orange</td>
+                            <td class="color-morse-rules">If the number is divisible by 3, divide by 3. Otherwise, add the number of lights that flash with primary colors.</td>
+                        </tr>
+                        <tr>
+                            <td>Yellow</td>
+                            <td class="color-morse-rules">Square the number.</td>
+                        </tr>
+                        <tr>
+                            <td>Green</td>
+                            <td class="color-morse-rules">Swap the position of the parentheses to be around the 2nd and 3rd light if they are around the 1st and 2nd light, or vice versa.</td>
+                        </tr>
+                        <tr>
+                            <td>Blue</td>
+                            <td class="color-morse-rules">Triple the number and take the digital root until the number is a single digit.</td>
+                        </tr>
+                        <tr>
+                            <td>Purple</td>
+                            <td class="color-morse-rules">Subtract the number from 10.</td>
+                        </tr>
+                    </tbody></table>
+                </div>
             </div>
            <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -78,1531 +205,221 @@
             </div>
             <div class="page-content">
                 <h3><b>Morse Code Reference</b></h3>
-                <p style="text-align:center">
-                    <img style="width:75%">
-                    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   version="1.0"
-   width="500"
-   height="420.5332"
-   viewBox="0 0 432.05417 340.54624"
-   id="Layer_2"
-   xml:space="preserve"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="Morse Reference.svg"><metadata
- id="metadata3375"><rdf:RDF><cc:Work
- rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-   rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><sodipodi:namedview
- pagecolor="#ffffff"
- bordercolor="#666666"
- borderopacity="1"
- objecttolerance="10"
- gridtolerance="10"
- guidetolerance="10"
- inkscape:pageopacity="0"
- inkscape:pageshadow="2"
- inkscape:window-width="1920"
- inkscape:window-height="1017"
- id="namedview3373"
- showgrid="false"
- inkscape:zoom="1"
- inkscape:cx="-169.13043"
- inkscape:cy="174.93111"
- inkscape:window-x="-8"
- inkscape:window-y="-8"
- inkscape:window-maximized="1"
- inkscape:current-layer="Layer_2" /><defs
- id="defs3017" /><g
- id="g553"
- transform="translate(29.518901,-129.00708)"><g
-   id="g3272"
-   transform="translate(-3.8164787,0)"><g
- id="g3132"
- transform="translate(-18.434315,0)"><circle
-   id="circle3554"
-   transform="matrix(1.296365,0,0,1.296365,202.38592,-57.340438)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3556"
-   y="121.45683"
-   x="285.73181"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3558"
-   transform="matrix(1.296365,0,0,1.296365,220.82023,-57.340438)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3560"
-   transform="matrix(1.296365,0,0,1.296365,202.38592,-38.906127)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3562"
-   transform="matrix(1.296365,0,0,1.296365,220.82023,-38.906126)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3564"
-   transform="matrix(1.296365,0,0,1.296365,239.25454,-38.906126)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3566"
-   y="139.89114"
-   x="304.16614"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3568"
-   transform="matrix(1.296365,0,0,1.296365,202.38592,-20.471816)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3570"
-   y="158.32545"
-   x="267.29752"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3572"
-   y="158.32544"
-   x="304.16614"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3574"
-   y="176.75975"
-   x="248.8632"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3576"
-   transform="matrix(1.296365,0,0,1.296365,239.25454,-2.0375037)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3578"
-   transform="matrix(1.296365,0,0,1.296365,257.68885,-2.0375037)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3580"
-   y="176.75977"
-   x="322.60043"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3588"
-   y="195.19408"
-   x="248.8632"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3590"
-   y="195.19408"
-   x="304.16614"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3592"
-   y="195.19408"
-   x="341.03476"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3594"
-   transform="matrix(1.296365,0,0,1.296365,239.25454,16.396807)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3596"
-   y="213.62837"
-   x="248.8632"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3598"
-   y="213.62839"
-   x="285.73181"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3600"
-   transform="matrix(1.296365,0,0,1.296365,276.12316,34.831118)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3602"
-   transform="matrix(1.296365,0,0,1.296365,294.55748,34.831118)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><g
-   id="g2615"
-   transform="translate(-1.8497366,0)"><text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3604"
-     y="130.67398"
-     x="231.22548"
-     sodipodi:linespacing="0%">U</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3608"
-     y="149.10829"
-     x="231.74756"
-     sodipodi:linespacing="0%">V</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3612"
-     y="167.31757"
-     x="229.15523"
-     sodipodi:linespacing="0%">W</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3616"
-     y="185.97691"
-     x="231.73405"
-     sodipodi:linespacing="0%">X</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3620"
-     y="204.41122"
-     x="231.76105"
-     sodipodi:linespacing="0%">Y</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3624"
-     y="222.84554"
-     x="232.27863"
-     sodipodi:linespacing="0%">Z</text>
-</g></g><g
- id="g3169"><circle
-   id="circle2870"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,-57.340437)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3010"
-   y="121.45683"
-   x="55.302933"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3324"
-   transform="matrix(1.296365,0,0,1.296365,27.496285,-38.906126)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3326"
-   transform="matrix(1.296365,0,0,1.296365,45.694276,-38.611276)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3328"
-   transform="matrix(1.296365,0,0,1.296365,64.122679,-38.906126)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3330"
-   y="158.32544"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3332"
-   transform="matrix(1.296365,0,0,1.296365,27.23125,-20.471815)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3334"
-   y="158.32544"
-   x="92.171555"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3336"
-   transform="matrix(1.296365,0,0,1.296365,82.623628,-20.471815)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3338"
-   y="176.75977"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3340"
-   transform="matrix(1.296365,0,0,1.296365,27.17162,-2.0375044)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3342"
-   transform="matrix(1.296365,0,0,1.296365,45.694276,-1.8597136)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3412"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,16.396807)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3414"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086574,34.831118)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3416"
-   transform="matrix(1.296365,0,0,1.296365,8.8256537,34.831118)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3420"
-   y="213.62837"
-   x="73.737244"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3422"
-   transform="matrix(1.296365,0,0,1.296365,64.128587,34.831118)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3424"
-   y="232.06268"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3426"
-   y="232.06268"
-   x="73.737244"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3428"
-   transform="matrix(1.296365,0,0,1.296365,64.128587,53.265429)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3458"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,71.69974)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3460"
-   transform="matrix(1.296365,0,0,1.296365,8.8256535,71.69974)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3462"
-   transform="matrix(1.296365,0,0,1.296365,27.259965,71.69974)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3464"
-   transform="matrix(1.296365,0,0,1.296365,45.694276,71.69974)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3466"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,90.134051)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3468"
-   transform="matrix(1.296365,0,0,1.296365,8.8256537,90.134051)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3470"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,108.56836)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3472"
-   y="287.36563"
-   x="55.302933"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3474"
-   y="287.36563"
-   x="92.171555"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3476"
-   y="287.36563"
-   x="129.04018"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3478"
-   y="305.79993"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3480"
-   transform="matrix(1.296365,0,0,1.296365,27.259965,127.00267)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3482"
-   y="305.79996"
-   x="92.171555"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3484"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,145.43698)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3486"
-   y="324.23425"
-   x="55.302933"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3488"
-   transform="matrix(1.296365,0,0,1.296365,45.694276,145.43698)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3490"
-   transform="matrix(1.296365,0,0,1.296365,64.128587,145.43698)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3492"
-   y="342.66858"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3494"
-   y="342.66858"
-   x="73.737244"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3496"
-   y="361.10287"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3498"
-   transform="matrix(1.296365,0,0,1.296365,27.259965,182.30561)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3500"
-   y="379.5372"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3502"
-   y="379.5372"
-   x="73.737244"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3504"
-   y="379.5372"
-   x="110.60587"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3506"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086576,219.17423)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3508"
-   y="397.9715"
-   x="55.302933"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3510"
-   y="397.9715"
-   x="92.171555"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3512"
-   transform="matrix(1.296365,0,0,1.296365,82.562898,219.17423)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3514"
-   y="416.40579"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><rect
-   id="rect3516"
-   y="416.40582"
-   x="73.737244"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3518"
-   transform="matrix(1.296365,0,0,1.296365,64.128587,237.60854)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3520"
-   y="416.40582"
-   x="129.04018"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3522"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086574,256.04285)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3524"
-   y="434.84012"
-   x="55.302933"
-   height="9.217145"
-   width="27.651466" /><circle
-   id="circle3526"
-   transform="matrix(1.296365,0,0,1.296365,45.694276,256.04285)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3528"
-   transform="matrix(1.296365,0,0,1.296365,27.259965,274.47716)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3530"
-   transform="matrix(1.296365,0,0,1.296365,8.8256537,274.47716)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><circle
-   id="circle3532"
-   transform="matrix(1.296365,0,0,1.296365,-9.6086574,274.47716)"
-   r="3.5550001"
-   cy="141.48"
-   cx="39.400002" /><rect
-   id="rect3534"
-   y="471.70874"
-   x="36.868622"
-   height="9.217145"
-   width="27.651466" /><g
-   id="g2573"><text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3309"
-     y="130.67398"
-     x="17.138149"
-     sodipodi:linespacing="0%">A</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3344"
-     y="149.10829"
-     x="16.953625"
-     sodipodi:linespacing="0%">B</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3350"
-     y="167.31757"
-     x="16.535072"
-     sodipodi:linespacing="0%">C</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3356"
-     y="185.97691"
-     x="16.409058"
-     sodipodi:linespacing="0%">D</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3360"
-     y="204.41122"
-     x="16.904119"
-     sodipodi:linespacing="0%">E</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3364"
-     y="222.84554"
-     x="17.322672"
-     sodipodi:linespacing="0%">F</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3368"
-     y="241.05481"
-     x="16.202032"
-     sodipodi:linespacing="0%">G</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3372"
-     y="259.71414"
-     x="16.634085"
-     sodipodi:linespacing="0%">H</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3376"
-     y="278.14847"
-     x="20.693594"
-     sodipodi:linespacing="0%">I</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3380"
-     y="296.58276"
-     x="19.145401"
-     sodipodi:linespacing="0%">J</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3384"
-     y="315.01709"
-     x="16.481066"
-     sodipodi:linespacing="0%">K</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3388"
-     y="333.45139"
-     x="17.813232"
-     sodipodi:linespacing="0%">L</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3392"
-     y="351.88571"
-     x="15.621459"
-     sodipodi:linespacing="0%">M</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3396"
-     y="370.32001"
-     x="16.683592"
-     sodipodi:linespacing="0%">N</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3400"
-     y="388.75433"
-     x="16.085016"
-     sodipodi:linespacing="0%">O</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3404"
-     y="425.62296"
-     x="16.058014"
-     sodipodi:linespacing="0%">Q</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3408"
-     y="407.18866"
-     x="16.82761"
-     sodipodi:linespacing="0%">P</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3536"
-     y="444.05728"
-     x="16.022009"
-     sodipodi:linespacing="0%">R</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3540"
-     y="462.49158"
-     x="17.205658"
-     sodipodi:linespacing="0%">S</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text3544"
-     y="480.9259"
-     x="17.62421"
-     sodipodi:linespacing="0%">T</text>
-</g><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2703"
-   transform="translate(-18.43431,18.434311)" /></g><g
- id="g3051"
- transform="translate(-18.434314,64.295099)"><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2707"
-   transform="translate(211.99458,119.82302)" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2709"
-   transform="translate(248.8632,119.82301)" /><use
-   xlink:href="#use2709"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2711" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2713"
-   transform="translate(285.73182,119.82301)" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2715"
-   transform="translate(322.60045,119.82301)" /><use
-   xlink:href="#circle2870"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2717"
-   transform="translate(211.99458,119.82302)" /><use
-   xlink:href="#circle2870"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2719"
-   transform="translate(211.99458,138.25733)" /><use
-   xlink:href="#circle2870"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2721"
-   transform="translate(230.42889,138.25733)" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2723"
-   transform="translate(230.42889,138.25733)" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2725"
-   transform="translate(267.29751,138.25733)" /><use
-   xlink:href="#rect3010"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2727"
-   transform="translate(304.16613,138.25732)" /><use
-   xlink:href="#circle2870"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2779"
-   transform="translate(211.99458,156.69164)" /><use
-   xlink:href="#use2779"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2781"
-   transform="translate(18.434309,4.0522843e-6)" /><use
-   xlink:href="#use2781"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2783"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2723"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2785"
-   transform="translate(18.434309,18.434308)" /><use
-   xlink:href="#use2785"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2787"
-   transform="translate(36.868622,0)" /><use
-   xlink:href="#use2779"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2789"
-   transform="translate(2.324722e-7,18.434311)" /><use
-   xlink:href="#use2789"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2791"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2791"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2793"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2793"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2795"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2785"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2797"
-   transform="translate(18.434313,18.434307)" /><use
-   xlink:href="#use2789"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2799"
-   transform="translate(-2.3247221e-7,18.434311)" /><use
-   xlink:href="#use2799"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2801"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2801"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2803"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2803"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2805"
-   transform="translate(18.434312,0)" /><use
-   xlink:href="#use2805"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2807"
-   transform="translate(18.434311,0)" /><use
-   xlink:href="#use2789"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2809"
-   transform="translate(36.868622,36.868622)" /><use
-   xlink:href="#use2791"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2811"
-   transform="translate(36.868622,36.868622)" /><use
-   xlink:href="#use2793"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2813"
-   transform="translate(36.868622,36.868622)" /><use
-   xlink:href="#use2795"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2815"
-   transform="translate(36.868622,36.868622)" /><use
-   xlink:href="#use2797"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2817"
-   transform="translate(-73.737245,36.868622)" /><use
-   xlink:href="#use2779"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2819" /><use
-   xlink:href="#use2781"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2821" /><use
-   xlink:href="#use2783"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2823" /><use
-   xlink:href="#use2785"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2825" /><use
-   xlink:href="#use2787"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2827" /><use
-   xlink:href="#use2779"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2829"
-   transform="translate(73.737242,73.737248)" /><use
-   xlink:href="#use2781"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2831"
-   transform="translate(73.737244,73.737244)" /><use
-   xlink:href="#use2783"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2833"
-   transform="translate(73.737244,73.737244)" /><use
-   xlink:href="#use2825"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2845"
-   transform="translate(-55.302932,73.73724)" /><use
-   xlink:href="#use2827"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2847"
-   transform="translate(-55.302931,73.737251)" /><use
-   xlink:href="#use2829"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2849"
-   transform="translate(36.868622,18.434311)" /><use
-   xlink:href="#use2831"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2851"
-   transform="translate(36.868622,18.434311)" /><use
-   xlink:href="#use2845"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2855"
-   transform="translate(36.868622,18.434311)" /><use
-   xlink:href="#use2847"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2857"
-   transform="translate(36.868622,18.434311)" /><use
-   xlink:href="#use2855"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2859"
-   transform="translate(-36.868622,0)" /><use
-   xlink:href="#use2707"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2861"
-   transform="translate(-18.434316,147.4745)" /><use
-   xlink:href="#use2709"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2863"
-   transform="translate(-18.434316,147.4745)" /><use
-   xlink:href="#use2711"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2865"
-   transform="translate(-18.434316,147.4745)" /><use
-   xlink:href="#use2713"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2867"
-   transform="translate(-18.434316,147.4745)" /><use
-   xlink:href="#use2715"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2869"
-   transform="translate(-18.434316,147.4745)" /><use
-   xlink:href="#use2869"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2873"
-   transform="translate(-110.60587,18.434302)" /><use
-   xlink:href="#use2851"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2875"
-   transform="translate(18.434312,18.434312)" /><use
-   xlink:href="#use2861"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2877"
-   transform="translate(36.868625,18.434302)" /><use
-   xlink:href="#use2863"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2879"
-   transform="translate(36.868625,18.434302)" /><use
-   xlink:href="#use2865"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2881"
-   transform="translate(36.868625,18.434302)" /><use
-   xlink:href="#use2867"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2883"
-   transform="translate(36.868625,18.434302)" /><use
-   xlink:href="#use2869"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2885"
-   transform="translate(36.868625,18.434302)" /><g
-   id="g3029"><text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2889"
-     y="250.49699"
-     x="231.75656"
-     sodipodi:linespacing="0%">1</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2893"
-     y="268.9313"
-     x="231.284"
-     sodipodi:linespacing="0%">2</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2897"
-     y="287.14056"
-     x="231.09947"
-     sodipodi:linespacing="0%">3</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2901"
-     y="305.79993"
-     x="231.39651"
-     sodipodi:linespacing="0%">4</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2905"
-     y="324.23422"
-     x="231.05447"
-     sodipodi:linespacing="0%">5</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2909"
-     y="342.66855"
-     x="231.14449"
-     sodipodi:linespacing="0%">6</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2913"
-     y="360.87781"
-     x="231.04997"
-     sodipodi:linespacing="0%">7</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2917"
-     y="379.53714"
-     x="231.09947"
-     sodipodi:linespacing="0%">8</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2921"
-     y="397.97147"
-     x="231.09048"
-     sodipodi:linespacing="0%">9</text>
-<text
-     style="font-size:18px;line-height:0%;font-family:'DejaVu Sans'"
-     xml:space="preserve"
-     id="text2925"
-     y="416.40576"
-     x="231.12648"
-     sodipodi:linespacing="0%">0</text>
-</g></g></g><use
-   xlink:href="#use2779"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2789-2"
-   transform="translate(14.617688,-19.661762)" /><use
-   xlink:href="#use2789-2"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2791-0"
-   transform="translate(18.434312,3.5666666e-6)" /><use
-   xlink:href="#use2791-0"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2793-4"
-   transform="translate(18.434312,3.5666666e-6)" /><use
-   xlink:href="#use2793-4"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2795-3"
-   transform="translate(18.434312,3.5666666e-6)" /><use
-   xlink:href="#use2785"
-   height="500.99399"
-   width="414.772"
-   y="0"
-   x="0"
-   id="use2797-0"
-   transform="translate(33.051998,-19.661772)" /><text
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.99995232px;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:1"
-   xml:space="preserve"
-   id="text3624-1"
-   y="269.82916"
-   x="209.66879"
-   sodipodi:linespacing="0%"><tspan
- id="tspan219"
- sodipodi:role="line"
- x="209.66879"
- y="269.82916"
- style="stroke-width:1">-</tspan></text>
-<rect
-   id="rect3596-6"
-   y="258.491"
-   x="226.61241"
-   height="9.217145"
-   width="27.651466"
-   style="stroke-width:1" /></g><text
- xml:space="preserve"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
- x="9.7769127"
- y="2.5137391"
- id="text4361"
- sodipodi:linespacing="105.99999%"><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="2.5137391"
-   id="tspan4363"><tspan
- x="9.7769127"
- y="2.5137391"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4365">10</tspan><tspan
- dx="0"
- x="30.198223"
- y="2.5137391"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4367" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="20.832834"
-   id="tspan4369"><tspan
- x="9.7769127"
- y="20.832834"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4371">11</tspan><tspan
- dx="0"
- x="29.489384"
- y="20.832834"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4373" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="39.151932"
-   id="tspan4375"><tspan
- x="9.7769127"
- y="39.151932"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4377">12</tspan><tspan
- dx="0"
- x="29.556892"
- y="39.151932"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4379" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="57.471027"
-   id="tspan4381"><tspan
- x="9.7769127"
- y="57.471027"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4383">13</tspan><tspan
- dx="0"
- x="29.253105"
- y="57.471027"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4385" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="75.790115"
-   id="tspan4387"><tspan
- x="9.7769127"
- y="75.790115"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4389">14</tspan><tspan
- dx="0"
- x="29.793173"
- y="75.790115"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4391" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="94.109215"
-   id="tspan4393"><tspan
- x="9.7769127"
- y="94.109215"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4395">15</tspan><tspan
- dx="0"
- x="28.915562"
- y="94.109215"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4397" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="112.42831"
-   id="tspan4399"><tspan
- x="9.7769127"
- y="112.42831"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4401">16</tspan><tspan
- dx="0"
- x="29.793173"
- y="112.42831"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4403" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="130.74741"
-   id="tspan4405"><tspan
- x="9.7769127"
- y="130.74741"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4407">17</tspan><tspan
- dx="0"
- x="28.746792"
- y="130.74741"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4409" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="149.0665"
-   id="tspan4411"><tspan
- x="9.7769127"
- y="149.0665"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4413">18</tspan><tspan
- dx="0"
- x="29.995697"
- y="149.0665"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4415" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="167.3856"
-   id="tspan4417"><tspan
- x="9.7769127"
- y="167.3856"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4419">19</tspan><tspan
- dx="0"
- x="29.725664"
- y="167.3856"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4421" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="185.7047"
-   id="tspan4423"><tspan
- x="9.7769127"
- y="185.7047"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4425">20</tspan><tspan
- dx="0"
- x="30.265732"
- y="185.7047"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4427" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="204.02379"
-   id="tspan4429"><tspan
- x="9.7769127"
- y="204.02379"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4431">21</tspan><tspan
- dx="0"
- x="29.556892"
- y="204.02379"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4433" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="222.3429"
-   id="tspan4435"><tspan
- x="9.7769127"
- y="222.3429"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4437">22</tspan><tspan
- dx="0"
- x="29.624401"
- y="222.3429"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4439" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="240.66197"
-   id="tspan4441"><tspan
- x="9.7769127"
- y="240.66197"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4443">23</tspan><tspan
- dx="0"
- x="29.320614"
- y="240.66197"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4445" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="258.98108"
-   id="tspan4447"><tspan
- x="9.7769127"
- y="258.98108"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4449">24</tspan><tspan
- dx="0"
- x="30.299486"
- y="258.98108"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4451" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="277.3002"
-   id="tspan4453"><tspan
- x="9.7769127"
- y="277.3002"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4455">25</tspan><tspan
- dx="0"
- x="28.98307"
- y="277.3002"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4457" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="295.61929"
-   id="tspan4459"><tspan
- x="9.7769127"
- y="295.61929"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4461">26</tspan><tspan
- dx="0"
- x="29.860682"
- y="295.61929"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4463" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="313.93842"
-   id="tspan4465"><tspan
- x="9.7769127"
- y="313.93842"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4467">27</tspan><tspan
- dx="0"
- x="29.28686"
- y="313.93842"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4469" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="332.25751"
-   id="tspan4471"><tspan
- x="9.7769127"
- y="332.25751"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4473">28</tspan><tspan
- dx="0"
- x="30.063206"
- y="332.25751"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4475" /></tspan><tspan
-   sodipodi:role="line"
-   x="9.7769127"
-   y="350.5766"
-   id="tspan4477"><tspan
- x="9.7769127"
- y="350.5766"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4479">29</tspan><tspan
- dx="0"
- x="29.793173"
- y="350.5766"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1"
- id="tspan4481" /></tspan></text>
-<flowRoot
- xml:space="preserve"
- id="flowRoot4372"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.99999993px;line-height:106%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#0084dd;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
- transform="matrix(0.86410832,0,0,0.86410832,0,-11.420006)"><flowRegion
-   id="flowRegion4374"><rect
- id="rect4376"
- width="36"
- height="130"
- x="233"
- y="-0.46679688"
- style="-inkscape-font-specification:'Special Elite, Normal';font-family:'Special Elite';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:19.99999993px;text-anchor:start;text-align:start;writing-mode:lr;line-height:106%;fill:#0084dd;fill-opacity:1;" /></flowRegion><flowPara
-   id="flowPara4380" /></flowRoot><text
- xml:space="preserve"
- style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.28216553px;line-height:105.99999428%;font-family:'Special Elite';-inkscape-font-specification:'Special Elite, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0096e0;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
- x="209.11421"
- y="1.0572448"
- id="text4483"
- sodipodi:linespacing="105.99999%"><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="1.0572448"
-   id="tspan4485"><tspan
- x="209.11421"
- y="1.0572448"
- id="tspan4487">30</tspan><tspan
- dx="0"
- x="229.29924"
- y="1.0572448"
- id="tspan4489" /></tspan><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="19.376339"
-   id="tspan4491"><tspan
- x="209.11421"
- y="19.376339"
- id="tspan4493">31</tspan><tspan
- dx="0"
- x="228.59041"
- y="19.376339"
- id="tspan4495" /></tspan><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="37.695435"
-   id="tspan4497"><tspan
- x="209.11421"
- y="37.695435"
- id="tspan4499">32</tspan><tspan
- dx="0"
- x="228.65791"
- y="37.695435"
- id="tspan4501" /></tspan><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="56.014534"
-   id="tspan4503"><tspan
- x="209.11421"
- y="56.014534"
- id="tspan4505">33</tspan><tspan
- dx="0"
- x="228.35413"
- y="56.014534"
- id="tspan4507" /></tspan><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="74.333626"
-   id="tspan4509"><tspan
- x="209.11421"
- y="74.333626"
- id="tspan4511">34</tspan><tspan
- dx="0"
- x="229.33299"
- y="74.333626"
- id="tspan4513" /></tspan><tspan
-   sodipodi:role="line"
-   x="209.11421"
-   y="92.652718"
-   id="tspan4515"><tspan
- x="209.11421"
- y="92.652718"
- id="tspan4517">35</tspan></tspan></text>
-</svg>
-                    </img>
-                </p>
+                <svg style="width:75%" xmlns="http://www.w3.org/2000/svg" viewBox="0 -20 433 400">
+                    <g transform="translate(29.5 -129)">
+                        <g transform="translate(-22.3)">
+                            <circle transform="matrix(1.29636 0 0 1.29636 202.4 -57.3)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M285.7 121.5h27.7v9.2h-27.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 220.8 -57.3)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 202.4 -39)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 220.8 -39)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 239.3 -39)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M304.2 139.9h27.7v9.2h-27.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 202.4 -20.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M267.3 158.3H295v9.2h-27.7zM304.2 158.3h27.7v9.2h-27.7zM248.9 176.8h27.7v9.2h-27.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 239.3 -2)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 257.7 -2)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M322.6 176.8h27.7v9.2h-27.7zM248.9 195.2h27.7v9.2h-27.7zM304.2 195.2h27.7v9.2h-27.7zM341 195.2h27.7v9.2H341z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 239.3 16.4)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M248.9 213.6h27.7v9.2h-27.7zM285.7 213.6h27.7v9.2h-27.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 276.1 34.8)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 294.6 34.8)" r="3.6" cy="141.5" cx="39.4"/>
+                            <g font-size="18" font-family="DejaVu Sans">
+                                <text style="line-height:0%" y="130.7" x="231.2" transform="translate(-1.8)">U</text>
+                                <text style="line-height:0%" y="149.1" x="231.7" transform="translate(-1.8)">V</text>
+                                <text style="line-height:0%" y="167.3" x="229.2" transform="translate(-1.8)">W</text>
+                                <text style="line-height:0%" y="186" x="231.7" transform="translate(-1.8)">X</text>
+                                <text style="line-height:0%" y="204.4" x="231.8" transform="translate(-1.8)">Y</text>
+                                <text style="line-height:0%" y="222.8" x="232.3" transform="translate(-1.8)">Z</text>
+                            </g>
+                        </g>
+                        <g transform="translate(-3.8)">
+                            <circle id="c" transform="matrix(1.29636 0 0 1.29636 -9.6 -57.3)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path id="a" d="M55.3 121.5H83v9.2H55.3z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.5 -39)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 45.7 -38.6)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 64.1 -39)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 158.3h27.7v9.2H36.9z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.2 -20.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M92.2 158.3h27.7v9.2H92.2z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 82.6 -20.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 176.8h27.7v9.2H36.9z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.2 -2)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 45.7 -1.9)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 16.4)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 34.8)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 8.8 34.8)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M73.7 213.6h27.7v9.2H73.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 64.1 34.8)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 232.1h27.7v9.2H36.9zM73.7 232.1h27.7v9.2H73.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 64.1 53.3)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 71.7)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 8.8 71.7)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.3 71.7)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 45.7 71.7)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 90.1)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 8.8 90.1)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 108.6)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M55.3 287.4H83v9.2H55.3zM92.2 287.4h27.7v9.2H92.2zM129 287.4h27.7v9.2H129zM36.9 305.8h27.7v9.2H36.9z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.3 127)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M92.2 305.8h27.7v9.2H92.2z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 145.4)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M55.3 324.2H83v9.2H55.3z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 45.7 145.4)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 64.1 145.4)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 342.7h27.7v9.2H36.9zM73.7 342.7h27.7v9.2H73.7zM36.9 361.1h27.7v9.2H36.9z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.3 182.3)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 379.5h27.7v9.2H36.9zM73.7 379.5h27.7v9.2H73.7zM110.6 379.5h27.7v9.2h-27.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 219.2)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M55.3 398H83v9.2H55.3zM92.2 398h27.7v9.2H92.2z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 82.6 219.2)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 416.4h27.7v9.2H36.9zM73.7 416.4h27.7v9.2H73.7z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 64.1 237.6)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M129 416.4h27.7v9.2H129z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 256)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M55.3 434.8H83v9.2H55.3z"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 45.7 256)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 27.3 274.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 8.8 274.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <circle transform="matrix(1.29636 0 0 1.29636 -9.6 274.5)" r="3.6" cy="141.5" cx="39.4"/>
+                            <path d="M36.9 471.7h27.7v9.2H36.9z"/>
+                            <g font-size="18" font-family="DejaVu Sans">
+                                <text style="line-height:0%" y="130.7" x="17.1">A</text>
+                                <text style="line-height:0%" y="149.1" x="17">B</text>
+                                <text style="line-height:0%" y="167.3" x="16.5">C</text>
+                                <text style="line-height:0%" y="186" x="16.4">D</text>
+                                <text style="line-height:0%" y="204.4" x="16.9">E</text>
+                                <text style="line-height:0%" y="222.8" x="17.3">F</text>
+                                <text style="line-height:0%" y="241.1" x="16.2">G</text>
+                                <text style="line-height:0%" y="259.7" x="16.6">H</text>
+                                <text style="line-height:0%" y="278.1" x="20.7">I</text>
+                                <text style="line-height:0%" y="296.6" x="19.1">J</text>
+                                <text style="line-height:0%" y="315" x="16.5">K</text>
+                                <text style="line-height:0%" y="333.5" x="17.8">L</text>
+                                <text style="line-height:0%" y="351.9" x="15.6">M</text>
+                                <text style="line-height:0%" y="370.3" x="16.7">N</text>
+                                <text style="line-height:0%" y="388.8" x="16.1">O</text>
+                                <text style="line-height:0%" y="425.6" x="16.1">Q</text>
+                                <text style="line-height:0%" y="407.2" x="16.8">P</text>
+                                <text style="line-height:0%" y="444.1" x="16">R</text>
+                                <text style="line-height:0%" y="462.5" x="17.2">S</text>
+                                <text style="line-height:0%" y="480.9" x="17.6">T</text>
+                            </g>
+                            <use xlink:href="#a" height="501" width="414.8" transform="translate(-18.4 18.4)"/>
+                        </g>
+                        <g transform="translate(-22.3 64.3)">
+                            <use xlink:href="#a" height="501" width="414.8" y="0" x="0" id="z" transform="translate(212 119.8)"/>
+                            <use xlink:href="#a" height="501" width="414.8" y="0" x="0" id="b" transform="translate(248.9 119.8)"/>
+                            <use xlink:href="#b" height="501" width="414.8" y="0" x="0" id="A"/>
+                            <use xlink:href="#a" height="501" width="414.8" y="0" x="0" id="B" transform="translate(285.7 119.8)"/>
+                            <use xlink:href="#a" height="501" width="414.8" y="0" x="0" id="C" transform="translate(322.6 119.8)"/>
+                            <use xlink:href="#c" height="501" width="414.8" transform="translate(212 119.8)"/>
+                            <use xlink:href="#c" height="501" width="414.8" transform="translate(212 138.3)"/>
+                            <use xlink:href="#c" height="501" width="414.8" transform="translate(230.4 138.3)"/>
+                            <use xlink:href="#a" height="501" width="414.8" y="0" x="0" id="f" transform="translate(230.4 138.3)"/>
+                            <use xlink:href="#a" height="501" width="414.8" transform="translate(267.3 138.3)"/>
+                            <use xlink:href="#a" height="501" width="414.8" transform="translate(304.2 138.3)"/>
+                            <use xlink:href="#c" height="501" width="414.8" y="0" x="0" id="d" transform="translate(212 156.7)"/>
+                            <use xlink:href="#d" height="501" width="414.8" y="0" x="0" id="e" transform="translate(18.4)"/>
+                            <use xlink:href="#e" height="501" width="414.8" y="0" x="0" id="q" transform="translate(18.4)"/>
+                            <use xlink:href="#f" height="501" width="414.8" y="0" x="0" id="g" transform="translate(18.4 18.4)"/>
+                            <use xlink:href="#g" height="501" width="414.8" y="0" x="0" id="r" transform="translate(36.9)"/>
+                            <use xlink:href="#d" height="501" width="414.8" y="0" x="0" id="h" transform="translate(0 18.4)"/>
+                            <use xlink:href="#h" height="501" width="414.8" y="0" x="0" id="i" transform="translate(18.4)"/>
+                            <use xlink:href="#i" height="501" width="414.8" y="0" x="0" id="j" transform="translate(18.4)"/>
+                            <use xlink:href="#j" height="501" width="414.8" y="0" x="0" id="o" transform="translate(18.4)"/>
+                            <use xlink:href="#g" height="501" width="414.8" y="0" x="0" id="p" transform="translate(18.4 18.4)"/>
+                            <use xlink:href="#h" height="501" width="414.8" y="0" x="0" id="k" transform="translate(0 18.4)"/>
+                            <use xlink:href="#k" height="501" width="414.8" y="0" x="0" id="l" transform="translate(18.4)"/>
+                            <use xlink:href="#l" height="501" width="414.8" y="0" x="0" id="m" transform="translate(18.4)"/>
+                            <use xlink:href="#m" height="501" width="414.8" y="0" x="0" id="n" transform="translate(18.4)"/>
+                            <use xlink:href="#n" height="501" width="414.8" transform="translate(18.4)"/>
+                            <use xlink:href="#h" height="501" width="414.8" transform="translate(36.9 36.9)"/>
+                            <use xlink:href="#i" height="501" width="414.8" transform="translate(36.9 36.9)"/>
+                            <use xlink:href="#j" height="501" width="414.8" transform="translate(36.9 36.9)"/>
+                            <use xlink:href="#o" height="501" width="414.8" transform="translate(36.9 36.9)"/>
+                            <use xlink:href="#p" height="501" width="414.8" transform="translate(-73.7 36.9)"/>
+                            <use xlink:href="#d" height="501" width="414.8"/>
+                            <use xlink:href="#e" height="501" width="414.8"/>
+                            <use xlink:href="#q" height="501" width="414.8"/>
+                            <use xlink:href="#g" height="501" width="414.8" y="0" x="0" id="s"/>
+                            <use xlink:href="#r" height="501" width="414.8" y="0" x="0" id="t"/>
+                            <use xlink:href="#d" height="501" width="414.8" y="0" x="0" id="u" transform="translate(73.7 73.7)"/>
+                            <use xlink:href="#e" height="501" width="414.8" y="0" x="0" id="v" transform="translate(73.7 73.7)"/>
+                            <use xlink:href="#q" height="501" width="414.8" transform="translate(73.7 73.7)"/>
+                            <use xlink:href="#s" height="501" width="414.8" y="0" x="0" id="w" transform="translate(-55.3 73.7)"/>
+                            <use xlink:href="#t" height="501" width="414.8" y="0" x="0" id="x" transform="translate(-55.3 73.7)"/>
+                            <use xlink:href="#u" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#v" height="501" width="414.8" y="0" x="0" id="E" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#w" height="501" width="414.8" y="0" x="0" id="y" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#x" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#y" height="501" width="414.8" transform="translate(-36.9)"/>
+                            <use xlink:href="#z" height="501" width="414.8" y="0" x="0" id="F" transform="translate(-18.4 147.5)"/>
+                            <use xlink:href="#b" height="501" width="414.8" y="0" x="0" id="G" transform="translate(-18.4 147.5)"/>
+                            <use xlink:href="#A" height="501" width="414.8" y="0" x="0" id="H" transform="translate(-18.4 147.5)"/>
+                            <use xlink:href="#B" height="501" width="414.8" y="0" x="0" id="I" transform="translate(-18.4 147.5)"/>
+                            <use xlink:href="#C" height="501" width="414.8" y="0" x="0" id="D" transform="translate(-18.4 147.5)"/>
+                            <use xlink:href="#D" height="501" width="414.8" transform="translate(-110.6 18.4)"/>
+                            <use xlink:href="#E" height="501" width="414.8" transform="translate(18.4 18.4)"/>
+                            <use xlink:href="#F" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#G" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#H" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#I" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <use xlink:href="#D" height="501" width="414.8" transform="translate(36.9 18.4)"/>
+                            <g font-size="18" font-family="DejaVu Sans">
+                                <text style="line-height:0%" y="250.5" x="231.8">1</text>
+                                <text style="line-height:0%" y="268.9" x="231.3">2</text>
+                                <text style="line-height:0%" y="287.1" x="231.1">3</text>
+                                <text style="line-height:0%" y="305.8" x="231.4">4</text>
+                                <text style="line-height:0%" y="324.2" x="231.1">5</text>
+                                <text style="line-height:0%" y="342.7" x="231.1">6</text>
+                                <text style="line-height:0%" y="360.9" x="231">7</text>
+                                <text style="line-height:0%" y="379.5" x="231.1">8</text>
+                                <text style="line-height:0%" y="398" x="231.1">9</text>
+                                <text style="line-height:0%" y="416.4" x="231.1">0</text>
+                            </g>
+                        </g>
+                        <use xlink:href="#d" height="501" width="414.8" y="0" x="0" id="J" transform="translate(14.6 -19.7)"/>
+                        <use xlink:href="#J" height="501" width="414.8" y="0" x="0" id="K" transform="translate(18.4)"/>
+                        <use xlink:href="#K" height="501" width="414.8" y="0" x="0" id="L" transform="translate(18.4)"/>
+                        <use xlink:href="#L" height="501" width="414.8" transform="translate(18.4)"/>
+                        <use xlink:href="#g" height="501" width="414.8" transform="translate(33 -19.7)"/>
+                        <text style="line-height:0%;text-align:start" y="269.8" x="209.7" font-weight="400" font-size="18" font-family="DejaVu Sans">
+                            <tspan x="209.7" y="269.8">-</tspan>
+                        </text>
+                        <path d="M226.6 258.5h27.7v9.2h-27.7z"/>
+                    </g>
+                    <text class="blue" x="9.8" y="2.5" font-weight="400" font-size="17.3" letter-spacing="0" word-spacing="0" fill="#0096e0">
+                        <tspan x="9.8" y="2.5">10</tspan>
+                        <tspan x="9.8" y="20.8">11</tspan>
+                        <tspan x="9.8" y="39.2">12</tspan>
+                        <tspan x="9.8" y="57.5">13</tspan>
+                        <tspan x="9.8" y="75.8">14</tspan>
+                        <tspan x="9.8" y="94.1">15</tspan>
+                        <tspan x="9.8" y="112.4">16</tspan>
+                        <tspan x="9.8" y="130.7">17</tspan>
+                        <tspan x="9.8" y="149.1">18</tspan>
+                        <tspan x="9.8" y="167.4">19</tspan>
+                        <tspan x="9.8" y="185.7">20</tspan>
+                        <tspan x="9.8" y="204">21</tspan>
+                        <tspan x="9.8" y="222.3">22</tspan>
+                        <tspan x="9.8" y="240.7">23</tspan>
+                        <tspan x="9.8" y="259">24</tspan>
+                        <tspan x="9.8" y="277.3">25</tspan>
+                        <tspan x="9.8" y="295.6">26</tspan>
+                        <tspan x="9.8" y="313.9">27</tspan>
+                        <tspan x="9.8" y="332.3">28</tspan>
+                        <tspan x="9.8" y="350.6">29</tspan>
+                    </text>
+                    <text class="blue" x="209.1" y="1.1" font-weight="400" font-size="17.3" letter-spacing="0" word-spacing="0" fill="#0096e0">
+                        <tspan x="209.1" y="1.1">30</tspan>
+                        <tspan x="209.1" y="19.4">31</tspan>
+                        <tspan x="209.1" y="37.7">32</tspan>
+                        <tspan x="209.1" y="56">33</tspan>
+                        <tspan x="209.1" y="74.3">34</tspan>
+                        <tspan x="209.1" y="92.7">35</tspan>
+                    </text>
+                </svg>
             </div>
            <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>

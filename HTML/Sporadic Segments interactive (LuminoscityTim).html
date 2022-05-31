@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Sporadic Segments — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(() => {
+        let saveStates = [];
+        let currentState = 0;
+        let display = $(".hstack.holder");
+        let svg1 = $("svg.interactive");
+        const MODE_INDEP = 0;
+        const MODE_XOR = 1;
+        const MODE_TOG = 2;
+
+        for (var i = 1; i <= 2; i++) {
+            $("<div>").css("width", "5mm").appendTo(display);
+            let vstack = $("<div>").addClass(`vstack display${i}`).appendTo(display);
+            let svg = MakeSvgTag(375, 636, -15, -60, {class:`interactive display${i}`, "text-anchor":"middle", "stroke-width":"4"})
+                .appendTo(vstack);
+            svg.html(svg1.html());
+        }
+        $("svg.interactive").each(function(i) {
+            let txt = MakeSvgElem("text", {
+                x:172, y:-5
+            });
+            txt.innerHTML = String.fromCharCode(65 + i);
+            this.append(txt);
+            let btn = $("<button>").addClass("reset-grid").click(function() {
+                $(`svg.display${i} polygon`).removeClass("black");
+            }).text(`Clear ${String.fromCharCode(65 + i)}`);
+            $(`.vstack.display${i}`).append(btn);
+        });
+
+        function mode() {
+            if ($("#action-indep").prop("checked"))
+                return MODE_INDEP;
+            else if ($("#action-xor").prop("checked"))
+                return MODE_XOR;
+            else
+                return MODE_TOG;
+        }
+
+        function xorAB() {
+            for (let s = 0; s < 7; s++) {
+                $(`svg.display2 polygon.seg${s}`).toggleClass("black",
+                    $(`svg.display0 polygon.seg${s}`).hasClass("black") != $(`svg.display1 polygon.seg${s}`).hasClass("black")
+                );
+            }
+        }
+
+        for (let disp = 0; disp < 3; disp++) {
+            for (let seg = 0; seg < 7; seg++) {
+                $(`svg.interactive.display${disp} polygon.seg${seg}`).click(function() {
+                    if (mode() == MODE_INDEP) {
+                        $(this).toggleClass("black");
+                    }
+                    else if (mode() == MODE_XOR) {
+                        $(this).toggleClass("black");
+                        xorAB();
+                    }
+                    else {
+                        $(`svg.interactive polygon.seg${seg}`).toggleClass("black");
+                    }
+                });
+            }
+        }
+        $("input.action").change(function() {
+            if ($("#action-xor").prop("checked"))
+                xorAB();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.reset-all").click(function() {
+            $("svg polygon").removeClass("black");
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateA = Array.from($("svg.display0 polygon")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateB = Array.from($("svg.display1 polygon")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateC = Array.from($("svg.display2 polygon")).map(x => $(x)).map(x => x.attr("class") || "");
+            // console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $("svg.display0 polygon").each((i, x) => $(x).attr("class", saveStateA[i]));
+                if (mode() == MODE_XOR) {
+                    xorAB();
+                }
+                else {
+                    $("svg.display1 polygon").each((i, x) => $(x).attr("class", saveStateB[i]));
+                    $("svg.display2 polygon").each((i, x) => $(x).attr("class", saveStateC[i]));
+                }
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(`.saves`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .hstack.spread {
+            justify-content: space-around;
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hstack.spread .vstack { width: 30%; }
+        .hstack .option { min-width: 130px; }
+        table {
+            margin: 1em auto;
+        }
+        svg.interactive {
+            width: 100%;
+        }
+
+        svg polygon {
+            cursor: pointer;
+            stroke: #888;
+            fill: transparent;
+        }
+        svg text {
+            user-select: none;
+            fill: #000;
+            font-size: 60px;
+        }
+        .dark svg text { fill: #DDD; }
+        svg polygon.black {
+            fill: #000;
+            stroke: #000;
+        }
+        .dark svg polygon.black {
+            fill: #DDD;
+            stroke: #DDD;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .option label, input.action {
+            cursor: pointer;
+        }
+
+        .vspace { margin-top: 3mm; }
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Sporadic Segments</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Sporadic Segments.svg" class="diagram">
+                <h2>On the Subject of Sporadic Segments</h2>
+                <p class="flavour-text">This appears to be a cross between a GameBoy and a digital clock, except the GameBoy only has one game, and the clock... </p>
+
+                <p>The module has a screen with a seven-segment display and two text displays, which cycle to spell a phrase.</p>
+
+                <p>
+                    The seven-segment display cycles through a seven-digit sequence, which repeats every time the top text display shows the word “SPORADIC.”
+                    The full word sequence of the top text display is “SPORADIC” -> “SURPRISING” -> “SPEEDY” -> “SPONTANEOUS” -> “SEVEN” -> “SEGMENT” -> “DISPLAY.”
+                </p>
+                <p>
+                    Each segment is inverted when the last seconds digit of the bomb's countdown timer is certain digits;
+                    if the segment should be on it is off and if it should be off it is on.
+                    For each of the digits where the segment is inverted, add 2 raised to that power to obtain that segment's value.
+                </p>
+                <p>
+                    To solve the module, press each segment when the last digit of the bomb's timer is the digit at the corresponding
+                    position of the digit sequence plus the last digit of that segment's value, modulo 10.</p>
+                <p>
+                    <b>Clarifications: Anything raised to the power of 0 is 1. Segments are numbered in reading order.
+                    These are the digits used by the module and on other modules using seven-segment displays.</b>
+                </p>
+                <img alt="Image of 7 Segment Displays" src="img/Faulty Seven Segment Displays/SegmentsStitched.png" style="width: 100%">
+                <p>
+                    <b>Helpful tip: To obtain the digit sequence, take each element of it when the last digit is a certain digit.
+                    Thus, the inverted segments will be the same between each digit, allowing you to deduce what the digit sequence is.
+                    Once you have obtained the digit sequence, obtaining the values of the segments is trivial.</b>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Sporadic Segments</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack holder">
+                    <div class="vstack display0">
+                        <svg class="interactive display0" viewBox="-15 -60 375 636" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" stroke-width="4">
+                            <polygon class="seg0" points="278.759,287.927 242.759,323.928 98.759,323.928 62.759,287.927 98.759,251.927 242.759,251.927"/>
+                            <polygon class="seg1" points="278.759,520.74 242.759,556.74 98.759,556.74 62.759,520.74 98.759,484.74 242.759,484.74"/>
+                            <polygon class="seg2" points="287.759,295.928 323.759,331.928 323.759,475.928 287.759,511.928 251.759,475.928 251.759,331.928"/>
+                            <polygon class="seg3" points="53.758,295.928 89.758,331.928 89.758,475.928 53.758,511.928 17.758,475.928 17.758,331.928"/>
+                            <polygon class="seg4" points="278.759,55.26 242.759,91.26 98.759,91.26 62.759,55.26 98.759,19.26 242.759,19.26"/>
+                            <polygon class="seg5" points="287.759,64.427 323.759,100.427 323.759,244.427 287.759,280.427 251.759,244.427 251.759,100.427"/>
+                            <polygon class="seg6" points="53.758,64.427 89.759,100.427 89.759,244.427 53.758,280.427 17.758,244.427 17.758,100.427"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="hstack spread vspace">
+                    <div class="option">
+                        <input class="action" type="radio" id="action-indep" name="action-type" value="indep" checked>
+                        <label id="lab-indep" for="action-indep">Independent</label>
+                    </div>
+                    <div class="option">
+                        <input class="action" type="radio" id="action-xor" name="action-type" value="xor">
+                        <label id="lab-xor" for="action-xor"><b>A</b> XOR <b>B</b> = <b>C</b></label>
+                    </div>
+                    <div class="option">
+                        <input class="action" type="radio" id="action-toggleall" name="action-type" value="toggleall">
+                        <label id="lab-toggleall" for="action-toggleall">Toggle All</label>
+                    </div>
+                </div>
+                <div class="saves buttons vspace">
+                    <button class="save">Save</button>
+                </div>
+                <div class="buttons vspace">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h4>Controls</h4>
+                <ul>
+                    <li>In <b>Independent</b> mode:
+                        <ul>
+                            <li>Click a <b>segment</b> to toggle its state.</li>
+                        </ul>
+                    </li>
+                    <li>In <b>A</b> XOR <b>B</b> = <b>C</b> mode:
+                        <ul>
+                            <li>Click a <b>segment</b> to toggle its state, display C is automatically XORed.</li>
+                            <li>Display <b>B</b> is not updated when switching between save states, but display <b>C</b> will still be the XORed result.</li>
+                        </ul>
+                    </li>
+                    <li>In <b>Toggle All</b> mode:
+                        <ul>
+                            <li>Click a <b>segment</b> to toggle the coresponding segment in all 3 displays.</li>
+                        </ul>
+                    </li>
+                    <li>Use the buttons to clear individual displays, save the state, reset the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>

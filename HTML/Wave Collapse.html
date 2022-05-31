@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wave Collapse — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css" />
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        const PARTICLES_COUNT = 5;
+        const SCHEMES_COUNT = 10;
+        const PARTICLES = ["e", 0xb5, 0x03bd, "g", 0x03b3, "u", "c", "t", "d", "s", "b", 0x03c4, "Z", "W", "H"];
+
+        function particleToString(p) {
+            return typeof p === "string" ? p : String.fromCharCode(p);
+        }
+
+        function getSchemaUrlAndRotation(i) {
+            const res = (s, i) => [`img/Wave Collapse/Diagram_${s}.svg`, i];
+            if (i < 1) return res("0-0", 0);
+            if (i < 5) return res("1-4", (i - 1) % 4);
+            if (i < 7) return res("5-6", (i - 1) % 2);
+            if (i < 9) return res("7-8", (i - 1) % 2);
+            return res("9-9", 0);
+        }
+
+        function pickRandom(arr, rnd) {
+            return arr[rnd.nextMax(arr.length)];
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            const particles = rnd.seed === 1 ? PARTICLES : rnd.shuffleArray(PARTICLES);
+            const grid = new Array(PARTICLES_COUNT).fill(0).map(() => new Array(PARTICLES_COUNT).fill(0));
+            const schemes = new Array(SCHEMES_COUNT).fill(0).map((_, i) => i);
+            const rowsParticles = new Array(PARTICLES_COUNT).fill(0).map(() => new Set());
+            const diagSchemes = rnd.shuffleArray(schemes);
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const schema = diagSchemes[i];
+                grid[i][i] = schema;
+                rowsParticles[i].add(schema);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                for (let j = 0; j < i; j++) {
+                    const schema = pickRandom(schemes.filter((s) => !rowsParticles[i].has(s) && !rowsParticles[j].has(s)), rnd);
+                    grid[j][i] = grid[i][j] = schema;
+                    rowsParticles[i].add(schema);
+                    rowsParticles[j].add(schema);
+                }
+            }
+            console.log(grid.map((col) => col.join(",")).join("\n"));
+            const table = document.getElementById("diagram-table-content");
+            table.innerHTML = "";
+            const firstTr = table.appendChild(document.createElement("tr"));
+            firstTr.appendChild(document.createElement("td"));
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const td = firstTr.appendChild(document.createElement("td"));
+                td.innerText = particleToString(particles[i]);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const tr = table.appendChild(document.createElement("tr"));
+                const firstTd = tr.appendChild(document.createElement("td"));
+                firstTd.innerText = particleToString(particles[i]);
+                for (let j = 0; j < PARTICLES_COUNT; j++) {
+                    const td = tr.appendChild(document.createElement("td"));
+                    const img = td.appendChild(document.createElement("img"));
+                    const [url, rot] = getSchemaUrlAndRotation(grid[i][j]);
+                    img.src = url;
+                    if (rot > 0) img.classList.add(`r${rot}`);
+                }
+            }
+        }
+    </script>
+    <style>
+        table {
+            float: right;
+            text-align: center;
+        }
+
+        p {
+            font-size: 13px;
+        }
+
+        #values-table {
+            margin-left: 8px;
+        }
+
+        #values-table tr:first-child td {
+            border-bottom: 3px solid;
+        }
+
+        #diagram-table {
+            margin: 32px 0 0 8px;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        #diagram-table td {
+            border: none;
+            padding: 4px;
+        }
+
+        #diagram-table img {
+            width: 64px;
+        }
+
+        .r1 {
+            transform: rotate(90deg);
+        }
+
+        .r2 {
+            transform: rotate(180deg);
+        }
+
+        .r3 {
+            transform: rotate(270deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wave Collapse</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wave Collapse.svg" class="diagram">
+                <h2>On the Subject of Wave Collapse</h2>
+                <p class="flavour-text">Any joke about Schrödinger's cat is funny and unfunny at the same time.</p>
+                <p>
+                    The module has a 5x7 grid and 8 buttons to the right of it.
+                    Each of these 8 buttons is connected with one particle, located somewhere on the grid, with a symbol that describes its type.
+                </p>
+                <p>
+                    Tap any of the buttons on the right to view its particle's wave function. A wave function is a 2x2 square of the grid in which the particle can be located.
+                </p>
+                <p>Remember the order, type, and wave function of each particle, as they will not be available after the collapse.</p>
+                <table id="values-table">
+                    <tr>
+                        <td>Value</td>
+                        <td>Multiplier</td>
+                    </tr>
+                    <tr>
+                        <td>Port plates</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Modules count</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>First digit of serial number</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>Starting time in minutes</td>
+                        <td>7</td>
+                    </tr>
+                    <tr>
+                        <td>Indicators without vowels</td>
+                        <td>5</td>
+                    </tr>
+                </table>
+                <p>
+                    Sum the results of each row in the table on the right, subtracting 8 until the result is within the range 1-8, inclusive.
+                    Hold down the button on the right which is assigned this number in reading order for more than one second.
+                    This will collapse the wave function of the particle connected with this button:
+                    the particle will take one of its four possible positions, and will be displayed on the grid.
+                </p>
+                <table id="diagram-table">
+                    <tbody id="diagram-table-content"></tbody>
+                </table>
+                <p>To solve the module, press the positions of all the other particles in reading order of their buttons.</p>
+                <p>
+                    If the wave functions of two particles intersect, then those particles are entangled.
+                    To find the positions of particles after collapse, start with the initially collapsed particle.
+                    Find which of the remaining particles are entangled with this one.
+                    For each of those entangled particles, look up its type along with the other particle's type to obtain a diagram,
+                    and place the known particle's position, relative to its wave function, in the corresponding position in the diagram.
+                    If the position contains a point, then the position of the particle is unchanged.
+                    Otherwise, if the position contains a line, the entangled particle will collapse at the other end of the line.
+                    This position, relative to the unknown particle's wave function, is that particle's target location.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

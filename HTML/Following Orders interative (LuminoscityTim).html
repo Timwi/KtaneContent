@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Following Orders — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        $(".shouts td").each(function() {
+            var elem = $(this);
+            var audio = $("<audio>")
+                .on("error", function() {
+                    button.addClass("failed");
+                })
+                .attr("src", "../HTML/audio/Following Orders/" + elem.text().replace(/[^\w]/g, "_") + ".ogg")
+                .on("ended", function() {
+                    button.removeClass("playing");
+                })
+                .appendTo(elem);
+
+            var button = $("<a href='#' class='play-button'>▶</a>")
+                .click(function() {
+                    if (button.hasClass("playing")) {
+                        button.removeClass("playing");
+                        audio[0].pause();
+                        audio[0].currentTime = 0;
+                    } else {
+                        button.addClass("playing");
+                        audio[0].play();
+                    }
+                    return false;
+                })
+                .prependTo(elem);
+        });
+
+        const symbols = [ "ankh", "cloth", "cup", "sieve", "vulture" ];
+        let rows = 6;
+        let cols = 6;
+        let currX = 0;
+        let currY = 0;
+        let grid = $(".the-grid");
+        var selected = "";
+        let saveStates = [];
+        let currentState = 0;
+
+        function selectNone() {
+            selected = "";
+            $("table.hieroglyphs td.selected").removeClass("selected");
+        }
+        $(document).click(function(event) {
+            selectNone();
+        });
+
+        for (let y = 0; y < rows; y++) {
+            let row = $("<div>").addClass("grid-row").appendTo(grid);
+            for (let x = 0; x < cols; x++) {
+                if (x > 0 && y < rows - 1) {
+                    $("<div>").addClass("gridcell cell").appendTo(row).click(function(event) {
+                        currX = x;
+                        currY = y;
+                        updatePosition();
+                        // event.preventDefault();
+                        // event.stopPropagation();
+                    });
+                }
+                else if (x == 0 && y == rows - 1) {
+                    $("<div>").addClass("cell").appendTo(row);
+                }
+                else {
+                    $("<div>").addClass("symbolcell cell").appendTo(row).each(function(_, e) {
+                        let element = $(e);
+                        $("<div>").appendTo(element).click(function(event) {
+                            if (selected.length > 0) {
+                                let elm = grid.children().eq(y).children().eq(x).children().eq(0);
+                                let whichSymbol = hasWhichSymbolClass(elm);
+                                if (whichSymbol >= 0) {
+                                    elm.removeClass(symbols[whichSymbol]);
+                                    if (symbols[whichSymbol] != selected) {
+                                        elm.addClass(selected);
+                                    }
+                                } else {
+                                    elm.addClass(selected);
+                                }
+                            } else {
+                                if (x == 0) currY = y;
+                                else currX = x;
+                                updatePosition();
+                            }
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                    });
+                }
+            }
+        }
+        grid.children().eq(rows - 2).children().eq(1).click();
+        $("table.hieroglyphs td div").each(function(_, e) {
+            let elem = $(e);
+            elem.click(function(event) {
+                $("table.hieroglyphs td.selected").removeClass("selected");
+                elem.parent().addClass("selected");
+                let whichSymbol = hasWhichSymbolClass(elem);
+                if (whichSymbol >= 0)
+                    selected = symbols[whichSymbol];
+
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        });
+
+        function removeSymbolClass(elem) {
+            symbols.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichSymbolClass(elem) {
+            for (let i = 0; i < symbols.length; i++) {
+                if (elem.hasClass(symbols[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function updatePosition() {
+            $(".cell.selected").removeClass("selected");
+            grid.children().eq(currY).children().eq(currX).addClass("selected");
+            grid.children().eq(currY).children().eq(0).addClass("selected");
+            grid.children().eq(rows - 1).children().eq(currX).addClass("selected");
+        }
+
+        $(".reset-grid").click(function() {
+            $(".symbolcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            grid.children().eq(rows - 2).children().eq(1).click();
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $(".symbolcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            grid.children().eq(rows - 2).children().eq(1).click();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".the-grid .cell, .the-grid .symbolcell div")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".the-grid .cell, .the-grid .symbolcell div").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .dark table, table { border: none; }
+        td { text-align: center; }
+        .small td, .small th { font-size: 10pt; }
+
+        .dark a, a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
+
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 10px;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+
+        div.the-grid {
+            height: 400px;
+            width: 400px;
+        }
+        div.cell {
+            width: 60px;
+            height: 60px;
+            margin: 1px;
+            user-select: none;
+            text-align: center;
+            border: 1px solid transparent;
+            box-sizing: border-box;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .cell.selected { background-color: rgba(255, 255, 0, 0.4); }
+        table.hieroglyphs td.selected { background-color: rgba(0, 0, 255, 0.4); }
+        table.hieroglyphs td {
+            width: 50px;
+            height: 50px;
+        }
+        .cell.gridcell { border: #888 1px solid; }
+        .cell.symbolcell { border: #88F 2px solid; }
+
+        table.hieroglyphs td, .cell.symbolcell {
+            position: relative;
+        }
+        table.hieroglyphs td>div, .symbolcell>div {
+            position: absolute;
+            width: 100%;
+            height: 60px;
+            top: 0; left: 0;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        div.cell:not(.nopointer) { cursor: pointer; }
+
+        .grid-row {
+            position: relative;
+            margin: 2px;
+            height: 60px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ankh { background-image: url("img/Following Orders/Ankh.png"); }
+        .cloth { background-image: url("img/Following Orders/Cloth.png"); }
+        .cup { background-image: url("img/Following Orders/Cup.png"); }
+        .sieve { background-image: url("img/Following Orders/Sieve.png"); }
+        .vulture { background-image: url("img/Following Orders/Vulture.png"); }
+        .dark .ankh, .dark .cloth, .dark .cup, .dark .sieve, .dark .vulture {
+            filter: invert(85%);
+        }
+
+        button {
+            font-family: "Special Elite";
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-grid, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Following Orders</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Following Orders.svg" class="diagram">
+                <h2>On the Subject of Following Orders</h2>
+                <p class="flavour-text">This is the first module that wants you to succeed so badly, it’s yelling the answer at you!</p>
+
+                <ul>
+                    <li>On the module, there is a switch that can turn a speaker on or off.</li>
+                    <li>This speaker will relay three to five “shouts” that will tell you directions.</li>
+                    <li>There is also a directional pad on the module that will move you from tile to tile on the five by five hieroglyph grid.</li>
+                    <li>The hieroglyphs denoting the rows and columns will glow to show you which tile you are currently on.</li>
+                    <li>Ten of these twenty-five tiles are trapped, and only one of the tiles will solve the module upon landing on it.</li>
+                    <li>The shouts will lead you around the trapped tiles to the exit tile based on the table below.</li>
+                    <li>Stepping on a trapped tile will reset all special tiles and randomly generate ten new trapped tiles, and a new exit. The previous trapped tiles will briefly glow red.</li>
+                </ul>
+
+                <h3>Decoding Shouts:</h3>
+
+                <ul>
+                    <li>The table on the next page will ask questions regarding the sequence of shouts from the speaker, and your current location.</li>
+                    <li>To read this table, first, you will find which row and column have the most criteria present in the shouts you received.</li>
+                    <li>You will then move in the direction with the most criteria, to the first space in that direction that has the hieroglyph with the most criteria.</li>
+                    <li>Every non-trapped tile will give you a different set of shouts that will always lead you in the correct direction towards the goal,
+                        so if you ever take a step in the wrong direction and survive, the new shouts will lead you in the correct direction.</li>
+                    <li>In the case of a tie, find the square on which you’re standing on the module and find that same location on the 5 by 5 table below.
+                        Use the direction or glyph that cross at that square depending on what’s tied.</li>
+                    <li>In this table:
+                        <ul>
+                            <li>Direction refers to the word being said in each specific instance.</li>
+                            <li>Voice refers to one of the three possible people giving directions: a man, a woman, and a child.</li>
+                            <li>Shout refers to a specific instance of a voice saying a direction.</li>
+                        </ul></li>
+                    <li><strong>ONCE IN A BLUE MOON:</strong> Microsoft Sam will just tell you the destination.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Following Orders</span>
+            </div>
+            <div class="page-content">
+                <table class="small">
+                    <caption><b>Decoding Table</b></caption>
+                    <tr>
+                        <td>In Cup Row</td>
+                        <td>Woman’s voice is present</td>
+                        <td>Man’s shout precedes “Left” shout</td>
+                        <td>No shouts that say a vertical direction</td>
+                        <td>All shouts are saying the same direction</td>
+                        <th>Up</th>
+                    </tr>
+                    <tr>
+                        <td>At least 2 “Right” shouts</td>
+                        <td>No “Left” shouts</td>
+                        <td>Two or more Female shouts</td>
+                        <td>In Vulture Column</td>
+                        <td>At least one “Down” shout</td>
+                        <th>Left</th>
+                    </tr>
+                    <tr>
+                        <td>Man’s voice is not present</td>
+                        <td>In Ankh Column</td>
+                        <td>At least one “Left” shout</td>
+                        <td>Child’s voice is present</td>
+                        <td>Any voice in between two shouts that share a direction</td>
+                        <th>Down</th>
+                    </tr>
+                    <tr>
+                        <td>At least three shouts with the same direction</td>
+                        <td>Man’s voice is present</td>
+                        <td>Only the Child’s voice is absent</td>
+                        <td>There are exactly 3 shouts</td>
+                        <td>In Sieve Row</td>
+                        <th>Right</th>
+                    </tr>
+                    <tr>
+                        <td>The first and last shouts are different voices</td>
+                        <td>At least one voice is saying opposite directions</td>
+                        <td>At least one shout of each direction</td>
+                        <td>All three voices are present</td>
+                        <td>There are 5 shouts</td>
+                        <th>Shortest Path to Hieroglyph*</th>
+                    </tr>
+                    <tr>
+                        <th>Ankh</th>
+                        <th>Cloth</th>
+                        <th>Cup</th>
+                        <th>Sieve</th>
+                        <th>Vulture</th>
+                        <th class="corner"></th>
+                    </tr>
+                </table>
+
+                <ul>
+                    <li>*If there is more than one direction that is tied for the fewest tiles to reach the corresponding hieroglyph,
+                        choose a direction based on the first two characters of the serial number.
+                        <table class="small">
+                            <tr>
+                                <th>Character 1</th>
+                                <td>Number</td>
+                                <td>Number</td>
+                                <td>Letter</td>
+                                <td>Letter</td>
+                            </tr>
+                            <tr>
+                                <th>Character 2</th>
+                                <td>Number</td>
+                                <td>Letter</td>
+                                <td>Number</td>
+                                <td>Letter</td>
+                            </tr>
+                            <tr>
+                                <th>Direction</th>
+                                <td>Up</td>
+                                <td>Left</td>
+                                <td>Down</td>
+                                <td>Right</td>
+                            </tr>
+                        </table>
+                </ul>
+                <br>
+                <table class="shouts centered">
+                    <caption><b>Shouts</b></caption>
+                    <tr><td>Child Up</td><td>Child Down</td><td>Child Left</td><td>Child Right</td></tr>
+                    <tr><td>Female Up</td><td>Female Down</td><td>Female Left</td><td>Female Right</td></tr>
+                    <tr><td>Male Up</td><td>Male Down</td><td>Male Left</td><td>Male Right</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Following Orders</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack">
+                    <div class="vstack">
+                        <table class="centered hieroglyphs">
+                            <caption><b>Hieroglyphs</b></caption>
+                            <tr>
+                                <th>Ankh</th>
+                                <th>Cloth</th>
+                                <th>Cup</th>
+                                <th>Sieve</th>
+                                <th>Vulture</th>
+                            </tr>
+                            <tr>
+                                <td><div class="ankh"></div></td>
+                                <td><div class="cloth"></div></td>
+                                <td><div class="cup"></div></td>
+                                <td><div class="sieve"></div></td>
+                                <td><div class="vulture"></div></td>
+                            </tr>
+                        </table>
+                        <div style="height: 5mm"></div>
+                        <div class="the-grid"></div>
+                    </div>
+                </div>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-all">Reset All</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-grid">Reset Grid</button>
+                </div>
+
+                <h3>Interactive Grid</h3>
+                <ul>
+                    <li>Select one of the <b>glyphs</b> above the grid then click on the <b>left</b> or <b>bottom</b> cells to place/remove a glyph.</li>
+                    <li>Click a main cell to change position in the grid.</li>
+                    <li>Click a <b>left</b> or <b>bottom</b> cell when no glyph tool is selected to change only the row of column of the position.</li>
+                    <li>You can save the current state of the grid, reset the grid, reset the saves, or reset everything using the buttons.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>

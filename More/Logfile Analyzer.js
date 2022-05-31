@@ -1,3 +1,8 @@
+// Dark mode
+if (localStorage.getItem("theme") == "dark") {
+    document.documentElement.classList.add("dark-mode");
+}
+
 class Groups {
     constructor() {
         this.groups = [];
@@ -1012,12 +1017,15 @@ function Bomb(seed) {
             return 0;
         });
 
+        const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
         function GetManual(parseData) {
             const moduleData = parseData.moduleData;
-            let manual = (moduleData.repo?.FileName || moduleData.repo?.Name || moduleData.displayName)
+            const repoName = moduleData.repo?.Name;
+            let manual = (moduleData.repo?.FileName || repoName || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
 
+            let preferredManual = preferredManuals[repoName];
             if (parseData.tree && parseData.tree.length != 0 && typeof parseData.tree[0] === "string" && parseData.tree[0].startsWith("Language is ")) {
                 manual += ` (${parseData.tree[0].split(" ")[2]} — *)`;
 
@@ -1026,12 +1034,15 @@ function Bomb(seed) {
                     .replace("Vent Gas", "Venting Gas")
                     .replace("Passwords", "Password")
                     .replace("Who's on First", "Who’s on First")
-                    .replace(" Translated", " translated");
+                    .replace(" Translated", " translated")
+                    + ".html";
+            } else if (preferredManual !== undefined) {
+                manual = repoName + " " + preferredManual.replace(/ \((HTML|PDF)\)$/, (_, type) => "." + type.toLowerCase());
+            } else {
+                manual += ".html";
             }
 
-            manual += ".html";
-
-            if (ruleSeed != 1)
+            if (ruleSeed != 1 && manual.endsWith(".html"))
                 manual += "#" + ruleSeed;
 
             return manual;
@@ -1171,22 +1182,27 @@ function Bomb(seed) {
 
                 // The X axis needs to be flipped for the back face, so we multiply it by -1.
                 // And the Y axis is always upside down, so we always multiply it by -1.
-                const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1);
-                const y = this.Anchors[moduleIndex][1] * -1;
-                const image = $SVG(`<image x=${x} y=${y} xlink:href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=.22 height=.22>`).appendTo(svg);
-                $SVG(`<rect x=${x} y=${y} width=.22 height=.22 stroke=black stroke-width=0.005 fill=none>`).appendTo(svg);
+                const x = this.Anchors[moduleIndex][0] * (moduleIndex < this.ModuleOrder.length / 2 ? 1 : -1) * 100;
+                const y = this.Anchors[moduleIndex][1] * -1 * 100;
+
+                let image;
+                if (module.iconPosition !== undefined) {
+                    const imageSVG = $SVG(`<svg viewBox="0 0 32 32" x=${x} y=${y} width=22 height=22>`).appendTo(svg);
+                    image = $SVG(`<image x=${-module.moduleData.iconPosition.X * 32} y=${-module.moduleData.iconPosition.Y * 32} href="../iconsprite">`).appendTo(imageSVG);
+                } else {
+                    image = $SVG(`<image x=${x} y=${y} href="../Icons/${encodeURI(module.moduleData.icon)}.png" width=22 height=22>`).appendTo(svg);
+                }
+
+                $SVG(`<rect x=${x} y=${y} width=22 height=22 stroke=black stroke-width=0.5 fill=none>`).appendTo(svg);
 
                 for (let j = 0; j < 4; j++) {
-                    viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 0.22));
+                    viewBox[j] = Math[j < 2 ? "min" : "max"](viewBox[j], (j % 2 == 0 ? x : y) + (j < 2 ? 0 : 22));
                 }
                 svg.attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${Math.abs(viewBox[0]) + viewBox[2]} ${Math.abs(viewBox[1]) + viewBox[3]}`);
                 svg.width(`${0.5 * Math.min(Math.abs(viewBox[0]) + viewBox[2] / 0.66, 1) * 100}%`);
 
-                // Attempt to make the image pixelated
-                image.css("image-rendering", "crisp-edges");
-                if (image.css("image-render") == null) {
-                    image.css("image-rendering", "pixelated");
-                }
+                image.css("image-rendering", "pixelated");
+                image.on("error", () => image.attr("href", "../Icons/blank.png"));
             }
             const backFace = svg;
 
@@ -1248,8 +1264,6 @@ function generateParseDataKeys(field)
     parseData.forEach((moduleData, index) => {
         if (parseKeys[field][moduleData[field]] !== undefined) {
             return;
-        } else if (Array.isArray(moduleData[field])) {
-            moduleData[field].forEach((individual, secondIndex) => parseKeys[field][individual] = [index, secondIndex]);
         } else if (moduleData[field] !== undefined) {
             parseKeys[field][moduleData[field]] = index;
         }
@@ -1263,28 +1277,39 @@ function getModuleData(value, field = "loggingTag") {
         generateParseDataKeys(field);
 
 
-    if (Array.isArray(parseKeys[field][value])) {
-        const singleModuleData = Object.assign({}, parseData[parseKeys[field][value][0]]);
-        const index = parseKeys[field][value][1];
-        const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
-
-        for (const field of fields) {
-            if (!Array.isArray(singleModuleData[field])) continue;
-
-            singleModuleData[field] = singleModuleData[field][index];
-        }
-        return singleModuleData;
-    } else if (parseKeys[field][value] !== undefined) {
+    if (parseKeys[field][value] !== undefined) {
         return Object.assign({}, parseData[parseKeys[field][value]]);
     }
 
     return null;
 }
 
+parseData = parseData.flatMap(data => {
+    if (!Array.isArray(data.moduleID)) {
+        return [data];
+    }
+
+    const multiple = [];
+    const fields = ["loggingTag", "moduleID", "displayName", "icon", "iconPosition"];
+    for (let i = 0; i < data.moduleID.length; i++) {
+        const singleData = {};
+        for (const field of fields) {
+            if (!Array.isArray(data[field])) continue;
+
+            singleData[field] = data[field][i];
+        }
+
+        singleData.matches = data.matches;
+        multiple.push(singleData);
+    }
+
+    return multiple;
+});
+
 // Read Logfile
 var readwarning = false;
 var buildwarning = false;
-var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1");
+var debugging = (window.location.protocol == "file:" || window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost");
 var linen = 0;
 var lines = [];
 var bombgroup;
@@ -1400,7 +1425,7 @@ function parseLog(opt) {
 
         $.get("../json/raw", function(websiteData) {
             for (const module of websiteData.KtaneModules) {
-                const matches = parseData.filter(data => Array.isArray(data.moduleID) ? data.moduleID.includes(module.ModuleID) : data.moduleID == module.ModuleID);
+                const matches = parseData.filter(data => data.moduleID == module.ModuleID);
                 if (matches.length === 0) {
                     websiteParseData.push({
                         moduleID: module.ModuleID,
@@ -1409,19 +1434,13 @@ function parseLog(opt) {
                         iconPosition: { X: module.X, Y: module.Y },
                         repo: module
                     });
-                } else if (matches.length === 1) {
-                    const match = matches[0];
-                    if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
-                        console.warn(`Unnecessary module: ${module.Name}`);
-                    }
+                } else if (matches.length >= 1) {
+                    for (const match of matches) {
+                        if (match.matches == null && match.hasLogging !== false && (match.displayName == module.Name || match.displayName == null) && (match.loggingTag == module.Name || match.loggingTag == null) && (match.icon == module.Name || match.icon == null)) {
+                            console.warn(`Unnecessary module: ${module.Name}`);
+                        }
 
-                    match.repo = module;
-                    if (Array.isArray(match.moduleID)) {
-                        if (match.iconPosition == null)
-                            match.iconPosition = [];
-
-                        match.iconPosition[match.moduleID.indexOf(module.ModuleID)] = { X: module.X, Y: module.Y };
-                    } else {
+                        match.repo = module;
                         match.iconPosition = { X: module.X, Y: module.Y };
                     }
                 }
@@ -1481,13 +1500,8 @@ function parseLog(opt) {
                 // The Rules module runs into this edge case and so we need to make sure we find the one that has a module ID (if it exists).
                 if (id !== null && obj?.moduleID == undefined) {
                     var potentialModules = parseData.filter(data => data.loggingTag == loggingTag && data.moduleID !== undefined);
-                    switch (potentialModules.length) {
-                        case 1:
-                            obj = potentialModules[0];
-                            break;
-                        default:
-                            obj = null;
-                            break;
+                    if (potentialModules.length === 1) {
+                        obj = potentialModules[0];
                     }
                 }
 
@@ -1699,6 +1713,19 @@ $(function() {
         readPaste(clipText);
         pasteButton.show();
         pasteBox.hide();
+    }).on("keydown", function(event) {
+        if (!event.altKey || event.shiftKey || event.ctrlKey || event.metaKey)
+            return;
+        let k = event.key.toLowerCase();
+        if (k == "w" || event.keyCode === 87)
+        {
+            if(!confirm("Refresh to toggle dark mode?")) return;
+            if(document.documentElement.classList.contains("dark-mode"))
+                localStorage.removeItem('theme');
+            else
+                localStorage.setItem('theme', "dark");
+            location.reload();
+        }
     });
 
     pasteBox.on("blur", function() {

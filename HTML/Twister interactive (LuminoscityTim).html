@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="initial-scale=1">
-        <title>Twister — Keep Talking and Nobody Explodes Mod</title>
-        <link rel='stylesheet' type='text/css' href='css/font.css'>
-        <link rel="stylesheet" type="text/css" href="css/normalize.css">
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-        <script src="js/ktane-utils.js"></script>
-        <script src="js/jquery.3.1.1.min.js"></script>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Twister — Keep Talking and Nobody Explodes Mod</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
         <style>
             .hstack {
                 display: flex;
@@ -90,6 +91,22 @@
             .player {
                 margin: 4px;
             }
+            .player div {
+                box-sizing: border-box;
+                position: absolute;
+                /* width: 70px;
+                height: 70px;
+                top: 5px;
+                left: 5px; */
+                width: 80px;
+                height: 80px;
+                top: -1px;
+                left: -1px;
+            }
+            .player.present div {
+                margin: 1px;
+                border: 3px solid #777;
+            }
             .move, .stagetext {
                 font-size: 20px;
                 display: flex;
@@ -115,6 +132,10 @@
             }
             .stagetext.label {
                 padding-left: 130px;
+            }
+            .move {
+                margin: 3px;
+                border: 1px solid;
             }
             .player.selected {
                 margin: 2px;
@@ -194,13 +215,6 @@
             let rows = 6;
             let cols = 4;
 
-            function makeSVG(tag, attrs) {
-                var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
-                for (var k in attrs)
-                    el.setAttribute(k, attrs[k]);
-                return el;
-            }
-
             $(document).click(function() {
                 // $(".stagenumber").removeClass("selected");
                 start = null;
@@ -241,9 +255,9 @@
                 for (let x = 1; x <= cols; x++) {
                     let circleHolder = $("<div>").addClass("cell").appendTo(row).each(function(_, b) {
                         let box = $(b);
-                        let svg = $('<svg class="circle" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">')
+                        let svg = MakeSvgTag(100, 100, 0, 0, {class:"circle"})
                             .appendTo(box);
-                        let circle = makeSVG("circle", {
+                        let circle = MakeSvgElem("circle", {
                             class: circleColors[x-1], cx:50, cy:50, r:40, stroke: "#000", "stroke-width": 2
                         });
                         svg.append(circle);
@@ -293,7 +307,7 @@
                                         }
                                     });
                                 }
-
+                                updatePresent();
                                 start = null;
                             }
                             event.preventDefault();
@@ -318,14 +332,25 @@
                 return -1;
             }
 
+            function updatePresent() {
+                $(".player.present").removeClass("present");
+                $(".matcell").each(function(i) {
+                    let elem = $(this);
+                    let sym = hasWhichPlayerClass(elem);
+                    if (sym >= 0) {
+                        $(`.player.${players[sym]}`).addClass("present");
+                    }
+                });
+            }
+
             var tools1 = $(".tools.c1");
             var tools2 = $(".tools.c2");
             for (let i = 0; i < players.length; i++) {
-                 $("<div>").addClass("player cell").appendTo(i < 4 ? tools1 : tools2).click(function() {
+                let player = $("<div>").addClass("player cell").appendTo(i < 4 ? tools1 : tools2).click(function() {
                     $(".player").removeClass("selected");
                     $(this).addClass("selected");
                     selected = players[i];
-                }).addClass(players[i]);
+                }).addClass(players[i]).append($("<div>"));
             }
             $(".lhand1").click();
             $("<div>").addClass("player cell nopointer").appendTo(tools1);
@@ -339,6 +364,7 @@
                 $(".matcell").each(function(_, e) {
                     removePlayerClass($(e));
                 });
+                $(".player").removeClass("present");
             });
 
             $(".reset-saves").click(function() {
@@ -358,6 +384,7 @@
                 $(".matcell").each(function(_, e) {
                     removePlayerClass($(e));
                 });
+                $(".player").removeClass("present");
                 $(".replace-save").prop('disabled', true);
                 saveStates.forEach(x => x.remove());
                 saveStates = [];
@@ -380,7 +407,7 @@
 
             $("button.new-save").click(function() {
                 let saveState = Array.from($(".cell")).map(x => $(x)).map(x => x.attr("class") || "");
-                console.log(saveStates);
+                //console.log(saveStates);
                 let stateNumber = saveStates.length;
                 let s = currentStage;
                 currentState = stateNumber;
@@ -410,7 +437,7 @@
 
             $("button.replace-save").click(function() {
                 let saveState = Array.from($(".cell")).map(x => $(x)).map(x => x.attr("class") || "");
-                console.log(saveStates);
+                //console.log(saveStates);
                 let stateNumber = currentState;
                 let s = currentStage;
 
@@ -512,7 +539,7 @@
                     <p>Use the above interactive graphic as a Twister mat.</p>
                     <p>Select one of the tools to the right of the mat then click on the mat to use that tool.
                     <br>
-                    Use one of the hand/foot tools to place/remove a hand/foot.
+                    Use one of the hand/foot tools to place/remove a hand/foot. When one of them is present on the mat, the tool has a gray border.
                     <br>
                     Use the <b>Move</b> tool to drag a hand/foot from one circle to another.
                     <br>

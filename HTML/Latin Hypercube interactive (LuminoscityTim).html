@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Latin Hypercube — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        let rows = 4;
+        let cols = 4;
+        let rc = rows * cols;
+        let currG = 0;
+        let currX = 0;
+        let currY = 0;
+        let bigGrid = $(".interactive-grid");
+        var selectedSymbol = "";
+        var selected = null;
+        let saveStates = [];
+        let currentState = 0;
+        const symbols = [ "cube", "octahedron", "tetrahedron", "dodecahedron" ];
+        const keyToSymbol = {
+            c:"cube",
+            h:"cube",
+            o:"octahedron",
+            t:"tetrahedron",
+            d:"dodecahedron",
+            n:""
+        };
+
+        function selectNone() {
+            selectedSymbol = "";
+            selected = null;
+            $("table.symbols td.selected").removeClass("selected");
+            $(".gridcell").removeClass("selected selectedgray");
+        }
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            let k = event.key.toLowerCase();
+            let space = event.key == " ";
+            if (space || k == "c" || k == "h" || k == "d" || k == "o" || k == "t") {
+                pressColorKey(space ? "n" : k);
+                // selectNone();
+                if (space) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            }
+        });
+        function updateFill() {
+            let filled = $(".cell .cube, .cell .tetrahedron, .cell .octahedron, .cell .dodecahedron").length;
+            filled = Math.floor(filled * 1000 / 256) / 10;
+            $(".fill-text span").text(filled)
+        }
+
+        function pressColorKey(k) {
+            if (selected) {
+                removeSymbolClass(selected);
+                selected.addClass(keyToSymbol[k]);
+                updateFill();
+            }
+        }
+        function removeSymbolClass(elem) {
+            symbols.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichSymbolClass(elem) {
+            for (let i = 0; i < symbols.length; i++) {
+                if (elem.hasClass(symbols[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        $("table.symbols td div").each(function(_, e) {
+            let elem = $(e);
+            elem.click(function(event) {
+                $("table.symbols td.selected").removeClass("selected");
+                elem.parent().addClass("selected");
+                let whichSymbol = hasWhichSymbolClass(elem);
+                if (whichSymbol >= 0)
+                    selectedSymbol = symbols[whichSymbol];
+
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        });
+        function updatePosition(x, y, g) {
+            $(".gridcell.selected").removeClass("selected");
+            let grids = bigGrid.children().filter(function(i, el) {
+                return i % cols == g % cols || Math.floor(i / cols) == Math.floor(g / cols);
+            });
+            grids.each((i, el) => {
+                let item = $(el);
+                item.children().eq(1).children().eq(y).children().eq(x).addClass("selected");
+            });
+        }
+
+        for (let g = 0; g < rc; g++) {
+            let hs = $("<div>").addClass("hstack").appendTo(bigGrid);
+            $("<span>").text(`${String.fromCharCode(65 + g%cols)}${Math.floor(g/cols)+1}`).appendTo(hs);
+            let grid = $("<div>").addClass("grid").appendTo(hs);
+            for (let y = 0; y < rows; y++) {
+                let row = $("<div>").addClass("grid-row").appendTo(grid);
+                for (let x = 0; x < cols; x++) {
+                    $("<div>").addClass("gridcell cell").appendTo(row).each(function(_, e) {
+                        let element = $(e);
+                        $("<div>").appendTo(element).click(function(event) {
+                            selected = $(this);
+                            if (selectedSymbol.length > 0) {
+                                let elm = bigGrid.children().eq(g).children().eq(1).children().eq(y).children().eq(x).children().eq(0);
+                                let whichSymbol = hasWhichSymbolClass(elm);
+                                if (whichSymbol >= 0) {
+                                    elm.removeClass(symbols[whichSymbol]);
+                                    if (symbols[whichSymbol] != selectedSymbol) {
+                                        elm.addClass(selectedSymbol);
+                                    }
+                                } else {
+                                    elm.addClass(selectedSymbol);
+                                }
+                                updateFill();
+                            }
+                            currG = g;
+                            currX = x;
+                            currY = y;
+                            $(".gridcell.selectedgray").removeClass("selectedgray");
+                            selected.parent().addClass("selectedgray")
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }).hover(function() {   //hover
+                            updatePosition(x, y, g);
+                        }, function() {         //leave
+                            $(".gridcell.selected").removeClass("selected");
+                        });
+                    });
+                }
+            }
+        }
+        updateFill();
+
+        $(".letters-symbols").click(function() {
+            $("body").toggleClass("letters");
+            $(this).toggleClass("symb");
+        });
+
+        $(".reset-grid").click(function() {
+            $(".gridcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            selectNone();
+            updateFill();
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $(".gridcell div").each(function(_, e) {
+                removeSymbolClass($(e));
+            });
+            selectNone();
+            updateFill();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function(event) {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".gridcell, .gridcell div")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+            let s_selected = selected;
+
+            let button = $("<button>").text(stateNumber + 1).click(function(evt) {
+                $(".gridcell, .gridcell div").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+                selected = s_selected;
+                updateFill();
+                evt.preventDefault();
+                evt.stopPropagation();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    });
+    </script>
+    <style>
+        td { text-align: center; }
+
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .small { font-size: 12px; }
+
+        div.interactive-grid {
+            width: 120%;
+            margin-left: -12%;
+        }
+        @media screen and (max-width: 899px) {
+            div.interactive-grid {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+        div.grid {
+            height: 162px;
+            width: 170px;
+            margin: 10px 1px 10px 1px;
+        }
+        div.cell {
+            width: 40px;
+            height: 40px;
+            margin: 0;
+            user-select: none;
+            text-align: center;
+            border: 1px solid transparent;
+            box-sizing: border-box;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .cell.selected { background-color: rgba(255, 255, 0, 0.4); }
+        .cell.selectedgray { background-color: rgba(0, 0, 0, 0.2); }
+        .dark .cell.selectedgray { background-color: rgba(255, 255, 255, 0.35); }
+        table.symbols td.selected { background-color: rgba(0, 0, 255, 0.4); }
+        table.symbols td {
+            width: 33px;
+            height: 33px;
+        }
+        .cell.gridcell { border: #888 1px solid; }
+
+        table.symbols td, .cell.gridcell {
+            position: relative;
+        }
+        table.symbols td>div, .gridcell>div {
+            position: absolute;
+            height: 40px;
+            top: 0; left: 0;
+            font-size: 20pt;
+            line-height: 45px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        body.letters .gridcell>div {
+            text-align: left;
+            padding-left: 11px;
+        }
+        body.dark.letters .gridcell>div, body.dark.letters table.symbols td>div {
+            color: black;
+        }
+        table.symbols td>div {
+            width: 100%;
+        }
+        .gridcell>div {
+            width: 40px;
+            background-size: 85%;
+            background-position: 35% 30%;
+        }
+        .gridcell>div.cube {
+            background-size: 78%;
+            background-position: 35% 20%;
+        }
+        .gridcell>div.dodecahedron {
+            background-size: 84%;
+            background-position: 35% 20%;
+        }
+
+        div.cell:not(.nopointer) { cursor: pointer; }
+
+        .grid-row {
+            position: relative;
+            margin: 0px;
+            height: 40px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hstack span {
+            margin-left: 5px;
+            width: 15px;
+            text-align: right;
+        }
+        .fill-text {
+            width: 21%;
+            font-size: 16pt;
+        }
+
+        body.letters .cube::after { content: 'H' }
+        body.letters .tetrahedron::after { content: 'T' }
+        body.letters .octahedron::after { content: 'O' }
+        body.letters .dodecahedron::after { content: 'D' }
+        body:not(.letters) .cube { background-image: url("img/Latin Hypercube/cube.svg"); }
+        body:not(.letters) .tetrahedron { background-image: url("img/Latin Hypercube/tetrahedron.svg"); }
+        body:not(.letters) .octahedron { background-image: url("img/Latin Hypercube/octahedron.svg"); }
+        body:not(.letters) .dodecahedron { background-image: url("img/Latin Hypercube/dodecahedron.svg"); }
+        .dark .cube, .dark .tetrahedron, .dark .octahedron, .dark .dodecahedron {
+            filter: invert(85%);
+        }
+
+        button {
+            font-family: "Special Elite";
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 4px;
+        }
+        button.reset-saves, button.reset-grid, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+        button.letters-symbols:not(.symb)::after {
+            content: 'Symbols';
+        }
+        button.letters-symbols.symb::after {
+            content: 'Letters';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Latin Hypercube</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Latin Hypercube.svg" class="diagram">
+                <h2>On the Subject of Latin Hypercubes</h2>
+                <p class="flavour-text">Tolle rationem deductionis ad altiorem tuum dimensionem.</p>
+                <p>On this module is a 4×4×4×4 grid. Each cell may contain one of four solids: Tetrahedron, Hexahedron(Cube), Octahedron, or Dodecahedron.</p>
+                <p>
+                    Each row, column, stack, and rank of the grid may only contain one of each shape.<br>
+                    There is only one arrangement of solids that fits within the constraints with the given starting configuration.
+                </p>
+                <p>
+                    Navigate around the cube using the four buttons at the top of the module.<br>
+                    Pressing any one will move the cell selector one space in its direction, wrapping around if it exits the grid.<br>
+                    The coordinates of the selector are shown on the buttons.<br>
+                    Only solids with the same W coordinate as the selector are visible on the module.
+                </p>
+                <p>
+                    If the selected cell is empty, a white sphere is visible inside it,<br>
+                    otherwise the button with the solid in the selected cell will be highlighted.<br>
+                    Pressing one of the four buttons to the right of the module will place its corresponding solid in the selected empty cell.<br>
+                    Placing the wrong solid in an empty cell will incur a strike.
+                </p>
+                <p>The module is solved once more than two thirds of the cells are filled.</p>
+                <h3>Interactive Grid</h3>
+                <ul>
+                    <li>Click a <b>cell</b> to highlight the other cells in the same <b>rank</b> and <b>stack</b>.</li>
+                    <li>Select one of the <b>shapes</b> above the grid, then click one of the <b>cells</b> to place/remove a shape.</li>
+                    <li>Press <b>T / H</b><span class="small">(or C)</span><b> / O / D</b> when a cell is selected to place a shape.</li>
+                    <li>Press [<b>Space</b>] when a cell is selected to remove a shape.</li>
+                    <li>Click the <b>Symbols</b> button to toggle between letters and symbols.</li>
+                    <li>You can save the current state of the grid, reset the grid, reset the saves, or reset everything using the other buttons.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Latin Hypercube</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack">
+                    <div class="fill-text"> Fill: <span></span>% </div>
+                    <table class="symbols">
+                        <tr><th>T</th><th>H/C</th><th>O</th><th>D</th></tr>
+                        <tr>
+                            <td><div class="tetrahedron"></div></td>
+                            <td><div class="cube"></div></td>
+                            <td><div class="octahedron"></div></td>
+                            <td><div class="dodecahedron"></div></td>
+                        </tr>
+                    </table>
+                    <div style="width: 8%"></div>
+                    <button class="letters-symbols"></button>
+                </div>
+
+                <div class="hstack wrap interactive-grid"></div>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-all">Reset All</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-grid">Reset Grid</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
