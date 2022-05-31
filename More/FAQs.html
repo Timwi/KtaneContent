@@ -465,7 +465,7 @@
         <section id="boss-module" data-title="Boss module">
             <a href='#boss-module'><h3>Boss module</h3></a>
             <div class="answer">
-                <p>A <a class="ref" href="#regular-module">regular module</a> that cannot be solved independently of other modules on the same bomb; a module that insists that other modules are solved first before you can solve this one.</p>
+                <p>A module (typically having the <a href='#module-quirks'>quirks</a> <b>SolvesAtEnd</b> or <b>NeedsOtherSolves</b>) that may present or generate new information needed for solving it <u>when</u> other non-ignored modules are solved <u>or</u> may require interaction between module solves.</p>
                 <p>These modules use <b>ignore lists</b> to make sure that multiple boss modules can work on the same bomb without all waiting on each other, which would make the bomb unsolvable.</p>
                 <p>Make sure to be subscribed to the <a href='https://steamcommunity.com/sharedfiles/filedetails/?id=1669095833'>Boss Module Manager</a> to ensure the ignore lists for these modules are up-to-date.</p>
                 <p>The following are some of the more well-known modules that require <em>all</em> other modules to be solved first (except for other boss modules). This list is not exhaustive.</p>
@@ -973,7 +973,7 @@
                     <li><a href="../HTML/Green%20Cipher.html">Green Cipher</a></li>
                     <li><a href="../HTML/The%20Hyperlink.html">Hyperlink</a></li>
                     <li><a href="../HTML/Polygons.html">Polygons</a></li>
-                    <li><a href="../HTML/Multi-Colored%20Switches.html">Multi-Colored Switches</a></li>
+                    <li><a href="../HTML/Multicolored%20Switches.html">Multicolored Switches</a></li>
                     <li><a href="../HTML/14.html">14</a></li>
                     <li><a href="../HTML/Dreamcipher.html">Dreamcipher</a></li>
                     <li>Answer to...<div class='aside'>(module has since been removed)</div></li>
@@ -994,8 +994,14 @@
                     <li><a href="../HTML/Linq.html">Linq</a></li>
                     <li><a href="../HTML/X.html">X</a> and <a href="../HTML/Y.html">Y</a></li>
                     <li>That's the Badger<div class='aside'>(module has since been removed)</div></li>
-                    <li>That's the Fox<div class='aside'>(module has yet to resurface)</div></li>
-                    <li>Pointless Machines<div class='aside'>(ongoing at the time of writing)</div></li>
+                    <li><a href="../HTML/That%27s%20The%20Fox.html">That's the Fox</a></li>
+                    <li><a href="../HTML/Pointless%20Machines.html">Pointless Machines</a></li>
+                    <li><a href="../HTML/Inselectables.html">Inselectables</a></li>
+                    <li><a href="../HTML/Imbalance.html">Imbalance</a></li>
+                    <li><a href="../HTML/Hypermatch.html">Hypermatch</a><div class='aside'>(referred to as 'The Hyper Challenge' before its solve)</div></li>
+                    <li><a href="../HTML/Faerie%20Fires.html">Faerie Fires</a></li>
+                    <li><a href="../HTML/Wumbo.html">Wumbo</a></li>
+                    <li><a href="../HTML/Wander.html">Wander</a></li>
                 </ul>
             </div>
         </section>
@@ -1270,6 +1276,23 @@
                     commonly used to add functionality (such as <a class="ref" href="#twitch-plays-ktane">Twitch Plays: KTANE</a> support)
                     to a <a class="ref" href="#module">module</a>. Pull requests can also be used to add new manuals or other
                     files or functionality to the <a class="ref" href="#repository-of-manual-pages">Repository of Manual Pages</a>.</p>
+            </div>
+        </section>
+        <section id="module-quirks" data-title="Quirks">
+            <a href='#module-quirks'><h3>Quirks</h3></a>
+            <div class="answer">
+                <p>Some modules have special properties or characteristics (quirks) that change the way or order in which modules must be solved. Some modules also interact with or depend on other modules in order to be solved.</p>
+                <p>List of possible quirks:</p>
+                <ul>
+                    <li><b>Solves at end</b>: The module is only solvable after <u>ALL</u> non-ignored* modules are solved (at the end of the bomb). In general, bosses have this quirk and all bosses should ignore modules with this quirk.</li>
+                    <li><b>Needs other solves</b>: The module cannot be solved until some, but not necessarily all, other non-ignored* regular modules are solved first. In general, semi-bosses ignore modules with this quirk and often have this quirk.</li>
+                    <li><b>Must solve before some</b>: The module must be solved before some other non-ignored* modules. In general, all modules with this quirk should ignore each other.</li>
+                    <li><b>May solve with others</b>: The module may disarm itself immediately in response to another module being solved.</li>
+                    <li><b>Will solve suddenly</b>: The module will suddenly present a small window of time in which it will solve even if the solution is incorrect or if strikes are generated.</li>
+                    <li><a href='#pseudo-needy'><b>Pseudo-needy</b></a>: The module poses a recurring hazard in a similar fashion to a needy before it can be solved.</li>
+                    <li><b>Heavily time-dependent</b>: The module has very precise timing requirements or can only be solved at an exact time.</li>
+                </ul>
+                <p>*Modules that have some of these quirks often will ignore each other using <b>ignore lists</b> to make sure that multiple quirky modules can work on the same bomb without all waiting on each other, which would make the bomb unsolvable.</p>
             </div>
         </section>
         <section id="regular-module" data-title="Regular module">
@@ -1700,15 +1723,18 @@
         const exceptions = [
             [ "Forget Enigma", "Forget Everything", "The Twin" ], // Stage/solve cap
             [ "Iconic", "Souvenir" ], // Needs info about already solved modules
-            [ "Organization" ], // Modules to be solved in specific order
+            [ "Organization", "Damocles Lumber" ], // Modules to be solved in specific order
             [ "Purgatory" ], // Only sometimes a boss
             [ "OmegaDestroyer", "Password Destroyer" ], //  answer changes very frequently
             [ "Zener Cards" ] // reveal info at some random time
         ];
+        const nameExceptions = {
+            "A>N<D": "A_N_D"
+        };
         function fillBossList(json) {
             let ulb = $("#list-of-boss-modules ul.bosses");
             json.bosses.forEach((mod, i) => {
-                let url = `../HTML/${encodeURIComponent(mod.Name)}.html`;
+                let url = mod.Name in nameExceptions ? `../HTML/${nameExceptions[mod.Name]}.html` : `../HTML/${encodeURIComponent(mod.Name)}.html`;
                 let li = $("<li>").appendTo(ulb);
                 $.get(url)
                     .done(function() {
@@ -1721,7 +1747,7 @@
             });
             let ulp = $("#list-of-boss-modules ul.pseudo-needies");
             json.psNeedy.forEach((mod, i) => {
-                let url = `../HTML/${encodeURIComponent(mod.Name)}.html`;
+                let url = mod.Name in nameExceptions ? `../HTML/${nameExceptions[mod.Name]}.html` : `../HTML/${encodeURIComponent(mod.Name)}.html`;
                 let li = $("<li>").appendTo(ulp);
                 $.get(url)
                     .done(function() {
@@ -1732,7 +1758,7 @@
             });
             let ult = $("#list-of-boss-modules ul.time-depend");
             json.timeDep.forEach((mod, i) => {
-                let url = `../HTML/${encodeURIComponent(mod.Name)}.html`;
+                let url = mod.Name in nameExceptions ? `../HTML/${nameExceptions[mod.Name]}.html` : `../HTML/${encodeURIComponent(mod.Name)}.html`;
                 let li = $("<li>").appendTo(ult);
                 $.get(url)
                     .done(function() {
