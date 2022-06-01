@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>The cRule — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        var selectedButton;
+        let grid = $(".grids");
+        let ruleNumber = [$(".ruleNumber.redp"), $(".ruleNumber.greenp"), $(".ruleNumber.bluep")];
+        const rows = 4;
+        const cols = 8;
+        const numGrids = 5;
+        const numSq = 26;
+        const RULE_MIN = 0;
+        const RULE_MAX = 15;
+        const RULE_STATES = 4;
+        const INIT_FILLED = 10;
+        const colChanText = ["red", "green", "blue"];
+        let colors = ["red", "green", "blue", "yellow", "cyan", "magenta", "white", "black"];
+        let gameGrid = Array(2).fill().map(()=>Array(cols).fill().map(()=>Array(rows).fill(0)));
+        let gameGridSolution = Array(cols).fill().map(()=>Array(rows).fill(0));
+        let rule = [8,8,8];
+        let ruleNum = [8,8,8];
+        let exSol = Array(colChanText.length).fill().map(()=>Array(numSq).fill(false));
+        let ruleBin = Array(colChanText.length).fill().map(()=>Array(RULE_STATES).fill(false));
+        let currX = 0;
+        let currY = 0;
+        let currG = 0;
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        let gridSolSaveState = [];
+        let ruleSolSaveState = [];
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        let squareColors = Array(colors.length);
+        Object.assign(squareColors, colors);
+        squareColors.unshift("");
+
+        const colorMix = [
+            [1, 4, 6, 7],
+            [2, 4, 5, 7],
+            [3, 5, 6, 7]
+        ];
+        const T = true;
+        const F = false;
+        const colorBit = [ [F,F,F],[T,F,F],[F,T,F],[F,F,T],[T,T,F],[F,T,T],[T,F,T],[T,T,T],[F,F,F] ];
+        const symbolList = ["♤♤", "♤♧", "♤♢", "♤♡", "♧♤", "♧♧", "♧♢", "♧♡", "♢♤", "♢♧", "♢♢", "♢♡", "♡♤", "♡♧", "♡♢", "♡♡"];
+
+        const colorLetters = "rgbycmkw";
+        const colorIndex = {
+            "x": 0,
+            "r": 1,
+            "g": 2,
+            "b": 3,
+            "y": 4,
+            "c": 5,
+            "m": 6,
+            "w": 7,
+            "k": 8
+        };
+
+        const pow2 = [1, 2, 4, 8, 16];
+        let xy2Idx = Array(cols).fill().map(()=>Array(rows).fill(0));
+        for (let y = 0; y < rows; y++)
+            for (let x = 0; x < rWidth(y); x++)
+                xy2Idx[x][y] = (cols - rWidth(y - 1) + 1) * (cols + rWidth(y - 1)) / 2 + x;
+
+        function rWidth(y) {
+            return cols - y;
+        }
+
+        function selectNone() {
+            $(".selected").removeClass("selected");
+            selected = null;
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(squareColors[(c + 1) % squareColors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("white black cyan magenta yellow red blue green");
+        }
+
+        function generate() {
+            generating = true;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    gameGridSolution[x][y] = gameGrid[0][x][y] = 0;
+
+            for (let c = 0; c < colChanText.length; c++)
+                for (let i = 0; i < numSq; i++) {
+                    if (i < RULE_STATES)
+                        ruleBin[c][i] = false;
+                    exSol[c][i] = false;
+                }
+            currX = currY = currG = 0;
+            resetGrid(true);
+            PickRuleNumbers();
+            FindOneSolution();
+            PickInitialColors();
+
+            updateGrid();
+            generating = false;
+        }
+
+        //This code is based on the module source code  vvvvvvvvvvvvvvvvvvvvv
+        function PickRuleNumbers() {
+            ruleNum[0] = Math.floor(Math.random() * RULE_MAX) + 1;
+            do {
+                ruleNum[1] = Math.floor(Math.random() * RULE_MAX) + 1;
+            } while (ruleNum[1] == ruleNum[0]);
+            do {
+                ruleNum[2] = Math.floor(Math.random() * RULE_MAX) + 1;
+            } while (ruleNum[2] == ruleNum[0] || ruleNum[2] == ruleNum[1]);
+
+            if ( $("body").hasClass("rul") ) {
+                Object.assign(rule, ruleNum);
+                updatePatterns();
+            }
+            for (let i = 0; i < colChanText.length; i++)
+                for (let j = 0; j < RULE_STATES; j++)
+                    ruleBin[i][j] = (ruleNum[i] % pow2[RULE_STATES - j]) >= pow2[RULE_STATES - j - 1];
+        }
+
+        const bitpattern = [ [true,true],[true,false],[false,true],[false,false] ];
+        function FindOneSolution() {
+            let len = colChanText.length;
+            for (let i = 0; i < len; i++)
+                for (let j = 0; j < pow2[len]; j++)
+                    exSol[i][j] = Math.random() > 0.5;
+
+            let rGuar = Math.floor(Math.random() * pow2[len]);
+            let gGuar = Math.floor(Math.random() * pow2[len]);
+            let bGuar = Math.floor(Math.random() * pow2[len]);
+            while (gGuar == rGuar) {
+                gGuar = Math.floor(Math.random() * pow2[len]);
+            }
+            while (bGuar == rGuar || bGuar == gGuar) {
+                bGuar = Math.floor(Math.random() * pow2[len]);
+            }
+            let guar = [rGuar, gGuar, bGuar];
+
+            for (let c = 0; c < len; c++) {
+                if (Math.random() > 0.5)
+                    for (let i = 0; i < len; i++)
+                        exSol[i][ guar[c] ] = c == i;
+                else
+                    for (let i = 0; i < len; i++)
+                        exSol[i][ guar[c] ] = c != i;
+            }
+
+            for (let i = 0; i < len; i++) {
+                let sq = 0;
+                for (let y = 1; y < rows; y++) {
+                    let j = sq;
+                    for (; j < sq + rWidth(y); j++) {
+                        for (let p = 0; p < RULE_STATES; p++) {
+                            if (ruleBin[i][p]) {
+                                if ((exSol[i][j] == bitpattern[p][0]) && (exSol[i][j + 1] == bitpattern[p][1])) {
+                                    exSol[i][j + rWidth(y-1)] = true;
+                                }
+                            }
+                        }
+                    }
+                    sq = j + 1;
+                }
+            }
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < rWidth(y); x++) {
+                    for (let c = 1; c < squareColors.length; c++) {
+                        let i = xy2Idx[x][y];
+                        if ((exSol[0][i] == colorBit[c][0]) && (exSol[1][i] == colorBit[c][1]) && (exSol[2][i] == colorBit[c][2])) {
+                            gameGridSolution[x][y] = c;
+                        }
+                    }
+                }
+            }
+        }
+
+        function findIndex(i) {
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < rWidth(y); x++)
+                    if (xy2Idx[x][y] == i)
+                        return [x, y];
+            return [0, 0];
+        }
+        let symbolCondition = [ [ colorIndex["r"],colorIndex["c"] ], [ colorIndex["g"],colorIndex["m"] ], [ colorIndex["b"],colorIndex["y"] ] ];
+        function PickInitialColors() {
+            let initOn = Array(INIT_FILLED).fill(0);
+            for (let c = 0; c < colChanText.length; c++) {
+                let done = false;
+                let cInitOn = Math.floor(Math.random() * numSq);
+                for (let i = cInitOn; i < cInitOn + numSq; i++) {
+                    let index = i % numSq;
+                    let xy = findIndex(index);
+                    if (symbolCondition[c].includes(gameGridSolution[ xy[0] ][ xy[1] ])) {
+                        initOn[c] = index;
+                        TurnOn(xy[0], xy[1]);
+                        let elem = grid.children().eq(0).children().eq(1).children().eq(xy[1]+1).children().eq(xy[0]+1);
+                        elem.find(".symbolbox").text(symbolList[ ruleNum[c] ]);
+                        break;
+                    }
+                }
+            }
+
+            for (let i = colChanText.length; i < INIT_FILLED; i++) {
+                let which;
+                do {
+                    which = Math.floor(Math.random() * numSq);
+                } while (initOn.includes(which));
+                initOn[i] = which;
+                let xy = findIndex(which);
+                TurnOn(xy[0], xy[1]);
+            }
+        }
+
+        function TurnOn(x, y) { // black, red, green, blue, white, cyan, magenta, yellow
+            gameGrid[1][x][y] = gameGrid[0][x][y] = gameGridSolution[x][y];
+        }
+
+        function checkSolution() {
+            let len = colChanText.length;
+            let boolsSol = Array(len).fill().map(()=>Array(numSq).fill(false));
+            let bools = Array(len).fill().map(()=>Array(numSq).fill(false));
+            for(let c = 0; c < len; c++) {
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < rWidth(y); x++) {
+                        let idx = xy2Idx[x][y];
+                        let n = gameGrid[1][x][y];
+                        if (n < 1) return false;
+                        boolsSol[c][idx] = bools[c][idx] = colorMix[c].includes();
+                    }
+            }
+
+            for (let i = 0; i < len; i++) {
+                let sq = 0;
+                for (let y = 1; y < rows; y++) {
+                    let j = sq;
+                    for (; j < sq + rWidth(y); j++) {
+                        for (let p = 0; p < RULE_STATES; p++) {
+                            if (ruleBin[i][p]) {
+                                if ((boolsSol[i][j] == bitpattern[p][0]) && (boolsSol[i][j + 1] == bitpattern[p][1])) {
+                                    boolsSol[i][j + rWidth(y-1)] = true;
+                                }
+                            }
+                        }
+                    }
+                    sq = j + 1;
+                }
+            }
+
+            for(let i = 0; i < colChanText.length; i++) {
+                for(let j = 0; j < numSq; j++) {
+                    if(bools[i][j] != boolsSol[i][j]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        //This code is based on the module source code  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        function setColorClass(i) {
+            if (selected && selected.hasClass("netsq")) {
+                if (i >= 0 && !selected.hasClass("locked")) {
+                    if (currG == 0) {
+                        gameGrid[1][currX][currY] = gameGrid[0][currX][currY] = i;
+                        playRFSound(xy2Idx[currX][currY] % audioRF.length);
+                    }
+                    else if (currG == numGrids - 1) {
+                        gameGrid[1][currX][currY] = i;
+                        playFinalGridSound();
+                    }
+                    updateGrid();
+                }
+
+                if (currX == rWidth(currY) - 1) {
+                    currY = (currY + 1) % rows;
+                    currX = 0;
+                }
+                else
+                    currX = (currX + 1) % rWidth(currY);
+                var elem = grid.children().eq(currG).children().eq(1).children().eq(currY+1).children().eq(currX+1);
+                selected = elem;
+                updateSelection();
+            }
+        }
+
+        let down = false;
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if ((k == " " || k == "enter" || colorLetters.includes(k)) && NoSpecialKeys(event)) {
+                setColorClass(k == " " || k == "enter" ? -1 : colorIndex[k]);
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            else if (NoSpecialKeys(event)) {
+                if (k == "-")
+                    ruleDec(0);
+                else if (k == "=" || k == "+")
+                    ruleInc(0);
+                else if (k == "[")
+                    ruleDec(1);
+                else if (k == "]")
+                    ruleInc(1);
+                else if (k == ",")
+                    ruleDec(2);
+                else if (k == ".")
+                        ruleInc(2);
+            }
+            down = false;
+        });
+
+        function ruleDec(i) {
+            rule[i] = Math.max(RULE_MIN, rule[i] - 1);
+            updatePatterns()
+        }
+        function ruleInc(i) {
+            rule[i] = Math.min(RULE_MAX, rule[i] + 1);
+            updatePatterns()
+        }
+        $(".ruletext.minus").each(function(i, e) {
+            $(e).click(function() {
+                ruleDec(i);
+            });
+        });
+        $(".ruletext.plus").each(function(i, e) {
+            $(e).click(function() {
+                ruleInc(i);
+            });
+        });
+
+        function updatePatterns() {
+            $(`th .pattern.rule`).removeClass("one");
+            for (let c = 0; c < 3; c++) {
+                ruleNumber[c].text(rule[c]);
+                for (let p = 3; p >= 0; p--) {
+                    if (rule[c] % pow2[p+1] >= pow2[p])
+                        $(`th.${colChanText[c]}pat${dec2bin(p)} .rule`).addClass("one");
+                }
+            }
+        }
+
+        function dec2bin(dec) {
+            return (dec >>> 0).toString(2);
+        }
+        function plr(x) {
+            return x == 0 ? "l" : "r";
+        }
+        let pTable = [$("table.patterns.redp"), $("table.patterns.greenp"), $("table.patterns.bluep")];
+        colChanText.forEach((item, i) => {
+            let tr1 = $("<tr>").appendTo(pTable[i]);
+            for (let p = 3; p >= 0; p--) {
+                let td = $("<td>").appendTo(tr1);
+                let hstack = $("<div>").addClass("hstack").appendTo(td);
+                for (let x = 0; x < 2; x++) {
+                    $("<div>").addClass(`pattern p${dec2bin(p)}${plr(x)}`).appendTo(hstack);
+                }
+            }
+            let tr2 = $("<tr>").appendTo(pTable[i]);
+            for (let p = 3; p >= 0; p--) {
+                let th = $("<th>").addClass(`${item}pat${dec2bin(p)}`).appendTo(tr2);
+                let hstack = $("<div>").addClass("hstack").appendTo(th);
+                $("<div>").addClass("pattern rule").appendTo(hstack);
+            }
+        });
+
+        updatePatterns();
+
+        function updateGrid() {
+            if (currG == 0 || currG == numGrids - 1) {
+                // let g = currG;
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < rWidth(y); x++) {
+                        let elemF = grid.children().eq(numGrids - 1).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem1 = grid.children().eq(1).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem2 = grid.children().eq(2).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem3 = grid.children().eq(3).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        if (currG == 0) {
+                            let elemR = grid.children().eq(0).children().eq(1).children().eq(y+1).children().eq(x+1);
+                            removeColorClass(elemR);
+                            let n = gameGrid[0][x][y];
+                            elemR.addClass(squareColors[n]);
+                            elemF.toggleClass("locked", n > 0);
+                            elem1.toggleClass("locked", n > 0);
+                            elem2.toggleClass("locked", n > 0);
+                            elem3.toggleClass("locked", n > 0);
+                            elem1.toggleClass("red", colorMix[0].includes(n));
+                            elem2.toggleClass("green", colorMix[1].includes(n));
+                            elem3.toggleClass("blue", colorMix[2].includes(n));
+                        }
+                        removeColorClass(elemF);
+                        elemF.addClass(squareColors[ gameGrid[1][x][y] ]);
+                    }
+            }
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else
+                return MODE_SOLVE;
+        }
+
+        function resetGrid(overrideMode) {
+            removeColorClass( $(`.grid${currG} .netsquare:not(.locked)`) );
+            $(`.grid${currG} .netsquare`).removeClass("marked");
+            if (currG == 0 || currG == numGrids - 1) {
+                if (currG == 0 && (overrideMode || mode() == MODE_SOLVE)) {
+                    $(`.grid .netsquare`).removeClass("marked locked");
+                    $(`.grid0 .netsquare .symbolbox`).text("");
+                }
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        if (currG == 0 && (overrideMode || mode() == MODE_SOLVE)) {
+                            gameGrid[0][x][y] = gameGrid[1][x][y] = 0;
+                        }
+                        else if (currG != 0) {
+                            gameGrid[1][x][y] = gameGrid[0][x][y];
+                        }
+                    }
+                }
+            }
+            if (currG != 0 || overrideMode || mode() == MODE_SOLVE)
+                updateGrid();
+            resetPos(0);
+        }
+
+        function resetPos(y) {
+            selected = grid.children().eq(currG).children().eq(1).children().eq(y+1).children().eq(1);
+            updateSelection();
+            currX = 0;
+            currY = y;
+        }
+
+        function playZeroOneSound(one) {
+            if ($("button.sound").hasClass("play")) {
+                let aud = audio01[one ? 1 : 0][0].cloneNode();
+                aud.volume = 0.4;
+                aud.play();
+            }
+        }
+
+        function playRFSound(n) {
+            if ($("button.sound").hasClass("play") && n >= 0 && n < audioRF.length) {
+                let aud = audioRF[n][0].cloneNode();
+                aud.volume = 0.4;
+                aud.play();
+            }
+        }
+
+        function readCellClick(x, y) {
+            if (selected && !selected.hasClass("locked")) {
+                if ( $("#cycle-on-click").hasClass("cycle") ) {
+                    gameGrid[1][x][y] = gameGrid[0][x][y] = (gameGrid[0][x][y] + 1) % squareColors.length;
+                    playRFSound(xy2Idx[currX][currY] % audioRF.length);
+                }
+                updateGrid();
+            }
+        }
+
+        function colorGridClick(elem, g) {
+            if (selected && !selected.hasClass("locked")) {
+                elem.toggleClass(colChanText[g]);
+                playZeroOneSound( elem.hasClass(colChanText[g]) );
+            }
+        }
+
+        function playFinalGridSound() {
+            if ($("button.sound").hasClass("play"))
+                if (checkSolution())
+                    audioSolve[0].play();
+                else
+                    playRFSound(xy2Idx[currX][currY] % audioRF.length);
+        }
+
+        function finalGridClick(x, y) {
+            if (selected && !selected.hasClass("locked")) {
+                if ( $("#cycle-on-click").hasClass("cycle") ) {
+                    gameGrid[1][x][y] = (gameGrid[1][x][y] + 1) % squareColors.length;
+                    playFinalGridSound();
+                }
+                updateGrid();
+            }
+        }
+
+        for (let g = 0; g < numGrids; g++) {
+            let row = $("<div>").addClass("square-row letters").appendTo(grid.children().eq(g).children().eq(1));
+            $("<div>").addClass("square").appendTo(row);
+            for (var i = 0; i < cols; i++) {
+                $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+            }
+            for (let y = 1; y <= rows; y++) {
+                row = $("<div>").addClass("square-row").appendTo(grid.children().eq(g).children().eq(1));
+                $("<div>").addClass("square numbers").text(y).appendTo(row);
+                for (let x = 1; x <= rWidth(y-1); x++) {
+                    let square = $("<div>").addClass("netsquare square netsq").appendTo(row).each(function(_, e) {
+                        var element = $(e);
+                        element.click(function(event) {
+                            selected = $(this);
+                            updateSelection();
+                            currX = x-1;
+                            currY = y-1;
+                            currG = g;
+
+                            if (g == 0)
+                                readCellClick(x-1, y-1);
+                            else if (g == numGrids - 1)
+                                finalGridClick(x-1, y-1);
+                            else
+                                colorGridClick(element, g-1);
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                        element.contextmenu(function(event) {
+                            let s_g = currG;
+                            currG = g;
+                            if (g == 0) {
+                                gameGrid[1][x-1][y-1] = gameGrid[0][x-1][y-1] = 0;
+                                updateGrid();
+                            }
+                            else if (g == numGrids - 1) {
+                                if (!element.hasClass("locked")) {
+                                    gameGrid[1][x-1][y-1] = 0;
+                                    updateGrid();
+                                }
+                            }
+                            else {
+                                if (!element.hasClass("locked")) {
+                                    element.toggleClass("marked");
+                                    playZeroOneSound( !element.hasClass("marked") );
+                                }
+                            }
+                            currG = s_g;
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                    });
+                    if (g == 0) {
+                        $("<div>").addClass("symbolbox").appendTo(square);
+                        square.addClass("read");
+                    }
+                    else if (g < numGrids - 1)
+                        square.addClass("colorrule");
+                }
+            }
+        }
+        resetPos(0);
+
+        $("table.symboltable td").each(function(i, e) {
+            $(e).click(function(event) {
+                if (selected && selected.hasClass("netsq read")) {
+                    let elem = selected.find(".symbolbox");
+                    if (elem.text() == $(this).text())
+                        elem.text("");
+                    else
+                        elem.text( $(this).text() );
+                    playRFSound(i % audioRF.length);
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        });
+
+        let colortools = $(".colorbuttons");
+        squareColors.forEach((item, i) => {
+            $("<button>").addClass(item + " clrbtn").click(function(event) {
+                setColorClass(i);
+                event.preventDefault();
+                event.stopPropagation();
+            }).appendTo(colortools);
+        });
+
+        let audio0 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/TapCode.wav")
+            .appendTo(grid);
+        let audio1 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
+            .appendTo(grid);
+        let audio01 = [audio0, audio1];
+        let audioR1 = $("<audio>")
+            .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+            .appendTo(grid);
+        let audioR2 = $("<audio>")
+            .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+            .appendTo(grid);
+        let audioF1 = $("<audio>")
+            .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+            .appendTo(grid);
+        let audioF2 = $("<audio>")
+            .attr("src", "audio/Module Listening/Rhythms.ogg")
+            .appendTo(grid);
+        let audioRF = [audioR1, audioR2, audioF1, audioF2];
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let tools = $(".tools.buttons");
+        $("<button>").addClass("sound play").appendTo(tools).click(function(event) {
+            $(this).toggleClass("play");
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+                $(".netsquare.read").addClass("locked");
+            }
+            else
+                $(".netsquare.read").removeClass("locked");
+            // $(".reset-grid").click();
+        });
+
+        $("<button>").addClass("show-sol").appendTo(tools).click(function(event) {
+            $(this).toggleClass("show");
+            let has = $(this).hasClass("show")
+            $("body").toggleClass("solution-shown", has);
+            if (has) {
+                gridSolSaveState = Array.from($(".netsquare")).map(x => $(x)).map(x => x.attr("class") || "");
+                Object.assign(ruleSolSaveState, rule);
+                Object.assign(rule, ruleNum);
+                updatePatterns();
+                $(".netsquare").addClass("locked");
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < rWidth(y); x++) {
+                        let elemF = grid.children().eq(numGrids - 1).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem1 = grid.children().eq(1).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem2 = grid.children().eq(2).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let elem3 = grid.children().eq(3).children().eq(1).children().eq(y+1).children().eq(x+1);
+                        let n = gameGridSolution[x][y];
+                        elem1.toggleClass("red", colorMix[0].includes(n));
+                        elem2.toggleClass("green", colorMix[1].includes(n));
+                        elem3.toggleClass("blue", colorMix[2].includes(n));
+                        removeColorClass(elemF);
+                        elemF.addClass(squareColors[n]);
+                    }
+            } else {
+                $(".netsquare").each((i, x) => $(x).attr("class", gridSolSaveState[i]));
+                Object.assign(rule, ruleSolSaveState);
+                updatePatterns();
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $("<button>").addClass("colorblind-mode").appendTo(tools).click(function(event) {
+            $(this).toggleClass("enable");
+            $("body").toggleClass("cblind");
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $('<input type="checkbox" id="cycle-on-click" name="cycle-color" value="cycle">').appendTo(tools).change(function(event) {
+            $(this).toggleClass("cycle", $(this).prop("checked"));
+        });
+        $('<label id="cycle-label" for="cycle-on-click">Cycle color<br>on click</label>').appendTo(tools);
+
+        let resetButton = $(".reset-grid");
+        resetButton.click(function(event) {
+            resetGrid(false);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $(".reset-saves").click(function(event) {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $(".reset-all").click(function() {
+            $("body").removeClass("solution-shown play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[0][x][y] = 0;
+                    gameGrid[1][x][y] = 0;
+                    gameGridSolution[x][y] = 0;
+                }
+            removeColorClass( $(".netsquare") );
+            $(".netsquare").removeClass("locked marked");
+            $(".netsquare .symbolbox").text("");
+            currX = currY = currG = 0;
+            resetPos(0);
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveButtonClass = Array.from($(".tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateClass = Array.from($(".netsquare")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($(".netsquare .symbolbox")).map(x => $(x)).map(x => x.text() || "");
+            //console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gridSolSaveState = Array(gridSolSaveState.length);
+            Object.assign(s_gridSolSaveState, gridSolSaveState);
+            let s_ruleNum = [0,0,0];
+            let s_rule = [0,0,0];
+            Object.assign(s_ruleNum, ruleNum);
+            Object.assign(s_rule, rule);
+            let s_gameGrid = Array(2).fill().map(()=>Array(cols).fill().map(()=>Array(rows).fill(0)));
+            let s_gameGridSolution = Array(cols).fill().map(()=>Array(rows).fill(0));
+            let s_ruleBin = Array(colChanText.length).fill().map(()=>Array(RULE_STATES).fill(false));
+            for (let y = 0; y < RULE_STATES; y++)
+                for (let x = 0; x < colChanText.length; x++)
+                    s_ruleBin[x][y] = ruleBin[x][y];
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    s_gameGrid[0][x][y] = gameGrid[0][x][y];
+                    s_gameGrid[1][x][y] = gameGrid[1][x][y];
+                    s_gameGridSolution[x][y] = gameGridSolution[x][y];
+                }
+            let s_selected = selected;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_currG = currG;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".tools button").each((i, x) => $(x).attr("class", saveButtonClass[i]));
+                $(".netsquare .symbolbox").each((i, x) => $(x).text(saveStateText[i]));
+                $("body").toggleClass("play-mode", mode() == MODE_PLAY);
+                currentState = stateNumber;
+                selected = s_selected;
+                Object.assign(gridSolSaveState, s_gridSolSaveState);
+                Object.assign(ruleNum, s_ruleNum);
+                Object.assign(rule, s_rule);
+                for (let y = 0; y < RULE_STATES; y++)
+                    for (let x = 0; x < colChanText.length; x++)
+                        ruleBin[x][y] = s_ruleBin[x][y];
+                updatePatterns();
+                currX = s_currX;
+                currY = s_currY;
+                currG = s_currG;
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[0][x][y] = s_gameGrid[0][x][y];
+                        gameGrid[1][x][y] = s_gameGrid[1][x][y];
+                        gameGridSolution[x][y] = s_gameGridSolution[x][y];
+                    }
+                updateGrid();
+                $(".netsquare").each((i, x) => $(x).attr("class", saveStateClass[i]));
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .hstack.between {
+            justify-content: space-between;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        /* .tools {
+            width: 80px;
+        } */
+        .tools button {
+            margin: 10px;
+        }
+        .tools.colors { width: 105px; }
+        .tools.colors svg {
+            width: 110px;
+        }
+
+        .square-row {
+            height: 37px;
+            margin: 0px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .solution, .path, .path .redspan {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            width: 100px;
+        }
+        .path span.redspan {
+            color: #D00;
+            display: inline;
+        }
+
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .path .redspan,
+        body:not(.solution-shown) .solution,
+        body:not(.play-mode) .solution {
+            color: transparent;
+        }
+
+        .square {
+            margin: 0px;
+            width: 37px;
+            height: 37px;
+            float: left;
+            font-size: 20px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.3s, color 0.3s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 11px;
+            border-width: 0;
+            width: 37px;
+            height: 37px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .netsquare {
+            height: 37px;
+            width: 37px;
+            font-size: 20px;
+            line-height: 42px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #FFF;
+            background-color: #555;
+            position: relative;
+        }
+        .netsquare.selected {
+            border: 5px dashed #33F;
+            line-height: 34px;
+        }
+        .netsquare.blue.selected {
+            border: 5px dashed #AAA;
+        }
+        .netsquare.read { line-height: 28px; }
+        .netsquare.read.selected { line-height: 20px; }
+        .netsquare .symbolbox {
+            position: absolute;
+            height: 37px;
+            width: 37px;
+            text-align: center;
+            padding-top: 9px;
+            line-height: 42px;
+        }
+        .netsquare.selected .symbolbox {
+            left: -4px;
+            line-height: 36px;
+        }
+
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+
+        .grids .vstack span {
+            margin-top: 12px;
+            font-size: 18px;
+            padding-left: 35px;
+        }
+
+        table.patterns.redp { margin: 0 0 5px 53px; }
+        table.patterns.greenp { margin: 0 0 5px 30px; }
+        table.patterns.bluep { margin: 0 0 5px 43px; }
+        .pattern {
+            border: #808080 1px solid;
+            height: 25px;
+            width: 25px;
+            background-color: #FFF;
+            color: #000;
+            line-height: 30px;
+        }
+        .redp .pattern.p11l, .redp .pattern.p11r, .redp .pattern.p10l, .redp .pattern.p1r, .redp .pattern.one {
+            background-color: #E93E3E;
+            color: #FFF;
+        }
+        .greenp .pattern.p11l, .greenp .pattern.p11r, .greenp .pattern.p10l, .greenp .pattern.p1r, .greenp .pattern.one {
+            background-color: #4F4;
+            color: #000;
+        }
+        .bluep .pattern.p11l, .bluep .pattern.p11r, .bluep .pattern.p10l, .bluep .pattern.p1r, .bluep .pattern.one {
+            background-color: #44F;
+            color: #FFF;
+        }
+        .pattern.p10r, .pattern.p1l, .pattern.p0l, .pattern.p0r {
+            background-color: #FFF;
+        }
+        .pattern.rule.one::after {
+            content: "1";
+        }
+        .pattern.rule:not(.one)::after {
+            content: "0";
+        }
+
+        .ruletext {
+            font-size: 20px;
+        }
+        .ruletext {
+            padding-top: 8px;
+        }
+        .ruleNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 52px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .ruleHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        .colorbuttons button {
+            width: 38px;
+            height: 38px;
+            margin: 6px 0 0 0;
+            background-color: #777;
+        }
+
+        button.clrbtn.red, .red { background-color: #E93E3E; color: #FFF; }
+        button.clrbtn.green, .green { background-color: #60F658; color: #000; }
+        button.clrbtn.blue, .blue { background-color: #44F; color: #FFF; }
+        button.clrbtn.yellow, .yellow { background-color: #FBF441; color: #000; }
+        button.clrbtn.magenta, .magenta { background-color: #E660FF; color: #FFF; }
+        button.clrbtn.cyan, .cyan { background-color: #4EE; color: #000; }
+        button.clrbtn.white, .white { background-color: #FFF; color: #000; }
+        button.clrbtn.black, .black { background-color: #000; color: #FFF; }
+        button.black { border-color: #555; }
+
+        /* .netsquare.colorrule.locked:not(.red, .green, .blue)::after {
+            content: '×';
+        }
+        .netsquare.colorrule.marked::after {
+            content: '•';
+        } */
+
+        .colorbuttons .red::after, body.cblind .red::after { content: 'R' }
+        .colorbuttons .green::after, body.cblind .green::after { content: 'G' }
+        .colorbuttons .blue::after, body.cblind .blue::after { content: 'B' }
+        .colorbuttons .yellow::after, body.cblind .yellow::after { content: 'Y' }
+        .colorbuttons .magenta::after, body.cblind .magenta::after { content: 'M' }
+        .colorbuttons .cyan::after, body.cblind .cyan::after { content: 'C' }
+        .colorbuttons .white::after, body.cblind .white::after { content: 'W' }
+        .colorbuttons .black::after, body.cblind .black::after { content: 'K' }
+
+        .vspace { margin-top: 5mm; }
+
+        table.symboltable { font-size: 30px; }
+        table.symboltable td {
+            padding: 10px 6px 0 6px;
+            line-height: 30px;
+            user-select: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        table.symboltable td:hover {
+            background-color: #777;
+        }
+        .tools.colors svg circle {
+            cursor: pointer;
+        }
+        button:not(.clrbtn):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.expert-play { width: 118px; }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        body:not(.play) button.show-sol {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        body:not(.play) button.show-sol::before {
+            content: 'Solution Hidden';
+        }
+        button.colorblind-mode, button.show-sol {
+            font-size: 16px;
+            padding: 3px 3px 1px 3px;
+        }
+        button.show-sol { width: 100px; }
+        button.colorblind-mode:not(.enable)::before {
+            content: 'Colorblind\00a0Off';
+        }
+        button.colorblind-mode.enable::before {
+            content: 'Colorblind\00a0On';
+        }
+        #cycle-label {
+            line-height: 18px;
+            margin-left: 6px;
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            background-size: 108%
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The cRule</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The cRule.svg" class="diagram">
+                <h2>On the Subject of The cRule</h2>
+                <p class="flavour-text">Isn't this whole game pretty cruel anyway?</p>
+
+                <p>
+                    This module is based on Wolfram's cellular automata. This module displays four rows of squares. From top to bottom, the rows contain 8, 7, 6, and 5 squares.
+                    10 squares in the grid will be colored one of the three primary colors (red, green, or blue), one of the three secondary colors (yellow, cyan, and magenta), white (representing a mixture of all three primary colors), or black (representing an absence of all three primary colors).
+                    These cells cannot change color. All other squares on the module will initially be gray.
+                </p>
+
+                <p>
+                    A Rule Number represents a cellular automaton. The goal of this module is to find the colors of all four stages of the cellular automaton based off of the already filled-in squares.
+                    Whether or not a square contains a certain primary color is based on if the two adjacent squares immediately above it contain that color, as determined by that color's Rule. Coloring is additive.
+                </p>
+
+                <p>
+                    The defuser can click any of the eight small colored squares in the bottom half of the module to choose a color. They can then select squares in the grid that were not pre-filled to change their color to the currently active color.
+                    When the Submit button is pressed, the module will check each square in the grid. If each square follows all three colors' Rules, then the module will solve.
+                    If any square breaks a Rule, then a strike will be incurred and the grid will reset to its initial configuration. There may be multiple solutions for a grid's initial configuration; all correct solutions will be accepted.
+                    The reset button is used to set all defuser-colored cells back to gray.
+                </p>
+
+                <h3>Solving the Module</h3>
+
+                <p>Three of the pre-filled squares contain shapes. These shapes represent numbers based on the following table.</p>
+
+                <table>
+                    <tr><th>00</th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th></tr>
+                    <tr><td>♤♤</td><td>♤♧</td><td>♤♢</td><td>♤♡</td><td>♧♤</td><td>♧♧</td><td>♧♢</td><td>♧♡</td></tr>
+                    <tr><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th></tr>
+                    <tr><td>♢♤</td><td>♢♧</td><td>♢♢</td><td>♢♡</td><td>♡♤</td><td>♡♧</td><td>♡♢</td><td>♡♡</td></tr>
+                </table>
+
+                <p>The Rule Number of a color can be calculated by adding its symbol's number to the sum of the digits in the serial number and taking this sum modulo 16.</p>
+                <p>
+                    If a symbol occurs on a primary color, then that color's Rule Number is the number associated with that symbol.
+                    If a symbol occurs on a secondary color, then the color not making up the secondary color will receive the symbol's associated Rule Number. Each symbol represents a different color.
+                </p>
+
+                <p>
+                    Each color's Rule Number is converted to a four-digit binary number, prepending with zeroes if necessary.
+                    In reading order, the four digits in the binary number are respectively the value of a cell under cells represented by 11, 10, 01, and 00, where 1 means a cell contains the relevant primary color and 0 means the cell does not contain that color.
+                    To solve the module, color squares so that the module displays the correct behavior of the cellular automatons and click the Submit button.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The cRule</span>
+            </div>
+            <div class="page-content">
+                <div class="ruleHolder hstack">
+                    <div class="ruletext label">Red Rule:</div>
+                    <div class="ruletext ruleNumber redp">8</div>
+
+                    <button class="ruletext minus">-</button>
+                    <button class="ruletext plus">+</button>
+                    <table class="patterns redp"></table>
+                </div>
+                <div class="ruleHolder hstack">
+                    <div class="ruletext label">Green Rule:</div>
+                    <div class="ruletext ruleNumber greenp">8</div>
+
+                    <button class="ruletext minus">-</button>
+                    <button class="ruletext plus">+</button>
+                    <table class="patterns greenp"></table>
+                </div>
+                <div class="ruleHolder hstack">
+                    <div class="ruletext label">Blue Rule:</div>
+                    <div class="ruletext ruleNumber bluep">8</div>
+
+                    <button class="ruletext minus">-</button>
+                    <button class="ruletext plus">+</button>
+                    <table class="patterns bluep"></table>
+                </div>
+                <div class="hstack tools buttons"></div>
+                <table class="symboltable">
+                    <tr><td>♤♤</td><td>♤♧</td><td>♤♢</td><td>♤♡</td><td>♧♤</td><td>♧♧</td><td>♧♢</td><td>♧♡</td></tr>
+                    <tr><td>♢♤</td><td>♢♧</td><td>♢♢</td><td>♢♡</td><td>♡♤</td><td>♡♧</td><td>♡♢</td><td>♡♡</td></tr>
+                </table>
+                <div class="colorbuttons hstack"></div>
+                <div class="hstack wrap grids">
+                    <div class="vstack">
+                        <span><b>Read</b></span>
+                        <div class="grid grid0"></div>
+                    </div>
+                    <div class="vstack">
+                        <span><b>Red Rule</b></span>
+                        <div class="grid grid1"></div>
+                    </div>
+                    <div class="vstack">
+                        <span><b>Green Rule</b></span>
+                        <div class="grid grid2"></div>
+                    </div>
+                    <div class="vstack">
+                        <span><b>Blue Rule</b></span>
+                        <div class="grid grid3"></div>
+                    </div>
+                    <div class="vstack">
+                        <span><b>Solution</b></span>
+                        <div class="grid grid4"></div>
+                    </div>
+                </div>
+                <div class="colorbuttons hstack"></div>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div class="buttons vspace">
+                    <button class="reset-grid">Reset Grid</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The cRule</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>The sound effects can be muted.</li>
+                    <li>In <b>Manual</b> mode, you can <b>press RGBYCMWK on your keyboard</b> or click individual squares or use the color buttons to input the puzzle into the <b>Read</b> grid.
+                        <ul>
+                            <li>Entering cells on the <b>Read</b> grid locks the corresponding cells on the other grids.</li>
+                            <li>Click a card symbol to assign that patterns to a <u>Read</u> cell.</li>
+                            <li><b>Right-click</b> a <u>Read</u> cell or <u>Solution</u> cell to mark it as a zero.</li>
+                            <li><b>Right-click</b> a rule cell to mark it (•) as a zero.</li>
+                            <li>“<b>×</b>” denotes a given zero.</li>
+                        </ul>
+                    </li>
+                    <li>In <b>Generated</b> mode, you can have fun solving generated puzzles.
+                        <ul>
+                            <li>You can't alter the <b>Read</b> grid or any of the given cells in this mode.</li>
+                            <li>One possible solution to a generated puzzle can be <u>shown</u> or <u>hidden</u>.</li>
+                            <li>All grids are locked when solution is being shown.</li>
+                        </ul>
+                    </li>
+                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the <b>Red</b> rule number.</li>
+                    <li>Use “<b>[</b>” and “<b>]</b>” to increment <b>Green</b>; “<b>,</b>” and “<b>.</b>” to increment <b>Blue</b>.</li>
+                    <li>The <u>Reset Grid</u> button affects whichever grid has a cell selected.</li>
+                    <li>Resetting a color grid or solution grid does not affect the <u>locked</u> cells.</li>
+                    <li>Resetting the <b>Read</b> grid clears the others as well.</li>
+                    <li>Using the other buttons, you can save the current state of all grids, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
