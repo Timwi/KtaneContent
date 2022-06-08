@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Flavor Text — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        // const JSON_URL = "http://localhost:8990/json/flavourtext";
+        const JSON_URL = "https://ktane.timwi.de/json/flavourtext";
+
+        let table = $("table.texts");
+        let display = $("span.showing");
+        function fetchJSON() {
+            return fetch(JSON_URL)
+            .then((v) => v.json())
+            .then((json) => {
+                const allMods = json.KtaneModules.filter(
+                    (module) => module.Flavour && module.Flavour.length > 0 && module.Flavour[0].length > 0
+                );
+                allMods.sort((e1, e2) => e1.Name.localeCompare(e2.Name));
+
+                return allMods;
+            });
+        }
+
+        function fillTable(allMods) {
+            let count = 0;
+            allMods.forEach((mod, idx) => {
+                // if (mod.Flavour.length > 1) {
+                // if (mod.Flavour.some(x => x.includes("\""))) {
+                count++;
+                let tr = $("<tr>").appendTo(table);
+                let tdN = $("<td>").text(mod.Name).appendTo(tr);
+                let tdF = $("<td>").appendTo(tr);
+                mod.Flavour.forEach((flav, i) => {
+                    if (i > 0)
+                        $("<div>").addClass("vspace").appendTo(tdF);
+                    $("<div>").html(flav).appendTo(tdF);            //toggle the comment state of these lines
+                    // let div = $("<div>").html(flav);             //to remove all formatting of the
+                    // $("<div>").text(div.text()).appendTo(tdF);   //flavour-texts in table
+                });
+                // }
+            });
+            display.text(`Showing ${count} modules`);
+        }
+
+        fetchJSON().then((allMods) => {
+            fillTable(allMods);
+        });
+    });
+    </script>
+    <style>
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            width: 9.5in;
+        }
+        table.texts td:nth-child(2) {
+            max-width: 50%;
+        }
+        table.texts td:nth-child(1) {
+            padding: 0.1em 0.2em 0.1em;
+        }
+        .vspace { height: 6mm; }
+        span.showing {
+            font-size: 25px;
+            font-weight: bold;
+        }
+        .page-bg-03 .page-content {
+            margin: 0 0.2in;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Flavor Text</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Flavor Text.svg" class="diagram">
+                <h2>On the Subject of Flavor Text</h2>
+                <p class="flavour-text">You have been made useful.</p>
+                <ul>
+                    <li>The module will display a flavor text from one of the other manual pages (including mod manuals).</li>
+                    <li>Press the “Y” button if and <i>only</i> if a module with that flavor text in the manual is present on the bomb.</li>
+                    <li>If no such modules are present, press the “N” button.</li>
+                    <li>Pressing the wrong button will result in a strike and change the displayed flavor text.</li>
+                    <li>Note: If there are several modules with the same flavor text, press “Y” if <i>any</i> such modules are present on the bomb, and “N” if <i>none</i> are present.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Flavor Text EX</span>
+            </div>
+            <div class="page-content">
+                <span class="showing"></span>
+                <table class="texts">
+                    <tr><th>Name</th><th>Flavour Text</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
