@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Chinese Remainder CM — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Chinese Remainder CM</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Cipher Machine.svg" class="diagram">
+                <h2>On the Subject of Chinese Remainder CM</h2>
+                <p class="flavour-text"></p>
+
+                <p>If the Submit Button is white, follow the instructions under Encrypt Instructions. Otherwise follow the instructions under Decrypt Instructions.</p>
+                <p><em>Take note:</em> Some parts of this cipher use A1Z26 (normal alphabetic position) while some use A1Y25Z0 (normal for A–Y, but Z is 0).</p>
+                <h2>Decrypt Instructions</h2>
+                <p>Append any letters on screen 2 to the end of your existing encrypted word.</p>
+                <p>Start with a value <var>v</var> of 0 (zero). Then, for each letter in the encrypted word, multiply <var>v</var> by 26 and add the A1Y25Z0 value of the letter.</p>
+                <p>For each letter on screen 1:</p>
+                <ul>
+                    <li>Convert the letter into a number using A1Z26 and add 26.</li>
+                    <li>Take <var>v</var> modulo that number.</li>
+                    <li>Convert the result back to a letter using A1Z26.</li>
+                </ul>
+                <p>The letters obtained this way form the decrypted word.</p>
+
+                <div class="centered">
+                    <h3>Example</h3>
+                    <p>
+                        Encrypted word: YJOXGAAK + S (from screen 2)<br>
+                        <var>v</var> = (((((((25×26+10)×26+15)×26+24)×26+7)×26+1)×26+1)×26+11)×26+19 = 5305916823213
+                    </p>
+                    <p>Screen 1: MKXOQCUW</p>
+                    <p>
+                        5305916823213 % (13 + 26) = 6  = F<br>
+                        5305916823213 % (11 + 26) = 5  = E<br>
+                        5305916823213 % (24 + 26) = 13 = M<br>
+                        5305916823213 % (15 + 26) = 9  = I<br>
+                        5305916823213 % (17 + 26) = 14 = N<br>
+                        5305916823213 % (3 + 26) = 9  = I<br>
+                        5305916823213 % (21 + 26) = 19 = S<br>
+                        5305916823213 % (23 + 26) = 13 = M</p>
+                    <p>Decrypted word: FEMINISM</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of #NUM</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Chinese Remainder CM</span>
+            </div>
+            <div class="page-content">
+                <h2>Encrypt Instructions</h2>
+                <p>Convert each letter on screen 1 into a number using A1Z26 and add 26. These numbers are called the <em>moduli</em>.</p>
+                <p>Convert each letter of the encrypted word using A1Z26 and add the A1Y25Z0 value of the corresponding letter on screen 2. Call these the <em>remainders</em>.</p>
+                <p>
+                    Find the only integer <var>v</var> in the range 0 &le; <var>v</var> &lt; <var>p</var> (<var>p</var> is the product of all the moduli) such that taking <var>v</var> modulo each of the moduli results in the corresponding remainders.
+                    (This number is unique per the Chinese Remainder Theorem.) The following section outlines one possible method for finding this integer.
+                </p>
+                <h3>Finding <var>v</var> from two moduli and remainders</h3>
+                <p>This method will be explained with an example using two moduli, and subsequently, two remainders.</p>
+                <ul>
+                    <li><code>v % 247 = 31</code></li>
+                    <li><code>v % 651 = 35</code></li>
+                </ul>
+                <p>Begin with the congruence of the larger modulus, <code>v % 651 = 35</code>. Rewrite this congruence as an equivalent equation. <code>v = 651×a + 35</code>, for any integer <code>a</code></p>
+                <p>Substitute <code>v = 651×a + 35</code> into the congruence equation of the lower modulus and rewrite it with the modulo on the right. For this example, it will be <code>651×a + 35 = 31 ( % 247 )</code></p>
+                <p>Then, solve the congruence for <code>a</code>, so for this example, we subtract 35 from both sides, making the equation <code>651×a = -4 ( % 247 )</code>. Now, repeatedly add 247 to the right until it is divisible by the multiplier of <code>a</code>, in this case, 651 (we do not need to worry about the left hand side because x + 247 mod 247 is the same as x mod 247). Then, divide the total by the multiplier of <code>a</code>, in this case, 651. In this case, we need to repeatedly add it 58 times, then after dividing, we get <code>a = 22 ( % 247 )</code>. Rewrite this as an equivalent equation. <code>a = 247*b + 22</code>, for any integer <code>b</code></p>
+                <p>Then, substitute <code>a</code> into the first congruence equation, <code>v = 651×a + 35</code>, so it becomes <code>v = 651×(247×b + 22) + 35</code>. Then, expand this equation, making it <code>v = 160797×b + 14357</code>. At this point, make <code>b</code> zero, and calculate <code>v</code> at that point. That is your final value.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of #NUM</div>
+        </div>
+    </div>
+</body>
+</html>
