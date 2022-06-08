@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+<title>サイモンの絶叫 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+<link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.simon-screams, table.simon-screams table {
+            border: none;
+            
+        }
+
+            table.simon-screams td.corner, table.simon-screams th.corner {
+                border: none;
+                font-size: 90%;
+            }
+
+            table.simon-screams td {
+                text-align: center;
+            }
+
+            table.simon-screams th {
+                text-align: right;
+            }
+
+                table.simon-screams th.little {
+                    text-align: left;
+                }
+
+            table.simon-screams tr.top > th {
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+                table.simon-screams tr.top > th > p {
+                    margin: .25em;
+                }
+
+            table.simon-screams tr.rotated > th {
+                position: relative;
+                text-align: left;
+                height: 4em;
+            }
+
+                table.simon-screams tr.rotated > th > span.text {
+                    top: 50%;
+                    left: 50%;
+                    position: absolute;
+                    transform: translate(-50%, -50%) rotate(-50deg);
+                    transform-origin: center center;
+                    text-align: center;
+                    line-height: 1.25;
+                }
+
+        table.simon-screams-small td, table.simon-screams-small th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .column-rule {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+     var _rules = [
+         { prob:  50, name: "全ての色が少なくとも1回点滅した" },
+         { prob: 120, name: "2つ離れた3色が、時計回りに点滅した" },
+         { prob: 220, name: "ある色が点滅し、それに隣接した色が点滅した後、最初の色が再び点滅した" },
+         { prob: 121, name: "隣接する3色が、反時計回りに点滅した" },
+         { prob: 122, name: "隣接する3色が、時計回りに点滅した" },
+         { prob: 123, name: "ある色が点滅し、対角線上の色が点滅した後、最初の色が再び点滅した" },
+         { prob: 100, name: "隣接する3色が点滅しなかった" },
+         { prob: 170, name: "最初に点滅した色と最後に点滅した色が同じである" },
+         { prob: 124, name: "2つ分離れた3色が、反時計回りに点滅した" },
+         { prob: 230, name: "ある色が点滅し、2つ離れた色が点滅した後、最初の色が再び点滅した" },
+         { prob: 260, name: "ある色が点滅し、隣接した色が点滅した後、その色の対角線上の色が点滅した" },
+         { prob: 261, name: "ある色が点滅し、隣接した色が点滅した後、最初の色の対角線上の色が点滅した" },
+         { prob: 262, name: "ある色が点滅し、2つ離れた色が点滅した後、その色の対角線上の色が点滅した" },
+         { prob: 263, name: "ある色が点滅し、2つ離れた色が点滅した後、最初の色の対角線上の色が点滅した" },
+         { prob: 231, name: c => `${c[0]}、${c[1]}、${c[2]}のうち多くとも1色が点滅した` },
+         { prob: 264, name: "ある色が点滅し、対角線上の色が点滅した後、 最初の色に隣接する色が点滅した" },
+         { prob: 221, name: "1回より多く点滅した色が存在しない" },
+         { prob: 265, name: "ある色が点滅し、対角線上の色が点滅した後、それに隣接した色が点滅した" },
+         { prob: 240, name: "ちょうど2回点滅した色が、ちょうど2色ある" },
+         { prob: 420, name: "点滅していない隣接する2色がある" },
+         { prob: 270, name: "点滅していない色が、ちょうど1色ある" },
+         { prob: 280, name: "ちょうど2回点滅した色が存在しない" },
+         { prob: 290, name: "少なくとも3色が、点滅していない" },
+         { prob: 300, name: "1回より多く点滅した色が、ちょうど2色ある" },
+         { prob: 330, name: "最初に点滅した色と最後に点滅した色が隣接している" },
+         { prob: 380, name: "1回より多く点滅した色が、ちょうど1色ある" },
+         { prob: 440, name: "点滅していない2つ離れた2色がある" },
+         { prob: 266, name: "点滅していない対角線上にある2色がある" },
+         { prob: 400, name: "点滅していない色が、ちょうど2色ある" },
+         { prob: 410, name: "ちょうど2回点滅した色が、ちょうど1色ある" },
+         { prob: 480, name: "点滅した異なる色の数が、偶数である" },
+         { prob: 390, name: "隣接した2色が、時計回りに点滅していない" },
+         { prob: 391, name: "隣接した2色が、反時計回り回りに点滅していない" },
+         { prob: 610, name: "隣接した2色が、時計回りに点滅した" },
+         { prob: 392, name: "2つ離れた2色が、反時計回りに点滅していない" },
+         { prob: 500, name: "最初に点滅した色と最後に点滅した色が異なり、かつ隣接していない" },
+         { prob: 520, name: "ある色が点滅し、別の色が点滅した後、最初の色が点滅した" },
+         { prob: 393, name: "2つ離れた2色が時計回りに点滅していない" },
+         { prob: 611, name: "隣接した2色が、反時計回りに点滅した" },
+         { prob: 612, name: "2つ離れた2色が時計回りに点滅した" },
+         { prob: 613, name: "2つ離れた2色が、反時計回りに点滅した" },
+         { prob: 521, name: "点滅した異なる色の数が、奇数である" },
+         { prob: 770, name: c => `${c[0]}、${c[1]}、${c[2]}のうち少なくとも2色が点滅した` }];
+
+     function setDefaultRules(rnd) { setRules(rnd); }
+
+     function setRules(rnd)
+     {
+         var steps = rnd.next(0, 25);
+         for (var i = 0; i < steps; i++)
+             rnd.nextDouble();
+
+         var rules = _rules.slice(0);
+         rnd.shuffleFisherYates(rules);
+         var ths = document.getElementsByClassName('row-rule');
+         rules = rules.slice(0, ths.length);
+         rules.sort((a, b) => a.prob < b.prob ? -1 : a.prob > b.prob ? 1 : 0);
+         for (var i = 0; i < ths.length; i++)
+         {
+             var name = rules[i].name;
+             if (typeof rules[i].name === 'function')
+             {
+                 var colors = '橙,黄,赤,緑,青,紫'.split(',');
+                 rnd.shuffleFisherYates(colors);
+                 name = rules[i].name(colors);
+             }
+             ths[i].innerText = name;
+         }
+
+         var gt = rnd.next(0, 2);
+
+         var condThs = document.getElementsByClassName('little');
+         var conds = ['ポート', 'インジケーター', 'バッテリー', '#内の数字', '#内の英字', 'バッテリーホルダー'];
+         rnd.shuffleFisherYates(conds);
+         for (var i = 0; i < 6; i++)
+             condThs[i].innerText = `${conds[i]} ${gt ? '≥' : '≤'} 3`;
+
+         var sts = [0, 1, 2];
+         var grid = [
+             "FFC,CEH,HAF,ECD,DDE,AHA".split(','),
+             "AHF,DFC,ECH,CDE,FEA,HAD".split(','),
+             "DED,ECF,FHE,HAA,AFH,CDC".split(','),
+             "HCE,ADA,CFD,DHH,EAC,FEF".split(','),
+             "CAH,FHD,DDA,AEC,HCF,EFE".split(','),
+             "EDA,HAE,AEC,FFF,CHD,DCH".split(',')];
+         var smallGrid = [
+             "YOGRBP",
+             "PYRBOG",
+             "OGBPRY",
+             "GBOYPR",
+             "RPYOGB",
+             "BRPGYO"];
+
+         if (rnd.seed != 1)
+         {
+             sts[0] = rnd.next(0, 3);
+             sts[1] = rnd.next(sts[0] + 1, 4);
+             sts[2] = rnd.next(sts[1] + 1, 5);
+
+             var numbers = [];
+             for (var i = 0; i < 6; i++)
+                 numbers.push(i);
+
+             var columnShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle3 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle = [columnShuffle1, columnShuffle2, columnShuffle3];
+
+             var rowShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+             var rowShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+             var rowShuffle3 = rnd.shuffleFisherYates(numbers);
+             var rowShuffle = [rowShuffle1, rowShuffle2, rowShuffle3];
+
+             var newGrid = grid.map(arr => arr.slice(0));
+             for (var r = 0; r < 6; r++)
+                 for (var c = 0; c < 6; c++)
+                     newGrid[r][c] = [0, 1, 2].map(ix => grid[rowShuffle[ix][r]][columnShuffle[ix][c]].substr(ix, 1)).join('');
+             grid = newGrid;
+
+             rnd.shuffleFisherYates(columnShuffle1);
+             rnd.shuffleFisherYates(rowShuffle1);
+
+             var newSmallGrid = [];
+             for (var r = 0; r < 6; r++)
+                 newSmallGrid.push([0, 1, 2, 3, 4, 5].map(c => smallGrid[rowShuffle1[r]].substr(columnShuffle1[c], 1)).join(''));
+             smallGrid = newSmallGrid;
+         }
+
+         var ords = ["1番目", "2番目", "3番目", "4番目", "5番目"];
+         var colSpans = document.getElementsByClassName('column-rule');
+         for (var i = 0; i < 3; i++)
+             colSpans[i].innerText = ords[sts[i]];
+
+         var cellRules = document.getElementsByClassName('cell-rule');
+         for (var r = 0; r < 6; r++)
+             for (var c = 0; c < 6; c++)
+                 cellRules[r * 6 + c].innerText = grid[r][c];
+
+         var smallRules = document.getElementsByClassName('small-rule');
+         for (var r = 0; r < 6; r++)
+             for (var c = 0; c < 6; c++)
+                 smallRules[r * 6 + c].innerText = smallGrid[r].substr(c, 1);
+     }
+ </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+<span class="page-header-section-title">サイモンの絶叫</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Screams.svg" class="diagram">
+ <h2>モジュール詳細：サイモンの絶叫</h2>
+               <p class="flavour-text">
+                おこ!まじおこ!激おこぷんぷん丸!ムカ着火ファイヤー!!
+                </p>
+                <ul>
+                    <li>
+                        モジュールには赤, 橙, 黄, 緑, 青、紫の6色のライトが存在する.
+                        これらはステージ毎に長くなるシーケンスを点滅させる。ステージは3ステージある。
+                    </li>
+                    <li>
+                        各ステージで、点滅したシーケンス全体について考える。大きな表で、最初に合致する段と正しい列を見つける。そのセルから、現在のステージに対応する位置の文字を取得し、小さな表の列に対応させて参照する。
+                    </li>
+                    <li>
+                        その列を上から下へ確認し、条件に当てはまる全ての色を押す。
+                        色は、赤(R)、橙(O)、黄(Y)、緑(G)、青(B)、紫(P)で示され、「#」は「シリアルナンバー」を意味する。
+                    </li>
+                    <li>
+                        シーケンスが再び点滅するたびに、現在のステージの入力はリセットされる。
+                    </li>
+                </ul>
+
+                <table class='simon-screams'>
+                    <tr class='top'>
+                        <td class='corner' rowspan='2'>
+                            <table class='simon-screams-small'>
+                                <tr>
+                                    <td class='corner'></td>
+                                    <th>A</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th>E</th>
+                                    <th>F</th>
+                                    <th>H</th>
+                                </tr>
+                                <tr>
+                                    <th class='little'>インジケーター≥3</th>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>ポート≥3</th>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>#内の数字≥ 3</th>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>Y</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>#内の英字≥3 </th>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>バッテリー≥ 3</th>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>バッテリーホルダー≥ 3 </th>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <th colspan='6' class='corner'>
+                            <p>ステージ1：<span class='column-rule'>1番目</span>に点滅した色</p>
+                            <p>ステージ2：<span class='column-rule'>2番目</span>に点滅した色</p>
+                            <p>ステージ3：<span class='column-rule'>3番目</span>に点滅した色</p>
+                        </th>
+                    </tr>
+                    <tr class='rotated'>
+                        <th><span class='text'>赤</span></th>
+                        <th><span class='text'>橙</span></th>
+                        <th><span class='text'>黄</span></th>
+                        <th><span class='text'>緑</span></th>
+                        <th><span class='text'>青</span></th>
+                        <th><span class='text'>紫</span></th>
+                    </tr>
+                    <tr>
+                        <th><span class='row-rule'>隣接する3色が、時計回りに点滅した</span>場合</th>
+                        <td class='cell-rule'>FFC</td>
+                        <td class='cell-rule'>CEH</td>
+                        <td class='cell-rule'>HAF</td>
+                        <td class='cell-rule'>ECD</td>
+                        <td class='cell-rule'>DDE</td>
+                        <td class='cell-rule'>AHA</td>
+                    </tr>
+                    <tr>
+                        <th>それ以外で、<span class='row-rule'>ある色が点滅し、それに隣接した色が点滅した後、最初の色が再び点滅した</span>場合</th>
+                        <td class='cell-rule'>AHF</td>
+                        <td class='cell-rule'>DFC</td>
+                        <td class='cell-rule'>ECH</td>
+                        <td class='cell-rule'>CDE</td>
+                        <td class='cell-rule'>FEA</td>
+                        <td class='cell-rule'>HAD</td>
+                    </tr>
+                    <tr>
+                        <th>それ以外で、<span class='row-rule'>赤、黄、青のうち多くとも1色が点滅した</span>場合</th>
+                        <td class='cell-rule'>DED</td>
+                        <td class='cell-rule'>ECF</td>
+                        <td class='cell-rule'>FHE</td>
+                        <td class='cell-rule'>HAA</td>
+                        <td class='cell-rule'>AFH</td>
+                        <td class='cell-rule'>CDC</td>
+                    </tr>
+                    <tr>
+                        <th>それ以外で、<span class='row-rule'>点滅していない対角線上にある2色がある</span>場合</th>
+                        <td class='cell-rule'>HCE</td>
+                        <td class='cell-rule'>ADA</td>
+                        <td class='cell-rule'>CFD</td>
+                        <td class='cell-rule'>DHH</td>
+                        <td class='cell-rule'>EAC</td>
+                        <td class='cell-rule'>FEF</td>
+                    </tr>
+                    <tr>
+                        <th>それ以外で、<span class='row-rule'>隣接した2色が、時計回りに点滅した</span>場合</th>
+                        <td class='cell-rule'>CAH</td>
+                        <td class='cell-rule'>FHD</td>
+                        <td class='cell-rule'>DDA</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>HCF</td>
+                        <td class='cell-rule'>EFE</td>
+                    </tr>
+                    <tr>
+                        <th>それ以外</th>
+                        <td class='cell-rule'>EDA</td>
+                        <td class='cell-rule'>HAE</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>FFF</td>
+                        <td class='cell-rule'>CHD</td>
+                        <td class='cell-rule'>DCH</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
