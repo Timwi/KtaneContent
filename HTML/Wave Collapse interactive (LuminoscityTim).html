@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wave Collapse — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css" />
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+        const PARTICLES_COUNT = 5;
+        const SCHEMES_COUNT = 10;
+        const PARTICLES = ["e", "µ", "ν", "g", "γ", "u", "c", "t", "d", "s", "b", "τ", "Z", "W", "H"];
+
+        function particleToString(p) {
+            return typeof p === "string" ? p : String.fromCharCode(p);
+        }
+
+        function getSchemaUrlAndRotation(i) {
+            const res = (s, i) => [`img/Wave Collapse/Diagram_${s}.svg`, i];
+            if (i < 1) return res("0-0", 0);
+            if (i < 5) return res("1-4", (i - 1) % 4);
+            if (i < 7) return res("5-6", (i - 1) % 2);
+            if (i < 9) return res("7-8", (i - 1) % 2);
+            return res("9-9", 0);
+        }
+
+        function pickRandom(arr, rnd) {
+            return arr[rnd.nextMax(arr.length)];
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            const particles = rnd.seed === 1 ? PARTICLES : rnd.shuffleArray(PARTICLES);
+            const grid = new Array(PARTICLES_COUNT).fill(0).map(() => new Array(PARTICLES_COUNT).fill(0));
+            const schemes = new Array(SCHEMES_COUNT).fill(0).map((_, i) => i);
+            const rowsParticles = new Array(PARTICLES_COUNT).fill(0).map(() => new Set());
+            const diagSchemes = rnd.shuffleArray(schemes);
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const schema = diagSchemes[i];
+                grid[i][i] = schema;
+                rowsParticles[i].add(schema);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                for (let j = 0; j < i; j++) {
+                    const schema = pickRandom(schemes.filter((s) => !rowsParticles[i].has(s) && !rowsParticles[j].has(s)), rnd);
+                    grid[j][i] = grid[i][j] = schema;
+                    rowsParticles[i].add(schema);
+                    rowsParticles[j].add(schema);
+                }
+            }
+            console.log(grid.map((col) => col.join(",")).join("\n"));
+            const table = document.getElementById("diagram-table-content");
+            table.innerHTML = "";
+            const firstTr = table.appendChild(document.createElement("tr"));
+            firstTr.appendChild(document.createElement("td"));
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const td = firstTr.appendChild(document.createElement("td"));
+                td.innerText = particleToString(particles[i]);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const tr = table.appendChild(document.createElement("tr"));
+                const firstTd = tr.appendChild(document.createElement("td"));
+                firstTd.innerText = particleToString(particles[i]);
+                for (let j = 0; j < PARTICLES_COUNT; j++) {
+                    const td = tr.appendChild(document.createElement("td"));
+                    const img = td.appendChild(document.createElement("img"));
+                    const [url, rot] = getSchemaUrlAndRotation(grid[i][j]);
+                    img.src = url;
+                    if (rot > 0) img.classList.add(`r${rot}`);
+                }
+            }
+            finishSetup(particles);
+        }
+
+        //***************INTERACTIVE*****************
+
+        function finishSetup(particles) {
+            var selected;
+            let thegrid = $(".thegrid");
+            let typesButtons = $(".types");
+            let particlesButtons = $(".particles");
+            let tools = $(".tools");
+            thegrid.html("");
+            typesButtons.html("");
+            particlesButtons.html("");
+            tools.html("");
+            const rows = 7;
+            const cols = 5;
+            const partCols = 2;
+            const numParticles = 8;
+            let gameGrid = {};
+            let currP = 0;
+            let saveStates = [];
+            let currentState = 0;
+            let pathN = [];
+            const MOV_RANGE = 9;
+            const MIN_MOVES = 2;
+            const MAX_MOVES = 41;
+            const MODE_READ = 0;
+            const MODE_SOLVE = 1;
+            const MODE_PLAY = 2;
+
+            function selectNone() {
+                selected = null;
+                updateSelection();
+            }
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                    if (mode() == MODE_READ) {
+                        $(".netsq.highlighted").removeClass("highlighted");
+                        gameGrid[selected.attr("id")].addClass("highlighted");
+                    }
+                    else {
+                        $(".netsq.black").removeClass("black");
+                        gameGrid[selected.attr("id")].addClass("black");
+                    }
+                }
+            }
+
+            function resetSelection() {
+                selected = particlesButtons.children().eq(0);
+                updateSelection();
+                currP = 0;
+            }
+
+            function mode() {
+                if ($("button.expert-play").hasClass("play"))
+                    return MODE_PLAY;
+                else if ($("button.read-solve").hasClass("solve"))
+                    return MODE_SOLVE;
+                else
+                    return MODE_READ;
+            }
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            let row = $("<div>").addClass("square-row letters").appendTo(thegrid);
+            $("<div>").addClass("square").appendTo(row);
+            for (var i = 0; i < cols; i++) {
+                $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+            }
+            for (let y = 1; y <= rows; y++) {
+                row = $("<div>").addClass("square-row").appendTo(thegrid);
+                $("<div>").addClass("square numbers").text(y).appendTo(row);
+                for (let x = 1; x <= cols; x++) {
+                    let square = $("<div>").addClass(`netsquare square netsq`).appendTo(row).each(function(_, e) {
+                        var element = $(e);
+                        $("<div>").addClass("celltext").appendTo(element);
+                        $("<div>").addClass("pathnum pnum1").appendTo(element);
+                        $("<div>").addClass("pathnum pnum2").appendTo(element);
+
+                        element.mousedown(function(event) {
+                            if (event.which == 1) {
+                                start = [x, y];
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                        });
+
+                        element.mouseup(function(event) {
+                            if (start) { // Just in case.
+                                var changed = [];
+                                var distx, disty, dirx, diryi;
+                                distx = Math.abs(start[0] - x);
+                                disty = Math.abs(start[1] - y);
+                                dirx = (start[0] < x) ? 1 : -1;
+                                diry = (start[1] < y) ? 1 : -1;
+
+                                for (yy = start[1]; yy != (y + diry); yy += diry)
+                                    for (xx = start[0]; xx != (x + dirx); xx += dirx)
+                                        changed.push([xx, yy]);
+
+                                if (changed.length > 0) {
+                                    let from = thegrid.children().eq(start[1]).children().eq(start[0]);
+                                    let firstHL = from.hasClass("highlighted");
+                                    changed.forEach(function(coord, i) {
+                                        let elem = thegrid.children().eq(coord[1]).children().eq(coord[0]);
+                                        if (mode() == MODE_READ) {
+                                            setTimeout(() => {
+                                                elem.toggleClass("highlighted", !firstHL);
+                                                playZeroOneSound(!firstHL);
+                                                gameGrid[selected.attr("id")] = $(".netsq.highlighted");
+                                            }, 30*i);
+                                        } else if (changed.length == 1) {
+                                            let mark2 = element.hasClass("marked");
+                                            let removal = element.hasClass("marked2");
+                                            element.toggleClass("marked", !(mark2 || removal));
+                                            element.toggleClass("marked2", mark2);
+                                            let pathnum1 = element.find(".pathnum.pnum1");
+                                            let pathnum2 = element.find(".pathnum.pnum2");
+                                            if (removal) {
+                                                let n = pathnum1.text().length > 0 ? parseInt(pathnum1.text()) : 0;
+                                                pathN.splice(pathN.indexOf(n), 1);
+                                                n = pathnum2.text().length > 0 ? parseInt(pathnum2.text()) : 0;
+                                                pathN.splice(pathN.indexOf(n), 1);
+                                                pathnum1.text("");
+                                                pathnum2.text("");
+                                            }
+                                            else if (mark2) {
+                                                let n = nextPathN();
+                                                if (n > 0) pathnum2.text(n);
+                                            }
+                                            else {
+                                                let n = nextPathN();
+                                                if (n > 0) pathnum1.text(n);
+                                            }
+
+                                            if ($("button.sound").hasClass("play")) {
+                                                let aud = (!(mark2 || removal) ? audioW[0] : (mark2 ? audioK[0] : audioP[0])).cloneNode();
+                                                aud.volume = 0.5;
+                                                aud.play();
+                                            }
+                                        }
+                                    });   //changed.forEach
+                                }   //if (changed.length > 0)
+                            }   //if (start)
+
+                            start = null;
+                        });     // element.mouseup
+                    });     //let square = $("<div>")
+                }
+            }
+
+            for (let b = 0; b < PARTICLES_COUNT; b++) {
+                $("<button>").text(particles[b]).click(function(event) {
+                    if (selected && selected.hasClass("particle") && mode() == MODE_READ) {
+                        if ($("button.sound").hasClass("play")) {
+                            let aud = audioY[0].cloneNode();
+                            aud.volume = 0.5;
+                            aud.play();
+                        }
+                        selected.text(particles[b]);
+                        currP = (currP + 1) % numParticles;
+                        selected = particlesButtons.children().eq(currP);
+                        updateSelection();
+                    }
+                }).appendTo(typesButtons);
+            }
+            for (let b = 0; b < numParticles; b++) {
+                let part = $("<div>").addClass("square particle").text(particles[0]).click(function(event) {
+                    selected = $(this);
+                    updateSelection();
+                    currP = b;
+                }).appendTo(particlesButtons);
+                part.attr("id", `particle-${b}`);
+                gameGrid[`particle-${b}`] = $(".netsq.highlighted");
+                if (b == 0) {
+                    selected = part;
+                    updateSelection();
+                }
+            }
+
+            function playZeroOneSound(one) {
+                if ($("button.sound").hasClass("play")) {
+                    let aud = one ? audio1[0].cloneNode() : audio0[0].cloneNode();
+                    aud.volume = 0.5;
+                    aud.play();
+                }
+            }
+
+            let audio0 = $("<audio>")
+                .attr("src", "audio/Not The Bulb/TapCode.wav")
+                .appendTo(thegrid);
+            let audio1 = $("<audio>")
+                .attr("src", "audio/Not The Bulb/NonoClick.wav")
+                .appendTo(thegrid);
+            let audioY = $("<audio>")
+                .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+                .appendTo(thegrid);
+            let audioW = $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+                .appendTo(thegrid);
+            let audioP = $("<audio>")
+                .attr("src", "audio/Module Listening/Rhythms.ogg")
+                .appendTo(thegrid);
+            let audioK = $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+                .appendTo(thegrid);
+
+            function nextHighlight(elem) {
+                if (elem.hasClass("highlighted3") || elem.hasClass("highlighted4")) {
+                    elem.removeClass("highlighted3");
+                    elem.addClass("highlighted4");
+                } else if (elem.hasClass("highlighted2")) {
+                    elem.removeClass("highlighted2");
+                    elem.addClass("highlighted3");
+                } else if (elem.hasClass("highlighted")) {
+                    elem.addClass("highlighted2");
+                } else {
+                    elem.addClass("highlighted");
+                }
+            }
+
+            function nextPathN() {
+                pathN.sort(function(a, b) {
+                    return a - b;
+                });
+                let first = 0;
+                for (let i = 0; i < pathN.length; i++) {
+                    first = pathN[i];
+                    if (first !== i) {
+                        first = i;
+                        break;
+                    }
+                    first = i + 1;
+                }
+                pathN.push(first);
+                return first;
+            }
+
+            $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+                $(this).toggleClass("solve");
+                $("body").toggleClass("solve", $(this).hasClass("solve"));
+
+                $(".netsq").removeClass("black highlighted highlighted2 highlighted3 highlighted4");
+                if (mode() != MODE_READ) {
+                    for (let wave of Object.keys(gameGrid)) {
+                        gameGrid[wave].each(function(i, e) {
+                            let elem = $(e);
+                            nextHighlight(elem);
+                        });
+                    }
+                }
+                updateSelection();
+            });
+            $("<button>").addClass("sound play").appendTo(tools).click(function() {
+                $(this).toggleClass("play");
+            });
+
+            $(".reset-grid").click(function() {
+                if (mode() == MODE_READ) {
+                    $(".netsquare").removeClass("highlighted");
+                    gameGrid[selected.attr("id")] = $(".netsq.highlighted");
+                } else {
+                    $(".netsquare .pathnum").text("");
+                    pathN.splice(0, pathN.length);
+                    $(".netsquare").removeClass("marked marked2");
+                }
+            });
+            $(".reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+            $(".reset-all").click(function() {
+                $("body").removeClass("free solution-shown solve play");
+                $("button.sound").addClass("play");
+                $("button.expert-play").removeClass("play");
+                $("button.show-sol").removeClass("show");
+                $("button.read-solve").removeClass("solve");
+                $(".netsquare .pathnum").text("");
+                pathN.splice(0, pathN.length);
+                $(".netsquare").removeClass("highlighted highlighted2 highlighted3 highlighted4 black marked marked2");
+                for (let wave of Object.keys(gameGrid)) {
+                    gameGrid[wave] = $(".netsq.highlighted");
+                }
+
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+                resetSelection();
+            });
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveStateClass = Array.from($(".square, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+                let saveStatePart = Array.from($(".particle")).map(x => $(x)).map(x => x.text() || "");
+                let saveStateNum = Array.from($(".pathnum")).map(x => $(x)).map(x => x.text() || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let s_gameGrid = {};
+                for (let wave of Object.keys(gameGrid)) {
+                    s_gameGrid[wave] = gameGrid[wave];
+                }
+                updateSelection();
+
+                let s_selected = selected;
+                let s_currP = currP;
+                let s_pathN = Array(pathN.length);
+                Object.assign(s_pathN, pathN);
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(".square, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                    $(".particle").each((i, x) => $(x).text(saveStatePart[i]));
+                    $(".pathnum").each((i, x) => $(x).text(saveStateNum[i]));
+                    currentState = stateNumber;
+                    selected = s_selected;
+                    currP = s_currP;
+                    for (let wave of Object.keys(gameGrid)) {
+                        gameGrid[wave] = s_gameGrid[wave];
+                    }
+                    Object.assign(pathN, s_pathN);
+                    pathN.splice(s_pathN.length);
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+        }
+    </script>
+    <style>
+        table {
+            float: right;
+            text-align: center;
+        }
+
+        p {
+            font-size: 13px;
+        }
+
+        #values-table {
+            margin-left: 8px;
+        }
+
+        #values-table tr:first-child td {
+            border-bottom: 3px solid;
+        }
+
+        #diagram-table {
+            margin: 32px 0 0 8px;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        @media screen and (max-width: 836px) and (min-width: 755px) {
+            .last-paragraph {
+                margin-bottom: 160px;
+            }
+        }
+
+        #diagram-table td {
+            border: none;
+            padding: 4px;
+        }
+
+        #diagram-table img {
+            width: 64px;
+        }
+
+        .r1 {
+            transform: rotate(90deg);
+        }
+
+        .r2 {
+            transform: rotate(180deg);
+        }
+
+        .r3 {
+            transform: rotate(270deg);
+        }
+
+        .aligncenter {
+            text-align: center;
+        }
+        .note {
+            text-align: center;
+            font-size: x-small;
+            font-style: italic;
+        }
+        th img {
+            height: auto;
+            width: 80%;
+        }
+        table {
+            margin: 1em auto;
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 110px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+
+        .square-row {
+            height: 44px;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .solution, .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+        }
+        body.free.solution-shown .path span.str { color: #F00; }
+
+        .square {
+            margin: 0;
+            width: 34px;
+            height: 34px;
+            float: left;
+            font-size: 30px;
+            line-height: 35px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 10px;
+            border-width: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .square.movesleft {
+            font-size: 20px;
+            line-height: 80px;
+            border: none;
+        }
+
+        .square.netsquare {
+            height: 44px;
+            width: 44px;
+            line-height: 51px;
+            font-weight: bold;
+            position: relative;
+            cursor: pointer;
+            background-color: #333;
+            color: #FFF;
+        }
+        .netsquare .celltext {
+            height: 44px;
+            width: 44px;
+            font-size: 30px;
+            position: absolute;
+        }
+        .netsquare .pathnum {
+            height: 17px;
+            width: 17px;
+            line-height: 17px;
+            font-size: 15px;
+            position: absolute;
+            text-align: left;
+            top: 0px;
+            left: 0px;
+        }
+        .netsquare .pathnum.pnum2 {
+            left: 24px;
+            text-align: right;
+        }
+        .netsquare.black {
+            background-color: #000;
+            color: #DDD;
+        }
+        .netsquare.white {
+            background-color: #FFF;
+            color: #222;
+        }
+        .square.selected {
+            background-color: #00D;
+            color: #DDD;
+        }
+        .netsquare.highlighted {
+            background-color: #44D;
+            color: #DDD;
+        }
+        .netsquare.highlighted2 {
+            background-color: #A2A;
+            color: #DDD;
+        }
+        .netsquare.highlighted3 {
+            background-color: #D44;
+            color: #DDD;
+        }
+        .netsquare.highlighted4 {
+            background-color: #1B1;
+            color: #DDD;
+        }
+        .netsq.marked .celltext::after, .netsq.marked2 .celltext::after {
+            content: '•';
+        }
+        .square.netsquare.black {
+            background-color: #000;
+        }
+
+        .particle-stack .hstack {
+            width: 95px;
+        }
+        .hstack.particles {
+            margin-top: 20px;
+            font-family: 'Special Elite';
+        }
+
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+
+        .vspace { margin-top: 3mm; }
+        button {
+            font-family: 'Special Elite';
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        .types {
+            margin-top: 40px;
+        }
+        .types button {
+            width: 35px;
+            height: 35px;
+            padding: 1px 5px 2px 5px;
+            font-size: 20px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wave Collapse</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wave Collapse.svg" class="diagram">
+                <h2>On the Subject of Wave Collapse</h2>
+                <p class="flavour-text">Any joke about Schrödinger's cat is funny and unfunny at the same time.</p>
+                <p>
+                    The module has a 5x7 grid and 8 buttons to the right of it.
+                    Each of these 8 buttons is connected with one particle, located somewhere on the grid, with a symbol that describes its type.
+                </p>
+                <p>
+                    Tap any of the buttons on the right to view its particle's wave function. A wave function is a 2x2 square of the grid in which the particle can be located.
+                </p>
+                <p>Remember the order, type, and wave function of each particle, as they will not be available after the collapse.</p>
+                <table id="values-table">
+                    <tr>
+                        <td>Value</td>
+                        <td>Multiplier</td>
+                    </tr>
+                    <tr>
+                        <td>Port plates</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Modules count</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>First digit of serial number</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>Starting time in minutes</td>
+                        <td>7</td>
+                    </tr>
+                    <tr>
+                        <td>Indicators without vowels</td>
+                        <td>5</td>
+                    </tr>
+                </table>
+                <p>
+                    Sum the results of each row in the table on the right, subtracting 8 until the result is within the range 1-8, inclusive.
+                    Hold down the button on the right which is assigned this number in reading order for more than one second.
+                    This will collapse the wave function of the particle connected with this button:
+                    the particle will take one of its four possible positions, and will be displayed on the grid.
+                </p>
+                <table id="diagram-table">
+                    <tbody id="diagram-table-content"></tbody>
+                </table>
+                <p>To solve the module, press the positions of all the other particles in reading order of their buttons.</p>
+                <p class="last-paragraph">
+                    If the wave functions of two particles intersect, then those particles are entangled.
+                    To find the positions of particles after collapse, start with the initially collapsed particle.
+                    Find which of the remaining particles are entangled with this one.
+                    For each of those entangled particles, look up its type along with the other particle's type to obtain a diagram,
+                    and place the known particle's position, relative to its wave function, in the corresponding position in the diagram.
+                    If the position contains a point, then the position of the particle is unchanged.
+                    Otherwise, if the position contains a line, the entangled particle will collapse at the other end of the line.
+                    This position, relative to the unknown particle's wave function, is that particle's target location.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wave Collapse</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap">
+                    <div class="vstack tools"></div>
+                    <div class="thegrid"></div>
+                    <div class="vstack particle-stack">
+                        <div class="hstack wrap types"></div>
+                        <div class="hstack wrap particles"></div>
+                    </div>
+                </div>
+                <div class="saves hstack wrap just-left vspace">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack just-left vspace">
+                    <button class="reset-grid">Reset Grid</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <p>
+                <ul>
+                    <li>In <b>Read</b> mode:
+                        <ul>
+                            <li>Select a <b>particle</b> (1-8) then <b>click and drag</b> to input the wave function.</li>
+                            <li>Click a <b>particle type</b> button to update the <b>selected particle</b>.</li>
+                        </ul></li>
+                    <li>In <b>Solve</b> mode:
+                        <ul>
+                            <li>All <b>wave functions</b> are shown with magenta, red, and green highlights indicating increasing amounts of <b>overlapping wave functions</b>.</li>
+                            <li>The <b>selected particle</b>'s wave functions is shown in black.</li>
+                            <li>Click a <b>square</b> to mark the <b>collapsed position</b> of each particle.</li>
+                            <li>Use the auto-numbering to indicate the order the squares must be clicked on the module.</li>
+                            <li>If the next number cannot be placed yet, put it temporarily in a gray square.</li>
+                        </ul></li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Using the other buttons, you can save the current state of the grid, reset the currently displayed grid, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
