@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Ternary Tiles — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        let grid = $(".grid");
+        let movesNumber = $(".movesNumber");
+        let xNumber = $(".xNumber");
+        let yNumber = $(".yNumber");
+        const SIZE_MIN = 2;
+        const SIZEX_MAX = 10;
+        const SIZEY_MAX = 8;
+        let gameGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+        let solutionGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+        let origGameGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+        let resultList = [];
+        let answerList = [];
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        let moves = 12;
+        let rows = 4;
+        let cols = 3;
+        let PossibleInstruc = [];
+        let InstrucStr = [];
+        const MAX_STATE = 3;
+        const MOV_RANGE = 9;
+        const MIN_MOVES = 3;
+        const MAX_MOVES = 35;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        function resetGrid() {
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    gameGrid[x][y] = mode() == MODE_PLAY ? origGameGrid[x][y] : 0;
+            updateGrid();
+        }
+        //This function is taken from the module source code
+        function generate() {
+            generating = true;
+            answerList = [];
+            InstrucStr = [];
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    origGameGrid[x][y] = Math.random() > 0.6 ? 1 : 0;
+                    gameGrid[x][y] = 0;
+                }
+
+            for (i = 0; i < moves; i++) {
+                let n = Math.floor(Math.random() * PossibleInstruc.length);
+                InstrucStr.push(PossibleInstruc[n]);
+                if (n < cols) {
+                    let x = n;
+                    for (let y = 0; y < rows; y++)
+                        gameGrid[x][y] = (gameGrid[x][y] + 1) % MAX_STATE;
+                }
+                else if (n < rows + cols) {
+                    let y = n - cols;
+                    for (let x = 0; x < cols; x++)
+                        gameGrid[x][y] = (gameGrid[x][y] + 1) % MAX_STATE;
+                }
+                else
+                    for (let y = 0; y < rows; y++)
+                        for (let x = 0; x < cols; x++)
+                            gameGrid[x][y] = (gameGrid[x][y] + 1) % MAX_STATE;
+            }
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    solutionGrid[x][y] = (gameGrid[x][y] + origGameGrid[x][y]) % MAX_STATE;
+                    answerList.push(solutionGrid[x][y]);
+                    gameGrid[x][y] = origGameGrid[x][y];
+                }
+                answerList.push(" ");
+            }
+            $(".instruction-str").val(InstrucStr.join(""));
+            $(".solution .str").text(answerList.join(""));
+            updateGrid();
+            generating = false;
+        }
+
+        function clickAll() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let i = y*cols + x;
+                    setTimeout(() => {
+                        let elem = grid.children().eq(y+1).children().eq(x+1);
+                        elem.click();
+                    }, 40*i);
+                }
+            }
+        }
+
+        function clickRow(y) {
+            for (let x = 0; x < cols; x++) {
+                setTimeout(() => {
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+                    elem.click();
+                }, 50*x);
+            }
+        }
+        function clickCol(x) {
+            for (let y = 0; y < rows; y++) {
+                setTimeout(() => {
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+                    elem.click();
+                }, 50*y);
+            }
+        }
+
+        function updateGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let n = gameGrid[x][y];
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+                    elem.text(n);
+                }
+            }
+            updateResult();
+        }
+
+        function updateResult() {
+            resultList = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let n = gameGrid[x][y];
+                    resultList.push(n);
+                }
+                resultList.push(" ");
+            }
+            $(".path .str").text(resultList.join(""));
+        }
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (NoSpecialKeys(event)) {
+                if (k == "-")
+                    sizeDec(0);
+                else if (k == "=" || k == "+")
+                    sizeInc(0);
+                else if (k == "[")
+                    sizeDec(1);
+                else if (k == "]")
+                    sizeInc(1);
+                else if (k == ",")
+                    sizeDec(2);
+                else if (k == ".")
+                    sizeInc(2);
+            }
+            down = false;
+        });
+        function updateMoves() {
+            movesNumber.text(moves);
+            xNumber.text(cols);
+            yNumber.text(rows);
+            $(".square-row, .square").removeClass("invisible");
+            for (let y = rows + 1; y <= SIZEY_MAX; y++)
+                $(`.row${y}`).addClass("invisible");
+
+            for (let x = cols + 1; x <= SIZEX_MAX; x++)
+                $(`.column${x}`).addClass("invisible");
+
+            PossibleInstruc = [];
+
+            for (let x = 1; x <= cols; x++)
+                PossibleInstruc.push(String.fromCharCode(64 + x));
+            for (let y = 1; y <= rows; y++)
+                PossibleInstruc.push(y);
+            PossibleInstruc.push("+");
+        }
+
+        function sizeDec(i) {
+            if (i == 0)
+                moves = Math.max(MIN_MOVES, moves - 1);
+            else if (i == 1)
+                cols = Math.max(SIZE_MIN, cols - 1);
+            else
+                rows = Math.max(SIZE_MIN, rows - 1);
+            updateMoves();
+        }
+        function sizeInc(i) {
+            if (i == 0)
+                moves = Math.min(MAX_MOVES, moves + 1);
+            else if (i == 1)
+                cols = Math.min(SIZEX_MAX, cols + 1);
+            else
+                rows = Math.min(SIZEY_MAX, rows + 1);
+            updateMoves();
+        }
+        $(".movestext.minus").each(function(i, e) {
+            $(e).click(function() {
+                sizeDec(i);
+            });
+        });
+        $(".movestext.plus").each(function(i, e) {
+            $(e).click(function() {
+                sizeInc(i);
+            });
+        });
+
+        function checkSolution() {
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    if (solutionGrid[x][y] != gameGrid[x][y])
+                        return false;
+            return true;
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else
+                return MODE_SOLVE;
+        }
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square small-letter").text("All").click(function() {
+            clickAll();
+        }).appendTo(row);
+        for (let i = 0; i < SIZEX_MAX; i++) {
+            $("<div>").addClass(`square column${i+1}`).text(String.fromCharCode(65 + i)).click(function() {
+                clickCol(i);
+            }).appendTo(row);
+        }
+        for (let y = 1; y <= SIZEY_MAX; y++) {
+            row = $("<div>").addClass(`square-row row${y}`).appendTo(grid);
+            $("<div>").addClass(`square numbers row${y}`).text(y).click(function() {
+                clickRow(y-1);
+            }).appendTo(row);
+            for (let x = 1; x <= SIZEX_MAX; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq column${x} row${y} `).text("0").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+                        let n = (gameGrid[x-1][y-1] + 1) % MAX_STATE;
+                        gameGrid[x-1][y-1] = n;
+                        updateGrid();
+
+                        if (mode() == MODE_PLAY && checkSolution()) {
+                            if ($("button.sound").hasClass("play"))
+                                audioSolve[0].play();
+                        }
+                        else if ($("button.sound").hasClass("play")) {
+                            let aud = audioClick[n][0].cloneNode();
+                            aud.volume = 0.5;
+                            aud.play();
+                        }
+                    });
+                });
+            }
+        }
+        updateMoves();
+        updateGrid();
+
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Sim Sings - Solve.ogg")
+            .prop("volume", 0.9)
+            .appendTo(grid);
+        let audioClick = [];
+        const audioClickName = [
+            "Not The Bulb/SelectBulb", "Not The Bulb/TapCode", "Not The Bulb/NonoClick"
+        ]
+        for (let i = 0; i < audioClickName.length; i++) {
+            let audio = $("<audio>")
+                .attr("src", `audio/${audioClickName[i]}.wav`)
+                .prop("volume", 0.9)
+                .appendTo(grid);
+            audioClick.push(audio);
+        }
+
+        var tools = $(".tools");
+        $("<button>").addClass("reset-grid").text("Reset Grid").appendTo(tools).click(function() {
+            resetGrid();
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+            }
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("body").removeClass("solution-shown play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = 0;
+                }
+            }
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            moves = 12;
+            rows = 4;
+            cols = 3;
+            updateMoves();
+            updateGrid();
+            $(".instruction-str").val("");
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_solutionGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+            let s_gameGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+            let s_origGameGrid = Array(SIZEX_MAX).fill().map(()=>Array(SIZEY_MAX).fill(0));
+            for (let y = 0; y < SIZEY_MAX; y++)
+                for (let x = 0; x < SIZEX_MAX; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                    s_solutionGrid[x][y] = solutionGrid[x][y];
+                }
+            let s_answerList = Array(answerList.length);
+            Object.assign(s_answerList, answerList);
+            let s_instructions = $(".instruction-str").val();
+            let s_moves = moves;
+            let s_rows = rows;
+            let s_cols = cols;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                answerList = Array(s_answerList.length);
+                Object.assign(answerList, s_answerList);
+                $(".solution .str").text(answerList.join(""));
+                currentState = stateNumber;
+                moves = s_moves;
+                rows = s_rows;
+                cols = s_cols;
+                $(".instruction-str").val(s_instructions);
+                updateMoves();
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                        solutionGrid[x][y] = s_solutionGrid[x][y];
+                    }
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table { margin: 1em auto; }
+        table td:nth-child(2) { text-align: center; }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 110px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+
+        .square-row {
+            height: 44px;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .instr-label {
+            font-size: 20px;
+        }
+        .instruction-str {
+            width: 73%;
+            text-transform: uppercase;
+            font-size: 25px;
+            font-family: monospace;
+        }
+        .solution, .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .solution span.str, .path span.str {
+            font-family: monospace;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+        }
+
+        .square {
+            margin: 0;
+            width: 44px;
+            height: 44px;
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            cursor: pointer;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+        }
+        .small-letter { font-size: 19px; }
+        .square.numbers, .letters .square {
+            margin-top: 10px;
+            border-width: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .square.movesleft {
+            font-size: 20px;
+            line-height: 80px;
+            border: none;
+        }
+
+        .netsquare {
+            height: 44px;
+            width: 44px;
+            font-size: 30px;
+            line-height: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #DDD;
+            color: #000;
+        }
+        .netsquare.black {
+            background-color: #000;
+            color: #DDD;
+        }
+        .netsquare.white {
+            background-color: #FFF;
+            color: #222;
+        }
+
+        .netsquare.reset-grid {
+            font-size: 70px;
+            padding-top: 2px;
+            color: #DDD;
+            background-color: #555;
+        }
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+        .movestext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .movesNumber, .xNumber, .yNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 48px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .movesHolder {
+            margin: 0 30px 0 30px;
+        }
+        .widhgt .movesHolder {
+            margin: 0 20px 0 20px;
+        }
+        .movesHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        .invisible {
+            color: transparent;
+            background-color: transparent;
+            border-color: transparent;
+            user-select: none;
+            pointer-events: none;
+        }
+        .square-row.invisible, .square.invisible {
+            display: none;
+        }
+
+        .vspace { margin-top: 3mm; }
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol, button.reset-grid {
+            padding: 3px 3px 1px 3px;
+        }
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Ternary Tiles</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Ternary Tiles.svg" class="diagram">
+                <h2>On the Subject of Ternary Tiles</h2>
+                <p class="flavour-text">What universe is this module from?</p>
+
+                <p>This module presents a 4×3 grid of buttons, an indicator below it and a submit button to its right. Pressing a button will add 1 to its label, unless its label is “2”, in which case it will change back to 0. To solve the module, you must submit a specific pattern using the buttons. Submitting a pattern that is not the pattern the module expected will cause a strike. Note: for the whole of this manual, letters refer to columns and numbers refer to rows.</p>
+
+                <h3>Step 1: Determining Base Values</h3>
+
+                <p>The base value for each button depends on the bomb's edgework. Read through the list of conditions below and if any of them are true, let the button given by that condition's label be 1. Otherwise, let it be 0.</p>
+
+                <table>
+                    <tr><th>Condition</th><th>Button</th></tr>
+                    <tr>
+                        <td>The bomb has either a serial or an AC port</td>
+                        <td>C3</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has either a parallel or a USB port</td>
+                        <td>B2</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has either an RJ-45 or a Component Video port</td>
+                        <td>B3</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has either a DVI-D or a Composite Video port</td>
+                        <td>A4</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has either a PS/2 or an HDMI port</td>
+                        <td>A3</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has either a Stereo RCA or a PCMCIA port</td>
+                        <td>C1</td>
+                    </tr>
+                    <tr>
+                        <td>The last digit of the bomb's serial number is odd</td>
+                        <td>B1</td>
+                    <tr>
+                        <td>The first digit of the bomb's serial number is even</td>
+                        <td>B4</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb's serial number contains any letter from “TILES”</td>
+                        <td>A1</td>
+                    </tr>
+                    <tr>
+                        <td>There are more lit than unlit indicators on the bomb</td>
+                        <td>C2</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has a lit indicator labelled “_SA”*</td>
+                        <td>C4</td>
+                    </tr>
+                    <tr>
+                        <td>The bomb has an unlit indicator labelled “C_R”*</td>
+                        <td>A2</td>
+                    </tr>
+                </table>
+
+                <h6>*An underscore denotes any letter.</h6>
+                <p><i>Continued on the next page...</i></p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Ternary Tiles</span>
+            </div>
+            <div class="page-content">
+                <h3>Step 2: Modifying Base Values</h3>
+
+                <p>For each of the 12 characters displayed on the indicator, if it is...</p>
+
+                <ul>
+                    <li>...a letter, add 1 to each element of that column in the grid.</li>
+                    <li>...a number, add 1 to each element of that row in the grid.</li>
+                    <li>...“+”, add 1 to every element in the grid.</li>
+                </ul>
+
+                <p>Ensure that each element is within the range 0-2</p>
+
+                <div class="hstack wrap">
+                    <div class="vstack tools"></div>
+                    <div class="grid vstack just-left"></div>
+                </div>
+                <span class="instr-label vspace">Instructions: </span> <input type="text" class="instruction-str vspace">
+                <div class="saves hstack wrap just-left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack just-left wrap vspace">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                    <div class="movesHolder hstack">
+                        <div class="movestext label">Instructions:</div>
+                        <div class="movestext movesNumber"></div>
+
+                        <button class="movestext minus">-</button>
+                        <button class="movestext plus">+</button>
+                    </div>
+                </div>
+                <div class="hstack just-left path vspace"><span>Result:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack just-left solution"><span>Solution:</span><span class="str"></span></div>
+                <div class="hstack wrap widhgt">
+                    <div class="movesHolder hstack">
+                        <div class="movestext label">Width:</div>
+                        <div class="movestext xNumber"></div>
+
+                        <button class="movestext minus">-</button>
+                        <button class="movestext plus">+</button>
+                    </div>
+                    <div class="movesHolder hstack">
+                        <div class="movestext label">Height:</div>
+                        <div class="movestext yNumber"></div>
+
+                        <button class="movestext minus">-</button>
+                        <button class="movestext plus">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Ternary Tiles</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive Controls</h3>
+                <p>Use the above interactive graphic to input the read and try out different paths.</p>
+                <ul>
+                    <li>Click a <b>square</b> to increment the number.</li>
+                    <li>Type the <b>character string</b> into the <b>Instructions</b> textbox.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Switch the <b>Manual</b> button to <b>Generated</b> to have fun solving generated puzzles of 3 – 35 instrutions and varying grid sizes.</li>
+                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the number of instrutions.</li>
+                    <li>Similarly, use “<b>[</b>” and “<b>]</b>” to increment <b>Width</b>; “<b>,</b>” and “<b>.</b>” to increment <b>Height</b>.</li>
+                    <li>The solution you came up with as well as the correct solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.</li>
+                    <li>Using the other buttons, you can reset the grid, save the current state of the grid, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
