@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Matrix Mapping — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script>
+    $(function() {
+        let gridholder = $(".gridholder");
+        let grid = $("#the-grid");
+        const TABLE_CX = 300;
+        const TABLE_CY = 175;
+        const TABLE_SIDE = 37.6;
+        const POLY_SIDES = 4;
+        const TRAV_DIAM = 4;
+        const MAZE_DIAM = 6;
+        const DIAM_CX = 150;
+        const DIAM_CY = 350;
+        const MAZE_CX = 150;
+        const MAZE_CY = 680;
+        const MAZE_SIDE = 27.2;
+        const SVG_WID = 600;
+        const SVG_HIT = 1200;
+        const DIAMOND_RADIUS = 24.8;
+        const ARROW_BOTH = 3;
+        const ARROW_RIGHT = 2;
+        const ARROW_LEFT = 1;
+        const ARROW_NONE = 0;
+        let saveStates = [];
+        let currentState = 0;
+        let squareID = 0;
+        let selected = null;
+        let selectedLoop = [];
+        let loopI = 0;
+        let arrowState = Array(MAZE_DIAM).fill().map(()=>Array(MAZE_DIAM).fill().map(()=>Array(4).fill(0)));
+        let traverseVal = [];
+
+        const directions = {
+            Up: [0, -1],
+            Left: [-1, 0],
+            Down: [0, 1],
+            Right: [1, 0]
+        };
+
+        const hues =   ["red", "orange", "amber", "yellow", "lime", "green", "jade", "aqua", "cyan", "azure", "navy", "blue", "violet", "purple", "magenta", "pink", "rose"];
+        const hueLet = ["R",   "O",      "A",     "Y",      "L",    "G",     "J",    "Q",    "C",    "Z",     "N",    "B",    "V",      "P",      "M",      "I",     "S"];
+        const traverseText = [ "", "🟢", "❌", "N/A" ];
+
+        let thesvg = $("svg.grid");
+        let svgdefs = thesvg.find("defs");
+        const arrowClass = [ "unkn", "pass", "wall", "" ];
+
+        function makeColorTableHeader(x, y, right) {
+            let mn = right ? "-" : "";
+            let pl = right ? "" : "-";
+            return MakeSvgElem("path", { class: "header azure size0",
+                d:`M${x} ${y}l${pl}35.35 35.35l${mn}17.67 17.67l${mn}35.35-35.35z`
+            });
+        }
+
+        function newID() {      //unique IDs for all the clip-paths
+            let ids = `square${squareID}`;
+            squareID += 1;
+            return ids;
+        }
+        const mapTravSound = [6,8,9,7];
+
+        //find all neightboring cells that can be reached from the current one
+        function neighborMazeCells(elem, x, y, nside) {
+            let neighbors = [];
+            if (x - 1 >= 0 && $(`.arrow.left.arrow-${x-1}-${y}-0`).hasClass("pass"))
+                neighbors.push([$(`.maze.square.square-${x-1}-${y}`), x-1, y]);
+            if (x < nside - 1 && $(`.arrow.right.arrow-${x}-${y}-0`).hasClass("pass"))
+                neighbors.push([$(`.maze.square.square-${x+1}-${y}`), x+1, y]);
+            if (y - 1 >= 0 && $(`.arrow.left.arrow-${x}-${y-1}-1`).hasClass("pass"))
+                neighbors.push([$(`.maze.square.square-${x}-${y-1}`), x, y-1]);
+            if (y < nside - 1 && $(`.arrow.right.arrow-${x}-${y}-1`).hasClass("pass"))
+                neighbors.push([$(`.maze.square.square-${x}-${y+1}`), x, y+1]);
+            return neighbors;
+        }
+
+        let traverseTime = 0;
+        //recursive depth-first search to traverse the maze (graph)
+        function traverse(elem, x, y, nside) {
+            if (!elem.hasClass("visited")) {
+                elem.addClass("visited");
+                setTimeout(() => {
+                    elem.addClass("yellow");
+                }, 20*traverseTime);
+                traverseTime++;
+            }
+            let neighbors = neighborMazeCells(elem, x, y, nside);
+            neighbors.forEach((cell, i) => {
+                let n = i;
+                if (!cell[0].hasClass("visited"))
+                    traverse(cell[0], cell[1], cell[2], nside);
+            });
+        }
+        function pathChecker(elem, x, y, nside) {   //start depth-first search
+            elem.click(function(event) {
+                $(".square.maze").removeClass("yellow blue visited");
+                elem.addClass("blue visited")
+                traverseTime = 0;
+                traverse(elem, x, y, nside);
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        }
+
+        //make any of 4 grids of diamonds
+        function makeDiamondGrid(rad, topx, topy, nside, spacing, extraClass, size, addClick, addPathChecker, addText, addHighlight, whichGrid = 0) {
+            for (let y = 0; y < nside; y++) {
+                for (let x = 0; x < nside; x++) {
+                    let xc = topx + spacing*x + spacing*y;
+                    let yc = topy - spacing*x + spacing*y;
+                    let diamond = RegularPolygon(rad, xc, yc, POLY_SIDES, 0, {
+                        class: `square ${extraClass} square-${x}-${y} ${size}`
+                    });
+                    if (addClick) {     //add click for the colorable diamonds
+                        let idstr = newID();
+                        let clippath = MakeSvgElem("clipPath", { id:idstr });
+                        let clip = RegularPolygon(rad, xc, yc, POLY_SIDES, 0, {
+                            fill: "transparent"
+                        });
+                        $(clippath).append(clip);
+                        svgdefs.append(clippath);
+                        diamond.setAttribute("clip-path", `url(#${idstr})`);
+                        addClickColorable($(diamond), loopI, addHighlight, x, y, whichGrid, nside);
+                        loopI++;
+                    }
+                    else if (addPathChecker) {  //add traversibility checker to maze diamonds
+                        pathChecker($(diamond), x, y, nside);
+                    }
+                    thesvg.append(diamond);
+                    if (addText) {      //add text to Traversibility Table diamonds
+                        traverseVal.push(0);
+                        $(diamond).click(function() {
+                            let i = y*nside + x;
+                            traverseVal[i] = (traverseVal[i] + 1) % traverseText.length;
+                            playSound(mapTravSound[ traverseVal[i] ]);
+                            txt.innerHTML = traverseText[ traverseVal[i] ];
+                        });
+                        let txt = MakeSvgElem("text", {
+                            class:`traverse text-${x}-${y}`, x:(xc), y:(yc + 6)
+                        });
+                        thesvg.append(txt);
+                    }
+                }
+            }
+        }
+
+        //add arrows and segments to maze
+        function makeArrows() {
+            let topx = MAZE_CX - 95;
+            for (let y = 0; y < MAZE_DIAM; y++) {
+                for (let x = 0; x < MAZE_DIAM; x++) {
+                    for (let i = 0; i < 2; i++) {   //vertical vs. horizontal arrows
+                        if ((y == MAZE_DIAM-1 && i == 1) || (x == MAZE_DIAM-1 && i == 0)) continue; //there are only 5 arrows in some rows and columns
+
+                        let topy = MAZE_CY + (i == 0 ? -27 : 27);
+                        let groupL = MakeSvgElem("g", { class:"arrow-region left" });
+                        let groupR = MakeSvgElem("g", { class:"arrow-region right" });
+                        let spacing = MAZE_SIDE * 2;
+                        let vert = i == 0 ? "-" : " ";
+                        let pl = i == 0 ? "" : "-";
+                        let mx = topx + spacing*x + spacing*y;
+                        let my = topy - spacing*x + spacing*y;
+                        let arrowL = MakeSvgElem("path", {      //the arrowheads and their lines
+                            class: `arrow left unkn arrow-${x}-${y}-${i}`, "stroke-width":6, d:`M${mx - 7} ${my + 6*(i==0 ? 1 : -1)}l10.1${vert}10.1`
+                        });
+                        let arrowR = MakeSvgElem("path", {
+                            class: `arrow right unkn arrow-${x}-${y}-${i}`, "stroke-width":6, d:`M${mx - 4.1} ${my + 3.1*(i==0 ? 1 : -1)}l10.1${vert}10.1`
+                        });
+                        let segL = MakeSvgElem("path", {    //extra segments for showing unknown or walls
+                            class: "left-segment unkn", "stroke-width":6.1, d:`M${mx - 13.5} ${my + 12.7*(i==0 ? 1 : -1)}l10${vert}10`
+                        });
+                        let segR = MakeSvgElem("path", {
+                            class: "right-segment unkn", "stroke-width":6.1, d:`M${mx + 3} ${my - 4*(i==0 ? 1 : -1)}l10${vert}10`
+                        });
+                        let sdxL = i == 0 ? -13.2 : 0;
+                        let sdxR = i == 0 ? 0.2 : 13.4;
+                        let sdyL = i == 0 ? 13.2 : 26.6;
+                        let sdyR = i == 0 ? 26.8 : 13.4;
+                        let diamondL = MakeSvgElem("path", { class: "area", fill:"transparent",   //this is the left/up arrow clickable region
+                            d:`M${mx + sdxL} ${my - sdyL}l${pl}27 27l${vert}13.5 13.5l${vert}27-27z`
+                        });
+                        let diamondR = MakeSvgElem("path", { class: "area", fill:"transparent",   //this is the left/up arrow clickable region
+                            d:`M${mx + sdxR} ${my - sdyR}l${pl}27 27l${vert}13.5 13.5l${vert}27-27z`
+                        });
+                        $(diamondL).click(function(event) {     //change state of left/up arrow segment
+                            $(this).parent().find(".arrow, .left-segment").removeClass("unkn pass wall");
+                            arrowState[x][y][i*2] = (arrowState[x][y][i*2] + 1) % arrowClass.length;
+                            playSound(arrowState[x][y][i*2]*2);
+                            //the arrowheads are added in CSS classes (.pass)
+                            $(this).parent().find(".arrow, .left-segment").addClass(arrowClass[ arrowState[x][y][i*2] ]);
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                        $(diamondR).click(function(event) {     //change state of right/down arrow segment
+                            $(this).parent().find(".arrow, .right-segment").removeClass("unkn pass wall");
+                            arrowState[x][y][i*2 + 1] = (arrowState[x][y][i*2 + 1] + 1) % arrowClass.length;
+                            playSound(arrowState[x][y][i*2 + 1]*2);
+                            $(this).parent().find(".arrow, .right-segment").addClass(arrowClass[ arrowState[x][y][i*2 + 1] ]);
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                        $(groupL).append(arrowL);     //add all items to the left group
+                        $(groupL).append(segL);
+                        $(groupL).append(diamondL);
+                        $(groupR).append(arrowR);     //add all items to the right group
+                        $(groupR).append(segR);
+                        $(groupR).append(diamondR);
+                        thesvg.append(groupL);
+                        thesvg.append(groupR);
+                    }
+                }
+            }
+        }
+
+        //add click handler for colorable diamond or header
+        function addClickColorable(elem, loopIdx, addHighlight = false, x = 0, y = 0, whichGrid = 0, nside = 0) {
+            selectedLoop.push(elem);
+            elem.click(function(event) {
+                let whichColor = hasWhichColorClass(elem);
+                $("button.color").removeClass("highlighted");
+                tools.children().eq(whichColor).addClass("highlighted");
+                loopI = loopIdx;
+                selected = elem;
+                updateSelection();
+                $(".square.highlighted").removeClass("highlighted");
+                if (addHighlight) {
+                    highlightSurrounding(x, y, whichGrid == 1 ? "diamond2" : "diamond1", nside);
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        }
+
+        //setup entire SVG
+        function makeDiagram() {
+            makeDiamondGrid(DIAMOND_RADIUS, DIAM_CX - 124, DIAM_CY, MAZE_DIAM, DIAMOND_RADIUS, "diamond1 azure", "size1", true, false, false, true, 1);
+            makeDiamondGrid(DIAMOND_RADIUS, DIAM_CX*3 - 124, DIAM_CY, MAZE_DIAM, DIAMOND_RADIUS, "diamond2 azure", "size1", true, false, false, true, 2);
+            for (let j = TRAV_DIAM-1; j >= 0; j--) {
+                let h = makeColorTableHeader(TABLE_CX - 37.8*j - 20, TABLE_CY + 37.8*j - 168, false);
+                addClickColorable($(h), loopI);
+                loopI++;
+                thesvg.append(h);
+            }
+            for (let j = 0; j < TRAV_DIAM; j++) {
+                let h = makeColorTableHeader(TABLE_CX + 37.8*j + 20, TABLE_CY + 37.8*j - 168, true);
+                addClickColorable($(h), loopI);
+                loopI++;
+                thesvg.append(h);
+            }
+            makeDiamondGrid(TABLE_SIDE, TABLE_CX - 112.5, TABLE_CY, TRAV_DIAM, TABLE_SIDE, "trav", "size1", false, false, true);
+            makeDiamondGrid(MAZE_SIDE, MAZE_CX - 122, MAZE_CY, MAZE_DIAM, MAZE_SIDE*2, "maze gray", "size2", false, true, false);
+            makeArrows();
+        }
+        makeDiagram();
+        loopI = 0;
+        selected = selectedLoop[loopI];
+        updateSelection();
+
+        //color buttons
+        let tools = $(".colortools");
+        const colors = ["red", "blue", "purple", "green"];
+        const sizes = ["size0", "size1", "size2", "size3"];
+        const colorLet = ["R", "B", "V", "G"];
+        hues.forEach((col, i) => {
+            $("<button>").addClass(`color ${hues[i]}`).text(hueLet[i]).click(function(event) {
+                if (selected) {
+                    playSound(i % audioClick.length);
+                    removeColorClass(selected);
+                    selected.addClass(hues[i]);
+                    nextInLoop();
+                }
+                $(".square.highlighted").removeClass("highlighted");
+                $("button.color").removeClass("highlighted");
+                event.preventDefault();
+                event.stopPropagation();
+            }).appendTo(tools);
+        });
+
+        $(document).click(function() {      //clicking the page
+            selectNone();
+        }).keydown(function(event) {        //keyboard support
+            let k = event.key.toUpperCase();
+            if (event.key.startsWith("Arrow")) {    //arrow keys
+                let direction = directions[event.key.substring(5)];
+                if (direction[0] !== 0) {
+                    loopI = UMod(loopI + direction[0], selectedLoop.length);
+                } else {
+                    loopI = UMod(loopI + MAZE_DIAM * direction[1], selectedLoop.length);
+                }
+                selected = selectedLoop[loopI];
+                updateSelection();
+                event.preventDefault();
+                event.stopPropagation();
+            } else if (NoSpecialKeys(event) && hueLet.includes(k)) {
+                tools.children().eq( hueLet.findIndex((x) => x == k) ).click();
+            }
+            else if (NoSpecialKeys(event) && k == " ") {
+                nextInLoop();
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+
+        function nextInLoop() {     //select next colorable
+            loopI = (loopI + 1) % selectedLoop.length;
+            selected = selectedLoop[loopI];
+            updateSelection();
+        }
+
+        function selectNone() {     //unselect everything
+            $(".selected").removeClass("selected");
+            $("button.color, .square.highlighted").removeClass("highlighted");
+            $(".square.maze").removeClass("yellow blue visited");
+            selected = null;
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected"); //clear other selected classes
+            if (selected) {
+                selected.addClass("selected");      //select item
+            }
+        }
+
+        function removeColorClass(elem) {
+            hues.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichColorClass(elem) {
+            for (let i = 0; i < hues.length; i++) {
+                if (elem.hasClass(hues[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function highlightSurrounding(x, y, cl, nside) {    //highlight neighbors in the other diamond
+            $(`.maze.square.square-${x}-${y}`).addClass("highlighted");
+            $(`.square.${cl}`).filter(function(i, el) {
+                let dx = Math.abs(i % nside - x);
+                let dy = Math.abs(Math.floor(i / nside) - y);
+                return dx < 2 && dy < 2 && (dx == 0 || dy == 0) && (dx != 0 || dy != 0);
+            }).each((i, el) => {
+                $(el).addClass("highlighted");
+            });
+        }
+
+        //sound effects
+        let audioClick = [];
+        const audioClickName = [
+            "Not The Bulb/SelectBulb.wav", "Not The Bulb/TapCode.wav", "Not The Bulb/NonoClick.wav", "Old Fogey/ButtonPress.wav",
+            "Old Fogey/BigButtonRelease.wav", "Old Fogey/WireSnip.wav", "Module Listening/Unfair Cipher - Press 3.wav",
+            "Module Listening/Shapes and Bombs - Press 1.wav", "Module Listening/Sim Sim 3.wav", "Module Listening/Rhythms.ogg", "Not The Bulb/StarDing.wav"
+        ]
+        for (let i = 0; i < audioClickName.length; i++) {
+            let audio = $("<audio>")
+                .attr("src", `audio/${audioClickName[i]}`)
+                .prop("volume", 0.1)
+                .appendTo(grid);
+            audioClick.push(audio);
+        }
+        function playSound(n) {
+            if (sound() && n >= 0 && n < audioClickName.length) {
+                let aud = audioClick[n][0].cloneNode();
+                aud.volume = 0.4;
+                aud.play();
+            }
+        }
+        function playReset() {
+            if (sound()) {
+                let aud = audioReset[0].cloneNode();
+                aud.volume = 0.4;
+                aud.play();
+            }
+        }
+        let audioReset = $("<audio>")
+            .attr("src", "audio/Spilling Paint/reset.mp3")
+            .appendTo(grid);
+
+        //reset buttons
+        $("<button>").text("Reset").addClass("reset-d1").click(function(event) {
+            playReset();
+            removeColorClass($(".diamond1"));
+            $(".diamond1").addClass("azure");
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+        $("<button>").text("Reset").addClass("reset-d2").click(function(event) {
+            playReset();
+            removeColorClass($(".diamond2"));
+            $(".diamond2").addClass("azure");
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+        $("<button>").text("Reset").addClass("reset-table").click(function(event) {
+            playReset();
+            removeColorClass($(".header"));
+            $(".header").addClass("azure");
+            $("text.traverse").html("");
+            traverseVal.fill(0);
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        $("<button>").text("Reset Saves").addClass("reset-saves").click(function(event) {
+            playReset();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        $("<button>").text("Reset Maze").addClass("reset-maze").click(function(event) {
+            playReset();
+            $(".square.maze").removeClass("yellow blue visited");
+            $(".arrow, .left-segment, .right-segment").removeClass("pass wall");
+            $(".arrow, .left-segment, .right-segment").addClass("unkn");
+            for (let y = 0; y < MAZE_DIAM; y++)
+                for (let x = 0; x < MAZE_DIAM; x++)
+                    for (let i = 0; i < 4; i++) {
+                        arrowState[x][y][i] = 0;
+                    }
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        function sound() {
+            return $("button.sound").hasClass("play");
+        }
+        $("<button>").addClass("sound play").click(function(event) {
+            $(this).toggleClass("play");
+            event.preventDefault();
+            event.stopPropagation();
+        }).appendTo(gridholder);
+
+        function removeFutureSaves() {      //delete invalid saves if previous save was selected and page re-saved
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        //Save button
+        $("<button>").text("Save").addClass("save").click(function(event) {
+            removeFutureSaves();
+            playSound(10);
+            let saveStateClass = Array.from($("svg.grid path, svg.grid polygon, button.color")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($("svg.grid text")).map(x => $(x)).map(x => x.html() || "");
+
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+            let s_selected = selected;
+            let s_loopI = loopI;
+            let s_selectedLoop = Array(selectedLoop.length);
+            let s_arrowState = Array(MAZE_DIAM).fill().map(()=>Array(MAZE_DIAM).fill().map(()=>Array(2).fill(0)));
+            let s_traverseVal = Array(traverseVal.length);
+            Object.assign(s_selectedLoop, selectedLoop);
+            Object.assign(s_traverseVal, traverseVal);
+            for (let y = 0; y < MAZE_DIAM; y++)
+                for (let x = 0; x < MAZE_DIAM; x++)
+                    for (let i = 0; i < 4; i++) {
+                        s_arrowState[x][y][i] = arrowState[x][y][i];
+                    }
+
+            let button = $("<button>").text(stateNumber + 1).click(function(event) {
+                $("svg.grid path, svg.grid polygon, button.color").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("svg.grid text").each((i, x) => $(x).html(saveStateText[i]));
+                playSound(10);
+
+                Object.assign(selectedLoop, s_selectedLoop);
+                Object.assign(traverseVal, s_traverseVal);
+                for (let y = 0; y < MAZE_DIAM; y++)
+                    for (let x = 0; x < MAZE_DIAM; x++)
+                        for (let i = 0; i < 4; i++) {
+                            s_arrowState[x][y][i] = arrowState[x][y][i];
+                        }
+                loopI = s_loopI;
+                selected = s_selected;
+                updateSelection();
+                currentState = stateNumber;
+                event.preventDefault();
+                event.stopPropagation();
+            }).addClass("flash").appendTo(`.saves`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+            // event.preventDefault();
+            // event.stopPropagation();
+        }).appendTo(gridholder);
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hstack table {
+            width: 27%;
+            margin: 0.7em;
+            font-size: 9.5px;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .gridholder {
+            width: 672px;
+            height: 1110px;
+            position: relative;
+        }
+        #the-grid {
+            width: 672px;
+            height: 1110px;
+            position: relative;
+        }
+        #the-grid svg {
+            position: absolute;
+            width: 685px;
+            margin-left: -1%;
+            transition: width 0.8s, height 0.8s, left 0.8s, top 0.8s;
+        }
+        #the-grid svg.gone {
+            display: none;
+        }
+        svg path.header {
+            cursor: pointer;
+            stroke-width: 2.2px;
+            stroke: #000;
+        }
+
+        svg polygon.square {
+            pointer-events: all;
+            cursor: pointer;
+            fill: none;
+            stroke: #000;
+            stroke-width: 1px;
+            transition: fill 0.5s;
+            paint-order: fill;
+        }
+
+        .dark svg path.header.selected,
+        svg polygon.square.selected, svg path.header.selected {
+            stroke: #777;
+            overflow: hidden;
+        }
+        svg .size0.selected {
+            stroke-dasharray: 7,5;
+            stroke-width: 5px;
+        }
+        svg .size1.selected {
+            stroke-dasharray: 8,4;
+            stroke-width: 8px;
+        }
+        svg polygon.square.size1.highlighted {
+            stroke-dasharray: 8,19,8,27,8,27,8,27;
+            stroke-width: 16px;
+            stroke: #000;
+        }
+        svg polygon.maze.square.highlighted {
+            stroke-width: 7px;
+        }
+        body:not(.dark) svg polygon.square.red.selected,
+        body:not(.dark) svg polygon.square.navy.selected,
+        body:not(.dark) svg polygon.square.magenta.selected,
+        body:not(.dark) svg polygon.square.pink.selected,
+        body:not(.dark) svg polygon.square.rose.selected {
+            stroke: #555;
+        }
+
+        svg path.arrow {
+            stroke: transparent;
+        }
+        svg path.arrow.left.pass {
+            stroke: #000;
+            marker-start: url(#m2);
+        }
+        svg path.arrow.right.pass {
+            stroke: #000;
+            marker-end: url(#m1);
+        }
+        .dark svg path.arrow.pass, .dark svg path.arrow.pass {
+            stroke: #DDD;
+        }
+        svg path.left-segment, svg path.right-segment {
+            stroke: transparent;
+        }
+        svg path.right-segment.unkn, svg path.left-segment.unkn {
+            stroke: #F00;
+        }
+        svg path.right-segment.wall, svg path.left-segment.wall {
+            stroke: #000;
+        }
+        .dark svg path.right-segment.wall, .dark svg path.left-segment.wall {
+            stroke: #DDD;
+        }
+        svg g.arrow-region.left { cursor: pointer; }
+        svg g.arrow-region.right { cursor: alias; }
+        svg g.arrow-region, svg path.header {
+            transition: fill 0.5s, stroke 0.5s;
+        }
+        .dark svg.grid marker path {
+            fill: #DDD;
+        }
+
+        .dark svg polygon.square { stroke: #FFF; }
+        svg polygon.area {
+            stroke: transparent;
+            fill: transparent;
+        }
+
+        svg text {
+            user-select: none;
+            pointer-events: none;
+        }
+        .dark svg text.grid-label, .dark svg text.traverse {
+            fill: #DDD;
+        }
+
+        svg polygon.gray { fill: #888; }
+        svg path.red, svg polygon.red { fill: #FF0B0BCC; }
+        svg path.orange, svg polygon.orange { fill: #FF5500CC; }
+        svg path.amber, svg polygon.amber { fill: #FFAA00CC; }
+        svg path.yellow, svg polygon.yellow { fill: #FFFF00CC; }
+        svg path.lime, svg polygon.lime { fill: #99FF00CC; }
+        svg path.green, svg polygon.green { fill: #00FF00CC; }
+        svg path.jade, svg polygon.jade { fill: #00FF55CC; }
+        svg path.aqua, svg polygon.aqua { fill: #00FFAACC; }
+        svg path.cyan, svg polygon.cyan { fill: #00FFFFCC; }
+        svg path.azure, svg polygon.azure { fill: #00AAFFCC; }
+        svg path.navy, svg polygon.navy { fill: #0055FFCC; }
+        svg path.blue, svg polygon.blue { fill: #1111FFCC; }
+        svg path.violet, svg polygon.violet { fill: #4411FFCC; }
+        svg path.purple, svg polygon.purple { fill: #BB00FFCC; }
+        svg path.magenta, svg polygon.magenta { fill: #FF00FFCC; }
+        svg path.pink, svg polygon.pink { fill: #FF2299CC; }
+        svg path.rose, svg polygon.rose { fill: #FF0044CC; }
+
+        button.color {
+            color: #000;
+            width: 40px;
+            padding: 6px 8px 0 8px;
+            margin: 0;
+            font-size: 27px;
+        }
+        button.color.highlighted { border: 5px solid gray; }
+        button.red { background: #FF0A0ACC; }
+        button.orange { background: #FF5500CC; }
+        button.amber { background: #FFAA00CC; }
+        button.yellow { background: #FFFF00CC; }
+        button.lime { background: #99FF00CC; }
+        button.green { background: #00FF00CC; }
+        button.jade { background: #00FF55CC; }
+        button.aqua { background: #00FFAACC; }
+        button.cyan { background: #00FFFFCC; }
+        button.azure { background: #00AAFFCC; }
+        button.navy { background: #0055FFCC; }
+        button.blue { background: #1111FFCC; }
+        button.violet { background: #4411FFCC; }
+        button.purple { background: #BB00FFCC; }
+        button.magenta { background: #FF00FFCC; }
+        button.pink { background: #FF2299CC; }
+        button.rose { background: #FF0044CC; }
+
+        .colortools {
+            min-height: 44px;
+            width: 104%;
+            margin-left: -2%;
+        }
+
+        .dark table, table { border: none; }
+        td { text-align: center; }
+
+        button {
+            font-family: Special Elite;
+            font-size: 20px;
+            background-color: white;
+            user-select: none;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 4px;
+            transition: color 1s, background-color 1s;
+            margin: 1px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.save, .saves button {
+            padding: 5px 8px 2px 8px;
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        .gridholder button {
+            padding: 5px 8px 2px 8px;
+            position: absolute;
+        }
+        .gridholder button.save {
+            top: 600px;
+            right: 2px;
+            font-size: 25px;
+        }
+        .gridholder button.reset-maze {
+            bottom: 20px;
+            right: 0;
+        }
+        .gridholder button.sound {
+            top: 20px;
+            left: 0;
+        }
+        .gridholder button.reset-saves {
+            bottom: 20px;
+            left: 0;
+        }
+        .gridholder button.reset-d1 {
+            top: 490px;
+            left: 2px;
+        }
+        .gridholder button.reset-d2 {
+            top: 490px;
+            right: 2px;
+        }
+        .gridholder button.reset-table {
+            top: 50px;
+            right: 75px;
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            background-size: 103%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Matrix Mapping</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Matrix Mapping.svg" class="diagram">
+                <h2>On the Subject of Matrix Mapping</h2>
+                <p class="flavour-text">Stop! In the name of <s>love</s> an absence of movement buttons.</p>
+                <p>
+                    On the module will be a 6×6 diamond consisting of four colours, with two additional buttons to the top-left of it.
+                    The toggle button will be to the left, and the submit button will be to the top.
+                </p>
+                <p>
+                    The toggle button toggles the 6×6 diamond between two sets of four colours,
+                    the colour of the submit button between black and white, and its own colour between one colour of each colour set.
+                </p>
+                <p>
+                    The goal of this module will be to create a 4×4 binary matrix which defines a fully traversible maze
+                    shown on the module through the 6×6 diamond of colours.
+                </p>
+                <p>The maze is defined by the matrix as follows:</p>
+                <ul>
+                    <li>The rows of the matrix are associated with the four colours of the first 6×6 grid.</li>
+                    <li>The columns of the matrix are associated with the four colours of the second 6×6 grid.</li>
+                    <li>
+                        It is only possible to travel from one tile to another that shares an edge if the intersection of the colour
+                        of the starting tile in the first grid and the colour of the target tile in the second grid is a 1.
+                    </li>
+                    <li>Additionally, the following applies to the matrix:
+                        <ul>
+                            <li>Each row and column must contain at least one 0.</li>
+                            <li>
+                                If a specific intersection of colours does not occur while navigating, that intersection has a value that is neither 0 nor 1.
+                                Instead, it is marked as “Absent”.
+                            </li>
+                            <li>If at any point while making the matrix all currently undefined values can be set to 0, they should be set to 0.</li>
+                        </ul>
+                    </li>
+                    <li>You should now have a completely filled-in matrix.</li>
+                </ul>
+                <p>
+                    After finding this matrix, find the intersection of the two colours on the toggle button,
+                    and press the submit button when it is black if the value is 0, and white if it is 1.
+                    Repeat this process with the new colour pair on the toggle button until the module is solved.
+                    <em>Note that absent cells will never be displayed on the toggle button, and the module will continue to the next colour pair even upon a strike.</em>
+                </p>
+                <p>
+                    Available colors: Red, Orange, Amber, Yellow, Lime, Green, Jade, a<b><u>q</u></b>ua, Cyan, a<b><u>z</u></b>ure,
+                    Navy, Blue, Violet, Purple, Magenta, p<b><u>i</u></b>nk, ro<b><u>s</u></b>e
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Matrix Mapping</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack colortools"></div>
+                <div class="gridholder">
+                    <div id="the-grid">
+                        <svg class="grid" viewbox="-4 0 608 985" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="20">
+                            <defs>
+                                <marker id="m1" orient="auto" overflow="visible" refX="0" refY="0">
+                                    <path d="M0 0l-4 4l10 -4l-10-4 4 4z" transform="scale(0.3)"/>
+                                </marker>
+                                <marker id="m2" orient="auto" overflow="visible" refX="0" refY="0">
+                                    <path d="M0 0l4 -4l-10 4l10 4 -4 -4z" transform="scale(0.3) "/>
+                                </marker>
+                            </defs>
+                            <text x="130" y="70" class="grid-label">Traversibility</text>
+                            <text x="130" y="90" class="grid-label">Table</text>
+                            <text x="50" y="240" class="grid-label">Diamond 1</text>
+                            <text x="550" y="240" class="grid-label">Diamond 2</text>
+                            <text x="50" y="570" class="grid-label">Maze</text>
+                        </svg>
+                    </div>
+                </div>
+                <div class="saves hstack wrap"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Matrix Mapping</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>The sound effects can be muted.</li>
+                    <li>In <b>Diamond 1/2</b>:
+                        <ul>
+                            <li>Select a square and <b>press ROAYLGJQCZNBVPMIS on your keyboard</b> or use the color buttons to input the puzzle grid.</li>
+                            <li>
+                                Selecting a square highlights (1) the relevant <b>neighbors</b> in the other diamond grid,
+                                (2) the <b>color button</b> matching the color of the square, and (3) the corresponding <b>maze cell</b>.
+                            </li>
+                            <li>Use <b>arrow keys</b> on yOur keyboard to navigate to other colorable diamonds.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In the <b>Traversibility Table</b>, color the headers the same way and click squares to mark your
+                        deductions about traversibility between colors in the diamond grids.
+                    </li>
+                    <li>In the <b>Maze</b>:
+                        <ul>
+                            <li>
+                                Click <b><u>between</u></b> the diamonds to mark the traversibility between each diamond as either a
+                                <u>red unknown</u> state, an <u>arrowhead</u>, or a <u>wall</u> (if both halves are walls, set them to blank 😉)
+                            </li>
+                            <li>
+                                Select a <b><u>diamond</u></b> to show which cells can be reached <b><u>starting from</u></b> the selected one.
+                                Remember to check <u>all starting cells</u> when you are nearly done.
+                            </li>
+                        </ul>
+                    <li>The <b>Reset</b> buttons affect the grid nearest them.</li>
+                    <li>Use the <b>Save</b> button to save the current state of all grids. You can also reset the saves.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
