@@ -3,13 +3,83 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Chess — Keep Talking and Nobody Explodes Mod</title>
+    <title>Chess — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script>
+        var defaultRules = null;
+        var letters = ['a','b','c','d','e','f']
+        var numbers = ['1','2','3','4','5','6']
+
+        function getDefaultRules(){
+            if (defaultRules !== null)
+            return;
+            defaultRules = {}
+            for (var rule = 1; rule <=6; rule++){
+                defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+            }
+        }
+
+        function setDefaultRules()
+        {
+            getDefaultRules()
+            for( var i = 1; i <= 6; i++){
+                var span = document.getElementById(`rule${i}`)
+
+                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5)
+            }
+            letters = ['a','b','c','d','e','f']
+            numbers = ['1','2','3','4','5','6']
+            updateChessboardLabels()
+        }
+
+        function setRules(rnd)
+        {
+            getDefaultRules()
+            var order = [1,2,3,4,5,6]
+            rnd.shuffleFisherYates(order)
+            var ind = order.indexOf(5)
+
+            var invertX = rnd.nextInt() % 2 == 0;
+            var invertY = rnd.nextInt() % 2 == 0;
+            var swap = rnd.nextInt() % 2 == 0;
+            var invertField = rnd.nextInt() % 2 == 1;
+            var invertSerial = rnd.nextInt() % 2 == 0;
+            for (var i = 0; i < 6; i++){
+                var span = document.getElementById(`rule${i+1}`)
+                var inner = defaultRules[order[i]].replace("{i}",i+1);
+                switch(order[i]){
+                    case 1: inner = inner.replace("{j}",ind+1); break;
+                    case 2: inner = inner.replace("odd", invertSerial == true ? "even" : "odd"); break;
+                    case 5: inner = inner.replace("white", invertField == true ? "black" : "white"); break;
+                }
+                span.innerHTML = inner;
+            }
+            letters = ['a','b','c','d','e','f']
+            numbers = ['1','2','3','4','5','6']
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            if (swap) {
+                var tmp = letters;
+                letters = numbers;
+                numbers = tmp;
+            }
+            updateChessboardLabels()
+        }
+
+        function updateChessboardLabels() {
+            for (let i = 0; i < 6; i++) {
+                var rows = document.getElementById(`row${i}`);
+                if (rows) rows.innerHTML = numbers[5 - i];
+                var cols = document.getElementById(`col${i}`);
+                if (cols) cols.innerHTML = letters[i];
+            }
+        }
+
         $(function() {
             var pieces = ["♔", "♕", "♖", "♗", "♘"]; //"♙"
             var selected = "";
@@ -23,7 +93,7 @@
             var chessboard = $(".chessboard");
             for (let y = 0; y < 6; y++) {
                 row = $("<div>").addClass("chess-row").appendTo(chessboard);
-                $("<div>").addClass("square").text(6 - y).appendTo(row);
+                $("<div>").addClass("square").attr("id", "row" + y).text(numbers[5 - y]).appendTo(row);
                 for (let x = 0; x < 6; x++) {
                     $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "white" : "black")).appendTo(row).each(function(_, e) {
                         var element = $(e);
@@ -100,7 +170,7 @@
 
             row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
             for (var i = 0; i < 6; i++) {
-                $("<div>").addClass("square").text(String.fromCharCode(97 + i)).appendTo(row);
+                $("<div>").addClass("square").attr("id", "col" + i).text(letters[i]).appendTo(row);
             }
 
             var chesspieces = $(".chess-pieces");
@@ -248,45 +318,45 @@
                 <p>Use this table as reference to determine the correct piece for each position:</p>
                 <table class="chess">
                     <tr>
-                        <td>
-                            <h4>Position #1: Monarchy vs Theocracy</h4>
-                            <p>Occupied by a king if Position #5 is occupied by a queen.
-                            <p>Otherwise, the field is occupied by a bishop.
+                        <td id = "rule1">
+                            <h4>Position #{i}: Monarchy vs Theocracy</h4>
+                            <p>Occupied by a king if Position #{j} is occupied by a queen.</p>
+                            <p>Otherwise, the field is occupied by a bishop.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Position #2: Commander of the Army</h4>
-                            <p>Occupied by a rook if the last digit of the serial number is odd.
-                            <p>Otherwise, the field is occupied by a knight.
+                        <td id = "rule2">
+                            <h4>Position #{i}: Commander of the Army</h4>
+                            <p>Occupied by a rook if the last digit of the serial number is odd.</p>
+                            <p>Otherwise, the field is occupied by a knight.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Position #3: A Matter of Regents</h4>
-                            <p>Occupied by a queen if there are less than two rooks on the board.
-                            <p>Otherwise, the field is occupied by a king.
+                        <td id = "rule3">
+                            <h4>Position #{i}: A Matter of Regents</h4>
+                            <p>Occupied by a queen if there are less than two rooks on the board.</p>
+                            <p>Otherwise, the field is occupied by a king.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Position #4: The Iron Tower</h4>
-                            <p>Always occupied by a rook.
+                        <td id = "rule4">
+                            <h4>Position #{i}: The Iron Tower</h4>
+                            <p>Always occupied by a rook.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Position #5: Conflict between Good and Evil</h4>
-                            <p>Occupied by a queen if the field is white.
-                            <p>Otherwise, the field is occupied by a rook.
+                        <td id = "rule5">
+                            <h4>Position #{i}: Conflict between Good and Evil</h4>
+                            <p>Occupied by a queen if the field is white.</p>
+                            <p>Otherwise, the field is occupied by a rook.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Position #6: The Scepter, the Sword and the Crosier</h4>
-                            <p>Occupied by a queen if there are no other queens on the board.
-                            <p>Otherwise, occupied by a knight if there are no other knights on the board.
-                            <p>Otherwise, the field is occupied by a bishop.
+                        <td id = "rule6">
+                            <h4>Position #{i}: The Scepter, the Sword, and the Crosier</h4>
+                            <p>Occupied by a queen if there are no other queens on the board.</p>
+                            <p>Otherwise, occupied by a knight if there are no other knights on the board.</p>
+                            <p>Otherwise, the field is occupied by a bishop.</p>
                         </td>
                     </tr>
                 </table>
