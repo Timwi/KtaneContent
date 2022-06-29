@@ -111,6 +111,7 @@
             font-weight: bold;
             font-size: 20pt;
         }
+        .icon-header { cursor: pointer; }
     </style>
     <script>
         $(function() {
@@ -118,6 +119,12 @@
             const JSON_URL = "https://ktane.timwi.de/json/raw";
             var ignoreJson = null;
             var ignorees = [];
+            const paramHash = window.location.hash;
+            let params = !paramHash ? {} : paramHash.substring(1).split('&').reduce(function (res, item) {
+                let parts = item.split('=');
+                res[parts[0]] = decodeURI(parts[1]);
+                return res;
+            }, {});
 
             function elApplyArg($el, arg) {
                 if (arg instanceof HTMLElement) {
@@ -162,7 +169,7 @@
                     const ignorees = json.KtaneModules.filter(
                         (module) => module.Quirks && (module.Quirks.includes("SolvesAtEnd") || module.Quirks.includes("NeedsOtherSolves") ||
                                     module.Quirks.includes("SolvesBeforeSome") || module.Quirks.includes("SolvesWithOthers") ||
-                                    module.Quirks.includes("WillSolveSuddenly ") || module.Quirks.includes("TimeDependent "))
+                                    module.Quirks.includes("WillSolveSuddenly") || module.Quirks.includes("TimeDependent"))
                     );
                     ignorees.forEach((item) => {
                         if (item.SortKey === undefined)
@@ -207,10 +214,18 @@
             }
 
             function createRows(json, elIgnorees, filterName) {
+                if (filterName.length < 1 && params.mod) {
+                    console.log(params);
+                    let oneMod = json.ignorers.filter(
+                        (mod) => mod.ModuleID.includes(params.mod)
+                    );
+                    if (oneMod.length > 0)
+                        filterName = oneMod[0].DisplayName || oneMod[0].Name;
+                }
                 let table = document.getElementById("ignore-table");
-                let body = table.getElementsByTagName("tbody")[0];
-                if (body)
-                    table.removeChild(body);
+                let mainbody = table.getElementsByTagName("tbody")[0];
+                if (mainbody)
+                    table.removeChild(mainbody);
                 let elCells = [];
                 let elIgnorers = [];
                 let $tooltip = document.getElementById("tooltip");
@@ -218,7 +233,7 @@
                     (mod) => mod.Name.includes(filterName)
                 );
                 if (filterName.length > 0)
-                    $(".hstack h1")[0].innerHTML = `Ignore Table: ${filterName}`;
+                    $(".hstack h1")[0].innerHTML = `Ignore Table: ${filterName.replace(/</g, '&lt;').replace(/>/g, '&gt;')}`;
                 else
                     $(".hstack h1")[0].innerHTML = "Table of modules that ignore one another";
 
@@ -226,7 +241,7 @@
                 const $tbody = el("tbody", null,
                     ignorers.map((ignorer, i) => {
                         elCells[i] = [];
-                        elIgnorers[i] = el("th", null,
+                        elIgnorers[i] = el("th", "icon-header",
                             el("img", null,
                                 {
                                     src: "https://ktane.timwi.de/iconsprite",
@@ -237,6 +252,8 @@
                         );
                         if (filterName.length > 0) {
                             elIgnorers[i].addEventListener("click", e => {
+                                window.location.hash = "";
+                                params = {};
                                 createRows(ignoreJson, ignorees, "");
                             });
                             let name = (ignorer.DisplayName || ignorer.Name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -247,6 +264,7 @@
                         }
                         else
                             elIgnorers[i].addEventListener("click", e => {
+                                window.location.hash = `mod=${encodeURIComponent(ignorer.ModuleID)}`;
                                 createRows(ignoreJson, ignorees, ignorer.DisplayName || ignorer.Name);
                             });
 

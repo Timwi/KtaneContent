@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Memory — Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    var highlightable = document.createElement('span');
+                    highlightable.classList.add("highlightable");
+                    highlightable.appendChild(document.createTextNode(`Si l'écran affiche ${j}, ${rule}.`));
+                    tag.appendChild(highlightable);
+                    if (j != 4)
+                        tag.appendChild(document.createElement('br'));
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "appuyer sur le bouton en première position";
+                case 1: return "appuyer sur le bouton en deuxième position";
+                case 2: return "appuyer sur le bouton en troisième position";
+                case 3: return "appuyer sur le bouton en quatrième position";
+                case 4: return `appuyer sur le bouton portant le chiffre «\xa0${targetDigit}\xa0»`;
+                case 5: return `appuyer sur le bouton à la même position qu'à l'étape ${targetStage}`;
+                case 6: return `appuyer sur le bouton ayant le même chiffre qu'à l'étape ${targetStage}`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Memory</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory.svg" class="diagram" />
+                <h2>&Agrave; propos du Memory</h2>
+                <p class="flavour-text">La m&eacute;moire est une chose fragile, mais bon tout l&rsquo;est quand une bombe explose, alors faites attention !</p>
+                <ul>
+                    <li>Appuyer sur la bonne touche pour aller &agrave; la prochaine &eacute;tape. Compl&eacute;ter toutes les &eacute;tapes pour d&eacute;sarmer le module.</li>
+                    <li>Appuyer sur un bouton incorrect vous fera revenir &agrave; l'&eacute;tape 1.</li>
+                    <li>Les boutons sont ordonn&eacute;s de gauche &agrave; droite.</li>
+                </ul>
+                <div class="memory-rules">
+                    <h4>&Eacute;tape 1 :</h4>
+                    <p id="memory-stage-1">Si l'&eacute;cran affiche 1, appuyer sur le bouton en deuxi&egrave;me position.<br>Si l'&eacute;cran affiche 2, appuyer sur le bouton en deuxi&egrave;me position.<br>Si l'&eacute;cran affiche 3, appuyer sur le bouton en troisi&egrave;me position.<br>Si l'&eacute;cran affiche 4, appuyer sur le bouton en quatri&egrave;me position.<br></p>
+                    <h4>&Eacute;tape 2 :</h4>
+                    <p id="memory-stage-2">Si l'&eacute;cran affiche 1, appuyer sur le bouton portant le chiffre &laquo; 4 &raquo; .<br>Si l'&eacute;cran affiche 2, appuyer sur le bouton &agrave; la m&ecirc;me position qu'&agrave; l'&eacute;tape 1.<br>Si l'&eacute;cran affiche 3, appuyer sur le bouton en premi&egrave;re position.<br>Si l'&eacute;cran affiche 4, appuyer sur le bouton &agrave; la m&ecirc;me position qu'&agrave; l'&eacute;tape 1.<br></p>
+                    <p id="memory-stage-3">Si l'&eacute;cran affiche 1, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 2.<br>Si l'&eacute;cran affiche 2, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 1.<br>Si l'&eacute;cran affiche 3, appuyer sur le bouton en troisi&egrave;me position.<br>Si l'&eacute;cran affiche 4, appuyer sur le bouton portant le chiffre &laquo; 4 &raquo; .<br></p>
+                    <h4>&Eacute;tape 4 :</h4>
+                    <p id="memory-stage-4">Si l'&eacute;cran affiche 1, appuyer sur le bouton &agrave; la m&ecirc;me position qu'&agrave; l'&eacute;tape 1.<br>Si l'&eacute;cran affiche 2, appuyer sur le bouton en premi&egrave;re position.<br>Si l'&eacute;cran affiche 3, appuyer sur le bouton &agrave; la m&ecirc;me position qu'&agrave; l'&eacute;tape 2.<br>Si l'&eacute;cran affiche 4, appuyer sur le bouton &agrave; la m&ecirc;me position qu'&agrave; l'&eacute;tape 2.<br></p>
+                    <h4>&Eacute;tape 5 :</h4>
+                    <p id="memory-stage-5">Si l'&eacute;cran affiche 1, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 1.<br>Si l'&eacute;cran affiche 2, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 2.<br>Si l'&eacute;cran affiche 3, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 4.<br>Si l'&eacute;cran affiche 4, appuyer sur le bouton ayant le m&ecirc;me chiffre qu'&agrave; l'&eacute;tape 3.<br></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 sur 1</div>
+        </div>
+    </div>
+</body>
+</html>

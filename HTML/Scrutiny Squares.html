@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Scrutiny Squares — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nova+Mono&display=swap" rel="stylesheet">
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/ktane-utils.js"></script>
+    <script>
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            let boxes = Array(25);
+            for (let box = 0; box < 25; box++)
+                boxes[box] = "";
+            let colorOptions = ["r", "g", "b", "c", "p", "y", "k", 'w'];
+            for (let box = 0; box < 25; box++) {
+                boxes[box] = "";
+                let isValid = true;
+                for (let c = 0; c < 4; c++)
+                    boxes[box] += colorOptions[rnd.next(0, 8)];
+                for (let prevBox = 0; prevBox < box; prevBox++) {
+                    let score = 0;
+                    for (let c = 0; c < 4; c++)
+                        if (boxes[box][c] === boxes[prevBox][c])
+                            score++;
+                    if (score > 1)
+                        isValid = false;
+                }
+                if (!isValid || boxes[box][1] == boxes[box][2] ||
+                    (boxes[box][1] == "w" && boxes[box][2] == "y") ||
+                    (boxes[box][1] == "y" && boxes[box][2] == "w") ||
+                    (boxes[box][1] == "p" && boxes[box][2] == "r") ||
+                    (boxes[box][1] == "r" && boxes[box][2] == "p") ||
+                    (boxes[box][1] == "g" && boxes[box][2] == "c") ||
+                    (boxes[box][1] == "c" && boxes[box][2] == "g")
+                )
+                    box--;
+            }
+            let scrutiny = $("table.scrutiny");
+            scrutiny.html("");
+            let fullColors = ["red", "lime", "blue", "cyan", "magenta", "yellow", "black", "white"];
+            let fullColorsText = ["red", "green", "blue", "cyan", "pink", "yellow", "black", "white"];
+            for (let y = 0; y < 5; y++) {
+                let tr1 = $("<tr>").appendTo(scrutiny);
+                for (let x = 0; x < 5; x++) {
+                    let i = y*5 + x;
+                    let td1 = $("<td>").addClass("outer").css(
+                        "background-color", fullColors[colorOptions.indexOf(boxes[i][2])]
+                    ).appendTo(tr1);
+                    let table = $("<table>").addClass("scrut-table").appendTo(td1);
+                    let tr = $("<tr>").appendTo(table);
+                    $("<td>").addClass("inner nohighlight").text(fullColorsText[colorOptions.indexOf(boxes[i][0])].toUpperCase()).css({
+                        "color": fullColors[colorOptions.indexOf(boxes[i][1])],
+                        "border-color": fullColors[colorOptions.indexOf(boxes[i][3])]
+                    }).appendTo(tr);
+                    console.log(boxes[i]);
+                }
+            }
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'Nova Mono';
+        }
+        .scrutiny {
+        margin: 0em auto;
+            width: 15.5cm;
+             height: 15.5cm;
+            text-align: center;
+            font-family: 'Nova Mono';
+            font-weight: bold;
+            font-size: 16pt;
+        }
+        .inner, .dark .inner {
+            border-width: 1.5mm;
+            padding: 1mm;
+        }
+        .outer, .dark .outer {
+            border: solid 3px black;
+            width: 3cm;
+            height: 3cm;
+            padding: 0;
+        }
+        .scrut-table {
+            height: 30%;
+            margin: 0em auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Scrutiny Squares</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Scrutiny Squares.svg" class="diagram">
+                <h2>On the Subject of Scrutiny Squares</h2>
+                <p class="flavour-text">
+                    The screen displays a slightly modified version of one of the squares below.
+                    You can move from square to square by pressing the edges of the screen.
+                    Press <b>UP</b> if the <b>WORD</b> is wrong, <b>DOWN</b> if the <b>COLOR OF THE WORD</b> is wrong,
+                    <b>RIGHT</b> if the <b>COLOR OF THE BACKGROUND</b> is wrong, and <b>LEFT</b> if the <b>COLOR AROUND THE WORD</b> is wrong.
+                    Note that if you cannot see the color around the word, it has the same color as the background.
+                    Continue moving until you reach a square with multiple things wrong with it, once you reach that square, press the status light to solve the module.
+                    A strike will be recorded if an incorrect button is pressed.
+                </p>
+                <table class="scrutiny"></table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
