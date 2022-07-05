@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
@@ -9,16 +8,17 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
         .click-box,
         .grid-box {
             fill-opacity: 0;
         }
 
-        .click-box:hover,
-        .grid-box:hover {
-            fill-opacity: 0.3;
-        }
+            .click-box:hover,
+            .grid-box:hover {
+                fill-opacity: 0.3;
+            }
 
         .canvas {
             margin-top: 32px;
@@ -31,9 +31,9 @@
             stroke-linecap: round;
         }
 
-        .line.solid {
-            stroke-dasharray: none;
-        }
+            .line.solid {
+                stroke-dasharray: none;
+            }
 
         .select-button {
             border: #222 solid 1px;
@@ -44,56 +44,94 @@
             outline: none;
         }
 
-        .select-button img {
-            width: 100%;
-        }
+            .select-button img {
+                width: 100%;
+            }
 
-        .select-button.selected {
-            border-width: 4px;
-        }
+            .select-button.selected {
+                border-width: 4px;
+            }
 
         #canvas {
             display: block;
             width: 80%;
             margin: 16px auto 0
         }
-        @media screen and (min-width:900px) and  (max-width:1652px) {
+
+        @media screen and (min-width:900px) and (max-width:1652px) {
             .multipage {
                 align-items: flex-start;
             }
-            .multipage .interactive-page {
-                max-width: 4in;
-                min-height: unset;
-                position: sticky;
-                top: 10%;
-                order: 1;
-            }
-            .multipage .interactive-section {
-                align-items: start;
-            }
-            .multipage .interactive-page .page-header {
-                display: none;
-            }
-            .multipage .interactive-page .page-content {
-                margin: 24px;
-                min-height: unset;
-                padding-top: 0;
-            }
-            .multipage .interactive-page .page-footer {
-                display: none;
-            }
-            .multipage .page:not(.interactive-page) {
-                min-width: unset;
-                max-width: 8.5in;
-                width: calc(100% - 4.1in);
-                order: 2;
-            }
+
+                .multipage .interactive-page {
+                    max-width: 4in;
+                    min-height: unset;
+                    position: sticky;
+                    top: 10%;
+                    order: 1;
+                }
+
+                .multipage .interactive-section {
+                    align-items: start;
+                }
+
+                .multipage .interactive-page .page-header {
+                    display: none;
+                }
+
+                .multipage .interactive-page .page-content {
+                    margin: 24px;
+                    min-height: unset;
+                    padding-top: 0;
+                }
+
+                .multipage .interactive-page .page-footer {
+                    display: none;
+                }
+
+                .multipage .page:not(.interactive-page) {
+                    min-width: unset;
+                    max-width: 8.5in;
+                    width: calc(100% - 4.1in);
+                    order: 2;
+                }
+
             #canvas {
                 display: block;
                 width: 100%;
                 margin: 16px auto 0
             }
         }
+
+        a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+            a:hover:not(.failed):not(.playing) {
+                color: #ff8;
+            }
+
+            a.playing {
+                color: #8f8;
+            }
+
+            a.failed {
+                cursor: not-allowed;
+                color: red;
+            }
     </style>
 
     <script>
@@ -127,12 +165,12 @@
             }
 
             init() {
-                if(!this.canvas) {
+                if (!this.canvas) {
                     throw new Error("You must set canvas before initialization");
                 }
 
                 this.icons = {}
-                for(let mode in this.modes) {
+                for (let mode in this.modes) {
                     this.icons[mode] = document.createElementNS("http://www.w3.org/2000/svg", "image");
                     this.icons[mode].setAttribute("visibility", "hidden");
                     this.icons[mode].setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
@@ -144,9 +182,9 @@
                 this.$vertline = [];
                 this.$horizline = [];
 
-                for(let i = 0; i < this.w + 1; i++) {
+                for (let i = 0; i < this.w + 1; i++) {
                     this.$vertline[i] = [];
-                    for(let j = 0; j < this.h; j++) {
+                    for (let j = 0; j < this.h; j++) {
                         let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                         line.setAttribute("class", "line");
                         line.setAttribute("x1", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
@@ -167,9 +205,9 @@
                     }
                 }
 
-                for(let i = 0; i < this.w; i++) {
+                for (let i = 0; i < this.w; i++) {
                     this.$horizline[i] = [];
-                    for(let j = 0; j < this.h + 1; j++) {
+                    for (let j = 0; j < this.h + 1; j++) {
                         let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                         line.setAttribute("class", "line");
                         line.setAttribute("x1", (this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w));
@@ -190,8 +228,8 @@
                     }
                 }
 
-                for(let i = 0; i < this.w; i++) {
-                    for(let j = 0; j < this.h; j++) {
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h; j++) {
                         let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                         rect.setAttribute("class", "grid-box");
                         rect.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
@@ -199,50 +237,50 @@
                         rect.setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
                         rect.setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
                         this.canvas.appendChild(rect);
-                        rect.addEventListener("click", () => this.setIcon(i , j));
+                        rect.addEventListener("click", () => this.setIcon(i, j));
                         rect.addEventListener("contextmenu", e => {
                             e.preventDefault();
-                            this.removeIcon(i , j);
+                            this.removeIcon(i, j);
                         });
 
                     }
                 }
-                if(this.options.onInit) this.options.onInit();
+                if (this.options.onInit) this.options.onInit();
             }
 
             toggleVert(x, y) {
-                if(!this.vert[x]) {
+                if (!this.vert[x]) {
                     this.vert[x] = [];
                 }
-                if(!this.vert[x][y]) {
+                if (!this.vert[x][y]) {
                     this.vert[x][y] = 1;
                     this.draw();
-                    if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
                     return;
                 }
                 this.vert[x][y] = 1 - this.vert[x][y];
                 this.draw();
-                if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
             }
 
             toggleHoriz(x, y) {
-                if(!this.horiz[x]) {
+                if (!this.horiz[x]) {
                     this.horiz[x] = [];
                 }
-                if(!this.horiz[x][y]) {
+                if (!this.horiz[x][y]) {
                     this.horiz[x][y] = 1;
-                    if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
                     this.draw();
                     return;
                 }
                 this.horiz[x][y] = 1 - this.horiz[x][y];
                 this.draw();
-                if(this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
             }
 
             draw() {
-                for(let i = 0; i < this.w + 1; i++) {
-                    for(let j = 0; j < this.h; j++) {
+                for (let i = 0; i < this.w + 1; i++) {
+                    for (let j = 0; j < this.h; j++) {
                         this.$vertline[i][j].setAttribute(
                             "class",
                             this.vert[i] && this.vert[i][j] ? "line solid" : "line"
@@ -250,16 +288,16 @@
                     }
                 }
 
-                for(let i = 0; i < this.w; i++) {
-                    for(let j = 0; j < this.h + 1; j++) {
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h + 1; j++) {
                         this.$horizline[i][j].setAttribute(
                             "class",
                             this.horiz[i] && this.horiz[i][j] ? "line solid" : "line"
                         );
                     }
                 }
-                for(let mode in this.modes) {
-                    if(!this.iconpos[mode]) {
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) {
                         this.icons[mode].setAttribute("visibility", "hidden");
                         continue;
                     }
@@ -267,11 +305,11 @@
                     this.icons[mode].setAttribute("x", (this.iconpos[mode][0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
                     this.icons[mode].setAttribute("y", (this.iconpos[mode][1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
                 }
-                if(this.options.onDraw) this.options.onDraw();
+                if (this.options.onDraw) this.options.onDraw();
             }
 
             shift(dx, dy) {
-                if(
+                if (
                     (this.vert.some(v1 => v1.some(v2 => v2)) && (
                         this.vert.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
                         this.vert.length - this.vert.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 > this.w ||
@@ -296,52 +334,52 @@
                 ) return;
                 this.vert = this.vert.map(
                     (v1, i) => (i + dx < 0 || i + dx > this.w) ?
-                        Array.from({length: this.h}, () => 0) :
+                        Array.from({ length: this.h }, () => 0) :
                         v1.map(
                             (v2, j) => (j + dy < 0 || j + dy >= this.h) ?
-                            0 :
-                            this.vert[i + dx][j + dy]
+                                0 :
+                                this.vert[i + dx][j + dy]
                         )
                 );
                 this.horiz = this.horiz.map(
                     (v1, i) => (i + dx < 0 || i + dx >= this.w) ?
-                        Array.from({length: this.h + 1}, () => 0) :
+                        Array.from({ length: this.h + 1 }, () => 0) :
                         v1.map(
                             (v2, j) => (j + dy < 0 || j + dy > this.h) ?
-                            0 :
-                            this.horiz[i + dx][j + dy]
+                                0 :
+                                this.horiz[i + dx][j + dy]
                         )
                 );
-                for(let mode in this.modes) {
-                    if(this.iconpos[mode]) {
+                for (let mode in this.modes) {
+                    if (this.iconpos[mode]) {
                         this.iconpos[mode][0] -= dx;
                         this.iconpos[mode][1] -= dy;
                     }
                 }
                 this.draw();
-                if(this.options.onShift)this.options.onShift(dx, dy);
+                if (this.options.onShift) this.options.onShift(dx, dy);
             }
 
             setIcon(x, y) {
-                if(!(this.mode in this.modes) || this.iconpos[this.mode]) return;
-                for(let mode in this.modes) {
-                    if(mode === this.mode || !this.iconpos[mode]) continue;
-                    if(this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                if (!(this.mode in this.modes) || this.iconpos[this.mode]) return;
+                for (let mode in this.modes) {
+                    if (mode === this.mode || !this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
                         return;
                     }
                 }
                 this.iconpos[this.mode] = [x, y];
                 this.draw();
-                if(this.options.onSetIcon)this.options.onSetIcon(x, y);
+                if (this.options.onSetIcon) this.options.onSetIcon(x, y);
             }
 
             removeIcon(x, y) {
-                for(let mode in this.modes) {
-                    if(!this.iconpos[mode]) continue;
-                    if(this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
                         delete this.iconpos[mode];
                         this.draw();
-                        if(this.options.onRemoveIcon)this.options.onRemoveIcon(x, y);
+                        if (this.options.onRemoveIcon) this.options.onRemoveIcon(x, y);
                         return;
                     }
                 }
@@ -350,7 +388,7 @@
 
             setMode(mode) {
                 this.mode = mode;
-                if(this.options.onSetMode) this.options.onSetMode(mode);
+                if (this.options.onSetMode) this.options.onSetMode(mode);
             }
 
             reset() {
@@ -366,7 +404,7 @@
                 }, () => 0));
                 this.iconpos = {};
                 this.draw();
-                if(this.options.onReset) this.options.onReset();
+                if (this.options.onReset) this.options.onReset();
 
             }
 
@@ -385,7 +423,7 @@
             $key = document.getElementById("img-key");
             $exit = document.getElementById("img-exit");
 
-            let maze = new MazeDrawer(4,4, {
+            let maze = new MazeDrawer(4, 4, {
                 hoverLineWidth: 6,
                 modes: {
                     blank: "img/Mystic Maze interactive (VFlyer)/marker.svg",
@@ -394,17 +432,17 @@
                 },
                 initMode: "blank",
                 onSetMode: (mode) => {
-                    if(mode === "blank") {
+                    if (mode === "blank") {
                         $blankButton.setAttribute("class", "select-button selected");
                     } else {
                         $blankButton.setAttribute("class", "select-button");
                     }
-                    if(mode === "key") {
+                    if (mode === "key") {
                         $keyButton.setAttribute("class", "select-button selected");
                     } else {
                         $keyButton.setAttribute("class", "select-button");
                     }
-                    if(mode === "exit") {
+                    if (mode === "exit") {
                         $exitButton.setAttribute("class", "select-button selected");
                     } else {
                         $exitButton.setAttribute("class", "select-button");
@@ -424,6 +462,33 @@
             $keyButton.addEventListener("click", () => maze.setMode("key"));
             $exitButton.addEventListener("click", () => maze.setMode("exit"));
 
+        });
+        $(function () {
+            $("span:contains(ping), span:contains(ding), span:contains(sonar)").next().each(function () {
+                let audio = $("<audio>")
+                    .on("error", function () {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "../HTML/audio/Echolocation/" + $(this).prev().text() + ".mp3")
+                    .on("ended", function () {
+                        button.removeClass("playing");
+                    })
+                    .appendTo($(this));
+
+                let button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function () {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo($(this));
+            })
         });
     </script>
 </head>
@@ -445,7 +510,7 @@
                     <li>In each cardinal direction there is an “arrow” that when pressed will turn you in that direction, and the one north will move you in that direction.</li>
                     <li>The button in the center is used to make a high pitched noise.</li>
                     <li>The noise will bounce off of the object and come back to you.</li>
-                    <li>The key will make a <a href="https://www.youtube.com/watch?t=1255&v=13Xs2PVnLaA&feature=youtu.be">ping</a> sound, the exit will make a <a href="https://www.youtube.com/watch?t=240&v=13Xs2PVnLaA&feature=youtu.be">ding</a> sound, any walls will make a <a href="https://www.youtube.com/watch?t=455&v=13Xs2PVnLaA&feature=youtu.be">sonar wave</a> sound.</li>
+                    <li>The key will make a <span>ping</span><span></span>sound, the exit will make a <span>ding</span><span></span>sound, any walls will make a <span>sonar wave</span><span></span>sound.</li>
                     <li>The noise takes one second to go one space forward. Once you press the button, the “timer” for the ping starts.</li>
                     <li>The maze has a key and an exit, both of which return distinct noises when a pitch is played in that direction.</li>
                     <li>To pick up the key, go to where it is and hold the center button.</li>
