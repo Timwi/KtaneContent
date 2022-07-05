@@ -8,12 +8,72 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-        <style>
-            table {
-                margin: 1em auto;
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+            a:hover:not(.failed):not(.playing) {
+                color: #ff8;
             }
-        </style>
-    </head>
+
+            a.playing {
+                color: #8f8;
+            }
+
+            a.failed {
+                cursor: not-allowed;
+                color: red;
+            }
+    </style>
+    <script>
+        $(function () {
+            $("span:contains(ping), span:contains(ding), span:contains(sonar)").next().each(function () {
+                let audio = $("<audio>")
+                    .on("error", function () {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "../HTML/audio/Echolocation/" + $(this).prev().text() + ".mp3")
+                    .on("ended", function () {
+                        button.removeClass("playing");
+                    })
+                    .appendTo($(this));
+
+                let button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function () {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo($(this));
+            })
+        });
+    </script>
+</head>
     <body>
         <div class="section">
             <div class="page page-bg-01">
@@ -31,7 +91,7 @@
                         <li>In each cardinal direction there is an “arrow” that when pressed will turn you in that direction, and the one north will move you in that direction.</li>
                         <li>The button in the center is used to make a high pitched noise.</li>
                         <li>The noise will bounce off of the object and come back to you.</li>
-                        <li>The key will make a <a href="https://www.youtube.com/watch?t=1255&v=13Xs2PVnLaA&feature=youtu.be">ping</a> sound, the exit will make a <a href="https://www.youtube.com/watch?t=240&v=13Xs2PVnLaA&feature=youtu.be">ding</a> sound, any walls will make a <a href="https://www.youtube.com/watch?t=455&v=13Xs2PVnLaA&feature=youtu.be">sonar wave</a> sound.</li>
+                        <li>The key will make a <span>ping</span><span></span>sound, the exit will make a <span>ding</span><span></span>sound, any walls will make a <span>sonar wave</span><span></span>sound.</li>
                         <li>The noise takes one second to go one space forward. Once you press the button, the “timer” for the ping starts.</li>
                         <li>The maze has a key and an exit, both of which return distinct noises when a pitch is played in that direction.</li>
                         <li>To pick up the key, go to where it is and hold the center button.</li>
@@ -45,7 +105,6 @@
                             <li>A wall can separate two spaces orthogonally.</li>
                             <li>You, the key and the exit are always in the center of a square, thus the key and the exit will only make sounds an integer number of seconds after you make a sound. Walls on the other hand are on the edge of squares, and thus will be played half a second more than an integer number of seconds.</li>
                         </ul>
-                    
                 </div>
                 <div class="page-footer relative-footer">Page 1 of 1</div>
             </div>
