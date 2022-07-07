@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>バーテンディング — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .drinks td, .drinks th {
+            padding: .3em .3em .25em .3em;
+            text-align: center;
+        }
+
+        .drinks img {
+            height: 75px;
+        }
+
+        .drinks {
+            margin: 1em auto;
+            font-size: 10pt;
+        }
+
+            .drinks.not-bottled {
+                width: 100%;
+            }
+
+        body:not(.dark) .page-bg-01 {
+            background-image: url("img/Bartending/page-bg-noise-01.png");
+        }
+        body:not(.dark) .page-bg-02 {
+            background-image: url("img/Bartending/page-bg-noise-02.png");
+        }
+        body:not(.dark) .page-bg-03 {
+            background-image: url("img/Bartending/page-bg-noise-03.png");
+        }
+        .page-bg-01, .page-bg-02, .page-bg-03 {
+            position: relative;
+            overflow: hidden;
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .dark .page-bg-01::before {
+            content: "";
+            position: absolute;
+            /* top: 0; left: 0;
+            width: 100%; height: 100%; */
+            top: -42mm; left: -35mm;
+            width: 310mm; height: 375mm;
+            background-image: url("img/Bartending/page-bg-noise-01.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .dark .page-bg-02::before {
+            content: "";
+            position: absolute;
+            top: -42mm; left: -35mm;
+            width: 310mm; height: 365mm;
+            background-image: url("img/Bartending/page-bg-noise-02.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .dark .page-bg-03::before {
+            content: "";
+            position: absolute;
+            top: -45mm; left: -35mm;
+            width: 310mm; height: 402mm;
+            background-image: url("img/Bartending/page-bg-noise-03.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .page-content, .page-header, .page-footer {
+        /* This will make it stack on top of the ::before */
+            position: relative;
+        }
+
+        #chaser-o, #chaser-0, #chaser-o0, #big-o, #big-0, #big-o0 {
+            display: none;
+        }
+
+        @media screen and (min-width: 900px) {
+            body.dark, body {
+                background: url('img/Bartending/web-background.jpg');
+            }
+        }
+        @media print {
+            .drinks td, .drinks th  {
+                padding: .2em .3em;
+            }
+
+        }
+    </style>
+    <script>
+        // Bottled Drinks
+        let Absinthe = { Name: "アブサン", SpriteIndex: 0, Bottled: true };
+        let Ram = { Name: "ラム", SpriteIndex: 1, Bottled: true };
+        let MulanTea = { Name: "ムラン茶", SpriteIndex: 2, Bottled: true };
+        let AFedora = { Name: "フェドラ", SpriteIndex: 3, Bottled: true };
+
+        // Non-bottled Drinks
+        let BadTouch = { Name: "バッドタッチ", SpriteIndex: 17 };
+        let Beer = { Name: "ビール", SpriteIndex: 6 };
+        let BleedingJane = { Name: "ブリーディングジェイン", SpriteIndex: 8 };
+        let BloomLight = { Name: "ブルームライト", SpriteIndex: 7 };
+        let BlueFairy = { Name: "ブルーフェアリー", SpriteIndex: 16 };
+        let Brandtini = { Name: "ブランドティニ", SpriteIndex: 7 };
+        let CobaltVelvet = { Name: "コバルトベルベット", SpriteIndex: 18 };
+        let CreviceSpike = { Name: "クレバススパイク", SpriteIndex: 19 };
+        let FlamingMoai = { Name: "フレイミングモアイ", SpriteIndex: 20 };
+        let FluffyDream = { Name: "フラフィードリーム", SpriteIndex: 9 };
+        let FringeWeaver = { Name: "フリンジウィーバー", SpriteIndex: 15 };
+        let FrothyWater = { Name: "フロストウォーター", SpriteIndex: 6 };
+        let GrizzlyTemple = { Name: "グリゾリーテンプル", SpriteIndex: 10 };
+        let GutPunch = { Name: "ガットパンチ", SpriteIndex: 21 };
+        let Marsblast = { Name: "マースブラスト", SpriteIndex: 22 };
+        let Mercuryblast = { Name: "マーキュリーブラスト", SpriteIndex: 23 };
+        let Moonblast = { Name: "ムーンブラスト", SpriteIndex: 11 };
+        let PianoMan = { Name: "ピアノマン", SpriteIndex: 12 };
+        let PianoWoman = { Name: "ピアノウーマン", SpriteIndex: 13 };
+        let Piledriver = { Name: "パイルドライバー", SpriteIndex: 24 };
+        let SparkleStar = { Name: "スパークルスター", SpriteIndex: 25 };
+        let SugarRush = { Name: "シュガーラッシュ", SpriteIndex: 14 };
+        let SunshineCloud = { Name: "サンシャインクラウド", SpriteIndex: 26 };
+        let Suplex = { Name: "スプレックス", SpriteIndex: 27 };
+        let ZenStar = { Name: "ゼンスター", SpriteIndex: 28 };
+
+        let AllDrinks = [ AFedora, Absinthe, BadTouch, Beer, BleedingJane, BloomLight, BlueFairy, Brandtini, CobaltVelvet, CreviceSpike, FlamingMoai, FluffyDream, FringeWeaver, FrothyWater, GrizzlyTemple, GutPunch, Marsblast, Mercuryblast, Moonblast, MulanTea, PianoMan, PianoWoman, Piledriver, Ram, SparkleStar, SugarRush, SunshineCloud, Suplex, ZenStar ];
+
+        let _patronNames = [ "Barbara", "Patricia", "Karl", "Konrad", "Vivi", "Angelika", "Donna", "Gabe", "Clayton", "Chip" ];
+        let _ingNames = [ "パワード<br>デルタ", "フレイナー<br>ジャイド", "アデル<br>ハイド", "ブロンソン<br>エクステンド", "カルモ<br>トライン" ];
+
+        function setDefaultRules()
+        {
+            setIngredientValues([ 0, 1, 2, 3, 4 ]);
+            setDrinktionary([
+                { Drink: Beer, Ingredients: [ 1, 2, 1, 2, 4 ], State: 'ミックス' },
+                { Drink: FluffyDream, Ingredients: [ 3, 0, 3, 0, 2 ], Aged: true, State: 'ミックス' },
+                { Drink: BleedingJane, Ingredients: [ 3, 3, 0, 1, 4 ], State: 'ブレンド' },
+                { Drink: SugarRush, Ingredients: [ 1, 0, 2, 0, 4 ], State: 'ミックス' },
+                { Drink: PianoMan, Ingredients: [ 1, 1, 6, 3, 2 ], Iced: true, State: 'ブレンド' },
+                { Drink: Moonblast, Ingredients: [ 1, 1, 6, 0, 2 ], Iced: true, State: 'ブレンド' },
+                { Drink: FringeWeaver, Ingredients: [ 0, 0, 1, 0, 9 ], Aged: true, State: 'ミックス' },
+                { Drink: BlueFairy, Ingredients: [ 0, 1, 4, 0, 5 ], Aged: true, State: 'ミックス' },
+                { Drink: GrizzlyTemple, Ingredients: [ 3, 0, 3, 3, 1 ], State: 'ブレンド' },
+                { Drink: BloomLight, Ingredients: [ 1, 2, 4, 0, 3 ], Aged: true, Iced: true, State: 'ミックス' },
+                { Drink: FrothyWater, Ingredients: [ 1, 1, 1, 1, 0 ], Aged: true, State: 'ミックス' },
+                { Drink: PianoWoman, Ingredients: [ 2, 3, 5, 5, 3 ], Aged: true, State: 'ミックス' }
+            ], [ 0, 1, 2, 3, 4 ]);
+            setLetterRule('chaser-rule', 'chaser-o', 'chaser-0', 'chaser-o0', "CH4S3R");
+            setLetterRule('big-rule', 'big-o', 'big-0', 'big-o0', "B1G");
+        }
+
+        function setRules(rnd)
+        {
+            let _drinktionary = [];
+            let nonBottledDrinks = rnd.shuffleFisherYates(AllDrinks.filter(d => !d.Bottled));
+            for (let dr = 0; dr < 12; dr++)
+            {
+                let ingredients;
+                let iter = 0, valid;
+                do
+                {
+                    iter++;
+                    ingredients = [];
+                    for (let ing = 0; ing < 5; ing++)
+                        // Cube the random number to allow lower numbers to occur more frequently and high numbers less frequently
+                        ingredients.push(Math.floor(10 * Math.pow(rnd.nextDouble(), 3)));
+                    if (iter > 1000)
+                    {
+                        console.log("iteration fail");
+                        return;
+                    }
+
+                    valid = true;
+                    for (let i = 0; i < dr && valid; i++)
+                    {
+                        let isSame = true;
+                        for (let j = 0; j < 5 && isSame; j++)
+                            if (_drinktionary[i].Ingredients[j] !== ingredients[j])
+                                isSame = false;
+                        if (isSame)
+                            valid = false;
+                    }
+                }
+                while (!valid);
+
+                _drinktionary.push({ Drink: nonBottledDrinks[dr], Ingredients: ingredients, Aged: rnd.next(0, 2) !== 0, Iced: rnd.next(0, 2) !== 0, State: rnd.next(0, 2) !== 0 ? 'ブレンド' : 'ミックス' });
+                console.log(`Drinktionary entry ${dr + 1}: ${_drinktionary[dr].Drink.Name} [${_drinktionary[dr].Ingredients.join(", ")}] Aged=${_drinktionary[dr].Aged}, Iced=${_drinktionary[dr].Iced}, ${_drinktionary[dr].State}`);
+            }
+
+            let allDrinks = nonBottledDrinks.slice(0, _drinktionary.length);
+            allDrinks.splice(allDrinks.length, 0, ...AllDrinks.filter(d => d.Bottled));
+            let prefs = document.getElementsByClassName('pref');
+            for (let c = 0; c < _patronNames.length; c++)
+            {
+                rnd.shuffleFisherYates(allDrinks);
+                for (let pref = 0; pref < 6; pref++)
+                    prefs[6*c + pref].innerText = allDrinks[pref].Name;
+            }
+            let ingValues = rnd.shuffleFisherYates([ 0, 1, 2, 3, 4 ]);
+            console.log(`Ingredient values = [${ingValues.map(i => i+1).join(", ")}]`);
+            setIngredientValues(ingValues);
+            setDrinktionary(_drinktionary, ingValues);
+
+            let chars = rnd.shuffleFisherYates("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')).join("");
+            setLetterRule('chaser-rule', 'chaser-o', 'chaser-0', 'chaser-o0', chars.substr(0, 6));
+            setLetterRule('big-rule', 'big-o', 'big-0', 'big-o0', chars.substr(6, 3));
+        }
+
+        function setDrinktionary(drinktionary, ingValues)
+        {
+            let drinks = document.getElementsByClassName('drink');
+            let ingAmounts = document.getElementsByClassName('ing-amount');
+            let ageds = document.getElementsByClassName('aged');
+            let iceds = document.getElementsByClassName('iced');
+            let statuses = document.getElementsByClassName('status');
+            for (let dr = 0; dr < 12; dr++)
+            {
+                drinks[dr].innerText = drinktionary[dr].Drink.Name.replace(/ /g, '\u00a0');
+                for (let ing = 0; ing < 5; ing++)
+                    ingAmounts[5*dr + ingValues[ing]].innerText = drinktionary[dr].Ingredients[ing];
+                ageds[dr].innerText = drinktionary[dr].Aged ? 'はい' : 'いいえ';
+                iceds[dr].innerText = drinktionary[dr].Iced ? 'はい' : 'いいえ';
+                statuses[dr].innerText = drinktionary[dr].State;
+            }
+        }
+
+        function setIngredientValues(ingValues)
+        {
+            let ings = document.getElementsByClassName('ing');
+            for (let ing = 0; ing < 5; ing++)
+                ings[ingValues[ing]].innerHTML = _ingNames[ing];
+        }
+
+        function setLetterRule(idRule, idO, id0, idO0, str)
+        {
+            document.getElementById(idRule).innerText = str;
+            document.getElementById(id0).style.display = str.includes('0') && !str.includes('O') ? 'inline' : 'none';
+            document.getElementById(idO).style.display = str.includes('O') && !str.includes('0') ? 'inline' : 'none';
+            document.getElementById(idO0).style.display = str.includes('O') && str.includes('0') ? 'inline' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">バーテンディング</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Bartending.svg" class="diagram">
+                <h2>モジュール詳細：バーテンディング</h2>
+                <p class="flavour-text">お酒をミックスして命を救おう。</p>
+
+                <p>ゆったりとした夜の中、KDANEバーにて、最後のお客様の注文を聞いている。お店を閉めるためには、お客様の好みを考慮し、正しい材料を使用してお酒を作り、正しい順番で提供しなければならない。</p>
+                <p>お酒の作成に失敗したり、間違ったお酒を提供した場合、お客様はあなたにお酒を投げつけ、お店を出てしまい、ペナルティとしてミスが記録される。その後、あなたの上司が新しいお客様を紹介する。</p>
+                <p>モジュールには複数のディスプレイが付いており、その内の五つは色がついている。これらは材料の表示であり、左から右に順に数える。</p>
+                <p>次のページの指示に従い、お客様と提供するべきお酒を判別し、お酒を正しいスロットに挿入した後、お酒を提供する。材料を間違えたお酒はディスプレイにバグったお酒のアイコンとして表示され、その場合、最初から作り直しとなる。ミックスされていないお酒や間違ったお酒を提供しようとするとミスが記録され、材料の配置が変化する。</p>
+                <p>材料は以下の通り:</p>
+                <ul>
+                    <li>赤 = アデルハイド</li>
+                    <li>緑 = フレイナージャイド</li>
+                    <li>黄色 = ブロンソンエクステンド</li>
+                    <li>白 = カルモトライン</li>
+                    <li>青 = パワードデルタ</li>
+                </ul>
+                <p>指示の中にある材料番号についてはドリンクショナリーに記されている。</p>
+                <p>「ミックス」や「ブレンド」のお酒の完成には、最後にバーテンダー(処理者) が「M」のラベルがあるボタンを長押ししてお酒をミックスする必要がある。「ミックス」の場合、お酒は 4-6 秒の間だけミックスする。 「ブレンド」の場合、7–9 秒の間だけミックスする。お酒が「ブレンド」されている時はシェーカーの振りが早くなる。ミックスを 4 秒未満もしくは 10 秒以上すると存在しないお酒ができてしまう。これらは現実の秒数でカウントする。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">バーテンディング</span>
+            </div>
+            <div class="page-content">
+                <h3>「お飲み物は?」</h3>
+                <p>「お得意様」の表にいる人物達はKDANEバーの常連さんである。お客様がこの中の誰なのかを判別する。お酒の好みは 1 が一番好きなもので、6 が一番苦手なもの。</p>
+                <p>お客様を判別するには、モジュールの最初と二番目に配置された材料を見つける。最初の材料の番号を取り、それを 2 倍にした後、二番目の材料の番号を足す。結果の一番最後の数字と一致するお得意様が今回のお客様。</p>
+                <table class="drinks">
+                    <tr>
+                        <th colspan="2">お得意様</th>
+                        <th colspan="6">お酒の好み</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">/\/\/\/\</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th>6</th>
+                    </tr>
+                    <tr>
+                        <td>0</td>
+                        <th>バーバラ</th>
+                        <td class='pref'>ブルーフェアリー</td>
+                        <td class='pref'>ピアノマン</td>
+                        <td class='pref'>フロストウォーター</td>
+                        <td class='pref'>ピアノウーマン</td>
+                        <td class='pref'>フリンジウィーバー</td>
+                        <td class='pref'>アブサン</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <th>パトリシア</th>
+                        <td class='pref'>フロストウォーター</td>
+                        <td class='pref'>ピアノウーマン</td>
+                        <td class='pref'>フリンジウィーバー</td>
+                        <td class='pref'>グリゾリーテンプル</td>
+                        <td class='pref'>フェドラ</td>
+                        <td class='pref'>ラム</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <th>カール</th>
+                        <td class='pref'>ピアノマン</td>
+                        <td class='pref'>ラム</td>
+                        <td class='pref'>グリゾリーテンプル</td>
+                        <td class='pref'>ムラン茶</td>
+                        <td class='pref'>アブサン</td>
+                        <td class='pref'>フロストウォーター</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <th>コンラド</th>
+                        <td class='pref'>ムラン茶</td>
+                        <td class='pref'>フロストウォーター</td>
+                        <td class='pref'>フラフィードリーム</td>
+                        <td class='pref'>ブリーディングジェイン</td>
+                        <td class='pref'>ラム</td>
+                        <td class='pref'>フェドラ</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <th>ビビ</th>
+                        <td class='pref'>フラフィードリーム</td>
+                        <td class='pref'>ムーンブラスト</td>
+                        <td class='pref'>アブサン</td>
+                        <td class='pref'>ピアノマン</td>
+                        <td class='pref'>ビール</td>
+                        <td class='pref'>フリンジウィーバー</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <th>アンジェリカ</th>
+                        <td class='pref'>ピアノウーマン</td>
+                        <td class='pref'>ブルーフェアリー</td>
+                        <td class='pref'>フェドラ</td>
+                        <td class='pref'>アブサン</td>
+                        <td class='pref'>ブリーディングジェイン</td>
+                        <td class='pref'>グリゾリーテンプル</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <th>ドナ</th>
+                        <td class='pref'>ビール</td>
+                        <td class='pref'>シュガーラッシュ</td>
+                        <td class='pref'>ピアノウーマン</td>
+                        <td class='pref'>ブルームライト</td>
+                        <td class='pref'>ムーンブラスト</td>
+                        <td class='pref'>ムラン茶</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <th>ゲイブ</th>
+                        <td class='pref'>ムーンブラスト</td>
+                        <td class='pref'>ムラン茶</td>
+                        <td class='pref'>シュガーラッシュ</td>
+                        <td class='pref'>フェドラ</td>
+                        <td class='pref'>フロストウォーター</td>
+                        <td class='pref'>ブルームライト</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <th>クレイトン</th>
+                        <td class='pref'>グリゾリーテンプル</td>
+                        <td class='pref'>ブルームライト</td>
+                        <td class='pref'>ブリーディングジェイン</td>
+                        <td class='pref'>フリンジウィーバー</td>
+                        <td class='pref'>ピアノマン</td>
+                        <td class='pref'>ビール</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <th>チップ</th>
+                        <td class='pref'>ブリーディングジェイン</td>
+                        <td class='pref'>グリゾリーテンプル</td>
+                        <td class='pref'>ムーンブラスト</td>
+                        <td class='pref'>シュガーラッシュ</td>
+                        <td class='pref'>ブルーフェアリー</td>
+                        <td class='pref'>フラフィードリーム</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">バーテンディング</span>
+            </div>
+            <div class="page-content">
+                <h3>ドリンクショナリー</h3>
+                <p>提供する飲み物を判断するには、四番目と五番目に配置された材料を使用し、お客様を判別した方法と同じ方法で得た数字を 7 で割った余りの数字を使う。もし結果が 0 ならば、1 を足す。お客様の好みの内、この数字が示すお酒が提供するべきお酒。</p>
+                <ul>
+                    <li>「<span id='chaser-rule'>CH4S3R</span>」<span id='chaser-o'> (文字の O であり、数字のゼロではない)</span><span id='chaser-0'> (数字の 0 であり、文字の O ではない)</span><span id='chaser-o0'> (数字の 0 と文字の O の違いに注意)</span>の内、3 種類の文字がシリアルナンバーに使用されていた場合、お客様はお酒を二つ注文している。その場合、三番目に配置された材料の番号を使用し、表の内、一つ目のお酒からその数字の分の下にあるお酒を見つける。一番下の段まで来たら、一番上の段へループさせる。これが二番目に提供するべきお酒。</li>
+                    <li class="bold">メモ: 一番目に提供するお酒は「Slot 1」に挿入すること。</li>
+                    <li>ミックス/ブレンドのお酒については、シリアルナンバーに「<span id='big-rule'>B1G</span>」<span id='big-o'> (文字の O であり、数字のゼロではない)</span><span id='big-0'> (数字の 0 であり、文字の O ではない)</span><span id='big-o0'> (数字の 0 と文字の O の違いに注意)</span>の内、いずれかの文字を含む場合、入れる材料の量を二倍にする。</li>
+                    <li>ボトルのお酒については、「Bottled Drinks」のボタンを押して正しいスロットにお酒を挿入する。</li>
+                </ul>
+                <p>以下の表は、お客様が飲むお酒のレシピの一覧。</p>
+
+                <table class="drinks not-bottled">
+                    <tr>
+                        <th>材料番号</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th colspan="3"></th>
+                    </tr>
+                    <tr>
+                        <th>お酒</th>
+                        <th class='ing'>パワード<br>デルタ</th>
+                        <th class='ing'>フレイナー<br>ジャイド</th>
+                        <th class='ing'>アデル<br>ハイド</th>
+                        <th class='ing'>ブロンソン<br>エクステンド</th>
+                        <th class='ing'>カルモ<br>トライン</th>
+                        <th>熟成</th>
+                        <th>氷</th>
+                        <th>ミックス/<br>ブレンド</th>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ビール</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>フラフィードリーム</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ブリーディングジェイン</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ブレンド</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>シュガーラッシュ</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ピアノマン</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>6</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>はい</td>
+                        <td class='status'>ブレンド</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ムーンブラスト</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>6</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>はい</td>
+                        <td class='status'>ブレンド</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>フリンジウィーバー</th>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>9</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ブルーフェアリー</th>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>グリゾリーテンプル</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='aged'>いいえ</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ブレンド</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ブルームライト</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>はい</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>フロストウォーター</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>ピアノウーマン</th>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='aged'>はい</td>
+                        <td class='iced'>いいえ</td>
+                        <td class='status'>ミックス</td>
+                    </tr>
+                </table>
+                <p>ボトルのお酒については以下の通り:</p>
+                <table class="drinks">
+                    <tr><th>フェドラ</th><th>ムラン茶</th><th>アブサン</th><th>ラム</th></tr>
+                    <tr><td><img src="img/Bartending/A_Fedora.png"></td><td><img src="img/Bartending/MulanTea.png"></td><td><img src="img/Bartending/AbsintheSprite.png"></td><td><img src="img/Bartending/RumSprite.png"></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

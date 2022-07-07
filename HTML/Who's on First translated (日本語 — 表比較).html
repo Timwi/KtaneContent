@@ -9,6 +9,80 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/main.css" />
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+     table.eye-table td.button {
+         background-size: contain;
+     }
+
+     table.eye-table.eye-0 td.button-0,
+     table.eye-table.eye-1 td.button-1,
+     table.eye-table.eye-2 td.button-2,
+     table.eye-table.eye-3 td.button-3,
+     table.eye-table.eye-4 td.button-4,
+     table.eye-table.eye-5 td.button-5 {
+         background: url("img/Who's on First/eye-icon.png") center center no-repeat;
+     }
+ </style>
+    <script>
+     var defaults = null;
+
+     var DisplayWords = [
+         "そう", "最初", "表示", "オーケー", "言う", "何もない", "", "から", "いや", "解",
+         "回", "下位", "快", "開", "あと", "まって", "どう？", "導", "同",
+         "動", "どう", "大正", "対照", "対称", "大賞", "才", "再", "最"
+     ];
+     var KeypadWords = [
+         ["準備OK", "最初", "違う", "ブランク", "なし", "そう", "何？", "えーと", "残り", "右", "真ん中", "オーケー", "ウェイト", "押して"],
+         ["どう？", "導", "同", "動", "左", "それ", "うんうん", "そうそう", "え？", "できた", "次", "まって", "もちろん", "例えば"]
+     ];
+
+     function setRules(rnd)
+     {
+         var eyeTables = document.getElementsByClassName('eye-table');
+         var precTrs = document.getElementsByClassName('whos-on-first-step2-table')[0].getElementsByTagName('TR');
+
+         if (defaults === null)
+         {
+             defaults = { eyes: [], lists: {} };
+             for (var i = 0; i < eyeTables.length; i++)
+             {
+                 defaults.eyes.push({
+                     display: eyeTables[i].getElementsByClassName('whos-on-first-look-at-display')[0].innerText,
+                     eye: Array.from(eyeTables[i].classList).filter(s => /^eye-\d+$/.test(s))[0].substr(4) | 0
+                 });
+             }
+             for (var i = 0; i < precTrs.length; i++)
+                 defaults.lists[precTrs[i].getAttribute('data-word')] = precTrs[i].getElementsByTagName('TD')[0].innerText;
+         }
+
+         var rules;
+         if (rnd.seed === 1)
+             rules = defaults;
+         else
+         {
+             rules = { eyes: [], lists: {} };
+             for (var i = 0; i < 28; i++)
+                 rules.eyes.push({ display: DisplayWords[i], eye: rnd.next(0, 6) });
+             for (var i = 0; i < KeypadWords.length; i++)
+                 for (var j = 0; j < KeypadWords[i].length; j++)
+                     // The .slice(0) is necessary to take a copy of the array, because .shuffleFisherYates() is in-place.
+                     rules.lists[KeypadWords[i][j]] = rnd.shuffleFisherYates(KeypadWords[i].slice(0)).join(', ');
+         }
+
+         for (var i = 0; i < eyeTables.length; i++)
+         {
+             eyeTables[i].getElementsByClassName('whos-on-first-look-at-display')[0].innerText = rules.eyes[i].display;
+             Array.from(eyeTables[i].classList).filter(x => /^eye-\d+$/.test(x)).forEach(x => eyeTables[i].classList.remove(x));
+             eyeTables[i].classList.add('eye-' + rules.eyes[i].eye);
+         }
+
+         for (var i = 0; i < precTrs.length; i++)
+             precTrs[i].getElementsByTagName('TD')[0].innerText = rules.lists[precTrs[i].getAttribute('data-word')];
+     }
+
+     function setDefaultRules(rnd) { setRules(rnd); }
+ </script>
   </head>
 
   <body>
@@ -37,806 +111,551 @@
           <p>
             ディスプレーに表示されているテキストをもとに、一致するボタンのラベルを<u>読んで</u>からステップ2へ進む：
           </p>
-          <table class="whos-on-first-step1-table">
-            <tbody>
-              <tr>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          そう
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+<table class="whos-on-first-step1-table">
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">そう</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          最初
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">最初</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          表示
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">表示</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          オーケー
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">オーケー</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          言う
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">言う</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          何もない
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">何もない</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th
-                          class="whos-on-first-look-at-display"
-                          colspan="2"
-                        ></th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-4">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2"><br></th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          から
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">から</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          いや
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">いや</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          解
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">解</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          回
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">回</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          下位
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">下位</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          快
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">快</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          開
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-4">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">開</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          あと
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-4">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">あと</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          まって
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">まって</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          どう？
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">どう？</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          導
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">導</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          同
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">同</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          動
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">動</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          どう
-                        </th>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-0">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">どう</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          大正
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">大正</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          対照
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-4">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">対照</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          対称
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-3">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">対称</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td></td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          大賞
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <table class="eye-table eye-2">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">大賞</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          才
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">才</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          再
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-1">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">再</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-                <td>
-                  <table dir="ltr">
-                    <tbody>
-                      <tr>
-                        <th class="whos-on-first-look-at-display" colspan="2">
-                          最
-                        </th>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td><br /></td>
-                      </tr>
-                      <tr>
-                        <td><br /></td>
-                        <td class="whos-on-first-look-at">
-                          <img
-                            src="img/Who's on First/eye-icon.png"
-                            alt="見るべき"
-                          />
+                        <td>
+                            <table class="eye-table eye-5">
+                                <tr>
+                                    <th class="whos-on-first-look-at-display" colspan="2">最</th>
+                                </tr>
+                                <tr>
+                                    <td class="button button-0"></td>
+                                    <td class="button button-1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-2"></td>
+                                    <td class="button button-3"></td>
+                                </tr>
+                                <tr>
+                                    <td class="button button-4"></td>
+                                    <td class="button button-5"></td>
+                                </tr>
+                            </table>
                         </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    </tr>
+                </table>
         </div>
         <div class="page-footer relative-footer">ページ 1/2</div>
       </div>
@@ -848,34 +667,34 @@
         <div class="page-content">
             <h3>ステップ2：</h3>
             <p>ステップ1のラベルをもとに、一致するリストの<u>最初に表れるボタンを押す</u>：</p>
-            <table class="whos-on-first-step2-table"><tbody><tr><th><q><span>準備OK</span></q>:</th>
-    <td><span>そう</span>, <span>オーケー</span>, <span>何？</span>, <span>真ん中</span>, <span>残り</span>, <span>押して</span>, <span>右</span>, <span>ブランク</span>, <span>準備OK</span>, <span>違う</span>, <span>最初</span>, <span>えーと</span>, <span>なし</span>, <span>ウェイト</span></td></tr><tr><th><q><span>最初</span></q>:</th>
-    <td><span>残り</span>, <span>オーケー</span>, <span>そう</span>, <span>真ん中</span>, <span>違う</span>, <span>右</span>, <span>なし</span>, <span>えーと</span>, <span>ウェイト</span>, <span>準備OK</span>, <span>ブランク</span>, <span>何？</span>, <span>押して</span>, <span>最初</span></td></tr><tr><th><q><span>違う</span></q>:</th>
-    <td><span>ブランク</span>, <span>えーと</span>, <span>ウェイト</span>, <span>最初</span>, <span>何？</span>, <span>準備OK</span>, <span>右</span>, <span>そう</span>, <span>なし</span>, <span>残り</span>, <span>押して</span>, <span>オーケー</span>, <span>違う</span>, <span>真ん中</span></td></tr><tr><th><q><span>ブランク</span></q>:</th>
-    <td><span>ウェイト</span>, <span>右</span>, <span>オーケー</span>, <span>真ん中</span>, <span>ブランク</span>, <span>押して</span>, <span>準備OK</span>, <span>なし</span>, <span>違う</span>, <span>何？</span>, <span>残り</span>, <span>えーと</span>, <span>そう</span>, <span>最初</span></td></tr><tr><th><q><span>なし</span></q>:</th>
-    <td><span>えーと</span>, <span>右</span>, <span>オーケー</span>, <span>真ん中</span>, <span>そう</span>, <span>ブランク</span>, <span>違う</span>, <span>押して</span>, <span>残り</span>, <span>何？</span>, <span>ウェイト</span>, <span>最初</span>, <span>なし</span>, <span>準備OK</span></td></tr><tr><th><q><span>そう</span></q>:</th>
-    <td><span>オーケー</span>, <span>右</span>, <span>えーと</span>, <span>真ん中</span>, <span>最初</span>, <span>何？</span>, <span>押して</span>, <span>準備OK</span>, <span>なし</span>, <span>そう</span>, <span>残り</span>, <span>ブランク</span>, <span>違う</span>, <span>ウェイト</span></td></tr><tr><th><q><span>何？</span></q>:</th>
-    <td><span>えーと</span>, <span>何？</span>, <span>残り</span>, <span>なし</span>, <span>準備OK</span>, <span>ブランク</span>, <span>真ん中</span>, <span>違う</span>, <span>オーケー</span>, <span>最初</span>, <span>ウェイト</span>, <span>そう</span>, <span>押して</span>, <span>右</span></td></tr><tr><th><q><span>えーと</span></q>:</th>
-    <td><span>準備OK</span>, <span>なし</span>, <span>残り</span>, <span>何？</span>, <span>オーケー</span>, <span>そう</span>, <span>右</span>, <span>違う</span>, <span>押して</span>, <span>ブランク</span>, <span>えーと</span>, <span>真ん中</span>, <span>ウェイト</span>, <span>最初</span></td></tr><tr><th><q><span>残り</span></q>:</th>
-    <td><span>右</span>, <span>残り</span>, <span>最初</span>, <span>違う</span>, <span>真ん中</span>, <span>そう</span>, <span>ブランク</span>, <span>何？</span>, <span>えーと</span>, <span>ウェイト</span>, <span>押して</span>, <span>準備OK</span>, <span>オーケー</span>, <span>なし</span></td></tr><tr><th><q><span>右</span></q>:</th>
-    <td><span>そう</span>, <span>なし</span>, <span>準備OK</span>, <span>押して</span>, <span>違う</span>, <span>ウェイト</span>, <span>何？</span>, <span>右</span>, <span>真ん中</span>, <span>残り</span>, <span>えーと</span>, <span>ブランク</span>, <span>オーケー</span>, <span>最初</span></td></tr><tr><th><q><span>真ん中</span></q>:</th>
-    <td><span>ブランク</span>, <span>準備OK</span>, <span>オーケー</span>, <span>何？</span>, <span>なし</span>, <span>押して</span>, <span>違う</span>, <span>ウェイト</span>, <span>残り</span>, <span>真ん中</span>, <span>右</span>, <span>最初</span>, <span>えーと</span>, <span>そう</span></td></tr><tr><th><q><span>オーケー</span></q>:</th>
-    <td><span>真ん中</span>, <span>違う</span>, <span>最初</span>, <span>そう</span>, <span>えーと</span>, <span>なし</span>, <span>ウェイト</span>, <span>オーケー</span>, <span>残り</span>, <span>準備OK</span>, <span>ブランク</span>, <span>押して</span>, <span>何？</span>, <span>右</span></td></tr><tr><th><q><span>ウェイト</span></q>:</th>
-    <td><span>えーと</span>, <span>違う</span>, <span>ブランク</span>, <span>オーケー</span>, <span>そう</span>, <span>残り</span>, <span>最初</span>, <span>押して</span>, <span>何？</span>, <span>ウェイト</span>, <span>なし</span>, <span>準備OK</span>, <span>右</span>, <span>真ん中</span></td></tr><tr><th><q><span>押して</span></q>:</th>
-    <td><span>右</span>, <span>真ん中</span>, <span>そう</span>, <span>準備OK</span>, <span>押して</span>, <span>オーケー</span>, <span>なし</span>, <span>えーと</span>, <span>ブランク</span>, <span>残り</span>, <span>最初</span>, <span>何？</span>, <span>違う</span>, <span>ウェイト</span></td></tr><tr><th><q><span>どう？</span></q>:</th>
-    <td><span>もちろん</span>, <span>導</span>, <span>同</span>, <span>動</span>, <span>次</span>, <span>うんうん</span>, <span>左</span>, <span>まって</span>, <span>え？</span>, <span>どう？</span>, <span>そうそう</span>, <span>例えば</span>, <span>できた</span>, <span>それ</span></td></tr><tr><th><q><span>導</span></q>:</th>
-    <td><span>同</span>, <span>次</span>, <span>例えば</span>, <span>うんうん</span>, <span>え？</span>, <span>できた</span>, <span>そうそう</span>, <span>まって</span>, <span>どう？</span>, <span>それ</span>, <span>動</span>, <span>もちろん</span>, <span>左</span>, <span>導</span></td></tr><tr><th><q><span>同</span></q>:</th>
-    <td><span>そうそう</span>, <span>導</span>, <span>うんうん</span>, <span>同</span>, <span>次</span>, <span>左</span>, <span>もちろん</span>, <span>それ</span>, <span>動</span>, <span>どう？</span>, <span>え？</span>, <span>まって</span>, <span>例えば</span>, <span>できた</span></td></tr><tr><th><q><span>動</span></q>:</th>
-    <td><span>どう？</span>, <span>動</span>, <span>左</span>, <span>次</span>, <span>そうそう</span>, <span>導</span>, <span>それ</span>, <span>同</span>, <span>え？</span>, <span>うんうん</span>, <span>もちろん</span>, <span>できた</span>, <span>例えば</span>, <span>まって</span></td></tr><tr><th><q><span>左</span></q>:</th>
-    <td><span>できた</span>, <span>それ</span>, <span>左</span>, <span>うんうん</span>, <span>え？</span>, <span>もちろん</span>, <span>同</span>, <span>まって</span>, <span>動</span>, <span>例えば</span>, <span>次</span>, <span>そうそう</span>, <span>導</span>, <span>どう？</span></td></tr><tr><th><q><span>それ</span></q>:</th>
-    <td><span>うんうん</span>, <span>もちろん</span>, <span>次</span>, <span>え？</span>, <span>動</span>, <span>左</span>, <span>そうそう</span>, <span>できた</span>, <span>それ</span>, <span>どう？</span>, <span>例えば</span>, <span>まって</span>, <span>導</span>, <span>同</span></td></tr><tr><th><q><span>うんうん</span></q>:</th>
-    <td><span>うんうん</span>, <span>同</span>, <span>導</span>, <span>どう？</span>, <span>できた</span>, <span>まって</span>, <span>そうそう</span>, <span>次</span>, <span>もちろん</span>, <span>例えば</span>, <span>動</span>, <span>左</span>, <span>それ</span>, <span>え？</span></td></tr><tr><th><q><span>そうそう</span></q>:</th>
-    <td><span>左</span>, <span>それ</span>, <span>導</span>, <span>動</span>, <span>次</span>, <span>そうそう</span>, <span>できた</span>, <span>どう？</span>, <span>うんうん</span>, <span>例えば</span>, <span>同</span>, <span>もちろん</span>, <span>まって</span>, <span>え？</span></td></tr><tr><th><q><span>え？</span></q>:</th>
-    <td><span>どう？</span>, <span>まって</span>, <span>動</span>, <span>同</span>, <span>それ</span>, <span>できた</span>, <span>そうそう</span>, <span>例えば</span>, <span>導</span>, <span>うんうん</span>, <span>左</span>, <span>次</span>, <span>え？</span>, <span>もちろん</span></td></tr><tr><th><q><span>できた</span></q>:</th>
-    <td><span>もちろん</span>, <span>うんうん</span>, <span>次</span>, <span>え？</span>, <span>同</span>, <span>左</span>, <span>動</span>, <span>まって</span>, <span>例えば</span>, <span>どう？</span>, <span>それ</span>, <span>導</span>, <span>そうそう</span>, <span>できた</span></td></tr><tr><th><q><span>次</span></q>:</th>
-    <td><span>え？</span>, <span>うんうん</span>, <span>そうそう</span>, <span>同</span>, <span>まって</span>, <span>もちろん</span>, <span>次</span>, <span>例えば</span>, <span>できた</span>, <span>導</span>, <span>左</span>, <span>動</span>, <span>それ</span>, <span>どう？</span></td></tr><tr><th><q><span>まって</span></q>:</th>
-    <td><span>導</span>, <span>それ</span>, <span>できた</span>, <span>そうそう</span>, <span>どう？</span>, <span>左</span>, <span>もちろん</span>, <span>え？</span>, <span>動</span>, <span>次</span>, <span>まって</span>, <span>うんうん</span>, <span>同</span>, <span>例えば</span></td></tr><tr><th><q><span>もちろん</span></q>:</th>
-    <td><span>導</span>, <span>できた</span>, <span>例えば</span>, <span>動</span>, <span>どう？</span>, <span>まって</span>, <span>うんうん</span>, <span>左</span>, <span>もちろん</span>, <span>それ</span>, <span>え？</span>, <span>次</span>, <span>同</span>, <span>そうそう</span></td></tr><tr><th><q><span>例えば</span></q>:</th>
+            <table class="whos-on-first-step2-table"><tbody><tr data-word='準備OK'><th><q><span>準備OK</span></q>:</th>
+    <td><span>そう</span>, <span>オーケー</span>, <span>何？</span>, <span>真ん中</span>, <span>残り</span>, <span>押して</span>, <span>右</span>, <span>ブランク</span>, <span>準備OK</span>, <span>違う</span>, <span>最初</span>, <span>えーと</span>, <span>なし</span>, <span>ウェイト</span></td></tr><tr data-word='最初'><th><q><span>最初</span></q>:</th>
+    <td><span>残り</span>, <span>オーケー</span>, <span>そう</span>, <span>真ん中</span>, <span>違う</span>, <span>右</span>, <span>なし</span>, <span>えーと</span>, <span>ウェイト</span>, <span>準備OK</span>, <span>ブランク</span>, <span>何？</span>, <span>押して</span>, <span>最初</span></td></tr><tr data-word='違う'><th><q><span>違う</span></q>:</th>
+    <td><span>ブランク</span>, <span>えーと</span>, <span>ウェイト</span>, <span>最初</span>, <span>何？</span>, <span>準備OK</span>, <span>右</span>, <span>そう</span>, <span>なし</span>, <span>残り</span>, <span>押して</span>, <span>オーケー</span>, <span>違う</span>, <span>真ん中</span></td></tr><tr data-word='ブランク'><th><q><span>ブランク</span></q>:</th>
+    <td><span>ウェイト</span>, <span>右</span>, <span>オーケー</span>, <span>真ん中</span>, <span>ブランク</span>, <span>押して</span>, <span>準備OK</span>, <span>なし</span>, <span>違う</span>, <span>何？</span>, <span>残り</span>, <span>えーと</span>, <span>そう</span>, <span>最初</span></td></tr><tr data-word='なし'><th><q><span>なし</span></q>:</th>
+    <td><span>えーと</span>, <span>右</span>, <span>オーケー</span>, <span>真ん中</span>, <span>そう</span>, <span>ブランク</span>, <span>違う</span>, <span>押して</span>, <span>残り</span>, <span>何？</span>, <span>ウェイト</span>, <span>最初</span>, <span>なし</span>, <span>準備OK</span></td></tr><tr data-word='そう'><th><q><span>そう</span></q>:</th>
+    <td><span>オーケー</span>, <span>右</span>, <span>えーと</span>, <span>真ん中</span>, <span>最初</span>, <span>何？</span>, <span>押して</span>, <span>準備OK</span>, <span>なし</span>, <span>そう</span>, <span>残り</span>, <span>ブランク</span>, <span>違う</span>, <span>ウェイト</span></td></tr><tr data-word='何？'><th><q><span>何？</span></q>:</th>
+    <td><span>えーと</span>, <span>何？</span>, <span>残り</span>, <span>なし</span>, <span>準備OK</span>, <span>ブランク</span>, <span>真ん中</span>, <span>違う</span>, <span>オーケー</span>, <span>最初</span>, <span>ウェイト</span>, <span>そう</span>, <span>押して</span>, <span>右</span></td></tr><tr data-word='えーと'><th><q><span>えーと</span></q>:</th>
+    <td><span>準備OK</span>, <span>なし</span>, <span>残り</span>, <span>何？</span>, <span>オーケー</span>, <span>そう</span>, <span>右</span>, <span>違う</span>, <span>押して</span>, <span>ブランク</span>, <span>えーと</span>, <span>真ん中</span>, <span>ウェイト</span>, <span>最初</span></td></tr><tr data-word='残り'><th><q><span>残り</span></q>:</th>
+    <td><span>右</span>, <span>残り</span>, <span>最初</span>, <span>違う</span>, <span>真ん中</span>, <span>そう</span>, <span>ブランク</span>, <span>何？</span>, <span>えーと</span>, <span>ウェイト</span>, <span>押して</span>, <span>準備OK</span>, <span>オーケー</span>, <span>なし</span></td></tr><tr data-word='右'><th><q><span>右</span></q>:</th>
+    <td><span>そう</span>, <span>なし</span>, <span>準備OK</span>, <span>押して</span>, <span>違う</span>, <span>ウェイト</span>, <span>何？</span>, <span>右</span>, <span>真ん中</span>, <span>残り</span>, <span>えーと</span>, <span>ブランク</span>, <span>オーケー</span>, <span>最初</span></td></tr><tr data-word='真ん中'><th><q><span>真ん中</span></q>:</th>
+    <td><span>ブランク</span>, <span>準備OK</span>, <span>オーケー</span>, <span>何？</span>, <span>なし</span>, <span>押して</span>, <span>違う</span>, <span>ウェイト</span>, <span>残り</span>, <span>真ん中</span>, <span>右</span>, <span>最初</span>, <span>えーと</span>, <span>そう</span></td></tr><tr data-word='オーケー'><th><q><span>オーケー</span></q>:</th>
+    <td><span>真ん中</span>, <span>違う</span>, <span>最初</span>, <span>そう</span>, <span>えーと</span>, <span>なし</span>, <span>ウェイト</span>, <span>オーケー</span>, <span>残り</span>, <span>準備OK</span>, <span>ブランク</span>, <span>押して</span>, <span>何？</span>, <span>右</span></td></tr><tr data-word='ウェイト'><th><q><span>ウェイト</span></q>:</th>
+    <td><span>えーと</span>, <span>違う</span>, <span>ブランク</span>, <span>オーケー</span>, <span>そう</span>, <span>残り</span>, <span>最初</span>, <span>押して</span>, <span>何？</span>, <span>ウェイト</span>, <span>なし</span>, <span>準備OK</span>, <span>右</span>, <span>真ん中</span></td></tr><tr data-word='押して'><th><q><span>押して</span></q>:</th>
+    <td><span>右</span>, <span>真ん中</span>, <span>そう</span>, <span>準備OK</span>, <span>押して</span>, <span>オーケー</span>, <span>なし</span>, <span>えーと</span>, <span>ブランク</span>, <span>残り</span>, <span>最初</span>, <span>何？</span>, <span>違う</span>, <span>ウェイト</span></td></tr><tr data-word='どう？'><th><q><span>どう？</span></q>:</th>
+    <td><span>もちろん</span>, <span>導</span>, <span>同</span>, <span>動</span>, <span>次</span>, <span>うんうん</span>, <span>左</span>, <span>まって</span>, <span>え？</span>, <span>どう？</span>, <span>そうそう</span>, <span>例えば</span>, <span>できた</span>, <span>それ</span></td></tr><tr data-word='導'><th><q><span>導</span></q>:</th>
+    <td><span>同</span>, <span>次</span>, <span>例えば</span>, <span>うんうん</span>, <span>え？</span>, <span>できた</span>, <span>そうそう</span>, <span>まって</span>, <span>どう？</span>, <span>それ</span>, <span>動</span>, <span>もちろん</span>, <span>左</span>, <span>導</span></td></tr><tr data-word='同'><th><q><span>同</span></q>:</th>
+    <td><span>そうそう</span>, <span>導</span>, <span>うんうん</span>, <span>同</span>, <span>次</span>, <span>左</span>, <span>もちろん</span>, <span>それ</span>, <span>動</span>, <span>どう？</span>, <span>え？</span>, <span>まって</span>, <span>例えば</span>, <span>できた</span></td></tr><tr data-word='動'><th><q><span>動</span></q>:</th>
+    <td><span>どう？</span>, <span>動</span>, <span>左</span>, <span>次</span>, <span>そうそう</span>, <span>導</span>, <span>それ</span>, <span>同</span>, <span>え？</span>, <span>うんうん</span>, <span>もちろん</span>, <span>できた</span>, <span>例えば</span>, <span>まって</span></td></tr><tr data-word='左'><th><q><span>左</span></q>:</th>
+    <td><span>できた</span>, <span>それ</span>, <span>左</span>, <span>うんうん</span>, <span>え？</span>, <span>もちろん</span>, <span>同</span>, <span>まって</span>, <span>動</span>, <span>例えば</span>, <span>次</span>, <span>そうそう</span>, <span>導</span>, <span>どう？</span></td></tr><tr data-word='それ'><th><q><span>それ</span></q>:</th>
+    <td><span>うんうん</span>, <span>もちろん</span>, <span>次</span>, <span>え？</span>, <span>動</span>, <span>左</span>, <span>そうそう</span>, <span>できた</span>, <span>それ</span>, <span>どう？</span>, <span>例えば</span>, <span>まって</span>, <span>導</span>, <span>同</span></td></tr><tr data-word='うんうん'><th><q><span>うんうん</span></q>:</th>
+    <td><span>うんうん</span>, <span>同</span>, <span>導</span>, <span>どう？</span>, <span>できた</span>, <span>まって</span>, <span>そうそう</span>, <span>次</span>, <span>もちろん</span>, <span>例えば</span>, <span>動</span>, <span>左</span>, <span>それ</span>, <span>え？</span></td></tr><tr data-word='そうそう'><th><q><span>そうそう</span></q>:</th>
+    <td><span>左</span>, <span>それ</span>, <span>導</span>, <span>動</span>, <span>次</span>, <span>そうそう</span>, <span>できた</span>, <span>どう？</span>, <span>うんうん</span>, <span>例えば</span>, <span>同</span>, <span>もちろん</span>, <span>まって</span>, <span>え？</span></td></tr><tr data-word='え？'><th><q><span>え？</span></q>:</th>
+    <td><span>どう？</span>, <span>まって</span>, <span>動</span>, <span>同</span>, <span>それ</span>, <span>できた</span>, <span>そうそう</span>, <span>例えば</span>, <span>導</span>, <span>うんうん</span>, <span>左</span>, <span>次</span>, <span>え？</span>, <span>もちろん</span></td></tr><tr data-word='できた'><th><q><span>できた</span></q>:</th>
+    <td><span>もちろん</span>, <span>うんうん</span>, <span>次</span>, <span>え？</span>, <span>同</span>, <span>左</span>, <span>動</span>, <span>まって</span>, <span>例えば</span>, <span>どう？</span>, <span>それ</span>, <span>導</span>, <span>そうそう</span>, <span>できた</span></td></tr><tr data-word='次'><th><q><span>次</span></q>:</th>
+    <td><span>え？</span>, <span>うんうん</span>, <span>そうそう</span>, <span>同</span>, <span>まって</span>, <span>もちろん</span>, <span>次</span>, <span>例えば</span>, <span>できた</span>, <span>導</span>, <span>左</span>, <span>動</span>, <span>それ</span>, <span>どう？</span></td></tr><tr data-word='まって'><th><q><span>まって</span></q>:</th>
+    <td><span>導</span>, <span>それ</span>, <span>できた</span>, <span>そうそう</span>, <span>どう？</span>, <span>左</span>, <span>もちろん</span>, <span>え？</span>, <span>動</span>, <span>次</span>, <span>まって</span>, <span>うんうん</span>, <span>同</span>, <span>例えば</span></td></tr><tr data-word='もちろん'><th><q><span>もちろん</span></q>:</th>
+    <td><span>導</span>, <span>できた</span>, <span>例えば</span>, <span>動</span>, <span>どう？</span>, <span>まって</span>, <span>うんうん</span>, <span>左</span>, <span>もちろん</span>, <span>それ</span>, <span>え？</span>, <span>次</span>, <span>同</span>, <span>そうそう</span></td></tr><tr data-word='例えば'><th><q><span>例えば</span></q>:</th>
     <td><span>動</span>, <span>次</span>, <span>それ</span>, <span>左</span>, <span>まって</span>, <span>できた</span>, <span>そうそう</span>, <span>え？</span>, <span>うんうん</span>, <span>どう？</span>, <span>例えば</span>, <span>もちろん</span>, <span>導</span>, <span>同</span></td></tr></tbody></table>
         </div>
         <div class="page-footer relative-footer">ページ 2/2</div>
