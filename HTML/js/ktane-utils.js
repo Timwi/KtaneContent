@@ -411,7 +411,7 @@ e.onload = function()
             });
         };
 
-        $("td:not(.nohighlight), th:not(.nohighlight), li:not(.nohighlight), .highlightable, .stroke-highlightable").each(function() {
+        $("td:not(.nohighlight, .corner), th:not(.nohighlight, .corner), li:not(.nohighlight), .highlightable, .stroke-highlightable").each(function() {
             makeHighlightable($(this));
         });
 
