@@ -11,92 +11,96 @@
     <script src="js/ruleseed.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script>
-        var defaultRules = null;
-        var letters = ['a','b','c','d','e','f']
-        var numbers = ['1','2','3','4','5','6']
+        let defaultRules = null;
+        let letters = ['a','b','c','d','e','f'];
+        let numbers = ['1','2','3','4','5','6'];
 
-        function getDefaultRules(){
-            if (defaultRules !== null)
-            return;
-            defaultRules = {}
-            for (var rule = 1; rule <=6; rule++){
+        function getDefaultRules() {
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <=6; rule++) {
                 defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
             }
         }
 
         function setDefaultRules()
         {
-            getDefaultRules()
-            for( var i = 1; i <= 6; i++){
-                var span = document.getElementById(`rule${i}`)
+            getDefaultRules();
+            makeBoard();
+            for (let i = 1; i <= 6; i++) {
+                let span = document.getElementById(`rule${i}`);
 
-                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5)
+                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5);
             }
-            letters = ['a','b','c','d','e','f']
-            numbers = ['1','2','3','4','5','6']
-            updateChessboardLabels()
+            letters = ['a','b','c','d','e','f'];
+            numbers = ['1','2','3','4','5','6'];
+            updateChessboardLabels();
         }
 
         function setRules(rnd)
         {
-            getDefaultRules()
-            var order = [1,2,3,4,5,6]
-            rnd.shuffleFisherYates(order)
-            var ind = order.indexOf(5)
+            getDefaultRules();
+            makeBoard();
+            let order = [1,2,3,4,5,6];
+            rnd.shuffleFisherYates(order);
+            let ind = order.indexOf(5);
 
-            var invertX = rnd.nextInt() % 2 == 0;
-            var invertY = rnd.nextInt() % 2 == 0;
-            var swap = rnd.nextInt() % 2 == 0;
-            var invertField = rnd.nextInt() % 2 == 1;
-            var invertSerial = rnd.nextInt() % 2 == 0;
-            for (var i = 0; i < 6; i++){
-                var span = document.getElementById(`rule${i+1}`)
-                var inner = defaultRules[order[i]].replace("{i}",i+1);
-                switch(order[i]){
+            let invertX = rnd.nextInt() % 2 == 0;
+            let invertY = rnd.nextInt() % 2 == 0;
+            let swap = rnd.nextInt() % 2 == 0;
+            let invertField = rnd.nextInt() % 2 == 1;
+            let invertSerial = rnd.nextInt() % 2 == 0;
+            for (let i = 0; i < 6; i++) {
+                let span = document.getElementById(`rule${i+1}`);
+                let inner = defaultRules[order[i]].replace("{i}",i+1);
+                switch (order[i]) {
                     case 1: inner = inner.replace("{j}",ind+1); break;
                     case 2: inner = inner.replace("odd", invertSerial == true ? "even" : "odd"); break;
                     case 5: inner = inner.replace("white", invertField == true ? "black" : "white"); break;
                 }
                 span.innerHTML = inner;
             }
-            letters = ['a','b','c','d','e','f']
-            numbers = ['1','2','3','4','5','6']
+            letters = ['a','b','c','d','e','f'];
+            numbers = ['1','2','3','4','5','6'];
             if (invertX) letters.reverse();
             if (invertY) numbers.reverse();
             if (swap) {
-                var tmp = letters;
+                let tmp = letters;
                 letters = numbers;
                 numbers = tmp;
             }
-            updateChessboardLabels()
+            updateChessboardLabels();
         }
 
         function updateChessboardLabels() {
             for (let i = 0; i < 6; i++) {
-                var rows = document.getElementById(`row${i}`);
+                let rows = document.getElementById(`row${i}`);
                 if (rows) rows.innerHTML = numbers[5 - i];
-                var cols = document.getElementById(`col${i}`);
+                let cols = document.getElementById(`col${i}`);
                 if (cols) cols.innerHTML = letters[i];
             }
         }
 
-        $(function() {
-            var pieces = ["♔", "♕", "♖", "♗", "♘"]; //"♙"
-            var selected = "";
-            var start;
+        function makeBoard() {
+            let pieces = ["♔", "♕", "♖", "♗", "♘"]; //"♙"
+            let selected = "";
+            let start;
 
             $(document).click(function() {
                 start = null;
             });
 
-            var row;
-            var chessboard = $(".chessboard");
+            let row;
+            let chessboard = $(".chessboard");
+            chessboard.html("");
+            let chesspieces = $(".chess-pieces");
+            chesspieces.html("");
             for (let y = 0; y < 6; y++) {
                 row = $("<div>").addClass("chess-row").appendTo(chessboard);
                 $("<div>").addClass("square").attr("id", "row" + y).text(numbers[5 - y]).appendTo(row);
                 for (let x = 0; x < 6; x++) {
                     $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "white" : "black")).appendTo(row).each(function(_, e) {
-                        var element = $(e);
+                        let element = $(e);
                         element.mousedown(function(event) {
                             start = [x, y];
                             event.preventDefault();
@@ -105,8 +109,8 @@
 
                         element.mouseup(function(event) {
                             if (start) { // Just incase.
-                                var changed = [];
-                                var a, b, i;
+                                let changed = [];
+                                let a, b, i;
                                 if (start[0] == x) {
                                     a = (start[1] > y ? y : start[1]);
                                     b = (start[1] > y ? start[1] : y);
@@ -120,9 +124,9 @@
                                         changed.push([i, y]);
                                     }
                                 } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
-                                    var dist = Math.abs(start[0] - x);
-                                    var dirx = (start[0] < x) ? 1 : -1;
-                                    var diry = (start[1] < y) ? 1 : -1;
+                                    let dist = Math.abs(start[0] - x);
+                                    let dirx = (start[0] < x) ? 1 : -1;
+                                    let diry = (start[1] < y) ? 1 : -1;
 
                                     for (i = 0; i <= dist; i++) {
                                         changed.push([start[0] + i * dirx, start[1] + i * diry]);
@@ -130,9 +134,9 @@
                                 }
 
                                 if (changed.length > 0) {
-                                    var first = chessboard.children().eq(start[1]).children().eq(start[0] + 1).hasClass("occupied");
+                                    let first = chessboard.children().eq(start[1]).children().eq(start[0] + 1).hasClass("occupied");
                                     changed.forEach(function(pos) {
-                                        var elm = chessboard.children().eq(pos[1]).children().eq(pos[0] + 1);
+                                        let elm = chessboard.children().eq(pos[1]).children().eq(pos[0] + 1);
                                         if (selected == "marking") {
                                             if (changed.length == 1) {
                                                 elm.toggleClass("occupied");
@@ -169,11 +173,10 @@
             }
 
             row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
-            for (var i = 0; i < 6; i++) {
+            for (let i = 0; i < 6; i++) {
                 $("<div>").addClass("square").attr("id", "col" + i).text(letters[i]).appendTo(row);
             }
 
-            var chesspieces = $(".chess-pieces");
             $("<div>").addClass("piece square").css("background-color", "rgba(255, 105, 105, 1)").appendTo(chesspieces).click(function() {
                 $(".piece").removeClass("selected");
                 $(this).addClass("selected");
@@ -190,7 +193,7 @@
             $(".reset").click(function() {
                 $(".black.square, .white.square").text("").removeClass("occupied");
             });
-        });
+        }
     </script>
     <style>
         .chess-board {
