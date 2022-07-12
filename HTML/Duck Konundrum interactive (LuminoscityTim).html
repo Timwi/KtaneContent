@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Duck Konundrum — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        let grid = $(".grid");
+        let chairsholder = $(".chairsholder");
+        let stageNumber = $(".controls .stage input");
+        let selected = null;
+        let saveStates = [];
+        let currentState = 0;
+        let currentStage = 0;
+        let itemID = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const CHAIR_LEFT = true;
+        const CHAIR_RIGHT = false;
+        const CHAIRS = 6;
+
+        const colors = ["red", "yellow", "blue", "orange", "green", "purple", "brown"];
+        let squareColors = Array(colors.length);
+        Object.assign(squareColors, colors);
+        squareColors.unshift("none");
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(squareColors[(c + 1) % squareColors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("none brown orange purple yellow red blue green");
+        }
+
+        const colorLetters = " xrybogpn";
+        const colorIndex = {
+            " ": 0,
+            "x": 0,
+            "r": 1,
+            "y": 2,
+            "b": 3,
+            "o": 4,
+            "g": 5,
+            "p": 6,
+            "n": 7,
+        };
+
+        function updateSelection() {
+            $("th.selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+        function selectNone() {
+            selected = null;
+            $("th.selected").removeClass("selected");
+        }
+
+        function stageDec() {
+            currentStage = Math.max(0, currentStage - 1);
+            stageNumber.val(currentStage);
+        }
+        function stageInc() {
+            currentStage += 1;
+            stageNumber.val(currentStage);
+        }
+        $(".stagetext.minus").click(function() {
+            stageDec();
+        });
+        $(".stagetext.plus").click(function() {
+            stageInc();
+        });
+
+        let down = false;
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == "-" && NoSpecialKeys(event))
+                stageDec();
+            else if ((k == "=" || k == "+") && NoSpecialKeys(event))
+                stageInc();
+            else if (colorLetters.includes(k) && NoSpecialKeys(event)) {
+                if (selected) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[ colorIndex[k] ]);
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }
+            down = false;
+        });
+
+        function assignID(elem) {
+            let id = `item${itemID}`;
+            elem.attr("id", id);
+            itemID += 1;
+            return id;
+        }
+
+        function makeChairs() {
+            let cy = 350;
+            let cx = 250;
+            let r = 250;
+            let angle = Math.PI / 180 * 60;
+            let dTheta = 2 * Math.PI / CHAIRS;
+            for (let i = 0; i < CHAIRS; i++) {
+                let a = i*dTheta + angle;
+                let x = cx + r * Math.cos(a);
+                let y = cy + r* 1.3 * Math.sin(a);
+                makeChair(x, y, i, i == 3).appendTo(chairsholder);
+            }
+        }
+
+        function makeChair(x, y, idx, arm) {
+            let group = $("<div>").addClass("chair-group vstack").css({
+                left:`${x}px`, top:`${y}px`
+            });
+            let chairImage = $("<div>").addClass(`chair ${arm ? "armchair" : "plainchair"}`).appendTo(group);
+            let people = $("<div>").addClass("hstack between people").appendTo(group);
+            $(`<input type="radio" name="you-mark" value="you${idx}" id="you${idx}">`).appendTo(people);
+            $(`<label for="you${idx}"">You</label>`).appendTo(people);
+            $("<div>").addClass("hspace").appendTo(people);
+            $(`<input type="radio" name="duck-mark" value="duck${idx}" id="duck${idx}">`).appendTo(people);
+            $(`<label for="duck${idx}">Duck</label>`).appendTo(people);
+
+            let clr = $('<table class="chaircolor color-table">'+
+                '<tr><th>Seat</th><th class="none"></th></tr>'+
+                '<tr><th>Bottom</th><th class="none"></th></tr>'+
+                '<tr><th>Number</th><td><input type="text"></td></tr>'+
+                '<tr><th>Number Color</th><th class="none"></th></tr>'+
+                '</table>').appendTo(group);
+
+            let whoopee = $("<div>").addClass("hstack whoopee").appendTo(group);
+            $(`<input type="radio" name="whoopee-mark" value="whoopee${idx}" id="whoopee${idx}">`).appendTo(whoopee);
+            $(`<label for="whoopee${idx}">Whoopee Cushion</label>`).appendTo(whoopee);
+
+            return group;
+        }
+        makeChairs();
+
+        let whoopeeValue = "";
+        $(".whoopee input").click(function(event) {
+            if (whoopeeValue == this.value) {
+                $(this).prop("checked", false);
+                whoopeeValue = "";
+            }
+            else
+                whoopeeValue = this.value;
+        });
+        let duckValue = "";
+        $(".people input:nth-child(1)").click(function(event) {
+            if (duckValue == this.value) {
+                $(this).prop("checked", false);
+                duckValue = "";
+            }
+            else
+                duckValue = this.value;
+        });
+        let youValue = "";
+        $(".people input:nth-child(4)").click(function(event) {
+            if (youValue == this.value) {
+                $(this).prop("checked", false);
+                youValue = "";
+            }
+            else
+                youValue = this.value;
+        });
+
+        let colorbuttons = $("<div>").addClass("colorbuttons hstack wrap controls").appendTo(chairsholder);
+        for (let i = 0; i < squareColors.length; i++) {
+            $("<button>").addClass(`clrbtn ${squareColors[i]}`).click(function(event) {
+                let c = hasWhichColor($(this));
+                if (selected && c >= 0) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[c]);
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }).appendTo(colorbuttons);
+        }
+
+        let allColorable = $(".color-table th:nth-child(2)");
+        allColorable.click(function(event) {
+            selected = $(this);
+            updateSelection();
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        const bodyParts = ["none", "rfoot", "lfoot", "rhand", "lhand", "butt"];
+        function hasWhichBodyPart(elem) {
+            for (var i = 0; i < bodyParts.length; i++) {
+                if (elem.hasClass(bodyParts[i])) { return i; }
+            }
+            return -1;
+        }
+        function removeBodyPartClass(elem) {
+            elem.removeClass("none rfoot lfoot rhand lhand butt");
+        }
+        function nextBodyPart(elem) {
+            let c = hasWhichBodyPart(elem);
+            removeBodyPartClass(elem);
+            elem.addClass(bodyParts[(c + 1) % bodyParts.length]);
+        }
+        let hokeyBodyPart = $(".hokey tr:nth-child(4) td");
+        hokeyBodyPart.click(function() {
+            nextBodyPart($(this));
+        });
+
+        stageNumber.on("input", function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            let n = parseInt(this.value);
+            if (n) currentStage = n;
+        })
+
+        $(".reset-grid").click(function() {
+            removeBodyPartClass(hokeyBodyPart);
+            hokeyBodyPart.addClass("none");
+            allColorable.each(function(_, e) {
+                removeColorClass($(e));
+                $(e).addClass("none");
+            });
+            $(".hokey td input, .color-table td input").val("");
+            $(".forehead td input").val("0");
+            $("select.sitting").val("state1");
+            $(".whoopee input, .people input").prop("checked", false);
+        });
+
+        $(".reset-saves").click(function() {
+            if(!confirm("Are you sure you want to reset all saves?")) return;
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-future-saves").click(function() {
+            removeFutureSaves();
+        });
+
+        $(".reset-all").click(function() {
+            if(!confirm("Are you sure you want to reset everything?")) return;
+            $(".reset-grid").click();
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            currentStage = 0;
+            stageNumber.val(currentStage);
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        let replaceID = `item${itemID}`;
+
+        $("button.new-save").click(function() {
+            let saveStateClass = Array.from($(".color-table th:nth-child(2), .hokey tr:nth-child(4) td")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($(".hokey td input, .color-table td input, .forehead td input, select.sitting")).map(x => $(x)).map(x => x.val() || "");
+            let saveStateRadio = Array.from($(".whoopee input, .people input")).map(x => $(x)).map(x => x.prop("checked") || "");
+            //console.log(saveStates);
+            let stateNumber = saveStates.length;
+            let s = currentStage;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $(".color-table th:nth-child(2), .hokey tr:nth-child(4) td").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".hokey td input, .color-table td input, .forehead td input, select.sitting").each((i, x) => $(x).val(saveStateText[i]));
+                $(".whoopee input, .people input").each((i, x) => $(x).prop("checked", saveStateRadio[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageNumber.val(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+            }).addClass("flash").appendTo(".saves");
+            let saveID = assignID(button);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            $(".saves button").removeClass("selected");
+            $(".replace-save").prop('disabled', true);
+            saveStates.push(button);
+            currentStage += 1;
+            stageNumber.val(currentStage);
+        });
+
+        $("button.replace-save").click(function() {
+            let saveStateClass = Array.from($(".color-table th:nth-child(2), .hokey tr:nth-child(4) td")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($(".hokey td input, .color-table td input, .forehead td input, select.sitting")).map(x => $(x)).map(x => x.val() || "");
+            let saveStateRadio = Array.from($(".whoopee input, .people input")).map(x => $(x)).map(x => x.prop("checked") || "");
+            //console.log(saveStates);
+            let stateNumber = currentState;
+            let s = currentStage;
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $(".color-table th:nth-child(2), .hokey tr:nth-child(4) td").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".hokey td input, .color-table td input, .forehead td input, select.sitting").each((i, x) => $(x).val(saveStateText[i]));
+                $(".whoopee input, .people input").each((i, x) => $(x).prop("checked", saveStateRadio[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageNumber.val(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+            }).addClass("flash");
+            let saveID = assignID(button);
+            setTimeout(() => {
+                button.removeClass("flash");
+                button.addClass("selected");
+            }, 100);
+
+            if (saveStates.length > currentState) {
+                saveStates.splice(currentState, 1, button);
+                let oldButton = document.getElementById(replaceID);
+                oldButton.parentNode.replaceChild(button[0], oldButton);
+                replaceID = saveID;
+            }
+            else {
+                button.appendTo(".saves");
+                saveStates.push(button);
+            }
+        });
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .hstack.between {
+            justify-content: space-between;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-right {
+            align-items: end;
+        }
+        .hspace { width: 4mm; }
+
+        .people {
+            width: 160px;
+            height: 30px;
+            font-size: 24px;
+        }
+        .people input {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 7px;
+            cursor: pointer;
+        }
+        .people label {
+            line-height: 20px;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+        .whoopee input {
+            width: 15px;
+            height: 15px;
+            margin-bottom: 7px;
+            margin-right: 3px;
+            cursor: pointer;
+        }
+        .whoopee label { cursor: pointer; }
+        .whoopee { margin-top: 2px; }
+
+        .appendix p {
+            font-size: 15px;
+        }
+
+        .armchair {
+            background-image: url("img/DuckKonundrum/Armchair.svg");
+        }
+        .plainchair {
+            background-image: url("img/DuckKonundrum/PlainChair.svg");
+        }
+        .chairsholder {
+            position: relative;
+            width: 672px;
+            height: 920px;
+        }
+        .chair-group, .controls {
+            position: absolute;
+        }
+        table.color-table th {
+            width: 70px;
+            padding: 4px 1px 0 1px;
+        }
+        table.color-table th:nth-child(2) {
+            cursor: pointer;
+        }
+        table.color-table td:nth-child(2), table.hokey td {
+            cursor: pointer;
+            padding: 0;
+        }
+        .chaircolor td input, .forehead td input, .stage td input {
+            width: 70px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .chaircolor tr:nth-child(4) th, .name tr:nth-child(3) th {
+            line-height: 1.1;
+        }
+        .stage td input { font-size: 25px; }
+        .name td input {
+            width: 120px;
+            text-align: center;
+        }
+        table.name td, .stage td { padding: 0; }
+
+        .hokey th, .hokey tr:nth-child(4) td, .name th {
+            padding: 4px 1px 0 1px;
+        }
+        .hokey td input {
+            width: 92px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        table.hokey th { width: 92px; }
+        table.hokey td { text-align: center; }
+
+        th.selected { background-color: #888; }
+
+        .chair {
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .smallcan {
+            left: 225px;
+            top: 380px;
+            width: 40px;
+        }
+        .medcan {
+            left: 385px;
+            top: 365px;
+            width: 60px;
+        }
+        .largecan {
+            left: 285px;
+            top: 475px;
+            width: 80px;
+        }
+        .can-table.small {
+            left: 170px;
+            top: 420px;
+        }
+        .can-table.med {
+            left: 340px;
+            top: 420px;
+        }
+        .can-table.large {
+            left: 250px;
+            top: 550px;
+        }
+
+        select { cursor: pointer; }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .tools button, button.save {
+            padding: 4px 3px 0 3px;
+            font-size: 17px;
+        }
+        .saves button.selected {
+            background-color: #EE0;
+        }
+        button:not([disabled], .clrbtn):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+        .saves.hstack { width: 673px; }
+
+        .stagetext {
+            padding: 6px 8px 2px 8px;
+        }
+
+        .colorbuttons button {
+            width: 38px;
+            height: 38px;
+            margin: 0;
+        }
+        .colorbuttons {
+            width: 153px;
+            left: -10px;
+            top: 17px;
+        }
+        .red { background-color: #E93E3E; color: #FFF; }
+        .yellow { background-color: #FBF441; color: #000; }
+        .blue { background-color: #33F; color: #FFF; }
+        .green { background-color: #20DF28; color: #000; }
+        .purple { background-color: #6401DE; color: #FFF; }
+        .orange { background-color: #FF6532; color: #000; }
+        .brown { background-color: #6B3E2E; color: #FFF; }
+
+        .colorbuttons .red::after { content: 'R' }
+        .colorbuttons .yellow::after { content: 'Y' }
+        .colorbuttons .blue::after { content: 'B' }
+        .colorbuttons .green::after { content: 'G' }
+        .colorbuttons .purple::after { content: 'P' }
+        .colorbuttons .orange::after { content: 'O' }
+        .colorbuttons .brown::after { content: 'N' }
+        .colorbuttons .none { background-color: #888; color: transparent; }
+        .colorbuttons .none::after { content: '.' }
+
+        th.red::after { content: 'Red' }
+        th.yellow::after { content: 'Yellow' }
+        th.blue::after { content: 'Blue' }
+        th.green::after { content: 'Green' }
+        th.purple::after { content: 'Purple' }
+        th.orange::after { content: 'Orange' }
+        th.brown::after { content: 'Brown' }
+        th.none::after, td.none::after { content: 'None' }
+
+        td.rfoot::after { content: 'R Foot' }
+        td.lfoot::after { content: 'L Foot' }
+        td.rhand::after { content: 'R Hand' }
+        td.lhand::after { content: 'L Hand' }
+        td.butt::after { content: 'Butt' }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            background-size: 103%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Duck Konundrum</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Duck Konundrum.svg" class="diagram">
+                <h2>On the Subject of Duck Konundrums</h2>
+                <p class="flavour-text">The “defuser with a manual” module to end all “defuser with a manual” modules.</p>
+                <ul>
+                    <li>Gather the following supplies: five armless chairs and one armchair, three metal cans containing red, yellow, and blue paint, three watering cans of notably different sizes, and a live duck. Please do not endanger the life of the duck at any time*. We prefer that no animals are harmed during the defusal of this bomb.</li>
+                    <li>Place the chairs in a circle before starting.</li>
+                    <li>Every time you solve a module, a new instruction will appear on the screen. Follow it.</li>
+                    <li>When all other <a href="../More/Ignore%20Table.html#mod=duckKonundrum">non-ignored modules</a> are solved, the module will ask you three questions about the state of the room.</li>
+                    <li>Picking an incorrect answer to a question will strike you but will not change the question nor show you the stages.</li>
+                    <li>Refer to <b>Appendix DUCK</b> for clarifications.</li>
+                </ul>
+                <p><i>* Unless the module tells you to.</i></p>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Select a <strong>colorable</strong> and press <strong>Space(X)/R/Y/B/O/G/P/N</strong> on your keyboard or click a <strong>color button</strong> to color the chairs, cans, body parts, etc.</li>
+                    <li>Use the <strong>radio buttons</strong> to indicate where you, the duck, and the whoopee cushion are, click a checked radio button again to deselect it.</li>
+                    <li>Type in any of the textboxes.</li>
+                    <li>The <strong>dropdown</strong> under body part colors indicates sitting, standing, etc.</li>
+                    <li>Click under <strong>Hokey Pokey Part</strong> to cycle through possible body parts.</li>
+                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the stage number.</li>
+                    <li>Using the other buttons, you can save the current state, replace a selected save, reset the current state,
+                    delete the saves, delete saves after a selected one, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Duck Konundrum</span>
+            </div>
+            <div class="page-content">
+                <div class="chairsholder">
+                    <div class="vstack tools controls" style="left: -5px; top: 200px">
+                        <button class="reset-grid">Reset State</button>
+                        <button class="reset-saves">Reset Saves</button>
+                        <button class="reset-future-saves">Reset<br>Future Saves</button>
+                        <button class="reset-all">Reset All</button>
+                    </div>
+                    <table class="controls color-table forehead" style="left: 240px; top: -10px">
+                        <tr><th>Forehead&nbsp;Ls</th><td> <input type="text" value="0"> </td></tr>
+                        <tr><th>L Color</th><th class="none"></th></tr>
+                    </table>
+                    <div class="controls vstack" style="left: 258px; top: 60px">
+                        <table class="stage">
+                            <tr><th>Stage</th><td> <input type="text" value="0"> </td></tr>
+                        </table>
+                        <div class="hstack">
+                            <button class="stagetext minus">-</button>
+                            <button class="stagetext plus">+</button>
+                        </div>
+                    </div>
+                    <table class="controls color-table you-table" style="left: 520px; top: 0">
+                        <tr><th>R Foot</th><th class="none"></th></tr>
+                        <tr><th>L Foot</th><th class="none"></th></tr>
+                        <tr><th>R Hand</th><th class="none"></th></tr>
+                        <tr><th>L Hand</th><th class="none"></th></tr>
+                        <tr><th>Butt</th><th class="none"></th></tr>
+                    </table>
+                    <select style="left: 545px; top: 140px" class="controls sitting">
+                        <option value="state1">Sitting</option>
+                        <option value="state2">Standing</option>
+                        <option value="state3">Handstanding</option>
+                    </select>
+                    <table class="controls color-table name" style="left: 543px; top: 170px">
+                        <tr><th colspan="2">Duck&nbsp;Name</th></tr>
+                        <tr><td colspan="2"> <input type="text"> </td></tr>
+                        <tr><th>Duck's Feet</th><th class="none"></th></tr>
+                    </table>
+
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls smallcan">
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls medcan">
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls largecan">
+                    <table class="controls color-table can-table small">
+                        <tr><th>Can</th><th class="none"></th></tr>
+                        <tr><th>Contents</th><th class="none"></th></tr>
+                    </table>
+                    <table class="controls color-table can-table med">
+                        <tr><th>Can</th><th class="none"></th></tr>
+                        <tr><th>Contents</th><th class="none"></th></tr>
+                    </table>
+                    <table class="controls color-table can-table large">
+                        <tr><th>Can</th><th class="none"></th></tr>
+                        <tr><th>Contents</th><th class="none"></th></tr>
+                    </table>
+
+                    <table class="controls hokey" style="left: 0; top: 680px">
+                        <tr><th>Hokey Pokey Step</th></tr>
+                        <tr><td> <input type="text"> </td></tr>
+                        <tr><th>Hokey Pokey Part</th></tr>
+                        <tr><td class="none"></td></tr>
+                    </table>
+                    <div class="controls savebuttons hstack wrap just-left" style="left: 530px; top: 680px">
+                        <button class="save replace-save gray" disabled>Replace<br>Save</button>
+                        <button class="save new-save">New<br>Save</button>
+                    </div>
+                </div>
+                <div class="saves hstack wrap just-left"></div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Duck Konundrum</span>
+            </div>
+            <div class="page-content appendix">
+                <h4>Appendix DUCK: Unspoken Rules and Clarifications</h4>
+                <p>Putting paint in a watering can that already has paint in it will make a mixture of the two paints. Painting something while it is already painted will just change it to the new color.</p>
+                <p>Mixing red and yellow paint makes orange paint. Mixing yellow and blue paint makes green paint. Mixing blue and red paint makes purple paint. Mixing red, yellow, and blue paint makes brown paint.</p>
+                <p>Secondary/tertiary color paints are treated as their primary components. For example, orange is treated as red and yellow, so mixing orange and yellow paint just makes orange paint again.</p>
+                <p>Dumping paint from one watering can to another counts as “adding paint to a watering can”.</p>
+                <p>When you paint a number on the back of a chair, it covers up any number that was already there.</p>
+                <p>Whenever you paint anything, please wait for the paint to dry before advancing to the next step.</p>
+                <p>The steps to the Hokey Pokey are:</p>
+
+                <p>1. You put your right foot in, you put your right foot out
+                <br>2. You put your right foot in, and you shake it all about
+                <br>3. You do the Hokey Pokey, and you turn yourself around
+                <br>4. That’s what it’s all about!</p>
+
+                <p>[Repeat four more times, with “right foot” replaced by “left foot”, “right hand”, “left hand”, and “buttocks” each time. Once you finish that, stop doing the Hokey Pokey. It’s embarrassing.]</p>
+                <p>When doing something “between every stage”, the period between the last stage and the questions also counts as between two stages.</p>
+
+                <p>Instructions that are triggered by a whoopee cushion happen before instructions that are triggered by doing the Hokey Pokey (unless the whoopee cushion’s rule was only activated because of an instruction triggered by the Hokey Pokey).</p>
+
+                <p>When you move to another chair, continue sitting/standing/doing a handstand on the new chair if you were doing so before.</p>
+                <p>When sitting, your butt touches the chair. When standing, both of your feet touch the chair. When doing a handstand, both of your hands touch the chair.</p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
