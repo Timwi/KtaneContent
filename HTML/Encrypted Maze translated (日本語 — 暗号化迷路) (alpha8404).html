@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>暗号化迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack div {
+            margin: 1.5mm;
+        }
+        table {
+            font-size: 14px;
+        }
+
+        table.maze {
+            border: none;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        table.maze td, .maze th {
+            border: none;
+            padding-bottom: 1px;
+        }
+        div.hl {
+            position: relative;
+        }
+        table.hl-cell {
+            position: absolute;
+            border-color: rgba(0,0,0,0);
+            border: 0 solid transparent;
+            width: 50mm;
+            height: 50mm;
+        }
+        table.hl-cell tr>td {
+            border-color: rgba(0,0,0,0);
+            border: 0 solid transparent;
+        }
+        table.maze td.row1 {
+             border-bottom: 1px solid #222;
+        }
+        .dark table.maze td.row1 {
+             border-bottom: 1px solid #DDD;
+        }
+        table.maze td.col1 {
+             border-left: 1px solid #222;
+        }
+        .dark table.maze td.col1 {
+             border-left: 1px solid #DDD;
+        }
+        .hl table {
+            z-index: 1;
+        }
+        .hl img {
+            width: 50mm;
+            z-index: -1;
+        }
+        .dark .hl img {
+            filter: invert(87%);
+        }
+        .dark td img {
+            filter: invert(87%);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">暗号化迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Encrypted Maze.svg" class="diagram">
+                <h2>モジュール詳細：暗号化迷路</h2>
+                <p class="flavour-text">四角いペグを八角形の穴に入れよう。</p>
+                <p>
+                    このモジュールは、６×６の迷路を表示するディスプレイと、移動するために４つの矢印で構成されている。
+                </p>
+                <ul style>
+                    <li>モジュールを解除するには、開始地点から目的地点まで移動する必要がある。</li>
+                    <li>これらの位置と正しい迷路は、ディスプレイに表示される２つの回転するマーカーによって暗号化されている。</li>
+                    <li>壁に移動するとミスが記録される。モジュールはリセットされず、迷路も変更されない。</li>
+                </ul>
+                <h3>位置の復号化</h3>
+                <p>
+                    <em>現在地点</em>は、<em>時計回り</em>に回転するマーカーが示している。
+                    <br/>
+                    <em>目的地点</em>は、<em>反時計周り</em>に回転するマーカーが示している。
+                </p>
+                <ul>
+                    <li>各マーカーは<em>パターン</em>と<em>数字</em>を示す。</li>
+                    <li>マーカーの形状に対応した数字にマーカーのある段(１～６)の数字を合計し、６より大きくなる場合は１～６の範囲になるまで繰り返し６を減算する。</li>
+                    <li>マーカーのパターンと数字を対応する表に使用し、それぞれの位置を特定する。</li>
+                </ul>
+                <table class="maze" style="float: left; margin-right: 70px; margin-top: -10px">
+                    <tr>
+                        <th colspan="7" style="text-align: center; font-size: 18px"><em>現在地点</em></th>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">1</td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">2</td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">3</td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">4</td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">5</td>
+                        <td style="text-align: center; padding-right: 14px" class="row1">6</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_thin.svg" style="width: 20px"></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_thickdot.svg" style="width: 20px"/></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_filled.svg" style="width: 20px"/></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_thindot.svg" style="width: 20px"/></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_thick.svg" style="width: 20px"/></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/EncryptedMaze/f_crossed.svg" style="width: 20px;"/></td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                </table>
+                <table class="maze" style="margin-top: -10px">
+                    <tr>
+                        <th colspan="7" style="text-align: center; font-size: 18px"><em>目的地点</em></th>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_thick.svg" style="width: 20px"/></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_filled.svg" style="width: 20px"/></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_crossed.svg" style="width: 20px;"/></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_thin.svg" style="width: 20px"></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_thindot.svg" style="width: 20px"/></td>
+                        <td style="text-align: center; padding: 3px 9px" class="row1"><img src="img/EncryptedMaze/f_thickdot.svg" style="width: 20px"/></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td style="padding-top: 0px; text-align: center" class="col1">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                        <td style="padding-top: 0px; text-align: center">.</td>
+                    </tr>
+                </table>
+
+                <table style="margin-top: 30px; width: 660px">
+                    <tr>
+                        <th colspan="5">形状の値</th>
+                    </tr>
+                    <tr  >
+                        <td style="text-align: center; width: 20%; border-bottom: none"><img src="img/EncryptedMaze/tri.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 20%; border-bottom: none"><img src="img/EncryptedMaze/square.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 20%; border-bottom: none"><img src="img/EncryptedMaze/pent.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 20%; border-bottom: none"><img src="img/EncryptedMaze/hex.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 20%; border-bottom: none"><img src="img/EncryptedMaze/oct.svg" style="width: 25%"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">単１バッテリーの数</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">点灯していないインジケーターの数</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">単３バッテリーの数</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">点灯したインジケーターの数</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">ポートの種類の数</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">暗号化迷路</span>
+            </div>
+            <div class="page-content">
+                <table style="width: 660px">
+                    <tr>
+                        <th colspan="6">パターン</th>
+                    </tr>
+                    <tr style="border-bottom: none">
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_thin.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_thick.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_filled.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_thindot.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_thickdot.svg" style="width: 25%"/></td>
+                        <td style="text-align: center; width: 16.6%; border-bottom: none"><img src="img/EncryptedMaze/f_crossed.svg" style="width: 25%"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">細い線</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">太い線</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">塗りつぶし</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">小さいドット</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">大きいドット</td>
+                        <td style="text-align: center; border-top: none; font-size: 0.9em">バツの線</td>
+                    </tr>
+                </table>
+                <h3>使用迷路の特定</h3>
+                <ul>
+                    <li>２つの回転するマーカの列(１～６)の数字を取得し、３より大きくなる場合は１～３の範囲になるまで繰り返し３を減算する。</li>
+                    <li>これらの値から新しい座標を作成する。
+                        <ul style="margin-top: 5px; margin-bottom: 5px">
+                            <li><em>時計回り</em>のマーカーの数字を列として扱う。</li>
+                            <li><em>反時計回り</em>のマーカーの数字を段として扱う。</li>
+                        </ul></li>
+                    <li>この座標は、マニュアルを全画面表示で見た際に迷路１つひとつをセルとした３×３グリッドのいずれかを指す。この迷路を使用する。</li>
+                </ul>
+                <div class="hstack wrap">
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze0.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze1.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze2.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze3.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze4.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze5.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze6.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze7.svg"/>
+                    </div>
+                    <div class="hl">
+                        <table class="hl-cell">
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                        <img src="img/EncryptedMaze/maze8.svg"/>
+                    </div>
+                </div>
+                <div class="page-footer relative-footer">ページ 2/2</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
