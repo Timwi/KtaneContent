@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1"/>
+    <title>偽サイモンゲーム — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css"/>
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css"/>
+    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .colourDiagram { text-align: center; }
+        .colourDiagram svg { width: 12em; height: 12em; }
+        figure {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .maze {
+            width: 17.5em;
+            height: 17.5em;
+            position: relative;
+            margin-bottom: 1em;
+        }
+        .maze img {
+            background: url('img/Not Maze/grid.svg');
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 85.7%;
+            height: 85.7%;
+        }
+        .dark .maze img { filter: invert(90%); }
+        table {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            position: relative;  /* Needed for z-index to work, allowing cells to be highlighted. */
+            z-index: 1;
+        }
+        .dark table, .dark th, .dark td, table, th, td { border: none; }
+        .dark svg rect, .dark svg circle { stroke: #DDD; }
+        .colourcell { padding: 0; position: relative; color: black; }
+        .colour {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: -1;
+            border: 2px solid;
+            border-radius: 4px;
+            transform: rotate(45deg) scale(0.7);
+        }
+        .ktane-highlight { z-index: 2; }
+        @media print {
+            .maze {
+                margin-top: 1.5em
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽サイモンゲーム</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon%20Says.svg" class="diagram"
+                    alt="2×2のグリッドの正方形ボタンが斜めに配置されている画像。"/>
+                <h2>モジュール詳細：偽サイモンゲーム</h2>
+                <p class="flavour-text">
+                    これは、処理担当者の時にプレイしたあの表示されるパターンを変えなくてはいけないモジュールの１つに似ているが、これはおそらく常識がほとんどない人が作成した模造品だろう。
+                </p>
+
+                <p>モジュールには、４つの点滅する色付きボタンがある。ボタンが以下に示す配置になっていない場合、別のモジュールを見ている。</p>
+                <p>これはモジュール「サイモンゲーム(Simon Says)」ではない。これは迷路ベースのモジュールとして考える。</p>
+                <p>モジュールは５色の色を点滅させることから始まる。最初の色はどの迷路を使用するかを決定し、次の２つが開始地点、最後の２つがゴール地点を示す。</p>
+                <p>ペアの最初の色は列を、２つ目の色は段を表す。</p>
+                <p>各ボタンを方向(赤＝上、緑＝右、黄＝下、青＝左)として使用し、壁にぶつからずに開始地点からゴール地点まで移動する必要がある。</p>
+                <p>最初の正しいボタンが押されると、モジュールは２色を点滅する。これは現在の座標である。</p>
+
+                <p>※２色が同時に点滅する場合、それらを混ぜた色を使用する。例えば赤と黄ならオレンジ(橙)である。緑のボタンは常に単独で点滅する。</p>
+
+                <p class='colourDiagram'>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none"
+                        alt="赤色のボタンは上、青色のボタンは左、緑色のボタンは右、黄色のボタンは下である。">
+                        <style>text { font: 54px Special Elite, Courier New, monospace; stroke: none; fill: black; text-anchor: middle; }</style>
+                        <g stroke='black' stroke-width='2' fill='none'>
+                            <rect width='300' height='300'/>
+                            <circle cx='270' cy='30' r='15'/>
+                            <polygon points='150,50 200,100 150,150 100,100' fill='red'/>
+                            <text x='150' y='120'>赤</text>
+                            <polygon points='100,100 150,150 100,200 50,150' fill='royalblue'/>
+                            <text x='100' y='170'>青</text>
+                            <polygon points='200,100 250,150 200,200 150,150' fill='lime'/>
+                            <text x='200' y='170'>緑</text>
+                            <polygon points='150,150 200,200 150,250 100,200' fill='yellow'/>
+                            <text x='150' y='220'>黄</text>
+                        </g>
+                    </svg>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽サイモンゲーム</span>
+            </div>
+            <div class="page-content">
+                <figure>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze0.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>赤<div class='colour' style='background-color: red;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze1.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>橙<div class='colour' style='background-color: orange;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze2.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>黄<div class='colour' style='background-color: yellow;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze3.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>緑<div class='colour' style='background-color: lime;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze4.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>青<div class='colour' style='background-color: royalblue;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class='maze'>
+                        <img src='img/Not%20Simaze/Maze5.svg'/>
+                        <table>
+                            <tr>
+                                <th class='colourcell'>紫<div class='colour' style='background-color: darkorchid;'></div></th>
+                                <th>赤</th><th>橙</th><th>黄</th><th>緑</th><th>青</th><th>紫</th>
+                            </tr>
+                            <tr><th>紫</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>青</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>緑</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>黄</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>橙</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>赤</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                </figure>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

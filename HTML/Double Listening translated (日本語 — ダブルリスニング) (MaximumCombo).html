@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ダブルリスニング — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaults = null;
+
+        function getDefaults()
+        {
+            if(defaults !== null)
+                return;
+
+            defaults = {};
+
+            for(var i = 1; i <= 3; i++)
+                defaults[`cond-${i}`] = document.getElementById(`cond-${i}`).innerText;
+        }
+
+        function setDefaultRules()
+        {
+            getDefaults();
+            for(var i = 1; i <= 3; i++)
+                document.getElementById(`cond-${i}`).innerText = defaults[`cond-${i}`];
+        }
+
+        function setRules(rnd)
+        {
+            getDefaults();
+
+            var soundNames = ["ゲームセンター","ボールペンを用いて書く音","浜辺","本のページをめくる音","車のエンジン","カジノ","自主規制音","チェーンソー","圧縮された空気","牛","ダイヤルアップ接続","ドアの閉まる音","換気扇","花火が爆発する音","ガラスが割れる音","ヘリコプター","マリンバ","中世の武器","オーボエ","電話が鳴る音","警察の無線機",
+    "鉄鎖を揺らす音","グロック19をリロードする音","サックス","サーボモータ","ミシン","サッカーの試合","音のなるおもちゃ","スーパーマーケット","卓球","モリフクロウ","タクシーの配車無線","布を破る音","喉歌","ヤブサヨナキドリ","チベットの尼","鉄道の駅","チューバ","掃除機","滝","ジッパー"];
+            var indicatorNames = ["BOB", "CAR", "CLR", "FRK", "FRQ", "IND", "MSA", "NSA", "SIG", "SND", "TRN"];
+            var portNames = ["パラレル", "シリアル", "PS/2", "RJ-45", "DVI-D", "ステレオRCA"];
+
+            var conditionIndicesUsed = new Array(3);
+
+            for(var i = 0; i < 3; i++)
+            {
+                var condIndex = -1;
+                while(condIndex == -1 || conditionIndicesUsed.includes(condIndex))
+                    condIndex = rnd.nextMax(7);
+
+                var condType = condIndex;
+                conditionIndicesUsed[i] = condIndex;
+                var parameter;
+
+                if(condIndex < 2)
+                    parameter = rnd.nextMax(11);
+                else
+                    parameter = rnd.nextMax(6);
+
+                var soundCondition = false;
+                var soundConditionMsg = "";
+                var otherwiseCondition = "";
+                var condition;
+                var span = document.getElementById(`cond-${i+1}`);
+
+                if(i == 0)
+                {
+                    var soundArr = new Array();
+                    soundArr.push(rnd.nextMax(41));
+                    soundArr.push(-1);
+                    while(soundArr[1] == -1 || soundArr[1] == soundArr[0])
+                        soundArr[1] = rnd.nextMax(41);
+
+                    condition = {type: condType, conditionParam: parameter};
+                    soundCondition = true;
+                    soundConditionMsg = `かつ少なくとも一つの音源が${soundNames[soundArr[0]]}もしくは${soundNames[soundArr[1]]}`;
+                    otherwiseCondition = ``;
+                }
+                else
+                {
+                    condition = {type: condType, conditionParam: parameter};
+                    otherwiseCondition = `そうでない場合、`;
+                    soundCondition = false;
+                    soundConditionMsg = ``;
+                }
+
+                switch(condition.type)
+                {
+                    case 0: span.innerText = `${otherwiseCondition}爆弾に点灯した ${indicatorNames[condition.conditionParam]} インジケーターが付いて${(soundCondition) ? "おり、" + soundConditionMsg : "いる"}`;break;
+                    case 1: span.innerText = `${otherwiseCondition}爆弾に消灯した ${indicatorNames[condition.conditionParam]} インジケーターが付いて${(soundCondition) ? "おり、" + soundConditionMsg : "いる"}`;break;
+                    case 2: span.innerText = `${otherwiseCondition}爆弾に${portNames[condition.conditionParam]}ポートが付いて${(soundCondition) ? "おり、" + soundConditionMsg : "いる"}`;break;
+                    case 3: span.innerText = `${otherwiseCondition}爆弾に空のポートプレートが${(soundCondition) ? "あり、" + soundConditionMsg : "ある"}`;break;
+                    case 4: span.innerText = `${otherwiseCondition}爆弾に少なくとも ${(condition.conditionParam % 3) + 2} 本のバッテリーが付いて${(soundCondition) ? "おり、" + soundConditionMsg : "いる"}`;break;
+                    case 5: span.innerText = `${otherwiseCondition}爆弾のシリアルナンバーの最後の数字が${(condition.parameter % 2 == 0) ? "偶数" : "奇数"}${(soundCondition) ? "であり、" + soundConditionMsg : ""}`;break;
+                    case 6: span.innerText = `${otherwiseCondition}爆弾のシリアルナンバーに母音が含まれて${(condition.parameter % 2 == 0) ? `${(soundCondition) ? `おらず、${soundConditionMsg}` : `いない`}` : `${(soundCondition) ? `おり、${soundConditionMsg}` : `いる`}`}`
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ダブルリスニング</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Double Listening.svg" class="diagram">
+                <h2>モジュール詳細：ダブルリスニング</h2>
+                <p class="flavour-text">「違いが分かんないけど、これはゲームセンター? それともカジノ?」 「うん。」</p>
+
+                <p>このモジュールには再生ボタン、黒の四角い送信ボタン、下には五桁の二進数のディスプレーが付いている。
+                再生ボタンを押すとリスニングモジュールに使用される二つの音源が同時に再生される。
+                再生ボタンには 3 秒のクールダウンが存在する。
+                <a href="https://ktane.timwi.de/HTML/Listening%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E3%83%AA%E3%82%B9%E3%83%8B%E3%83%B3%E3%82%B0)%20(hatosable).html">リスニングのマニュアル</a>を使用し、それぞれの音源のコードを入手する。</p>
+
+                <p>表 A において、最初に該当する条件の段を使用し、それぞれのコードを二進数に変換する。
+                この二つの五桁の二進数に対して、XOR<sup>*</sup> 演算子で評価し、 結果を下のディスプレーに入力して送信する。
+                間違った入力はミスとなり、モジュールはリセットされる。</p>
+
+                <h3>表 A</h3>
+                <table style="margin-bottom: 17px;">
+                    <tr>
+                        <th rowspan="2">条件</th>
+                        <th colspan="4">記号</th>
+                    </tr>
+                    <tr>
+                        <th>#</th>
+                        <th>$</th>
+                        <th>&amp;</th>
+                        <th>*</th>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left"><span class='condition' id='cond-1'>爆弾に少なくとも 3 本のバッテリーが付いており、かつ少なくとも一つの音源が浜辺もしくは滝</span></th>
+                        <td>0</td><td>0</td><td>1</td><td>1</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left;width:60%"><span class='condition' id='cond-2'>そうでない場合、爆弾に空のポートプレートがある</span></th>
+                        <td>0</td><td>1</td><td>0</td><td>1</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left"><span class='condition' id='cond-3'>そうでない場合、爆弾のシリアルナンバーの最後の数字が奇数</span></th>
+                        <td>1</td><td>0</td><td>1</td><td>0</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:left">そうでない場合</th>
+                        <td>1</td><td>1</td><td>0</td><td>0</td>
+                    </tr>
+                </table>
+                <p>メモ: 特定の音源は他の音源をかき消すことがないようにするため、音量が調節されている。</p>
+                <p><sup>*</sup>XOR 演算子で評価するには、二つの二進数のそれぞれの桁を一つずつ比べていく。
+                桁の数字が異なる場合、その桁の結果は 1 である。そうでない場合、その桁の結果は 0 である。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
