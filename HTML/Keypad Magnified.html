@@ -8,6 +8,167 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let numToFile = [ '18-nwithhat', '11-six', '26-cursive', '6-omega', '1-copyright', '7-squidknife', '16-euro', '3-hollowstar', '19-dragon' ];
+
+        function setDefaultRules() {
+            makeTables();
+            setMiniGrids([ [0,2,5,7],[1,3,6,4],[2,1,8,3],[3,4,7,2],[4,6,1,8],[5,7,2,0],[6,8,0,5],[7,5,4,6],[8,0,3,1] ]);
+            setBigGrid([ 0,4,1,2,8,5,3,6,7,7,3,6,0,4,1,5,2,8,2,5,8,6,3,7,4,0,1,3,1,4,7,5,2,0,8,6,6,8,2,1,0,4,7,3,5,5,7,0,8,6,3,2,1,4,8,6,7,4,2,0,1,5,3,4,0,3,5,1,6,8,7,2,1,2,5,3,7,8,6,4,0 ]);
+            setWords(['row', 'column', 'row', 'column'], ['left to right', 'top to bottom', 'right to left', 'bottom to top']);
+
+        }
+        function setRules(rnd) {
+            makeTables();
+            randomizeMiniGrids();
+            randomizeBigGrid();
+            randomizeWords();
+
+            function randomizeMiniGrids() {
+                let mergedGrid = recurse(
+                    Array(4 * 9).fill(null),
+                    Array(4 * 9).fill(null).map(x => [0,1,2,3,4,5,6,7,8]),
+                    4, 9, rnd);
+                let grids = [ ];
+                for (let gIx = 0; gIx < 9; gIx++) {
+                    grids[gIx] = new Array(4);
+                    for (let     i = 0; i < 4; i++){
+                        grids[gIx][i] = mergedGrid[4 * gIx + i];
+                    }
+                }
+                setMiniGrids(grids);
+            }
+            function randomizeBigGrid() {
+                let grid = recurse(
+                    Array(9 * 9).fill(null),
+                    Array(9 * 9).fill(null).map(x => Array(9).fill(null).map((_, c) => c)),
+                    9, 9);
+                setBigGrid(grid);
+            }
+            function randomizeWords() {
+                let rc = [ 'row', 'column', 'row', 'column' ];
+                let reverse = [ true, true, false, false ];
+                rnd.shuffleFisherYates(rc);
+                rnd.shuffleFisherYates(reverse);
+                let dir = new Array(4);
+                for (let i = 0; i < 4; i++) {
+                    if (rc[i] == 'row'){
+                        if (reverse[i])
+                            dir[i] = 'right to left';
+                        else
+                            dir[i] = 'left to right';
+                    }
+                    else {
+                        if (reverse[i])
+                            dir[i] = 'bottom to top';
+                        else
+                            dir[i] = 'top to bottom';
+                    }
+                }
+                setWords(rc, dir);
+            }
+
+            function recurse(sofar, available, w, h) {
+                function processAvailable(sq, v) {
+                    let newAvailable = available.slice(0);
+                    for (let c = 0; c < w; c++) {
+                        let avIx = c + w * ((sq / w) | 0);
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    for (let r = 0; r < h; r++) {
+                        let avIx = (sq % w) + w * r;
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    return newAvailable;
+                }
+
+                let ixs = [];
+                let lowest = 9;
+                for (let sq = 0; sq < w * h; sq++) {
+                    if (sofar[sq] !== null)
+                        continue;
+                    if (available[sq].length < lowest) {
+                        ixs = [sq];
+                        lowest = available[sq].length;
+                    }
+                    else if (available[sq].length === lowest)
+                        ixs.push(sq);
+                    if (lowest === 1)
+                        break;
+                }
+
+                if (ixs.length === 0)
+                    return sofar;
+
+                let square = ixs[rnd.next(0, ixs.length)];
+                let offset = rnd.next(0, available[square].length);
+                for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++) {
+                    let avIx = (fAvIx + offset) % available[square].length;
+                    let v = available[square][avIx];
+                    sofar[square] = v;
+
+                    let result = recurse(sofar, processAvailable(square, v), w, h);
+                    if (result !== null)
+                        return result;
+                }
+                sofar[square] = null;
+                return null;
+            }
+
+        }
+
+        function makeTables() {
+            let stack = $(".hstack.wrap");
+            stack.html("");
+            for (let i = 0; i < 9; i++)
+                $('<table> <tr><td></td><td></td></tr> <tr><td></td><td></td></tr> </table>').appendTo(stack);
+            let bigTable = $(".big-table");
+            bigTable.html("");
+            let tr = $("<tr>").appendTo(bigTable);
+            $(`<th>`).addClass("corner").appendTo(tr);
+            for (let i = 1; i <= 9; i++)
+                $("<th>").addClass("empty").text(i).appendTo(tr);
+            for (let i = 1; i <= 9; i++)
+                $(`<tr><th class="empty">${i}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`).appendTo(bigTable);
+        }
+
+        function setMiniGrids(grids){
+            let cells = $('.hstack.wrap td');
+            for (let gridIx = 0; gridIx < 9; gridIx++){
+                for (let cellIx = 0; cellIx < 4; cellIx++) {
+                    let value = grids[gridIx][cellIx];
+                    setImage(cells[4 * gridIx + cellIx], value);
+                }
+            }
+        }
+        function setBigGrid(grid){
+            let cells = $('.big-table td');
+            for (let i = 0; i < 81; i++){
+                setImage(cells[i], grid[i]);
+            }
+        }
+        function setWords(rc, dir) {
+            let rcSpans = document.getElementsByClassName('row-column-indicator');
+            let dirSpans = document.getElementsByClassName('direction-indicator');
+            for (let i = 0; i < 4; i++){
+                rcSpans[i].innerText = rc[i];
+                dirSpans[i].innerText = dir[i];
+            }
+        }
+        function setImage(cell, value) {
+            $(cell).append(`<img src="img/Keypad/${numToFile[value]}.png">`);
+        }
+    </script>
     <style>
         .dark table, table {
             border: none;
@@ -24,8 +185,24 @@
             align-items: center;
             justify-content: center;
         }
+        .big-table { font-size: 1px; }
+        td img {
+            width: 1.25cm;
+            height: 1.25cm;
+        }
+        .big-table td {
+            padding: 0;
+            width: 1.5cm;
+            height: 1.5cm;
+        }
+        li {
+            margin: 0.5mm;
+        }
         .wrap { flex-wrap: wrap; }
-        td.empty { font-size: 30px; }
+        th.empty {
+            font-weight: normal;
+            font-size: 30px;
+        }
     </style>
 </head>
 <body>
@@ -46,59 +223,23 @@
                     <li>Determine the remaining three symbols based on the symbol on the buttons and which button has the blue status light.</li>
                     <li>To determine the layout of the symbols on the buttons, find the grid with the symbol in the corner with the blue status light.</li>
                 </ul>
-                <div class="hstack wrap">
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/N.png"></td><td><img src="img/Keypad Magnified/wisp.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/kitty.png"></td><td><img src="img/Keypad Magnified/star.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/six.png"></td><td><img src="img/Keypad Magnified/omega.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/euro.png"></td><td><img src="img/Keypad Magnified/copyright.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/wisp.png"></td><td><img src="img/Keypad Magnified/six.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/dragon.png"></td><td><img src="img/Keypad Magnified/omega.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/omega.png"></td><td><img src="img/Keypad Magnified/copyright.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/star.png"></td><td><img src="img/Keypad Magnified/wisp.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/copyright.png"></td><td><img src="img/Keypad Magnified/euro.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/six.png"></td><td><img src="img/Keypad Magnified/dragon.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/kitty.png"></td><td><img src="img/Keypad Magnified/star.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/wisp.png"></td><td><img src="img/Keypad Magnified/N.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/euro.png"></td><td><img src="img/Keypad Magnified/dragon.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/N.png"></td><td><img src="img/Keypad Magnified/kitty.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/star.png"></td><td><img src="img/Keypad Magnified/kitty.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/copyright.png"></td><td><img src="img/Keypad Magnified/euro.png"></td></tr>
-                    </table>
-                    <table>
-                        <tr><td><img src="img/Keypad Magnified/dragon.png"></td><td><img src="img/Keypad Magnified/N.png"></td></tr>
-                        <tr><td><img src="img/Keypad Magnified/omega.png"></td><td><img src="img/Keypad Magnified/six.png"></td></tr>
-                    </table>
-                </div>
+                <div class="hstack wrap"></div>
 
                 <ul>
                     <li>Press the four buttons in the order their symbols appear. Follow the rules for the condition that applies</li>
                 </ul>
                 <ul>
-                    <li><strong>Last digit of the serial number is even, only:</strong> Read the <strong>row</strong> from <u>left to right</u>.</li>
-                </ul>
-                <ul>
-                    <li><strong>First digit of the serial number is even, only:</strong> Read the <strong>column</strong> from <u>top to bottom</u>.</li>
-                </ul>
-                <ul>
-                    <li><strong>Both the first and last digits are even:</strong> Read the <strong>row</strong> from <u>right to left</u>.</li>
-                </ul>
-                <ul>
-                    <li><strong>Neither of the digits are even:</strong> Read the <strong>column</strong> from <u>bottom to top</u>.</li>
+                    <li><strong>Last digit of the serial number is even, only:</strong> <ul>
+                        <li>Read the <strong class="row-column-indicator"></strong> from <u class="direction-indicator"></u>.</li></ul></li>
+
+                    <li><strong>First digit of the serial number is even, only:</strong> <ul>
+                        <li>Read the <strong class="row-column-indicator"></strong> from <u class="direction-indicator"></u>.</li></ul></li>
+
+                    <li><strong>Both the first and last digits are even:</strong> <ul>
+                        <li>Read the <strong class="row-column-indicator"></strong> from <u class="direction-indicator"></u>.</li></ul></li>
+
+                    <li><strong>Neither of the digits are even:</strong> <ul>
+                        <li>Read the <strong class="row-column-indicator"></strong> from <u class="direction-indicator"></u>.</li></ul></li>
                 </ul>
 
             </div>
@@ -114,132 +255,7 @@
                     <li>Use the last digit of the serial number to determine the row or column to read. If the last digit is 0, use the leftmost letter’s numerical position in the alphabet, subtracting 9 until it is within range.
                 </ul>
 
-                <table style="font-size: 1px; ">
-                    <tr>
-                        <td class="corner"></td>
-                        <td class="empty">1</td>
-                        <td class="empty">2</td>
-                        <td class="empty">3</td>
-                        <td class="empty">4</td>
-                        <td class="empty">5</td>
-                        <td class="empty">6</td>
-                        <td class="empty">7</td>
-                        <td class="empty">8</td>
-                        <td class="empty">9</td>
-                    </tr>
-                    <tr>
-                        <td class="empty">1</td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">2</td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">3</td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">4</td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">5</td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">6</td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">7</td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">8</td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                    </tr>
-                    <tr>
-                        <td class="empty">9</td>
-                        <td><img src="img/Keypad Magnified/six.png"></td>
-                        <td><img src="img/Keypad Magnified/wisp.png"></td>
-                        <td><img src="img/Keypad Magnified/kitty.png"></td>
-                        <td><img src="img/Keypad Magnified/omega.png"></td>
-                        <td><img src="img/Keypad Magnified/star.png"></td>
-                        <td><img src="img/Keypad Magnified/dragon.png"></td>
-                        <td><img src="img/Keypad Magnified/euro.png"></td>
-                        <td><img src="img/Keypad Magnified/copyright.png"></td>
-                        <td><img src="img/Keypad Magnified/N.png"></td>
-                    </tr>
-                </table>
-
-                <ul>
-                    <li>When a button is pressed at the correct time, its status light will turn green. Pressing a button at the wrong time will give a strike and its status light will turn red. The module will not reset.</li>
-                </ul>
+                <table class="big-table"></table>
                 <br>
                 <p style="font-size: 11px">* The pieces of the symbol can be swapped around to make the symbol not as easily recognizable. They cannot be rotated, but they can be in different positions. This has no impact on the functionality of the module and is purely visual.</p>
 
