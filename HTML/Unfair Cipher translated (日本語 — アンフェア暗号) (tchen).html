@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>アンフェア暗号 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        .key-b-table {
+            width: 100%;
+        }
+        .key-b-table th, .key-b-table td {
+            padding: .1em .1em 0;
+            text-align: center;
+        }
+        .key-b-table td {
+            font-family: 'Special Elite', 'Courier New', monospace;
+        }
+        .floating-table {
+            float: right;
+            margin: .5em 0 0 1em;
+        }
+        ol, ul {
+            padding-left: 2em;
+        }
+        ul.spaced li {
+            margin: 1em 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Unfair Cipher.svg" class="diagram">
+                <h2>モジュール詳細：アンフェア暗号</h2>
+                <p class="flavour-text">フェアにプレイする気はないようだ。</p>
+                <p>このモジュールには2つのディスプレーがある。上のディスプレーには暗号化されたメッセージが表示されている。LEDの列は現在のステージ数を表している。</p>
+                <p>右のディスプレイを押すと、白字で表示されるモジュールIDと、赤字で表示されるモジュールが認識したミスの回数の表示で切り替わる。これらはどちらもローマ数字で表示される。</p>
+                <p><strong><span style="color:red">このモジュールにおいて、ミスの回数を参照する場合、必ずこの赤字で表示されたミスの回数を参照する。</span></strong></p>
+                <p>モジュールによって暗号化されたメッセージは、3文字の<strong>命令</strong>を繋げたものである。これは異なる<strong>鍵</strong>を使った<strong>プレイフェア暗号</strong>によって暗号化される。すべての正しい入力を行うとモジュールが解除される。</p>
+                <ul>
+                    <li>暗号化の手順は次の通りである: <strong>原文 → 鍵Aによる暗号化 → 鍵Cによる暗号化 → カエサル暗号</strong>。これらを逆順に復号すると元の命令を得られる。</li>
+                </ul>
+                <h3>鍵A</h3>
+                <ol>
+                    <li>最初に、爆弾のシリアルナンバーを参照する。</li>
+                    <li>
+                        すべての英字を、その英字のアルファベットでの位置の数字で置き換える(A=1、B=2...)
+                        <ul>
+                            <li>これにより、数字のみで構成された文字列を得る。</li>
+                            <li>ただし、最初の文字が英字でそのアルファベットでの位置が20以上である場合、その文字を無視する。</li>
+                        </ul>
+                    </li>
+                    <li>
+                        シリアルナンバーの4つ目か5つ目の文字が<strong>母音</strong>であった場合、最後の数字を取り除く。
+                        <ul>
+                            <li>どちらも母音であった場合でもこの操作は一度しか行われない。</li>
+                        </ul>
+                    </li>
+                    <li>この数字を<strong><em>十六進数</em></strong>に変換する。詳細の方法については、<i>付録：D3K2H3X</i>を参照する。</li>
+                    <li>十六進数を、数字と英字で構成された文字列として見る。左から順にみて、すべての数字に以下の操作を行う: 
+                        <ul>
+                            <li>その数字の後の文字も数字で、その数字と合わせると10から26の間の数字を構成する場合、その2桁の数字を、アルファベットでの位置がその数字である英字1文字と置き換える。</li>
+                            <li>そうでない場合、その1桁の数字をアルファベットでの位置がその数字である英字1文字と置き換える。数字が0である場合、その数字を無視する。</li>
+                        </ul>
+                    </li>
+                    <li>モジュールID、ポートプレートの数、バッテリーホルダーの数を、それぞれアルファベットでの位置がその数字である英字1文字に変換する。ただし、値が0である場合、それを無視する。</li>
+                    <li>得られた1~3文字の英字を、これまでの結果の最後に結合する。</li>
+                    <li><strong>これが鍵Aである。</strong></li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h3>鍵B</h3>
+                <p>以下の表から鍵Bを得る。曜日と月は、爆弾が起動した時間を参照する。:</p>
+                <table class='key-b-table'>
+                    <tr><td style="background: #101010" colspan="2" rowspan="2"></td>
+                        <th colspan="12" style="background: #303030; color: white">月</th></tr>
+                    <tr><th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th><th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th></tr>
+                    <tr><th rowspan="7" style="background: #303030; color: white">曜日</th>
+                        <th>月</th><td>ABDA</td><td>FEV</td><td>DBHC</td><td>BLD</td><td>DBIE</td><td>AFEF</td><td>AFCG</td><td>CQH</td><td>DEAI</td><td>FEAA</td><td>EFAB</td><td>DECC</td></tr>
+                    <tr><th>火</th><td>ABDB</td><td>FEW</td><td>DBHD</td><td>BLE</td><td>DBIF</td><td>AFEG</td><td>AFCH</td><td>CQI</td><td>DEAA</td><td>FEAB</td><td>EFAC</td><td>DECD</td></tr>
+                    <tr><th>水</th><td>ABDC</td><td>FEX</td><td>DBHE</td><td>BLF</td><td>DBIG</td><td>AFEH</td><td>AFCI</td><td>CQA</td><td>DEAB</td><td>FEAC</td><td>EFAD</td><td>DECE</td></tr>
+                    <tr><th>木</th><td>ABDD</td><td>FEY</td><td>DBHF</td><td>BLG</td><td>DBIH</td><td>AFEI</td><td>AFCA</td><td>CQB</td><td>DEAC</td><td>FEAD</td><td>EFAE</td><td>DECF</td></tr>
+                    <tr><th>金</th><td>ABDE</td><td>FEZ</td><td>DBHG</td><td>BLH</td><td>DBII</td><td>AFEA</td><td>AFCB</td><td>CQC</td><td>DEAD</td><td>FEAE</td><td>EFAF</td><td>DED</td></tr>
+                    <tr><th>土</th><td>ABDF</td><td>FEBG</td><td>DBHH</td><td>BLI</td><td>DBIA</td><td>AFEB</td><td>AFCC</td><td>CQD</td><td>DEAE</td><td>FEAF</td><td>EFB</td><td>DEDA</td></tr>
+                    <tr><th>日</th><td>ABDG</td><td>FEBH</td><td>DBHI</td><td>BLA</td><td>DBIB</td><td>AFEC</td><td>AFCD</td><td>CQE</td><td>DEAF</td><td>FET</td><td>EFBA</td><td>DEDB</td></tr>
+                </table>
+                <h3>鍵C</h3>
+                <p>鍵Bを利用したプレイフェア暗号によって、鍵Aを暗号化する。<strong>これが鍵Cである。</strong></p>
+                <p>詳細の方法については、<i>付録：PL4YF4112 101</i>を参照する。</p>
+
+                <h3>解法 — ステップ1: カエサル暗号</h3>
+                <table class='floating-table'>
+                    <tr>
+                        <th style="background: #303030; color: white">条件</th>
+                        <th style="background: #303030; color: white">操作</th>
+                    </tr>
+                    <tr>
+                        <td><strong>ポートの種類</strong>1つにつき</td>
+                        <th>- 2</th>
+                    </tr>
+                    <tr>
+                        <td><strong>ポートプレート</strong>1つにつき</td>
+                        <th>+ 1</th>
+                    </tr>
+                    <tr>
+                        <td>シリアルナンバーの<strong>子音</strong>1つにつき</td>
+                        <th>+ 1</th>
+                    </tr>
+                    <tr>
+                        <td>シリアルナンバーの<strong>母音</strong>1つにつき</td>
+                        <th>- 2</th>
+                    </tr>
+                    <tr>
+                        <td><strong>点灯した</strong>インジケーター1つにつき</td>
+                        <th>+ 2</th>
+                    </tr>
+                    <tr>
+                        <td><strong>点灯していない</strong>インジケーター1つにつき</td>
+                        <th>- 2</th>
+                    </tr>
+                    <tr>
+                        <td><strong>バッテリー</strong>1つにつき</td>
+                        <th>- 1</th>
+                    </tr>
+                    <tr>
+                        <td>バッテリーがない場合</td>
+                        <th>+ 10</th>
+                    </tr>
+                    <tr>
+                        <td>ポートがない場合</td>
+                        <th>× 2</th>
+                    </tr>
+                    <tr>
+                        <td>モジュールの数が31以上である場合</td>
+                        <th>÷ 2</th>
+                    </tr>
+                </table>
+                <p>カエサル暗号のオフセットを計算する。0から開始し、上記の表のうち満たす条件の操作を上から順に適用する。</p>
+                <p>除算については、あまりを無視する。例: 除算の結果が-1.5である場合、-1を利用する</p>
+                <p>暗号文を<em>復号</em>するには、オフセットが負であるならば、画面に表示された文字をそれぞれその数だけ前に進める。反対に、オフセットが正であるならば、文字をそれぞれその数だけ後ろに戻す。<strong>A</strong>から後ろに戻す場合は<strong>Z</strong>になり、反対に<strong>Z</strong>から前に進める場合は<strong>A</strong>になる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h3>解法 — ステップ2: プレイフェア暗号</h3>
+                <p>ステップ1で復号された暗号を、鍵Cを使ったプレイフェア暗号で復号する。</p>
+                <p>この操作をさらに、鍵Aを使ったプレイフェア暗号で繰り返す。</p>
+                <p><strong>ここで得られた文字列が原文である。</strong></p>
+
+                <h3>解法 — ステップ3: 命令の実行</h3>
+                <p>メッセージには4つの命令がある。左から右の順に命令を実行する。</p>
+                <p>小さいディスプレーを押すことで、モジュールIDとミスの回数の表示で切り替えられる。ミスの回数は赤で表示される。どちらもローマ数字で表記されている。</p>
+                <h4>命令:</h4>
+                <p>
+                    「%」は剰余算 (左の数を右の数で割った時のあまり)を示している。<br>
+                    <strong>内心</strong>とは、中心にある白い円を表す。<br>
+                    <strong>外心</strong>とは、色のついたボタンの外にある、灰色の三角形状の枠を示す。<br>
+                    素数のリストについては、<i>付録：PR1M3</i>を参照する。
+                </p>
+                <ul>
+                    <li><strong><em>PCR</em></strong>: 赤のボタンを押す。</li>
+                    <li><strong><em>PCG</em></strong>: 緑のボタンを押す。</li>
+                    <li><strong><em>PCB</em></strong>: 青のボタンを押す。</li>
+                    <li><strong><em>SUB</em></strong>: タイマーの秒を表す2つの数字が一致する時に、<strong>外心</strong>を押す。</li>
+                    <li>
+                        <strong><em>MIT</em></strong>: タイマーの秒数の一の位が<i>(m + c + s) % 10</i>と一致するときに、<strong>内心</strong>を押す。ただし、<i>m</i>はモジュールID、<i>c</i>は最後にミスが記録されたとき(ミスが記録されていない場合は初期状態)から色のついた(赤、緑、青のいずれか)ボタンが押された回数、<i>s</i>は現在のステージ(1から開始)の番号を表す。
+                    </li>
+                    <li><strong><em>PRN</em></strong>: モジュールID % 20が素数である場合、<strong>内心</strong>を押す。そうでない場合、<strong>外心</strong>を押す。</li>
+                    <li><strong><em>CHK</em></strong>: モジュールID % 20が素数である場合、<strong>外心</strong>を押す。そうでない場合、<strong>内心</strong>を押す。</li>
+                    <li>
+                        <strong><em>BOB</em></strong>: <strong>内心</strong>を押す。</strong>
+                        <ul>
+                            <li>点灯したBOBのインジケーターが爆弾の唯一のインジケーターで、バッテリーがちょうど二つある場合、これを押すと<strong>即座にモジュールが解除される</strong>。</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong><em>REP</em></strong>または<strong><em>EAT</em></strong>: 最後の命令を繰り返す。これが最初の命令である場合、<strong>内心</strong>を押す。</strong>
+                    </li>
+                    <li>
+                        <strong><em>STR</em></strong>または<strong><em>IKE</em></strong>: <span style="color:red">赤</span>のボタンを0個目として、色のついたボタンを時計回りに記録されたミスの回数分だけ数え、その位置のボタンを押す。
+                    <ul>
+                        <li>これらの手順におけるミスの回数は、モジュールにある小さいディスプレーに表示される<span style="color:red">認識されたミスの回数</span>を参照する。</li>
+                    </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <table class='floating-table'>
+                    <tr>
+                        <tr>
+                            <th>十進数</th>
+                            <th>十六進数</th>
+                        </tr>
+                    </tr>
+                    <tr>
+                        <th>0 - 9</th>
+                        <th>0 - 9</th>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>A</th>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>B</th>
+                    </tr>
+                    <tr>
+                        <th>12</th>
+                        <th>C</th>
+                    </tr>
+                    <tr>
+                        <th>13</th>
+                        <th>D</th>
+                    </tr>
+                    <tr>
+                        <th>14</th>
+                        <th>E</th>
+                    </tr>
+                    <tr>
+                        <th>15</th>
+                        <th>F</th>
+                    </tr>
+                    <tr>
+                        <th>16</th>
+                        <th>10</th>
+                    </tr>
+                    <tr>
+                        <th>26</th>
+                        <th>1A</th>
+                    </tr>
+                    <tr>
+                        <th>...</th>
+                        <th>...</th>
+                    </tr>
+                </table>
+                <h3>付録：D3K2H3X</h3>
+                <p>以下のステップを参照して整数を十六進数に変換する</p>
+                <ol>
+                    <li>数字を16で割り、その商と余剰を計算する。</li>
+                    <li>以下のテーブルを利用して、余剰を十六進数で利用される数字に変換する。</li>
+                    <li>同様のステップを、商を新しい数字として繰り返す。これを余剰が0になるまで行う。</li>
+                    <li>得られた十六進数で利用される数字の列の順番を逆転させる。</li>
+                    <li>先頭に0がある場合、それらを消す。</li>
+                </ol>
+
+                <h3>付録：PR1M3</h3>
+                <ul>
+                    <li>素数(20以下): 2, 3, 5, 7, 11, 13, 17, 19</li>
+                </ul>
+
+                <h3>付録：PL4YF4112 101</h3>
+                <ul class='spaced'>
+                    <li>
+                        次の手順により、5×5の英字からなる行列を作成する。まず<b>鍵</b>の英字を左上から読み順に埋め、残りの使われていないアルファベットをアルファベット順で埋める。全ての英字は、<b>一度しか</b>行列に利用することができないため、1回目の出現時のみ行列を埋める。「J」と「I」は同一の英字として扱う。
+                    </li>
+                    <li>以下の手順で(D)と書かれた手順は<em>復号</em>するときのみ適用し、(E)と書かれた手順は<em>暗号化</em>するときのみ適用する。</li>
+                    <li><b>メッセージ</b>を2文字ずつのペアに分ける。メッセージが奇数個である場合、メッセージの最後に「<strong>X</strong>」を付け足す。ペアの文字が<strong>同じ</strong>である場合、二つ目の文字を「<strong>X</strong>」に変換する。それぞれのペアについて:
+                        <ul>
+                            <li>文字が行列の同じ行に出現する場合、それぞれの文字を<em>左</em>(D)/<em>右</em>(E)に隣接する文字に変換する。その位置に文字が存在しない場合は、反対側の列にループする。</li>
+                            <li>文字が行列の同じ列に出現する場合、それぞれの文字を<em>上</em>(D)/<em>下</em>(E)に隣接する文字に変換する。その位置に文字が存在しない場合は、反対側の行にループする。</li>
+                            <li>文字が行列の異なる行・列に出現する場合、それぞれの文字を同じ行で、もう片方の文字の列にある文字に変換する。</li>
+                        </ul>
+                    </li>
+                    <li>必要があれば、「X」をペアのもう片方の文字に置き換えるか削除し、「I」を「J」に置き換える。
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+</html>
