@@ -10,9 +10,244 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+
+            var edgeworkVariables = [
+                'インジケーター', '点灯したインジケーター', '点灯していないインジケーター', '母音が含まれるインジケーター', '母音が含まれないインジケーター',
+                'ポート', 'ポートプレート', '空ではないポートプレート', 'ポートの種類', 'ちょうど一つしかないポートの種類', '重複しているポートの種類',
+                'バッテリー', 'バッテリーホルダー', '単3バッテリー', '単1バッテリー',
+                'シリアルナンバー内の英字', 'シリアルナンバー内の子音', 'シリアルナンバー内の母音',
+                'シリアルナンバー内の数字', 'シリアルナンバー内の奇数', 'シリアルナンバー内の偶数',
+                'すべてのモジュール(特殊モジュールを含む)', 'すべてのモジュール(特殊モジュールを含まない)',
+                '解除されたモジュール', '解除されていないモジュール(特殊モジュールを含まない)',
+
+                // Note: variables that start with “the” are handled specially by later code to ensure grammatical sentences
+                'シリアルナンバー内の最初の数字', 'シリアルナンバー内の最後から二番目の数字',
+                'シリアルナンバー内の最後の数字', 'シリアルナンバーの数字の合計',
+                'カウントダウンタイマーの秒数の一の位',
+                'カウントダウンタイマーの秒数の十の位',
+                'カウントダウンタイマーの分数の一の位',
+                'カウントダウンタイマーの分数の十の位'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['すべて白かすべて黒', 'すべて白', 'すべて黒'][rnd.next(0, 3)];
+
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: 'ちょうど一つの段か列がすべて白かすべて黒の' },
+                { extra: 'R', name: 'ちょうど一つの段がすべて白かすべて黒の' },
+                { extra: 'C', name: 'ちょうど一つの列がすべて白かすべて黒の' },
+                { extra: 'S', name: 'ピクセルがすべて白かすべて黒の3×3の正方形がある' },
+                { extra: 'T', name: `${type2x2}の2×2の正方形がある` },
+                { extra: '', name: `白ピクセルの方が多い区域の数と${edgeworkVariables[edgeworkVariableIx++]}の数が同じ` },
+                { extra: '', name: `白ピクセルの方が多い区域の数が${edgeworkVariables[edgeworkVariableIx++]}の数より多い` },
+                { extra: '', name: `白ピクセルの方が多い区域の数が${edgeworkVariables[edgeworkVariableIx++]}の数より少ない` },
+                { extra: '', name: `黒ピクセルの方が多い区域の数と${edgeworkVariables[edgeworkVariableIx++]}の数が同じ` },
+                { extra: '', name: `黒ピクセルの方が多い区域の数が${edgeworkVariables[edgeworkVariableIx++]}の数より多い` },
+                { extra: '', name: `黒ピクセルの方が多い区域の数が${edgeworkVariables[edgeworkVariableIx++]}の数より少ない` }
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1}以下` : `${16 - pixelCount1}以上`;
+            var blackWhite = rnd.next(0, 2) === 0 ? '白' : '黒';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? '白' : '黒';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `${blackWhite}ピクセルの数が${moreOrLess}の区域がない` },
+                    { extra: 'Q', name: `${blackWhite}ピクセルの数が${moreOrLess}の区域がちょうど一つある` },
+                    { extra: '', name: `${blackWhite}ピクセルの数が${moreOrLess}の区域が一つより多くある` },
+                ],
+                [
+                    { name: '白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より少ない', extra: '' },
+                    { name: '白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より多い', extra: '' },
+                    { name: '白ピクセルの方が多い区域の数と黒ピクセルの方が多い区域の数が同じである', extra: '' },
+                ],
+                [
+                    { name: `すべての${blackWhite2}ピクセルの合計が${64 - pixelCount2}以上の`, extra: '' },
+                    { name: `すべての${blackWhite2}ピクセルの合計が${64 - pixelCount2}以下の`, extra: '' },
+                    { name: `すべての${blackWhite2}ピクセルの合計が${pixelCount2 + 1}から${63 - pixelCount2}の間の`, extra: '' },
+                ],
+                [
+                    { name: '黒ピクセルと白ピクセルが8個ずつの区域がない', extra: '' },
+                    { name: '黒ピクセルと白ピクセルが8個ずつの区域がちょうど一つある', extra: 'Q' },
+                    { name: '黒ピクセルと白ピクセルが8個ずつの区域が一つより多くある', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = `${startRule}`;
+
+            var solutions = [
+                '黒ピクセルの方が多い区域',
+                '白ピクセルの方が多い区域',
+                '黒ピクセルと白ピクセルが8個ずつの区域',
+                '白ピクセルの合計',
+                '黒ピクセルの合計',
+                '黒ピクセルが最も少ない区域の黒ピクセル',
+                '黒ピクセルが最も多い区域の黒ピクセル',
+                '白ピクセルが最も少ない区域の白ピクセル',
+                '白ピクセルが最も多い区域の白ピクセル',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    'その他の3つの区域の白ピクセル',
+                    'その他の3つの区域の黒ピクセル',
+                    '対角線上にある区域の白ピクセル',
+                    '対角線上にある区域の黒ピクセル',
+                    '横に隣接している区域の白ピクセル',
+                    '横に隣接している区域の黒ピクセル',
+                    '縦に隣接している区域の白ピクセル',
+                    '縦に隣接している区域の黒ピクセル'
+                ],
+                'R': [
+                    'そのy座標(一番上の段を1つ目とする)',
+                    'そのy座標(一番下の段を1つ目とする)'
+                ],
+                'C': [
+                    'そのx座標(一番左の列を1つ目とする)',
+                    'そのx座標(一番右の列を1つ目とする)'
+                ],
+                'L': [
+                    'そのx/y座標(一番上/左の段/列を1つ目とする)',
+                    'そのx/y座標(一番下/右の段/列を1つ目とする)'
+                ],
+                'S': [
+                    '読み順*で最初のそのような正方形の中央のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の中央のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最後のそのような正方形の中央のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の中央のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最初のそのような正方形の左上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の左上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最後のそのような正方形の左上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の左上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最初のそのような正方形の右上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の右上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最後のそのような正方形の右上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の右上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最初のそのような正方形の左下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の左下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最後のそのような正方形の左下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の左下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最初のそのような正方形の右下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の右下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最後のそのような正方形の右下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の右下のピクセルのy座標(一番上の段が1つ目)'
+                ],
+                'T': [
+                    '読み順*で最初のそのような正方形の左上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の左上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最後のそのような正方形の左上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の左上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最初のそのような正方形の右上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の右上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最後のそのような正方形の右上のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の右上のピクセルのy座標(一番上の段が1つ目)',
+                    '読み順*で最初のそのような正方形の左下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の左下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最後のそのような正方形の左下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の左下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最初のそのような正方形の右下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最初のそのような正方形の右下のピクセルのy座標(一番下の段が1つ目)',
+                    '読み順*で最後のそのような正方形の右下のピクセルのx座標(一番左の列が1つ目)',
+                    '読み順*で最後のそのような正方形の右下のピクセルのy座標(一番上の段が1つ目)'
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `${conditions[i].name}場合、値は${solution.startsWith("the ") ? solution : `${solution}`}の数である。`;
+            }
+        }
+    </script>
     <style>
-        .footnote {
-            font-size: .83em;
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
         }
     </style>
 </head>
@@ -31,7 +266,7 @@
                 <ul>
                     <li>このモジュールには、4つの「区域」に分割された64ピクセルが表示されている。それぞれのピクセルは明るい(色がついていても「白」として扱う)か、暗い(「黒」として扱う)かのいずれかである。</li>
                     <li>その下には、1、2、3、4のラベルがついたボタンがある。</li>
-                    <li>次の表のシリアルナンバーの最後の数字のルールから開始する。</li>
+                    <li>次の表の<span id='start-rule'>シリアルナンバー内の最後の数字</span><span id='start-rule-modulo'> (0–9の範囲になるまで、10を加算/減算し続ける)</span>のルールから開始する。</li>
                     <li>当てはまるルールが見つかるまで、下向きに進める。一番下のルールまでたどり着いたら一番上のルールにループする。</li>
                     <li>当てはまる最初のルールの値を計算する。答えが1から4の範囲になるまで繰り返し4を足し引きする。その値のボタンを押すとモジュールが解除される。</li>
                 </ul>
@@ -42,44 +277,34 @@
                             <th>ルール</th>
                         </tr>
                         <tr>
-                            <th>0</th>
-                            <td>ちょうど一つの区域の白ピクセルの数が5以下である場合、値はその他の3つの区域の白ピクセルの数である。</td>
+                            <th>0</th><td class="rule">ちょうど一つの区域の白ピクセルの数が5以下である場合、値はその他の3つの区域の白ピクセルの数である。</td>
                         </tr>
                         <tr>
-                            <th>1</th>
-                            <td>白ピクセルの方が多い区域の数と点灯したインジケーターの数が同じである場合、値はバッテリーの数である。</td>
+                            <th>1</th><td class="rule">白ピクセルの方が多い区域の数と点灯したインジケーターの数が同じである場合、値はバッテリーの数である。</td>
                         </tr>
                         <tr>
-                            <th>2</th>
-                            <td>ちょうど一つの段か列がすべて白かすべて黒である場合、値はそのx/y座標である(一番上/左の段/列を1つ目とする)。</td>
+                            <th>2</th><td class="rule">ちょうど一つの段か列がすべて白かすべて黒である場合、値はそのx/y座標(一番上/左の段/列を1つ目とする)である。</td>
                         </tr>
                         <tr>
-                            <th>3</th>
-                            <td>白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より少ない場合、値は黒ピクセルの方が多い区域の数である。</td>
+                            <th>3</th><td class="rule">白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より少ない場合、値は黒ピクセルの方が多い区域の数である。</td>
                         </tr>
                         <tr>
-                            <th>4</th>
-                            <td>すべての白ピクセルの合計が36以上である場合、答えは白ピクセルの数である。</td>
+                            <th>4</th><td class="rule">すべての白ピクセルの合計が36以上である場合、答えは白ピクセルの数である。</td>
                         </tr>
                         <tr>
-                            <th>5</th>
-                            <td>白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より多い場合、値は黒ピクセル数が最も少ない区域の黒ピクセルの数である。</td>
+                            <th>5</th><td class="rule">白ピクセルの方が多い区域の数が黒ピクセルの方が多い区域の数より多い場合、値は黒ピクセル数が最も少ない区域の黒ピクセルの数である。</td>
                         </tr>
                         <tr>
-                            <th>6</th>
-                            <td>ちょうど一つの区域の黒ピクセルの数が5以下である場合、値はその他の3つの区域の黒ピクセルの数である。</td>
+                            <th>6</th><td class="rule">ちょうど一つの区域の黒ピクセルの数が5以下である場合、値はその他の3つの区域の黒ピクセルの数である。</td>
                         </tr>
                         <tr>
-                            <th>7</th>
-                            <td>黒ピクセルの方が多い区域の数と点灯していないインジケーターの数が同じである場合、値はポートの数である。</td>
+                            <th>7</th><td class="rule">黒ピクセルの方が多い区域の数と点灯していないインジケーターの数が同じである場合、値はポートの数である。</td>
                         </tr>
                         <tr>
-                            <th>8</th>
-                            <td>ピクセルがすべて白かすべて黒の3×3の正方形がある場合、値は読み順*で最初のそのような正方形中央のピクセルのx座標(一番左の列が1つ目)である。</td>
+                            <th>8</th><td class="rule">ピクセルがすべて白かすべて黒の3×3の正方形がある場合、値は読み順*で最初のそのような正方形の中央のピクセルのx座標(一番左の列が1つ目)である。</td>
                         </tr>
                         <tr>
-                            <th>9</th>
-                            <td>白ピクセルの方が多い区域の数と黒ピクセルの方が多い区域の数が同じである場合、値はシリアルナンバーの最初の数字である。</td>
+                            <th>9</th><td class="rule">白ピクセルの方が多い区域の数と黒ピクセルの方が多い区域の数が同じである場合、値はシリアルナンバー内の最初の数字である。</td>
                         </tr>
                     </tbody>
                 </table>

@@ -10,19 +10,130 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                '数字が奇数の場合、倍にする。そうでない場合、半分にする。',
+                '数字が3の倍数の場合、3で割る。そうでない場合、原色*で点滅しているライトの数を加える。',
+                '数字を二乗する。',
+                '括弧が2つ目と3つ目のライトを囲っている場合、1つ目と2つ目のライトを囲っているものとして扱う。1つ目と2つ目のライトを囲っている場合、2つ目と3つ目のライトを囲っているものとして扱う。',
+                '数字を3倍して、その数の数字根**を計算する。',
+                '10から数字を引く。'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `数字が${m}の倍数の場合、${m}で割る。そうでない場合、${m}を掛ける。`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "赤", "オレンジ", "黄色", "緑", "青", "紫", "白" ];
+                    return `数字が${m}の倍数の場合、${m}で割る。そうでない場合、${colorNames[colors[0]]}、${colorNames[colors[1]]}、${colorNames[colors[2]]}のいずれかの色で点滅しているライトの数を加える。`;
+                },
+                rnd => `数字を二乗する。`,
+                rnd => `括弧が2つ目と3つ目のライトを囲っている場合、1つ目と2つ目のライトを囲っているものとして扱う。1つ目と2つ目のライトを囲っている場合、2つ目と3つ目のライトを囲っているものとして扱う。`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `${which === 1
+                        ? '「+」を「−」、「-」を「+」に変更し、「×」を「/」、「/」を「×」に変更する。'
+                        : '「+」を「×」、「×」を「+」に変更し、「-」を「/」、「/」を「-」に変更する。'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `数字を${m}倍して、その数の数字根**を計算する。`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `${m}から数字を引く。`;
+                },
+                rnd => `<var>n<${''}/var> + 1を掛ける。<var>n<${''}/var>は、この文字が名前に含まれるポートの数に等しい。`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `数字を${m}で割った余りを求め、その階乗を計算する。`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `この文字が含まれる${['点灯した', '点灯していない ', ''][indMode]}インジケーターの数に数字を変更する。`;
+                },
+                rnd => `<var>n<${''}/var>を掛ける。<var>n<${''}/var>はシリアルナンバー内の異なる文字の数である。`,
+                rnd => `この数字を二進数表記した時の1の個数に数字を変更する。`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `この数字を三進数表記した時の${['1’s', '2’s', '1と2'][whichDigits]}の個数に数字を変更する。`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${['ポートプレート', 'ポートの種類', 'バッテリーホルダー'][whichEdgework]}の数を${[`<var>n<${''}/var>として、<var>n<${''}/var> + 1を掛ける`, '足す'][op]}。`;
+                },
+                rnd => `文字を<a href='https://ktane.timwi.de/HTML/Braille%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E7%82%B9%E5%AD%97)%20(hatosable).html'>点字(Braille)<${''}/a> で表現した時の点の個数に変更する。(1~9 = A~H, 0 = J)`,
+                rnd => `文字を<a href='https://ktane.timwi.de/HTML/Maritime%20Flags%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E6%B5%B7%E4%B8%8A%E6%97%97)%20(alpha8404).html'>海上旗<${''}/a>における色のついた区域の数に変更する。`,
+                rnd => `文字を、それを<a href="https://ktane.timwi.de/HTML/Zoni%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E3%82%BE%E3%83%8B%E6%96%87%E5%AD%97)%20(alpha8404).html">ゾニ文字(Zoni)<${''}/a>で表したときの図形の個数に変更する。`,
+                rnd => `文字を<var>d<${''}/var> + 3×<var>s<${''}/var>に変更する。<var>d<${''}/var>はその文字のモールス符号における短点の数であり、<var>s<${''}/var>は長点の数である。`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `文字を<a href='https://ktane.timwi.de/HTML/14%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%2014)%20(hatosable).html'>14セグメントディスプレー<${''}/a>における ${['点灯していない', '点灯した'][useOn]}セグメントの数に変更する。`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `この数字の${['前に', '後ろに'][append]}シリアルナンバーの${['6番目', '3番目'][snValue]}の文字を連結させ、2桁の数字にする。`;
+                },
+                rnd => `表示されている全ての色の文字数の合計を足す。`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `シリアルナンバーにその文字がある場合、 <var>n<${''}/var> + 1で割る。<var>n<${''}/var>はシリアルナンバー内におけるその文字の出現回数である。そうでない場合、${m}を掛ける。`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `符号を反転させたモールス信号が0–9の数字またはA–Zの英字である場合、その文字の三十六進数の値を用いる。そうでない場合、その数字に${['ポート', 'ポートプレート', 'バッテリー', 'バッテリーホルダー', 'インジケーター', '点灯したインジケーター', '点灯していないインジケーター'][which]}の個数を足した数を用いる。`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `文字が数字の場合、${['ポート', 'ポートプレート', 'バッテリー', 'バッテリーホルダー', 'インジケーター', '点灯したインジケーター', '点灯していないインジケーター'][which]}の個数を足す。そうでない場合、 <var>d<${''}/var> + 3×<var>s<${''}/var>に変更する。<var>d<${''}/var>はその文字の<a href='https://ktane.timwi.de/HTML/Pigpen%20Rotations%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E3%83%94%E3%83%83%E3%82%B0%E3%83%9A%E3%83%B3%E6%9A%97%E5%8F%B7)%20(alpha8404).html'>ピッグペン暗号(Pigpen Rotations)</a>における点の数であり、<var>s<${''}/var>は線の数である。`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `シリアルナンバー内の${['数字', '英字の'][letters]}の個数を掛ける。`;
+                },
+                rnd => `ルールシード値の下一桁を足す。`,
+                rnd => `数字を、(全てのLEDの色の名前に含まれる文字の個数+1)に変更する。`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `爆弾が起動した時の現在の${['日', '月', '年'][which]}の数を足す。`;
+                },
+                rnd => `数字を、文章「0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9」で最初にその文字が登場した位置(スペースは無視)に変更する。`,
+                rnd => `その文字が英字の場合、英字を<a href='http://ktane.timwi.de/HTML/Scrabble%20Scramble.html'>English Scrabble<${''}/a>のスコアに変更する.`,
+                rnd => `数字をその文字に対する<a href='https://ktane.timwi.de/HTML/%C3%9Cbermodule.html'>extended tap code<${''}/a>の数を、2桁の数とみなして変更する。`,
+                rnd => `文字を、名前にその文字が含まれる爆弾のモジュール数の文字に置き換える。`,
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = shuffledRules[i];
+        }
+    </script>
     <style>
-        .color-morse-operations thead tr th:first-child {
-            width: 70px;
+        .small-font {
+            font-size: 11pt;
         }
-        .color-morse-reference {
-            text-align: center;
-            margin-top: 2em;
-        }
-        .color-morse-reference img {
-            max-width: 100%;
-        }
-        .dark img.centered-img { filter: invert(85%); }
-        img.centered-img { width: 500px; }
+        .dark .ondark { filter: invert(85%); }
     </style>
 </head>
 
@@ -42,52 +153,50 @@
                     <li>それぞれのライトは、モールス信号で一桁の数字か一文字の英字を表している。それらが英字を表している場合、その文字のアルファベットでの位置+9の数字として扱う。(A=10、B=11、など)</li>
                     <li>それぞれの数字について、下のテーブルから得られるそのライトの色に応じた操作を適用する。ライトの色が白の場合、その数字には何もしない。</li>
                     <li>
-                        新しく得られた数字をそのライトの場所に当てはめたときの数式の値を計算する。
+                        新しく得られた数字をそのライトの場所に当てはめたときの数式の数字を計算する。
                         <ul>
 
                             <li>結果が整数でない場合、整数部分のみを考える。</li>
                             <li>結果が負である場合、他の数字の前にハイフンを付けなければならない(-0は0となる)。</li>
-                            <li>結果の絶対値の値が999より大きい場合、下三桁のみを考える。</li>
+                            <li>結果の絶対数字の数字が999より大きい場合、下三桁のみを考える。</li>
                             <li>これらのルールが複数当てはまる場合、上から順に適用する。先頭の0は無視する。</li>
                         </ul>
                     </li>
                     <li>ボタンを利用して、結果をモールス信号で入力する。空白のボタンはそれぞれの桁のモールス信号を区切るために利用する。</li>
                     <li>ミスが記録された場合、それまでの入力はリセットされる。</li>
                 </ul>
-                <table class="color-morse-operations">
-                    <thead>
-                        <tr>
-                            <th>色</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>赤</td>
-                            <td>数字が奇数の場合、倍にする。そうでない場合、半分にする。</td>
-                        </tr>
-                        <tr>
-                            <td>オレンジ</td>
-                            <td>数字が3の倍数の場合、3で割る。そうでない場合、原色*で点滅しているライトの数を加える。</td>
-                        </tr>
-                        <tr>
-                            <td>黄色</td>
-                            <td>数字を二乗する。</td>
-                        </tr>
-                        <tr>
-                            <td>緑</td>
-                            <td>括弧が2つ目と3つ目のライトを囲っている場合、1つ目と2つ目のライトを囲っているものとして扱う。1つ目と2つ目のライトを囲っている場合、2つ目と3つ目のライトを囲っているものとして扱う。</td>
-                        </tr>
-                        <tr>
-                            <td>青</td>
-                            <td>数字を3倍して、その数の数字根**を計算する。</td>
-                        </tr>
-                        <tr>
-                            <td>紫</td>
-                            <td>10から数字を引く。</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <p id='rule-seeded-explanation'><em>数字</em>を参照するルールがある場合、三十六進数の数字を参照している(A=10, ..., Z=35)。
+                <em>文字</em>を参照するルールがある場合、モールス信号で表現された英字や数字を参照している。</p>
+                <table class="color-morse">
+                 <thead><tr>
+                     <td><b>色</b></td>
+                     <td><b>操作</b></td>
+                 </tr></thead>
+                 <tbody><tr>
+                     <td>赤<br>(red)</td>
+                     <td class="color-morse-rules">数字が奇数の場合、倍にする。そうでない場合、半分にする。</td>
+                 </tr>
+                 <tr>
+                     <td>オレンジ<br>(orange)</td>
+                     <td class="color-morse-rules">数字が3の倍数の場合、3で割る。そうでない場合、原色*で点滅しているライトの数を加える。</td>
+                 </tr>
+                 <tr>
+                     <td>黄色<br>(yellow)</td>
+                     <td class="color-morse-rules">数字を二乗する。</td>
+                 </tr>
+                 <tr>
+                     <td>緑<br>(green)</td>
+                     <td class="color-morse-rules">括弧が2つ目と3つ目のライトを囲っている場合、1つ目と2つ目のライトを囲っているものとして扱う。1つ目と2つ目のライトを囲っている場合、2つ目と3つ目のライトを囲っているものとして扱う。</td>
+                 </tr>
+                 <tr>
+                     <td>青<br>(blue)</td>
+                     <td class="color-morse-rules">	数字を3倍して、その数の数字根**を計算する。</td>
+                 </tr>
+                 <tr>
+                     <td>紫<br>(purple)</td>
+                     <td class="color-morse-rules">10から数字を引く。</td>
+                 </tr>
+             </tbody></table>
                 <p>
                     * 原色は青、赤、黄色である。
                 </p>
@@ -104,7 +213,7 @@
             </div>
             <div class="page-content">
                 <h3>モールス信号一覧</h3>
-                <img class="centered-img" src="img/Color Morse/Morse Reference.svg">
+                <img class="centered-img ondark" src="img/Color Morse/Morse Reference.svg">
             </div>
             <div class="page-footer relative-footer">ページ 2/2</div>
         </div>
