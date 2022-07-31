@@ -9,6 +9,398 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="css/main.css" />
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+    var MaxInitialRules = 6;
+    var MaxHoldRules = 3;
+    var LOGGING = false;
+
+    var IndicatorLabels = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+    var ButtonColor = ["赤", "青","黄色","白"];
+    var BigButtonLEDColor = ["赤", "青","黄色","白"];
+    var ButtonInstruction = ["押す","長押し","中止","起爆"];
+    var PortList = [ "DVI-D", "PS/2", "RJ-45", "ステレオRCA", "パラレル", "シリアル" ];
+
+    // Main conditions (“queries”)
+    function IsButtonColor(color) { return { id: "isButtonColor", text: `ボタンが${color}である` }; }
+    function IsButtonInstruction(label) { return { id: "isButtonLabel", text: `ボタンに「${label}」と書かれている` }; }
+    function IndicatorXLit(indicator) { return { id: "indicatorXLit", text: `「${indicator}」という点灯したインジケーターがある` }; }
+    function IsPortPresent(port) { return { id: "portPresent", text: `爆弾に${port}ポートがついている` }; }
+    function MoreThanXBatteries(n) {
+        return {
+            id: "moreThanXBatteries",
+            text: n === 1
+                ? "爆弾にバッテリーが1本よりも多くついている"
+                : `爆弾にバッテリーが${n}本よりも多くついている`
+        };
+    }
+    var EmptyPortPlate = { id: 'emptyportplate', text: "爆弾に空のポートプレートがある" };
+    var DoesSerialNumberStartWithLetter = { id: 'serial_letter', text: "シリアルナンバーが英字から始まる" };
+    var IsSerialNumberOdd = { id: 'serial_odd', text: "シリアルナンバーの最後の数字が奇数である" };
+
+    // Main rules
+    var Hold = { id: 'hold', text: "ボタンを押したままで「ボタンを離すタイミング」を参照する。" };
+    var Press = { id: 'tap', text: "ボタンを押してすぐに離す。" };
+    var TapWhenSecondsMatch = { id: 'tap11n', text: "カウントダウンタイマーの秒数の2つの数字が一致したときに、ボタンを押してすぐに離す。" };
+
+    // Conditions for releasing held buttons
+    function IsIndicatorColor(color) { return { id: "isButtonColor", text: `${color}い場合：` }; }
+
+    // Rules for releasing held buttons
+    function ReleaseOnTimerText(digit) { return { id: `rel_${digit}`, text: `カウントダウンタイマーに${digit}が表示されているときに離す。` }; }
+    var ReleaseWhenSecondsDigitsAddToSeven = { id: 'add7', text: "カウントダウンタイマーの秒数の2つの数字の合計が7のときに離す。" };
+    var ReleaseWhenSecondsDigitsAddToThreeOrThirteen = { id: 'add3_13', text: "カウントダウンタイマーの秒数の2つの数字の合計が3または13のときに離す。" };
+    var ReleaseWhenSecondsDigitsAddToFive = { id: 'add5', text: "カウントダウンタイマーの秒数の2つの数字の合計が5のときに離す。" };
+    var ReleaseWhenSecondsPrimeOrZero = { id: 'prime_0', text: "カウントダウンタイマーの秒数が素数または0のときに離す。" };
+    var ReleaseWhenSecondsAddToMultipleOfFour = { id: 'add4n', text: "カウントダウンタイマーの秒数の2つの数字の合計が4の倍数のときに離す。" };
+    function ReleaseWhenLeastSignificantSecondIs(digit) { return { id: `lsd_${digit}`, text: `カウントダウンタイマーの右端の秒数に${digit}が表示されているときに離す。` }; }
+    var ReleaseAtAnyTime = { id: 'any', text: "任意のタイミングでボタンを離す。" };
+
+    class Rule
+    {
+        constructor(queries, solution)
+        {
+            this.Queries = queries;
+            this.Solution = solution;
+        }
+
+        GetQueryString()
+        {
+            return this.Queries.map(q => q.text).join("かつ");
+        }
+
+        GetSolutionString()
+        {
+            return this.Solution.text;
+        }
+
+        GetString(isOtherwise)
+        {
+            return `${this.Queries.length ? this.GetQueryString() : '上記のいずれもが該当しない'}場合、${this.Solution.text}`;
+        }
+
+        AppendHoldHtml(elem)
+        {
+            var em = document.createElement('em');
+            em.innerText = this.Queries.length ? this.GetQueryString() : '他の色の場合：';
+            elem.appendChild(em);
+            elem.appendChild(document.createTextNode(' ' + this.GetSolutionString()));
+        }
+    }
+
+    function SelectSolution(rnd, weights, list)
+    {
+        var result = null;
+
+        var num = 0;
+        for (var i = 0; i < list.length; i++)
+            num += weights[list[i].id];
+        var num2 = rnd.nextDouble() * num;
+        for (var i = 0; i < list.length; i++)
+        {
+            if (num2 < weights[list[i].id])
+            {
+                weights[list[i].id] = weights[list[i].id] * .05;
+                result = list[i];
+                break;
+            }
+            num2 -= weights[list[i].id];
+        }
+        if (result === null)
+            result = list[rnd.next(0, list.length)];
+        if (LOGGING) {
+            console.log(`SelectSolution(list[${list.length}]) = #${list.indexOf(result)} (${result.id})`);
+            console.log(`weights:`);
+            for (var k in weights)
+                console.log(`  -- ${k} = ${weights[k]}`);
+        }
+        return result;
+    }
+
+    function RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList)
+    {
+        var remainder = ruleList;
+        if (remainder[remainder.length - 2].Solution.id == 'hold')
+            remainder[remainder.length - 2].Solution = SelectSolution(rnd, weights, CreateSolutionsList(rnd, weights, false));
+
+        var twobattery = -1;
+        var onebattery = -1;
+        var solution = '';
+        var samesolution = true;
+
+        for (var i = remainder.length - 1; i >= 0; i--)
+        {
+            if (remainder[i].GetQueryString().indexOf("more than 2 batteries") !== -1)
+            {
+                twobattery = i;
+                if (onebattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            else if (remainder[i].GetQueryString().indexOf("more than 1 battery") !== -1)
+            {
+                onebattery = i;
+                if (twobattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            if (solution === '')
+                continue;
+            samesolution &= remainder[i].GetSolutionString() === solution;
+        }
+        if (onebattery == -1 || twobattery == -1)
+            return;
+
+        if (onebattery < twobattery && remainder[onebattery].Queries.length == 1)
+        {
+            if (rnd.next(0, 2, LOGGING) === 0)
+                remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+            else
+                remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+        }
+        else if (remainder[onebattery].Queries.length === 1 && remainder[twobattery].Queries.length === 1 && samesolution)
+        {
+            switch (rnd.next(0, 7, LOGGING))
+            {
+                // push a secondary query to one or both of the battery rules
+                case 2:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    // fall through to case 0
+                case 0:
+                    remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+                case 1:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+
+                // Replace one or both of the battery rules with a new primary query
+                case 5:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    // fall through to case 3
+                case 3:
+                    remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+                case 4:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+
+                // Replace one of the solutions in between the minimumかつmaximum battery.
+                default:
+                    var replacementsolution = remainder[onebattery].Solution.id === 'tap' ? Hold : Press;
+                    if (Math.abs(onebattery - twobattery) === 1)
+                        remainder[Math.min(onebattery, twobattery)].Solution = replacementsolution;
+                    else
+                        remainder[rnd.next(Math.min(onebattery, twobattery), Math.max(onebattery, twobattery), LOGGING)].Solution = replacementsolution;
+                    break;
+            }
+        }
+    }
+
+    var defaultPrimaryRules = null;
+    var defaultHoldRules = null;
+    var defaultAppendixReference = null;
+    function setDefaultRules(rnd) { setRules(rnd); }
+
+    function setRules(rnd)
+    {
+        if (defaultPrimaryRules === null) {
+            defaultPrimaryRules = document.getElementById('primary-rules').innerHTML;
+            defaultHoldRules = document.getElementById('hold-rules').innerHTML;
+            defaultAppendixReference = document.getElementById('appendix-reference').innerHTML;
+        }
+
+        if (rnd.seed === 1) {
+            document.getElementById('primary-rules').innerHTML = defaultPrimaryRules;
+            document.getElementById('hold-rules').innerHTML = defaultHoldRules;
+            document.getElementById('appendix-reference').innerHTML = defaultAppendixReference;
+            return;
+        }
+
+        var q = BuildQueryLists(rnd);
+        var weights = {};
+
+        var ruleList = [];
+        while (ruleList.length < MaxInitialRules && q.PrimaryQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.PrimaryQueryList);
+            var num = rnd.next(0, 2, LOGGING);
+            if (num === 0)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery], false));
+            for (var i = 0; i < num; i++)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery, PopQueryFromList(rnd, q.SecondaryQueryList)], false));
+        }
+        // Otherwise: hold the button.
+        ruleList.push(new Rule([], Hold));
+
+        var holdRuleList = [];
+        while (holdRuleList.length < MaxHoldRules && q.IndicatorColorQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.IndicatorColorQueryList);
+            holdRuleList.push(CreateRule(rnd, weights, [baseQuery], true));
+        }
+        // Otherwise
+        holdRuleList.push(CreateRule(rnd, weights, [], true));
+
+        if (rnd.seed !== 1)
+            RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList);
+
+        var rulesOl = document.getElementById('primary-rules');
+        while (rulesOl.firstChild != null)
+            rulesOl.removeChild(rulesOl.firstChild);
+        for (var i = 0; i < ruleList.length; i++)
+        {
+            var li = document.createElement('li');
+            rulesOl.appendChild(li);
+            li.innerText = ruleList[i].GetString(i !== 0);
+        }
+
+        var holdRulesUl = document.getElementById('hold-rules');
+        while (holdRulesUl.firstChild != null)
+            holdRulesUl.removeChild(holdRulesUl.firstChild);
+        for (var i = 0; i < holdRuleList.length; i++)
+        {
+            var li = document.createElement('li');
+            holdRulesUl.appendChild(li);
+            holdRuleList[i].AppendHoldHtml(li);
+        }
+
+        var needsIndicatorAppendix = false, needsBatteryAppendix = false, needsPortAppendix = false;
+        var allRules = ruleList.concat(holdRuleList);
+        for (var i = 0; i < allRules.length; i++)
+            for (var j = 0; j < allRules[i].Queries.length; j++)
+            {
+                if (allRules[i].Queries[j].id === 'indicatorXLit')
+                    needsIndicatorAppendix = true;
+                if (allRules[i].Queries[j].id === 'moreThanXBatteries')
+                    needsBatteryAppendix = true;
+                if (allRules[i].Queries[j].id === 'portPresent')
+                    needsPortAppendix = true;
+            }
+        var references = [];
+        if (needsIndicatorAppendix)
+            references.push("インジケーターを確認するには「付録A」を参照すること。");
+        if (needsBatteryAppendix)
+            references.push("バッテリーを確認するには「付録B」を参照すること。");
+        if (needsPortAppendix)
+            references.push("ポートを確認するには「付録C」を参照すること。");
+
+        var p = document.getElementById('appendix-reference');
+        p.innerHTML = '';
+        for (var i = 0; i < references.length; i++) {
+            if (i > 0)
+                p.appendChild(document.createElement('br'));
+            p.appendChild(document.createTextNode(references[i]));
+        }
+    }
+
+    function PopQueryFromList(rnd, queries)
+    {
+        var index = rnd.next(0, queries.length, LOGGING);
+        var query = queries[index];
+        queries.splice(index, 1);
+        return query;
+    }
+
+    function BuildQueryLists(rnd)
+    {
+        PrimaryQueryList = ButtonColor.map(c => IsButtonColor(c));
+        IndicatorColorQueryList = BigButtonLEDColor.map(c => IsIndicatorColor(c));
+        SecondaryQueryList = ButtonInstruction.map(i => IsButtonInstruction(i));
+        SecondaryHoldQueryList = SecondaryQueryList.slice(0);
+
+        for (var i = 1; i < 3; i++)
+            PrimaryQueryList.push(MoreThanXBatteries(i));
+
+        for (var m = 0; m < 3; m++)
+            SecondaryQueryList.push(IndicatorXLit(IndicatorLabels[rnd.next(0, IndicatorLabels.length, LOGGING)]));
+
+        if (rnd.seed !== 1)
+        {
+            var list = PortList.slice(0);
+            for (var i = 0; i < 3; i++)
+            {
+                var ix = rnd.next(0, list.length, LOGGING);
+                var port = list[ix];
+                list.splice(ix, 1);
+                SecondaryQueryList.push(IsPortPresent(port));
+            }
+            for (var i = 0; i < list.length; i++)
+                PrimaryQueryList.push(IsPortPresent(list[i]));
+
+            PrimaryQueryList.push(EmptyPortPlate);
+            SecondaryQueryList.push(DoesSerialNumberStartWithLetter);
+            SecondaryQueryList.push(IsSerialNumberOdd);
+        }
+
+        return {
+            PrimaryQueryList: PrimaryQueryList,
+            IndicatorColorQueryList: IndicatorColorQueryList,
+            SecondaryQueryList: SecondaryQueryList,
+            SecondaryHoldQueryList: SecondaryHoldQueryList
+        };
+    }
+
+    function CreateRule(rnd, weights, queries, isHoldRule)
+    {
+        return new Rule(queries, SelectSolution(rnd, weights, !isHoldRule ? CreateSolutionsList(rnd, weights, true) : CreateHoldSolutionsList(rnd, weights)));
+    }
+
+    function CreateSolutionsList(rnd, weights, holdAllowed)
+    {
+        var list = [ Hold, Press ];
+        if (!holdAllowed)
+            list.splice(0, 1);
+
+        if (rnd.seed !== 1)
+        {
+            list.push(TapWhenSecondsMatch);
+            if (!(TapWhenSecondsMatch.id in weights))
+                weights[TapWhenSecondsMatch.id] = 0.05;
+        }
+        if (!(Press.id in weights))
+            weights[Press.id] = 0.1;
+
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+
+    function CreateHoldSolutionsList(rnd, weights)
+    {
+        var list = [ ReleaseOnTimerText("5"), ReleaseOnTimerText("1"), ReleaseOnTimerText("2"), ReleaseOnTimerText("3"), ReleaseOnTimerText("4") ];
+        if (rnd.seed !== 1)
+        {
+            list.push(ReleaseOnTimerText("6"));
+            list.push(ReleaseOnTimerText("7"));
+            list.push(ReleaseOnTimerText("8"));
+            list.push(ReleaseOnTimerText("9"));
+            list.push(ReleaseOnTimerText("0"));
+
+            for (var i = 0; i < 10; i++)
+                list.push(ReleaseWhenLeastSignificantSecondIs(i));
+
+            list.push(ReleaseAtAnyTime);
+            list.push(ReleaseWhenSecondsAddToMultipleOfFour);
+            list.push(ReleaseWhenSecondsDigitsAddToFive);
+            list.push(ReleaseWhenSecondsDigitsAddToSeven);
+            list.push(ReleaseWhenSecondsDigitsAddToThreeOrThirteen);
+            list.push(ReleaseWhenSecondsPrimeOrZero);
+        }
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+    </script>
   </head>
   <body>
     <div class="section">
@@ -25,16 +417,16 @@
           <p class="flavour-text">
             「押す」と書いてあるボタンを操作するのは簡単だと思うかもしれないが、そのような心構えでは長生きできない。
           </p>
-          <p class="appendix-reference">
+          <p class="appendix-reference" id="appendix-reference">
             <span>インジケーターを確認するには「付録A」を参照すること。</span
-            ><br /><span
+            ><br/><span
               >バッテリーの種類を確認するには「付録B」を参照すること。</span
             >
           </p>
           <p>
             試すべき手順の優先順位は下記の通り。最初に該当する手順をこなす：
           </p>
-          <ol>
+          <ol id='primary-rules'>
             <li>
               ボタンが青くかつボタンに「中止」と書かれている場合、ボタンを押したままで「ボタンを離すタイミング」を参照する。
             </li>
@@ -61,7 +453,7 @@
           <p>
             ボタンを押している間、モジュールの右側が光る。その色によって、ボタンを離してよいタイミングが決まっている：
           </p>
-          <ul>
+          <ul id='hold-rules'>
             <li>
               <em><span>青い場合：</span></em>
               <span>カウントダウンタイマーに4が表示されているときに離す。</span>

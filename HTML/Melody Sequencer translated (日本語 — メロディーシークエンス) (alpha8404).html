@@ -11,81 +11,81 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
     <script>
-        var noteNames = ["C4", "C♯4", "D4", "D♯4", "E4", "F4", "F♯4", "G4", "G♯4", "A4", "A♯4", "B4", "C5", "C♯5", "D5", "D♯5", "E5", "F5", "F♯5", "G5", "G♯5", "A5", "A♯5", "B5"];
+     var noteNames = ["C4", "C♯4", "D4", "D♯4", "E4", "F4", "F♯4", "G4", "G♯4", "A4", "A♯4", "B4", "C5", "C♯5", "D5", "D♯5", "E5", "F5", "F♯5", "G5", "G♯5", "A5", "A♯5", "B5"];
 
-        function setDefaultRules()
-        {
-            var melody = [
-                "D4, F4, A4, F4, A♯4, F4, A4, F4",
-                "D4, F4, A4, C5, D5, A4, D5, C5",
-                "F5, D5, F5, A5, A♯5, F5, A♯5, A5",
-                "G5, E5, G5, E5, C5, E5, C5, A4",
-                "G4, E4, G4, E4, A4, E4, A4, F4",
-                "A♯4, F4, A♯4, G4, C5, G4, C5, A4",
-                "D5, A4, D5, G4, C5, G4, C5, F4",
-                "A♯4, F4, A♯4, E4, A4, E4, A4, C4"
-            ];
-            var list = document.getElementsByClassName('part');
-            for (var i = 0; i < melody.length; i++)
-                list[i].innerHTML = melody[i];
-        }
+     function setDefaultRules()
+     {
+         var melody = [
+             "D4, F4, A4, F4, A♯4, F4, A4, F4",
+             "D4, F4, A4, C5, D5, A4, D5, C5",
+             "F5, D5, F5, A5, A♯5, F5, A♯5, A5",
+             "G5, E5, G5, E5, C5, E5, C5, A4",
+             "G4, E4, G4, E4, A4, E4, A4, F4",
+             "A♯4, F4, A♯4, G4, C5, G4, C5, A4",
+             "D5, A4, D5, G4, C5, G4, C5, F4",
+             "A♯4, F4, A♯4, E4, A4, E4, A4, C4"
+         ];
+         var list = document.getElementsByClassName('part');
+         for (var i = 0; i < melody.length; i++)
+             list[i].innerHTML = melody[i];
+     }
 
-        function setRules(rnd)
-        {
-            // Decide on the key of the first part. The rest of the parts are in specific keys relative to each previous one
-            var keys = [ rnd.next(0, 12) ];
-            for (var partIx = 1; partIx < 8; partIx++)
-            {
-                var eligibleKeys = [ 5, 7, -5, -7 ].map(jump => keys[partIx - 1] + jump).filter(key => key >= 0 && key < 12);
-                keys.push(eligibleKeys[rnd.next(0, eligibleKeys.length)]);
-            }
+     function setRules(rnd)
+     {
+         // Decide on the key of the first part. The rest of the parts are in specific keys relative to each previous one
+         var keys = [ rnd.next(0, 12) ];
+         for (var partIx = 1; partIx < 8; partIx++)
+         {
+             var eligibleKeys = [ 5, 7, -5, -7 ].map(jump => keys[partIx - 1] + jump).filter(key => key >= 0 && key < 12);
+             keys.push(eligibleKeys[rnd.next(0, eligibleKeys.length)]);
+         }
 
-            var list = document.getElementsByClassName('part');
+         var list = document.getElementsByClassName('part');
 
-            // Generate a new melody at random!
-            parts = [];
-            for (var partIx = 0; partIx < 8; partIx++)
-            {
-                var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
-                var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
-                var newPart, isIdentical;
+         // Generate a new melody at random!
+         parts = [];
+         for (var partIx = 0; partIx < 8; partIx++)
+         {
+             var notes = [ 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23 ].map(i => (i + keys[partIx]) % 24);
+             var majorNotes = [ 0, 4, 7, 12, 16, 19 ].map(i => (i + keys[partIx]) % 24);
+             var newPart, isIdentical;
 
-                do
-                {
-                    newパート= [];
-                    for (var note = 0; note < 8; note++)
-                    {
-                        var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
-                        if (note > 0)
-                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - newPart[note - 1]) < 7);
-                        else if (partIx > 0)
-                            eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
-                        if (note > 1 && newPart[note - 1] === newPart[note - 2])
-                        {
-                            var ix = eligibleNotes.indexOf(newPart[note - 1]);
-                            if (ix !== -1)
-                                eligibleNotes.splice(ix, 1);
-                        }
-                        newPart.push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
-                    }
+             do
+             {
+                 newPart = [];
+                 for (var note = 0; note < 8; note++)
+                 {
+                     var eligibleNotes = (note % 2 === 0 ? majorNotes : notes);
+                     if (note > 0)
+                         eligibleNotes = eligibleNotes.filter(n => Math.abs(n - newPart[note - 1]) < 7);
+                     else if (partIx > 0)
+                         eligibleNotes = eligibleNotes.filter(n => Math.abs(n - parts[partIx - 1][7]) < 7);
+                     if (note > 1 && newPart[note - 1] === newPart[note - 2])
+                     {
+                         var ix = eligibleNotes.indexOf(newPart[note - 1]);
+                         if (ix !== -1)
+                             eligibleNotes.splice(ix, 1);
+                     }
+                     newPart.push(eligibleNotes[rnd.next(0, eligibleNotes.length)]);
+                 }
 
-                    isIdentical = false;
-                    for (var p = 0; p < partIx && !isIdentical; p++)
-                    {
-                        var identical = true;
-                        for (var q = 0; q < parts[p].length && identical; q++)
-                            identical = identical && (parts[p][q] === newPart[q]);
-                        isIdentical = isIdentical || identical;
-                    }
-                }
-                while (isIdentical);
+                 isIdentical = false;
+                 for (var p = 0; p < partIx && !isIdentical; p++)
+                 {
+                     var identical = true;
+                     for (var q = 0; q < parts[p].length && identical; q++)
+                         identical = identical && (parts[p][q] === newPart[q]);
+                     isIdentical = isIdentical || identical;
+                 }
+             }
+             while (isIdentical);
 
-                parts.push(newPart);
+             parts.push(newPart);
 
-                list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
-            }
-        }
-    </script>
+             list[partIx].innerHTML = parts[partIx].map(note => noteNames[note]).join(', ');
+         }
+     }
+ </script>
 </head>
 <body>
     <div class="section">
@@ -100,39 +100,39 @@
                 <p class="flavour-text">ハーモニーとメロディー…両方を作成することはミュージシャンの最大の偉業だ。</p>
 
                 <table style='float: right; clear: right; margin-left: 1em; margin-top: 1em;'>
-                <tr>
-                    <th>パート1</th>
-                    <td class='part'>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
-                </tr>
-                <tr>
-                    <th>パート2</th>
-                    <td class='part'>D4, F4, A4, C5, D5, A4, D5, C5</td>
-                </tr>
-                <tr>
-                    <th>パート3</th>
-                    <td class='part'>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
-                </tr>
-                <tr>
-                    <th>パート4</th>
-                    <td class='part'>G5, E5, G5, E5, C5, E5, C5, A4</td>
-                </tr>
-                <tr>
-                    <th>パート5</th>
-                    <td class='part'>G4, E4, G4, E4, A4, E4, A4, F4</td>
-                </tr>
-                <tr>
-                    <th>パート6</th>
-                    <td class='part'>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
-                </tr>
-                <tr>
-                    <th>パート7</th>
-                    <td class='part'>D5, A4, D5, G4, C5, G4, C5, F4</td>
-                </tr>
-                <tr>
-                    <th>パート8</th>
-                    <td class='part'>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
-                </tr>
-                </table>
+                 <tr>
+                  <th>パート1</th>
+                  <td class='part'>D4, F4, A4, F4, A♯4, F4, A4, F4</td>
+              </tr>
+              <tr>
+                  <th>パート2</th>
+                  <td class='part'>D4, F4, A4, C5, D5, A4, D5, C5</td>
+              </tr>
+              <tr>
+                  <th>パート3</th>
+                  <td class='part'>F5, D5, F5, A5, A♯5, F5, A♯5, A5</td>
+              </tr>
+              <tr>
+                  <th>パート4</th>
+                  <td class='part'>G5, E5, G5, E5, C5, E5, C5, A4</td>
+              </tr>
+              <tr>
+                  <th>パート5</th>
+                  <td class='part'>G4, E4, G4, E4, A4, E4, A4, F4</td>
+              </tr>
+              <tr>
+                  <th>パート6</th>
+                  <td class='part'>A♯4, F4, A♯4, G4, C5, G4, C5, A4</td>
+              </tr>
+              <tr>
+                  <th>パート7</th>
+                  <td class='part'>D5, A4, D5, G4, C5, G4, C5, F4</td>
+              </tr>
+              <tr>
+                  <th>パート8</th>
+                  <td class='part'>A♯4, F4, A♯4, E4, A4, E4, A4, C4</td>
+              </tr>
+              </table>
 
                 <p>このモジュールを解除するには、４つのメロディーの特定の部分を聴き、それらを正しい順序で並べ、それぞれの欠落した部分を埋める必要がある。横の表は、パートの正しい順序と各パートのすべてのノーツが正しい順序で記されている。</p>
 
@@ -143,11 +143,11 @@
                 <h3>パートを聞く</h3>
                 <ul>
                     <li>緑色のボタンを押して、選択したパートを聞く。</li>
-                    <li>上のディスプレイには鳴った音のノートが表示される。</li>
+                    <li>上のディスプレーには鳴った音のノートが表示される。</li>
                 </ul>
                 <h3>パートの移動</h3>
                 <ul>
-                    <li>パートを別の場所に移動するには、移動したいパートを選択して黄色のボタンを押す。ディスプレイにはそのパートが選択されたことが表示される。</li>
+                    <li>パートを別の場所に移動するには、移動したいパートを選択して黄色のボタンを押す。ディスプレーにはそのパートが選択されたことが表示される。</li>
                     <li>上下のボタンを押して入れ替えるパートを選択して、黄色のボタンをもう一度押す。</li>
                     <li><strong>パートが正しい順序で配置されていないと、ミスが記録される。</strong></li>
                 </ul>
