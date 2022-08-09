@@ -1239,6 +1239,41 @@ const everything = {
                 ]
             ]
         },
+        'SGA': {
+            'CSS': 'textonly galactic',
+            'RandomizeLeft': true,
+            'Groups': ['glyphs', 'letters'],
+            'Items': [
+                [
+                    ['A', '<span>A</span>'],
+                    ['B', '<span>B</span>'],
+                    ['C', '<span>C</span>'],
+                    ['D', '<span>D</span>'],
+                    ['E', '<span>E</span>'],
+                    ['F', '<span>F</span>'],
+                    ['G', '<span>G</span>'],
+                    ['H', '<span>H</span>'],
+                    ['I', '<span>I</span>'],
+                    ['J', '<span>J</span>'],
+                    ['K', '<span>K</span>'],
+                    ['L', '<span>L</span>'],
+                    ['M', '<span>M</span>'],
+                    ['N', '<span>N</span>'],
+                    ['O', '<span>O</span>'],
+                    ['P', '<span>P</span>'],
+                    ['Q', '<span>Q</span>'],
+                    ['R', '<span>R</span>'],
+                    ['S', '<span>S</span>'],
+                    ['T', '<span>T</span>'],
+                    ['U', '<span>U</span>'],
+                    ['V', '<span>V</span>'],
+                    ['W', '<span>W</span>'],
+                    ['X', '<span>X</span>'],
+                    ['Y', '<span>Y</span>'],
+                    ['Z', '<span>Z</span>'],
+                ]
+            ]
+        },
         'Zoni': {
             'CSS': 'zoni',
             'RandomizeRight': true,
