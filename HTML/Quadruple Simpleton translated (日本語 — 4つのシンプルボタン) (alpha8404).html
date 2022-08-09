@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>4つのシンプルボタン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        text { user-select: none }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">4つのシンプルボタン</span>
+            </div>
+            <div class="page-content">
+                <svg id="svg" class="diagram" viewBox="0 0 348 348" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="none" id="group" stroke="black" stroke-width="3">
+                        <rect height="338" id="frame" width="338" x="5" y="5"/>
+                        <circle cx="305" cy="43" id="statusLight" r="15" visibility="hidden"/>
+                    </g>
+                    <g id="originalButton" visibility="hidden">
+                        <circle cx="174" cy="174" r="144" id="button" fill="white" stroke="black" stroke-width="3"/>
+                        <text x="54" y="192" font-family="Special Elite" font-size="60" id="text">PUSH IT!</text>
+                    </g>
+                </svg>
+                <h2>モジュール詳細：4つのシンプルボタン</h2>
+                <p class='flavour-text'><span class='tuple'>四つ</span>のボタンだ！<span class='tuple'>四つ</span>は楽しい！</p>
+                <p><span id='number'>四つ</span>のボタンを押す。<span id="newline"></span>君ならできる！</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+    <script>
+        const number = $("#number");
+
+        function setDefaultRules()
+        {
+            $(".tuple").text("四つ");
+            number.text("四つ");
+            number.css("font-weight", "default");
+
+            alterSVG(2);
+        }
+
+        function setRules(rnd)
+        {
+            side = rnd.nextMax(9) % 9 + 3; //[3, 11]
+
+            end_str = "つ"
+            if (side > 3) end_str = "個"
+
+            $(".tuple").text(side * side + end_str);
+            const names = ["九つ", "十六個", "二十五個", "三十六個", "四十九個", "六十四個", "八十一個", "百個", "百二十一個"];
+
+            number.text(names[side-3]);
+            if (side >= 10) number.css("font-weight", "bold");
+            number.css("font-weight", "default");
+
+            alterSVG(side);
+        }
+
+        function alterSVG(n)
+        {
+            const svg = $("svg")
+                , SVGside = 338;
+            resetPage();
+
+            radius = SVGside/((n+1)*2);
+            if (n == 2) radius *= 1.25;
+            const buttonMargins = [90, 60, 47.5, 39, 33.5, 29.25, 26.3, 24, 21.8, 20.4]
+                , hText = [-4.5, 13, 21, 26, 29.5, 31.5, 33.5, 35.5, 36.5, 38]
+                , vText = [-1, -3, -5, -6, -6.5, -7, -7.5, -8, -8.5, -8.1]
+                , textSize = [27, 18, 14, 12, 10, 9, 8, 7, 6.5, 5.8]
+                , distance = SVGside - SVGside/n;
+
+            for (let i = 0; i < n * n; i++)
+            {
+                const widthDistribution = i % n * distance / (n - 1) + buttonMargins[n-2]
+                    , heightDistribution = Math.floor(i / n) * distance / (n - 1) + buttonMargins[n-2]
+                    , newCircle = $("#button").clone()
+                    , newText = $("#text").clone();
+
+                newCircle.attr(
+                {
+                    r: radius,
+                    cx: widthDistribution,
+                    cy: heightDistribution,
+                }).addClass("clone")
+                  .css("cursor", "pointer")
+                  .click(colorButtons);
+
+                newText
+                .attr({
+                    x: widthDistribution-50+hText[n-2],
+                    y: heightDistribution+10+vText[n-2],
+                })
+                .addClass("clone")
+                .css("cursor", "pointer")
+                .css("font-size", textSize[n-2])
+                .text("PUSH IT!")
+                .click(colorButtons);
+
+                svg.append(newCircle);
+                svg.append(newText);
+                if (n >= 7) newCircle.attr('stroke-width', 2);
+                if (n == 2) newText.attr('font-weight', 'bold');
+            }
+
+            $("#statusLight")
+            .attr({
+                cx: SVGside/2,
+                cy: SVGside/2
+            })
+            .css("visibility", n == 2 ? "visible" : "hidden");
+
+            $("#originalButton").remove();
+            if (n >= 10)
+            {
+                svg.attr("transform", "scale(1.3) translate(0, 20)")
+                if (n == 11) $("#newline").html("<br>");
+            }
+            //for some reason resetPage() acts too late when onhashchange, but here's the workaround
+            if (!document.querySelector(".clone")) location.reload();
+        }
+
+        function resetPage() {
+            console.log("cleaning");
+            $(".clone").remove();
+            $(".circle").css('fill', 'white');
+            $("text").css('fill', 'black');
+            $("svg").attr("transform", "");
+        }
+
+        function colorButtons() {
+            $(".clone").css('fill', 'blue').css("cursor", "default");
+            $("text").css('fill', 'white').css("cursor", "default");
+        }
+    </script>
+</body>
+</html>
