@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>正方形精査 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nova+Mono&display=swap" rel="stylesheet">
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+
+    <script>
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            let boxes = Array(25);
+            for (let box = 0; box < 25; box++)
+                boxes[box] = "";
+            let colorOptions = ["r", "g", "b", "c", "p", "y", "k", 'w'];
+            for (let box = 0; box < 25; box++) {
+                boxes[box] = "";
+                let isValid = true;
+                for (let c = 0; c < 4; c++)
+                    boxes[box] += colorOptions[rnd.next(0, 8)];
+                for (let prevBox = 0; prevBox < box; prevBox++) {
+                    let score = 0;
+                    for (let c = 0; c < 4; c++)
+                        if (boxes[box][c] === boxes[prevBox][c])
+                            score++;
+                    if (score > 1)
+                        isValid = false;
+                }
+                if (!isValid || boxes[box][1] == boxes[box][2] ||
+                    (boxes[box][1] == "w" && boxes[box][2] == "y") ||
+                    (boxes[box][1] == "y" && boxes[box][2] == "w") ||
+                    (boxes[box][1] == "p" && boxes[box][2] == "r") ||
+                    (boxes[box][1] == "r" && boxes[box][2] == "p") ||
+                    (boxes[box][1] == "g" && boxes[box][2] == "c") ||
+                    (boxes[box][1] == "c" && boxes[box][2] == "g")
+                )
+                    box--;
+            }
+            let scrutiny = $("table.scrutiny");
+            scrutiny.html("");
+            let fullColors = ["red", "lime", "blue", "cyan", "magenta", "yellow", "black", "white"];
+            let fullColorsText = ["red", "green", "blue", "cyan", "pink", "yellow", "black", "white"];
+            for (let y = 0; y < 5; y++) {
+                let tr1 = $("<tr>").appendTo(scrutiny);
+                for (let x = 0; x < 5; x++) {
+                    let i = y*5 + x;
+                    let td1 = $("<td>").addClass("outer").css(
+                        "background-color", fullColors[colorOptions.indexOf(boxes[i][2])]
+                    ).appendTo(tr1);
+                    let table = $("<table>").addClass("scrut-table").appendTo(td1);
+                    let tr = $("<tr>").appendTo(table);
+                    $("<td>").addClass("inner nohighlight").text(fullColorsText[colorOptions.indexOf(boxes[i][0])].toUpperCase()).css({
+                        "color": fullColors[colorOptions.indexOf(boxes[i][1])],
+                        "border-color": fullColors[colorOptions.indexOf(boxes[i][3])]
+                    }).appendTo(tr);
+                    console.log(boxes[i]);
+                }
+            }
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'Nova Mono';
+        }
+        .scrutiny {
+        margin: 0em auto;
+            width: 15.5cm;
+             height: 15.5cm;
+            text-align: center;
+            font-family: 'Nova Mono';
+            font-weight: bold;
+            font-size: 16pt;
+        }
+        .inner, .dark .inner {
+            border-width: 1.5mm;
+            padding: 1mm;
+        }
+        .outer, .dark .outer {
+            border: solid 3px black;
+            width: 3cm;
+            height: 3cm;
+            padding: 0;
+        }
+        .scrut-table {
+            height: 30%;
+            margin: 0em auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">正方形精査</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Scrutiny Squares.svg" class="diagram">
+                <h2>モジュール詳細：正方形精査</h2>
+                <p class="flavour-text">
+                    ディスプレーには、下の正方形の１つのわずかに変更されたものが表示される。画面の端を押すと別の正方形が表示される。単語のみが間違っているなら上、単語の色のみが間違っているなら下、背景の色のみが間違っているなら右、単語の周りの四角の色のみが間違っているなら左を押す。単語の周りの四角がない場合、それは背景色と同化していることを指す。複数の間違いがある正方形に到達するまで移動を続ける。複数の間違いのある正方形に到達したら、ステータスライトを押してモジュールを解除する。間違ったボタンが押されると、ミスが記録される。
+                </p>
+                <table class="scrutiny"></table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
