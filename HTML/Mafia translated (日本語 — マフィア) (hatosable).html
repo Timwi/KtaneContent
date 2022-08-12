@@ -10,8 +10,33 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <style>
-        td {
+ td {
             font-size: 14px;
+        }
+
+        table.interactive, table.interactive td {
+            border: none;
+        }
+
+        table.interactive input {
+            display: inline;
+        }
+
+        .person input[type="text"] {
+            width: 4em;
+        }
+
+        div.person {
+            display: flex;
+            column-gap: 5px;
+        }
+
+        .striked {
+            text-decoration: line-through;
+        }
+
+        .person span {
+            line-height: 2;
         }
     </style>
 </head>
@@ -34,6 +59,33 @@
                     <li>除外した人をスキップしながら、残り一人になるまで一つ上のルールを進める。</li>
                     <li>残った人物の表に残っている名前を探し、その人物の「無罪の条件」を参照する。条件を満たしていない場合、その人物はゴッドファーザーであり、処刑されるべきである。もしその人物が無実だと判断された場合、「それ以外」の欄で紹介されている人物を処刑する。</li>
                 </ul>
+                <h3>人物メモ欄</h3>
+                <table class="interactive">
+                    <tr>
+                        <td></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td><div class="person"><input type="text"><input type="checkbox"><span>(?)</span></div></td>
+                        <td></td>
+                    </tr>
+                </table>
             </div>
             <div class="page-footer relative-footer">ページ 1/4</div>
         </div>
@@ -346,5 +398,49 @@
             <div class="page-footer relative-footer">ページ 4/4</div>
         </div>
     </div>
+    <script>
+     let order = 0;
+     let checkOrder = [];
+     const nextIndex = [1, 3, 0, 5, 2, 7, 4, 6];
+     const people = document.querySelectorAll("div.person");
+
+     for (const [index, person] of people.entries()) {
+         const name = person.querySelector("[type=\"text\"]");
+         const checkbox = person.querySelector("[type=\"checkbox\"]");
+         const number = person.querySelector("span");
+         checkbox.addEventListener("input", () => {
+             name.classList.toggle("striked", checkbox.checked);
+
+             order += checkbox.checked ? 1 : -1;
+             number.textContent = `(${checkbox.checked ? order : "?"})`;
+
+             if (checkbox.checked)
+             {
+                 if (checkOrder.length !== 0)
+                     checkOrder[checkOrder.length - 1].disabled = true;
+
+                 checkOrder.push(checkbox);
+             }
+             else
+             {
+                 checkOrder.pop();
+
+                 if (checkOrder.length !== 0)
+                     checkOrder[checkOrder.length - 1].disabled = false;
+             }
+         });
+
+         name.addEventListener("keydown", (event) => {
+             if (event.key !== "Enter" && event.key !== "Tab")
+                 return;
+
+             people[nextIndex[index]].querySelector("[type=\"text\"]").focus();
+             event.preventDefault();
+         });
+
+         name.value = "";
+         checkbox.checked = false;
+     }
+ </script>
 </body>
 </html>
