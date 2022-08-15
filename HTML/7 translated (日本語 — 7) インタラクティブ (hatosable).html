@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>7 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+             table
+        {
+            text-align: center;
+            width: 100%;
+            font-size: 150%;
+        }
+        .dark img:not(.diagram) { filter: invert(85%); }
+        .appendix {
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+        }
+        path {
+            cursor: pointer;
+            marker: none;
+        }
+        text {
+            text-indent: 0;
+            text-align: start;
+            line-height: 125%;
+            text-transform: none;
+            marker: none;
+            -inkscape-font-specification: Special Elite;
+        }
+        td>img { width: 60% }
+        .dark svg text { fill: #DDD }
+
+        #int {
+            transform: scale(0.8);
+            stroke: silver;
+        }
+        .dark #int { stroke: dimgray }
+        #colorPanel { stroke-width: 2 }
+
+        .fill-black { fill: #000 }
+        .fill-blue { fill: #00f }
+        .fill-green { fill: #0f0 }
+        .fill-cyan { fill: #0ff }
+        .fill-red { fill: #f00}
+        .fill-magenta { fill: #f0f }
+        .fill-yellow { fill: #ff0 }
+        .fill-white { fill: #fff }
+        .dark .fill-white { fill: #ddd }
+
+        .selected {
+            stroke: purple;
+            stroke-width: 3;
+        }
+
+        button {
+            padding: 5px 10px;
+            user-select: none;
+            background-color: #C0C0C0;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        #reset {
+            display: block;
+            margin: 0 auto;
+            border-bottom: 3px black dashed;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            padding-bottom: 2px;
+        }
+        #buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5%;
+        }
+        #prev, #next {
+            border: 3px solid transparent;
+            visibility: hidden;
+        }
+            #prev:hover, #next:hover {
+                background-color: #aaa;
+                border: 3px black dashed;
+            }
+            #prev:active, #next:active {
+                background-color: #999;
+            }
+            #next { border-radius: 10px 20px 20px 10px }
+            #prev { border-radius: 20px 10px 10px 20px }
+        #table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+        }
+        #pages {
+            font-size: 1.17em;
+        }
+    </style>
+    <script>
+
+        $(() => {
+            function selectStroke($color) {
+                $colorPanel.removeClass("selected");
+                $color.addClass("selected");
+            }
+
+            function fillSegment($segment) {
+                $segment.removeClass()
+                $segment.addClass(getFillClass($(".selected")));
+            }
+
+            function resetAll() {
+                $segmentPanel.removeClass();
+                $segmentPanel.addClass("fill-black");
+                $colorPanel.removeClass("selected");
+            }
+
+            function handleNoSelection() {
+                console.error("You didn't select any color!");
+                return ["fill-black"];
+            }
+
+            const $colorPanel = $("#colorPanel").children()
+                , $segmentPanel = $("#segmentPanel").children()
+                , getFillClass = $el => (/fill-\w+/.exec($el.attr("class")) ?? handleNoSelection())[0];
+
+            $colorPanel.click(e => selectStroke($(e.target)));
+            $segmentPanel.click(e => fillSegment($(e.target)));
+            $("#reset").click(resetAll);
+
+            resetAll();
+            $.get("data/14-interactive/segmentMap.json", j => {
+                let pageCounter = 0, stages;
+
+                if (window.location.hash) {
+                    stages = JSON.parse(decodeURI(window.location.hash.slice(1)));
+
+                    pageButton(0);
+
+                    $("#prev").click(()=>pageButton(-1)).css("visibility", "visible");
+                    $("#next").click(()=>pageButton(1)).css("visibility", "visible");
+                }
+
+                function pageButton(dir) {
+                    let _ = pageCounter + dir;
+                    if (_ < 0 ||_ > stages.length-1) return;
+                    pageCounter = _;
+                    resetAll();
+                    const segmentChannels = parseStages(stages[pageCounter]);
+                    const segmentColors = getColorsFromChannels(segmentChannels);
+                    fillSegments(segmentColors);
+                    updateVisualPageCounter();
+                }
+
+                function updateVisualPageCounter() {
+                    $("#pages").text(`Stage ${pageCounter} of ${stages.length-1}`);
+                }
+
+                function fillSegments(colors) {
+                    for (let i = 0; i < 14; i++) {
+                        $segmentPanel.eq(i).addClass("fill-"+colors[i]);
+                    }
+                }
+
+                function getColorsFromChannels(channels) {
+                    segmentsColors = Array.from({length: 14});
+                    for (let i = 0; i < 14; i++)
+                        segmentsColors[i] = j.colorConditions[channels[0][i] + channels[1][i] + channels[2][i]];
+                    return segmentsColors;
+                }
+
+                function parseStages(stage) {
+                    const fillings = [[], [], []];
+                    fillings[0] = getFills(stage[0]); //red
+                    fillings[1] = getFills(stage[1]); //green
+                    fillings[2] = getFills(stage[2]); //blue
+                    return fillings;
+                }
+
+                function getFills(letter) {
+                    const segmentsFilled = Array.from({length:14})
+                        , isNegative = letter[0] === "-"
+                        , hasNumber = n => j.mappings[letter].indexOf(n) >= 0;
+                    letter = letter[letter.length-1];
+                    for (let i = 0; i < 14; i++) {
+                        segmentsFilled[i] = hasNumber(i) ^ isNegative ? "t" : "f";
+                    }
+                    return segmentsFilled;
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">7</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/7.svg" class="diagram">
+                <h2>モジュール詳細：7</h2>
+                <p class="flavour-text">線の数は片割れのヤツの半分になった。しかし問題点は2倍に増えた。</p>
+                <p>モジュールには7セグメントディスプレー、異なる8つのRGBカラーからなる回転したダイヤ、ステージ数のインジケーター、押すことが出来るLEDが付いている。<br>
+                LEDが押せない、セグメントが多い、ダイヤが回転していない、あるいはステージ数のインジケーターが1桁より多い場合、異なるモジュールを参照している。</p>
+                <p>モジュールはステージ0から開始し、初期状態を示す黒色のLEDが点灯する。またモジュールは自身を含む解除可能なモジュール数に応じて、デフォルトで最大7つのステージを追加生成する。分かりやすく言うと、初期ステージを1ステージと換算した際、自身を含めて11個の解除可能なモジュールが爆弾にある場合、このモジュールはデフォルトで8つのステージを生成する。</p>
+                <p>7セグメントは繰り返し赤、緑、青のチャンネルが混ざって構成された多様なパターンを繰り返し表示する。これらのチャンネルは初期値を表し、チャンネルの表示が反転している場合はマイナスの数値を表す。これらの値は、10進法で表示される。</p>
+                <p>このモジュールに表示される数字は、<a href="Faulty%20Seven%20Segment%20Displays.html">欠陥7セグメントディスプレー(Faulty Seven Segment Displays)</a>を参照する。</p>
+                <p>各ステージのLEDの色に応じて、次ページの表を用いた操作を行う。</p>
+                <p>LEDを押すと、モジュールの次のステージに進む。ただし、モジュールが最後のステージにある場合は、ループしてステージ0に戻る。</p>
+                <p>各チャンネルの最終的な値を計算したら、ステージインジケーターを押して送信モードにする。</p>
+                <p>そこから、ダイヤの一部を構成するすべての三角形がパレットに着色される。また、特定の条件を満たすと、LEDが消灯したり、点滅したりする。</p>
+                <p>3つのチャンネルの最終値を入力し、必要に応じてチャンネルを反転させ、ダイヤを使って加法混合を行い、指定された色と適用するセグメントを選択する。ステージインジケーターを押して、モジュール上に「SUb」と表示されている指定されたセットを送信する。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">7</span>
+            </div>
+            <div class="page-content">
+                <p>間違った送信はミスを記録し、誤ったセグメントが赤で表示される。そこから、色/セグメントを選択すると、正解/不正解のマークが取り除かれ、分析担当者/処理担当者は必要に応じて新しいセットを再送信できる。</p>
+                <p>現在のステージを計算した時点で、その値が：</p>
+                <ul>
+                    <li>-9より小さい場合、-9より小さくなくなるまで10を足し続ける。</li>
+                    <li>9より大きい場合、9より大きくならなくなるまで、10を引き続ける。</li>
+                </ul>
+                <p>T<sub>x</sub> はステップX後の現在のチャンネルの値を指し、一方で D<sub>x</sub>はX番目のステップで表示された数字を指す。この表はD<sub>n</sub>は反転表示を含め、正の値としている。</p>
+                <table>
+                    <tr>
+                        <th colspan="2" rowspan="2">インジケーターの色</th>
+                        <th colspan="2">操作</th>
+                    </tr>
+                    <tr>
+                        <th>与えられた値が正常の場合</th>
+                        <th>与えられた値が反転表示の場合</th>
+                    </tr>
+                    <tr>
+                        <th>黒</th>
+                        <td style="background-color: black"></td>
+                        <td>初期値 (T<sub>n</sub> = D<sub>n</sub>)</td>
+                        <td>初期値 (T<sub>n</sub> = -D<sub>n</sub>)</td>
+                    </tr>
+                    <tr>
+                        <th>赤</th>
+                        <td style="background-color: red"></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> + D<sub>n</sub></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> - D<sub>n</sub></td>
+                    </tr>
+                    <tr>
+                        <th>緑</th>
+                        <td style="background-color: rgb(0,255,0)"></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> - D<sub>n</sub></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> + D<sub>n</sub></td>
+                    </tr>
+                    <tr>
+                        <th>青</th>
+                        <td style="background-color: blue"></td>
+                        <td>T<sub>n</sub> = D<sub>n</sub> - T<sub>n-1</sub></td>
+                        <td>T<sub>n</sub> = - ( D<sub>n</sub> + T<sub>n-1</sub> )</td>
+                    </tr>
+                    <tr>
+                        <th>白</th>
+                        <td></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> &times; D<sub>n</sub></td>
+                        <td>T<sub>n</sub> = T<sub>n-1</sub> &times; (-D<sub>n</sub>)</td>
+                    </tr>
+                </table>
+                <p>このモジュールでLEDを点滅させるための具体的な条件について驚くかもしれない。点滅したLEDを押すだけで、処理担当者はステージを再獲得できる。</p>
+                <p>Zen Modeまたはタイマーがカウントアップするその他のモードで爆弾を開始した場合、ミスの回数に関わらず送信フェーズの間にステージを再獲得できる。</p>
+                <p>もしTime Modeで開始した場合、最低1回このモジュールでミスを記録しないと再獲得できない。</p>
+                <p>それ以外の場合、最低1回このモジュールまたは他のモジュールでミスを記録していなければ、ステージを再獲得できない。</p>
+            </div>
+           <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">7</span>
+            </div>
+            <div class="page-content">
+                <h2>モジュールの仕様シート</h2>
+                <p>各色は回転したダイヤの中の色の名前の文字によって示されている。<br>Rは赤、Gは緑、Bは青、Mはマゼンタ、Yは黄色、Cはシアン、Wは白、Kは黒である。</p>
+                <p>赤と緑を混ぜると黄色になり、 緑と青を混ぜるとシアンになり、青と赤を混ぜるとマゼンタになり、赤と緑と青を混ぜると白になる。</p>
+                <img src="img/Component/SevenWithColorInd.svg">
+            </div>
+           <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+        <div class="page page-bg-05">
+         <div class="page-header">
+             <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+             <span class="page-header-section-title">7</span>
+         </div>
+         <div class="page-content">
+          <div id="table-header">
+           <h3>チャンネルの記録</h3>
+           <span id="pages"></span>
+       </div>
+       <span id="buttons">
+           <button id="reset">リセット</button>
+           <span>
+               <button id="prev">前</button>
+               <button id="next">次</button>
+           </span>
+       </span>
+       <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+       <svg
+          id="int"
+          viewBox="23 65 300 215"
+          fill="#fff"
+          version="1.1"
+          sodipodi:docname="7 gazou.svg"
+          inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+          xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+          xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:svg="http://www.w3.org/2000/svg">
+         <defs
+            id="defs861" />
+         <sodipodi:namedview
+            id="namedview859"
+            pagecolor="#ffffff"
+            bordercolor="#666666"
+            borderopacity="1.0"
+            inkscape:pageshadow="2"
+            inkscape:pageopacity="0"
+            inkscape:pagecheckerboard="true"
+            showgrid="false"
+            inkscape:zoom="1.8192221"
+            inkscape:cx="108.56288"
+            inkscape:cy="114.60942"
+            inkscape:window-width="1440"
+            inkscape:window-height="847"
+            inkscape:window-x="0"
+            inkscape:window-y="300"
+            inkscape:window-maximized="0"
+            inkscape:current-layer="segmentPanel" />
+         <g
+            id="colorPanel">
+           <path
+              d="M284.612 69.517l14.743 25.537H269.87z"
+              class="fill-black"
+              id="path824" />
+           <path
+              d="M305.224 101.895l14.743 25.536h-29.486z"
+              class="fill-blue"
+              id="path826" />
+           <path
+              d="M284.612 125.566l-14.743-25.537h29.486z"
+              class="fill-green"
+              id="path828" />
+           <path
+              d="M263.696 157.943l-14.743-25.536h29.486z"
+              class="fill-cyan"
+              id="path830" />
+           <path
+              d="M263.696 101.895l14.743 25.536h-29.486z"
+              class="fill-red"
+              id="path832" />
+           <path
+              d="M284.108 134.273l14.743 25.536h-29.486z"
+              class="fill-magenta"
+              id="path834" />
+           <path
+              d="M305.224 157.943l-14.743-25.536h29.486z"
+              class="fill-yellow"
+              id="path836" />
+           <path
+              d="M284.108 190.321l-14.743-25.536h29.486z"
+              class="fill-white"
+              id="path838" />
+         </g>
+         <g
+            id="segmentPanel">
+           <path
+              d="m 67.036,68.567 h 111.45 v 0 c 0,0 0,0 0,0 l 16.17,17.92 -16.17,17.919 v 0 0 H 67.036 v 0 c 0,0 0,0 0,0 L 49.99,86.486 67.036,68.566 v 0 z"
+              id="path841" />
+           <path
+              d="m 67.036,154.504 h 111.45 v 0 c 0,0 0,0 0,0 l 16.17,17.92 -16.17,17.919 v 0 0 H 67.036 v 0 c 0,0 0,0 0,0 l -17.046,-17.92 17.046,-17.92 v 0 z"
+              id="path841-2" />
+           <path
+              d="m 60.47,112.264 v 35.839 c 0,0 0,0 0,0 0,0 0,0 0,0 L 42.551,164.274 24.632,148.103 c 0,0 0,0 0,0 0,0 0,0 0,0 v -35.839 c 0,0 0,0 0,0 0,0 0,0 0,0 l 17.92,-17.045 17.919,17.045 c 0,0 0,0 0,0 0,0 0,0 0,0 z"
+              id="path843" />
+           <path
+              d="m 220.872,111.827 v 35.839 c 0,0 0,0 0,0 0,0 0,0 0,0 l -17.92,16.171 -17.92,-16.171 c 0,0 0,0 0,0 0,0 0,0 0,0 v -35.839 c 0,0 0,0 0,0 0,0 0,0 0,0 l 17.92,-17.045 17.92,17.045 c 0,0 0,0 0,0 0,0 0,0 0,0 z"
+              id="path845" />
+           <path
+              d="m 60.908,197.49 v 35.84 c 0,0 0,0 0,0 0,0 0,0 0,0 L 42.988,249.5 25.069,233.33 c 0,0 0,0 0,0 0,0 0,0 0,0 v -35.84 c 0,0 0,0 0,0 0,0 0,0 0,0 l 17.92,-17.045 17.919,17.046 c 0,0 0,0 0,0 0,0 0,0 0,0 z"
+              id="path851" />
+           <path
+              d="m 221.309,197.054 v 35.838 c 0,0 0,0 0,0 0,0 0,0 0,0 l -17.92,16.172 -17.92,-16.172 c 0,0 0,0 0,0 0,0 0,0 0,0 v -35.838 c 0,0 0,0 0,0 0,0 0,0 0,0 l 17.92,-17.046 17.92,17.046 c 0,0 0,0 0,0 0,0 0,0 0,0 z"
+              id="path853" />
+           <path
+              d="m 67.91,239.947 h 111.45 v 0 c 0,0 0,0 0,0 l 16.171,17.92 -16.171,17.919 v 0 H 67.91 v 0 c 0,0 0,0 0,0 l -17.046,-17.92 17.046,-17.92 v 0 z"
+              id="path855" />
+         </g>
+       </svg>
+       
+   </div>
+         </div>
+        <div class="page-footer relative-footer">ページ 3/3</div>
+     </div>
+    </div>
+</body>
+</html>
