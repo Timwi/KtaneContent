@@ -208,6 +208,7 @@ class BombGroup {
         this.LoggedSerials = [];
         this.Events = [];
         this.RuleSeed = 1;
+        this.CompetitiveLogger = false;
     }
 
     get loggedBombs() {
@@ -278,6 +279,8 @@ class BombGroup {
         } else {
             missionInfoTree.push("State: " + this.State);
         }
+
+        if (this.CompetitiveLogger) missionInfoTree.push("Competitive Logger enabled.")
 
         // Copy DMG string
         const dmgString =
