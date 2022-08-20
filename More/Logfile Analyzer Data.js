@@ -653,6 +653,17 @@ let parseData = [
             }
         ]
     },
+    {
+        loggingTag: "CompetitiveLogger",
+        matches: [
+            {
+                regex: /Cache dump complete\./,
+                handler: function () {
+                    bombgroup.CompetitiveLogger = true;
+                }
+            }
+        ]
+    },
 
     // ** MODULES START HERE ** //
 
@@ -717,7 +728,7 @@ let parseData = [
                             </tr>
                         </table>`)
                         };
-                        module.push({label:`<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>`});
+                        module.push({ label: `<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>` });
                         module.push(module.ListObject);
                         module.SetCss = function () {
                             module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
@@ -727,7 +738,7 @@ let parseData = [
                     while (module.TableData.length <= matches[1])
                         module.TableData.push({});
                     module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
-                    module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length-1]);
+                    module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length - 1]);
                     if (matches[2] === 'B') {
                         let ledColors = {
                             K: '#888',
@@ -753,7 +764,7 @@ let parseData = [
                         module.JSONs.push(module.Stage);
                         module.Stage = [];
                         console.log(JSON.stringify(module.JSONs));
-                        module[1] = {label:`<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>`};
+                        module[1] = { label: `<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>` };
                     }
                     return true;
                 }
