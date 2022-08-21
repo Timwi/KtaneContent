@@ -9826,7 +9826,7 @@ let parseData = [
         loggingTag: "The Tile Maze",
         matches: [
             {
-                regex: /^Generated Maze:$/,
+                regex: /^Generated maze:$/,
                 handler: function (matches, module) {
                     let maze = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
                     module.tileMaze = maze;
@@ -9834,14 +9834,14 @@ let parseData = [
                 }
             },
             {
-                regex: /^Extra Tile: (.)$/,
+                regex: /^Extra tile: (.)$/,
                 handler: function (matches, module) {
                     module.extraTile = matches[1];
                     return true;
                 }
             },
             {
-                regex: /^Tile Numbers:$/,
+                regex: /^Tile numbers:$/,
                 handler: function (matches, module) {
                     let tileNumbers = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
                     module.tileNumbers = tileNumbers;
@@ -9849,7 +9849,7 @@ let parseData = [
                 }
             },
             {
-                regex: /^Extra Tile Number: (.)$/,
+                regex: /^Extra tile number: (.)$/,
                 handler: function (matches, module) {
                     module.extraNumber = matches[1];
                     return true;
@@ -9933,7 +9933,7 @@ let parseData = [
                                 .appendTo(td);
                         }
                     }
-                    module.push({ label: 'Generated Maze:', obj: table });
+                    module.push({ label: 'Generated maze:', obj: table });
 
                     let div = $('<div>')
                         .css('width', '50px')
@@ -9966,7 +9966,7 @@ let parseData = [
                     }
 
                     $('<img>')
-                        .attr('src', `img/The TIle Maze/${tile}.png`)
+                        .attr('src', `img/The Tile Maze/${tile}.png`)
                         .css('transform', `rotate(${rotation}deg)`)
                         .css('width', '50px').css('height', '50px')
                         .appendTo(div);
