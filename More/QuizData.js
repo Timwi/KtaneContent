@@ -1013,7 +1013,7 @@ const everything = {
         }
     },
     'Alphabets': {
-        'Elder Symbols': {
+        'Elder Runes': {
             'CSS': 'zoo',
             'RandomizeRight': true,
             'Groups': ['letters', 'symbols'],
@@ -1042,6 +1042,41 @@ const everything = {
                     ['X', '<svg viewBox="227.8 7.2 4.7 5.3"><path d="m 230.3473,10.086461 c 0.3507,-0.1934961 0.29054,-0.2993951 -0.36113,-0.6357581 -0.29948,-0.154573 -0.31646,-0.136807 -0.31646,0.331094 0,0.5356761 0.14265,0.5998151 0.67759,0.3046641 z m -1.24018,-0.1598826 c 0,-2.4941735 0.0101,-2.5874135 0.2813,-2.5874135 0.2392,0 0.28129,0.09324 0.28129,0.623124 0,0.622855 4.2e-4,0.623378 0.98453,1.204751 0.54149,0.319894 0.98453,0.625689 0.98453,0.679545 0,0.05385 -0.44289,0.3456321 -0.98419,0.6483951 l -0.98419,0.550479 -2.8e-4,0.734265 c -2.8e-4,0.640914 -0.0361,0.734266 -0.28163,0.734266 -0.27116,0 -0.2813,-0.09324 -0.2813,-2.5874116 z" /></svg>'],
                     ['Y', '<svg viewBox="107.8 7.2 4.7 5.3"><path d="m 109.74759,11.959957 c -1.09192,-0.791019 -1.11422,-0.816056 -0.96415,-1.082706 0.11146,-0.198049 0.18344,-0.182487 0.61232,0.132369 l 0.48602,0.356806 0.039,-2.0399424 0.0389,-2.039941 0.59395,0.425715 c 1.16531,0.835228 1.373,1.044361 1.2408,1.249424 -0.10352,0.160558 -0.19957,0.142188 -0.54852,-0.104895 -0.23267,-0.164749 -0.45904,-0.299542 -0.50305,-0.299542 -0.044,0 -0.0975,0.902108 -0.11894,2.0046844 l -0.0389,2.004684 z" /></svg>'],
                     ['Z', '<svg viewBox="167.8 7.2 4.7 5.3"><path d="m 170.11371,12.38136 c -0.0516,-0.05128 -0.0938,-0.663092 -0.0938,-1.359581 V 9.7554385 l -0.804,-0.807941 c -0.73594,-0.739536 -0.78502,-0.826827 -0.5797,-1.031003 0.20533,-0.204178 0.26349,-0.1746 0.68691,0.34934 0.25442,0.314821 0.51528,0.572403 0.57969,0.572403 0.0644,0 0.1171,-0.340262 0.1171,-0.756137 0,-0.68728 0.0256,-0.749476 0.2813,-0.682989 0.23797,0.06188 0.28129,0.190772 0.28129,0.836965 v 0.763818 l 0.58578,-0.498601 c 0.57776,-0.49177 0.58855,-0.49467 0.78791,-0.211645 0.11116,0.157827 0.17984,0.301559 0.15261,0.319406 -0.0272,0.01785 -0.38178,0.278457 -0.7879,0.579135 l -0.7384,0.546687 v 1.3698625 c 0,1.04831 -0.044,1.369861 -0.18753,1.369861 -0.10314,0 -0.22972,-0.04196 -0.28129,-0.09324 z" /></svg>']
+                ]
+            ]
+        },
+        'Fontanta Lower': {
+            'CSS': 'textonly fontana',
+            'RandomizeLeft': true,
+            'Groups': ['letters', 'symbols'],
+            'Items': [
+                [
+                    ['a', '<span>a</span>'],
+                    ['b', '<span>b</span>'],
+                    ['c', '<span>c</span>'],
+                    ['d', '<span>d</span>'],
+                    ['e', '<span>e</span>'],
+                    ['f', '<span>f</span>'],
+                    ['g', '<span>g</span>'],
+                    ['h', '<span>h</span>'],
+                    ['i', '<span>i</span>'],
+                    ['j', '<span>j</span>'],
+                    ['k', '<span>k</span>'],
+                    ['l', '<span>l</span>'],
+                    ['m', '<span>m</span>'],
+                    ['n', '<span>n</span>'],
+                    ['o', '<span>o</span>'],
+                    ['p', '<span>p</span>'],
+                    ['q', '<span>q</span>'],
+                    ['r', '<span>r</span>'],
+                    ['s', '<span>s</span>'],
+                    ['t', '<span>t</span>'],
+                    ['u', '<span>u</span>'],
+                    ['v', '<span>v</span>'],
+                    ['w', '<span>w</span>'],
+                    ['x', '<span>x</span>'],
+                    ['y', '<span>y</span>'],
+                    ['z', '<span>z</span>']
                 ]
             ]
         },
@@ -1191,6 +1226,81 @@ const everything = {
                     ['Repeat 2nd', '<svg viewBox="-.02 -.02 1.05 .665"><defs><clipPath id="repflag"><path d="M0 0L1 .3125 0 .625z" /></clipPath></defs><g clip-path="url(#repflag)"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M.5 0h1v1h-1z" fill="#fff" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0L1 .3125 0 .625z" /></svg>'],
                     ['Repeat 3rd', '<svg viewBox="-.02 -.02 1.05 .665"><defs><clipPath id="repflag"><path d="M0 0L1 .3125 0 .625z" /></clipPath></defs><g clip-path="url(#repflag)"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 .2h1v.225h-1z" fill="#000" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0L1 .3125 0 .625z" /></svg>'],
                     ['Repeat 4th', '<svg viewBox="-.02 -.02 1.05 .665"><defs><clipPath id="repflag"><path d="M0 0L1 .3125 0 .625z" /></clipPath></defs><g clip-path="url(#repflag)"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M0 .2h.225v.225h-.225z" fill="#ff0" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0L1 .3125 0 .625z" /></svg>']
+                ]
+            ]
+        },
+
+        'NY Point Upper': {
+            'CSS': 'textonly nypoint',
+            'DelayShowWrongLeft': 4,
+            'RandomizeLeft': true,
+            'LimitLeftAnswers': 8,
+            'Groups': ['letters', 'symbols'],
+            'Items': [
+                [
+                    ['A', '<span>A</span>'],
+                    ['B', '<span>B</span>'],
+                    ['C', '<span>C</span>'],
+                    ['D', '<span>D</span>'],
+                    ['E', '<span>E</span>'],
+                    ['F', '<span>F</span>'],
+                    ['G', '<span>G</span>'],
+                    ['H', '<span>H</span>'],
+                    ['I', '<span>I</span>'],
+                    ['J', '<span>J</span>'],
+                    ['K', '<span>K</span>'],
+                    ['L', '<span>L</span>'],
+                    ['M', '<span>M</span>'],
+                    ['N', '<span>N</span>'],
+                    ['O', '<span>O</span>'],
+                    ['P', '<span>P</span>'],
+                    ['Q', '<span>Q</span>'],
+                    ['R', '<span>R</span>'],
+                    ['S', '<span>S</span>'],
+                    ['T', '<span>T</span>'],
+                    ['U', '<span>U</span>'],
+                    ['V', '<span>V</span>'],
+                    ['W', '<span>W</span>'],
+                    ['X', '<span>X</span>'],
+                    ['Y', '<span>Y</span>'],
+                    ['Z', '<span>Z</span>']
+                ]
+            ]
+        },
+        'NY Point Lower': {
+            'CSS': 'textonly nypoint',
+            'DelayShowWrongLeft': 4,
+            'RandomizeLeft': true,
+            'LimitLeftAnswers': 8,
+            'Groups': ['letters', 'symbols'],
+            'Items': [
+                [
+                    ['a', '<span>a</span>'],
+                    ['b', '<span>b</span>'],
+                    ['c', '<span>c</span>'],
+                    ['d', '<span>d</span>'],
+                    ['e', '<span>e</span>'],
+                    ['f', '<span>f</span>'],
+                    ['g', '<span>g</span>'],
+                    ['h', '<span>h</span>'],
+                    ['i', '<span>i</span>'],
+                    ['j', '<span>j</span>'],
+                    ['k', '<span>k</span>'],
+                    ['l', '<span>l</span>'],
+                    ['m', '<span>m</span>'],
+                    ['n', '<span>n</span>'],
+                    ['o', '<span>o</span>'],
+                    ['p', '<span>p</span>'],
+                    ['q', '<span>q</span>'],
+                    ['r', '<span>r</span>'],
+                    ['s', '<span>s</span>'],
+                    ['t', '<span>t</span>'],
+                    ['u', '<span>u</span>'],
+                    ['v', '<span>v</span>'],
+                    ['w', '<span>w</span>'],
+                    ['x', '<span>x</span>'],
+                    ['y', '<span>y</span>'],
+                    ['z', '<span>z</span>']
                 ]
             ]
         },
