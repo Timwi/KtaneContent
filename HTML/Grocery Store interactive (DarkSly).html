@@ -8,10 +8,25 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
     <style>
-        table {
+        .dark table, table {
             margin: 1em auto;
             border: none;
+            text-align: center;
+        }
+        p.price {
+            font-size: 10pt;
+            margin: 0;
+        }
+        p.name {
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        td img {
+            height: 50px;
+            width: 70px;
+            object-fit: contain;
         }
 
         /* Chrome, Safari, Edge, Opera */
@@ -25,6 +40,9 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        .red { background-color: #FF9891; }
+        .dark .red { background-color: #882821; }
+        .pale { opacity: 0.5; }
 
         .noselect {
             -webkit-touch-callout: none;
@@ -35,6 +53,96 @@
             user-select: none;
         }
     </style>
+
+    <script>
+    $(function() {
+        let groceryItems = {
+            "Apples": 0.96,
+            "Bananas": 0.58,
+            "Bottled Water": 12.48,
+            "Bread": 2.50,
+            "Butter": 5.14,
+            "Candy": 3.99,
+            "Cat Food": 11.99,
+            "Cheese": 3.99,
+            "Coffee": 11.68,
+            "Cookies": 3.56,
+            "Detergent": 19.94,
+            "Eggs": 2.50,
+            "Flour": 6.75,
+            "Glass Cleaner": 6.28,
+            "Hot Sauce": 5.42,
+            "Jelly": 5.49,
+            "Lettuce": 1.49,
+            "Milk": 1.39,
+            "Paper Towels": 8.68,
+            "Peanut Butter": 5.64,
+            "Pepper": 4.98,
+            "Pork": 4.99,
+            "Potatoes": 4.59,
+            "Salt": 3.48,
+            "Sausage": 2.99,
+            "Soda": 4.48,
+            "Soup": 5.28,
+            "Steak": 12.00,
+            "Sugar": 11.37,
+            "Toilet Paper": 16.99,
+            "Tomatoes": 1.71,
+            "Toothpaste": 4.99,
+            "Turkey": 7.48
+        };
+
+        let total = document.getElementById("total-amount");
+        total.onchange = () => {
+            if(total.value == "") total.value = "100.00";
+
+            Object.keys(groceryItems).forEach((item, i) => {
+                let td = $("#td-" + item.replace(" ", ""));
+                if (groceryItems[item] > total.value)
+                    td.addClass("red");
+                else
+                    td.removeClass("red");
+            });
+        }
+
+        let table = $("#items-table");
+        let tableRow;
+
+        Object.keys(groceryItems).forEach((item, i) => {
+            if(i % 7 == 0)
+                tableRow = $("<tr>").appendTo(table);
+
+            let tableCell = $("<td>").attr("id", "td-" + item.replace(" ", "")).data("price", groceryItems[item]);
+
+            tableCell.on("mousedown", () => {
+                tableCell.addClass("pale");
+            });
+            tableCell.on("mouseleave", () => {
+                tableCell.removeClass("pale");
+            });
+            tableCell.on("mouseup", () => {
+                if(!tableCell.hasClass("red") && tableCell.hasClass("pale")) {
+                    total.value = (total.value - tableCell.data("price")).toFixed(2);
+                    total.dispatchEvent(new Event("change"));
+                }
+                tableCell.removeClass("pale");
+            });
+
+            let image = $(`<img src="img/Grocery Store/${item}.png">`).addClass("noselect");
+            image.attr("draggable", false);
+            tableCell.append(image);
+
+            let name = $("<p>").addClass("noselect name").text(item);
+            tableCell.append(name);
+
+            let price = $("<p>").addClass("noselect price").text("$" + groceryItems[item].toFixed(2));
+            tableCell.append(price);
+
+            tableRow.append(tableCell);
+        });
+        tableRow.append($('<td class="corner" colspan="2">'));
+    });
+    </script>
 </head>
 <body>
     <div class="section">
@@ -46,7 +154,7 @@
             <div class="page-content">
                 <img src="img/Component/Grocery Store.svg" class="diagram">
                 <h2>On the Subject of the Grocery Store</h2>
-                
+
                 <p>Press on any grocery item to deduct the item price from the total. Items turn <span style="font-weight: bold; color: red;">red</span> when they are too expensive.</p>
                 <p>The total amount starts at $100. Use the rules below to change that amount to your actual starting quantity. </p>
 
@@ -61,118 +169,10 @@
                 <input id="total-amount" type="number" style="width: 4em;" value="100.00" />
 
                 <table id="items-table"></table>
-        
+
             </div>
            <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
     </div>
-    <script>
-        var groceryItems = [
-            { name: "Apples", image: "img/Grocery Store/apples.png", price: 0.96 }, 
-            { name: "Bananas", image: "img/Grocery Store/bananas.png", price: 0.58 }, 
-            { name: "Bottled Water", image: "img/Grocery Store/bottled water.png", price: 12.48 }, 
-            { name: "Bread", image: "img/Grocery Store/bread.png", price: 2.50 }, 
-            { name: "Butter", image: "img/Grocery Store/butter.png", price: 5.14 }, 
-            { name: "Candy", image: "img/Grocery Store/candy.png", price: 3.99 }, 
-            { name: "Cat Food", image: "img/Grocery Store/cat food.png", price: 11.99 }, 
-            { name: "Cheese", image: "img/Grocery Store/cheese.png", price: 3.99 }, 
-            { name: "Coffee", image: "img/Grocery Store/coffee.png", price: 11.68 }, 
-            { name: "Cookies", image: "img/Grocery Store/cookies.png", price: 3.56 }, 
-            { name: "Detergent", image: "img/Grocery Store/detergent.png", price: 19.94 }, 
-            { name: "Eggs", image: "img/Grocery Store/eggs.png", price: 2.50 }, 
-            { name: "Flour", image: "img/Grocery Store/flour.png", price: 6.75 }, 
-            { name: "Glass Cleaner", image: "img/Grocery Store/glass cleaner.png", price: 6.28 }, 
-            { name: "Hot Sauce", image: "img/Grocery Store/hot sauce.png", price: 5.42 }, 
-            { name: "Jelly", image: "img/Grocery Store/jelly.png", price: 5.49 }, 
-            { name: "Lettuce", image: "img/Grocery Store/lettuce.png", price: 1.49 }, 
-            { name: "Milk", image: "img/Grocery Store/milk.png", price: 1.39 }, 
-            { name: "Paper Towels", image: "img/Grocery Store/paper towels.png", price: 8.68 }, 
-            { name: "Peanut Butter", image: "img/Grocery Store/peanut butter.png", price: 5.64 }, 
-            { name: "Pepper", image: "img/Grocery Store/pepper.png", price: 4.98 }, 
-            { name: "Pork", image: "img/Grocery Store/pork.png", price: 4.99 }, 
-            { name: "Potatoes", image: "img/Grocery Store/potatoes.png", price: 4.59 }, 
-            { name: "Salt", image: "img/Grocery Store/salt.png", price: 3.48 }, 
-            { name: "Sausage", image: "img/Grocery Store/sausage.png", price: 2.99 }, 
-            { name: "Soda", image: "img/Grocery Store/soda.png", price: 4.48 }, 
-            { name: "Soup", image: "img/Grocery Store/soup.png", price: 5.28 }, 
-            { name: "Steak", image: "img/Grocery Store/steak.png", price: 12.00 }, 
-            { name: "Sugar", image: "img/Grocery Store/sugar.png", price: 11.37 }, 
-            { name: "Toiler Paper", image: "img/Grocery Store/toilet paper.png", price: 16.99 }, 
-            { name: "Tomatoes", image: "img/Grocery Store/tomatoes.png", price: 1.71 }, 
-            { name: "Toothpaste", image: "img/Grocery Store/toothpaste.png", price: 4.99 }, 
-            { name: "Turkey", image: "img/Grocery Store/turkey.png", price: 7.48 }
-        ];
-
-        var total = document.getElementById("total-amount");
-        total.onchange = () => {
-            if(total.value == "") total.value = "100.00"
-
-            groceryItems.forEach((item, i) => {
-                var td = document.getElementById("td-" + item.name);
-                if(item.price > total.value) {
-                    td.style.backgroundColor = "rgb(255, 152, 145)";
-                } else {
-                    td.style.backgroundColor = "transparent";
-                }
-            });
-        }
-
-        var table = document.getElementById("items-table");
-        var tableRow;
-
-        groceryItems.forEach((item, i) => {
-            if(i % 7 == 0) {
-                tableRow = document.createElement("tr");
-                table.appendChild(tableRow);
-            }
-
-            var tableCell = document.createElement("td");
-            tableCell.id = "td-" + item.name;
-            tableCell.style.maxWidth = 70;
-            tableCell.extraData = item;
-
-            tableCell.onmousedown = () => {
-                tableCell.style.opacity = "50%";
-            }
-            tableCell.onmouseleave = () => {
-                tableCell.style.opacity = "100%";
-            }
-            tableCell.onmouseup = () => {
-                if(tableCell.style.backgroundColor != "rgb(255, 152, 145)" && tableCell.style.opacity == 0.5) {
-                    total.value = (total.value - tableCell.extraData.price).toFixed(2);
-                    total.dispatchEvent(new Event("change"));
-                }
-                tableCell.style.opacity = "100%";
-            }
-            
-            var image = document.createElement("img");
-            image.className = "noselect";
-            image.style.display = "block";
-            image.style.margin = "auto";
-            image.setAttribute("draggable", false);
-            image.style.objectFit = "contain";
-            image.height = 50;
-            image.width = 70;
-            image.src = item.image;
-            tableCell.appendChild(image);
-
-            var name = document.createElement("p");
-            name.className = "noselect";
-            name.style.textAlign = "center";
-            name.style.lineHeight = 1;
-            name.style.marginBottom = "5px";
-            name.innerHTML = item.name;
-            tableCell.appendChild(name);
-
-            var price = document.createElement("p");
-            price.className = "noselect";
-            price.style.fontSize = "10pt";
-            price.style.margin = 0;
-            price.innerHTML = "$" + item.price.toFixed(2);
-            tableCell.appendChild(price);
-
-            tableRow.appendChild(tableCell);
-        });
-    </script>
 </body>
 </html>
