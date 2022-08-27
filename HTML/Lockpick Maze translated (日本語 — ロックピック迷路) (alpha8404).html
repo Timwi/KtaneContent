@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ロックピック迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const rows = 8;
+        const cols = 8;
+        const paths = [
+            ["M5 5h80v80h-80v-80.7", "M15 5v40", "M25 25h60", "M35 25v-10h40", "M45 25v30", "M65 25v30", "M75 25v30", "M5 75h10v-20",
+             "M25 85v-50h10v10", "M25 65h10v-10v10h20v-20v20h20", "M35 75h50"],
+            ["M5 5h80v80h-80v-80.7", "M15 5v20h30v30v-30h10", "M25 15h40v10h10v-10h10", "M15 35h10v-10v30", "M5 45h10", "M15 55v30",
+             "M25 85v-20h50v-30h-10v20", "M35 35v30h20v-30", "M35 75h40v10"],
+            ["M5 5h80v80h-80v-80.7", "M25 5v30", "M45 5v30h30v-20h-20", "M15 15v30h20v-30v30h50", "M5 55h70", "M15 65h70", "M5 75h70"],
+            ["M5 5h80v80h-80v-80.7", "M15 5v70h60v-60h-50v10", "M25 35v30h20v10v-10h20v-40", "M35 15v40h10v-30v30h10", "M55 15v30"]
+        ];
+
+        $("th.lockmaze").each(function(i, e) {
+            let elem = $(e);
+            let svg = MakeSvgTag(90, 90, -2, -3, {
+                "text-anchor": "middle", "font-size": "5"
+            }).appendTo(elem);
+
+            paths[i].forEach((pat, p) => {
+                let path = MakeSvgElem("path", {
+                    d:pat, fill:"none", stroke:"#000", "stroke-width":1.5
+                });
+                svg.append(path);
+            });
+            for (let x = 0; x < cols; x++) {
+                let text = MakeSvgElem("text", {
+                    x:(x*10 + 10), y:2
+                });
+                text.innerHTML = String.fromCharCode(65 + x);
+                svg.append(text);
+            }
+
+            for (let y = 0; y < cols; y++) {
+                let text = MakeSvgElem("text", {
+                    x:1.5, y:(y*10 + 11.5)
+                });
+                text.innerHTML = y + 1;
+                svg.append(text);
+                for (let x = 0; x < rows; x++) {
+                    let dot = RegularPolygon(1.7, x*10 + 10, y*10 + 10, 4);
+                    svg.append(dot);
+                    let box = MakeSvgElem("rect", {
+                        x:(x*10 + 5), y:(y*10 + 5), width:10, height:10, fill:"transparent", class:"highlightable"
+                    });
+                    svg.append(box);
+                }
+            }
+        });
+    });
+    </script>
+    <style>
+        .container {
+            position: relative;
+            text-align: center;
+            color: white;
+        }
+
+        .containerBlack {
+            position: relative;
+            text-align: center;
+            color: black;
+        }
+
+        .centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .lock-type {
+            width: 100px;
+        }
+
+        .lock-maze {
+            width: 250px;
+        }
+
+        .lock-maze-picture {
+            width: 180px;
+            height: 180px;
+        }
+        th svg {
+            width: 200px;
+        }
+        .dark th svg path {
+            stroke: #DDD;
+        }
+        .dark th svg polygon, .dark th svg text {
+            fill: #DDD;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロックピック迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Lockpick Maze.svg" class="diagram">
+                <h2>モジュール詳細：ロックピック迷路</h2>
+                <p class="flavour-text">合法的に鍵をピッキング出来るのは、爆弾を解除している場合のみ……<br>そうであってくれ…</p>
+                <p class="appendix-reference">ロックの色の識別については、付録M4T3R1ALを参照する。
+                </p>
+                <p>このモジュールには、ロックと4つの色付きの方向ボタンがある。ロックを押すと迷路が現れる。迷路は30秒間だけ表示され、その後解除されずに再び非表示になるとミスが記録される。このモジュールを解除するには、30秒以内に自分が現在いる迷路を特定し、ゴール地点に向かう必要がある。ただし、開始するのが早すぎるとセキュリティアラートが鳴り、ミスが記録される。
+                </p>
+                <h3>ステップA:迷路の特定</h3>
+                <p>迷路は、ロックの材質によって決定される。以下から迷路を取得する。</p>
+
+                <table>
+                    <tr><th colspan="3">ロックの材質及び迷路</th></tr>
+                    <tr>
+                        <td class="lock-type">材質:</td>
+                        <th class="lock-maze"><span style="color: #993300;">銅</span></th>
+                        <th class="lock-maze"><span style="color: #808080;">銀</span></th>
+                    </tr>
+                    <tr>
+                        <td>迷路:</td>
+                        <th class="lockmaze nohighlight"></th>
+                        <th class="lockmaze nohighlight"></th>
+                    </tr>
+                    <tr>
+                        <td>材質:</td>
+                        <th class="lock-maze"><span style="color: #ffcc00;">金</span></th>
+                        <th class="lock-maze"><span style="color: #008080;">白金</span></th>
+                    </tr>
+                    <tr>
+                        <td style="">迷路:</td>
+                        <th class="lockmaze nohighlight"></th>
+                        <th class="lockmaze nohighlight"></th>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロックピック迷路</span>
+            </div>
+            <div class="page-content">
+                <h3>ステップB:ロック解除時間</h3>
+                <p>セキュリティアラームがインストールされていることに注意する必要がある。セキュリティ起動時にロックを押すとミスが記録される。ただし、特定の時間に起動するようである。以下のルールに従い、安全に開始できる時間を特定する。</p>
+                <ul>
+                    <li>目覚まし時計に表示されているPCの現在時刻を取得する。</li>
+                    <li>現在時刻に、爆弾タイマーの秒の数字が含まれていないときに開始することができる。</li>
+                    <li><em><b>注:</b>爆弾の残り時間が60秒未満の場合、これは適用されない。</em>
+                    <div><em>この場合は自由に開始することができる。</em></div></li>
+                </ul>
+                <h3>ステップC:開始地点</h3>
+                <p>迷路は開始するまで使用できず、制限時間は30秒しかないため、次のルールに従って開始位置とゴール地点を決定し、ルートを計画する必要がある。</p>
+                <h4>列の位置:</h4>
+                <p>列は、上下の矢印の色によって決定される。</p>
+                <ul>
+                    <li>赤の矢印1つにつき、1を加算する。</li>
+                    <li>青の矢印1つにつき、2を加算する。</li>
+                    <li>黄の矢印1つにつき、3を加算する。</li>
+                    <li>緑の矢印1つにつき、4を加算する。</li>
+                </ul>
+                <p>開始列は、計算結果の数字のアルファベット位置の英字である。</p>
+                <h4>段の位置:</h4>
+                <p>段は、左右の矢印の色によって決定される。</p>
+                <ul>
+                    <li>赤の矢印1つにつき、4を加算する。</li>
+                    <li>青の矢印1つにつき、3を加算する。</li>
+                    <li>黄の矢印1つにつき、2を加算する。</li>
+                    <li>緑の矢印1つにつき、1を加算する。</li>
+                </ul>
+                <p>開始段は、計算結果の数字である。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロックピック迷路</span>
+            </div>
+            <div class="page-content">
+                <h3>ステップD:ゴール地点</h3>
+                <p>迷路上にはゴールが表示されない。ゴールを見つけるには、以下のルールに従う(注:以下のルールにおいて全ての「ロックピック迷路」モジュールを無視する)。</p>
+                <h4>列の位置:</h4>
+                <p>列は、爆弾のその他のモジュールによって決定される。</p>
+                <ul>
+                    <li>モジュールの数を取得する。</li>
+                    <li>名前に「Color」という単語が含まれているモジュール1つにつき、5を加算する。</li>
+                    <li>名前に「Maze」という単語が含まれているモジュール1つにつき、3を加算する。</li>
+                    <li>名前に「Button」という単語が含まれているモジュール1つにつき、1を加算する。</li>
+                </ul>
+                <p><b>特殊ケース:</b></p>
+                <ul>
+                    <li>モジュール<em>「ダイヤル錠(Combination Lock)」</em>または<em>「セイフティ金庫(Safety Safe)」</em>がある場合、それぞれについて3を減算する。</li>
+                    <li>モジュール<em>「Retirement」</em>がある場合、4を減算する(1回のみ)。</li>
+                    <li>点灯したBOBインジケーターがあり、それ以外の特殊ケースが適用されない場合、シリアルナンバーの最後の数字に置き換える。</li>
+                </ul>
+                <p>ゴールの列は、計算結果の数字のアルファベット位置の英字である。数字が8を超える場合は8を減算する。0以下の場合は8を加算する。</p>
+                <h4>段の位置:</h4>
+                <p>段は、エッジワークによって決定される。</p>
+                <ul>
+                    <li>シリアルナンバーの最初の数字を取得する。</li>
+                    <li>点灯していないインジケーターの数を加算し、<u>点灯したインジケーター</u>については1つにつき2を加算する。</li>
+                    <li>バッテリーが4つ未満の場合、バッテリーの数を加算する。</li>
+                </ul>
+                <p>ゴール段は、計算結果の数字である。数字が8を超える場合は8を減算する。0以下の場合は8を加算する。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロックピック迷路</span>
+            </div>
+            <div class="page-content">
+                <h2>付録M4T3R1AL:ロックの素材</h2>
+                <p>以下は、全ての異なる素材のリストと、それらの見分け方である。</p>
+
+                <table style="height: 400px; width: 600px;">
+                    <tr style="height: 26.8px;">
+                        <th style="width: 283px; height: 26.8px;" colspan="3">ロックの材質及び迷路</th>
+                    </tr>
+                    <tr style="height: 37px;">
+                        <td style="width: 52px; height: 37px;">材質:</td>
+                        <th style="width: 120.4px; height: 37px; color: #993300;">銅</th>
+                        <th style="width: 110.6px; height: 37px; color: #808080;">銀</th>
+                    </tr>
+                    <tr style="height: 37px;">
+                        <td style="width: 52px; height: 37px;">違い:</td>
+                        <td style="width: 120.4px; height: 37px">
+                            <div class="containerBlack">
+                                <img src="img/Lockpick Maze/Lock Textures/BronzeTexture.jpg"
+                                    style="width:100%;">
+                                <div class="centered"><em>明るい茶色</em>に近い色</div>
+                            </div>
+                        </td>
+                        <td style="width: 120.4px; height: 37px">
+                            <div class="containerBlack">
+                                <img src="img/Lockpick Maze/Lock Textures/SilverTexture.jpg"
+                                    style="width:100%;">
+                                <div class="centered"><em>濃灰</em>の色</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr style="height: 37px;">
+                        <td style="width: 52px; height: 37px;">Lock type:</td>
+                        <th style="width: 120.4px; height: 37px; color: #ffcc00;">金</th>
+                        <th style="width: 110.6px; height: 37px; color: #008080;">白金</th>
+                    </tr>
+                    <tr style="height: 37px;">
+                        <td style="width: 52px; height: 37px;">違い:</td>
+                        <td style="width: 120.4px; height: 37px">
+                            <div class="containerBlack">
+                                <img src="img/Lockpick Maze/Lock Textures/GoldTexture.jpg" style="width:100%;">
+                                <div class="centered"><em>淡い黄みがかった</em>色</div>
+                            </div>
+                        </td>
+                        <td style="width: 120.4px; height: 37px">
+                            <div class="containerBlack">
+                                <img src="img/Lockpick Maze/Lock Textures/PlatinumTexture.jpg"
+                                    style="width:100%;">
+                                <div class="centered"><em>薄灰</em>の色</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+</html>
