@@ -1352,11 +1352,10 @@ let parseData = [
         matches: [
             {
                 regex: /^Frequency table:$/,
-                handler: function (matches, module)
-                {
+                handler: function (matches, module) {
                     let lines = readLines(2);
                     function p(n) {
-                        return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix+n) < 26 ? String.fromCharCode(65+ix+n) : ['EOF', 'total'][ix+n-26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n+14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
+                        return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix + n) < 26 ? String.fromCharCode(65 + ix + n) : ['EOF', 'total'][ix + n - 26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n + 14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
                     }
                     let table = $(`<div><table>${p(0)}</table><table>${p(14)}</table></div>`);
                     table.find('table').css({ width: '100%', marginBottom: '.1cm' });
@@ -1368,10 +1367,9 @@ let parseData = [
             },
             {
                 regex: /^(?:Start values|After (formulas|column removals)):$/,
-                handler: function (matches, module)
-                {
+                handler: function (matches, module) {
                     let lines = readLines(3).map(line => line.replace(/^\[Arithmetic Cipher #\d+\] (High|Low|Code): /, ''));
-                    let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v|0) : [0, 0];
+                    let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v | 0) : [0, 0];
                     function mark(str) {
                         if (shifts[1] !== 0)
                             str = str.substr(0, shifts[0] + 1) + `<span style='background: hsl(230, 100%, 90%)'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
@@ -2163,22 +2161,22 @@ let parseData = [
                     module.buttonGroup = [matches.input, []];
                     for (let i = 0; i < 25; i++) {
                         let line = readLine();
-                        module.buttonGroup[1].push(line.replace(/\[Color Grid #\d+\]/,((i+1)+"").padStart(2, '0')+"."));
+                        module.buttonGroup[1].push(line.replace(/\[Color Grid #\d+\]/, ((i + 1) + "").padStart(2, '0') + "."));
                     }
-                    module.push("The buttons are:", {obj: this.parseButtons(module.buttonGroup[1]), nobullet: true});
+                    module.push("The buttons are:", { obj: this.parseButtons(module.buttonGroup[1]), nobullet: true });
                     return true;
                 },
                 parseButtons: buttons => {
                     let groups = "";
                     for (let i = 0; i < 5; i++) {
                         for (let j = 0; j < 5; j++) {
-                            let color = /\[(\w+)\]/.exec(buttons[j*5+i])[1];
+                            let color = /\[(\w+)\]/.exec(buttons[j * 5 + i])[1];
                             color = color === "Inactive" ? "black" : color.toLowerCase();
-                            groups += `<circle r="9" cx="${10+20*i}" cy="${10+20*j}" fill="#363636"/>`;
-                            groups += `<rect width="10" height="10" x="${5+20*i}" y="${5+20*j}" transform="rotate(45 ${5+20*i+5} ${5+20*j+5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
+                            groups += `<circle r="9" cx="${10 + 20 * i}" cy="${10 + 20 * j}" fill="#363636"/>`;
+                            groups += `<rect width="10" height="10" x="${5 + 20 * i}" y="${5 + 20 * j}" transform="rotate(45 ${5 + 20 * i + 5} ${5 + 20 * j + 5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
                         }
                     }
-                    const css = {width: "250", height: "auto", display: "block", margin: "5px 0 10px"};
+                    const css = { width: "250", height: "auto", display: "block", margin: "5px 0 10px" };
                     const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
                     return svg;
                 }
@@ -3839,7 +3837,7 @@ let parseData = [
                             }
                         }
                     }
-                    if(matches[1] === 'Grid:') {
+                    if (matches[1] === 'Grid:') {
                         module.push([module.FloorLightsStage[0], [{ label: module.FloorLightsStage[2], obj: module.FloorLightsStage[1] }, { label: 'Grid:', obj: table }]])
                     }
                     else {
@@ -4415,15 +4413,15 @@ let parseData = [
             {
                 regex: /All solutions the computer could find.*/,
                 handler: function (matches, module) {
-                    let solutions = [ ];
+                    let solutions = [];
                     while (linen < lines.length) {
                         let mmm = (/\d-\d, \d/).exec(readLine());
-                        if (mmm == null) 
+                        if (mmm == null)
                             break;
                         solutions.push(mmm[0]);
                     }
                     linen--;
-                    module.push( { 'label':matches.input, 'obj':pre(solutions.join('\n')) } );
+                    module.push({ label: matches.input, obj: pre(solutions.join('\n')) });
                 }
             },
             {
@@ -4435,9 +4433,9 @@ let parseData = [
             {
                 regex: /(Initial state|Iteration \d+|Grid \w+|Solution|Colored square states|Submitted|Intended solution|Inputted):/,
                 handler: function (matches, module, moduleInfo) {
-                    if (moduleInfo.moduleData.moduleID === 'wackGameOfLife'){
+                    if (moduleInfo.moduleData.moduleID === 'wackGameOfLife') {
                         linen++;
-                        module.reference = { '#':'White', 'O':'Black' };
+                        module.reference = { '#': 'White', 'O': 'Black' };
                     }
                     const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
                     readLines(8).map(row => row.split("")).forEach((row, y) => {
@@ -4513,7 +4511,7 @@ let parseData = [
 
                     let offsets = [0.0];
                     for (let i = 1; i < 20; ++i)
-                    offsets[i] = offsets[i - 1] + parseFloat(lines[i]);
+                        offsets[i] = offsets[i - 1] + parseFloat(lines[i]);
                     offsets = offsets.map(i => i.toFixed(3));
                     offsets[0] = lines[0] = "Inter.";
 
@@ -4568,7 +4566,7 @@ let parseData = [
             },
             {
                 regex: /^\(Lap (\d+)\) Arrived at green flag lap\.$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.stages.append(struct = $(`
                     <tr style='border: black solid 2px;'>
                         <th style="border-right: black solid 2px;">${matches[1]}</th>
@@ -4583,16 +4581,16 @@ let parseData = [
             },
             {
                 regex: /^\(Final lap\) The exptected result is (.+)$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.push("Expected results:");
-                    module.push({obj:$(`<table style='border: black solid 2px; text-align: center;'>${matches[1].split(", ").map((m, i) => `<tr style='border: black solid 2px;'><th style="border-right: black solid 2px;">${i + 1}</th><td>${m}</td></tr>`).join("")}</table>`), nobullet:true});
+                    module.push({ obj: $(`<table style='border: black solid 2px; text-align: center;'>${matches[1].split(", ").map((m, i) => `<tr style='border: black solid 2px;'><th style="border-right: black solid 2px;">${i + 1}</th><td>${m}</td></tr>`).join("")}</table>`), nobullet: true });
 
                     return true;
                 }
             },
             {
                 regex: /^\(Final lap\) (.+)$/,
-                handler: function(matches, module){
+                handler: function (matches, module) {
                     module.push(matches[1]);
 
                     return true;
@@ -4600,7 +4598,7 @@ let parseData = [
             },
             {
                 regex: /^(\(Initial\) (Total lap count: \d+|The green flag lap is at lap \d+)|\(Final lap\) Reached the final lap\.)$/,
-                handler: function(_, _){
+                handler: function (_, _) {
                     return true;
                 }
             },
