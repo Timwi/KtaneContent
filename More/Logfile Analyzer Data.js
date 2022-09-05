@@ -4396,8 +4396,8 @@ let parseData = [
         ]
     },
     {
-        moduleID: ["GameOfLifeCruel", "GameOfLifeSimple", "LifeIteration"],
-        loggingTag: ["Game of Life Cruel", "Game of Life Simple", "Life Iteration"],
+        moduleID: ["GameOfLifeCruel", "GameOfLifeSimple", "LifeIteration", "wackGameOfLife"],
+        loggingTag: ["Game of Life Cruel", "Game of Life Simple", "Life Iteration", "Wack Game of Life"],
         matches: [
             {
                 regex: /Cell color reference:/,
@@ -4409,8 +4409,21 @@ let parseData = [
                         if (matches == null) break;
                         module.reference[matches[1]] = matches[2];
                     }
-
                     linen--;
+                }
+            },
+            {
+                regex: /All solutions the computer could find.*/,
+                handler: function (matches, module) {
+                    let solutions = [ ];
+                    while (linen < lines.length) {
+                        let mmm = (/\d-\d, \d/).exec(readLine());
+                        if (mmm == null) 
+                            break;
+                        solutions.push(mmm[0]);
+                    }
+                    linen--;
+                    module.push( { 'label':matches.input, 'obj':pre(solutions.join('\n')) } );
                 }
             },
             {
@@ -4420,8 +4433,12 @@ let parseData = [
                 }
             },
             {
-                regex: /(Initial state|Solution|Colored square states|Submitted):/,
-                handler: function (matches, module) {
+                regex: /(Initial state|Iteration \d+|Grid \w+|Solution|Colored square states|Submitted|Intended solution|Inputted):/,
+                handler: function (matches, module, moduleInfo) {
+                    if (moduleInfo.moduleData.moduleID === 'wackGameOfLife'){
+                        linen++;
+                        module.reference = { '#':'White', 'O':'Black' };
+                    }
                     const grid = $SVG('<svg viewBox="0 0 6 8" width="20%">').css({ border: "2px gray solid", display: "block" });
                     readLines(8).map(row => row.split("")).forEach((row, y) => {
                         row.forEach((cell, x) => {
