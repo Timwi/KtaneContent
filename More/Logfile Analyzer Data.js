@@ -10554,6 +10554,32 @@ let parseData = [
             }
         ]
     },
+		{ 
+		displayName: 'Voltorb Flip',
+		moduleID: 'VoltorbFlip',
+		loggingTag: 'Voltorb Flip',
+		matches: [
+			{
+				regex: /The grid on the module is as follows:/,
+				handler: function (matches, module) {
+					let linesRx = readLines(5).map(l => l.match(/([1-3*]) ([1-3*]) ([1-3*]) ([1-3*]) ([1-3*])/));
+					let table = `<table>`;
+					for (let row = 0; row < 5; row++){
+						table += `<tr>`;
+						for (let col = 0; col < 5; col++){
+							let cell = linesRx[row][col + 1];
+							if (cell == '*')
+								cell = 'voltorb';
+							table += `<td style="padding: 0"><img style="width: 1.5cm" src='img/Voltorb Flip/${cell}.png'></td>`;
+						}
+						table += `</td>`;
+					}
+					table += `</table>`;
+					module.push({label:matches.input, obj:table});
+				}
+			}
+		]
+	},
     {
         displayName: "Wavetapping",
         moduleID: "Wavetapping",
