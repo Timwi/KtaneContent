@@ -1516,6 +1516,160 @@ let parseData = [
         ]
     },
     {
+        displayName: "Binary Cipher",
+        moduleID: "binarycipher",
+        loggingTag: "Binary Cipher",
+        matches: [
+            {
+                regex: /Grid 1:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid 1:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid 2:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid 2:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid 3:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid 3:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid 4:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid 4:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Grid 5:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Grid 5:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /The 4 by 4 matrix should be:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "The 4 by 4 matrix should be:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table A, before shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table A, before shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table B, before shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table B, before shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table C, before shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table C, before shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table A, after shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table A, after shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table B, after shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table B, after shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /Table C, after shift:/,
+                handler: function (matches, module) {
+                    let lines = readTaggedLine();
+                    for (let i = 0; i < 3; i++) {
+                        lines += `\n${readTaggedLine()}`;
+                    }
+
+                    module.push({ label: "Table C, after shift:", obj: pre(lines) });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+    {
         displayName: "Binary Puzzle",
         moduleID: "BinaryPuzzleModule",
         loggingTag: "Binary Puzzle",
