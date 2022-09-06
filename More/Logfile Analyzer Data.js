@@ -3596,10 +3596,13 @@ let parseData = [
         loggingTag: "Echolocation",
         matches: [
             {
-                regex: /Maze:/,
+                regex: /Generating maze with size of (\d\d?)\.$/,
                 handler: function (matches, module) {
-                    var maze = readMultiple(9).replace(/\[Echolocation #\d+\] /g, '');
-                    module.push({ label: matches.input, obj: pre(maze) });
+                    let lineCount = matches[1] * 2 + 1;
+                    let line = readTaggedLine();
+                    module.push(matches.input);
+                    var maze = readMultiple(lineCount).replace(/\[Echolocation #\d+\] /g, '');
+                    module.push({ label: line, obj: pre(maze) });
                     return true;
                 }
             },
