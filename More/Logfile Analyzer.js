@@ -333,7 +333,7 @@ class BombGroup {
         // Graph
         if (this.Events.length !== 0 && this.isSingleBomb)
         {
-            const graph = $SVG(`<svg viewBox="-0.1 -0.1 2.3 1.4">`);
+            const graph = $SVG(`<svg viewBox="-1 -1 23 14">`);
 
             const totalRealTime = this.Events[this.Events.length - 1].realTime;
 
@@ -363,7 +363,7 @@ class BombGroup {
             };
 
             for (const stat of Object.values(stats)) {
-                stat.line = "M 0 1 ";
+                stat.line = "M 0 10 ";
                 stat.value = 0;
             }
 
@@ -375,7 +375,7 @@ class BombGroup {
                         continue;
                 }
 
-                const baseCommand = `L ${(event.realTime / totalRealTime * 2)} `;
+                const baseCommand = `L ${(event.realTime / totalRealTime * 2 * 10)} `;
 
                 for (const stat of Object.values(stats)) {
                     if (stat.type == event.type || stat.type == undefined) {
@@ -384,7 +384,7 @@ class BombGroup {
 
                         if (stat.name != "Time")
                         {
-                            stat.line += baseCommand + beforeRatio;
+                            stat.line += baseCommand + (beforeRatio * 10);
                             stat.value++;
                         }
                         else
@@ -395,7 +395,7 @@ class BombGroup {
                         let afterRatio = stat.value / stat.max;
                         if (stat.invert) afterRatio = 1 - afterRatio;
 
-                        stat.line += baseCommand + afterRatio;
+                        stat.line += baseCommand + (afterRatio * 10);
                     }
                 }
             }
@@ -406,25 +406,25 @@ class BombGroup {
                 {
                     let beforeRatio = stat.value / stat.max;
                     if (stat.invert) beforeRatio = 1 - beforeRatio;
-                    stat.line += `L 2 ${beforeRatio}`;
+                    stat.line += `L 20 ${beforeRatio * 10}`;
                 }
 
                 let afterRatio = stat.final / stat.max;
                 if (stat.invert) afterRatio = 1 - afterRatio;
-                stat.line += `L 2 ${afterRatio}`;
+                stat.line += `L 20 ${afterRatio * 10}`;
 
                 // Draw line and preprend it to make sure lines are drawn in the right order.
-                $SVG(`<path stroke="${stat.color}" stroke-width=0.01 fill=none d="${stat.line}">`).prependTo(graph);
+                $SVG(`<path stroke="${stat.color}" stroke-width=0.1 fill=none d="${stat.line}">`).prependTo(graph);
 
                 // Legend
-                $SVG(`<rect fill="${stat.color}" x=0.02 width=0.075 height=0.075 y=${i * 0.1}>`).appendTo(graph);
-                $SVG(`<text font-size=0.05 x=0.11 dominant-baseline=middle y=${i * 0.1 + 0.0375}>${stat.name}`).appendTo(graph);
+                $SVG(`<rect fill="${stat.color}" x=0.2 width=0.75 height=0.75 y=${i}>`).appendTo(graph);
+                $SVG(`<text font-size=0.5 x=1.1 dominant-baseline=middle y=${i + 0.375}>${stat.name}`).appendTo(graph);
 
                 i++;
             }
 
             // Graph lines
-            $SVG(`<path stroke=black stroke-width=0.01 fill=none d="M 0 0 0 1.01 2.01 1.01">`).appendTo(graph);
+            $SVG(`<path stroke=black stroke-width=0.1 fill=none d="M 0 0 0 10.1 20.1 10.1">`).appendTo(graph);
 
             function printTime(num) {
                 num = Math.floor(num);
@@ -456,20 +456,20 @@ class BombGroup {
             let group = $SVG(`
             <g>
                 <defs>
-                    <path id='left-label' stroke=black stroke-width=0.01 fill=none d="M 0 1.06 .2 1.26"/>
-                    <path id='right-label' stroke=black stroke-width=0.01 fill=none d="M 2.01 1.06 2.21 1.26"/>
+                    <path id='left-label' stroke=black stroke-width=0.1 fill=none d="M 0 10.6 2 12.6"/>
+                    <path id='right-label' stroke=black stroke-width=0.1 fill=none d="M 20.1 10.6 22.1 12.6"/>
                 </defs>
                 <text>
-                    <textpath href='#left-label' style="font-size: .05;">0:00</textpath>
-                    <textpath href='#right-label' style="font-size: .05;">${printTime(totalRealTime)}</textpath>
+                    <textpath href='#left-label' font-size=".5">0:00</textpath>
+                    <textpath href='#right-label' font-size=".5">${printTime(totalRealTime)}</textpath>
                 </text>
-                <text x='1' y='1.2' style="font-size: .05;text-anchor: middle;">Real Time</text>
+                <text x='10' y='12' font-size=".5" style="text-anchor: middle;">Real Time</text>
             </g>
             `);
 
             for (const item of timerLabels) {
-                $SVG(`<text transform='translate(${item * 2 / totalRealTime}, 0)'><textpath href='#left-label' style="font-size: .05;">${printTime(item)}</textpath></text>`).appendTo(group);
-                $SVG(`<path stroke='#ccc' stroke-width='.005' d='M${item * 2 / totalRealTime} 0v1.01'/>`).appendTo(group);
+                $SVG(`<text transform='translate(${item * 2 / totalRealTime * 10}, 0)'><textpath href='#left-label' font-size=".5">${printTime(item)}</textpath></text>`).appendTo(group);
+                $SVG(`<path stroke='#ccc' stroke-width='.05' d='M${item * 2 / totalRealTime * 10} 0v10.1'/>`).appendTo(group);
             }
 
             group.prependTo(graph);
