@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Lodě — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            /*eslint-env es6*/
+            var controls = localStorage.getItem("alt-controls");
+            if (controls == null) {
+                localStorage.setItem("alt-controls", false);
+                controls = false;
+            } else {
+                $(".alt-controls").prop("checked", controls == "true");
+                controls = (controls == "true");
+            }
+
+          var grid = $(".grid");
+            var ships = $(".ships");
+            var cells = [];
+            var undos = [];
+            var redos = [];
+            var saves = [];
+            var order = [];
+            var currentState;
+            var animTime;
+            var dragState;
+            var lastSelected;
+
+            function mod(x, m) {
+                return (x % m + m) % m;
+            }
+
+            function deselectCell(cell) {
+                lastSelected = cell;
+                cell.removeClass("selected").css("animation-delay", "");
+            }
+
+            function getCell(x, y) {
+                return cells[y] ? cells[y][x] : undefined;
+            }
+
+            function updateCell(x, y, passed) {
+                var cell = getCell(x, y);
+                var element = cell.element;
+                if (cell.state == 0) {
+                    element.removeClass("water");
+
+                    if (cell.ship) {
+                        cell.ship.remove();
+                        cell.ship = null;
+                    }
+                } else if (cell.state == 1) {
+                    element.addClass("water");
+
+                    if (cell.ship) {
+                        cell.ship.remove();
+                        cell.ship = null;
+                    }
+                } else if (!cell.ship) {
+                    element.addClass("water");
+                    cell.ship = $("<div>").addClass("ship").appendTo(element);
+                }
+
+                var ship = cell.ship;
+                var displayable = true;
+                var surrounding = [];
+
+                // Get every position around the cell.
+                for (var oy = -1; oy <= 1; oy++) {
+                    for (var ox = -1; ox <= 1; ox++) {
+                        if (ox != 0 || oy != 0) {
+                            var nextCell = getCell(x + ox, y + oy);
+                            if (nextCell && nextCell.element.hasClass("placable")) {
+                                var watered = nextCell.element.hasClass("water");
+                                if (!watered) {
+                                    displayable = false;
+                                } else if (nextCell.ship) {
+                                    surrounding.push([x + ox, y + oy]);
+
+                                    if (!passed) {
+                                        updateCell(x + ox, y + oy, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (ship) {
+                    ship.removeClass("diamond left right top down");
+                    if (displayable) {
+                        // Check for any potental errors with ships in different row/column.
+                        var error = false;
+                        surrounding.forEach(function(base) {
+                            surrounding.forEach(function(pos) {
+                                if (pos[0] != base[0] && pos[1] != base[1]) {
+                                    error = true;
+                                }
+                            });
+                        });
+
+                        surrounding.forEach(function(pos) {
+                            if (pos[0] != x && pos[1] != y) {
+                                error = true;
+                            }
+                        });
+
+                        if (!error) {
+                            ship.addClass("left right top bottom");
+                            surrounding.forEach(function(pos) {
+                                if (pos[0] > x) {
+                                    ship.removeClass("right");
+                                }
+
+                                if (pos[0] < x) {
+                                    ship.removeClass("left");
+                                }
+
+                                if (pos[1] > y) {
+                                    ship.removeClass("bottom");
+                                }
+
+                                if (pos[1] < y) {
+                                    ship.removeClass("top");
+                                }
+                            });
+                            return;
+                        }
+                    }
+
+                    ship.addClass("diamond");
+                }
+            }
+
+            function massChange(changes) {
+                changes.forEach(function(change) {
+                    if (change.cell) {
+                        var cell = change.cell;
+                        cell.state = change.state;
+                        updateCell(cell.x, cell.y);
+                    } else if (change.element) {
+                        change.element.prop("checked", change.state);
+                    }
+                });
+            }
+
+            $(document).keydown(function(event) {
+                var n = parseInt(event.key);
+                var k = event.key.toLowerCase();
+                var selected = $(".cell.selected");
+
+                if (selected.length == 0 && n) {
+                    if (lastSelected && lastSelected.length > 0) {
+                        lastSelected.click();
+                    } else {
+                        order[0].click();
+                    }
+
+                    selected = $(".cell.selected");
+                }
+
+                var index = -1;
+                order.forEach(function(e, i) {
+                    if (e.is(selected)) {
+                        index = i;
+                    }
+                });
+
+                if (event.key == "`") {
+                    n = 0;
+                }
+
+                if (selected.length > 0) {
+                    if (!isNaN(n)) {
+                        if (n > 4) {
+                            n = 4;
+                        }
+
+                        selected.text(n);
+                        deselectCell(selected);
+
+                        if (selected.parent().parent().hasClass("ships")) {
+                            selected.text(n);
+                            var row = selected.parent();
+                            row.children().filter("input").remove();
+                            for (var i = 1; i <= n; i++) {
+                                $("<input type=\"checkbox\">").addClass("tracker").appendTo(row).click(function() {
+                                    var element = $(this);
+                                    undos.push([{element: element, state: !element.prop("checked")}]);
+
+                                    if (currentState) {
+                                        var n = currentState - 1;
+                                        saves.forEach(function(button, index) {
+                                            if (index > n) {
+                                                button.remove();
+                                            }
+                                        });
+                                        saves.splice(currentState, saves.length - n);
+
+                                        currentState = null;
+                                    }
+                                });
+                            }
+                        }
+
+                        order[mod(index + 1, order.length)].click();
+                    } else if (event.key == "Backspace") {
+                        order[mod(index - 1, order.length)].click();
+                        event.preventDefault();
+                    } else if (event.key == " ") {
+                        order[mod(index + 1, order.length)].click();
+                        event.preventDefault();
+                    }
+                }
+
+                if (k == "z" && undos.length > 0) {
+                    var state = undos[undos.length - 1];
+                    var redo = [];
+
+                    state.forEach(function(change) {
+                        if (change.cell) {
+                            redo.push({cell: change.cell, state: change.cell.state});
+                        } else {
+                            redo.push({element: change.element, state: change.element.prop("checked")});
+                        }
+                    });
+                    massChange(state);
+
+                    undos.splice(undos.length - 1, 1);
+                    redos.push(redo);
+                }
+
+                if (k == "y" && redos.length > 0) {
+                    state = redos[redos.length - 1];
+                    var undo = [];
+
+                    state.forEach(function(change) {
+                        if (change.cell) {
+                            undo.push({cell: change.cell, state: change.cell.state});
+                        } else {
+                            undo.push({element: change.element, state: change.element.prop("checked")});
+                        }
+                    });
+                    massChange(state);
+
+                    redos.splice(redos.length - 1, 1);
+                    undos.push(undo);
+                }
+            }).click(function() {
+                deselectCell($(".cell.selected"));
+            });
+
+            function clickElement(event, cell, x, y) {
+                var button = event.buttons;
+                if (button == 1 || (button == 2 && controls)) {
+                    undos.push([{cell: cell, state: cell.state}]);
+                    if (!controls) {
+                        cell.state++;
+                        cell.state %= 3;
+                    } else if (button == 1) {
+                        if (cell.state == 0) {
+                            cell.state = 1;
+                        } else {
+                            cell.state = 0;
+                        }
+                    } else {
+                        if (cell.state == 0) {
+                            cell.state = 2;
+                        } else {
+                            cell.state = 0;
+                        }
+                    }
+
+                    if (event.type == "mousedown") {
+                        dragState = cell.state;
+                    } else if (event.type == "mouseenter") {
+                        cell.state = dragState;
+                    }
+
+                    redos = [];
+                    if (currentState) {
+                        var n = currentState - 1;
+                        saves.forEach(function(button, index) {
+                            if (index > n) {
+                                button.remove();
+                            }
+                        });
+                        saves.splice(currentState, saves.length - n);
+
+                        currentState = null;
+                    }
+
+                    updateCell(x, y);
+                }
+            }
+
+            var size = 5;
+            for (let y = 0; y <= size; y++) {
+                cells[y] = [];
+                var row = $("<tr>").addClass("row").appendTo(grid);
+                for (let x = 0; x <= size; x++) {
+                    let element = $("<td>").addClass("cell").appendTo(row);
+                    let cell = {
+                        x: x,
+                        y: y,
+                        element: element,
+                        state: 0
+                    };
+
+                    if (x > 0 && y > 0) {
+                        element
+                            .addClass("placable")
+                            .on("mousedown mouseenter", function(event) { clickElement(event, cell, x, y); })
+                            .contextmenu(function(event) {
+                                if (controls) {
+                                    event.preventDefault();
+                                }
+                            });
+
+                        cells[y][x] = cell;
+                    } else if (x != 0 || y != 0) {
+                        element.text("?");
+
+                        element.click(function(event) {
+                            if (!element.hasClass("selected")) {
+                                var offset;
+                                if (animTime) {
+                                    offset = ((Date.now() - animTime) / 1000) % 2.5;
+                                } else {
+                                    animTime = Date.now();
+                                }
+
+                                deselectCell($(".cell.selected"));
+                                element.addClass("selected");
+
+                                if (offset) {
+                                    element.css("animation-delay", "-" + offset + "s");
+                                }
+                                event.stopPropagation();
+                            }
+                        });
+
+                        cells[y][x] = {
+                            x: x,
+                            y: y,
+                            element: element
+                        };
+                        order.push(element);
+                    }
+                }
+            }
+
+            $("button.save-state").click(function() {
+                if (saves.length < 10) {
+                    var save = {
+                        changes: [],
+                        undos: undos.slice(0),
+                        redos: redos.slice(0),
+                        ships: []
+                    };
+
+                    cells.forEach(function(row, y) {
+                        row.forEach(function(cell, x) {
+                            if (y > 0 && x > 0) {
+                                save.changes.push({
+                                    cell: cell, state: cell.state
+                                });
+                            }
+                        });
+                    });
+
+                    $(".ships .row").each(function(index, row) {
+                        save.ships[index] = $(row).children().filter("input:checked").length;
+                    });
+
+                    var n = saves.length + 1;
+                    var button = $("<button>").appendTo($(".save-states")).click(function() {
+                        massChange(save.changes);
+                        undos = save.undos;
+                        redos = save.redos;
+                        $(".ships .row").each(function(y, row) {
+                            $(row).children().filter("input").each(function(index, element) {
+                                $(element).prop("checked", index <= save.ships[y] - 1);
+                            });
+                        });
+
+                        currentState = parseInt(n);
+                    }).text(n);
+
+                    saves.push(button);
+                }
+            });
+
+            function resetGrid() {
+                var undo = [];
+                cells.forEach(function(row, y) {
+                    row.forEach(function(cell, x) {
+                        if (y > 0 && x > 0) {
+                            undo.push({
+                                cell: cell, state: cell.state
+                            });
+                            cell.state = 0;
+                            updateCell(x, y);
+                        }
+                    });
+                });
+
+                $(".ships input.tracker").each(function() {
+                    var element = $(this);
+                    undo.push({
+                        element: element, state: element.prop("checked")
+                    });
+                    element.prop("checked", false);
+                });
+
+                undos.push(undo);
+            }
+
+            $("button.reset-grid").click(resetGrid);
+
+            $("button.reset").click(function() {
+                resetGrid();
+
+                saves = [];
+                $(".save-states button").remove();
+
+                order.forEach(function(element) {
+                    element.text("?");
+                });
+
+                $("input.tracker").remove();
+
+                lastSelected = null;
+            });
+
+            $("input.alt-controls").click(function() {
+                controls = $(this).prop("checked");
+                localStorage.setItem("alt-controls", controls.toString());
+            });
+
+            for (var i = 4; i >= 1; i--) {
+                row = $("<div>").addClass("row").appendTo(ships);
+
+                for (var x = 1; x <= i; x++) {
+                    var ship = $("<div>").addClass("ship").appendTo(row);
+                    if (x == 1) {
+                        ship.addClass("right top bottom").css("margin-right", (4 - i) * 35);
+                    }
+
+                    if (x == i) {
+                        ship.addClass("left top bottom");
+                    }
+                }
+
+                let cell = $("<div>").addClass("cell").appendTo(row).text("?");
+                order.push(cell);
+                cell.click(function(event) {
+                    if (!cell.hasClass("selected")) {
+                        var offset;
+                        if (animTime) {
+                            offset = ((Date.now() - animTime) / 1000) % 2.5;
+                        } else {
+                            animTime = Date.now();
+                        }
+
+                        deselectCell($(".cell.selected"));
+                        cell.addClass("selected");
+
+                        if (offset) {
+                            cell.css("animation-delay", "-" + offset + "s");
+                        }
+                        event.stopPropagation();
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+        * {
+            user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+        }
+
+        @keyframes flashing {
+            0% { background-color: rgba(255, 255, 0, 0.4); }
+            50% { background-color: rgba(255, 255, 0, 0.6); }
+            100% { background-color: rgba(255, 255, 0, 0.4); }
+        }
+
+        .grid {
+            margin-bottom: 10px;
+            cursor: default;
+            border: none;
+        }
+
+        .row {
+            height: 55px;
+        }
+
+        .cell {
+            padding: 0px;
+            height: inherit;
+            width: 55px;
+            text-align: center;
+            font-size: 30px;
+            vertical-align: middle;
+            line-height: 70px;
+            float: left;
+            border: rgba(0, 0, 0, 0) 1px solid;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cell.placable {
+            border: black 1px solid;
+            transition: 0.5s;
+        }
+
+        .cell.selected {
+            animation: 2.5s ease-in-out flashing infinite;
+        }
+
+        .cell.placable.water {
+            background-color: rgba(0, 0, 255, 0.5);
+        }
+
+        .ship {
+            border: black 3px solid;
+            background-color: white;
+            height: 40px;
+            width: 40px;
+            align-self: center;
+        }
+
+        .ship.diamond {
+            transform: rotateZ(45deg) scale(0.8);
+        }
+
+        .ship.top.left {
+            border-top-left-radius: 40px;
+        }
+
+        .ship.top.right {
+            border-top-right-radius: 40px;
+        }
+
+        .ship.bottom.left {
+            border-bottom-left-radius: 40px;
+        }
+
+        .ship.bottom.right {
+            border-bottom-right-radius: 40px;
+        }
+
+        .save-states {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .save-states button {
+            margin-left: 5px;
+            margin-bottom: 5px;
+        }
+
+        .ships {
+            float: right;
+            margin-top: 64px;
+        }
+
+        .ships .row {
+            border: rgba(0, 0, 0, 0) 1px solid;
+        }
+
+        .ships .ship, .ships .cell, .ships input {
+            float: right;
+            margin-right: 5px;
+            width: 25px;
+            height: 25px;
+            margin-top: 16px;
+            line-height: 35px;
+        }
+
+        .ships input {
+            margin-top: 19px;
+            float: right;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-04">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Lodě (čeština) v1.4</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/Battleship.svg" class="diagram">
+            <h2>Na téma Lodí (čeština)</h2>
+            <p class="flavour-text">PALTE! ... (žbluňk) Vedle.</p>
+
+            <p><strong>Kadete, Pozor.</strong> Zúžili jsme umístění nepřítele do této mřížky 5 × 5.
+              Cíle v této oblasti jsou skryté, ale máme na to spoustu inteligence.</p>
+
+            <p> Máme podezření, že tato informace nemusí být dostatečná, aby přesně určila, kde jsou nasazeny nepřátelské síly.
+                Potřebujeme, abyste zjistili, která místa v bojové aréně můžeme bezpečně prověřit.</p>
+
+            <ul>
+                <li>Vemte první písmeno a číslo sériového čísla.
+                  Přičtěte nebo odečtěte 5 k písmenu aby platilo že písmeno
+                  bude v rozmezí A-E a číslo 1-5. Toto je první bezpečná pozice.</li>
+                <li>Udělejte to samé s druhým číslem a písmenem.
+                  Pokračujte dokud vám nezbydou už žádné písmena či čísla.</li>
+                <li>Nakonec, převeďte počet portů na písmeno (zase musí být v rozmezí A-E)
+                    a počet indikátorů + baterií na číslo (zase musí být v rozmezí 1-5).
+                    Toto je vaše finální bezpečná pozice.</li>
+            </ul>
+            <h3> Nápověda: </h3>
+            <ul>
+              <li> Písmena = Sloupce
+                   Čísla = Řádky</li>
+              <li> Každá loď je vodorovná nebo svislá.</li>
+              <li> Žádné lodě spolu nesousedí (ani diagonálně).</li>
+              <li> Víme jak velké jsou lodě, kolik jich je a kolik jich je v každém řádku a sloupci.</li>
+              <li> RADAR   = Používej pouze na ZÁCHRANNÁ MÍSTA.</li>
+              <li> VODA    = Používej pouze na místa kde jsi si jistý že není loď. Můžeš také kliknout na číslo aby jsi dal vodu na celý řádek/sloupec.</li>
+              <li> TORPEDO = Používej pouze na místa kde jsi si jistý že je loď.</li>
+            </ul>
+            <p>Hodně štěstí.</p>
+              <div class="ships"></div>
+                        <table class="grid"></table>
+                        <button class="save-state">Uložit Stav</button>
+                        <div class="save-states"></div>
+                        <button class="reset-grid">Resetovat Tabulku</button>
+                        <br>
+                        <button class="reset" style="margin-top: 25px;">Resetovat</button>
+                        <div style="margin-top: 25px;">Střídavé Ovládání: <input class="alt-controls" type="checkbox"></div>
+              <h4>Ovládání interaktivní Tabulky: </h4>
+                        <ul>
+                            <li>Klikejte na okénko abyste změnili stav mezi vodou, lodí a prázdnotou.</li>
+                            <li>Klikněte a potáhněte abyste položili několik stejných okýnek</li>
+                            <li>Klikněte na znak otazníku (?) abyste napsali číslo.</li>
+                            <li>Když zadáte číslo vedle lodí, tak vám umožní kliknout na zaškrtávací pole abyste zaškrtli že tuto loď už máte splněnou.</li>
+                            <li>Zmáčkněte Z abyste dali krok zpět a Y abyste dali krok dopředu.</li>
+                        </ul>
+                        <h4>Střídavé Ovládání</h4>
+                        <ul>
+                            <li>Klikněte na okénko abyste změnili stav mezi vodou a prázdnotou.</li>
+                            <li>Pravým kliknutím na okénko budete měnit jeho stav mezi lodí a prázdnotou.</li>
+                        </ul>
+        </div>
+        <div class="page-footer relative-footer">Strana 1 z 1</div>
+    </div>
+</div>
+</body>
+</html>
