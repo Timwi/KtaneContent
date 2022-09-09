@@ -350,7 +350,7 @@ class BombGroup {
                     name: "Solves",
                     color: "rgb(0, 225, 0)",
                     max: totalModules,
-                    final: this.Bombs[0].Solves,
+                    final: this.Bombs[0].Solved,
                     invert: true,
                     type: "PASS"
                 },
