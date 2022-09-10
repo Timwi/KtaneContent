@@ -8211,6 +8211,58 @@ let parseData = [
             }
         ]
     },
+	    {
+        displayName: "Quantum Ternary Converter",
+        moduleID: "quTern",
+        loggingTag: "Quantum Ternary Converter",
+        matches: [
+            {
+                regex: /The display shows the superposition of the numbers: (-?)(\d+) and (-?)(\d+)\./,
+                handler: function (matches, module) {
+					let negA = matches[1] == '-';
+					let a = matches[2];
+					let negB = matches[3] == '-';
+					let b = matches[4];
+					
+					let digits = { '0':[true,true,true,false,true,true,true], '1':[false,false,true,false,false,true,false], '2':[true,false,true,true,true,false,true], '3':[true,false,true,true,false,true,true], '4':[false,true,true,true,false,true,false], '5':[true,true,false,true,false,true,true], '6':[true,true,false,true,true,true,true], '7':[true,false,true,false,false,true,false], '8':[true,true,true,true,true,true,true], '9':[true,true,true,true,false,true,true], '/':[false,false,false,false,false,false,false] };
+					let colors = { 0:'Black', 1:'Gray', 2:'White' };
+					
+					while (a.length < b.length)
+						a = '/' + a;
+					while (b.length < a.length)
+						b = '/' + b;
+
+					const pathTop = 'M-2 1-3 0-2-1 2-1 3 0 2 1Z';
+					const transforms = [ 'translate(0,0)', 'translate(-3,3) rotate(90)', 'translate(3,3) rotate(90)', 'translate(0,6)', 'translate(-3,9) rotate(90)', 'translate(3,9) rotate(90)', 'translate(0, 12)'];
+					const svgStyle = "background-color: black; width: 5in; display: block;"
+					
+					let groups = [];
+					for (let i = 0; i < a.length; i++) {
+						let setA = digits[a[i]];
+						let setB = digits[b[i]];
+						let group = [ ];
+						
+						for (let seg = 0; seg < 7; seg++) {
+							let value = setA[seg] + setB[seg];
+							group.push(`<path d='${pathTop}' transform='${transforms[seg]}' fill='${colors[value]}'></path>`);
+						}
+						groups.push(`<g transform='translate(${10 * i})'> ${group.join(' ')} </g>'`);
+					}
+					let neg = negA + negB; // Number
+					groups.push(`<path d='M-5 6-6 5-10 5-11 6-10 7-6 7Z' fill='${colors[neg]}' ></path>`);
+					let svg = `<svg viewbox="${neg == 0 ? -5 : -12} -2 ${10 * a.length + (neg == 0 ? 0 : 8)} 16" xmlns="http://www.w3.org/2000/svg" style="${svgStyle}">`;
+					svg += groups.join(' ');
+					svg += `</svg>`;
+					
+					module.push({ label:matches, obj:svg });
+					return true;
+                }
+            },            
+			{
+                regex: /(?!The display shows the).+/,
+            }
+        ]
+    },
     {
         displayName: "Quintuples",
         moduleID: "quintuples",
