@@ -8254,7 +8254,7 @@ let parseData = [
 					svg += groups.join(' ');
 					svg += `</svg>`;
 					
-					module.push({ label:matches, obj:svg });
+					module.push({ label:matches[0], obj:svg });
 					return true;
                 }
             },            
