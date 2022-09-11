@@ -6693,6 +6693,45 @@ let parseData = [
         loggingTag: "Megaman 2"
     },
     {
+        moduleID: "metapuzzle",
+        loggingTag: "Metapuzzle",
+        matches: [
+            {
+                regex: /.+/,
+				handler: function (matches, module) {
+					const header = /--- ([\w\s]+) ---/;
+					let line = '';
+					module.stuff = [ ];
+					
+					if (module.done)
+						module.push(matches[0]);
+					else {						
+						while ((line = readLine()).startsWith('[Metapuzzle #')){
+							line = line.replace(/^\[Metapuzzle #\d+\] /, '');
+							let match = line.match(header);
+							if (match) {
+								if (module.header)
+									module.push( [ module.header, module.stuff ] );
+								module.header = match[1];
+								module.stuff = [ ];
+							}
+							else {
+								if (module.header)
+									module.stuff.push(line);
+								else 
+									module.push(line);
+							}
+						}
+						module.push( [ module.header, module.stuff ] );
+						module.done = true;
+						linen--;
+					}
+					
+				}
+            }
+        ]
+    },
+    {
         displayName: "Minecraft Survival",
         moduleID: "kataMinecraftSurvival",
         loggingTag: "Minecraft Survival",
