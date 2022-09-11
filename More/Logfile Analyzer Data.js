@@ -2472,6 +2472,23 @@ let parseData = [
             }
         ]
     },
+	{
+		displayName: "Color One Two",
+		moduleID: "colorOneTwo",
+		loggingTag: "Color One Two",
+		matches: [
+			{
+				regex: /The \w+ led's color is \w+/,
+				handler: function (matches, module) {
+					module.push(matches[0] + '.');
+					return true;
+				}
+			},            
+			{
+                regex: /.+/
+            }
+		]
+	},
     {
         displayName: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash Translated"],
         moduleID: ["ColourFlash", "ColourFlashPL", "ColourFlashES", "TranslatedColourFlash"],
