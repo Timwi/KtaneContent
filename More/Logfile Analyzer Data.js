@@ -9029,6 +9029,98 @@ let parseData = [
             }
         ]
     },
+	    {
+        displayName: "Set Connections",
+        moduleID: "setConnections",
+        loggingTag: "Set Connections",
+        matches: [
+            {
+                regex: /^Numbers:/,
+                handler: function (matches, module) {
+					module.nums = readLines(9).map(l => l.match(/([1-3])([1-3])([1-3])([1-3])([1-3])([1-3])([1-3])([1-3])([1-3])/).slice(1,10));
+					return true;
+                }
+            },
+			{
+                regex: /^Colors:/,
+                handler: function (matches, module) {
+					module.cols = readLines(9).map(l => l.match(/([RBY])([RBY])([RBY])([RBY])([RBY])([RBY])([RBY])([RBY])([RBY])/).slice(1,10));
+					return true;
+				}
+            },
+			{
+                regex: /^Fills:/,
+                handler: function (matches, module) {
+					module.fills = readLines(9).map(l => l.match(/([□■◪])([□■◪])([□■◪])([□■◪])([□■◪])([□■◪])([□■◪])([□■◪])([□■◪])/).slice(1,10));
+					return true;
+                }
+            },
+			{
+                regex: /^Shapes:/,
+                handler: function (matches, module) {
+					module.shapes = readLines(9).map(l => l.match(/([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])/).slice(1,10));
+					
+					module.stripedRID = Math.floor(Math.random() * 2147483647);
+					module.stripedBID = Math.floor(Math.random() * 2147483647);
+					module.stripedYID = Math.floor(Math.random() * 2147483647);
+					
+					const shapes = { 
+							'D':'m5 20-5-10 5-10 5 10z',
+							'C':'M0 15a5 5 0 0010 0v-10a5 5 0 00-10 0z',
+							'S':'m4 0c-1.1 0-2.4.2-2.9 1.3s.5 2.4 1 3.4.8 3.8-.1 5.5-1.7 4.2-1.1 6.4 2.3 3.3 4.2 3.6 2.8.2 3.9-.4.9-1.6.5-2.3-1.3-2.3-1.4-3.6.4-2.8.9-4.2 1.5-3.9.9-5.9-3-3.8-5.9-3.8z'
+						};
+					const colors = {'R':'#F00', 'B':'#00F', 'Y':'#FF0'};
+					const positions = { 1:[0], 2:[-7.5, 7.5], 3:[-15, 0, 15] };
+					const stripedIds = { 'R':module.stripedRID, 'B':module.stripedBID, 'Y':module.stripedYID };
+					const xs = [ 0, 55, 110, 175, 230, 285, 350, 405, 460 ];
+					const ys = [ 0, 35, 70, 115, 150, 185, 230, 265, 300 ];
+					
+					let svg = `<svg viewbox='0 0 510 330'>`+
+									`<defs>`+                                                                                       
+										`<pattern id='striped${module.stripedRID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#F00" stroke-width="2"/></pattern>`+
+										`<pattern id='striped${module.stripedBID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#00F" stroke-width="2"/></pattern>`+
+										`<pattern id='striped${module.stripedYID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#FF0" stroke-width="2"/></pattern>`+
+									`</defs>`;
+					
+					for (let y = 0; y < 9; y++){
+						for (let x = 0; x < 9; x++) {
+							let index = 9 * y + x;
+							let group = `<g transform='translate(${xs[x]}, ${ys[y]})'>`
+							group += `<rect width='50' height='30' x='0' y='0' rx='5' fill='#DDD'/>`
+							let color = colors[module.cols[index]];
+							for (let symbol = 0; symbol < module.nums[y][x] - '0'; symbol++){
+								let pos = positions[module.nums[y][x] - '0'][symbol];
+								let color = colors[module.cols[y][x]];
+								let shape = shapes[module.shapes[y][x]];
+								let fill = null;
+								
+								let fillVal = module.fills[y][x];
+								if (fillVal == '□')
+									fill = 'none';
+								else if (fillVal == '■')
+									fill = color;
+								else if (fillVal == '◪')
+									fill = `url(#striped${stripedIds[module.cols[y][x]]})`;
+
+
+								
+								group += `<path d='${shape}' fill='${fill}' stroke='${color}' transform='translate(${pos + 20}, 5)' stroke-width='2'/>`;
+							}
+							group += '</g>';
+							svg += group;
+						}
+					}
+					svg += '</svg>';
+					module.push( { label:'Completed grid:', obj:svg } );
+					return true;
+                }
+            },
+			
+            {
+                regex: /.+/
+            }
+        ]
+    },
     {
         displayName: "Settlers of KTaNE",
         moduleID: "SettlersOfKTaNE",
