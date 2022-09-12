@@ -8119,6 +8119,41 @@ let parseData = [
                 }
             }
         ]
+	},
+	{
+        displayName: "Plagiarism",
+        moduleID: "plagiarism",
+        loggingTag: "Plagiarism",
+        matches: [
+            {
+                regex: /(Final sequence:|Shown sequence for stage \d:) ((?:[pbogr][tcxhs](?:, )?)+)(?:; answer is (Pass|Report).)?/,
+                handler: function (matches, module) {
+					
+                    //Each png in img/Plagiarism has the hsv of (0, 60, 100). 
+					//These numbers are the values to set the hue to get that color
+					let colors = { 'p':'#cc66ff', 'b':'#6680ff', 'o':'#ffbf66', 'g':'#66ff7f', 'r':'#ff6680' };
+					let shapes = { 'x':'hexagon', 't':'triangle', 'c':'circle', 's':'square', 'h':'heart' };
+					
+					let args = matches[2].split(', ');
+					let holder = `<div style='display: flex; flex-flow: row wrap; gap: 0.1in;'>`;
+					
+					for (let disp of args){
+						let color = colors[disp[0]];
+						let shape = shapes[disp[1]];
+						holder += `<img src='img/Plagiarism/${shape}.png' draggable='false' style='width: 0.5in; background-color: ${color}; user-select: none; pointer-events: none;'> `
+					}
+					
+					holder += '</div>';
+					module.push( { label:matches[1], obj:holder } );
+					if (matches[3])
+						module.push('The correct answer is to ' + matches[3]);
+					return true;
+                }
+            },
+			{
+				regex: /.+/
+			}
+		]
     },
     {
         displayName: "Playfair Cipher",
