@@ -4497,6 +4497,34 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: "gameChangerModule",
+		loggingTag: "Game Changer",
+		matches: [
+			{
+				regex: /Initial Board State:|Expected board state after \d+ iterations?:/,
+				handler: function (matches, module) {
+					let grid = readLines(6).map(l => l.replace(/\[Game Changer #\d+\] /, ''));
+					let svg = `<svg style='display: block; width: 2in' viewbox='0 0 38 74'>`;
+					svg += `<rect fill='#89b' x='0' y='0' width='38' height='74'/>`;
+					for (let row = 0; row < 6; row++){
+						for (let col = 0; col < 3; col++){
+							let color = grid[row][col] == 'W' ? '#FFF' : '#000';
+							let x = 10 * col + 2 * (col + 1);
+							let y = 10 * row + 2 * (row + 1);
+							svg += `<rect fill='${color}' x='${x}' y='${y}' width='10' height='10'/>`;
+						}
+					}
+					svg += '</svg>';
+					module.push({ label:matches, obj:svg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         moduleID: "GameOfColors",
         loggingTag: "Game of Colors",
