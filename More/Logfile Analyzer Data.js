@@ -3484,6 +3484,25 @@ let parseData = [
             }
         ]
     },
+	{
+		displayName: "Doofenshmirtz Evil Inc.",
+		moduleID: "doofenshmirtzEvilIncModule",
+		loggingTag: "Doofenshmirtz Evil Inc.",
+		matches: [
+			{
+				regex: /The displayed images are (-?\w+) & (-?\w+)./,
+				handler: function (matches, module) {
+					let img1 = `<img src='/HTML/img/Doofenshmirtz%20Evil%20Inc/${matches[1]}.png' style='width: 2in;'>`;
+					let img2 = `<img src='/HTML/img/Doofenshmirtz%20Evil%20Inc/${matches[2]}.png' style='width: 2in;'>`;
+					module.push({ label:'The displayed images are:', obj:`<div style='display: flex; flex-flow: row wrap; gap: 0.5in;'>${img1} ${img2}</div>` });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         displayName: "Dungeon",
         moduleID: "dungeon",
