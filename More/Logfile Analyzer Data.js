@@ -10617,6 +10617,40 @@ let parseData = [
             }
         ]
     },
+	{
+		displayName: "Tombstone Maze",
+		moduleID: "TombstoneMazeModule",
+		loggingTag: "Tombstone Maze",
+		matches: [
+			{	
+				regex: /(Visible|Hidden) Maze:/,
+				handler: function (matches, module){
+					linen++;
+					let grid = readLines(9).map(l => l.replace(/\[Tombstone Maze #\d+\] /, '').split(''));
+					let svg = `<svg viewbox='0 0 20 20' style='display: block; width: 3in'>`;
+					for (let row = 0; row < 4; row++){
+						for (let col = 0; col < 4; col++) {
+							let group = `<g transform='translate(${5 * col}, ${5 * row})'>`;
+							if (grid[2 * row][2 * col + 1] == '─')
+								group += `<rect x='0' y='0' width='5' height='1' fill='#000'/>`;
+							if (grid[2 * row + 1][2 * col] == '│')
+								group += `<rect x='0' y='0' width='1' height='5' fill='#000'/>`;
+							if (row == 3)
+								group += `<rect x='0' y='4' width='5' height='1' fill='#000'/>`;
+							if (col == 3)
+								group += `<rect x='4' y='0' width='1' height='5' fill='#000'/>`;
+							svg += group + '</g>';
+						}
+					}
+					module.push({label:matches[0], obj:svg});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         displayName: "Towers",
         moduleID: "Towers",
