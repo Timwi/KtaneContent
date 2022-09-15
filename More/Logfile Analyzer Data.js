@@ -9320,6 +9320,86 @@ let parseData = [
         moduleID: "SettlersOfKTaNE",
         loggingTag: "Settlers Of KTaNE"
     },
+	{
+		displayName: "Shape Fill",
+		moduleID: "ShapeFillModule",
+		loggingTag: "Shape Fill",
+		matches: [
+			{
+				regex: /Grid:/,
+				handler: function(matches, module) {
+					let svg = 
+						`<svg viewBox='-5 -5 510 510' style='width: 5in'>
+						<defs>
+							<pattern id='cross' width='100' height='100' patternUnits='userSpaceOnUse'>
+								<line x1='50' x2='50' y1='0' y2='100' stroke='#000' stroke-width='15'/>
+								<line x1='0' x2='100' y1='50' y2='50' stroke='#000' stroke-width='15'/>
+							</pattern>
+							
+							<pattern id='diagonal' width='25' height='25' patternUnits='userSpaceOnUse'>
+								  <line x1='0' x2='25' y1='25' y2='0' stroke='#000' stroke-width='8'/>
+								  <path d='M0 5.6569 5.6569 0 0 0Z' fill='#000'/> 
+								  <path d='M19.3431 25 25 19.3431 25 25Z' fill='#000'/> 
+							</pattern>
+							
+							<pattern id='dots' width='50' height='50' patternUnits='userSpaceOnUse'>
+								<circle r='12.5' cx='12.5' cy='12.5' fill='#000'/>
+								<circle r='12.5' cx='37.5' cy='37.5' fill='#000'/>
+							</pattern>
+							
+							<pattern id='empty' width='100' height='100' patternUnits='userSpaceOnUse'>
+							</pattern>
+							
+							<pattern id='filled' width='100' height='100' patternUnits='userSpaceOnUse'>
+								<rect x='0' y='0' width='100' height='100' fill='#000'/>
+							</pattern>
+							
+							<pattern id='horizontal' width='100' height='20' patternUnits='userSpaceOnUse'>
+								<rect x='0' y='6' width='100' height='8' fill='#000'/>
+							</pattern>
+							
+							<pattern id='vertical' width='20' height='100' patternUnits='userSpaceOnUse'>
+								<rect x='6' y='0' width='8' height='100' fill='#000'/>
+							</pattern>
+							
+							<pattern id='x' width='100' height='100' patternUnits='userSpaceOnUse'>
+								<line x1='0' x2='100' y1='0' y2='100' stroke='#000' stroke-width='15'/>
+								<line x1='0' x2='100' y1='100' y2='0' stroke='#000' stroke-width='15'/>
+							</pattern>
+							
+							<path id='circle' d='M0 50A50 50 0 00100 50 50 50 0 000 50'/>	
+							<path id='diamond' d='m5 45 40-40a7 7 0 0110 0l40 40a7 7 0 010 10l-40 40a7 7 0 01-10 0l-40-40a7 7 0 010-10'/>
+							<path id='heart' d='M50 100Q-5 65 0 25T50 20Q95-15 100 25T50 100Z'/>
+							<path id='octagon' d='M96.2 69.1 69.1 96.2 30.9 96.2 3.8 69.1 3.8 30.9 30.9 3.8 69.1 3.8 96.2 30.9Z'/>
+							<path id='square' d='M0 0H100V100H0Z'/>
+							<path id='star' d='M50 0 61.8 38.2 100 38.2 69.1 61.8 80.9 100 50 76.4 19.1 100 30.9 61.8 0 38.2 38.2 38.2Z'/>
+							<path id='trapezoid' d='M0 80 25 20 75 20 100 80z'/>
+							<path id='triangle' d='M0 100 100 100 50 0z'/>
+						</defs>`;
+					let lines = readLines(6).map(l => l.replace(/\[Shape Fill #\d+\] /, ''));
+					const letters = ['A','B','C','D','E'];
+					let ansRow = lines[5][lines[5].length - 1] - '1';
+					let ansCol = letters.indexOf(lines[5][lines[5].length - 2]);
+					
+					const shapeAbbrs = { 'C':'circle', 'D':'diamond', 'H':'heart', 'O':'octagon', 'S':'square', 'R':'star', 'Z':'trapezoid', 'T':'triangle' };
+					const fillAbbrs = { 'C':'cross', 'G':'diagonal', 'D':'dots', 'E':'empty', 'F':'filled', 'H':'horizontal', 'V':'vertical', 'X':'x' };
+					
+					let grid = lines.slice(0,5).map(row => row.split(' '));
+					for (let row = 0; row < 5; row++){
+						for (let col = 0; col < 5; col++) {
+							let cell = grid[row][col];
+							svg += `<rect x='${100 * col}' y='${100 * row}' width='100' height='100' fill='${row == ansRow && col == ansCol ? '#AFA' : '#FFF'}' stroke='#000' stroke-width='5'/>`;
+							svg += `<g transform='translate(${100 * col + 10}, ${100 * row + 10})'><use href='#${shapeAbbrs[cell[0]]}' fill='url(#${fillAbbrs[cell[1]]})' stroke='#000' stroke-width='3' transform='scale(0.8)'/></g>`;
+						}
+					}
+					module.push({ label:'Displayed grid and correct answer:', obj:svg});
+				}
+			},
+			{
+				regex: /(Stage \d shapes|Pressed correct|Incorrectly pressed).+/
+			}		
+		]
+	},
     {
         displayName: "Shapes And Bombs",
         moduleID: "ShapesBombs",
