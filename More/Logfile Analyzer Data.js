@@ -6759,14 +6759,13 @@ let parseData = [
 							}
 							
 							if (!corners[0])
-								group += `<rect x='10' y='10' width='15' height='15' fill='#000'/>`;
-							if (!corners[1])
 								group += `<rect x='75' y='10' width='15' height='15' fill='#000'/>`;
+							if (!corners[1])
+								group += `<rect x='10' y='10' width='15' height='15' fill='#000'/>`;
 							if (!corners[2])
-								group += `<rect x='10' y='75' width='15' height='15' fill='#000'/>`;
-							if (!corners[3])
 								group += `<rect x='75' y='75' width='15' height='15' fill='#000'/>`;
-							
+							if (!corners[3])
+								group += `<rect x='10' y='75' width='15' height='15' fill='#000'/>`;
 							group += '</g>';
 							svg += group;
 						}
