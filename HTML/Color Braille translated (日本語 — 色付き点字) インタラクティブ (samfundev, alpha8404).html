@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>色付き点字 — Keep Talking and Nobody Explodes Mod</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        table.braille-table th, table.braille-table td {
+            text-align: center;
+        }
+        svg {
+            margin: 0 auto;
+            display: block;
+        }
+        svg.braille-pattern {
+            width: 1cm;
+        }
+        .dark svg.braille-pattern { filter: invert(87%); }
+        .dark svg text { fill: #DDD; }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let poss = rnd.shuffleFisherYates([...Array(30).keys()]);
+            let tds = document.getElementsByClassName('pos');
+            for (let i = 0; i < 30; i++)
+                tds[i].innerText = poss[i] + 1;
+        }
+    </script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function()
+        {
+            const colors = ["red", "lime", "blue", "cyan", "magenta", "yellow", "white", "black"];
+            var stateNames = ["混色", "赤", "緑", "青"];
+            var states = {};
+            var selectedState = "Mixed";
+            var circles = [];
+            var selectedColor = "red";
+
+            const palette = $(".palette");
+            for (const color of colors) {
+                const paletteColor = $("<div>").css("background-color", color).appendTo(palette).click(() => {
+                    $(".palette div").css("opacity", "");
+                    selectedColor = color;
+                    paletteColor.css("opacity", 0.5);
+                });
+
+                if (color == "white")
+                    paletteColor.css("border", "1px solid black");
+                else if (color == "red")
+                    paletteColor.css("opacity", 0.5);
+            }
+
+            const stateSelector = $(".states");
+            for (const state of stateNames)
+            {
+                $("<button>").text(state).appendTo(stateSelector).click(() => {
+                    for (var i = 0; i < circles.length; i++) {
+                        circles[i].css("background-color", states[state][i] || "white");
+                    }
+
+                    selectedState = state;
+                });
+
+                states[state] = [];
+            }
+
+            const interactive = $("table.interactive");
+            for (var i = 0; i < 5; i++)
+            {
+                for (var y = 0; y < 3; y++)
+                {
+                    var row = interactive.find("tr").eq(y);
+                    for (var x = 0; x < 2; x++)
+                    {
+                        let index = i * 6 + y * 2 + x;
+                        let circle = $("<div>").appendTo(
+                            $("<td>").click(function()
+                            {
+                                circle.css("background-color", selectedColor);
+                                states[selectedState][index] = selectedColor;
+                            }).appendTo(row)
+                        );
+
+                        circles.push(circle);
+                    }
+                    if (i < 4) $("<td>").addClass("borderless").css("width", "30px").appendTo(row);
+                }
+            }
+        });
+    </script>
+    <style>
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin-bottom: 10px;
+        }
+
+        .palette, .states {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .palette {
+            justify-content: center;
+        }
+
+        .states {
+            justify-content: space-evenly;
+        }
+
+        .palette div {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+        }
+
+        .palette div:hover {
+            filter: invert(0.15);
+        }
+
+        .palette div:active {
+            filter: invert(0.3);
+        }
+
+        .interactive {
+            margin: 0 auto;
+        }
+
+            .interactive td {
+                padding: 0;
+                width: 40px;
+                height: 40px;
+            }
+
+                .interactive td div {
+                    border: black 1px solid;
+                    border-radius: 50%;
+                    margin: 5px;
+                    width: 30px;
+                    height: 30px;
+                    transition: background-color 0.25s;
+                }
+                .dark .interactive td div { border-color: #DDD; }
+
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        button {
+            pointer-events: all;
+            float: right;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+            button:hover {
+                color: white;
+                background-color: black;
+            }
+
+        .settings {
+            margin: 5px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .setting {
+            display: flex;
+            align-items: center;
+        }
+
+            .setting input {
+                margin: 0 5px;
+            }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色付き点字</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Color Braille.svg" class="diagram">
+                <h2>モジュール詳細：色付き点字</h2>
+                <p class="flavour-text">これは正しくないように感じるが、少なくとも見栄えは良い。</p>
+
+                <p>このモジュールは、30個の色付きの点を表示する。各点は加法混色(付録1参照)に従って、赤、緑、青で構成されている。色を3つの色に分解して、統一英語点字で書かれた3つの単語を取得する。</p>
+
+                <div class="controls">
+                    <div class="palette"></div>
+                    <div class="states"></div>
+                </div>
+
+                <table class="interactive borderless">
+                    <tr></tr>
+                    <tr></tr>
+                    <tr></tr>
+                </table>
+
+                <p>ただし、3つの単語のうち1つは、次のいずれかの処理により破損している。</p>
+
+                <ul>
+                    <li>いずれかの段の点が1つ左または右にシフトされている(循環はしない)。</li>
+                    <li>各点字が上下逆さま(180度回転)している。</li>
+                    <li>各点字が左右反対(ミラー)である。</li>
+                    <li>各点字が上下反転している。</li>
+                    <li>各点字の点が反転している(点の有無の入れ替え)。</li>
+                </ul>
+
+                <p>破損した単語及びその点字の色を特定する。次に、次の表で指定された位置にあるドットを押す(ドットは読み順に数字が付けられている)。</p>
+
+                <table>
+                    <tr><th>破損した点字の色→</th><th rowspan="2">赤</th><th rowspan="2">緑</th><th rowspan="2">青</th></tr>
+                    <tr><th>↓適用された処理</th></tr>
+                    <tr><th>上の段が右にシフト</th><td class="pos">1</td><td class="pos">9</td><td class="pos">16</td></tr>
+                    <tr><th>上の段が左にシフト	</th><td class="pos">17</td><td class="pos">5</td><td class="pos">3</td></tr>
+                    <tr><th>中央の段が右にシフト	</th><td class="pos">4</td><td class="pos">28</td><td class="pos">13</td></tr>
+                    <tr><th>中央の段が左にシフト	</th><td class="pos">2</td><td class="pos">6</td><td class="pos">21</td></tr>
+                    <tr><th>下の段が右にシフト	</th><td class="pos">20</td><td class="pos">25</td><td class="pos">15</td></tr>
+                    <tr><th>下の段が左にシフト	</th><td class="pos">22</td><td class="pos">23</td><td class="pos">30</td></tr>
+                    <tr><th>各点字が上下逆さま</th><td class="pos">11</td><td class="pos">18</td><td class="pos">8</td></tr>
+                    <tr><th>各点字を左右反転</th><td class="pos">10</td><td class="pos">24</td><td class="pos">29</td></tr>
+                    <tr><th>各点字を上下反転</th><td class="pos">26</td><td class="pos">14</td><td class="pos">19</td></tr>
+                    <tr><th>点自体が反転</th><td class="pos">27</td><td class="pos">7</td><td class="pos">12</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色付き点字</span>
+            </div>
+            <div class="page-content">
+                <h3>付録1:加法混色</h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="13cm" viewBox="0 0 125 86.59"><path d="M-1-1h92v88H-1z"></path><path fill="#00f" d="M70.121 33.404L50 51.59l-4.66 24.72c4.236 3.299 9.56 5.282 15.344 5.282 13.807 0 25-11.193 25-25 0-10.465-6.437-19.462-15.563-23.188z" color="#000" style="marker:none"></path><path fill="red" d="M45.34 4.998c-13.807 0-25 11.193-25 25 0 1.154.067 2.294.219 3.406L45 41.59l25.121-8.186c.153-1.116.22-2.247.22-3.406 0-13.807-11.194-25-25.001-25z" color="#000" style="marker:none"></path><path fill="#0f0" d="M20.559 33.404C11.433 37.13 4.996 46.127 4.996 56.592c0 13.807 11.193 25 25 25 5.785 0 11.108-1.983 15.344-5.281L40 51.59z" color="#000" style="marker:none"></path><path fill="#ff0" d="M29.996 31.592c-3.342 0-6.523.623-9.437 1.812 1.222 8.987 7.238 16.442 15.375 19.75l9.375-16.28c-4.23-3.292-9.535-5.282-15.313-5.282z" color="#000" style="marker:none"></path><path fill="#f0f" d="M60.684 31.592a25.038 25.038 0 0 0-15.375 5.281l9.437 16.281c8.137-3.308 14.153-10.763 15.375-19.75-2.914-1.19-6.095-1.812-9.437-1.812z" color="#000" style="marker:none"></path><path fill="#0ff" d="M35.934 53.154a25.223 25.223 0 0 0-.25 3.438c0 8.022 3.781 15.144 9.656 19.719 5.875-4.575 9.656-11.697 9.656-19.72 0-1.166-.095-2.312-.25-3.437z" color="#000" style="marker:none"></path><path fill="#fff" d="M45.309 36.873a24.955 24.955 0 0 0-9.375 16.281 24.893 24.893 0 0 0 9.406 1.844c3.333 0 6.499-.66 9.406-1.844-.909-6.614-4.412-12.371-9.437-16.28z" color="#000" style="marker:none"></path><path fill="none" stroke="gray" stroke-width=".4" d="M45 21.59h55M30 36.59h70M60 41.59h40M45 51.59h55M20 56.59h80M45 66.59h55M60 76.59h40" color="#000" style="marker:none"></path><text x="102.5" y="23.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="23.22">赤</tspan></text><text x="102.5" y="38.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="38.22">黄</tspan></text><text x="102.5" y="43.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="43.22">マゼンタ</tspan></text><text x="102.5" y="53.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="53.22">白</tspan></text><text x="102.5" y="58.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="58.22">緑</tspan></text><text x="102.5" y="68.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="68.22">シアン</tspan></text><text x="102.5" y="78.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="78.22">青</tspan></text><path fill="none" stroke="gray" stroke-width=".4" d="M75 11.59h25" color="#000" style="marker:none"></path><text x="102.5" y="13.22" stroke-width=".2" color="#000" font-family="Special Elite" font-size="5" font-weight="400" letter-spacing="0" style="text-indent:0;text-align:start;line-height:125%;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Special Elite" word-spacing="0"><tspan x="102.5" y="13.22">黒</tspan></text></svg>
+
+                <h3>付録2:統一英語点字一覧</h3>
+                <table class='braille-table'>
+                    <!--#-->
+                    <tr><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>a</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>b</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>c</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>d</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>e</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>f</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>g</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>h</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>i</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>j</div>
+                    <tr><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>k</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>l</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>m</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>n</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>o</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>p</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>q</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>r</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>s</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>t</div>
+                    <tr><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>u</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>v</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>w</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>x</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>y</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>z</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>and</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>for</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>the</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>with</div>
+                    <tr><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>ar</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>bb</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>cc</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>ch</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>ea</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>ed</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>en</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>er</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>ff</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>gg</div>
+                    <tr><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>gh</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>in</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>ing</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>of</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>ou</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>ow</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>sh</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /></svg><div>st</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>th</div><td><svg class='braille-pattern' viewBox='-.5 -.5 4 6'><circle cx='0.5' cy='0.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='0.5' cy='2.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='0.5' cy='4.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='0.5' r='.5' fill='white' stroke='#ccc' stroke-width='.1' /><circle cx='2.5' cy='2.5' r='.5' fill='black' stroke='none' stroke-width='.1' /><circle cx='2.5' cy='4.5' r='.5' fill='black' stroke='none' stroke-width='.1' /></svg><div>wh</div>
+                <!--##-->
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ハンバーガー警報 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .tableImg {
+            width: 100%;
+        }
+        .selectable:hover
+        {
+            background-color: lightgray;
+        }
+    </style>
+    <script>
+        var allImages = [
+            // Indexes 0 - 4
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/bun.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/cheese.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/ketchup.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/lettuce.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/mayo.png\">",
+            // Indexes 5 - 9
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/meat.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/mustard.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/onions.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/pickles.png\">",
+            "<img class=\"tableImg\" src=\"img/Burger Alarm/tomato.png\">",
+        ]; // Sorted by image name in alphabetical order.
+        var gridLayout = [ 4,8,1,3,2,7,4,8,7,7,
+                           7,0,4,8,2,0,6,6,7,8,
+                           8,9,1,9,5,3,1,2,7,0,
+                           2,2,1,2,1,5,9,9,8,6,
+                           8,5,5,0,6,5,2,9,3,0,
+                           3,5,2,9,4,2,4,7,4,5,
+                           5,0,0,0,5,8,9,6,7,1,
+                           0,6,1,8,4,4,4,4,3,9,
+                           7,3,0,5,9,6,9,1,3,6,
+                           1,2,3,6,8,1,6,3,7,3
+                         ];
+
+        var selectedCol = -1;
+        var selectedRow = -1;
+        function UpdateGrid()
+        {
+            var tableCells = document.getElementsByClassName("intCell");
+            for (var x = 0; x < tableCells.length; x++)
+                {
+                    tableCells[x].innerHTML = allImages[gridLayout[x]];
+                    if (x % 10 == selectedCol || Math.floor(x / 10) == selectedRow)
+                        tableCells[x].style.backgroundColor = "yellow";
+                    else
+                        tableCells[x].style.backgroundColor = "";
+                }
+            var rowSelectables = document.getElementsByClassName("RowB");
+            for (var x = 0; x < rowSelectables.length; x++)
+                {
+                    if (x == selectedRow)
+                        rowSelectables[x].style.backgroundColor = "yellow";
+                    else
+                        rowSelectables[x].style.backgroundColor = "";
+                }
+            var colSelectables = document.getElementsByClassName("ColB");
+            for (var x = 0; x < colSelectables.length; x++)
+                {
+                    if (x == selectedCol)
+                        colSelectables[x].style.backgroundColor = "yellow";
+                    else
+                        colSelectables[x].style.backgroundColor = "";
+                }
+        }
+        function ResetGrid()
+        {
+            gridLayout = [ 4,8,1,3,2,7,4,8,7,7,7,0,4,8,2,0,6,6,7,8,8,9,1,9,5,3,1,2,7,0,2,2,1,2,1,5,9,9,8,6,8,5,5,0,6,5,2,9,3,0,3,5,2,9,4,2,4,7,4,5,5,0,0,0,5,8,9,6,7,1,0,6,1,8,4,4,4,4,3,9,7,3,0,5,9,6,9,1,3,6,1,2,3,6,8,1,6,3,7,3];
+            UpdateGrid();
+        }
+        function SwapRows(oneRow, otherRow)
+        {
+            for (var x=0;x<10;x++)
+                {
+                    var temp = gridLayout[oneRow * 10 + x];
+                    gridLayout[oneRow * 10 + x] = gridLayout[otherRow * 10 + x];
+                    gridLayout[otherRow * 10 + x] = temp;
+                }
+        }
+        function SwapCols(oneCol, otherCol)
+        {
+            for (var x = 0;x < 10; x++)
+                {
+                    var temp = gridLayout[x * 10 + oneCol];
+                    gridLayout[x * 10 + oneCol] = gridLayout[x * 10 + otherCol];
+                    gridLayout[x * 10 + otherCol] = temp;
+                }
+        }
+
+        function SelectCol(idx)
+        {
+            selectedRow = -1;
+            if (selectedCol == -1)
+                selectedCol = idx;
+            else
+                {
+                    SwapCols(idx, selectedCol);
+                    selectedCol = -1;
+                }
+            UpdateGrid();
+        }
+        function SelectRow(idx)
+        {
+            selectedCol = -1;
+            if (selectedRow == -1)
+                selectedRow = idx;
+            else
+                {
+                    SwapRows(idx, selectedRow);
+                    selectedRow = -1;
+                }
+            UpdateGrid();
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ハンバーガー警報</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Burger Alarm.svg" class="diagram">
+                <h2>モジュール詳細：ハンバーガー警報</h2>
+                <p class="flavour-text">バーガーキングのハンバーガーで一番避けたいのは時限爆弾だ。</p>
+
+                <p>モジュールには、さまざまなハンバーガーの材料が表示されたボタン、7桁の数字が表示されたディスプレー、注文ボタン(X)、送信ボタン(✓)、そしてタイマーがある。モジュールを解除するには、注文ボタンを押して作る必要があるハンバーガーを特定し、材料ボタンを使用してハンバーガーを作成する必要がある。時間内に作成したハンバーガーを送信する必要がある。時間切れになるか、間違ったハンバーガーを送信すると、ミスが記録される。</p>
+
+                <p>以下の8つの表を使用する。各表から取得した数字を対応するディスプレーの各桁に加算する(8桁目に関しては、表から得た数字に表示された数字の合計を加算する)。これらの数字のいずれかが10以上の場合は最下位桁を使用する。詳細な手順は表の下にある。また、表に「隣接」という単語があるが、これは斜めではなく上下左右のことを指す。
+
+                </p>
+
+                <table>
+                    <tr>
+                        <th colspan="4">数字1</th>
+                        <th colspan="4">数字2</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">シリアルナンバーの最後の数字が素数</th>
+                        <th colspan="2">それ以外</th>
+                        <th colspan="2">モジュール「時計(The Clock)」または「ルービッククロック(Rubik's Clock)」がある</th>
+                        <th colspan="2">それ以外</th>
+                    </tr>
+                    <tr>
+                        <th>ケチャップが2段目にある</th>
+                        <th>それ以外</th>
+                        <th>チーズが右の列にある</th>
+                        <th>それ以外</th>
+                        <th>ピクルスとマヨネーズが同じ段にある</th>
+                        <th>それ以外</th>
+                        <th>トマトとバンズが同じ列にある</th>
+                        <th>それ以外</th>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>4</td>
+                        <td>6</td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>8</td>
+                        <td>2</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr>
+                        <th colspan="4">数字3</th>
+                        <th colspan="4">数字4</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">単1バッテリーがない</th>
+                        <th colspan="2">それ以外</th>
+                        <th colspan="2">HDMIポートまたはPCMCIAポートがある</th>
+                        <th colspan="2">それ以外</th>
+                    </tr>
+                    <tr>
+                        <th>マスタードは3段目にない</th>
+                        <th>それ以外</th>
+                        <th>肉は真ん中の列にない</th>
+                        <th>それ以外</th>
+                        <th>レタスは送信ボタンと隣接している</th>
+                        <th>それ以外</th>
+                        <th>ピクルスはマスタードと隣接している</th>
+                        <th>それ以外</th>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>9</td>
+                        <td>3</td>
+                        <td>7</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>4</td>
+                        <td>8</td>
+                    </tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ハンバーガー警報</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <tr>
+                        <th colspan="4">数字5</th>
+                        <th colspan="4">数字6</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">2ファクターがある</th>
+                        <th colspan="2">それ以外</th>
+                        <th colspan="2">NLLまたはSNDインジケーターがある</th>
+                        <th colspan="2">それ以外</th>
+                    </tr>
+                    <tr>
+                        <th>玉ねぎは注文ボタンと隣接していない</th>
+                        <th>それ以外</th>
+                        <th>ケチャップはマヨネーズと隣接していない</th>
+                        <th>それ以外</th>
+                        <th>トマトは2段目よりも下にある</th>
+                        <th>それ以外</th>
+                        <th>バンズは3段目よりも上にある</th>
+                        <th>それ以外</th>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>3</td>
+                        <td>6</td>
+                        <td>9</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>4</td>
+                        <td>5</td>
+                    </tr>
+                </table>
+
+                <table>
+                    <tr>
+                        <th colspan="4">数字7</th>
+                        <th colspan="4">数字8</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">シリアルナンバーに「BURG3R」のいずれかと共通した文字がある</th>
+                        <th colspan="2">それ以外</th>
+                        <th colspan="2">モジュール「アイスクリーム(Ice Cream)」、「クッキー缶(Cookie Jars)」、「料理(Cooking)」、「パイ(Pie)」のいずれかがある。</th>
+                        <th colspan="2">それ以外</th>
+                    </tr>
+                    <tr>
+                        <th>チーズはマヨネーズよりも下にある</th>
+                        <th>それ以外</th>
+                        <th>ケチャップはバンズよりも上にある</th>
+                        <th>それ以外</th>
+                        <th>マスタードは肉よりも左にある</th>
+                        <th>それ以外</th>
+                        <th>バンズはレタスよりも右にある</th>
+                        <th>それ以外</th>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>9</td>
+                        <td>3</td>
+                        <td>7</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>4</td>
+                        <td>8</td>
+                    </tr>
+                </table>
+
+                <p>次のページの表の段/列を一部変更する必要がある。計算した数値の1桁目に対応する段を2桁目の段と入れ替え、次に3桁目の列を4桁目の列と入れ替える。同様に5桁目の段と6桁目の段を入れ替え、7桁目の列と8桁目の列を入れ替える。</p>
+                <p>指定された2つの列/段を押して入れ替えることが出来る。表をリセットしたい場合は、リセットボタンを押す。</p>
+
+            </div>
+           <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ハンバーガー警報</span>
+            </div>
+            <div class="page-content">
+            <h3>インタラクティブ材料表</h3>
+            <p style="text-align: center">
+                <button onclick="ResetGrid()">リセット</button>
+            </p>
+                <table>
+                    <tr>
+                        <th>X</th>
+                        <th class="selectable ColB" onclick="SelectCol(0)">列0</th>
+                        <th class="selectable ColB" onclick="SelectCol(1)">列1</th>
+                        <th class="selectable ColB" onclick="SelectCol(2)">列2</th>
+                        <th class="selectable ColB" onclick="SelectCol(3)">列3</th>
+                        <th class="selectable ColB" onclick="SelectCol(4)">列4</th>
+                        <th class="selectable ColB" onclick="SelectCol(5)">列5</th>
+                        <th class="selectable ColB" onclick="SelectCol(6)">列6</th>
+                        <th class="selectable ColB" onclick="SelectCol(7)">列7</th>
+                        <th class="selectable ColB" onclick="SelectCol(8)">列8</th>
+                        <th class="selectable ColB" onclick="SelectCol(9)">列9</th>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(0)">段0</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(1)">段1</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(2)">段2</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(3)">段3</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(4)">段4</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(5)">段5</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(6)">段6</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(7)">段7</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mayo.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(8)">段8</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/bun.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/meat.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/tomato.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                    </tr>
+                    <tr>
+                        <th class="selectable RowB" onclick="SelectRow(9)">段9</th>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/ketchup.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/pickles.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/cheese.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/mustard.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/onions.png"></td>
+                        <td class="intCell"><img class="tableImg" src="img/Burger Alarm/lettuce.png"></td>
+                    </tr>
+                </table>
+
+                <p>注文ボタンを押すと、タイマーが99秒から開始し、ディスプレーに5つの注文リストのうちの最初の数字が表示される。注文ボタンをもう一度押すことで次の注文に切り替えることが出来る。各注文ごとに、1桁目を段に、2桁目を列に当てはめる。交差したセルが注文されている材料である。バンズ、5つの材料、バンズの順に押してハンバーガーを作成する。</p>
+
+                <p>例えば、注文番号が「37」の場合、3段目の7列目の材料を使用する。</p>
+            </div>
+           <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>
