@@ -7810,18 +7810,19 @@ let parseData = [
 		moduleID: 'NotPokerModule',
 		loggingTag: 'Not Poker',
 		matches: [
-		{
-			regex: /Generating manual with rule seed \d+:/,
-			handler: function(match, module){
-				let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
-				module.push({ label:match, obj:rs });
+			{
+				regex: /Generating manual with rule seed \d+:/,
+				handler: function(match, module){
+					let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
+					module.push([ match, [ pre(rs.join('\n'))]]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
-		},
-		{
-			regex: /.+/
-		}
 		]
-	}
+	},
     {
         moduleID: "NotWhosOnFirst",
         loggingTag: "Not Who's on First",
