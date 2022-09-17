@@ -304,6 +304,7 @@
         function setColorClass(i) {
             if (selected && selected.hasClass("netsq")) {
                 if (i >= 0 && !selected.hasClass("locked")) {
+                    $(".solved-text").addClass("invis");
                     if (currG == 0) {
                         gameGrid[1][currX][currY] = gameGrid[0][currX][currY] = i;
                         playRFSound(xy2Idx[currX][currY] % audioRF.length);
@@ -517,11 +518,16 @@
         }
 
         function playFinalGridSound() {
-            if ($("button.sound").hasClass("play"))
-                if (checkSolution())
+            if (checkSolution()) {
+                if ($("button.sound").hasClass("play"))
                     audioSolve[0].play();
-                else
+                $(".solved-text").removeClass("invis");
+            }
+            else {
+                if ($("button.sound").hasClass("play"))
                     playRFSound(xy2Idx[currX][currY] % audioRF.length);
+                $(".solved-text").addClass("invis");
+            }
         }
 
         function finalGridClick(x, y) {
@@ -766,7 +772,7 @@
         $("button.save").click(function() {
             removeFutureSaves();
 
-            let saveButtonClass = Array.from($(".tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveButtonClass = Array.from($(".solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateClass = Array.from($(".netsquare")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateText = Array.from($(".netsquare .symbolbox")).map(x => $(x)).map(x => x.text() || "");
             //console.log(saveStates);
@@ -797,7 +803,7 @@
             let s_currG = currG;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
-                $(".tools button").each((i, x) => $(x).attr("class", saveButtonClass[i]));
+                $(".solved-text, .tools button").each((i, x) => $(x).attr("class", saveButtonClass[i]));
                 $(".netsquare .symbolbox").each((i, x) => $(x).text(saveStateText[i]));
                 $("body").toggleClass("play-mode", mode() == MODE_PLAY);
                 currentState = stateNumber;
@@ -866,6 +872,13 @@
         .tools.colors svg {
             width: 110px;
         }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+            margin: .5em 0 0;
+        }
+        .invis { color: transparent; }
 
         .square-row {
             height: 37px;
@@ -1067,7 +1080,10 @@
 
         .vspace { margin-top: 5mm; }
 
-        table.symboltable { font-size: 30px; }
+        table.symboltable {
+            font-size: 30px;
+            margin: 0 auto 1em;
+        }
         table.symboltable td {
             padding: 10px 6px 0 6px;
             line-height: 30px;
@@ -1224,6 +1240,7 @@
                     <table class="patterns bluep"></table>
                 </div>
                 <div class="hstack tools buttons"></div>
+                <h3 class="solved-text invis centered">Solved!</h3>
                 <table class="symboltable">
                     <tr><td>♤♤</td><td>♤♧</td><td>♤♢</td><td>♤♡</td><td>♧♤</td><td>♧♧</td><td>♧♢</td><td>♧♡</td></tr>
                     <tr><td>♢♤</td><td>♢♧</td><td>♢♢</td><td>♢♡</td><td>♡♤</td><td>♡♧</td><td>♡♢</td><td>♡♡</td></tr>

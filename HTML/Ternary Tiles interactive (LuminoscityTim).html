@@ -45,6 +45,7 @@
                 for (let x = 0; x < cols; x++)
                     gameGrid[x][y] = mode() == MODE_PLAY ? origGameGrid[x][y] : 0;
             updateGrid();
+            $(".solved-text").addClass("invis");
         }
         //This function is taken from the module source code
         function generate() {
@@ -252,11 +253,15 @@
                         if (mode() == MODE_PLAY && checkSolution()) {
                             if ($("button.sound").hasClass("play"))
                                 audioSolve[0].play();
+                            $(".solved-text").removeClass("invis");
                         }
-                        else if ($("button.sound").hasClass("play")) {
-                            let aud = audioClick[n][0].cloneNode();
-                            aud.volume = 0.5;
-                            aud.play();
+                        else {
+                            if ($("button.sound").hasClass("play")) {
+                                let aud = audioClick[n][0].cloneNode();
+                                aud.volume = 0.5;
+                                aud.play();
+                            }
+                            $(".solved-text").addClass("invis");
                         }
                     });
                 });
@@ -326,6 +331,7 @@
             cols = 3;
             updateMoves();
             updateGrid();
+            $(".solved-text").addClass("invis");
             $(".instruction-str").val("");
         });
 
@@ -341,7 +347,7 @@
         $("button.save").click(function() {
             removeFutureSaves();
 
-            let saveStateClass = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
             console.log(saveStates);
             let stateNumber = saveStates.length;
@@ -364,7 +370,7 @@
             let s_cols = cols;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
-                $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".netsquare, .solved-text, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
                 answerList = Array(s_answerList.length);
                 Object.assign(answerList, s_answerList);
@@ -421,6 +427,12 @@
         .tools button {
             margin: 10px;
         }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
 
         .square-row {
             height: 44px;
@@ -704,6 +716,7 @@
 
                 <p>Ensure that each element is within the range 0-2</p>
 
+                <h3 class="solved-text invis centered">Solved!</h3>
                 <div class="hstack wrap">
                     <div class="vstack tools"></div>
                     <div class="grid vstack just-left"></div>

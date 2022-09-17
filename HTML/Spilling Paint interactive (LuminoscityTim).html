@@ -190,6 +190,7 @@
                         var elem2 = grid.children().eq(currY+1).children().eq(currX+1);
                         selected = elem2;
                         updateSelection();
+                        $(".solved-text").addClass("invis");
                         event.preventDefault();
                         event.stopPropagation();
                     }
@@ -227,9 +228,10 @@
         }
 
         function resetGrid() {
-            if (mode() != MODE_READ)
+            if (mode() != MODE_READ) {
                 spillList = [];
-                 $(".path .str").html("");
+                $(".path .str").html("");
+                $(".solved-text").addClass("invis");
                 for (let y = 0; y < rows; y++) {
                     for (let x = 0; x < cols; x++) {
                         let n = origGameGrid[x][y];
@@ -239,6 +241,7 @@
                         elem.addClass(colorNumber[ gameGrid[x][y] ]);
                     }
                 }
+            }
         }
 
         let resetButton = $(".reset-grid");
@@ -276,9 +279,12 @@
                             if (isSolved()) {
                                 if ($("button.sound").hasClass("play"))
                                     audioSolve[0].play();
+                                $(".solved-text").removeClass("invis");
                             }
-                            else if ($("button.sound").hasClass("play")) {
-                                audioSquareSelect[0].cloneNode().play();
+                            else {
+                                if ($("button.sound").hasClass("play"))
+                                    audioSquareSelect[0].cloneNode().play();
+                                $(".solved-text").addClass("invis");
                             }
                         }
                         // pressing = false;
@@ -352,8 +358,8 @@
                     $(`svg text.${col}`).html("");
             });
         });
-        $("<div>").css("height", "8mm").appendTo(buttons);
 
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(buttons);
         $("<button>").addClass("read-solve").appendTo(buttons).click(function() {
             $(this).toggleClass("solve");
             if (mode() == MODE_READ)
@@ -405,6 +411,7 @@
             $("button.show-sol").removeClass("show");
             $("body").removeClass("solution-shown play-mode");
             $("button.read-solve").removeClass("solve");
+            $(".solved-text").addClass("invis");
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     gameGrid[x][y] = 0;
@@ -439,7 +446,7 @@
         $("button.save").click(function() {
             removeFutureSaves();
 
-            let saveStateClass = Array.from($(".netsquare, .buttons button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .buttons button")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateDisable = Array.from($(".buttons button")).map(x => $(x)).map(x => x.prop("disabled") || false);
             //console.log(saveStates);
             let stateNumber = saveStates.length;
@@ -464,7 +471,7 @@
             let s_modeWasSolve = modeWasSolve;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
-                $(".netsquare, .buttons button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".netsquare, .solved-text, .buttons button").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $(".buttons button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
                 $("body").toggleClass("play-mode", mode() == MODE_PLAY);
                 $("body").toggleClass("solution-shown", $(".show-sol").hasClass("show"));
@@ -535,6 +542,12 @@
         .tools.colors svg {
             width: 110px;
         }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
 
         .square-row {
             height: 55px;
