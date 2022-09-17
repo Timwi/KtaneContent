@@ -6689,6 +6689,97 @@ let parseData = [
             }
         ]
     },
+	{
+		displayName: 'Mazeswapper',
+		loggingTag: 'Mazeswapper',
+		moduleID: 'mazeswapper',
+		matches: [
+			{
+				regex: /The (source tile|sphere|tetrahedron|icosahedron) belongs at ([A-F][1-6])/,
+				handler: function(matches, module){
+					const letters = ['A','B','C','D','E','F'];
+					const col = letters.indexOf(matches[2][0]);
+					const row = matches[2][1] - '1';
+					const cell = 6 * row + col;
+					if (matches[1] == 'source tile')
+						module.source = cell;
+					else if (matches[1] == 'sphere')
+						module.sphere = cell;
+					else if (matches[1] == 'tetrahedron')
+						module.tetrahedron = cell;
+					else module.icosahedron = cell;
+				}
+			},
+			{
+				regex: /Solution:/,
+				handler: function(_, module){
+					let grid = readLines(18).map(l => l.replace(/\[Mazeswapper #\d+\] /,'').split(' '));
+					
+					let svg = `<svg viewbox='-5 -5 670 670' style='display: block; width: 4in'>`;
+					
+					for (let row = 0; row < 6; row++){
+						for (let col = 0; col < 6; col++) {
+							const cell = 6 * row + col;
+							const fill = module.source == cell ? '#507ADC' : '#FFF';
+							let group = `<g transform='translate(${110 * col}, ${110 * row})'>`;
+							group += `<rect x='0' y='0' width='100' height='100' fill='${fill}' stroke='#000' stroke-width='3'/>`;
+							
+							let shape = null;
+							if (module.sphere == cell)
+								shape = 'sph';
+							else if (module.tetrahedron == cell)
+								shape = 'tet';
+							else if (module.icosahedron == cell)
+								shape = 'ico';
+							
+							if (shape)
+								group += `<image x='25' y='25' height='50' width='50' href='img/Mazeswapper/${shape}.svg'/>`;
+							
+							let corners = [ false, false, false, false ];
+							
+							if (grid[3 * row + 0] [3 * col + 1] == '■') {
+								group += `<rect x='10' y='10' width='80' height='15'/>`; //up;
+								corners[0] = true;
+								corners[1] = true;
+							}
+							if (grid[3 * row + 1][3 * col] == '■') {
+								group += `<rect x='10' y='10' width='15' height='80'/>`; //Right
+								corners[1] = true;
+								corners[3] = true;
+							}
+							if (grid[3 * row + 1][3 * col + 2] == '■') {
+								group += `<rect x='75' y='10' width='15' height='80'/>`; //Left
+								corners[0] = true;
+								corners[2] = true;
+							}
+							if (grid[3 * row + 2][3 * col + 1] == '■') {
+								group += `<rect x='10' y='75' width='80' height='15'/>`; //Down
+								corners[2] = true;
+								corners[3] = true;
+							}
+							
+							if (!corners[0])
+								group += `<rect x='10' y='10' width='15' height='15' fill='#000'/>`;
+							if (!corners[1])
+								group += `<rect x='75' y='10' width='15' height='15' fill='#000'/>`;
+							if (!corners[2])
+								group += `<rect x='10' y='75' width='15' height='15' fill='#000'/>`;
+							if (!corners[3])
+								group += `<rect x='75' y='75' width='15' height='15' fill='#000'/>`;
+							
+							group += '</g>';
+							svg += group;
+						}
+					}
+					
+					module.push({label:'Solution:',obj:svg});
+				}
+			},
+			{
+				regex: /The display reads.+/
+			}
+		]
+	},
     {
         displayName: "Memory",
         moduleID: "Memory",
@@ -7061,6 +7152,67 @@ let parseData = [
             }
         ]
     },
+{
+		loggingTag: "Mineswapper",
+		moduleID: "mineswapper",
+		matches: [
+			{
+				regex: /(Row|Column) (\d) has (\d) mines\./,
+				handler: function(matches, module) {
+					if (matches[1] == 'Row'){
+						if (!module.rows)
+							module.rows = [ 0, 0, 0, 0, 0, 0 ];
+						module.rows[matches[2] - '1'] = matches[3] - '0';
+					}
+					else {
+						if (!module.cols)
+							module.cols = [ 0, 0, 0, 0, 0, 0 ];
+						module.cols[matches[2] - '1'] = matches[3] - '0';
+					}
+					return true;
+				}
+			},
+			{
+				regex: /Initial state:|Particular solution:/,
+				handler: function(matches, module) {
+					const lines = readLines(6).map(l => l.replace(/\[Mineswapper #\d+\] /, '').split('|'));
+					const nums = lines.map(row => row.map(cell => cell[1]));
+					const mines = lines.map(row => row.map(cell => cell[0] == '*'));
+					const minePath = 'm49.55 5a4.95 4.95 90 00-4.8 4.95l0 10.05a30 30 90 00-12.6 5.1l-7.05-7.05a4.95 4.95 90 00-7.05 7.05l7.05 7.2a30 30 90 00-5.1 12.45l-10.05 0a4.95 4.95 90 000 10.05l10.05 0a30 30 90 005.1 12.45l-7.05 7.05a4.95 4.95 90 007.05 7.05l7.2-7.05a30 30 90 0012.45 5.25l0 9.9a4.95 4.95 90 0010.05 0l0-9.9a30 30 90 0012.45-5.25l7.05 7.05a4.95 4.95 90 007.05-7.05l-7.05-7.05a30 30 90 005.25-12.45l9.9 0a4.95 4.95 90 000-10.05l-9.9 0a30 30 90 00-5.25-12.45l7.05-7.2a4.95 4.95 90 00-7.05-7.05l-7.05 7.05a30 30 90 00-12.45-5.1l0-10.05a4.95 4.95 90 00-5.25-4.95z';
+					const arrowPath = 'M35 0H0L50 40 100 0h-35l-15 12z';
+					let svg = `<svg viewbox='-5 -100 770 770' style='display: block; width: 5in'>`;
+					for (let y = 0; y < 6; y++) {
+						for (let x = 0; x < 6; x++) {
+							let group = `<g transform='translate(${110 * x}, ${110 * y})'>`;
+							group += `<rect x='0' y='0' width='100' height='100' fill='#FFF' stroke='#000' stroke-width='3'/>`;
+							if (mines[y][x])
+								group += `<path d='${minePath}' fill='#AAA'/>`;
+							group += `<text style='font-size: 50' x='50' y='50' text-anchor='middle' dominant-baseline='central'>${nums[y][x]}</text>`;
+							svg += group + '</g>';
+						}
+						
+						let colGroup = `<g transform='translate(${110 * y}, -50)'>
+										<path d='${arrowPath}' fill='#555'/>
+										<text style='font-size: 50' x='50' y='-20' text-anchor='middle' dominant-baseline='central'>${module.cols[y]}</text>
+										</g>`;
+						let rowGroup = `<g transform='translate(700, ${110 * y})'>
+										<path d='${arrowPath}' fill='#555' transform='rotate(90)'/>
+										<text style='font-size: 50' x='20' y='50'  text-anchor='middle' dominant-baseline='central'>${module.rows[y]}</text>
+										</g>`
+						
+						svg += colGroup + rowGroup;
+					}
+					
+					module.push({ label:matches[0], obj:svg + '</svg>'});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		
+		]
+	},
     {
         moduleID: "MinesweeperModule",
         loggingTag: "Minesweeper",
