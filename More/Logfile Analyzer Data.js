@@ -2210,6 +2210,34 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'caRPS',
+		loggingTag: 'CA-RPS',
+		matches: [
+			{
+				regex: /The (initial|target) grid:/,
+				handler: function(matches, module) {
+					
+					const colors = { 'R':'#F00', 'P':'#0F0', 'S':'#00F', 'X':'#000' };
+					const pics = { 'R':'Rock', 'P':'Paper', 'S':'Scissors', 'X':'WEEDNUTS' };
+					const grid = readLines(8).map(l => l.replace(/\[CA-RPS #\d+\] /, ''));
+					let svg = `<svg viewbox='0 0 60 80' style='width: 3in; display: block'>`;
+					
+					for (let row = 0; row < 8; row++){
+						for (let col = 0; col < 6; col++) {
+							const sign = grid[row][col];
+							const color = colors[sign];
+							svg += `<rect x='${10 * col}' y='${10 * row}' width='10' height='10' fill='${color}' stroke='#000' stroke-width='0.5'/>`;
+							if (sign != 'X')
+								svg += `<image href='img/CA-RPS/${pics[sign]}.png' x='${10 * col + 1}' y='${10 * row + 1}' width='8' height='8'/>`;
+						}
+					}
+					svg += `</svg>`;
+					module.push({label:matches[0], obj:svg});
+				}
+			}
+		]
+	},
     {
         moduleID: "CaesarCipherModule",
         loggingTag: "CaesarCipher"
@@ -7778,6 +7806,22 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'NotPokerModule',
+		loggingTag: 'Not Poker',
+		matches: [
+		{
+			regex: /Generating manual with rule seed \d+:/,
+			handler: function(match, module){
+				let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
+				module.push({ label:match, obj:rs });
+			}
+		},
+		{
+			regex: /.+/
+		}
+		]
+	}
     {
         moduleID: "NotWhosOnFirst",
         loggingTag: "Not Who's on First",
