@@ -5407,7 +5407,41 @@ let parseData = [
     {
         displayName: "The Jack-O’-Lantern",
         moduleID: "jackOLantern",
-        loggingTag: "The Jack-O'-Lantern"
+        loggingTag: "The Jack-O'-Lantern",
+		matches: [
+			{
+				regex: /Eye pattern: (\d). Mouth pattern: (\d)./,
+				handler: function(matches, module) {
+					module.solveBased = matches[1] == '2' && matches[2] == '3';
+				}
+			},
+			{
+				regex: /Press (trick|treat)./,
+				handler: function(matches, module) {
+					if (module.solveBased){
+						if (matches[1] == 'trick'){
+							module.push('Even solves answer: Press trick');
+							module.push('Odd solves answer: Press treat');							
+						}
+						else {
+							module.push('Even solves answer: Press treat');
+							module.push('Odd solves answer: Press trick');							
+						}
+						return true;
+					}
+				}
+			},
+			{
+				regex: /A module has been solved. The answer is being recalculated./,
+				handler: function(_, module){
+					linen += 3;
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
     },
     {
         displayName: "The Jewel Vault",
