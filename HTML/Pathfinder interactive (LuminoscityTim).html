@@ -301,11 +301,15 @@
                                 setTimeout(function(){
                                     grid.children().eq(4).children().eq(4).addClass("fallen").removeClass("selected");
                                 }, 500);
+                                $(".solved-text").removeClass("invis");
                             }
-                            else if ($("button.sound").hasClass("play")) {
-                                let aud = audioStep[0].cloneNode();
-                                aud.volume = 0.3;
-                                aud.play();
+                            else {
+                                if ($("button.sound").hasClass("play")) {
+                                    let aud = audioStep[0].cloneNode();
+                                    aud.volume = 0.3;
+                                    aud.play();
+                                }
+                                $(".solved-text").addClass("invis");
                             }
 
                             setTimeout(function(){
@@ -327,7 +331,7 @@
             }
             if (y == 2) {
                 $("<div>").addClass("netsquare reset-grid square ").text("↻").appendTo(row).click(function() {
-                    if (mode() != MODE_READ)
+                    if (mode() != MODE_READ) {
                         for (let y = 0; y < rows; y++) {
                             for (let x = 0; x < cols; x++) {
                                 let n = origGameGrid[x][y];
@@ -340,6 +344,8 @@
                                     elem.removeClass("fallen");
                             }
                         }
+                        $(".solved-text").addClass("invis");
+                    }
                     resetPos();
                 });
             }
@@ -356,6 +362,7 @@
             .appendTo(grid);
 
         var tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
         $("<button>").addClass("read-solve").appendTo(tools).click(function() {
             $(this).toggleClass("solve");
             for (let y = 0; y < rows; y++) {
@@ -442,6 +449,7 @@
             $(".path").addClass("invisible");
             $(".solution").addClass("invisible");
             $(".movesHolder").addClass("invisible");
+            $(".solved-text").addClass("invis");
             for (let y = 0; y < rows; y++) {
                 for (let x = 0; x < cols; x++) {
                     gameGrid[x][y] = 0;
@@ -472,7 +480,7 @@
         $("button.save").click(function() {
             removeFutureSaves();
 
-            let saveStateClass = Array.from($(".netsquare, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateDisable = Array.from($(".tools button")).map(x => $(x)).map(x => x.prop("disabled") || false);
             console.log(saveStates);
             let stateNumber = saveStates.length;
@@ -500,7 +508,7 @@
             let s_modeWasSolve = modeWasSolve;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
-                $(".netsquare, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".netsquare, .solved-text, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $(".tools button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
                 movementList = [];
                 answerList = [];
@@ -578,6 +586,12 @@
         .tools button {
             margin: 10px;
         }
+        .solved-text {
+            color: #090;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
 
         .slab-row {
             height: 76px;

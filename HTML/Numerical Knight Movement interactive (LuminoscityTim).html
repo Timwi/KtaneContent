@@ -151,6 +151,7 @@
                             var elem = grid.children().eq(currY+1).children().eq(currX+1);
                             selected = elem;
                             updateSelection();
+                            $(".solved-text").addClass("invis");
                         }
                     }
                 }
@@ -228,6 +229,7 @@
                             gameGrid[x-1][y-1] = Math.min(99, gameGrid[x-1][y-1] + 1);
                             origGameGrid[x-1][y-1] = gameGrid[x-1][y-1];
                             $(this).text(gameGrid[x-1][y-1]);
+                            $(".solved-text").addClass("invis");
                         }
                         else {
                             let n = Math.max(0, gameGrid[x-1][y-1] - 1);
@@ -241,9 +243,11 @@
                             for (let r = 0; r < rows; r++)
                                 for (let c = 0; c < cols; c++)
                                     zeros += (gameGrid[c][r] == 0 ? 1 : 0);
+                            $(".solved-text").addClass("invis");
                             if (zeros == nTiles && (mode() == MODE_PLAY || mode() == MODE_SOLVE && movement() == MOV_ENFORCE)) {
                                 if ($("button.sound").hasClass("play"))
                                     audioSolve[0].play();
+                                $(".solved-text").removeClass("invis");
                             }
                             else if ($("button.sound").hasClass("play")) {
                                 let aud = audioStep[0].cloneNode();
@@ -289,6 +293,7 @@
                         }
                     }
                     resetPos();
+                    $(".solved-text").addClass("invis");
                 });
             } else if (y == 2) {
                 $("<div>").addClass("movesleft square").text("M: 0").appendTo(row);
@@ -303,7 +308,9 @@
             .prop("volume", 0.4)
             .appendTo(grid);
 
-        var tools = $(".tools");
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        
         $("<button>").addClass("read-solve").appendTo(tools).click(function() {
             $(this).toggleClass("solve");
             $("body").toggleClass("solve", $(this).hasClass("solve"));
@@ -354,6 +361,7 @@
             currentState = 0;
         });
         $(".reset-all").click(function() {
+            $(".solved-text").addClass("invis");
             $("button.movement").removeClass("free");
             $("body").removeClass("free solution-shown solve play");
             $("button.sound").addClass("play");
@@ -390,7 +398,7 @@
         $("button.save").click(function() {
             removeFutureSaves();
 
-            let saveStateClass = Array.from($(".netsquare, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
             console.log(saveStates);
             let stateNumber = saveStates.length;
@@ -416,7 +424,7 @@
             let s_modeWasSolve = modeWasSolve;
 
             let button = $("<button>").text(stateNumber + 1).click(function() {
-                $(".netsquare, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".netsquare, .solved-text, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
                 movementList = Array(s_movementList.length);
                 answerList = Array(s_answerList.length);
@@ -492,6 +500,12 @@
         .tools button {
             margin: 10px;
         }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
 
         .square-row {
             height: 76px;
