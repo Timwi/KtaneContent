@@ -10456,6 +10456,59 @@ let parseData = [
         moduleID: "stackem",
         loggingTag: "Stack'em"
     },
+	{
+		moduleID: 'starmap_reconstruction',
+		loggingTag: 'Starmap Reconstruction',
+		matches: [
+			{
+				regex: /(?:Answer example|Submitted map): ([\d\s-;]+)/,
+				handler: function (matches, module) {
+					const ans = matches[1];
+					const r = 40;
+					const diag = r * 0.707106781;
+					const shrinkFactor = 0.1;
+					let cncs = [ ];
+
+					for (let i = 0; i < ans.length; i++) {
+						if (ans[i] == '-')
+							cncs.push( { a: ans[i - 1] - '0', b: ans[i + 1] - '0' } );
+					}
+					let svg = `<svg viewBox='-50 -50 100 100' style='width: 3.5in; margin: 0.5cm 0; display: block;'> 
+							   <circle r='50' fill='#222'/>
+							   <circle r='40' fill='#000'/>`;
+					
+					let positions = [ {x:0, y:-r}, {x:diag, y:-diag}, {x:r, y:0}, {x:diag, y:diag}, {x:0, y:r}, {x:-diag, y:diag}, {x:-r, y:0}, {x:-diag, y:-diag} ];
+					for (let con of cncs) {
+						const dx = positions[con.b].x - positions[con.a].x;
+						const dy = positions[con.b].y - positions[con.a].y;
+						positions[con.a].x += shrinkFactor * dx;
+						positions[con.b].x -= shrinkFactor * dx;
+						positions[con.a].y += shrinkFactor * dy;
+						positions[con.b].y -= shrinkFactor * dy;
+					}
+					let hue = 0;
+					for (let con of cncs) {
+						const p1 = positions[con.a];
+						const p2 = positions[con.b];
+						svg += `<line x1='${p1.x}' y1='${p1.y}' x2='${p2.x}' y2='${p2.y}' stroke='hsl(${hue}deg, 90%, 80%' stroke-width='2'/>`;
+						hue += 360 / cncs.length;
+					}
+					
+					for (let i = 0; i < 8; i++) {
+						let color = Math.floor(Math.random() * 2) == 0 ? '#CDF' : '#FDB';
+						console.log(positions[i].y);
+						svg += `<circle r='7.5' cx='${positions[i].x}' cy='${positions[i].y}' fill='${color}'/>`;
+						svg += `<text x='${positions[i].x}' y='${positions[i].y}' text-anchor='middle' dominant-baseline='central' style='font-size: 95%'>${i}</text>`
+					}
+					module.push({ label:matches[0], obj:svg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         moduleID: "SymbolCycleModule",
         loggingTag: "Symbol Cycle",
