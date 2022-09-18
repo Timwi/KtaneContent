@@ -11155,6 +11155,39 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'twistyTerminals',
+		loggingTag: 'Twisty Terminals',
+		matches: [
+			{
+				regex: /(The initial configuration of the grid is|Solution|Submitted the following configuration):/,
+				handler: function (matches, module) {
+					const gap = 15;
+					const grid = readLines(12).map(l => l.replace(/\[Twisty Terminals #\d+\] /, '').replace(/ /g, '').split(''));
+					let svg = `<svg viewbox='-5 -5 470 470' style='width: 4in; display: block'>`;
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							let group = `<g transform='translate(${(100 + gap) * row}, ${(100 + gap) * col})'>
+											<rect width='100' height='100' stroke='#000' stroke-width='5' fill='#654'/>
+											<circle r='12.5' cx='50' cy='50' stroke='#222' stroke-width='3' fill='#3C3333'/>`;
+										//URDL
+							const chars = [ grid[3*row + 0][3*col + 1], grid[3*row + 1][3*col + 2], grid[3*row + 2][3 * col + 1], grid[3*row + 1][3*col + 0] ];
+							group += `<text font-size='37.5' transform='translate(50, 20) rotate(0)  ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[0]}</text>`;
+							group += `<text font-size='37.5' transform='translate(80, 50) rotate(90) ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[1]}</text>`;
+							group += `<text font-size='37.5' transform='translate(50, 80) rotate(180)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[2]}</text>`;
+							group += `<text font-size='37.5' transform='translate(20, 50) rotate(270)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[3]}</text>`;
+							
+							svg += group + '</g>';
+						}
+					}
+					module.push({ label:matches[0], obj:svg });
+				}
+			},
+			{
+				regex: /The following pairs/
+			}
+		]
+	},
     {
         displayName: "Updog",
         moduleID: "Updog",
