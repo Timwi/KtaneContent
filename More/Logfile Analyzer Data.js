@@ -7821,6 +7821,59 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'nomai',
+		loggingTag: 'Nomai',
+		matches: [
+			{
+				regex: /#0: (\w+) #1: (\w+) #2: (\w+) #3: (\w+) #4: (\w+) #5\(main\): (\w+)/,
+				handler: function(matches, module) {
+					module.planets = [ ];
+					for (let i = 0; i < 6; i++) {
+						module.planets.push(matches[i + 1]);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /Action table:/,
+				handler: function(_, module){
+					linen++;
+					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
+					const values = grid.map(r => r.substring(1, 12).split(' '));
+					const fills = { 'x':'#222', '0':'#A00', '1':'#888' };
+					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
+					const tdStyle = 'padding: 0; width: 1.5cm; border: 0;';
+					
+					let table = `<table style='margin: 0.25cm 0.5cm'> <tr> <td style='width: 1cm; text-align: center'>from→<br>to↓</td>`;
+					
+					for (let ix = 0; ix < 6; ix++) {
+						table += `<td style='padding: 0; width: 1cm'><img src='../HTML/img/Nomai/${module.planets[ix]}.png' style='${imgStyle}'/></td>`;
+					}
+					table += '</tr>';
+					
+					for (let row = 0; row < 6; row++){
+						table += `<tr> <td style='${tdStyle}'><img src='../HTML/img/Nomai/${module.planets[row]}.png' style='${imgStyle}'/>`;
+						for (let col = 0; col < 6; col++) {
+							if (values[row][col] == '2'){
+								table += `<td style='${tdStyle}'><img src='../HTML/img/Nomai/PurpleSpiral.png' style='${imgStyle}'></td>`;
+							}
+							else table += `<td style='${tdStyle} background-color: ${fills[values[row][col]]}'></td>`;
+						}
+						table += '</tr>';
+					}
+					table += '</table>';
+					module.push({ label:'Action Table:', obj:table });
+					module.push(['Legend:', ['Dark Gray: Not possible', 'Light Gray: Nothing', 'Red: Strike', 'Purple: Sixth Location', 'Planets are numbered from left to right starting with #0']]);
+					linen++;
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         moduleID: "NonogramModule",
         loggingTag: "Nonogram",
