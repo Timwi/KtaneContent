@@ -9715,6 +9715,75 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "The Sapphire Button",
+		moduleID: "SapphireButtonModule",
+		loggingTag: "The Sapphire Button",
+		matches: [
+			{
+				regex: /(Bitmaps shown on module|Reconstructed bitmaps):/,
+				handler: function(matches, module) {
+					let allLines = readLines(15).map(line => line.replace(/^\[The Sapphire Button #\d+\] /, ''));
+					let pixels = '', borders = '';
+					let w = allLines[0].length >> 1;
+					for (let bmp = 0; bmp < 3; bmp++)
+					{
+						let lines = allLines.slice(5*bmp, 5*bmp + 5);
+						for (let x = 0; x < w; x++)
+							for (let y = 0; y < 5; y++)
+								if (lines[y][2*x] === '█')
+									pixels += `M${x} ${y+6*bmp}h1v1h-1z`;
+						borders += `M0 ${6*bmp}h${w}v5H0z`;
+					}
+					module.push({
+						label: matches[0],
+						obj: $(`<svg viewBox='-.1 -.1 ${w*1.5+.2} 17.7'><path fill='none' stroke='black' stroke-width='.05' d='${borders}' /><path d='${pixels}' /></svg>`)
+					});
+					return true;
+				}
+			},
+			{
+				regex: /(\w+)\/(\d) \^ (\w+)\/(\d) \^ (\w+)\/(\d) = (\w+)/,
+				handler: function(matches, module) {
+					// cw: M.5 2.5A2 2 0 0 1 2.5,.5
+					let data = readLines(5).map(line => line.replace(/^\[The Sapphire Button #\d+\] /, ''));
+					let pixels = '', borders = 'M21 7h5v5h-5z', svg = '';
+					for (let bmp = 0; bmp < 3; bmp++)
+					{
+						for (let s = 0; s < 2; s++)
+						{
+							for (let x = 0; x < 5; x++)
+								for (let y = 0; y < 5; y++)
+										if (data[y][28*bmp + 13*s + 2*x] === '█')
+											pixels += `M${7*bmp + x} ${7*s + y}h1v1h-1z`;
+							borders += `M${7*bmp} ${7*s}h5v5h-5z`;
+						}
+						svg += `<text x='${7*bmp + 2.5}' y='6.3'>↓</text><text x='${7*bmp + 6}' y='9.8'>${bmp === 2 ? '=' : 'xor'}</text>`;
+						svg += `<text x='${7*bmp + 2.5}' y='-.3'>${matches[1+2*bmp]}</text>`;
+						svg += [
+							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)' fill='none' stroke='#4b4'><path d='M0 0l5 5' stroke-width='.1' /><path d='M4 1C2.5 1.5 1.5 2.5 1 4' stroke-width='.2' /><path transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /><path transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /></g>`,
+							`<g transform='translate(${7*bmp} 0)'><path d='M.5 2.5A2 2 0 0 1 2.5 .5' fill='none' stroke='#4b4' stroke-width='.2' /><path transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' /></g>`,
+							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)'><path d='M.5 2.5A2 2 0 0 1 2.5 .5' fill='none' stroke='#4b4' stroke-width='.2' /><path transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' /></g>`,
+							`<g transform='translate(${7*bmp} 0)' fill='none' stroke='#4b4'><path d='M0 0l5 5' stroke-width='.1' /><path d='M4 1C2.5 1.5 1.5 2.5 1 4' stroke-width='.2' /><path transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /><path transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /></g>`
+						][matches[2+2*bmp]-1];
+					}
+					for (let x = 0; x < 5; x++)
+						for (let y = 0; y < 5; y++)
+								if (data[y][84 + 2*x] === '█')
+									pixels += `M${21 + x} ${7 + y}h1v1h-1z`;
+
+					module.push({
+						label: 'Solving process:',
+						obj: $(`<svg viewBox='-.1 -1.6 30.2 14.2' text-anchor='middle' font-size='1'><path fill='none' stroke='black' stroke-width='.05' d='${borders}' /><path d='${pixels}' />${svg}</svg>`)
+					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "The Screw",
 		moduleID: "screw",
 		loggingTag: "Screw",
