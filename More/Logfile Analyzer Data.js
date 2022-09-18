@@ -5927,6 +5927,21 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: "MatchingSigns",
+		loggingTag: "Matching Signs",
+		matches: [
+			{
+				regex: /(\w+) -> (\w+)/,
+				handler: function (matches, module) { 
+					let a = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[1]}.png'/>`;
+					let b = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[2]}.png'/>`;
+					let style = '<style>.dark-mode .msigns img { filter: invert(87%) }</style>';
+					module.push({obj: `${style} <span class='msigns' style='display: flex; align-items: center; font-size: 36px'>${a} → ${b}</span>` });
+				}
+			}
+		]
+	},
     {
         displayName: "Matrices",
         moduleID: "MatrixQuiz",
