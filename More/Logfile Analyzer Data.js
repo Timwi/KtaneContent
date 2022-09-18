@@ -1973,6 +1973,61 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'BoozleageModule',
+		loggingTag: 'Boozleage',
+		matches: [
+			{
+				regex: /Square [A-C] has letter ([A-Z]) with vertices at ([A-H][1-8]), ([A-H][1-8]), ([A-H][1-8]), ([A-H][1-8])/,
+				handler: function (matches, module) {
+					const letters = [ 'A','B','C','D','E','F','G','H' ];
+					if (!module.squares)
+						module.squares = [ ];
+					let vs = [ ];
+					for (let i = 0; i < 4; i++) {
+						vs.push({ x:letters.indexOf(matches[i + 2][0]), y: matches[i + 2][1] - '1'});
+					}
+					module.squares.push( { letter: matches[1], vertices: vs } );
+				}
+			},
+			{
+				regex: /Full grid/,
+				handler: function(_, module){
+					const grid = readLines(8).map(l => l.replace(/\[Boozleage #\d+\] /, '').split(' '));
+					const colors = { 'R':'#F00', 'Y':'#FF0', 'G':'#0F0', 'B':'#00F', 'M':'#F0F', 'W':'#FFF' };
+					const octagonPath = 'M0 5l5-5h10l5 5v10l-5 5h-10l-5-5z';
+					let svg = `<svg viewbox='-2 -2 172 172' style='width: 4.5in; display: block; margin: 0'>`;
+					
+					for (let row = 0; row < 8; row++) {
+						for (let col = 0; col < 8; col++) {
+							const cell = grid[row][col];
+							const glyphName = `Set ${cell[1]} - ${cell[0]}`;
+							svg += `<path d='${octagonPath}' fill='${colors[cell[2]]}' transform='translate(${20 * col}, ${20 * row})' stroke='#000' stroke-width='2'/>`;
+							svg += `<image href='../HTML/img/Boozleglyphs/${glyphName}.svg' x='${20 * col + 4}' y='${20 * row + 4}' width='12' height='12'/>`;
+						}
+					}
+					for (let square of module.squares){
+						let d = `	M ${20 * square.vertices[0].x + 10} ${20 * square.vertices[0].y + 10}
+									L ${20 * square.vertices[1].x + 10} ${20 * square.vertices[1].y + 10}
+									L ${20 * square.vertices[3].x + 10} ${20 * square.vertices[3].y + 10}
+									L ${20 * square.vertices[2].x + 10} ${20 * square.vertices[2].y + 10} z`;
+						console.log(d);
+						svg += `<path d='${d}' stroke='#4FF' stroke-width='4' stroke-opacity='0.7' fill='transparent'/>`;
+					}
+					for (let square of module.squares) {
+						const cx = 20 * square.vertices[3].x + 20;
+						const cy = 20 * square.vertices[3].y + 20
+						svg += `<circle r='7' cx='${cx}' cy='${cy}' fill='#FFF' stroke='#000' stroke-width='2'/>
+								<text x='${cx}' y='${cy}' fill='#000' style='font-size: 12px' text-anchor='middle' dominant-baseline='central'>${square.letter}</text>`;
+					}
+					module.push({ label:'Displayed grid:', obj: svg });
+				}
+			},
+			{
+				regex: /The button at|Pressed/
+			}
+		]
+	},
     {
         moduleID: "BrokenButtonsModule",
         loggingTag: "Broken Buttons",
