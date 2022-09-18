@@ -8736,6 +8736,110 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: "polygrid",
+		loggingTag: "Polygrid",
+		matches: [
+			{
+				regex: /The displayed/,
+				handler: function (_, module) {
+						module.shapes = { 	'●':'M0 10a10 10 0 0020 0 10 10 0 00-20 0',
+											'◆':'M10 0l10 10-10 10-10-10z',
+											'▼':'M0 1h20l-10 17.3z',
+											'♥':'M10 20Q-1 13 0 5T10 4Q19-3 20 5T10 20Z',
+											'+':'M7 7v-7h6v7h7v6h-7v7h-6v-7h-7v-6z',
+											'■':'M1 1h18v18h-18z',
+											'▲':'M0 19h20l-10-17.3z',
+											'✖':'M5 0l5 5 5-5 5 5-5 5 5 5-5 5-5-5-5 5-5-5 5-5-5-5z',
+											' ': 'M0 0'}
+
+						module.lines = readLines(10).map(l => l.replace(/\[Polygrid #\d+\] /, '').substring(1,10).split('|'));
+						const letters = ['A','B','C','D','E','F','G','H','I','J'];
+						console.log(module.lines);
+						let div = "<div style='display: flex; flex-flow: row wrap'>";
+						
+						for (let line = 0; line < 10; line++) {
+							let svg = `<svg viewBox='-25 0 160 30' style='width: 3in; background-color: black; border: 1.5mm solid blue; margin: 1mm'>`;
+							
+							svg += `<text x='-12.5' y='15' style='font-size: 20px' dominant-baseline='central' text-anchor='middle' fill='#FFF' font-weight='bold'>${letters[line]}</text>`;
+							svg += `<line y1='-100' y2='100' stroke-width='3' stroke='#00F'/>`;
+							for (let sym = 0; sym < 5; sym++) {
+								svg += `<path transform='translate(${25 * sym + 5}, 5)' d='${module.shapes[module.lines[line][sym]]}' fill='#00F'/>`;
+							}
+							svg += '</svg>';
+							div += svg;
+						}
+						div += '</div>';
+						module.push({label:'The displayed rows/columns are:', obj:div });
+						return true;
+					}
+			},
+			{
+				regex: /The rows and columns/,
+				handler: function (_, module) {
+					const grid = readLines(5).map(l => l.replace(/\[Polygrid #\d+\] /, '').split(' '));
+					const arrowPath = 'M-40-40h80l-40 69.3z';
+					const letters = ['A','B','C','D','E','F','G','H','I','J'];
+					let svg = `<svg viewbox='-100 -100 700 700' style='width: 5in; display: block'>`;
+						
+								//up right down left
+					let arrows = [ Array(5), Array(5), Array(5), Array(5) ];
+					
+					next_line:
+					for (let line = 0; line < 10; line++) {
+						for (let dir = 0; dir < 4; dir++) {
+							next_arrow:
+							for (let arrow = 0; arrow < 5; arrow++) {
+								next_slot:
+								for (let slot = 0; slot < 5; slot++) {
+									if (module.lines[line][slot] == ' ')
+										continue next_slot; //Goto next slot
+									let cell = '';
+									switch (dir) {
+										case 0: cell = grid[slot][arrow]; break;
+										case 1: cell = grid[arrow][4 - slot]; break;
+										case 2: cell = grid[4 - slot][arrow]; break;
+										case 3: cell = grid[arrow][slot]; break;
+									}
+									if (cell != module.lines[line][slot] || arrows[dir][arrow])
+										continue next_arrow;
+								}
+								arrows[dir][arrow] = letters[line];
+								continue next_line;
+							}	
+						}
+					}
+					for (let row = 0; row < 5; row++){
+						for (let col = 0; col < 5; col++) {
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
+							g += `<rect width='100' height='100' fill='#000' stroke='#00F' stroke-width='12'/>`;
+							g += `<path transform='translate(20, 20) scale(3)' d='${module.shapes[grid[row][col]]}' fill='#00F'/>`;
+							svg += g + '</g>';
+						}
+						const arrPos = 100 * row + 50;
+						svg += `<path transform='translate(${arrPos}, -50) rotate(0)  ' d='${arrowPath}' fill='#00F' stroke='#000' stroke-width='6'/>`;
+						svg += `<path transform='translate(550, ${arrPos}) rotate(90) ' d='${arrowPath}' fill='#00F' stroke='#000' stroke-width='6'/>`;
+						svg += `<path transform='translate(${arrPos}, 550) rotate(180)' d='${arrowPath}' fill='#00F' stroke='#000' stroke-width='6'/>`;
+						svg += `<path transform='translate(-50, ${arrPos}) rotate(270)' d='${arrowPath}' fill='#00F' stroke='#000' stroke-width='6'/>`;	
+						if (arrows[0][row])
+							svg += `<text x='${arrPos}' y='-65' style='font-size:42px' dominant-baseline='central' text-anchor='middle' fill='#FFF' font-weight='bold'>${arrows[0][row]}</text>`;
+						if (arrows[1][row])
+							svg += `<text x='565' y='${arrPos}' style='font-size:42px' dominant-baseline='central' text-anchor='middle' fill='#FFF' font-weight='bold'>${arrows[1][row]}</text>`;
+						if (arrows[2][row])
+							svg += `<text x='${arrPos}' y='565' style='font-size:42px' dominant-baseline='central' text-anchor='middle' fill='#FFF' font-weight='bold'>${arrows[2][row]}</text>`;
+						if (arrows[3][row])
+							svg += `<text x='-65' y='${arrPos}' style='font-size:42px' dominant-baseline='central' text-anchor='middle' fill='#FFF' font-weight='bold'>${arrows[3][row]}</text>`;
+					}
+					
+					module.push({ label:'The rows and columns fit into this 5×5 grid', obj:svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         moduleID: "Probing",
         loggingTag: "Probing",
