@@ -2229,6 +2229,38 @@ let parseData = [
             }
         ]
     },
+	{
+		moduleID: 'buttonageModule',
+		loggingTag: 'Buttonage',
+		matches: [
+			{
+				regex: /Buttons:/,
+				handler: function(_, module) {
+					const grid = readLines(8).map(l => l.replace(/\[Buttonage #\d+\] /, '').split(' '));
+					const colors = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'Y':'#FF0', 'K':'#000', 'W':'#FFF', 'I':'#FFA8F3', 'O':'#EE5716', 'A':'#777' };
+					const textColors = { 'R':'#FFF', 'G':'#FFF', 'B':'#FFF', 'W':'#F00', 'Y':'#FF8F00' };
+					let svg = `<svg viewbox='-1 -1 162 162' style='display: block; width: 4in; margin-bottom: 0.5cm'>`;
+					for (let row = 0; row < 8; row++){
+						for (let col = 0; col < 8; col++) {
+							const cell = grid[row][col];
+							const cx = 20 * col + 10;
+							const cy = 20 * row + 10;
+							svg += 	`	<circle r='10' cx='${cx}' cy='${cy}' fill='${colors[cell[1]]}' stroke='#333' stroke-width='0.5' />
+										<circle r='8'  cx='${cx}' cy='${cy}' fill='${colors[cell[0]]}' stroke='#333' stroke-width='0.5' />`;
+							if (cell.length > 2)
+								svg += `<text x='${cx}', y='${cy}' fill='${textColors[cell[0]]}' style='font-size: 14px' text-anchor='middle' dominant-baseline='central'>${cell[2]}</text>`;
+						}
+					}
+					module.push({ label:'Buttons:', obj:svg + '</svg>' });
+					linen++;
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
     {
         displayName: "Button Grid",
         moduleID: "buttonGrid",
