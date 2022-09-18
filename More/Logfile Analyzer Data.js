@@ -9379,6 +9379,100 @@ let parseData = [
         moduleID: "WireSequence",
         loggingTag: "WireSequenceComponent",
     },
+	{
+		moduleID: "wireTerminals",
+		loggingTag: "Wire Terminals",
+		matches: [
+			{
+				regex: /The configuration of wires is:/,
+				handler: function (_, module) {
+					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
+					module.hWires = [ ];
+					for (let row = 0; row < 15; row += 2) {
+						for (let col = 3; col < 15; col += 4) { 
+							module.hWires.push(grid[row][col]);
+						}
+					}
+					module.vWires = [ ];
+					for (let row = 3; row < 15; row += 4) {
+						for (let col = 0; col < 15; col += 2) {
+							module.vWires.push(grid[row][col]);
+						}
+					}
+				}
+			},
+			{
+				regex: /(.+)in these positions:/,
+				handler: function (match, module) {
+					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
+					if (!module.colors)
+						module.colors = [ [], [], [], [] ];
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							module.colors[row][col] = grid[row * 4 + 1][col * 4 + 1];
+						}
+					}
+					
+					module.hCut = [ ];
+					for (let row = 0; row < 15; row += 2) {
+						for (let col = 3; col < 15; col += 4) { 
+							module.hCut.push(grid[row][col]);
+						}
+					}
+					module.vCut = [ ];
+					for (let row = 3; row < 15; row += 4) {
+						for (let col = 0; col < 15; col += 2) {
+							module.vCut.push(grid[row][col]);
+						}
+					}
+					
+					const colors = { 'R':'#F00', 'B':'#00F', 'Y':'#FF0', 'W':'#EEE', 'K':'#222' };
+					const xPath = 'M-30-8h60v16h-60z';
+					
+					let svg = `<svg viewbox='-5 -5 530 530' style='width: 4in; display: block'>`;
+					for (let row = 0; row < 8; row++){
+						for (let col = 0; col < 3; col++) {
+							let ix = 3 * row + col;
+							const hColor = colors[module.hWires[ix]];
+							const x = 140 * col + 100;
+							const y = 60 * row + 20 * Math.floor(row / 2) + 5;
+							svg += `<rect x='${x - 5}' y='${y}' width='50' height='30' fill='${hColor}' stroke='#222' stroke-width='3'/>`;
+							if (module.hCut[ix] == 'X'){
+								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-6.4-24v48h12.8v-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+							} else if (module.hCut[ix] == '/') {
+								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-8-24v48h16v-48z' fill='#FFF' />`
+							}
+						}
+					}
+					for (let row = 0; row < 3; row++){
+						for (let col = 0; col < 8; col++) {
+							let ix = 8 * row + col;
+							const vColor = colors[module.vWires[ix]];
+							const x = 60 * col + 20 * Math.floor(col / 2) + 5;
+							const y = 140 * row + 100;
+							svg += `<rect x='${x}' y='${y - 5}' width='30' height='50' fill='${vColor}' stroke='#222' stroke-width='3'/>`;
+							if (module.vCut[ix] == 'X'){
+								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-6.4h48v12.8h-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+							} else if (module.vCut[ix] == '/') {
+								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-8h48v16h-48z' fill='#FFF'/>`;
+							}
+						}
+					}
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							const color = colors[module.colors[row][col]];
+							svg += `<rect x='${140 * col}' y='${140 * row}' width='100' height='100' fill='#888' stroke='#222' stroke-width='5'/>
+									<circle r='30' cx='${140 * col + 50}' cy='${140 * row + 50}' fill='${color}' stroke='#999' stroke-width='5'/>`;								   
+						}
+					}
+					module.push({label:match[1] + 'in the positions marked below', obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /The terminals transmit through these wires:/
+			}
+		]
+	},
     {
         displayName: "Safety Safe",
         moduleID: "PasswordV2",
