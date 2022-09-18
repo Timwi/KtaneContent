@@ -7874,6 +7874,32 @@ let parseData = [
 			}
 		]
 	},
+	{
+		moduleID: 'nonbinaryPuzzle',
+		loggingTag: 'Nonbinary Puzzle',
+		matches: [
+			{
+				regex: /The (displayed grid|solution) is as follows:/,
+				handler: function(matches, module) {
+					const grid = readLines(6).map(l => l.replace(/\[Nonbinary Puzzle #\d+\] /, '').split(''));
+					const colors = { 'W':'#FFFFFF', 'K':'#000000', 'Y':'#FCF434', 'P':'#9C59D1', '.':'#989898' };
+					const tdStyle = 'width: 1cm; height: 1cm; text-align: center; border: 0.25mm solid black; font-size: 125%;';
+					let table = '<table>';
+					for (let row = 0; row < 6; row++){
+						table += '<tr>';
+						for (let col = 0; col < 6; col++) {
+							let color = grid[row][col];
+							let textColor = color == 'K' || color == 'P' ? '#FFF' : '#000';
+							table += `<td style='${tdStyle} background-color: ${colors[color]}; color: ${textColor}'>${color != '.' ? color : ''}</td>`;
+						}
+						table += '</tr>';
+					}
+					table += '</table>';
+					module.push({ label:matches[0], obj:table });
+				}
+			}
+		]
+	},
     {
         moduleID: "NonogramModule",
         loggingTag: "Nonogram",
