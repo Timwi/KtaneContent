@@ -8023,6 +8023,59 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'notreDameCipher',
+		loggingTag: 'Notre-Dame Cipher',
+		matches: [ 
+			{
+				regex: /(Starting|Current|Final) matrix :/i,
+				handler: function(matches, module) {
+					const grid = readLines(5).map(l => l.replace(/\[Notre-Dame Cipher #\d+\] /, '').split(''));
+					const tdStyle = 'width: 0.75cm; height: 0.75cm; text-align: center; vertical-align: middle; border: 2px solid black';
+					let table = '<table>';
+					for (let row = 0; row < 5; row++) {
+						table += '<tr>';
+						for (let col = 0; col < 5; col++) {
+							table += `<td style='${tdStyle}'>${grid[row][col]}</td>`;
+						}
+						table += '</tr>';
+					}
+					let logMessage = { label:matches[1] + ' Matrix:', obj:table }
+					if (matches[1] == 'Final') {
+						module.push([ module.dropdown.title, module.dropdown.items ]);
+						module.push(logMessage)
+						module.dropdown = null;
+					}
+					else{
+						if (!module.dropdown)
+							module.push(logMessage);
+						else {
+							module.dropdown.items.push(logMessage);
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /(Rosace|Vitrail|Cross) Cipher :/,
+				handler: function(matches, module) {
+					if (module.dropdown) {
+						module.push([ module.dropdown.title, module.dropdown.items ]);
+					}
+					module.dropdown = { title: matches[1] + ' Cipher', items: [ ] };
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if (module.dropdown)
+						module.dropdown.items.push(matches[0]);
+					else module.push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: 'NotPokerModule',
 		loggingTag: 'Not Poker',
 		matches: [
@@ -10866,7 +10919,6 @@ let parseData = [
 
 					for (let i = 0; i < 8; i++) {
 						let color = Math.floor(Math.random() * 2) == 0 ? '#CDF' : '#FDB';
-						console.log(positions[i].y);
 						svg += `<circle r='7.5' cx='${positions[i].x}' cy='${positions[i].y}' fill='${color}'/>`;
 						svg += `<text x='${positions[i].x}' y='${positions[i].y}' text-anchor='middle' dominant-baseline='central' style='font-size: 95%'>${i}</text>`
 					}
