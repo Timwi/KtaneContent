@@ -7044,6 +7044,69 @@ let parseData = [
 			}
 		]
 	},
+		{
+		moduleID: 'memoryPoker',
+		loggingTag: 'Memory Poker',
+		matches: [
+			{
+				regex: /The (suit|rank) table used is:/,
+				handler: function (matches, module) {
+					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					const tdStyle = 'width: 0.9cm; height: 0.9cm; text-align: center; vertical-align: middle; border: 2px solid black; padding: 0;';
+					
+					let table = '<table>';
+					for (let row = 0; row < 4; row++) {
+						table += '<tr>';
+						for (let col = 0; col < 4; col++) {
+							let cell = grid[row][col];
+							if (matches[1] == 'suit') {
+								if (cell == '♦' || cell == '♥')
+									table += `<td style='${tdStyle} font-size: 		24px'><span style='color: red'>${cell}</span></td>`;
+								else table += `<td style='${tdStyle} font-size: 	24px'>${cell}</td>`;
+							}
+							else table += `<td style='${tdStyle}'>${cell}</td>`;
+						}
+						table += '</tr>';
+					}
+					module.push({ label: matches[0], obj: table });
+					return true;
+				}
+			},
+			{
+				regex: /The face-up cards are:|The starting grid is:/,
+				handler: function (match, module) {
+					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					let svg = `<svg viewbox='-5 -5 101 101' style='width: 2.5in; display: block;'>
+							   <rect x='-5' y='-5' width='101' height='101' rx='5' ry='5' fill='#084'/>`;
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							let g = `<g transform='translate(${24 * col}, ${24 * row})'>`;
+							g += '<rect width=20 height=20 fill=#FFF rx=3 ry=3/>';
+							
+							const cell = grid[row][col];
+							if (cell == '..'){
+								g += '<rect x=1 y=1 width=18 height=18 fill=#CCC rx=2 ry=2/>'
+							}
+							else {
+								const color = cell[1] == '♥' || cell[1] == '♦' ? '#F00' : '#000';
+								g += `<text style='font-size: 12px' x='5' y='5' text-anchor='middle' dominant-baseline='central'>${cell[0]}</text>
+									  <text style='font-size: 16px' x='14' y='13' text-anchor='middle' dominant-baseline='central' fill='${color}'>${cell[1]}</text>`;
+							}
+							svg += g + '</g>';
+						}
+					}
+					module.push({ label:match[0], obj:svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					module.push({ obj:match[0].replace(/([♦♥])/, "<span style='color: red'>$1</span>") });
+				}
+			}
+		]
+	},
 	{
 		displayName: "Mega Man 2",
 		moduleID: "megaMan2",
