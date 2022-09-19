@@ -6016,6 +6016,44 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'matchematics',
+		loggingTag: 'Matchematics',
+		matches: [
+			{
+				regex: /(Equation|Possible answer|Submitting):/,
+				handler: function (matches, module) {
+					const m = readLine().match(/([01]{7}) ([-+*%]) ([01]{7}) = ([01]{7})/);
+					const seqs = [ m[1], m[3], m[4] ];
+					const tfs = [  '7.5, 30', '14, 22.5',  '0, 22.5',  '7.5, 15',  '14, 7.5',  '0, 7.5',  '7.5, 0' ];
+					const verts = [ 1, 2, 4, 5 ];
+					const matchObj = "<rect x='-4' y='-.375' width='8' height='0.75' fill='#FE9'/> <rect x='-4.5' y='-0.75' width='2' height='1.5' fill='#D33' rx='1' ry='0.5'/>";
+					
+					let svg = `<svg viewbox='-4 -3 80 36' style='display: block; width: 3.5in;'>
+								<rect x='-4' y='-3' width='70' height='36' fill='#000' rx='2' ry='2'/>`;
+					for (let i = 0; i < 3; i++) {
+						let g = `<g transform='translate(${24 * i}, 0)'>`;
+						for (let stick = 0; stick < 7; stick++) {
+							if (seqs[i][stick] == '1') {
+								let tf = `translate(${tfs[stick]})`;
+								if (verts.includes(stick))
+									tf += ' rotate(90)'
+								g += `<g transform='${tf}'>${matchObj}</g>`;
+							}
+						}
+						svg += g + '</g>';
+					}
+					svg += `<text x='19' y='15' style='font-size: 7px' font-weight='bold' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${m[2]}</text>`
+					svg += `<text x='43' y='14.5' style='font-size: 8px' font-weight='bold' fill='#FFF' text-anchor='middle' dominant-baseline='central'>=</text>`
+					module.push({ label:matches[0], obj:svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "MatchingSigns",
 		loggingTag: "Matching Signs",
 		matches: [
