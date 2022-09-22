@@ -6635,6 +6635,97 @@ let parseData = [
 			}
 		]
 	},
+    {
+        moduleID: "matrixMapping",
+		loggingTag: "Matrix Mapping",
+        matches: [
+            {
+                regex: /The chosen colour sets are: (.+)\./,
+                handler: function(matches, module) {
+                    let colourData = matches[1];
+                    let colours = colourData.split("}, {");
+                    for(let i = 0; i < colours.length; i++) {
+                        colours[i] = colours[i].replace(/[{}]/, "").toLowerCase().split("), ");
+                        for(let j = 0; j < colours[i].length - 1; j++) {
+                            colours[i][j] += ")";
+                        }
+                    }
+                    module.Colours = colours;
+					return true;
+                }
+            },
+            {
+                regex: /The grids are: (.+)\./,
+                handler: function(matches, module) {
+                    let puzzleData = matches[1].split(", ");
+                    for(let i = 0; i < puzzleData.length; i++) {
+                        puzzleData[i] = puzzleData[i].split("/");
+                    }
+
+					module.convertedModuleColours = [[], []];
+					for(let i = 0; i < module.Colours.length; i++) {
+						for(let j = 0; j < module.Colours[i].length; j++) {
+							let split = module.Colours[i][j].split(", ");
+							let regex = /\d.\d{3}/;
+							r = Math.floor(parseFloat(split[0].match(regex)) * 255);
+							g = Math.floor(parseFloat(split[1].match(regex)) * 255);
+							b = Math.floor(parseFloat(split[2].match(regex)) * 255);
+							module.convertedModuleColours[i].push(`rgb(${r}, ${g}, ${b})`);
+						}
+					}
+                    
+                    let svg = `<svg width="630" height="320" viewbox="-30 135 600 100">`;
+
+					for(let i = 0; i < puzzleData.length; i++) {
+						for(let j = 0; j < puzzleData[i].length; j++) {
+							for(let k = 0; k < puzzleData[i][j].length; k++) {
+								svg += `<rect transform="rotate(45)" x="${300 * i + 95 * (1 - i) + 30 * k + 37}" y="${30 * j + 37 - 285 * i - 80 * (1 - i)}" width="30" height="30" style="fill:${module.convertedModuleColours[i][parseInt(puzzleData[i][j][k]) - 1]};stroke:#202020;stroke-width:6" />`
+							}
+						}
+					}
+					module.push({label: "The grids shown on the module: ", obj: svg});
+					return true;
+                }
+            },
+			{
+				regex: /The calculated matrix is: (.+)\./,
+				handler: function(matches, module) {
+					let solutionData = matches[1].split("/");
+					let solutionColours = ["rgb(191, 191, 191)", "rgb(63, 63, 63)", "rgb(188, 188, 0)"];
+
+					let svg = `<svg width="600" height="300" viewbox="0 0 200 200">`;
+
+					for(let i = 0; i < solutionData.length + 1; i++) {
+						if(i == 0) {
+							let rect = `<rect x="30" y="30" width="27" height="27" style="fill:#222;stroke:#202020;stroke-width:4"/>`;
+							for(let j = 0; j < solutionData.length; j++) {
+								rect += `<rect x="${60 + 30 * j}" y="30" width="27" height="27" style="fill:${module.convertedModuleColours[1][j]};stroke:#202020;stroke-width:4" />`
+							}
+							svg += rect
+						} else {
+							let rect = ``;
+							for(let j = 0; j < solutionData.length; j++) {
+								for(let k = 0; k < solutionData.length + 1; k++) {
+									if(k == 0) {
+										rect += `<rect x="30" y="${60 + 30 * j}" width="27" height="27" style="fill:${module.convertedModuleColours[0][j]};stroke:#222;stroke-width:4" />`;
+									} else {
+										rect += `<rect x="${30 + 30 * k}" y="${30 + 30 * (j + 1)}" width="27" height="27" style="fill:${solutionColours["10-".indexOf(solutionData[j][k - 1])]};stroke:#202020;stroke-width:4" />`
+									}
+								}
+							}
+							svg += rect
+						}
+					}
+					module.push({label: "The solution: ", obj: svg});
+					module.push({label: "Further logging on this module in the form of x-y is in row-column format with respect to the solution table, 1-indexed."})
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+        ]
+    },
 	{
 		displayName: "Maze³",
 		moduleID: "maze3",
