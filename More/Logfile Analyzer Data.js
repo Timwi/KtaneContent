@@ -6691,7 +6691,7 @@ let parseData = [
 				regex: /The calculated matrix is: (.+)\./,
 				handler: function(matches, module) {
 					let solutionData = matches[1].split("/");
-					let solutionColours = ["rgb(191, 191, 191)", "rgb(63, 63, 63)", "rgb(188, 188, 0)"];
+					let solutionColours = ["rgb(191, 191, 191)", "rgb(63, 63, 63)", "rgb(176, 11, 30)"];
 
 					let svg = `<svg width="600" height="300" viewbox="0 0 200 200">`;
 
@@ -6710,6 +6710,9 @@ let parseData = [
 										rect += `<rect x="30" y="${60 + 30 * j}" width="27" height="27" style="fill:${module.convertedModuleColours[0][j]};stroke:#222;stroke-width:4" />`;
 									} else {
 										rect += `<rect x="${30 + 30 * k}" y="${30 + 30 * (j + 1)}" width="27" height="27" style="fill:${solutionColours["10-".indexOf(solutionData[j][k - 1])]};stroke:#202020;stroke-width:4" />`
+									}
+									if(solutionData[j][k - 1] == "-") {
+										rect += `<path fill="none" stroke="#222" stroke-width="4" d="M ${30 + 30 * k},${30 + 30 * (j + 1)} ${30 + 30 * k + 27},${30 + 30 * (j + 1) + 27} M ${30 + 30 * k + 27},${30 + 30 * (j + 1)} ${30 + 30 * k},${30 + 30 * (j + 1) + 27}" />`
 									}
 								}
 							}
