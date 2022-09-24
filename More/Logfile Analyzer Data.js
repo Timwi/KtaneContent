@@ -6016,6 +6016,134 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "matchem",
+		loggingTag: "Match 'em",
+		matches: [ 
+			{
+				regex: /The initial configuration of cards is:/,
+				handler: function(_, module) {
+					module.cardBacks = { 'R':'#F00', 'O':'#F80', 'Y':'#F8FF00', 'L':'#8F0', 'F':'#082', 'B':'#00F', 'C':'#0FF', 'V':'#80C', 'P':'#E0E', 'W':'#FFF'};
+					module.textColors = { 'R':'#C00','O':'#D60', 'Y':'#C8CC00', 'L':'#4C0', 'F':'#040', 'B':'#009', 'C':'#0CC', 'V':'#408', 'P':'#B0B', 'W':'#CCC' };
+					module.invert = [ 'B', 'F', 'V' ];
+					module.grid = [ ];
+					
+					const config = readLines(5).map(l => l.replace(/\[Match 'em #\d+\] /, '').split(' '));
+					for (let row = 0; row < 5; row++) {
+						module.grid.push( [ ] );
+						for (let col = 0; col < 5; col++) {
+							const cell = config[row][col];
+							module.grid[row].push( { color: cell[0], suit: cell[1] } );
+						}
+					}
+					
+					module.makeSvg = function (grid) {
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'> 
+						<rect x='-5' y='-5' width='130' height='180' fill='#4C4' rx='5' ry='5'/>`;
+					
+						for (let row = 0; row < 5; row++) {
+							for (let col = 0; col < 5; col++) {
+								const cell = grid[row][col];
+								
+								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
+								const fill = module.cardBacks[cell.color];
+								const inner = module.textColors[cell.color];
+								group += `<rect width='20' height='30' fill='${fill}' stroke='#000' stroke-width='1.5'/>
+										<text x='10' y='12' style='font-size: 24px' fill='${inner}' stroke='#000' stroke-width='0.5' text-anchor='middle' dominant-baseline='central'>${cell.suit}</text>
+										<text x='5' y='25' style='font-size: 9px' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>`;
+								svg += group + '</g>';
+							}
+						}
+						return svg + '</svg>';
+					};
+					
+					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid) });
+					return true;
+				}
+			},
+			{
+				regex: /The final configuration of cards is:/,
+				handler: function (_, module){ 
+					module.push({ label: "The final configuration of cards is:", obj:module.makeSvg(module.grid) });
+					linen += 5;
+					return true;
+				}
+			},
+			{
+				regex: /Move \d: (.+)/,
+				handler: function (matches, module) {
+					
+					const cmd = matches[1];
+					const swapMatch = cmd.match(/Swap (rows|columns) (\d) and (\d)/);
+					const shiftMatch = cmd.match(/Shift (row|column) (\d) one space (\w+)/);
+					const cycleMatch = cmd.match(/Cycle card (\d+) (anti)?clockwise/);
+					const swapTwoMatch = cmd.match(/Swap cards (\d+) and (\d+)/);
+					if (swapMatch) { 
+						let store = [ ];
+						let s1 = swapMatch[2] - '1';
+						let s2 = swapMatch[3] - '1';
+						for (let ix = 0; ix < 5; ix++) {
+							if (swapMatch[1] == 'rows') {
+								store.push(module.grid[s1][ix]);
+								module.grid[s1][ix] = module.grid[s2][ix];
+							}
+							else {
+								store.push(module.grid[ix][s1]);
+								module.grid[ix][s1] = module.grid[ix][s2];
+							}
+						}
+						for (let ix = 0; ix < 5; ix++) {
+							if (swapMatch[1] == 'rows')
+								module.grid[s2][ix] = store[ix];
+							else module.grid[ix][s2] = store[ix];
+						}
+					}		
+					else if (shiftMatch) {
+						const digit = shiftMatch[2] - '1';
+						const row = shiftMatch[1] == 'row'
+						let section = [ ];
+						for (let i = 0; i < 5; i++) {
+							if (row) 
+								section.push(module.grid[digit][i]);
+							else section.push(module.grid[i][digit]);
+						}
+						const adder = shiftMatch[3] == 'up' || shiftMatch[3] == 'left' ? 1 : 4;
+						for (let i = 0; i < 5; i++) {
+							if (row)
+								module.grid[digit][i] = section[(i + adder) % 5];
+							else module.grid[i][digit] = section[(i + adder) % 5];
+						}
+					}
+					else if (cycleMatch) {
+						const root = { x: (cycleMatch[1] - '1') % 5, y: Math.floor((cycleMatch[1] - '1') / 5) };
+						const x = root.x;
+						const y = root.y;
+						const order = cycleMatch[2] ? 
+									[ root, { x: y, y: 4 - x }, { x: 4 - x, y: 4 - y }, { x: 4 - y, y: x } ] :
+									[ root, { x: 4 - y, y: x }, { x: 4 - x, y: 4 - y }, { x: y, y: 4 - x } ];
+						let store = [ ];
+						for (let i = 0; i < 4; i++)
+							store.push(module.grid[order[i].y][order[i].x]);
+						for (let i = 0; i < 4; i++) 
+							module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
+					}
+					else if (swapTwoMatch) {
+						let a = { x: (swapTwoMatch[1] - '1') % 5, y: Math.floor((swapTwoMatch[1] - '1') / 5) };
+						let b = { x: (swapTwoMatch[2] - '1') % 5, y: Math.floor((swapTwoMatch[2] - '1') / 5) };
+						let temp = module.grid[b.y][b.x];
+						module.grid[b.y][b.x] = module.grid[a.y][a.x];
+						module.grid[a.y][a.x] = temp;
+					}
+					
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'matchematics',
 		loggingTag: 'Matchematics',
 		matches: [
