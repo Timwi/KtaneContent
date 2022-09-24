@@ -12788,6 +12788,65 @@ let parseData = [
 		]
 	},
 	{
+		loggingTag: "The Witness",
+		moduleID: "thewitness",
+		matches: [
+			{
+				regex: /Generated Puzzle:/,
+				handler: function (_, module) {
+					let syms = readLines(4).map(l => l.replace(/\[The Witness #\d+\] \w\w Symbol: /, ''));
+					
+					let imgs = [ ];
+					for (let row = 0; row < 2; row++){
+						for (let col = 0; col < 2; col++) {
+							let type = syms[2 * row + col].split(' ')[0];
+							let transf = `translate(${100 * col + 15} ${100 * row + 15}) scale(0.7) `;
+							if (type == 'LBlock'){
+								let num = parseInt(syms[2 * row + col].match(/\d+/));
+								transf += `rotate(${num} 50 50) `;
+							}
+							if (type == 'Empty')
+								imgs.push(null);
+							else imgs.push(`<g transform='${transf}'>
+											<image href='img/The Witness/${type}.svg' width='100' height='100'/></g>`);
+						}
+					}
+					
+					let svg = `<svg style='display: block; width: 2in' viewbox='-30 -30 260 260'>
+								<rect x='-30' y='-30' width='260' height='260' fill='#EDB' rx='5' ry='5' />
+								<path d='m0 0h100v100h-100v-100zm100 0h100v100h-100v-100m-100 100h100v100h-100v-100m100 0h100v100h-100v-100zm100 100h20'
+									stroke='#AAA' stroke-width='15' stroke-linejoin='round' stroke-linecap='round' fill='none'/>
+								<circle r='20' fill='#AAA'/>`;
+					for (let i = 0; i < 4; i++)
+						if (imgs[i])
+							svg += imgs[i];
+					
+					module.baseSvg = svg;
+					module.push({ label:'Generated Puzzle:', obj:module.baseSvg + '</svg>' });
+				}
+			},
+			{
+				regex: /(Inputted|Possible solution) line crosses these intersections in reading order: "(.+)"/,
+				handler: function (matches, module) {
+					let nums = matches[2].split(', ').map(d => d - '1').map(num => num = { 
+																				x: 100 * (num % 3), 
+																				y: 100 * Math.floor(num / 3) });
+					let svg = module.baseSvg + "<circle r='20' fill='#004'/>";
+					let path = 'M 0 0';
+					for (let num of nums) 
+						path += ' L ' + num.x + ' ' + num.y;
+					if (nums[nums.length - 1].x == '200' && nums[nums.length - 1].y == '200')
+						path += ' h 20';
+					svg += `<path d='${path}' stroke='#004' stroke-width='15' stroke-linejoin='round' stroke-linecap='round' fill='none'/>`;
+					module.push( { label: matches[1] + ':', obj:svg + '</svg>'} );
+				}
+			},
+			{
+				regex: /That line is/
+			}
+		]
+	},
+	{
 		displayName: "Who's That Monsplode?",
 		moduleID: "monsplodeWho",
 		loggingTag: "Who's that Monsplode?",
