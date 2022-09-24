@@ -6345,6 +6345,119 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "mathem",
+		loggingTag: "Math 'em",
+		matches: [ 
+			{
+				regex: /The arrangement of the tiles is:/,
+				handler: function (_, module) {
+					module.cardBacks = { 'W':'#FFFFFF', 'S':'#AFAFAF', 'G':'#E6C832', 'B':'#C89632' };
+					module.grid = [ ];
+					const nameReplace = { '+':'Plus', '-':'Diff', '^':'Xor', '/':'Mod' };
+					
+					const config = readLines(4).map(l => l.replace(/\[Math 'em #\d+\] /, '').split(' '));
+					for (let row = 0; row < 4; row++) {
+						module.grid.push( [ ] );
+						for (let col = 0; col < 4; col++) {
+							const cell = config[row][col];
+							const suit = nameReplace[cell[1]] ?? cell[1];
+							module.grid[row].push( { color: cell[0], suit: suit, ch: cell[1] } );
+						}
+					}
+					
+					module.makeSvg = function (grid) {
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 105 130'> 
+						<rect x='-5' y='-5' width='105' height='130' fill='#458' rx='5' ry='5'/>`;
+						
+						for (let row = 0; row < 4; row++) {
+							for (let col = 0; col < 4; col++) {
+								const cell = grid[row][col];
+								
+								let group = `<g transform='translate(${25 * col} ${30 * row	})'>`;
+								const fill = module.cardBacks[cell.color];
+								group += `<image href='../HTML/img/Math em/${cell.suit}.svg' width='20' height='30' style='background-color: ${fill}'	/>
+										<rect width='20' height='25' y='2.5' fill='${fill}AA' stroke='#223' stroke-width='1.5'/>
+										<text x='4.5' y='23.5' style='font-size: 8px' fill='#000' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>
+										<text x='15.5' y='7.5' style='font-size: 8px' fill='#000' text-anchor='middle' dominant-baseline='central'>${cell.ch}</text>`;
+								svg += group + '</g>';
+							}
+						}
+						return svg + '</svg>';
+					};
+					
+					module.push({ label: "The arrangement of tiles is:", obj:module.makeSvg(module.grid) });
+					return true;
+				}
+			},
+			{
+				regex: /Swap (rows|columns) (\d) and (\d)/,
+				handler: function (matches, module) {
+					let store = [ ];
+					let s1 = matches[2] - '1';
+					let s2 = matches[3] - '1';
+					for (let ix = 0; ix < 4; ix++) {
+						if (matches[1] == 'rows') {
+							store.push(module.grid[s1][ix]);
+							module.grid[s1][ix] = module.grid[s2][ix];
+						}
+						else {
+							store.push(module.grid[ix][s1]);
+							module.grid[ix][s1] = module.grid[ix][s2];
+						}
+					}
+					for (let ix = 0; ix < 4; ix++) {
+						if (matches[1] == 'rows')
+							module.grid[s2][ix] = store[ix];
+						else module.grid[ix][s2] = store[ix];
+					}
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Shift (row|column) (\d) (\w+)/,
+				handler: function (matches, module) {
+					const digit = matches[2] - '1';
+					const row = matches[1] == 'row'
+					let section = [ ];
+					for (let i = 0; i < 4; i++) {
+						if (row) 
+							section.push(module.grid[digit][i]);
+						else section.push(module.grid[i][digit]);
+					}
+					const adder = matches[3] == 'up' || matches[3] == 'left' ? 1 : 3;
+					for (let i = 0; i < 4; i++) {
+						if (row)
+							module.grid[digit][i] = section[(i + adder) % 4];
+						else module.grid[i][digit] = section[(i + adder) % 4];
+					}
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Cycle tiles ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4])/,
+				handler: function (matches, module) {
+					
+					let order = [ ];
+					let store = [ ];
+					for (let i = 0; i < 4; i++) {
+						order.push( { x: matches[i + 1][1] - '1', y: "ABCD".indexOf(matches[i + 1][0]) } );
+						store.push(module.grid[order[i].y][order[i].x]);
+					}
+					for (let i = 0; i < 4; i++) 
+						module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
+					
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Matrices",
 		moduleID: "MatrixQuiz",
 		loggingTag: "Linear Algebra Matrix Quiz",
