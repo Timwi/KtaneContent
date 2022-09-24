@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>3D迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .heading {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .mazes-table {
+            border: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        .tmaze-row {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+        }
+        .mazes-table div.tmaze-td {
+            padding-left: 2em;
+            padding-right: 2em;
+            padding-top: 1.5em;
+            padding-bottom: 2em;
+            border: none;
+        }
+
+        div.tmaze-outer {
+            border: .7mm solid black;
+            padding: .7mm;
+            line-height: 0;
+            display: inline-block;
+            position: relative;
+        }
+
+        svg.tmaze {
+            border: .7mm solid black;
+            padding: 2mm 3mm 3mm 2mm;
+            width: 60mm;
+        }
+
+        svg.tmaze line {
+            stroke: #000;
+            stroke-width: .3px;
+            stroke-linecap: square;
+        }
+
+        svg.tmaze text.cell {
+            font-size: 14pt;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        svg.tmaze text.x-label {
+            font-size: 9pt;
+            text-anchor: middle;
+        }
+
+        svg.tmaze text.y-label {
+            font-size: 9pt;
+            text-anchor: end;
+        }
+
+        svg.tmaze rect.unique {
+            fill: #FFED21;
+        }
+        .dark svg.tmaze rect.unique {
+            fill: #0012DE;
+        }
+        svg.tmaze rect.ambiguous {
+            fill: #FF8787;
+        }
+        .dark svg.tmaze rect.ambiguous {
+            fill: #781515;
+        }
+
+        .dark table {
+            border: none;
+        }
+        .dark svg.tmaze path, .dark svg.tmaze text {
+            fill: #DDD;
+        }
+        .dark div.tmaze-outer, .dark svg.tmaze {
+            border-color: #DDD;
+        }
+
+        .header {
+            position: absolute;
+            text-align: center;
+            text-decoration: underline;
+            font-weight: bold;
+            font-size: 20px;
+            height: 15px;
+            left: 50%;
+            top: -1em;
+            transform: translateX(-50%);
+        }
+        div.header, svg.tmaze { font-family: 'Special Elite'; }
+    </style>
+    <script>
+        let headers = "ABC|ABD|ABH|ACD|ACH|ADH|BCD|BCH|BDH|CDH".split('|').map(h => `<div class='header'>${h}<`+`/div>`);
+        let WIDTH = 8;
+
+        function setRules(rnd)
+        {
+            let NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
+            let mazeLabels = "ABC,ABD,ABH,ACD,ACH,ADH,BCD,BCH,BDH,CDH".split(',');
+            let tds = document.getElementsByClassName('tmaze-td');
+
+            function neighbor(cell, dir)
+            {
+                switch (dir)
+                {
+                    case NORTH: return { x: cell.x, y: (cell.y + WIDTH - 1) % WIDTH };
+                    case EAST: return { x: (cell.x + 1) % WIDTH, y: cell.y };
+                    case SOUTH: return { x: cell.x, y: (cell.y + 1) % WIDTH };
+                    default: return { x: (cell.x + WIDTH - 1) % WIDTH, y: cell.y };
+                }
+            }
+
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels = mazeLabels[mapIndex];
+                let mapData = [...Array(WIDTH).keys()].map(col => [...Array(WIDTH).keys()].map(cell => ({ label: ' ', n_wall: true, w_wall: true })));
+                let todo = [...Array(WIDTH * WIDTH).keys()].map(ix => ({ x: ix % WIDTH, y: (ix / WIDTH)|0 }));
+                let visited = [];
+                let done = [];
+
+                // Choose a random square to start from
+                let startIx = rnd.next(0, todo.length);
+                visited.push(todo[startIx]);
+                todo.splice(startIx, 1);
+
+                // Generate a maze
+                while (todo.length > 0)
+                {
+                    let cellIx = rnd.next(0, visited.length);
+                    let cell = visited[cellIx];
+
+                    let validWalls = [ NORTH, EAST, SOUTH, WEST ].map(dir => ({ dir: dir, cell: neighbor(cell, dir) })).filter(c => todo.some(t => t.x === c.cell.x && t.y === c.cell.y));
+                    if (validWalls.length == 0)
+                    {
+                        visited.splice(cellIx, 1);
+                        done.push(cell);
+                        continue;
+                    }
+
+                    let wallIx = rnd.next(0, validWalls.length);
+                    let wall = validWalls[wallIx];
+                    switch (wall.dir)
+                    {
+                        case NORTH: mapData[cell.x][cell.y].n_wall = false; break;
+                        case WEST: mapData[cell.x][cell.y].w_wall = false; break;
+                        case SOUTH: mapData[wall.cell.x][wall.cell.y].n_wall = false; break;
+                        default: mapData[wall.cell.x][wall.cell.y].w_wall = false; break;
+                    }
+                    todo = todo.filter(t => t.x !== wall.cell.x || t.y !== wall.cell.y);
+                    visited.push(wall.cell);
+                }
+
+                // Remove 20–35% of the remaining walls to make the maze more spacious
+                let remainingWalls = [];
+                for (let x = 0; x < WIDTH; x++)
+                    for (let y = 0; y < WIDTH; y++)
+                    {
+                        if (mapData[x][y].n_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2);
+                        if (mapData[x][y].w_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2 + 1);
+                    }
+                let percentage = (rnd.nextDouble() * .15) + .2;
+                let removeWalls = (remainingWalls.length * percentage)|0;
+                while (removeWalls > 0)
+                {
+                    let wallIx = rnd.next(0, remainingWalls.length);
+                    let wall = remainingWalls[wallIx];
+                    remainingWalls.splice(wallIx, 1);
+                    let x = (wall >> 1) % WIDTH;
+                    let y = ((wall >> 1) / WIDTH)|0;
+
+                    if (wall % 2 === 1)
+                    {
+                        // Make sure not to remove a wall that would leave an entire row devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(xx => mapData[xx][y].w_wall).length === 1)
+                            continue;
+                        mapData[x][y].w_wall = false;
+                    }
+                    else
+                    {
+                        // Make sure not to remove a wall that would leave an entire column devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(yy => mapData[x][yy].n_wall).length === 1)
+                            continue;
+                        mapData[x][y].n_wall = false;
+                    }
+                    removeWalls--;
+                }
+
+                // Select 33 random cells for the labels (letters and cardinals)
+                done.push(...visited);
+                rnd.shuffleFisherYates(done);
+                // Add the labels (5 of each letter)
+                for (let letterIx = 0; letterIx < labels.length; letterIx++)
+                    for (let i = 0; i < 5; i++)
+                        mapData[done[5 * letterIx + i].x][done[5 * letterIx + i].y].label = labels[letterIx];
+                // Add the 3 asterisks
+                for (let i = 0; i < 3; i++)
+                    mapData[done[30 + i].x][done[30 + i].y].label = '*';
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${headers[mapIndex]}${create2DMazeSvg(
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].n_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].w_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].label).join('')),
+                    false, false, '')}</div>`;
+            }
+
+            let phrases = [
+                "MAZE GAMER",
+                "MAZE TRAVELER",
+                "MAZE CORRIDOR",
+                "MAZE SOJOURNER",
+                "MAZE VOYAGER",
+                "HELP IM LOST",
+                "WINDING MAZE",
+                "TWISTY PASSAGES",
+                "ADVENTURING",
+                "FIND THE EXIT",
+                "WHERES THE EXIT",
+                "GO TO THE EXIT",
+                "FIND THE WALL",
+                "UPON DISCOVERY",
+                "ON A JOURNEY",
+                "SOS WHERE AM I",
+                "SHOW ME AROUND",
+                "I NEED ASSISTANCE",
+                "LABYRINTHIAN",
+                "PATH FINDER",
+                "CARDINAL DIRECTION",
+                "WHAT IS THIS PLACE",
+                "GO IN CIRCLES",
+                "DEAD END",
+                "TURN AROUND"
+            ];
+            let ix = rnd.next(0, phrases.length);
+            let rowPhrase = phrases[ix];
+            document.getElementById('row-phrase').innerText = rowPhrase;
+            document.getElementById('row-phrase-ind').innerText = `点灯していない ${'BOB,CAR,CLR,FRK,FRQ,IND,MSA,NSA,SIG,SND,TRN'.split(',').filter(ind => common(ind, rowPhrase)).join(', ')}`;
+            phrases.splice(ix, 1);
+            let colPhrase = phrases[rnd.next(0, phrases.length)];
+            document.getElementById('col-phrase').innerText = colPhrase;
+            document.getElementById('col-phrase-ind').innerText = `点灯した ${'BOB,CAR,CLR,FRK,FRQ,IND,MSA,NSA,SIG,SND,TRN'.split(',').filter(ind => common(ind, colPhrase)).join(', ')}`;
+
+            makeHighlightCells();
+        }
+
+        function common(letters1, letters2)
+        {
+            for (let i = 0; i < letters1.length; i++)
+                for (let j = 0; j < letters2.length; j++)
+                    if (letters1[i] === letters2[j])
+                        return true;
+            return false;
+        }
+
+        function setDefaultRules()
+        {
+            let tds = document.getElementsByClassName('tmaze-td');
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels, nWalls, wWalls;
+
+                switch (mapIndex)
+                {
+                    // ABC
+                    case 0:
+                        labels = [ "     A  ", " *A    B", "A  B C  ", " C  *  B", "    A   ", " B C  B ", "* C     ", "    A C " ];
+                        nWalls = [ "11000110", "00001000", "01011100", "00100011", "10011001", "00000100", "00110010", "11000001" ];
+                        wWalls = [ "10101001", "10100100", "00010001", "01010110", "01010001", "01100100", "01001101", "00101100" ];
+                        break;
+
+                    // ABD
+                    case 1:
+                        labels = [ "A  B  A*", "  D     ", "     D B", " A B    ", "  *   A ", "D   A   ", "  B  D  ", " D  *  B" ];
+                        nWalls = [ "10100011", "01100100", "00011010", "00100000", "11100110", "00010100", "10100001", "00011000" ];
+                        wWalls = [ "10000010", "11000100", "00010001", "01000100", "10010001", "00010100", "01000101", "00010100" ];
+                        break;
+
+                    // ABH
+                    case 2:
+                        labels = [ "B    A H", "* H     ", "B   B   ", "    * HA", " A H    ", "    A B ", " B   *  ", "A  H    " ];
+                        nWalls = [ "11101011", "01011000", "10001101", "01010000", "00001000", "00110100", "00101110", "01100000" ];
+                        wWalls = [ "10010000", "01000001", "00110011", "11010101", "11010010", "11100000", "00010101", "00000001" ];
+                        break;
+
+                    // ACD
+                    case 3:
+                        labels = [ "D       ", "  C D* C", " *   C  ", " A      ", "D  C D  ", "  A  * A", "   A  D ", "A    C  " ];
+                        nWalls = [ "10111011", "01100110", "00000111", "01000000", "11101110", "01100100", "00010110", "01101100" ];
+                        wWalls = [ "00001000", "11001100", "01110010", "10011001", "10001001", "01100101", "01010000", "10000010" ];
+                        break;
+
+                    // ACH
+                    case 4:
+                        labels = [ "H C   A ", "*   H   ", "      *C", " A   H  ", "C H C A ", " *     A", "   C H  ", "  A     " ];
+                        nWalls = [ "00111100", "11010000", "01100110", "00000000", "01000100", "00000001", "11100010", "01011011" ];
+                        wWalls = [ "10000110", "10010001", "01010101", "10000001", "11000000", "01010101", "10010000", "01000010" ];
+                        break;
+
+                    // ADH
+                    case 5:
+                        labels = [ "D D  *  ", "    H  A", " *H   A ", "A  D    ", "    HD  ", "* H    A", "D       ", "   A H  " ];
+                        nWalls = [ "01110101", "00001110", "00000111", "01001100", "00110101", "11100000", "01100000", "11001000" ];
+                        wWalls = [ "10100100", "11110000", "11011000", "01110000", "10000101", "10001110", "00011111", "10000101" ];
+                        break;
+
+                    // BCD
+                    case 6:
+                        labels = [ "     B  ", "C D   * ", " * B  C ", " C    B ", "    C  D", "B    D  ", " C  * D ", "D  B    " ];
+                        nWalls = [ "01011110", "01101011", "01100100", "10000111", "10110011", "10011001", "01100010", "10111001" ];
+                        wWalls = [ "10010000", "00001010", "11101000", "00001000", "00100010", "00010001", "00000110", "00100001" ];
+                        break;
+
+                    // BCH
+                    case 7:
+                        labels = [ "C   H   ", "  C    H", "  * B   ", "B  H*   ", " H   B C", "   *    ", "  B C   ", " C   H B" ];
+                        nWalls = [ "10110011", "01010111", "10101100", "00000110", "01111110", "00100010", "10010100", "00000110" ];
+                        wWalls = [ "10000100", "01001000", "01111001", "10001000", "10001000", "01101101", "01101001", "00010010" ];
+                        break;
+
+                    // BDH
+                    case 8:
+                        labels = [ "  D B  H", "   *  D ", "  H *  B", "D    B  ", "    D  H", "  B     ", "   H  H*", "D    B  " ];
+                        nWalls = [ "00100001", "00010001", "11011000", "11011011", "00010011", "10000000", "01101100", "01001111" ];
+                        wWalls = [ "01101000", "11010111", "00000110", "00100000", "00110100", "10001110", "11000000", "00011010" ];
+                        break;
+
+                    // CDH
+                    default:
+                        labels = [ "  H  D  ", "    C*  ", "   H   D", "H    D  ", "  C     ", "C  D C H", "*D  H * ", "       C" ];
+                        nWalls = [ "01011010", "00100100", "00000000", "01000010", "01000010", "01100110", "01011010", "10100101" ];
+                        wWalls = [ "11001001", "11110111", "00100010", "00011100", "10011100", "10001000", "11000001", "00101010" ];
+                        break;
+                }
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${headers[mapIndex]}${create2DMazeSvg(
+                    nWalls.map(row => row.split('').map(ch => ch === '1')),
+                    wWalls.map(row => row.split('').map(ch => ch === '1')),
+                    labels, false, false, '')}</div>`;
+            }
+            document.getElementById('col-phrase').innerText = 'HELP IM LOST';
+            document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
+        }
+
+        function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
+        {
+            let ySize = nWalls.length;
+            let xSize = nWalls[0].length;
+
+            function n(x, y) { return frame && y % ySize == 0 ? true : nWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+            function w(x, y) { return frame && x % xSize == 0 ? true : wWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+
+            function isCell(x, y) { return x % 2 != 0 && y % 2 != 0; }
+            function isOn(x, y) {
+                return (x % 2 == 0)
+                    ? (y % 2 == 0)
+                        ? (x != 0 && n((x >> 1) - 1, y >> 1)) || (x != xSize * 2 && n(x >> 1, y >> 1)) || (y != 0 && w(x >> 1, (y >> 1) - 1)) || (y != ySize * 2 && w(x >> 1, y >> 1))
+                        : w(x >> 1, y >> 1)
+                    : (y % 2 == 0)
+                        ? n(x >> 1, y >> 1)
+                        : false;
+            }
+
+            function getX(gridX) { return (gridX >> 1) * 25 + (gridX % 2) * 5; }
+            function getY(gridY) { return (gridY >> 1) * 25 + (gridY % 2) * 5; }
+            function getCoord(p) { return `${getX(p.X)},${getY(p.Y)}`; }
+
+            function corridorsSvg()
+            {
+                let lines = {};
+                for (let x = 0; x < WIDTH; x++)
+                    for (let y = 0; y < WIDTH; y++)
+                        if (w(x, y))
+                        {
+                            let markings = "";
+                            let startX = x;
+                            let endX = x;
+                            do
+                            {
+                                let c = labels[y][endX % WIDTH];
+                                markings += c === '*' ? ' ' : c;
+                                endX++;
+                            }
+                            while (!w(endX, y));
+                            if (markings.split('').filter(ch => ch !== ' ').length >= 2)
+                            {
+                                let rect = `<rect clip-path='url(#mainmaze)' x='${startX * 25 + 8}' y='${y * 25 + 8}' width='${(endX - startX) * 25 - 11}' height='14' rx='5' ry='5' class='<<#>>' />`;
+                                if (endX > WIDTH)
+                                    rect += `<rect clip-path='url(#mainmaze)' x='${(startX - 8) * 25 + 8}' y='${y * 25 + 8}' width='${(endX - startX) * 25 - 11}' height='14' rx='5' ry='5' class='<<#>>' />`;
+                                if (!(markings in lines))
+                                    lines[markings] = [];
+                                lines[markings].push(rect);
+                            }
+                        }
+                for (let x = 0; x < WIDTH; x++)
+                    for (let y = 0; y < WIDTH; y++)
+                        if (n(x, y))
+                        {
+                            let markings = "";
+                            let startY = y;
+                            let endY = y;
+                            do
+                            {
+                                let c = labels[endY % WIDTH][x];
+                                markings += c === '*' ? ' ' : c;
+                                endY++;
+                            }
+                            while (!n(x, endY));
+                            if (markings.split('').filter(ch => ch !== ' ').length >= 2)
+                            {
+                                let rect = `<rect clip-path='url(#mainmaze)' x='${x * 25 + 8}' y='${startY * 25 + 8}' width='14' height='${(endY - startY) * 25 - 11}' rx='5' ry='5' class='<<#>>' />`;
+                                if (endY > WIDTH)
+                                    rect += `<rect clip-path='url(#mainmaze)' x='${x * 25 + 8}' y='${(startY - 8) * 25 + 8}' width='14' height='${(endY - startY) * 25 - 11}' rx='5' ry='5' class='<<#>>' />`;
+                                if (!(markings in lines))
+                                    lines[markings] = [];
+                                lines[markings].push(rect);
+                            }
+                        }
+
+                let str = '';
+                for (let key of Object.keys(lines))
+                    for (let i = 0; i < lines[key].length; i++)
+                        str += lines[key][i].replace(/<<#>>/g, lines[key].length > 1 || (key.split('').reverse().join('') in lines) ? 'ambiguous' : 'unique');
+                return str;
+            }
+
+            let offset = omitAxes ? 0 : 14;
+            return `<svg viewBox='${-offset} ${-offset} ${25 * xSize + 5 + offset} ${25 * ySize + 5 + offset}' class='tmaze'>${
+                extra +
+                // For the “lines” below
+                (labels === '' || `<defs><clipPath id='mainmaze'><rect x='0' y='0' width='${25 * xSize + 5}' height='${25 * ySize + 5}' /></clipPath></defs>`) +
+                // Polygons
+                `<path d='${BoolsToPaths([...Array(2 * xSize + 1).keys()].map(x => [...Array(2 * ySize + 1).keys()].map(y => isOn(x, y)))).map(poly => poly.map((p, ix) => (ix === 0 ? "M" : ix === 1 ? "L" : "") + getCoord(p)).join(" ") + "z").join(" ")}' />` +
+                // “Lines”
+                (labels === '' || corridorsSvg()) +
+                // Column headers
+                (omitAxes ? '' : [...Array(xSize).keys()].map(colIx => `<text x='${colIx * 25 + 15}' y='-4' class='x-label'>${colIx}</text>`).join('')) +
+                // Row headers
+                (omitAxes ? '' : [...Array(ySize).keys()].map(rowIx => `<text x='-4' y='${rowIx * 25 + 20}' class='y-label'>${rowIx}</text>`).join('')) +
+                // Text objects
+                (labels === null ? '' : [...Array(8).keys()].map(rowIx =>
+                    [...Array(8).keys()].map(colIx =>
+                        labels[rowIx][colIx] !== ' ' ? `<text class='cell' x='${25 * colIx + 15}' y='${25 * rowIx + (labels[rowIx][colIx] === '*' ? 25 : 22)}'>${labels[rowIx][colIx]}</text>` : '')
+                        .join(''))
+                    .join(''))
+            }</svg>`;
+        }
+
+        function BoolsToPaths(input)
+        {
+            let width = input.length;
+            let height = input[0].length;
+
+            let results = [];
+            let visitedUpArrow = [...Array(width).keys()].map(col => [...Array(height).keys()].map(row => false));
+
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                    // every region must have at least one up arrow (left edge)
+                    if (!visitedUpArrow[i][j] && get(input, i, j) && !get(input, i - 1, j))
+                        results.push(tracePolygon(input, i, j, visitedUpArrow));
+
+            return results;
+        }
+
+        function get(arr, i, j)
+        {
+            return i < 0 || i >= arr.length ? false :
+                   j < 0 || j >= arr[i].length ? false : arr[i][j];
+        }
+
+        let Up = 0, Down = 1, Left = 2, Right = 3;
+
+        function tracePolygon(input, i, j, visitedUpArrow)
+        {
+            let result = [];
+            let dir = Up;
+
+            while (true)
+            {
+                // In each iteration of this loop, we move from the current edge to the next one.
+                // We have to prioritise right-turns so that the diagonal-adjacent case is handled correctly.
+                // Every time we take a 90° turn, we add the corner coordinate to the result list.
+                // When we get back to the original edge, the polygon is complete.
+                switch (dir)
+                {
+                    case Up:
+                        // If we’re back at the beginning, we’re done with this polygon
+                        if (visitedUpArrow[i][j])
+                            return result;
+
+                        visitedUpArrow[i][j] = true;
+
+                        if (!get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        else if (get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else
+                            j--;
+                        break;
+
+                    case Down:
+                        j++;
+                        if (!get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else if (get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        break;
+
+                    case Left:
+                        if (!get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        else if (get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else
+                            i--;
+                        break;
+
+                    case Right:
+                        i++;
+                        if (!get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else if (get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        break;
+                }
+            }
+        }
+
+        function makeHighlightCells() {
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = MakeSvgElem("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3D迷路</span>
+        </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+                <h2>モジュール詳細：3D迷路</h2>
+
+            <p class="flavour-text">あなたはどこも同じような見た目の、曲がりくねった通路の迷路にいる。 出口は北に、南に、東に、西に行ったところにある。
+
+            <ul>
+                <li>処理担当者は以下の10の迷路のうちの一つからランダムな場所･方向で開始する。
+                <li>迷路の壁の3次元ビューを利用して現在地を特定する。 ビューは現在の場所の床にある文字と、1ステップ先の場所に文字が存在するかどうかを表示する。
+                <li>迷路は循環する。つまり、端から外れると処理担当者は迷路の反対側の場所に辿り着く。(ただし、間に壁がないときに限る。)
+                <li>壁のうち一つがゴールである。その他の壁に向かって移動するとミスが記録される。
+                <li>モジュールを解除するには、ゴールを特定し、いずれかの方向からゴールの壁に向かって移動する必要がある。
+                <li>次の方法を利用して、段(0-7)と列(0-7)と方向を計算する。ゴールはその位置から見てその方向にある最初の壁である。
+            </ul>
+
+            <p class='heading'>段:
+            <ul>
+                <li>シリアルナンバーの<strong>最初の数字</strong>から開始する。
+                <li><strong id='row-phrase-ind'>点灯していないCAR, CLR, FRK, FRQ, MSA, NSA, SIG, TRN</strong>(<span id='row-phrase'>MAZE GAMER</span>)一つに付き1を加算する。
+                <li>数字が7を超える場合、8を減算する。
+            </ul>
+
+            <p class='heading'>列:
+            <ul>
+                <li>シリアルナンバーの<strong>最後の数字</strong>から開始する。
+                <li><strong id='col-phrase-ind'>点灯したBOB, CLR, IND, MSA, NLL, NSA, SIG, SND, TRN</strong>(<span id='col-phrase'>HELP IM LOST</span>)一つに付き1を加算する。
+                <li>数字が7を超える場合、8を減算する。
+            </ul>
+
+            <p class='heading'>方角:
+            <ul>
+                <li>それぞれの迷路には3つの星マークが記されている。
+                <li>それぞれのマークの場所には文字が書いており、ゴールの壁の方向を示している。Nは北、Sは南、Eは東、Wは西である。
+                <li>マークの書いていない場所の文字には注意せよ。それらはおとりの命令である。
+            </ul>
+        </div>
+        <div class="page-footer relative-footer">ページ 1/3</div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3D迷路</span>
+            </div>
+            <div class="page-content">
+
+<!-- ##[## -->
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
+<!-- ##]## -->
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3D迷路</span>
+            </div>
+            <div class="page-content">
+<!-- ###[### -->
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
+<!-- ###]### -->
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

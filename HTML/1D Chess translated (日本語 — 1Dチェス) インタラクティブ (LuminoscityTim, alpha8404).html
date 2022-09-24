@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>1Dチェス — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            var pieces = [
+                "wtk", "wtq", "wtn", "wtb", "wtr", "wtp",
+                "bkk", "bkq", "bkn", "bkb", "bkr", "bkp"
+            ]
+            var selected = "";
+            var toMove = 0;
+            var start;
+            let saveStates = [];
+            let currentState = 0;
+            let movesNumber = $(".movesnumber");
+            var movesLeft = 6;
+
+            $(document).click(function() {
+                $(".movesnumber").removeClass("selected");
+                start = null;
+            }).keydown(function(event) {
+                if (!(event.altKey || event.ctrlKey || event.shiftKey)) {
+                    let k = event.key.toLowerCase();
+                    if (k == "m") {
+                        movesNumber.addClass("selected");
+                    } else if (movesNumber.hasClass("selected")) {
+                        var n = parseInt(event.key);
+                        if (n >= 0) {
+                            movesLeft = n;
+                            movesNumber.text(n)
+                            $(".movesnumber").removeClass("selected");
+                        }
+                    }
+                }
+            });
+
+            $(".movestext.minus").click(function() {
+                movesLeft = Math.max(0, movesLeft - 1);
+                movesNumber.text(movesLeft);
+            });
+            $(".movestext.plus").click(function() {
+                movesLeft = Math.min(99, movesLeft + 1);
+                movesNumber.text(movesLeft);
+            });
+
+            var row;
+            var chessboard = $(".chessboard");
+            let y = 1;
+            var squares = 11;
+
+            // Initially based on code from Samfundev's Chess interactive
+            row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+            for (var i = 0; i < squares; i++) {
+                $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
+                    $(this).addClass(`label${i+1}`);
+                });
+            }
+            row = $("<div>").addClass("chess-row").appendTo(chessboard);
+            for (let x = 0; x < squares; x++) {
+                $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "white" : "green")).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                    $(this).addClass(`square${x + 1}`);
+
+                    element.mouseup(function(event) {
+                        if (start) { // Just in case.
+                            var changed = [];
+                            var a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                if (selected == "moving") {
+                                    changed.push([x, a]);
+                                    if (a != b) { changed.push([x, b]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([x, i]);
+                                    }
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                if (selected == "moving") {
+                                    changed.push([a, y]);
+                                    if (a != b) { changed.push([b, y]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([i, y]);
+                                    }
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                var dist = Math.abs(start[0] - x);
+                                var dirx = (start[0] < x) ? 1 : -1;
+                                var diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+
+                            if (changed.length > 0) {
+                                var from = chessboard.children().eq(start[1]).children().eq(start[0]);
+                                var first = from.hasClass("occupied");
+                                let toMove = hasWhichPieceClass(from);
+                                changed.forEach(function(pos) {
+                                    var elm = chessboard.children().eq(pos[1]).children().eq(pos[0]);
+                                    if (selected == "marking") {
+                                        if (changed.length == 1) {
+                                            elm.toggleClass("occupied");
+                                        } else {
+                                            elm.toggleClass("occupied", !first);
+                                        }
+                                    } else if (selected == "moving") {
+                                        if (changed.length > 1) {
+                                            if (pos[0] == start[0] && pos[1] == start[1]) {
+                                                removePieceClass(elm);
+                                            } else {
+                                                removePieceClass(elm);
+                                                elm.addClass(pieces[toMove]);
+                                            }
+                                        }
+                                    } else if (changed.length == 1) {
+                                        var whichPiece = hasWhichPieceClass(elm);
+                                        if (whichPiece >= 0) {
+                                            elm.removeClass(pieces[whichPiece]);
+                                            if (pieces[whichPiece] != selected) {
+                                                elm.addClass(selected);
+                                            }
+                                        } else {
+                                            elm.addClass(selected);
+                                        }
+                                    }
+                                });
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+
+                    if (x === 0) {
+                        element.css("border-left-width", "2px");
+                    } else if (x == (squares - 1)) {
+                        element.addClass("last-square");
+                    }
+
+                    element.css("border-top-width", "2px");
+                    element.parent().addClass("extra-height");
+                    element.css("border-bottom-width", "2px");
+                });
+            }
+
+            function removePieceClass(elem) {
+                pieces.forEach(function(val) {
+                    elem.removeClass(val);
+                });
+            }
+
+            function hasWhichPieceClass(elem) {
+                for (let i = 0; i < pieces.length; i++) {
+                    if (elem.hasClass(pieces[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            var chesspieces1 = $(".chess-pieces.r1");
+            var chesspieces2 = $(".chess-pieces.r2");
+            for (let i = 0; i < pieces.length; i++) {
+                 $("<div>").addClass("piece square").appendTo(i < 6 ? chesspieces1 : chesspieces2).click(function() {
+                    $(".piece").removeClass("selected");
+                    $(this).addClass("selected");
+                    selected = pieces[i];
+                }).addClass(pieces[i]);
+            }
+            $(".wtk").click();
+            $("<div>").addClass("piece square").css("background-color", "rgba(255, 105, 105, 1)").appendTo(chesspieces1).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "marking";
+            });
+            $("<div>").addClass("piece square move").text("Move").appendTo(chesspieces2).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "moving";
+            });
+
+            $(".reset-board").click(function() {
+                $(".green.square, .white.square").each(function(_, e) {
+                    removePieceClass($(e));
+                }).removeClass("occupied");
+            });
+
+            $(".reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $(".reset-all").click(function() {
+                $(".green.square, .white.square").each(function(_, e) {
+                    removePieceClass($(e));
+                }).removeClass("occupied");
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+                movesLeft = 6;
+                movesNumber.text(movesLeft);
+            });
+
+            $(".spacesButton").click(function() {
+                if ($(".square8").hasClass("last-square")) {
+                    $(".square8").toggleClass("last-square");
+                    $(".square11").toggleClass("last-square");
+                    for (let i = 9; i <= 11; i++) {
+                        $(`.square${i}`).removeClass("invisible");
+                        $(`.label${i}`).removeClass("invisible");
+                    }
+                    $(this).toggleClass('squares8');
+                    $(this).toggleClass('squares11');
+                } else {
+                    for (let s = 8; s <= 10; s++) {
+                        if ($(`.square${s+1}`).hasClass("last-square")) {
+                            $(`.square${s+1}`).toggleClass("invisible");
+                            $(`.label${s+1}`).toggleClass("invisible");
+                            for (let i = s; i <= (s+1); i++) { $(`.square${i}`).toggleClass("last-square"); }
+                            $(this).toggleClass(`squares${s}`);
+                            $(this).toggleClass(`squares${s+1}`);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($(".chessboard .square")).map(x => $(x)).map(x => x.attr("class") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                let m = movesLeft;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(".chessboard .square").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                    movesLeft = m;
+                    movesNumber.text(m);
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+        .chess-row.extra-height {
+            height: 62px;
+        }
+
+        .chess-pieces {
+            margin-left: 60px;
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            text-align: center;
+            border: black 0px solid;
+            cursor: default;
+            font-family: 'Special Elite';
+        }
+
+        .last-square {
+            border-right-width: 2px;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+
+        .move {
+            border: 1px solid black;
+        }
+        .move, .movestext {
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        .movestext {
+            padding-top: 8px;
+        }
+        .movesnumber {
+            font-size: 35px;
+            height: 30px;
+            width: 42px;
+            position: relative;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+            font-family: 'Special Elite';
+        }
+        .movesnumber.selected {
+            background-color: rgba(0, 0, 255, 0.4);
+        }
+        .movestext.label {
+            padding-left: 50px;
+        }
+
+        @media screen and (max-width: 600px) {
+            .chess-row, .chess-pieces {
+                height: 40px;
+            }
+            .chess-row.extra-height {
+                height: 42px;
+            }
+            .chess-row.letters {
+                margin-left: 2px;
+
+            }
+
+            .square {
+                width: 40px;
+                height: 40px;
+                font-size: 40px;
+
+            }
+            .move {
+                font-size: 15px;
+            }
+        }
+
+        .white.square, .green.square {
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .green {
+            background-color: #008000;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .white.occupied {
+            background-color: rgba(255, 105, 105, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .green.occupied {
+            background-color: rgba(150, 0, 0, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+
+        .dark .piece {
+            border-color: white;
+        }
+
+        .bkk { background-image: url("img/1D%20Chess/bk.svg"); }
+        .bkq { background-image: url("img/1D%20Chess/bq.svg"); }
+        .bkn { background-image: url("img/1D%20Chess/bn.svg"); }
+        .bkb { background-image: url("img/1D%20Chess/bb.svg"); }
+        .bkr { background-image: url("img/1D%20Chess/br.svg"); }
+        .bkp { background-image: url("img/1D%20Chess/bp.svg"); }
+        .wtk { background-image: url("img/1D%20Chess/wk.svg"); }
+        .wtq { background-image: url("img/1D%20Chess/wq.svg"); }
+        .wtn { background-image: url("img/1D%20Chess/wn.svg"); }
+        .wtb { background-image: url("img/1D%20Chess/wb.svg"); }
+        .wtr { background-image: url("img/1D%20Chess/wr.svg"); }
+        .wtp { background-image: url("img/1D%20Chess/wp.svg"); }
+        .bkk, .bkq, .bkn, .bkb, .bkr, .bkp, .wtk, .wtq, .wtn, .wtb, .wtr, .wtp {
+            background-size: contain;
+        }
+
+        .gridholder {
+            height: 130px;
+            width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+
+        }
+        .stampholder {
+            height: 120px;
+            width: 580px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-board, button.reset-all {
+            padding: 10px 20px;
+        }
+        button.spacesButton.squares8:before {
+            content: '8 ';
+        }
+        button.spacesButton.squares9:before {
+            content: '9 ';
+        }
+        button.spacesButton.squares10:before {
+            content: '10 ';
+        }
+        button.spacesButton.squares11:before {
+            content: '11 ';
+        }
+        button.spacesButton {
+            min-width: 30mm;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+        .movesholder {
+            height: 42px;
+        }
+        .movesholder {
+            display: flex;
+            flex-direction: row;
+        }
+
+        table.chess h4 {
+            margin: 0;
+        }
+        table.chess p {
+            margin: 0;
+        }
+        li {
+            margin-bottom: 16px;
+        }
+
+        .table-piece {
+            width: 36px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">1Dチェス</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/1D Chess.svg" class="diagram">
+                <h2>モジュール詳細：1Dチェス</h2>
+                <p class="flavour-text">何をするにしても、<u><strong>慌てる必要はない</strong></u>。</p>
+
+                <p>モジュールには、8～11個のタイルと、木製の黒板がある。爆弾が起動するとパズルを作成しようとする。しばらく時間がかかる場合がある。</p>
+
+                <p>有効なパズルが作成されると、黒板は「Mate in #」と表示する。#は移動の制限数である。
+                </p>
+
+                <p>モジュールを解除するには、CPUを<u><strong>負かす</strong></u>必要がある。黒板で指定された回数内でチェックメイトできない、または試合が負け／引き分けになるとミスが記録され、モジュールがリセットされる。</p>
+
+                <h3>ゲームルール</h3>
+
+                <ul>
+                    <li>
+                        4～8個のチェスの駒は白と黒に分けられる。試合は左から右に8～11の正方形の1次元ボードで行われる。コーナーは直線として扱う。
+                    </li>
+                    <li>
+                        王が攻撃されると「チェック」となる。チェックされたプレイヤーはこの状態から脱する必要がある。プレイヤーは自分自身をチェックすることはできない。
+
+                    </li>
+                    <li>
+                        1Dチェスの試合に勝つには、対戦相手をチェックメイトさせる必要がある。チェックメイトでは、対戦相手はチェック状態であり、その状態から脱することができない事を指す。
+                        <ul>
+                            <li>チェックではないが、プレイヤーまたは対戦相手が動くことができない状態になると<i>膠着状態</i>
+                            となり、引き分けとなる。
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <table>
+                    <tr>
+                        <th>名前</th>
+                        <th>アイコン</th>
+                        <th>動き</th>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「K」</strong></u>キング</td>
+                        <td><img src="img/1D Chess/bk.svg" class="piece" title="King"></td>
+                        <td>前後に1スペース</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「N」</strong></u>ナイト</td>
+                        <td><img src="img/1D Chess/bn.svg" class="piece" title="Knight"></td>
+                        <td>前後に２スペース／別の駒を飛び越えられる</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「P」</strong></u>ポーン</td>
+                        <td><img src="img/1D Chess/bp.svg" class="piece" title="Pawn"></td>
+                        <td>前方(対戦相手の王の方向)に1～２スペース</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「B」</strong></u>ビショップ</td>
+                        <td><img src="img/1D Chess/bb.svg" class="piece" title="Bishop"></td>
+                        <td>前後に<u><strong>偶数</strong></u>分のスペース</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「R」</strong></u>ルーク</td>
+                        <td><img src="img/1D Chess/br.svg" class="piece" title="Rook"></td>
+                        <td>前後に<u><strong>奇数</strong></u>分のスペース</td>
+                    </tr>
+                    <tr>
+                        <td><u><strong>「Q」</strong></u>クイーン</td>
+                        <td><img src="img/1D Chess/bq.svg" class="piece" title="Queen"></td>
+                        <td>前後に任意のスペース</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">1Dチェス</span>
+            </div>
+            <div class="page-content">
+                <div class="movesholder">
+                    <button class="spacesButton squares11">マス</button>
+                    <div class="movestext label">残り移動回数:</div>
+                    <div class="movestext movesnumber">6</div>
+
+                    <button class="movestext minus">-</button>
+                    <button class="movestext plus">+</button>
+                </div>
+                <div class="gridholder"><div class="chessboard"></div></div>
+                <div class="stampholder">
+                    <div class="chess-pieces r1"></div>
+                    <div class="chess-pieces r2"></div>
+                </div>
+                <br>
+                <div class="saves buttons">
+                    <button class="save">保存</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-all">全てリセット</button>
+                    <button class="reset-saves">保存データ削除</button>
+                    <button class="reset-board">現在の盤面を削除</button>
+                </div>
+                <h3>チェス盤面</h3>
+                <p>上の盤面をチェス盤として使用する。</p>
+                <p>チェス盤の下にあるツールの1つを選択し、チェス盤をクリックしてツールを使用する。
+                <br>
+                チェスの駒ツールは、そのセルに駒を配置する。
+                <br>
+                マーカーツールは、そのセルをマークする。
+                <br>
+                マーカーツールをドラッグすることで、複数のセルをマークできる。
+                <br>
+                <b>Move</b>ツールは、配置済みの駒をドラッグすることで別のセルに移動できる。
+                <br>
+                +と-を使用して残り移動回数を調整できる。
+                <br>
+                セルの数の調整や、盤面の状態の保存、盤面のリセット、保存の削除、全てのリセット等もできる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
