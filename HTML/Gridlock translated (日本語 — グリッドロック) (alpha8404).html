@@ -9,10 +9,49 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const rotation = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
+        const direction = (
+            "SW NE S E "+
+            "SW N W NW "+
+            "N NW S W "+
+            "NE SE SE E "+
+
+            "W SW N NW "+
+            "N S NW W "+
+            "SE E NE SE "+
+            "E S NE SW "+
+
+            "E S NE SW "+
+            "W SW N NW "+
+            "N S NW W "+
+            "SE E NE SE "+
+
+            "W N S NW "+
+            "SE SE E NE "+
+            "SW E S NE "+
+            "NW W SW N "+
+
+            "N NW W SW "+
+            "NW W N S "+
+            "NE SE SE E "+
+            "NE SW E S"
+        ).split(" ");
+        let cells = $("table.gridlock-1 tr:nth-child(n+2) th");
+        cells.each(function(i, e) {
+            let svg = MakeSvgTag(100,100,0,0, { class:"arrow" });
+            let arrow = MakeArrow(rotation[ direction[i] ], 100,50,50, "thin-v", "thin");
+            svg.append(arrow);
+            $(this).append(svg);
+        });
+    });
+    </script>
     <style>
-        li {
-            margin: .5em 0;
-        }
+        li { margin: .5em 0; }
+        .dark table, table { border: none; }
 
         table.gridlock-1 {
             margin: 1em auto;
@@ -21,10 +60,14 @@
             table.gridlock-1 td, table.gridlock-1 th {
                 text-align: center;
             }
-
+            table.gridlock-1 tr:nth-child(n+2) th {
+                padding: 6px 3px 0;
+            }
         table.gridlock-2 {
             margin: 1.5em auto;
         }
+        svg.arrow { height: 30px; }
+        .dark svg .arrow-hs { fill: #DDD; }
     </style>
 </head>
 <body>
@@ -40,23 +83,23 @@
                 <p class="flavour-text">渋滞もこんなに行ったり来たりしない。</p>
 
                 <ul>
-                    <li>４×４のグリッドが表示され、セルは色や図形等でマークされている。
-                    <li>開始位置は☆のセルである。
-                    <li>下記の表を使用し、色と図形を使用して次に進む方向を決定する。
-                    <li>次の位置は、現在地のセルから矢印方向に１つ進んだセルになる。
-                    <li>下のボタン<em>「NEXT」</em>を押す。これにより、次のグリッドを表示させることが出来る。
+                    <li>４×４のグリッドが表示され、セルは色や図形等でマークされている。</li>
+                    <li>開始位置は☆のセルである。</li>
+                    <li>下記の表を使用し、色と図形を使用して次に進む方向を決定する。</li>
+                    <li>次の位置は、現在地のセルから矢印方向に１つ進んだセルになる。</li>
+                    <li>下のボタン<em>「NEXT」</em>を押す。これにより、次のグリッドを表示させることが出来る。</li>
                     <li>以降は、次のルールを使用してセル間を移動する:
                     <ul>
-                        <li>現在のセルに矢印がある場合、その方向に進む。
-                        <li>現在のセルに色と図形がある場合、以下の表で決定した方向に進んだ後、「NEXT」を押して移動する。
-                        <li>現在のセルが空白の場合、以下の左上に色の名前が書かれた表を使用し、一番最後に利用した色のついたセルの色と現在地の座標に基づいて矢印を特定し、その方向に進む。
-                    </ul>
-                    <li>いずれかの時点で以前に訪れたセルに来た場合、そのセルからもう一度同じ方向に進み、一度も訪れたことがないセルに行くまで繰り返す。
-                    <li>グリッドはループする仕様を持っており、壁を通過した場合は反対側に移動する。一番上の段から上方向に行く場合、同じ列の一番下に移動し、一番下の段から下方向に行く場合、同じ列の一番上に移動する。左右や斜めにグリッドをはみ出してしまう場合も同様である(例: 左上の角から右上に移動する場合、4段2列のセルに移動する。)
-                    <li>指定された方向が全て訪れたセルの場合、グリッドロックが発生している。
-                    <li>その方向を指定したセル(一番最後に訪れたセル)が回答になる。そのセルを押してモジュールを解除する。
-                    <li>間違ったセルを押すとミスが記録され、モジュールが初期状態に戻る。
-                    <li>モジュールの右下の番号は、モジュールが現在表示しているグリッドの記号のページを表している。場合によっては、同じページを複数回利用する必要があることがある。
+                        <li>現在のセルに矢印がある場合、その方向に進む。</li>
+                        <li>現在のセルに色と図形がある場合、以下の表で決定した方向に進んだ後、「NEXT」を押して移動する。</li>
+                        <li>現在のセルが空白の場合、以下の左上に色の名前が書かれた表を使用し、一番最後に利用した色のついたセルの色と現在地の座標に基づいて矢印を特定し、その方向に進む。</li>
+                    </ul></li>
+                    <li>いずれかの時点で以前に訪れたセルに来た場合、そのセルからもう一度同じ方向に進み、一度も訪れたことがないセルに行くまで繰り返す。</li>
+                    <li>グリッドはループする仕様を持っており、壁を通過した場合は反対側に移動する。一番上の段から上方向に行く場合、同じ列の一番下に移動し、一番下の段から下方向に行く場合、同じ列の一番上に移動する。左右や斜めにグリッドをはみ出してしまう場合も同様である(例: 左上の角から右上に移動する場合、4段2列のセルに移動する。)</li>
+                    <li>指定された方向が全て訪れたセルの場合、グリッドロックが発生している。</li>
+                    <li>その方向を指定したセル(一番最後に訪れたセル)が回答になる。そのセルを押してモジュールを解除する。</li>
+                    <li>間違ったセルを押すとミスが記録され、モジュールが初期状態に戻る。</li>
+                    <li>モジュールの右下の番号は、モジュールが現在表示しているグリッドの記号のページを表している。場合によっては、同じページを複数回利用する必要があることがある。</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">ページ 1/2</div>
@@ -69,149 +112,51 @@
             <div class="page-content">
 
                 <table class='gridlock-1'>
-                <tr><th>図形／色
-                    <th>青
-                    <th>緑
-                    <th>黄
-                    <th>赤
-                <tr><td>△
-                    <td>↙
-                    <td>↗
-                    <td>↓
-                    <td>→
-                <tr><td>◇
-                    <td>↙
-                    <td>↑
-                    <td>←
-                    <td>↖
-                <tr><td>⎔
-                    <td>↑
-                    <td>↖
-                    <td>↓
-                    <td>←
-                <tr><td>☆
-                    <td>↗
-                    <td>↘
-                    <td>↘
-                    <td>→
+                    <tr><th>図形／色</th><th>青</th><th>緑</th><th>黄</th><th>赤</th></tr>
+                    <tr><td>△</td><th></th><th></th><th></th><th></th></tr>
+                    <tr><td>◇</td><th></th><th></th><th></th><th></th></tr>
+                    <tr><td>⎔</td><th></th><th></th><th></th><th></th></tr>
+                    <tr><td>☆</td><th></th><th></th><th></th><th></th></tr>
                 </table>
 
                 <table class='gridlock-2'>
                     <tr>
-                        <td>
+                        <td class="corner">
                             <table class='gridlock-1'>
-                            <tr><th>青
-                                <th>A
-                                <th>B
-                                <th>C
-                                <th>D
-                            <tr><td>1
-                                <td>←
-                                <td>↙
-                                <td>↑
-                                <td>↖
-                            <tr><td>2
-                                <td>↑
-                                <td>↓
-                                <td>↖
-                                <td>←
-                            <tr><td>3
-                                <td>↘
-                                <td>→
-                                <td>↗
-                                <td>↘
-                            <tr><td>4
-                                <td>→
-                                <td>↓
-                                <td>↗
-                                <td>↙
+                            <tr><th>青</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                            <tr><td>1</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>2</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>3</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>4</td><th></th><th></th><th></th><th></th></tr>
                             </table>
-                        <td>
+                        </td><td class="corner">
                             <table class='gridlock-1'>
-                            <tr><th>緑
-                                <th>A
-                                <th>B
-                                <th>C
-                                <th>D
-                            <tr><td>1
-                                <td>→
-                                <td>↓
-                                <td>↗
-                                <td>↙
-                            <tr><td>2
-                                <td>←
-                                <td>↙
-                                <td>↑
-                                <td>↖
-                            <tr><td>3
-                                <td>↑
-                                <td>↓
-                                <td>↖
-                                <td>←
-                            <tr><td>4
-                                <td>↘
-                                <td>→
-                                <td>↗
-                                <td>↘
+                            <tr><th>緑</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                            <tr><td>1</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>2</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>3</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>4</td><th></th><th></th><th></th><th></th></tr>
                             </table>
+                        </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td class="corner">
                             <table class='gridlock-1'>
-                            <tr><th>黄
-                                <th>A
-                                <th>B
-                                <th>C
-                                <th>D
-                            <tr><td>1
-                                <td>←
-                                <td>↑
-                                <td>↓
-                                <td>↖
-                            <tr><td>2
-                                <td>↘
-                                <td>↘
-                                <td>→
-                                <td>↗
-                            <tr><td>3
-                                <td>↙
-                                <td>→
-                                <td>↓
-                                <td>↗
-                            <tr><td>4
-                                <td>↖
-                                <td>←
-                                <td>↙
-                                <td>↑
+                            <tr><th>黄</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                            <tr><td>1</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>2</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>3</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>4</td><th></th><th></th><th></th><th></th></tr>
                             </table>
-                        <td>
+                        </td><td class="corner">
                             <table class='gridlock-1'>
-                            <tr><th>赤
-                                <th>A
-                                <th>B
-                                <th>C
-                                <th>D
-                            <tr><td>1
-                                <td>↑
-                                <td>↖
-                                <td>←
-                                <td>↙
-                            <tr><td>2
-                                <td>↖
-                                <td>←
-                                <td>↑
-                                <td>↓
-                            <tr><td>3
-                                <td>↗
-                                <td>↘
-                                <td>↘
-                                <td>→
-                            <tr><td>4
-                                <td>↗
-                                <td>↙
-                                <td>→
-                                <td>↓
+                            <tr><th>赤</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+                            <tr><td>1</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>2</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>3</td><th></th><th></th><th></th><th></th></tr>
+                            <tr><td>4</td><th></th><th></th><th></th><th></th></tr>
                             </table>
+                        </td>
                     </tr>
                 </table>
             </div>
