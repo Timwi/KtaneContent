@@ -3599,20 +3599,70 @@ let parseData = [
 		loggingTag: "Needy Determinants"
 	},
 	{
-		displayName: "Dreamcipher",
-		moduleID: "ksmDreamcipher",
-		loggingTag: "Dreamcipher",
+		displayName: "Diffusion",
+		moduleID: "diffusion",
+		loggingTag: "Diffusion",
 		matches: [
 			{
-				regex: /Glyph alphabet translation table:/,
-				handler: function (matches, module) {
-					var glyphTable = readMultiple(8).replace(/\[Dreamcipher #\d+\] \* /g, '');
-					module.push({ label: matches.input, obj: pre(glyphTable) });
-					return true;
+				regex: /The result of diffusion \(from tl cw\) is (.+)\./,
+				handler: function(matches, module) {
+					let partialInfo = matches[1].split(", ");
+					partialInfo.push("A0B0");
+					
+					let order = [0, 1, 2, 3, 11, 12, 12, 4, 10, 12, 12, 5, 9, 8, 7, 6];
+					let colourPalette = ["00", "40", "80", "c0", "ff"];
+					let cellSize = 135;
+
+					let info = [];
+					for(let i = 0; i < order.length; i++) {
+						info.push(partialInfo[order[i]]);
+					}
+
+					let svg = `<br><svg width="400" height="400" viewbox="115 100 600 600">`;
+					for(let i = 0; i < 16; i++) {
+						let redComponent = info[i].match(/A\d/);
+						console.log(redComponent);
+						redComponent = parseInt(redComponent[0].replace("A", ""));
+						let blueComponent = info[i].match(/B\d/);
+						blueComponent = parseInt(blueComponent[0].replace("B", ""));
+						svg += `<rect x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:#${colourPalette[redComponent]}00${colourPalette[blueComponent]};stroke:#000;stroke-width:2"/>`;
+						svg += `<text x="${cellSize * (i % 4) + cellSize + 67}" y="${cellSize * Math.floor(i / 4) + cellSize + 82}" text-anchor="middle" style="font-size:${Math.floor(cellSize / 3)}px;fill:#fff">${order[i] != 12 ? info[i] : ""}</text>`;
+					}
+					module.push({label: "The result of diffusion is:", obj: svg});
 				}
 			},
 			{
-				regex: /.+/
+				regex: /A possible solution is (.+)\./,
+				handler: function(matches, module) {
+					let partialInfo = matches[1].split(", ");
+
+					let order = [0, 1, 2, 3, 11, 12, 12, 4, 10, 12, 12, 5, 9, 8, 7, 6];
+					let cellSize = 135;
+					let info = [];
+
+					for(let i = 0; i < order.length; i++) {
+						info.push(partialInfo[order[i]]);
+					}
+					
+					let svg = `<br><svg width="400" height="400" viewbox="115 100 600 600">`;
+					for(let i = 0; i < info.length; i++) {
+						let colour = "";
+						switch (info[i]) {
+							case "0":
+								colour = "#000";
+								break;
+							case "A":
+								colour = "#f00";
+								break;
+							case "B":
+								colour = "#00f";
+								break;
+						}
+						svg += `<rect x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:${colour};stroke:#000;stroke-width:2"/>`;
+						svg += `<text x="${cellSize * (i % 4) + cellSize + 67}" y="${cellSize * Math.floor(i / 4) + cellSize + 90}" text-anchor="middle" style="font-size:${Math.floor(cellSize / 2)}px;fill:#fff">${order[i] != 12 ? info[i] : ""}</text>`;
+					}
+					module.push({label: "A possible solution is", obj: svg});
+				}
 			}
 		]
 	},
@@ -3649,6 +3699,24 @@ let parseData = [
 					let img1 = `<img src='/HTML/img/Doofenshmirtz%20Evil%20Inc/${matches[1]}.png' style='width: 2in;'>`;
 					let img2 = `<img src='/HTML/img/Doofenshmirtz%20Evil%20Inc/${matches[2]}.png' style='width: 2in;'>`;
 					module.push({ label:'The displayed images are:', obj:`<div style='display: flex; flex-flow: row wrap; gap: 0.5in;'>${img1} ${img2}</div>` });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		displayName: "Dreamcipher",
+		moduleID: "ksmDreamcipher",
+		loggingTag: "Dreamcipher",
+		matches: [
+			{
+				regex: /Glyph alphabet translation table:/,
+				handler: function (matches, module) {
+					var glyphTable = readMultiple(8).replace(/\[Dreamcipher #\d+\] \* /g, '');
+					module.push({ label: matches.input, obj: pre(glyphTable) });
 					return true;
 				}
 			},
