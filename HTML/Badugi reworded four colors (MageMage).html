@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Badugi — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table {
+            margin-top: 1em;
+            margin-bottom: 1em;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        td {
+            position: relative;
+            margin: 0px;
+            padding: 0px;
+            width: 50px;
+            height: 36px;
+        }
+        .cell-contents {
+            position: absolute;
+            display: block;
+            overflow: hidden;
+            height: 24px;
+            width: 40px;
+            top: 9%;
+            left: 9%;
+        }
+        .club {
+            color: #00B000;
+        }
+        .diamond {
+            color: #0000D0;
+        }
+        .heart {
+            color: #D00000;
+        }
+        .spade {
+            color: #000000;
+        }
+        .dark .spade {
+            color: #CCCCCC;
+        }
+        .dark .diamond {
+            color: #0088FF;
+        }
+        .ruleset-table:nth-child(even) {
+            background: #00000010;
+        }
+        .dark .ruleset-table:nth-child(even) {
+            background: #DDDDDD20;
+        }
+
+        @media screen and (max-width: 640px) {
+            table
+            {
+                font-size: 1em;
+            }
+        }
+    </style>
+    <script>
+        //Escaped Characters: ♠ = \u2660, ♥ = \u2665, ♣ = \u2663, ♦ = \u2666
+        var adjacent = [[0, 9], [1, 9], [1, 0], [1, 1], [0, 1], [9, 1], [9, 0], [9, 9]];
+        var fallback = [
+            "8\u2666", "3\u2666", "5\u2666", "4\u2660", "9\u2660", "7\u2660", "5\u2663", "7\u2666", "2\u2665", "2\u2660",
+            "5\u2660", "9\u2663", "8\u2663", "6\u2665", "6\u2666", "2\u2663", "J\u2663", "J\u2660", "Q\u2663", "5\u2663",
+            "6\u2663", "7\u2663", "2\u2666", "J\u2665", "A\u2660", "2\u2665", "6\u2665", "3\u2663", "A\u2666", "K\u2665",
+            "9\u2660", "Q\u2666", "A\u2663", "7\u2665", "6\u2660", "3\u2660", "9\u2666", "5\u2660", "5\u2666", "8\u2665",
+            "6\u2660", "9\u2665", "9\u2666", "6\u2666", "3\u2666", "A\u2665", "J\u2665", "2\u2663", "4\u2666", "4\u2665",
+            "7\u2663", "J\u2660", "10\u2660", "8\u2660", "2\u2666", "4\u2663", "Q\u2660", "K\u2660", "K\u2663", "4\u2663",
+            "2\u2660", "5\u2665", "3\u2665", "10\u2666", "9\u2665", "J\u2666", "6\u2663", "8\u2660", "9\u2663", "A\u2660",
+            "10\u2665", "J\u2663", "4\u2660", "Q\u2663", "5\u2665", "Q\u2665", "3\u2660", "K\u2666", "3\u2663", "Q\u2660",
+            "8\u2665", "A\u2663", "A\u2665", "4\u2666", "10\u2663", "A\u2666", "8\u2663", "8\u2666", "7\u2665", "3\u2665",
+            "10\u2663", "10\u2666", "7\u2666", "10\u2665", "J\u2666", "10\u2660", "4\u2665", "Q\u2666", "Q\u2665", "7\u2660"
+        ];
+        var test;
+
+        // For all the logic behind this mess, see RuleSeedCardTable.cs
+        function PlaceCardsUntilEmpty(rng, table, cards2place, locations) {
+            for (card of cards2place) {
+                var main_loc = locations.splice(rng.nextMax(locations.length), 1)[0];
+                var main_x = main_loc % 10, main_y = Math.floor(main_loc / 10);
+                table[main_loc] = card;
+                var adjacent_cards = [card];
+
+                for (movetest of adjacent) {
+                    var test_x = (main_x + movetest[0]) % 10, test_y = (main_y + movetest[1]) % 10;
+                    if (table[test_x + (test_y * 10)] != null)
+                        adjacent_cards.push(table[test_x + (test_y * 10)]);
+                }
+                var untestedlocs = [...locations];
+                var location_found = false;
+                var aux_loc;
+                while (!location_found) {
+                    if (untestedlocs.length == 0)
+                        return false;
+                    aux_loc = untestedlocs.splice(rng.nextMax(untestedlocs.length), 1)[0];
+                    var aux_x = aux_loc % 10, aux_y = Math.floor(aux_loc / 10);
+
+                    if ((Math.abs(aux_x - main_x) <= 2 || Math.abs(aux_x - main_x) >= 8) && (Math.abs(aux_y - main_y) <= 2 || Math.abs(aux_y - main_y) >= 8))
+                        continue;
+                    if ([0, 3, 7].indexOf(Math.abs(aux_x - main_x)) != -1 && [0, 3, 7].indexOf(Math.abs(aux_y - main_y)) != -1)
+                        continue
+
+                    location_found = true;
+                    for (movetest of adjacent) {
+                        var test_x = (aux_x + movetest[0]) % 10, test_y = (aux_y + movetest[1]) % 10;
+                        if (adjacent_cards.indexOf(table[test_x + (test_y * 10)]) !== -1) {
+                            location_found = false;
+                            break;
+                        }
+                    }
+                }
+                table[aux_loc] = card;
+                locations.splice(locations.indexOf(aux_loc), 1);
+            }
+            return true;
+        }
+
+        function setDefaultRules(rng) {
+            setRules(rng);
+        }
+
+        function setRules(rng) {
+            var table1st = [];
+            var cards2place = [
+                "8\u2663", "7\u2663", "6\u2663", "5\u2663", "4\u2663", "3\u2663", "2\u2663", "A\u2663",
+                "8\u2660", "7\u2660", "6\u2660", "5\u2660", "4\u2660", "3\u2660", "2\u2660", "A\u2660",
+                "8\u2665", "7\u2665", "6\u2665", "5\u2665", "4\u2665", "3\u2665", "2\u2665", "A\u2665",
+                "8\u2666", "7\u2666", "6\u2666", "5\u2666", "4\u2666", "3\u2666", "2\u2666", "A\u2666"
+            ];
+            var locations = [...Array(100).keys()];
+            PlaceCardsUntilEmpty(rng, table1st, cards2place, locations);
+
+            var table2nd = [...table1st];
+            var locbackup = [...locations];
+
+            var retries = 0;
+            for (; retries < 10; ++retries)
+            {
+                cards2place = [
+                    "Q\u2663", "Q\u2660", "Q\u2665", "Q\u2666",
+                    "J\u2663", "J\u2660", "J\u2665", "J\u2666",
+                    "10\u2663", "10\u2660", "10\u2665", "10\u2666",
+                    "9\u2663", "9\u2660", "9\u2665", "9\u2666"
+                ];
+                rng.shuffleFisherYates(cards2place);
+                if (PlaceCardsUntilEmpty(rng, table2nd, cards2place, locations))
+                    break;
+
+                table2nd = [...table1st];
+                locations = [...locbackup];
+            }
+
+            if (retries >= 10)
+                table2nd = [...fallback];
+            else
+            {
+                cards2place = ["K\u2663", "K\u2660", "K\u2665", "K\u2666",]
+                rng.shuffleFisherYates(cards2place);
+                for (var i = 0; i < 4; ++i)
+                    table2nd[locations[i]] = cards2place[i];
+            }
+
+            for (var y = 0, i = 0; y < 10; ++y) {
+                var row = document.getElementsByClassName('ruleset-table')[y];
+                for (var x = 0; x < 10; ++x, ++i) {
+                    var cell = row.getElementsByTagName('td')[x];
+                    var cname = 'spade';
+                    if (table2nd[i].includes('\u2665') )
+                        cname = 'heart';
+                    else if (table2nd[i].includes('\u2666'))
+                        cname = 'diamond';
+                    else if (table2nd[i].includes('\u2663'))
+                        cname = 'club';
+                    cell.innerHTML = `<span class='cell-contents ${cname}'>${table2nd[i]}</span>`;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Badugi</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Badugi.svg" class="diagram">
+                <h2>On the Subject of Badugi</h2>
+                <p class="flavour-text">Something happened in Vegas, and it apparently didn't stay there.</p>
+
+                <ul>
+                    <li>Eight cards will be dealt out onto the surface of this module, split up into two groups of four card hands. The first two cards of each hand will be shown, with the other two remaining hidden.</li>
+                    <li>Find the locations of the two given cards in the table below. (There are two copies of each card except Kings in the table.)</li>
+                    <lI>The two given cards will form exactly one line of adjacent cards, horizontally, vertically, or diagonally, wrapping around as necessary. The next two cards in that line are the two hidden cards in that hand.</li>
+                    <li>Compare the two hands by the rules of Badugi, and place a chip on (select) the betting line next to the stronger of the two hands. If the two hands tie, either one of them may be picked.</li>
+                    <li>The module will disarm after three correct choices have been made. Choosing a losing hand will result in a strike and new hands being drawn, but will not reset the number of correct choices thus far.</li>
+                </ul>
+                <p>The reworded rule overview for Badugi can be found on the next page.</p>
+
+                <h3>Table of Cards</h3>
+                <table>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                    <tr class="ruleset-table">
+                        <td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td><td><span class="cell-contents">-</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Badugi</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix: Primer on Badugi (reworded)</h2>
+                <p>Badugi is a lowball poker game, where the objective is to make the worst possible hand out of the four cards that you're given. You want to keep as many cards in your hand so that none of them match in rank or suit. The types of hands you can have are, in order from winning to loosing:</p>
+                <ul>
+                    <li>a Bedugi: All four cards are of different suits and all different ranks. As such you have a hand of four cards called a Badugi</li>
+                    <li>a three-card-hand: If instead with leaving out one card, the other three cards have no pairing matching in rank or suit, you've got a three-card-hand by omitting that specific card.</li>
+                    <li>a two-card-hand: If instead you can make at least one pair that doesn't match in either rank or suit, this pair makes up your two-card-hand.</li>
+                    <li>a one-card-hand: This happens when all cards are the same suit, or the same rank, in this case either single card will make up a one-card-hand.</li>
+                </ul>
+
+                <p>If there are multiple ways to get the same hand. Choose a way in which the highest card rank is as small as possible, suits don't matter as long as it's a valid hand. If there are multiple ways still proceed likewise with the second-highest card rank and so on. (Aces count as lowest)</p>
+
+                <p>Any Badugi beats any three-card hand regardless of the contents of either hand. Likewise, any three-card hand beats any two-card hand, and any two-card hand beats any single card. If both hands have the same number of valid cards, then the highest ranked cards are compared in each hand—treating Aces as the lowest rank—and the hand with the lower high card is the winner. If both hands have the same high card, the second-highest card is compared, followed by the third and fourth if necessary. If the ranks of all contributing cards are identical, the hands tie; no suit trumps any other.</p>
+
+                <p>Cards that did not contribute to the hand are <strong>never</strong> considered when comparing hands. The hands <span class="club">J&#9827;</span> <span class="heart">7&#9829;</span> <span class="spade">7&#9824;</span> <span class="diamond">2&#9830;</span> and <span class="heart">K&#9829;</span> <span class="diamond">J&#9830;</span> <span class="club">7&#9827;</span> <span class="heart">2&#9829;</span> tie with each other; in the former hand one of the two sevens does not contribute because they share ranks with each other, and in the latter hand the King does not contribute due to sharing a suit with the deuce. Therefore, both hands are Jack-low three card hands (Jack, Seven, Deuce).</p>
+                </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
