@@ -9,655 +9,687 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-        <style>
-            #table-container {
-                overflow-x: auto;
-                overflow-y: auto;
-                max-height: 45em;
-            }
-            .appendix-table {
-                margin: auto;
-                border: 0;
-            }
-            .appendix-cell {
-               border: 0;
-               padding: 0;
-               min-width: 2.5em;
-               height: 2.5em;
-               font-weight: bold;
-               color: #999;
-            }
-            #red_maze {
-                margin: auto;
-                border-width: 5px;
-                border-color: #770000;
-            }
-            #red_maze td {
-                color: #444;
-                min-width: 1.3em;
-                height: 1.9em;
-                border: 0;
-            }
-            .right{
-                border-right: 3px solid #c42525 !important;
-            }
-            .bottom{
-                border-bottom: 3px solid #c42525 !important;
-            }
-            .painted {
-                color: #000;
-            }
-            td {
-                text-align: center;
-            }
-            .border {
-               padding: 0;
-            }
-            .vb {
-               min-width: 3px;
-               width: 3px;
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        #table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 45em;
+        }
+        .dark .appendix-table, .appendix-table {
+            margin: auto;
+            border: 0;
+        }
+        .dark .appendix-cell, .appendix-cell {
+            border: 0;
+        }
+        .appendix-cell {
+            user-select: none;
+            padding: 0;
+            min-width: 2.5em;
+            height: 2.5em;
+            font-weight: bold;
+            color: #999;
+        }
+        .dark .appendix-cell {
+            color: #FFF;
+        }
+        #red_maze {
+            margin: auto;
+            border-width: 5px;
+            border-color: #770000;
+        }
+        #red_maze td {
+            user-select: none;
+            color: #444;
+            min-width: 1.3em;
+            height: 1.9em;
+            border: 0;
+        }
+        .dark #red_maze td { color: #FFF; }
+        .right{
+            border-right: 3px solid #c42525 !important;
+        }
+        .bottom{
+            border-bottom: 3px solid #c42525 !important;
+        }
+        .painted {
+            color: #000;
+        }
+        td {
+            text-align: center;
+        }
+        .border {
+           padding: 0;
+        }
+        .vb {
+           min-width: 3px;
+           width: 3px;
+        }
+
+        .hb {
+           min-height: 3px;
+           height: 3px;
+        }
+
+        .inactive_color { background-color: #00000000; }
+        .primary_color { background-color: #CABAFF99; }
+        .painted_color { background-color: #27F55099; }
+        .seen_color { background-color: #BEDDF799; }
+        .inactive_border_color { background-color: #BBBBBB; }
+        .active_border_color { background-color: #000; }
+
+        .dark .seen_color { background-color: #2B74B18F; }
+        .dark .inactive_border_color { background-color: #555; }
+        .dark .active_border_color { background-color: #FFF; }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+    <script>
+        // Setup Code (DarkSly Mark)
+        //#region - Parameters
+        const DEFAULT_TABLE_SIZE = 15;
+        const GRID_SIZE_LIMIT = 100;
+
+        const INACTIVE_COLOR = "inactive_color";
+        const PRIMARY_COLOR = "primary_color";
+        const PAINTED_COLOR = "painted_color";
+        const SEEN_COLOR = "seen_color";
+
+        const INACTIVE_BORDER_COLOR = "inactive_border_color";
+        const ACTIVE_BORDER_COLOR = "active_border_color";
+
+        var TABLE_ROWS = DEFAULT_TABLE_SIZE;
+        var TABLE_COLS = DEFAULT_TABLE_SIZE;
+
+        var seenState = true;
+        var selectedCell;
+        var arrowsBehavior = "arrowBorder";
+
+        var solvedCells = [];
+        var seenCells = [];
+        var activeBorders = [];
+
+        var undos = [];
+        var redos = [];
+        //#endregion
+
+        //#region - Table/Grid Management
+        function createTable() {
+          var container = document.getElementById('table-container');
+          var tbl = document.createElement('table');
+          tbl.className = "appendix-table";
+
+          var isBorderRow = true;
+          for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
+            //Rows
+            let tr = document.createElement('tr');
+
+            if(isBorderRow){
+                //First Border Corner
+                let borderFirstCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                let borderFirstCornerCol = -0.5;
+                tr.appendChild(createBorder(borderFirstCornerRow, borderFirstCornerCol, "vb hb"));
+
+            } else {
+                //First Vertical border
+                let borderFirstVRow = Math.ceil(i/2 - 1);
+                let borderFirstVCol = -0.5;
+                tr.appendChild(createBorder(borderFirstVRow, borderFirstVCol, "vb"));
             }
 
-            .hb {
-               min-height: 3px;
-               height: 3px;
-            }
-        </style>
-        <script>
-            // Setup Code (DarkSly Mark)
-            //#region - Parameters
-            const DEFAULT_TABLE_SIZE = 15;
-            const GRID_SIZE_LIMIT = 100;
+            for (var j = 0; j < TABLE_COLS; j++) {
+                if(isBorderRow) {
+                    //Horizontal Corners
+                    let borderHRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderHCol = j;
+                    tr.appendChild(createBorder(borderHRow, borderHCol, "hb"));
 
-            const INACTIVE_COLOR = "#00000000";
-            const PRIMARY_COLOR = "#cabaff99";
-            const PAINTED_COLOR = "#27f55099";
-            const SEEN_COLOR = "#beddf799";
-
-            const INACTIVE_BORDER_COLOR = "#BBBBBB";
-            const ACTIVE_BORDER_COLOR = "black";
-
-            var TABLE_ROWS = DEFAULT_TABLE_SIZE;
-            var TABLE_COLS = DEFAULT_TABLE_SIZE;
-
-            var seenState = true;
-            var selectedCell;
-            var arrowsBehavior = "arrowBorder";
-
-            var solvedCells = [];
-            var seenCells = [];
-            var activeBorders = [];
-
-            var undos = [];
-            var redos = [];
-            //#endregion
-
-            //#region - Table/Grid Management
-            function createTable() {
-              var container = document.getElementById('table-container');
-              var tbl = document.createElement('table');
-              tbl.className = "appendix-table";
-
-              var isBorderRow = true;
-              for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
-                //Rows
-                let tr = document.createElement('tr');
-
-                if(isBorderRow){
-                    //First Border Corner
-                    let borderFirstCornerRow = Math.ceil(i/2 - 1) + 0.5;
-                    let borderFirstCornerCol = -0.5;
-                    tr.appendChild(createBorder(borderFirstCornerRow, borderFirstCornerCol, "vb hb"));
-
+                    //Border Corners
+                    let borderCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderCornerCol = j + 0.5;
+                    tr.appendChild(createBorder(borderCornerRow, borderCornerCol, "vb hb"));
                 } else {
-                    //First Vertical border
-                    let borderFirstVRow = Math.ceil(i/2 - 1);
-                    let borderFirstVCol = -0.5;
-                    tr.appendChild(createBorder(borderFirstVRow, borderFirstVCol, "vb"));
-                }
+                    //Actual Cells
+                    let borderRow = Math.ceil(i/2 - 1);
+                    let borderCol = j;
+                    tr.appendChild(createCell(borderRow, borderCol));
 
-                for (var j = 0; j < TABLE_COLS; j++) {
-                    if(isBorderRow) {
-                        //Horizontal Corners
-                        let borderHRow = Math.ceil(i/2 - 1) + 0.5;
-                        let borderHCol = j;
-                        tr.appendChild(createBorder(borderHRow, borderHCol, "hb"));
-
-                        //Border Corners
-                        let borderCornerRow = Math.ceil(i/2 - 1) + 0.5;
-                        let borderCornerCol = j + 0.5;
-                        tr.appendChild(createBorder(borderCornerRow, borderCornerCol, "vb hb"));
-                    } else {
-                        //Actual Cells
-                        let borderRow = Math.ceil(i/2 - 1);
-                        let borderCol = j;
-                        tr.appendChild(createCell(borderRow, borderCol));
-
-                        //Vertical Borders
-                        let borderVRow = Math.ceil(i/2 - 1);
-                        let borderVCol = j + 0.5;
-                        tr.appendChild(createBorder(borderVRow, borderVCol, "vb"));
-                    }
-                }
-                isBorderRow = !isBorderRow;
-                tbl.appendChild(tr);
-              }
-              container.appendChild(tbl)
-            }
-
-            function resetTable() {
-                if(!confirm("本当にリセットしますか？")) return;
-
-                var container = document.getElementById('table-container');
-                container.innerHTML = "";
-                selectedCell = null;
-
-                undos = [];
-                redos = [];
-
-                solvedCells = [];
-                seenCells = [];
-                activeBorders = [];
-
-                createTable();
-            }
-
-            function createBorder(row, col, classAdds) {
-                let border = document.createElement('td');
-                border.row = row;
-                border.col = col;
-                border.id = "border_" + border.row + "_" + border.col;
-                border.className = "appendix-cell border " + classAdds;
-                border.style.backgroundColor = INACTIVE_BORDER_COLOR;
-                return border;
-            }            
-
-            function createCell(row, col) {
-                    let cell = document.createElement('td');
-                    cell.row = row;
-                    cell.col = col;
-                    cell.id = "cell_" + cell.row + "_" + cell.col;
-                    cell.className = "appendix-cell";
-                    cell.onclick = () => onCellClick(cell);
-                    cell.ondblclick = () => toggleCellSeen(cell);
-                    cell.addEventListener('contextmenu', function(ev) {
-                        ev.preventDefault();
-                        toggleCellSolved(cell);
-                        return false;
-                    }, false);
-                    let secondLetter = cell.col >= 26 ? String.fromCharCode(65 + Math.floor(cell.col / 26) - 1) : "";
-                    cell.pos = secondLetter + String.fromCharCode(65 + (cell.col % 26)) + "" + (cell.row + 1);
-                    cell.innerHTML = cell.pos;
-                    return cell;
-            }
-
-            function changeGridSize() {
-                TABLE_ROWS = document.getElementById("gridRow").value;
-                TABLE_COLS = document.getElementById("gridCol").value;
-
-                var container = document.getElementById('table-container');
-                container.innerHTML = "";
-
-                createTable();
-
-                applyGridState();
-                toggleCell(getCell(selectedCell?.row, selectedCell?.col), true);
-            }
-
-            function applyGridState() {
-                let seenCellsState = seenCells;
-                let solvedCellsState = solvedCells;
-                let activeBordersState = activeBorders;
-
-                seenCells = [];
-                solvedCells = [];
-                activeBorders = [];
-
-                seenCellsState.forEach(cell => toggleCellSeen(getCell(cell.row, cell.col), true));
-                solvedCellsState.forEach(cell => toggleCellSolved(getCell(cell.row, cell.col), true));
-                activeBordersState.forEach(border => toggleBorder(getBorder(border.row, border.col)));
-            }
-
-            function setGridSizeLimit(input) {
-                input.value = Math.abs(Math.round(input.value));
-
-                if(input.value > GRID_SIZE_LIMIT)
-                    input.value = GRID_SIZE_LIMIT;
-
-                if(input.value <= 0)
-                    input.value = 15;
-            }
-            //#endregion
-
-            //#region - Border Management
-            function toggleBorder(border) {
-              setBorder(border, border.style.backgroundColor != ACTIVE_BORDER_COLOR);
-
-              if(border.style.backgroundColor == ACTIVE_BORDER_COLOR) activeBorders.push(border);
-              else activeBorders.splice(activeBorders.findIndex(c => c.id == border.id), 1);
-
-              if(!selectedCell.seen && !selectedCell.painted) toggleCellSeen(selectedCell);
-            }
-
-            function getBorder(row, col) {
-                return document.getElementById("border_" + row + "_" + col);
-            }
-
-            function setBorder(border, active) {
-                let isHorizontal = border.row % 1 != 0;
-
-                border.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-                  if(isHorizontal) {
-                    let lastCorner = getBorder(border.row, border.col - 0.5);
-                    let nextCorner = getBorder(border.row, border.col + 0.5);
-
-                    if(lastCorner) lastCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-                    if(nextCorner) nextCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-                  }
-            }
-            //#endregion
-
-            //#region - Red Maze Management
-            function toggleRedMazeCell(cell) {
-                cell.style.backgroundColor = 
-                    isCellColor(cell, PRIMARY_COLOR) ?
-                    INACTIVE_COLOR : PRIMARY_COLOR;
-            }
-            //#endregion
-
-            //#region - Cell Management
-            function toggleCell(cell) {
-                if(!cell) return;
-                setInactiveColor();
-                selectedCell = cell;
-                selectedCell.style.backgroundColor = PRIMARY_COLOR;
-            }
-
-            function getCell(row, col) {
-                return document.getElementById("cell_" + row + "_" + col);
-            }
-
-            function applyOnCells(condition, predicate) {
-                for (var i = 0; i < TABLE_ROWS; i++) {
-                    for (var j = 0; j < TABLE_COLS; j++) {
-                            let cell = getCell(i, j);
-                            if(condition(cell)) 
-                                predicate(cell);
-                    }
+                    //Vertical Borders
+                    let borderVRow = Math.ceil(i/2 - 1);
+                    let borderVCol = j + 0.5;
+                    tr.appendChild(createBorder(borderVRow, borderVCol, "vb"));
                 }
             }
-            //#endregion
+            isBorderRow = !isBorderRow;
+            tbl.appendChild(tr);
+          }
+          container.appendChild(tbl)
+        }
 
-            //#region - Color Management
-            function isCellColor(cell, color) {
-                const ctx = document.createElement('canvas').getContext('2d');
-                ctx.fillStyle = color;
-                ctx.fillRect( 0, 0, 1, 1 );
-                ctx.fillStyle = getComputedStyle(cell, null).getPropertyValue("background-color");
-                ctx.fillRect( 1, 0, 1, 1 );
-                const a = JSON.stringify(Array.from(ctx.getImageData(0, 0, 1, 1).data));
-                const b = JSON.stringify(Array.from(ctx.getImageData(1, 0, 1, 1).data));
-                ctx.canvas = null;
-                return a === b;
-            }
+        function resetTable() {
+            if(!confirm("本当にリセットしますか？")) return;
 
-            function paintCell(cell, color) {
-                if(cell.style.backgroundColor == color)
-                    cell.style.backgroundColor = PRIMARY_COLOR;
-                else cell.style.backgroundColor = color;
-            }
+            var container = document.getElementById('table-container');
+            container.innerHTML = "";
+            selectedCell = null;
 
-            function setInactiveColor() {
-                if(selectedCell){
-                    if(selectedCell.painted) selectedCell.style.backgroundColor = PAINTED_COLOR;
-                    else if(selectedCell.seen) selectedCell.style.backgroundColor = SEEN_COLOR;
-                    else selectedCell.style.backgroundColor = INACTIVE_COLOR;
-                }
-            }
-            //#endregion
+            undos = [];
+            redos = [];
 
-            //#region - Cell States Management
-            function toggleCellSolved(cell, undoForced) {
-                if(!cell) return;
+            solvedCells = [];
+            seenCells = [];
+            activeBorders = [];
 
-                if(cell.painted) {
-                    solvedCells.splice(solvedCells.findIndex(c => c.id == cell.id), 1);
-                    paintCell(cell,cell == selectedCell ? PRIMARY_COLOR : INACTIVE_COLOR);
-                    cell.className = "appendix-cell";
-                    cell.innerHTML = cell.pos;
-                    cell.painted = false;
-                    updateSolvedCells();
-                } else {
-                    if(cell.seen) toggleCellSeen(cell);
-                    solvedCells.push(cell);
-                    paintCell(cell, PAINTED_COLOR);
-                    cell.className = "appendix-cell painted";
-                    cell.innerHTML = solvedCells.length;
-                    cell.painted = true;
-                }
-                if(!undoForced) saveAction({ event: { cell, action: "solved" }, action: "keycolor" });
-            }
-
-            function updateSolvedCells() {
-                solvedCells.forEach((cell, i) => {
-                    cell.innerHTML = (i + 1);
-                })
-            }
-
-            function toggleCellSeen(cell, undoForced) {
-                if(!cell) return;
-
-                if(cell.seen) {
-                    seenCells.splice(seenCells.findIndex(c => c.id == cell.id), 1);
-                    paintCell(cell, PRIMARY_COLOR);
-                    cell.className = "appendix-cell";
-                    cell.innerHTML = cell.pos;
-                    cell.seen = false;
-                    updateSolvedCells();
-                } else {
-                    seenCells.push(cell);
-                    if(cell.painted) toggleCellSolved(cell);
-                    paintCell(cell, SEEN_COLOR);
-                    cell.className = "appendix-cell";
-                    cell.innerHTML = seenState ? cell.pos : "";
-                    cell.seen = true;
-                }
-
-                if(!undoForced) saveAction({ event: { cell, action: "seen" }, action: "keycolor" });
-            }
-            //#endregion
-
-            //#region - Undo & Redo Management
-            function performUndoRedo(e) {
-                let isUndo = e.keyCode == 90 && !e.altKey;
-                    let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
-
-                    e.preventDefault();
-
-                    if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
-
-                    var undoEvent;
-
-                    if(isUndo) {
-                        undoEvent = undos.pop();
-                        redos.push(undoEvent);
-                    }
-
-                    if(isRedo) {
-                        undoEvent = redos.pop();
-                        undos.push(undoEvent);
-                    }
-
-                    if(undoEvent.action == "keymove") {
-                        onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
-                        toggleCell(isUndo ? getCell(undoEvent.event.row, undoEvent.event.col) : getCell(undoEvent.eventRedo.row, undoEvent.eventRedo.col));
-
-                    } else if(undoEvent.action == "keydown") {
-                        arrowsBehavior = undoEvent.arrowsBehavior;
-                        onKeyDown(undoEvent.event, true);
-                        setArrowsBehavior();
-
-                    } else if(undoEvent.action == "keycolor") {
-                        if(undoEvent.event.action == "solved") 
-                            toggleCellSolved(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
-                        if(undoEvent.event.action == "seen") 
-                            toggleCellSeen(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
-
-                    }  else if(undoEvent.action == "cellclick") {
-                        if(undoEvent.event || !isUndo)
-                        onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
-                        else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
-
-                    }
-            }
-
-            function saveAction(event) {
-                if(redos.length != 0) redos = [];
-                undos.push(event);
-            }
-
-            function setArrowsBehavior() {
-                arrowsBehavior = document.getElementById("arrowBehavior").value;
-            }
-            //#endregion
-
-            //#region - Listener Management
-            function setupEventListeners() {
-                if (document.addEventListener) {
-                    document.addEventListener('keydown', onKeyDown, false);
-                }
-                else if (document.attachEvent) {
-                    document.attachEvent('onkeydown', onKeyDown);
-                }
-
-                var seenMark = document.getElementById("seenMark");
-                seenMark.onchange = () => onSeenSelectChanged(seenMark);
-
-                var redmaze = document.getElementById("red_maze");
-                redmaze.querySelectorAll("td").forEach(cell => {
-                    cell.onclick = () => toggleRedMazeCell(cell);
-                });
-            }
-
-            function onCellClick(cell, undoForced) {
-                if(selectedCell == cell) return;
-
-                let tempCurCell = selectedCell;
-                if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
-
-                toggleCell(cell);
-            }
-
-            function onSeenSelectChanged (seenMark) {
-                seenState = seenMark.value == "keep";
-
-                applyOnCells((cell) => cell.seen, (cell) => {
-                    cell.innerHTML = seenState ? cell.pos : "";
-                });
-            }
-
-            function onKeyDown(e, undoForced) {
-                switch (e.keyCode) {
-                    case 13: //Enter
-                        e.preventDefault();
-                        setInactiveColor();
-                        selectedCell = null;
-                        if(!undoForced && selectedCell) saveAction({ event: e, action: "keydown" });
-                        return;
-
-                    case 9: //Tab
-                        e.preventDefault();
-                        if(selectedCell)
-                            toggleCell(getCell(
-                                e.shiftKey ? selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1 : selectedCell.row, 
-                                e.shiftKey ? selectedCell.col : selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
-                        else toggleCell(getCell(0, 0));
-                        if(!undoForced) saveAction({ event: e, action: "keydown" });
-                        return;
-
-                    case 38: //Arrow Up
-                        e.preventDefault();
-                        if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
-                            if(selectedCell) {
-                                toggleBorder(getBorder(selectedCell.row - 0.5, selectedCell.col));
-                                if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
-                            }
-                        } else { // Cell
-                            let undoCell = selectedCell;
-                            if(selectedCell) {
-                                toggleCell(getCell(selectedCell.row <= 0 ? (TABLE_ROWS - 1) : selectedCell.row - 1, selectedCell.col));
-                            } else toggleCell(getCell(0, 0));
-                            if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
-                        }
-                        return;
-
-                    case 40: //Arrow Down
-                        e.preventDefault();
-                        if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { //Border
-                            if(selectedCell) {
-                                toggleBorder(getBorder(selectedCell.row + 0.5, selectedCell.col));
-                                if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
-                            }
-                        } else { // Cell
-                            let undoCell = selectedCell;
-                            if(selectedCell) {
-                                toggleCell(getCell(selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1, selectedCell.col));
-                            } else toggleCell(getCell(0, 0));
-                            if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
-                        }
-                        return;
-
-                    case 39: //Arrow Right
-                        e.preventDefault();
-                        if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
-                            if(selectedCell) {
-                                toggleBorder(getBorder(selectedCell.row, selectedCell.col + 0.5));
-                                if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
-                            }
-                        } else { // Cell
-                            let undoCell = selectedCell;
-                            if(selectedCell) {
-                                toggleCell(getCell(selectedCell.row, selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
-                            } else toggleCell(getCell(0, 0));
-                            if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
-                        }
-                        return;
-
-                    case 37: //Arrow Left
-                        e.preventDefault();
-                        if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
-                            if(selectedCell) {
-                                toggleBorder(getBorder(selectedCell.row, selectedCell.col - 0.5));
-                                if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
-                            }
-                        } else { // Cell
-                            let undoCell = selectedCell;
-                            if(selectedCell) {
-                                toggleCell(getCell(selectedCell.row, selectedCell.col <= 0 ? (TABLE_COLS - 1) : selectedCell.col - 1));
-                            } else toggleCell(getCell(0, 0));
-                            if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
-                        }
-                        return;
-
-                    case 90: // Undo (Redo with Shift)
-                    case 89: // Redo
-                        if(e.ctrlKey) performUndoRedo(e);
-                        return;
-
-                    case 65: // Seen cell
-                        toggleCellSeen(selectedCell);
-                        return;
-
-                    case 83: // Solving cell
-                        toggleCellSolved(selectedCell);
-                        return;
-                }
-            }
-            //#endregion
-            
-            window.onbeforeunload = function() {
-                return true;
-            };
-        </script>
-    </head>
-    <body>
-        <div class="section">
-            <div class="page page-bg-01">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                    <span class="page-header-section-title">迷路忘る勿かれ</span>
-                </div>
-                <div class="page-content">
-                    <img src="img/Component/Forget Maze Not.svg" class="diagram">
-                    <h2>モジュール詳細：迷路忘る勿かれ</h2>
-                    <p class="flavour-text">見失わないフレイバー意味をテキストでように！</p>
-
-                    <p><span style="background: #DD0000; color: white; padding: 5px;">赤</span>: 以下に表示される<em>赤の迷路</em>で左下の座標まで移動する。</p>
-                    <p><span style="background: #DDDD00; padding: 5px;">黄</span>: 矢印を利用して<em>表示された座標の壁の状態</em>を入力する。</p>
-                    <p><span style="background: #0000DD; color: white; padding: 5px;">青</span>: 表示された壁と座標の一部分から、<em>壁の状態が一致するように座標を完成させる</em>。</p>
-                    <p><span style="background: #DD00DD; color: white; padding: 5px;">マゼンタ</span>: <em>通常の迷路</em>の出口を探す。</p>
-                    <p><span style="background: #00DDDD; padding: 5px;">シアン</span>: <em>反転した迷路</em>の出口を探す。（壁の方向に移動できるが、壁のない方向には移動できない。）</p>
-                    <div style="min-height: 20em;"></div>
-                    <table id="red_maze">
-                          <tr><td>A1</td><td class="bottom">B1</td><td>C1</td><td class="bottom">D1</td><td class="right">E1</td><td>F1</td><td>G1</td></tr>
-                          <tr><td class="right">A2</td><td class="right">B2</td><td class="bottom">C2</td><td class="right">D2</td><td class="bottom">E2</td><td class="bottom right">F2</td><td>G2</td></tr>
-                          <tr><td class="right">A3</td><td class="bottom">B3</td><td class="bottom">C3</td><td class="bottom right">D3</td><td>E3</td><td>F3</td><td class="bottom">G3</td></tr>
-                          <tr><td class="bottom">A4</td><td class="bottom">B4</td><td class="bottom">C4</td><td class="right">D4</td><td class="right">E4</td><td class="bottom">F4</td><td class="bottom">G4</td></tr>
-                          <tr><td>A5</td><td class="bottom">B5</td><td class="right">C5</td><td class="right">D5</td><td class="right">E5</td><td>F5</td><td>G5</td></tr>
-                          <tr><td class="bottom">A6</td><td class="right">B6</td><td>C6</td><td class="bottom right">D6</td><td class="bottom">E6</td><td class="bottom right">F6</td><td>G6</td></tr>
-                          <tr><td>A7</td><td class="right">B7</td><td class="right">C7</td><td>D7</td><td>E7</td><td>F7</td><td>G7</td></tr>
-                        </table>
-                </div>
-                <div class="page-footer relative-footer">ページ 1/3</div>
-            </div>
-        </div>
-          <div class="section">
-            <div class="page page-bg-02">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                    <span class="page-header-section-title">迷路忘る勿かれ</span>
-                </div>
-                <div class="page-content">
-                    <h2>付録：インタラクティブ迷路</h2>
-
-                    <label for="seenMark">入力されたセルの座標の表示:</label>
-                    <select name="seenMark" id="seenMark">
-                        <option value="keep">オン</option>
-                        <option value="delete">オフ</option>
-                    </select>
-
-                    <p></p>
-                    <label for="arrowBehavior">矢印キーの挙動:</label>
-                    <select name="arrow" id="arrowBehavior" onchange="setArrowsBehavior()">
-                        <option value="arrowBorder">壁を記入・削除する</option>
-                        <option value="arrowMove">移動する</option>
-                    </select>
-
-                    <p></p>
-                    <label>グリッドの大きさ[段/列]:</label>
-                    <input type="number" id="gridRow" name="row" min="1" max="26" value="15" onClick="this.select()" oninput="setGridSizeLimit(this)">
-                    <input type="number" id="gridCol" name="col" min="1" max="26" value="15" onClick="this.select()" oninput="setGridSizeLimit(this)">
-                    <input type="submit" value="生成" onclick="changeGridSize()">
-                    <p style="font-size: small;">(表示されている部分のグリッドの状態は、サイズ変更後も保持される。)</p>
-                    <button onclick="resetTable()">リセット</button>
-                    <p></p>
-
-                    <div id="table-container" ></div>
-                </div>
-                <div class="page-footer relative-footer">ページ 2/3</div>
-            </div>
-        </div>
-        <div class="section">
-            <div class="page page-bg-03">
-                <div class="page-header">
-                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                    <span class="page-header-section-title">迷路忘る勿かれ</span>
-                </div>
-                <div class="page-content">
-                    <div>
-                        <p></p>
-                        <table style="width: 100%;">
-                            <tr><th style="width: 18%;">グリッド操作</th><th style="width: 30%;">入力:</th><th style="width: 60%;">内容:</th></tr>
-                            <tr><th rowspan="5">セルの操作</th><td>左クリック(セル)</td><td>セルを選択</td></tr>
-                            <tr><td><span style="color: #000099;">[移動する]:</span><br>矢印キー<br> <span style="color: #000099;">[壁を記入・削除する]:</span> <span style="color: #990000;">無効</span></td><td>隣接するセルに移動 (何も選択されていない場合は、左上のセルを選択) </td></tr>
-                            <tr><td>Tabキー</td><td>右のセルを選択 (何も選択されていない場合は、左上のセルを選択) </td></tr>
-                            <tr><td>Shift + Tabキー</td><td>下のセルを選択(何も選択されていない場合は、左上のセルを選択) </td></tr>
-                            <tr><td>Enterキー</td><td>現在のセルの選択を解除</td></tr>
-                            <tr><th rowspan="2">セルの内容を操作</th><td>右クリック(セル)<br>あるいは<b>S</b>キー</td><td>送信するべきセルをマークする、あるいはマークを削除する</td></tr>
-                            <tr><td>ダブルクリック(セル)<br>あるいは<b>A</b>キー</td><td>入力済のセルとする、あるいは未入力のセルとする。</td></tr>
-                            <tr><th rowspan="1">壁の操作</th><td><span style="color: #000099;">[移動する]:</span> Alt/Ctrl/Shift + 矢印キー<br><span style="color: #000099;">[壁を記入・削除する]:</span>矢印キー</td><td>選択されたセルに隣接した、矢印の方向の壁の状態を切り替える。</td></tr>
-                            <tr><th rowspan="2">一般的な操作</th><td>Ctrl + Z</td><td>最後の入力を元に戻す<span style="color: #990000;">(リセットボタンはもとに戻せない)</span></td></tr>
-                            <tr><td>Ctrl + Y/<br>Ctrl + Shift + Z</td><td>元に戻された入力をやり直す(元に戻した後に他の入力をするとやり直せない)</td></tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="page-footer relative-footer">ページ 3/3</div>
-            </div>
-        </div>
-        <script>
-            // Trigger code
             createTable();
-            setupEventListeners();
-        </script>
-    </body>
+        }
+
+        function createBorder(row, col, classAdds) {
+            let border = document.createElement('td');
+            border.row = row;
+            border.col = col;
+            border.id = "border_" + border.row + "_" + border.col;
+            border.className = "appendix-cell border inactive_border_color " + classAdds;
+            return border;
+        }
+
+        function createCell(row, col) {
+                let cell = document.createElement('td');
+                cell.row = row;
+                cell.col = col;
+                cell.id = "cell_" + cell.row + "_" + cell.col;
+                cell.className = "appendix-cell";
+                cell.onclick = () => onCellClick(cell);
+                cell.ondblclick = () => toggleCellSeen(cell);
+                cell.addEventListener('contextmenu', function(ev) {
+                    ev.preventDefault();
+                    toggleCellSolved(cell);
+                    return false;
+                }, false);
+                let secondLetter = cell.col >= 26 ? String.fromCharCode(65 + Math.floor(cell.col / 26) - 1) : "";
+                cell.pos = secondLetter + String.fromCharCode(65 + (cell.col % 26)) + "" + (cell.row + 1);
+                cell.innerHTML = cell.pos;
+                return cell;
+        }
+
+        function changeGridSize() {
+            TABLE_ROWS = document.getElementById("gridRow").value;
+            TABLE_COLS = document.getElementById("gridCol").value;
+
+            var container = document.getElementById('table-container');
+            container.innerHTML = "";
+
+            createTable();
+
+            applyGridState();
+            toggleCell(getCell(selectedCell? selectedCell.row : null, selectedCell? selectedCell.col : null), true);
+        }
+
+        function applyGridState() {
+            let seenCellsState = seenCells;
+            let solvedCellsState = solvedCells;
+            let activeBordersState = activeBorders;
+
+            seenCells = [];
+            solvedCells = [];
+            activeBorders = [];
+
+            seenCellsState.forEach(cell => toggleCellSeen(getCell(cell.row, cell.col), true));
+            solvedCellsState.forEach(cell => toggleCellSolved(getCell(cell.row, cell.col), true));
+            activeBordersState.forEach(border => toggleBorder(getBorder(border.row, border.col)));
+        }
+
+        function setGridSizeLimit(input) {
+            input.value = Math.abs(Math.round(input.value));
+
+            if(input.value > GRID_SIZE_LIMIT)
+                input.value = GRID_SIZE_LIMIT;
+
+            if(input.value <= 0)
+                input.value = 15;
+        }
+        //#endregion
+
+        //#region - Border Management
+        function toggleBorder(border) {
+          setBorder(border, !($(border).hasClass(ACTIVE_BORDER_COLOR)));
+
+          if($(border).hasClass(ACTIVE_BORDER_COLOR)) activeBorders.push(border);
+          else activeBorders.splice(activeBorders.findIndex(c => c.id == border.id), 1);
+
+          if(!selectedCell.seen && !selectedCell.painted) toggleCellSeen(selectedCell);
+        }
+
+        function getBorder(row, col) {
+            return document.getElementById("border_" + row + "_" + col);
+        }
+
+        function setBorder(border, active) {
+            let isHorizontal = border.row % 1 != 0;
+
+            removeColorClass(border);
+            $(border).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+            if(isHorizontal) {
+              let lastCorner = getBorder(border.row, border.col - 0.5);
+              let nextCorner = getBorder(border.row, border.col + 0.5);
+
+              if(lastCorner) {
+                  removeColorClass(lastCorner);
+                  $(lastCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+              if(nextCorner) {
+                  removeColorClass(nextCorner);
+                  $(nextCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+            }
+        }
+        //#endregion
+
+        //#region - Red Maze Management
+        function toggleRedMazeCell(cell) {
+            $(cell).toggleClass(PRIMARY_COLOR);
+        }
+        //#endregion
+
+        //#region - Cell Management
+        function toggleCell(cell) {
+            if(!cell) return;
+            setInactiveColor();
+            selectedCell = cell;
+            removeColorClass(selectedCell);
+            $(selectedCell).addClass(PRIMARY_COLOR);
+        }
+
+        function getCell(row, col) {
+            return document.getElementById("cell_" + row + "_" + col);
+        }
+
+        function applyOnCells(condition, predicate) {
+            for (var i = 0; i < TABLE_ROWS; i++) {
+                for (var j = 0; j < TABLE_COLS; j++) {
+                        let cell = getCell(i, j);
+                        if(condition(cell))
+                            predicate(cell);
+                }
+            }
+        }
+        //#endregion
+
+        //#region - Color Management
+        function isCellColor(cell, color) {
+            return $(cell).hasClass(color);
+        }
+
+        function removeColorClass(cell) {
+            $(cell).removeClass("inactive_color primary_color painted_color seen_color inactive_border_color active_border_color")
+        }
+
+        function paintCell(cell, color) {
+            if($(cell).hasClass(color)) {
+                removeColorClass(cell);
+                $(cell).addClass(PRIMARY_COLOR);
+            }
+            else {
+                removeColorClass(cell);
+                $(cell).addClass(color);
+            }
+        }
+
+        function setInactiveColor() {
+            if(selectedCell) {
+                removeColorClass(selectedCell);
+                if(selectedCell.painted) $(selectedCell).addClass(PAINTED_COLOR);
+                else if(selectedCell.seen) $(selectedCell).addClass(SEEN_COLOR);
+                else $(selectedCell).addClass(INACTIVE_COLOR);
+            }
+        }
+        //#endregion
+
+        //#region - Cell States Management
+        function toggleCellSolved(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.painted) {
+                solvedCells.splice(solvedCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell,cell == selectedCell ? PRIMARY_COLOR : INACTIVE_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.painted = false;
+                updateSolvedCells();
+            } else {
+                if(cell.seen) toggleCellSeen(cell);
+                solvedCells.push(cell);
+                paintCell(cell, PAINTED_COLOR);
+                $(cell).addClass("painted");
+                cell.innerHTML = solvedCells.length;
+                cell.painted = true;
+            }
+            if(!undoForced) saveAction({ event: { cell, action: "solved" }, action: "keycolor" });
+        }
+
+        function updateSolvedCells() {
+            solvedCells.forEach((cell, i) => {
+                cell.innerHTML = (i + 1);
+            })
+        }
+
+        function toggleCellSeen(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.seen) {
+                seenCells.splice(seenCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell, PRIMARY_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.seen = false;
+                updateSolvedCells();
+            } else {
+                seenCells.push(cell);
+                if(cell.painted) toggleCellSolved(cell);
+                paintCell(cell, SEEN_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = seenState ? cell.pos : "";
+                cell.seen = true;
+            }
+
+            if(!undoForced) saveAction({ event: { cell, action: "seen" }, action: "keycolor" });
+        }
+        //#endregion
+
+        //#region - Undo & Redo Management
+        function performUndoRedo(e) {
+            let isUndo = e.keyCode == 90 && !e.altKey;
+                let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
+
+                e.preventDefault();
+
+                if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
+
+                var undoEvent;
+
+                if(isUndo) {
+                    undoEvent = undos.pop();
+                    redos.push(undoEvent);
+                }
+
+                if(isRedo) {
+                    undoEvent = redos.pop();
+                    undos.push(undoEvent);
+                }
+
+                if(undoEvent.action == "keymove") {
+                    onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
+                    toggleCell(isUndo ? getCell(undoEvent.event.row, undoEvent.event.col) : getCell(undoEvent.eventRedo.row, undoEvent.eventRedo.col));
+
+                } else if(undoEvent.action == "keydown") {
+                    arrowsBehavior = undoEvent.arrowsBehavior;
+                    onKeyDown(undoEvent.event, true);
+                    setArrowsBehavior();
+
+                } else if(undoEvent.action == "keycolor") {
+                    if(undoEvent.event.action == "solved")
+                        toggleCellSolved(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+                    if(undoEvent.event.action == "seen")
+                        toggleCellSeen(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+
+                }  else if(undoEvent.action == "cellclick") {
+                    if(undoEvent.event || !isUndo)
+                    onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
+                    else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
+
+                }
+        }
+
+        function saveAction(event) {
+            if(redos.length != 0) redos = [];
+            undos.push(event);
+        }
+
+        function setArrowsBehavior() {
+            arrowsBehavior = document.getElementById("arrowBehavior").value;
+        }
+        //#endregion
+
+        //#region - Listener Management
+        function setupEventListeners() {
+            if (document.addEventListener) {
+                document.addEventListener('keydown', onKeyDown, false);
+            }
+            else if (document.attachEvent) {
+                document.attachEvent('onkeydown', onKeyDown);
+            }
+
+            var seenMark = document.getElementById("seenMark");
+            seenMark.onchange = () => onSeenSelectChanged(seenMark);
+
+            var redmaze = document.getElementById("red_maze");
+            redmaze.querySelectorAll("td").forEach(cell => {
+                cell.onclick = () => toggleRedMazeCell(cell);
+            });
+        }
+
+        function onCellClick(cell, undoForced) {
+            if(selectedCell == cell) return;
+
+            let tempCurCell = selectedCell;
+            if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
+
+            toggleCell(cell);
+        }
+
+        function onSeenSelectChanged (seenMark) {
+            seenState = seenMark.value == "keep";
+
+            applyOnCells((cell) => cell.seen, (cell) => {
+                cell.innerHTML = seenState ? cell.pos : "";
+            });
+        }
+
+        function onKeyDown(e, undoForced) {
+            switch (e.keyCode) {
+                case 13: //Enter
+                    e.preventDefault();
+                    setInactiveColor();
+                    selectedCell = null;
+                    if(!undoForced && selectedCell) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 9: //Tab
+                    e.preventDefault();
+                    if(selectedCell)
+                        toggleCell(getCell(
+                            e.shiftKey ? selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1 : selectedCell.row,
+                            e.shiftKey ? selectedCell.col : selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                    else toggleCell(getCell(0, 0));
+                    if(!undoForced) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 38: //Arrow Up
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row - 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row <= 0 ? (TABLE_ROWS - 1) : selectedCell.row - 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 40: //Arrow Down
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { //Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row + 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 39: //Arrow Right
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col + 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 37: //Arrow Left
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col - 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col <= 0 ? (TABLE_COLS - 1) : selectedCell.col - 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 90: // Undo (Redo with Shift)
+                case 89: // Redo
+                    if(e.ctrlKey) performUndoRedo(e);
+                    return;
+
+                case 65: // Seen cell
+                    toggleCellSeen(selectedCell);
+                    return;
+
+                case 83: // Solving cell
+                    toggleCellSolved(selectedCell);
+                    return;
+            }
+        }
+        //#endregion
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路忘る勿かれ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Forget Maze Not.svg" class="diagram">
+                <h2>モジュール詳細：迷路忘る勿かれ</h2>
+                <p class="flavour-text">見失わないフレイバー意味をテキストでように！</p>
+
+                <p><span style="background: #DD0000; color: white; padding: 5px;">赤</span>: 以下に表示される<em>赤の迷路</em>で左下の座標まで移動する。</p>
+                <p><span style="background: #DDDD00; padding: 5px;">黄</span>: 矢印を利用して<em>表示された座標の壁の状態</em>を入力する。</p>
+                <p><span style="background: #0000DD; color: white; padding: 5px;">青</span>: 表示された壁と座標の一部分から、<em>壁の状態が一致するように座標を完成させる</em>。</p>
+                <p><span style="background: #DD00DD; color: white; padding: 5px;">マゼンタ</span>: <em>通常の迷路</em>の出口を探す。</p>
+                <p><span style="background: #00DDDD; padding: 5px;">シアン</span>: <em>反転した迷路</em>の出口を探す。（壁の方向に移動できるが、壁のない方向には移動できない。）</p>
+                <div style="min-height: 20em;"></div>
+                <table id="red_maze">
+                      <tr><td>A1</td><td class="bottom">B1</td><td>C1</td><td class="bottom">D1</td><td class="right">E1</td><td>F1</td><td>G1</td></tr>
+                      <tr><td class="right">A2</td><td class="right">B2</td><td class="bottom">C2</td><td class="right">D2</td><td class="bottom">E2</td><td class="bottom right">F2</td><td>G2</td></tr>
+                      <tr><td class="right">A3</td><td class="bottom">B3</td><td class="bottom">C3</td><td class="bottom right">D3</td><td>E3</td><td>F3</td><td class="bottom">G3</td></tr>
+                      <tr><td class="bottom">A4</td><td class="bottom">B4</td><td class="bottom">C4</td><td class="right">D4</td><td class="right">E4</td><td class="bottom">F4</td><td class="bottom">G4</td></tr>
+                      <tr><td>A5</td><td class="bottom">B5</td><td class="right">C5</td><td class="right">D5</td><td class="right">E5</td><td>F5</td><td>G5</td></tr>
+                      <tr><td class="bottom">A6</td><td class="right">B6</td><td>C6</td><td class="bottom right">D6</td><td class="bottom">E6</td><td class="bottom right">F6</td><td>G6</td></tr>
+                      <tr><td>A7</td><td class="right">B7</td><td class="right">C7</td><td>D7</td><td>E7</td><td>F7</td><td>G7</td></tr>
+                    </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+    </div>
+      <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路忘る勿かれ</span>
+            </div>
+            <div class="page-content">
+                <h2>付録：インタラクティブ迷路</h2>
+
+                <label for="seenMark">入力されたセルの座標の表示:</label>
+                <select name="seenMark" id="seenMark">
+                    <option value="keep">オン</option>
+                    <option value="delete">オフ</option>
+                </select>
+
+                <p></p>
+                <label for="arrowBehavior">矢印キーの挙動:</label>
+                <select name="arrow" id="arrowBehavior" onchange="setArrowsBehavior()">
+                    <option value="arrowBorder">壁を記入・削除する</option>
+                    <option value="arrowMove">移動する</option>
+                </select>
+
+                <p></p>
+                <label>グリッドの大きさ[段/列]:</label>
+                <input type="number" id="gridRow" name="row" min="1" max="26" value="15" onClick="this.select()" oninput="setGridSizeLimit(this)">
+                <input type="number" id="gridCol" name="col" min="1" max="26" value="15" onClick="this.select()" oninput="setGridSizeLimit(this)">
+                <input type="submit" value="生成" onclick="changeGridSize()">
+                <p style="font-size: small;">(表示されている部分のグリッドの状態は、サイズ変更後も保持される。)</p>
+                <button onclick="resetTable()">リセット</button>
+                <p></p>
+
+                <div id="table-container" ></div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路忘る勿かれ</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <p></p>
+                    <table style="width: 100%;">
+                        <tr><th style="width: 18%;">グリッド操作</th><th style="width: 30%;">入力:</th><th style="width: 60%;">内容:</th></tr>
+                        <tr><th rowspan="5">セルの操作</th><td>左クリック(セル)</td><td>セルを選択</td></tr>
+                        <tr><td><span style="color: #000099;">[移動する]:</span><br>矢印キー<br> <span style="color: #000099;">[壁を記入・削除する]:</span> <span style="color: #990000;">無効</span></td><td>隣接するセルに移動 (何も選択されていない場合は、左上のセルを選択) </td></tr>
+                        <tr><td>Tabキー</td><td>右のセルを選択 (何も選択されていない場合は、左上のセルを選択) </td></tr>
+                        <tr><td>Shift + Tabキー</td><td>下のセルを選択(何も選択されていない場合は、左上のセルを選択) </td></tr>
+                        <tr><td>Enterキー</td><td>現在のセルの選択を解除</td></tr>
+                        <tr><th rowspan="2">セルの内容を操作</th><td>右クリック(セル)<br>あるいは<b>S</b>キー</td><td>送信するべきセルをマークする、あるいはマークを削除する</td></tr>
+                        <tr><td>ダブルクリック(セル)<br>あるいは<b>A</b>キー</td><td>入力済のセルとする、あるいは未入力のセルとする。</td></tr>
+                        <tr><th rowspan="1">壁の操作</th><td><span style="color: #000099;">[移動する]:</span> Alt/Ctrl/Shift + 矢印キー<br><span style="color: #000099;">[壁を記入・削除する]:</span>矢印キー</td><td>選択されたセルに隣接した、矢印の方向の壁の状態を切り替える。</td></tr>
+                        <tr><th rowspan="2">一般的な操作</th><td>Ctrl + Z</td><td>最後の入力を元に戻す<span style="color: #990000;">(リセットボタンはもとに戻せない)</span></td></tr>
+                        <tr><td>Ctrl + Y/<br>Ctrl + Shift + Z</td><td>元に戻された入力をやり直す(元に戻した後に他の入力をするとやり直せない)</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+    <script>
+        // Trigger code
+        createTable();
+        setupEventListeners();
+    </script>
+</body>
 </html>
