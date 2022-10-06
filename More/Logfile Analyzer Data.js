@@ -5706,7 +5706,7 @@ let parseData = [
 					var div = $('<div>');
 					var photos = matches[3].split(' ');
 					for (var i = 0; i < photos.length; i++) {
-						div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img src='../HTML/img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
 					}
 					module.push(div);
 					if (matches[6] != '.') {
