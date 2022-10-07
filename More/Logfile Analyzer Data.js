@@ -3253,7 +3253,7 @@ let parseData = [
 						return svg + '</svg>';
 					};
 					
-					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid) });
+					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet:true });
 					return true;
 				}
 			},
@@ -6338,7 +6338,7 @@ let parseData = [
 						return svg + '</svg>';
 					};
 					
-					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid) });
+					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet: true});
 					return true;
 				}
 			},
@@ -6519,7 +6519,7 @@ let parseData = [
 						return svg + '</svg>';
 					};
 					
-					module.push({ label: "The arrangement of tiles is:", obj:module.makeSvg(module.grid) });
+					module.push({ label: "The arrangement of tiles is:", obj:module.makeSvg(module.grid), nobullet:true });
 					return true;
 				}
 			},
@@ -8801,7 +8801,7 @@ let parseData = [
 				regex: /Generating manual with rule seed \d+:/,
 				handler: function(match, module){
 					let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
-					module.push([ match, [ pre(rs.join('\n'))]]);
+					module.push([ match, [ { obj:pre(rs.join('\n')), nobullet:true } ] ] );
 					return true;
 				}
 			},
