@@ -1334,6 +1334,46 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'ApplePenModule',
+		loggingTag: 'Apple Pen',
+		matches: [
+			{
+				regex: /(?:[PAN] ?){36}/,
+				handler: function (match, module) {
+					module.grid = match[0].split(' ');
+				}
+			},
+			{
+				regex: /Starting position: (..)/,
+				handler: function (match, module) {
+					const icons = { 'A':'apple', 'P':'pen', 'N':'pineapple' };
+					const imgstyle = 'width: 1cm; margin: 0';
+					const tdstyle = 'border: 1mm solid; text-align: center;	';
+					
+					const startRow = 'ABCDEF'.indexOf(match[1][0]);
+					const startCol = match[1][1] - '1';
+					
+					let table = "<table style='width: 3in;'>";
+					for (let row = 0; row < 6; row++) {
+						table += '<tr>'; 
+						for (let col = 0; col < 6; col++) {
+							const icon = icons[module.grid[6 * row + col]];
+							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
+							table += `<td style='${tdstyle} background-color: ${fill}'>
+										<img style='${imgstyle}' src='img/PPAP/${icon}.png'/>
+									</td>`;
+						}
+						table += '</tr>';
+					}
+					module.push({ label:'Grid: (starting on green)', obj:table });
+				}
+			},
+			{
+				regex: /Possible solution|submitted/
+			}
+		]
+	},
+	{
 		moduleID: "Keypad",
 		loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
 		matches: [
@@ -9279,6 +9319,46 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Input.push(matches.input);
 				}
+			}
+		]
+	},
+	{
+		moduleID: 'PineapplePenModule',
+		loggingTag: 'Pineapple Pen',
+		matches: [ 
+			{
+				regex: /Generated Grid:/,
+				handler: function (_, module) {
+					const icons = [ 'apple', 'pen', 'pineapple' ];
+					const imgstyle = 'width: 1cm; margin: 0';
+					const tdstyle = 'border: 1mm solid; text-align: center;	';
+
+					let grid = readLines(6).map(l => l.replace(/\[Pineapple Pen #\d+\] /, '').split('').map(ch => ch - '1'));
+					readLine();
+					
+					let start = readLine().match(/[A-F][1-6]/)[0];
+					let startCol = 'ABCDEF'.indexOf(start[0]);
+					let startRow = start[1] - '1';
+					console.log(start);
+					
+					let table = "<table style='width: 3in;'>";
+					for (let row = 0; row < 6; row++) {
+						table += '<tr>'; 
+						for (let col = 0; col < 6; col++) {
+							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
+							table += `<td style='${tdstyle} background-color: ${fill}'>`;
+							if (grid[row][col] != -1)
+								table += `<img style='${imgstyle}' src='img/PPAP/${icons[grid[row][col]]}.png'/>`;
+							table += '</td>';
+						}
+						table += '</tr>';
+					}
+					module.push({ label:'Grid: (starting on green)', obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
