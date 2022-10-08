@@ -5651,7 +5651,7 @@ let parseData = [
 		loggingTag: "The Hypercolor",
 		matches: [
 			{
-				regex: /^Cube (\d+) is/,
+				regex: /^Cube (\w+) is/,
 				handler: function (matches, module) {
 					let lines = readLines(9).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
 					let vertices = [
@@ -5672,14 +5672,14 @@ let parseData = [
 						`<path d='M0 1 2 1 2 3 0 3z' stroke='black' stroke-width='.2' fill='none' />`,
 						`<path d='M0 1 2 1 2 3 0 3z' stroke='#ccc' stroke-width='.125' fill='none' />`
 					];
-					let colors = { 'K': '#000', 'B': '#00f', 'G': '#0f0', 'C': '#0ff', 'R': '#f00', 'M': '#f0f', 'Y': '#ff0', 'W': '#fff' };
+					let colors = { 'K': '#000', 'R':'#F00', 'M':'#800', 'G':'#0F0', 'F':'#080', 'B':'#00F', 'I':'#008' };
+					
 					const radius = .4;
 					for (let v of vertices) {
-						//rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
 						svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col]]}' d='M ${v.x + radius * Math.cos(-Math.PI / 4)} ${v.y + radius * Math.sin(-Math.PI / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} z' />`);
 						svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col + 2]]}' d='M ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 7 / 4)} ${v.y + radius * Math.sin(Math.PI * 7 / 4)} z' />`);
 					}
-					module.push({ label: 'Cube ' + matches[1], obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
+					module.push({ label: 'Cube ' + matches[1] + ':', obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
