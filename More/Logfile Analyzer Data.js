@@ -9582,6 +9582,116 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "pointerPointerModule",
+		loggingTag: "Pointer Pointer",
+		matches: [
+			{
+				regex: /Stage \d+/,
+				handler: function (matches, module) {
+					const colorDict = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#0FF', 'W':'#FFF', 'K':'#444' };
+					const dirs = [ 'U', 'UL', 'L', 'DL', 'D', 'DR', 'D', 'DR' ];
+					
+					readLine();
+					const colors = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					readLine();
+					const dispArrows = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					readLine();
+					const truthDir = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					readLines(2);
+					const path = readLine().replace(/\[Pointer Pointer #\d+\] /, '')
+										  .substring(12).split(' -> ').map(c => ({ x: c[1] - '1', y: 'ABCDEF'.indexOf(c[0]) }));
+					
+					
+					
+					let svg = "<svg viewbox='-5 -5 610 610' style='display: block; width: 3in'>";
+					const arrPath = 'M-15 40V10H-30L0-40 30 10H15V40Z';
+					const triPath = 'M-15 30H15L0 4Z';
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 6; col++) {
+							
+							const start = col == path[0].x && row == path[0].y;
+							const end = col == path[path.length - 1].x && row == path[path.length - 1].y;
+							const rectFill = start ? '#6C8' : '#888';
+							 
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'> 
+										<rect width='100', height='100' stroke='#222' stroke-width='5' fill='${rectFill}'/>`;
+							if (end)
+								g += `<circle cx='50' cy='50' r='45' fill='#F0F0F0'/> 
+									  <circle cx='50' cy='50' r='30' fill='${rectFill}'/>`;
+							
+							const fill = colorDict[colors[row][col]];
+							const dir = 45 * dirs.indexOf(dispArrows[row][col]);
+							g += `<path d='${arrPath}' fill='${fill}' transform='translate(50, 50) rotate(${dir})'/>`;
+							svg += g + '</g>';
+						}
+					}
+					let prev = path[0];
+					let line = `M ${100 * prev.x + 50} ${100 * prev.y + 50} `;
+					svg += `<circle r='15' cx='${100 * prev.x + 50}' cy='${100 * prev.y + 50}' fill='#000'/>`;
+					
+					for (let i = 1; i < path.length; i++) 
+					{
+						let node = path[i];
+						let cx = 100 * node.x + 50;
+						let cy = 100 * node.y + 50;
+						let xDiff = node.x - prev.x;
+						let yDiff = node.y - prev.y;
+						const xWrap = Math.abs(xDiff) == 5;
+						const yWrap = Math.abs(yDiff) == 5;
+						if (xWrap)
+							xDiff /= -5;
+						if (yWrap)
+							yDiff /= -5;
+						let midpointX = 100 * prev.x + 50 + 50 * xDiff;
+						let midpointY = 100 * prev.y + 50 + 50 * yDiff;
+						
+						
+						const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI + 90;
+						
+						line += `L ${midpointX} ${midpointY} `;
+						svg += `<path transform='translate(${midpointX}, ${midpointY}) rotate(${angle})' 
+									fill='#000' d='${triPath}'/>`;
+						if (xWrap)
+							midpointX = 600 - midpointX;
+						if (yWrap)
+							midpointY = 600 - midpointY;
+						line += `M ${midpointX} ${midpointY} L ${cx} ${cy} `;
+						prev = node;
+						svg += `<circle r='15' cx='${cx}' cy='${cy}' fill='#000'/>`;
+					}
+					svg += `<path d='${line}' fill='none' stroke-width='7.5' stroke='#000'/>`;
+					
+					const last = 'ABCDEF'[path[path.length - 1].y] + '123456'[path[path.length - 1].x];
+					
+					module.push([ matches[0] + ': Press ' + last, [ { obj: svg + '</svg>', nobullet:true } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Total Stages Generatable/,
+				handler: function (_, module) { 
+					module.push('Stage Legend: Green cell = starting point, Ring = stage answer');
+				}
+			},
+			{
+				regex: /Actions Performed/,
+				handler: function (_, module) {
+					module.actions = [ ];
+					module.push([ 'Actions Performed', module.actions ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (module.actions)
+						module.actions.push(match[0]);
+					else module.push(match[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "PointOfOrderModule",
 		loggingTag: "Point of Order",
 		matches: [
