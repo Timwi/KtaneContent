@@ -9668,8 +9668,8 @@ let parseData = [
 			{
 				regex: /Stage \d+/,
 				handler: function (matches, module) {
-					const colorDict = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#0FF', 'W':'#FFF', 'K':'#444' };
-					const dirs = [ 'U', 'UL', 'L', 'DL', 'D', 'DR', 'D', 'DR' ];
+					const colorDict = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0', 'W':'#FFF', 'K':'#444' };
+					const dirs = [ 'U', 'UR', 'R', 'DR', 'D', 'DL', 'L', 'DL' ];
 					
 					readLine();
 					const colors = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
@@ -9679,7 +9679,7 @@ let parseData = [
 					const truthDir = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
 					readLines(2);
 					const path = readLine().replace(/\[Pointer Pointer #\d+\] /, '')
-										  .substring(12).split(' -> ').map(c => ({ x: c[1] - '1', y: 'ABCDEF'.indexOf(c[0]) }));
+										  .substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
 					
 					
 					
@@ -9741,7 +9741,7 @@ let parseData = [
 					}
 					svg += `<path d='${line}' fill='none' stroke-width='7.5' stroke='#000'/>`;
 					
-					const last = 'ABCDEF'[path[path.length - 1].y] + '123456'[path[path.length - 1].x];
+					const last = 'ABCDEF'[path[path.length - 1].x] + '123456'[path[path.length - 1].y];
 					
 					module.push([ matches[0] + ': Press ' + last, [ { obj: svg + '</svg>', nobullet:true } ] ]);
 					return true;
