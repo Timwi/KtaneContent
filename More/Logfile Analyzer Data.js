@@ -12671,6 +12671,81 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "understand",
+		loggingTag: "Understand",
+		matches: [
+			{
+				regex: /Stage #\d+: (.+)/,
+				handler: function (matches, module) {
+					if (!module.stages)
+						module.stages = [ ];
+					const grid = matches[1].split(';').map(l => l.split(' '));
+					const shapes = {
+						'.':'M0 0',
+						'Tu':'M-40 34.5H40L0-34.5Z',
+						'Tr':'M34 0-34.5-40v80Z',
+						'Td':'M-40-34.5H40L0 34.5Z',
+						'Tl':'M-34 0 34.5-40v80Z',
+						'St':'M0-35.9-7.4-10.1-34-11-11 3.7-21.2 29.4 0 12 21.2 29.4 11 3.7 34-11 7.4-10.1Z',
+						'Sq':'M-36-36H36V36H-36Z',
+						'H':'M0 36.8-33.1 3.7A11 11 90 010-30.4 11 11 90 0133.1 3.7Z',
+						'D':'M0 36 36 0 0-36-36 0z',
+						'O':'M-36 0A36 36 0 0036 0 36 36 0 00-36 0'
+					};
+					let svg = "<svg viewbox='-20 -20 860 860' style='display: block; width: 3in'>";
+					svg += "<rect x='-20' y='-20' width='860' height='860' fill='#22222C' rx='20' ry='20'/>";
+					let symbols = [ ];
+					
+					for (let row = 0; row < 7; row++) {
+						for (let col = 0; col < 7; col++) {
+							svg += `<rect x='${120 * row}' y='${120 * col}' width='100' height='100' fill='none' stroke='#888' stroke-width='5'/>`;
+							if (grid[row][col] != '.')
+								symbols.push(`<path transform='translate(${120 * row + 50}, ${120 * col + 50})' d='${shapes[grid[row][col]]}' fill='#222' stroke='#AAA' stroke-width='5' stroke-linejoin='round'/>`);
+						}
+					}
+					module.stages.push(symbols);
+					module.grid = svg;
+				}
+			},
+			{
+				regex: /Stage #(\d+) (solution|attempt): (..) ([urdl]+)(.*)/,
+				handler: function(matches, module) {
+					const stage = matches[1] - '1';
+					let svg = module.grid;
+					let symbols = module.stages[stage];
+					let start = { x: 'ABCDEFG'.indexOf(matches[3][0]), y: matches[3][1] - '1' };
+					let d = `M ${120 * start.x + 50} ${120 * start.y + 50} l `;
+					for (let direction of matches[4]) {
+						switch (direction){
+							case 'u': d += '0 -120 '; break;
+							case 'r': d += '120 0 '; break;
+							case 'd': d += '0 120 '; break;
+							case 'l': d += '-120 0 '; break;	
+						}
+					}
+					svg += `<path d='${d}' stroke='#AAA' stroke-width='12' fill='none'/>`;
+					for (let s of symbols)
+						svg += s;
+					svg += `<circle cx='${120 * start.x + 50}' cy='${120 * start.y + 50}' r='20' fill='#AAA'/>`
+					
+					if (matches[2] == 'solution')
+						module.push({ label:`Stage #${matches[1]} solution:`, obj:svg});
+					else module.push([ `Stage #${matches[1]} submission${matches[5]}`, [{ obj:svg + '</svg>', nobullet:true }] ]);
+				}
+			},
+			{
+				regex: /Rule #\d+.+/,
+				handler: function (match, module) {
+					if (!module.rules){
+						module.rules = [ ];
+						module.push([ 'Rules', module.rules ]);
+					}
+					module.rules.push(match[0]);
+				}
+			}
+		]	
+	},
+	{
 		moduleID: "USA",
 		loggingTag: "USA Maze",
 		displayName: "USA Maze",
