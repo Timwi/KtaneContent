@@ -12098,10 +12098,10 @@ let parseData = [
 							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
 					module.push({ label:'Grid', obj:svg + '</svg>' });
 					return true;
-				},
-				{
-					regex: /.+/
-				}
+        }
+      },
+			{
+				regex: /.+/
 			}
 		]
 	},
