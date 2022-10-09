@@ -13300,9 +13300,9 @@ let parseData = [
 		]
 	},
 	{
-		displayName: ["X-Ray", "Not X-Ray"],
-		moduleID: ["XRayModule", "NotXRayModule"],
-		loggingTag: ["X-Ray", "Not X-Ray"],
+		displayName: ["X-Ray", "Not X-Ray", "X-RGB"],
+		moduleID: ["XRayModule", "NotXRayModule", "xrgb"],
+		loggingTag: ["X-Ray", "Not X-Ray", "X-RGB"],
 		matches: [
 			{
 				regex: /.+/,
