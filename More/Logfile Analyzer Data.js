@@ -6161,6 +6161,67 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'latinHypercube',
+		loggingTag: 'Latin Hypercube',
+		matches: [ 
+			{
+				regex: /The given shapes are:|Solution:/,
+				handler: function(matches, module){
+					
+					const paths = { 
+						'T':'M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30',
+						'H':'M0-2.2 37.6-21 0-39.8-37.6-21 0-2.2 0 39.8 37.6 21 37.6-21M-37.6-21-37.6 21 0 39.8 0-2.2 0-2.2',
+						'O':'M0 40 40 0 0-40-40 0zV-40M-40 0h80',
+						'D':'M0-26.7 25.3-8.3 15.7 21.6-15.7 21.6-25.3-8.3ZM15.7 21.6 23.5 32.4 38 12.4 37.3-12 25.3-8.3ZM-15.7 21.6-23.5 32.4 0 40 23.5 32.4 15.7 21.6M-23.5 32.4-38 12.4-37.3-12-25.3-8.3-15.7 21.6M0-26.7 0-40-23.5-32.4-37.3-12-25.3-8.3M0-40 23.5-32.4 37.3-12 25.3-8.3 0-26.7'
+					};
+					const fills = { 'T':'#FF0000', 'H':'#FF5800', 'O':'#FF9E00', 'D':'#FFFF00' };
+					const arrowHead = 'M-30 30 0 0 30 30 0 0';
+					
+					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
+					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#222' rx='50' ry='50'/>";
+					
+					let grid = readLines(19).map(l => 
+													l.replace(/\[Latin Hypercube #\d+\] /, '').replace(/ /g, '').split('')
+												 ).filter(l => l.length > 0);
+					for (let w = 0; w < 4; w++) {
+						for (let z = 0; z < 4; z++) {
+							for (let y = 0; y < 4; y++) {
+								for (let x = 0; x < 4; x++) {
+									let xPosition = 475 * y + 100 * x;
+									let yPosition = 475 * w + 100 * z;
+									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#47E9D4' stroke-width='15'/>`;
+									let shape = grid[4 * w + z][4 * y + x];
+									if (shape != '#')
+										svg += `<path transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}' 
+													fill='${fills[shape]}' stroke='#FFF' stroke-width='5' stroke-linejoin='round'/>`;
+								}
+							}
+						}
+					}
+					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+							
+							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							
+							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							
+							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+					module.push({ label:matches[0], obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /Placed|does not belong/
+			}
+		]
+	},
+	{
 		moduleID: "Laundry",
 		loggingTag: "Laundry",
 		matches: [
