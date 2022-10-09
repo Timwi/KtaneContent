@@ -9865,7 +9865,6 @@ let parseData = [
 
 						module.lines = readLines(10).map(l => l.replace(/\[Polygrid #\d+\] /, '').substring(1,10).split('|'));
 						const letters = ['A','B','C','D','E','F','G','H','I','J'];
-						console.log(module.lines);
 						let div = "<div style='display: flex; flex-flow: row wrap'>";
 
 						for (let line = 0; line < 10; line++) {
@@ -12050,6 +12049,59 @@ let parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: 'Tesseractivity',
+		loggingTag: 'Tesseractivity',
+		matches: [
+			{
+				regex: /Grid:/,
+				handler: function(_, module) {
+										const arrowHead = 'M-30 30 0 0 30 30 0 0';
+					
+					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
+					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#1B5EB2' rx='50' ry='50'/>";
+					
+					let grid = readLines(19).map(l => 
+													l.replace(/\[Tesseractivity #\d+\] /, '').replace(/[^*#]/g, '').split('')
+												 ).filter(l => l.length > 0);
+					for (let w = 0; w < 4; w++) {
+						for (let z = 0; z < 4; z++) {
+							for (let y = 0; y < 4; y++) {
+								for (let x = 0; x < 4; x++) {
+									const xPosition = 475 * y + 100 * x;
+									const yPosition = 475 * w + 100 * z;
+									const fill = grid[4 * w + z][4 * y + x] == '#' ? '#FFF' : '#KKK'
+									
+									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#5CF' stroke-width='15'/>`;	
+									svg += `<circle r='20' cx='${xPosition + 50}' cy='${yPosition  + 50}' fill='${fill}'/>`;
+								}
+							}
+						}
+					}
+					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+							
+							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							
+							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							
+							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+					module.push({ label:'Grid', obj:svg + '</svg>' });
+					return true;
+				},
+				{
+					regex: /.+/
+				}
 			}
 		]
 	},
