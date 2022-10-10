@@ -11227,7 +11227,7 @@ let parseData = [
 				handler: function(match, module) {
 					let grid = readLines(3).map(l => l.replace(/\[Shapes and Colors #\d+\] /, '').split(' '));
 					let svg = "<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black'>";
-					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F' };
+					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#F00' };
 					const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
 					for (let row = 0; row < 3; row++) {
 						for (let col = 0; col < 3; col++) {
@@ -11236,11 +11236,11 @@ let parseData = [
 							if (!cell.match((/^-?[RGB]$|KK/)))
 								g += "<rect width='100' height='100' fill='#FFF'/>";
 							if (cell.match(/[RGB][CDT]/))
-								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}'/>`;
+								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
 							else if (cell.match(/-?[RGB]/))
 								g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
 							else if (cell.match(/-?[CDT]/))
-								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888'/>`;
+								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
 							if (cell[0] == '-')
 								g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
 							svg += g + '</g>';
