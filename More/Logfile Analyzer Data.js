@@ -10484,6 +10484,46 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'robitProgramming',
+		loggingTag: 'Robit Programming',
+		matches: [
+			{
+				regex: /The maze has now been locked into the following:/,
+				handler: function(match, module) {
+					const grid = readLines(11).map(l => l.replace(/\[Robit Programming #\d+\] /, '').split('').map(ch => ch == 'X'));
+					
+					let svg = `<svg viewbox='0 0 26 26' style='display: block; width: 3in; margin: 2mm 0'>`;
+					
+					for (let row = 0; row < 5; row++){
+						for (let col = 0; col < 5; col++) {
+							let g = `<g fill='#000' transform='translate(${5 * col}, ${5 * row})'>`
+							if (grid[2 * row][2 * col + 1])
+								g += "<rect x='0' y='0' width='6' height='1'/>";
+							if (grid[2 * row + 1][2 * col])
+								g += "<rect x='0' y='0' width='1' height='6'/>";
+							g += "<rect width='1' height='1' x='2.5' y='2.5' fill='#444'/>"
+							svg += g + '</g>';
+							
+						}
+					}
+					svg += "<rect x='0' y='25' fill='#000' width='26' height='1'/>";
+					svg += "<rect x='25' y='0' fill='#000' width='1' height='26'/>";
+					module.push({ label:match, obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /(.+(?:the following string, |quirks: ))\[?([01]+|[\w, ]+)/,
+				handler: function(matches, module) {
+					module.push({ label: matches[1], obj: pre(matches[2]) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Round Keypad",
 		moduleID: "KeypadV2",
 		loggingTag: "Round Keypad",
