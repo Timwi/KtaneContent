@@ -8658,7 +8658,7 @@ let parseData = [
 			{
 				regex: /Generated Maze is/,
 				handler: function (matches, module) {
-					var table = $('<table>').css({ 'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto" });
+					var table = $('<table>').css({ 'border-collapse': "collapse", "width": "10cm", "display":"block" });
 					var maze = readLines(17);
 					for (var i = 0; i < 8; i++) {
 						var row = $('<tr>').appendTo(table);
@@ -8668,11 +8668,11 @@ let parseData = [
 							width += maze[2 * i + 1][2 * j + 2] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 2][2 * j + 1] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 1][2 * j] !== "■" ? " 0px" : " 5px";
-							var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%" }).appendTo(row);
+							var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "1.25cm", "padding-bottom": "12.5%" }).appendTo(row);
 							var cellValue = /[IKYE]/.exec(maze[2 * i + 1][2 * j + 1]);
 							if (cellValue !== null) {
 								cell.css("padding-bottom", "0%");
-								$('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%" }).appendTo(cell);
+								$('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "18pt", "height": "12.5%" }).appendTo(cell);
 							}
 						}
 					}
