@@ -13054,26 +13054,47 @@ let parseData = [
 		loggingTag: "Wander",
 		matches: [
 			{
-				regex: /Maze walls, before transformation:/,
+				regex: /Maze walls, (before|after) transformation:/,
 				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 8; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Maze walls, before transformation:", obj: pre(lines) });
+					if (matches[1] == 'before')
+						module.beforeMaze = readTaggedLines(9);
+					else 
+						module.push({ label: matches[0], obj:module.genSVG(readTaggedLines(9)) });
 					return true;
 				}
 			},
 			{
-				regex: /Maze walls, after transformation:/,
+				regex: /The color of the walls is (\w+)./,
 				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 8; i++) {
-						lines += `\n${readTaggedLine()}`;
+					module.genSVG = function (maze) {
+						
+						let svg = "<svg viewbox='-50 -50 500 500' style='width: 2in; display: block'>";
+						svg += "<rect x='-50' y='-50' width='500' height='500' fill='#000' rx='33' ry='33'/>";
+						
+						const color = module.wallColor ?? '#FFF';
+						for (let row = 0; row < 5; row++) {
+							for (let col = 0; col < 5; col++) {
+								let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
+								g += `<circle r='15' fill='${color}'/>`;
+								if (col != 4 && row != 4) {
+									if (maze[2 * row][2 * col + 1] == '#')
+										g += `<line x2='100' stroke='${color}' stroke-width='10'/>`;
+									if (maze[2 * row + 1][2 * col] == '#')
+										g += `<line y2='100' stroke='${color}' stroke-width='10'/>`;										
+								}
+								svg += g + '</g>';
+							}
+						}
+						svg += `<line y1='400' x2='400' y2='400' stroke='${color}' stroke-width='10'/>`;
+						svg += `<line x1='400' x2='400' y2='400' stroke='${color}' stroke-width='10'/>`;
+						return svg + '</svg>';
 					}
-
-					module.push({ label: "Maze walls, after transformation:", obj: pre(lines) });
+					const colors = { 'BLACK':'#888', 'RED':'#F00', 'GREEN':'#0F0', 'BLUE':'#00F', 'CYAN':'#0FF', 'MAGENTA':'#F0F', 'YELLOW':'#FF0', 'WHITE':'#FFF' };
+					module.wallColor = colors[matches[1]];
+					
+					module.push(matches[0]);
+					if (module.beforeMaze)
+						module.push({ label:'Maze walls, before transformation:', obj:module.genSVG(module.beforeMaze) });
 					return true;
 				}
 			},
