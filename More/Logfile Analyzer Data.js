@@ -676,12 +676,8 @@ let parseData = [
 				regex: /Showing fur pattern (\d+) rotated (\d+)° clockwise/,
 				handler: function (m, module) {
 					module.push({
-						label: 'Fur pattern shown on module:', obj: $(`<div style="
-							border-radius: 100%;
+						label: 'Fur pattern shown on module:', obj: $(`<div class='dalmatians-pattern' style="
 							background-image: url('img/101 Dalmatians/Fur${m[1]}.png');
-							background-size: contain;
-							width: 10cm;
-							height: 10cm;
 							transform: rotate(${m[2]}deg);
 						"></div>`)
 					});
@@ -708,7 +704,7 @@ let parseData = [
 						module.CorrectValues = {};
 						module.CorrectValuesFull = {};
 						module.ListObject = {
-							label: 'Module information:', obj: $(`<table style='border-collapse: collapse; text-align: center'>
+							label: 'Module information:', obj: $(`<table class='fourteen-table'>
 							<tr>
 								<th colspan='2'>Stages</th>
 								<td class='sep' rowspan='2'></td>
@@ -719,20 +715,19 @@ let parseData = [
 							<tr>
 								<th>#</th>
 								<th>LED</th>
-								<th style='background: #f99'>R</th>
-								<th style='background: #8f8'>G</th>
-								<th style='background: #aaf'>B</th>
-								<th style='background: #f99'>R</th>
-								<th style='background: #8f8'>G</th>
-								<th style='background: #aaf'>B</th>
+								<th class='colored' style='background: #f99'>R</th>
+								<th class='colored' style='background: #8f8'>G</th>
+								<th class='colored' style='background: #aaf'>B</th>
+								<th class='colored' style='background: #f99'>R</th>
+								<th class='colored' style='background: #8f8'>G</th>
+								<th class='colored' style='background: #aaf'>B</th>
 							</tr>
 						</table>`)
 						};
 						module.push({ label: `<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>` });
 						module.push(module.ListObject);
 						module.SetCss = function () {
-							module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
-							module.ListObject.obj.find('.sep').get().forEach(x => { x.setAttribute('rowspan', 2 + module.TableData.length); x.style.border = 'none'; });
+							module.ListObject.obj.find('.sep').get().forEach(x => x.setAttribute('rowspan', 2 + module.TableData.length));
 						};
 					}
 					while (module.TableData.length <= matches[1])
@@ -752,13 +747,14 @@ let parseData = [
 						};
 						let ix = +matches[1];
 						module.ListObject.obj.append($(`<tr>
-							<td>${ix}</td><td style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
-							<td style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
-							<td style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
-							<td style='background: #ccf' title='${module.TableData[ix].B.fulldisplay}'>${module.TableData[ix].B.display}</td>
-							<td style='background: #fbb' title='${module.TableData[ix].R.full}'>${module.TableData[ix].R.result}</td>
-							<td style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
-							<td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
+							<td>${ix}</td>
+							<td class='colored' style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
+							<td class='colored' style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
+							<td class='colored' style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
+							<td class='colored' style='background: #ccf' title='${module.TableData[ix].B.fulldisplay}'>${module.TableData[ix].B.display}</td>
+							<td class='colored' style='background: #fbb' title='${module.TableData[ix].R.full}'>${module.TableData[ix].R.result}</td>
+							<td class='colored' style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
+							<td class='colored' style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
 						</tr>`));
 						module.SetCss();
 						module.JSONs.push(module.Stage);
@@ -775,11 +771,11 @@ let parseData = [
 					module.CorrectValuesFull[matches[1]] = matches[2];
 					module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
 					if (matches[1] === 'B') {
-						module.ListObject.obj.append($(`<tr>
-							<th colspan='7' style='text-align: right'>Final answer</th>
-							<td style='border: 1px solid black; background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
-							<td style='border: 1px solid black; background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
-							<td style='border: 1px solid black; background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
+						module.ListObject.obj.append($(`<tr class='stage-answer'>
+							<th colspan='7'>Final answer</th>
+							<td class='colored' style='background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
+							<td class='colored' style='background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
+							<td class='colored' style='background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
 						</tr>`));
 						module.SetCss();
 					}
@@ -854,9 +850,10 @@ let parseData = [
 		loggingTag: "1D Chess",
 		matches: [
 			{
-				regex: /The position is.*/,
+				regex: /.+/,
 				handler: function (matches, module) {
-					let html = matches[0].replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span style='background: black; color: white; padding: 0 .1cm'>${m}</span>`);
+					let html = matches[0].replace(/[^\[]([A-Z] [a-z]→[a-z])[^\]]/g, (_, m) => ` <span class='one-d-chess-white-move'>${m}</span>,`)
+										  .replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span class='one-d-chess-black-move'>${m}</span>`);
 					let obj = document.createElement('span');
 					obj.innerHTML = html;
 					module.push({ obj: obj });
