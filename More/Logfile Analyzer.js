@@ -1350,6 +1350,13 @@ function readLines(count) {
         lines.push(readLine());
     return lines;
 }
+function readTaggedLines(count) {
+    var lines = [];
+    for (var i = 0; i < count; i++)
+        lines.push(readTaggedLine());
+    return lines;
+}
+
 
 function readDirectly(line, name, id) {
     if (line instanceof Array) {
