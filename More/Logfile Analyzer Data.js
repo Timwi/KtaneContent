@@ -1474,10 +1474,10 @@ let parseData = [
 		loggingTag: "Badugi",
 		matches: [
 			{
-				regex: /^(The hand on the (left|right) is )(.+)—(a(n|)(.+))$/,
+				regex: /^(The hand on the (left|right) is) (.+)—(a(n|)(.+))$/,
 				handler: function (matches, module) {
-					module.push(matches[1]);
-					module.push($("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]));
+					module.push(matches[1] + ':');
+					module.push({ obj: $("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]), nobullet:true });
 					module.push(matches[6]);
 					return true;
 				}
