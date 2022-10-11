@@ -1269,7 +1269,7 @@ let parseData = [
 			{
 				regex: /^The walls of the generated maze are as follows:$/,
 				handler: function (matches, module) {
-					module.push({ label: matches[0], obj: pre(readMultiple(9).replace(/\[Algorithmia #\d+\] /g, "")) });
+					module.push({ label: matches[0], obj: pre(readTaggedLines(9).join('\n')) });
 					return true;
 				}
 			},
@@ -1871,7 +1871,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: matches.input,
-						obj: pre(readMultiple(9, function (str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+						obj: pre(readTaggedLines(9).join('\n'))
 							.css('color', matches[1] === 'red' ? '#800' :
 								matches[1] === 'green' ? '#080' :
 									matches[1] === 'blue' ? '#008' :
@@ -2004,7 +2004,7 @@ let parseData = [
 			{
 				regex: /(Expecting:|You submitted:)/,
 				handler: function (matches, module) {
-					module.push({ label: matches[0], obj: pre(readMultiple(8).replace(/\[Boomdas #\d+\] /g, "").replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
+					module.push({ label: matches[0], obj: pre(readTaggedLines(8).join('\n').replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
 					return true;
 				}
 			},
@@ -2033,7 +2033,7 @@ let parseData = [
 			{
 				regex: /Full grid/,
 				handler: function(_, module){
-					const grid = readLines(8).map(l => l.replace(/\[Boozleage #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'Y':'#FF0', 'G':'#0F0', 'B':'#00F', 'M':'#F0F', 'W':'#FFF' };
 					const octagonPath = 'M0 5l5-5h10l5 5v10l-5 5h-10l-5-5z';
 					let svg = `<svg viewbox='-2 -2 172 172' style='width: 4.5in; display: block; margin: 0'>`;
@@ -2276,7 +2276,7 @@ let parseData = [
 			{
 				regex: /Buttons:/,
 				handler: function(_, module) {
-					const grid = readLines(8).map(l => l.replace(/\[Buttonage #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'Y':'#FF0', 'K':'#000', 'W':'#FFF', 'I':'#FFA8F3', 'O':'#EE5716', 'A':'#777' };
 					const textColors = { 'R':'#FFF', 'G':'#FFF', 'B':'#FFF', 'W':'#F00', 'Y':'#FF8F00' };
 					let svg = `<svg viewbox='-1 -1 162 162' style='display: block; width: 4in; margin-bottom: 0.5cm'>`;
@@ -2348,7 +2348,7 @@ let parseData = [
 
 					const colors = { 'R':'#F00', 'P':'#0F0', 'S':'#00F', 'X':'#000' };
 					const pics = { 'R':'Rock', 'P':'Paper', 'S':'Scissors', 'X':'WEEDNUTS' };
-					const grid = readLines(8).map(l => l.replace(/\[CA-RPS #\d+\] /, ''));
+					const grid = readTaggedLines(8);
 					let svg = `<svg viewbox='0 0 60 80' style='width: 3in; display: block'>`;
 
 					for (let row = 0; row < 8; row++){
@@ -2683,7 +2683,7 @@ let parseData = [
 					});
 					readLine();
 					for (let i = 0; i < 3; i++) {
-						module.push(readLine().replace(/\[Colour Flash Translated #\d+\] /, ""));
+						module.push(readTaggedLine());
 					}
 					return true;
 				}
@@ -3263,7 +3263,7 @@ let parseData = [
 									'Spade':'M-.15-38.5C-1.55-17.5-31.45-15.9-29.15 7.1-27.45 13.7-22.55 18.7-16.45 20.3-15.35 20.6-14.15 20.8-12.95 20.8-9.95 20.9-6.85 19.8-4.25 18.4-4.75 25.7-7.35 32.5-12.55 38.6-8.55 39.1 6.65 38.9 11.25 38.8 6.35 32.5 4.15 25.9 3.85 18.3 7.55 20.5 11.95 21.1 16.15 20 22.25 18.4 27.05 13.4 28.85 6.8 31.75-13.9 1.45-17.6.05-38.5Z', 
 									'Sword':'M.55-37.9-19.25-23.6-11.35 16.1H-21.25V24.6H-4.75V39.2H5.75V24.6H21.75V16.1H12.55L19.45-23.6Z' };
 					
-					const config = readLines(5).map(l => l.replace(/\[Cruel Match 'em #\d+\] /, '').split(', ').map(x => x.split(' ')));
+					const config = readTaggedLines(5).map(l => l.split(', ').map(x => x.split(' ')));
 					for (let row = 0; row < 5; row++) {
 						module.grid.push( [ ] );
 						for (let col = 0; col < 5; col++) {
@@ -3600,7 +3600,7 @@ let parseData = [
 			{
 				regex: /^Generated Maze:$/,
 				handler: function (matches, module) {
-					let maze = readMultiple(9).replace(/\[Cursor Maze #\d+\]/g, '').split('\n').slice(0, 8);
+					let maze = readTaggedLines(9).slice(0, 8);
 					let table = $('<table>');
 					for (let i = 0; i < 8; i++) {
 						let tr = $('<tr>').appendTo(table);
@@ -4047,7 +4047,7 @@ let parseData = [
 					let lineCount = matches[1] * 2 + 1;
 					let line = readTaggedLine();
 					module.push(matches.input);
-					var maze = readMultiple(lineCount).replace(/\[Echolocation #\d+\] /g, '');
+					var maze = readTaggedLines(lineCount).join('\n');
 					module.push({ label: line, obj: pre(maze) });
 					return true;
 				}
@@ -4199,7 +4199,7 @@ let parseData = [
 			{
 				regex: /The generated with its walls is as follows:/,
 				handler: function (matches, module) {
-					module.push({ label: "The maze generated with its walls as follows:", obj: pre(readMultiple(9).replace(/\[Factoring Maze #\d+\] /g, "")) });
+					module.push({ label: "The maze generated with its walls as follows:", obj: pre(readTaggedLines(9).join('\n')) });
 					return true;
 				}
 			},
@@ -4961,7 +4961,7 @@ let parseData = [
 			{
 				regex: /Initial Board State:|Expected board state after \d+ iterations?:/,
 				handler: function (matches, module) {
-					let grid = readLines(6).map(l => l.replace(/\[Game Changer #\d+\] /, ''));
+					let grid = readTaggedLines(6);
 					let svg = `<svg style='display: block; width: 2in' viewbox='0 0 38 74'>`;
 					svg += `<rect fill='#89b' x='0' y='0' width='38' height='74'/>`;
 					for (let row = 0; row < 6; row++){
@@ -4994,7 +4994,7 @@ let parseData = [
 						"yellow": "#FFFF00",
 						"cyan": "#00FFFF"
 					}[matches[1]];
-					let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+					let grid = readTaggedLines(5);
 					let table = $('<table>').css('border-collapse', 'collapse');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
@@ -5027,7 +5027,7 @@ let parseData = [
 						'W': "#FFFFFF",
 						'K': "#000000"
 					};
-					let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+					let grid = readTaggedLines(5);
 					let table = $('<table>').css('border-collapse', 'collapse');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
@@ -5653,7 +5653,7 @@ let parseData = [
 			{
 				regex: /^Cube (\w+) is/,
 				handler: function (matches, module) {
-					let lines = readLines(9).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
+					let lines = readTaggedLines(9);
 					let vertices = [
 						{ line: 0, col: 3, x: 1, y: 0 },
 						{ line: 0, col: 13, x: 3, y: 0 },
@@ -5909,7 +5909,7 @@ let parseData = [
 			{
 				regex: /^(Solution|Codings|New codings):$/,
 				handler: function (matches, module) {
-					var lines = readLines(6).map(l => l.replace(/\[Kyudoku #\d+\] /g, "").trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
+					var lines = readTaggedLines(6).map(l => l.trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
 					module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse; text-align: center;'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
 					return true;
 				}
@@ -6180,8 +6180,7 @@ let parseData = [
 					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
 					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#222' rx='50' ry='50'/>";
 					
-					let grid = readLines(19).map(l => 
-													l.replace(/\[Latin Hypercube #\d+\] /, '').replace(/ /g, '').split('')
+					let grid = readTaggedLines(19).map(l => l.replace(/ /g, '').split('')
 												 ).filter(l => l.length > 0);
 					for (let w = 0; w < 4; w++) {
 						for (let z = 0; z < 4; z++) {
@@ -6410,7 +6409,7 @@ let parseData = [
 					module.invert = [ 'B', 'F', 'V' ];
 					module.grid = [ ];
 					
-					const config = readLines(5).map(l => l.replace(/\[Match 'em #\d+\] /, '').split(' '));
+					const config = readTaggedLines(5).map(l => l.split(' '));
 					for (let row = 0; row < 5; row++) {
 						module.grid.push( [ ] );
 						for (let col = 0; col < 5; col++) {
@@ -6590,7 +6589,7 @@ let parseData = [
 					module.grid = [ ];
 					const nameReplace = { '+':'Plus', '-':'Diff', '^':'Xor', '/':'Mod' };
 					
-					const config = readLines(4).map(l => l.replace(/\[Math 'em #\d+\] /, '').split(' '));
+					const config = readTaggedLines(4).map(l => l.split(' '));
 					for (let row = 0; row < 4; row++) {
 						module.grid.push( [ ] );
 						for (let col = 0; col < 4; col++) {
@@ -6830,8 +6829,8 @@ let parseData = [
 			},
 			{
 				regex: /Solution:/,
-				handler: function (matches, module) {
-					module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, "")) });
+				handler: function (matches, module) {;
+					module.push({ label: "Solution:", obj: pre(readTaggedLines(15).join('\n')) });
 					return true;
 				}
 			},
@@ -7194,7 +7193,7 @@ let parseData = [
 			{
 				regex: /The dots\/circles are in the following pattern, where 0=blank,1=white,2=black.../,
 				handler: function (matches, module) {
-					var board = readMultiple(8).replace(/\[Masyu #\d+\] /g, "");
+					var board = readTaggedLines(8).join('\n');
 					var row = board.replace(/\r/g, '').split('\n');
 					var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
 					for (let i = 0; i < 7; i++) {
@@ -7634,7 +7633,7 @@ let parseData = [
 			{
 				regex: /Solution:/,
 				handler: function(_, module){
-					let grid = readLines(18).map(l => l.replace(/\[Mazeswapper #\d+\] /,'').split(' '));
+					let grid = readTaggedLines(18).map(l => l.split(' '));
 
 					let svg = `<svg viewbox='-5 -5 670 670' style='display: block; width: 4in'>`;
 
@@ -7769,7 +7768,7 @@ let parseData = [
 			{
 				regex: /The (suit|rank) table used is:/,
 				handler: function (matches, module) {
-					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(4).map(l => l.split(' '));
 					const tdStyle = 'width: 0.9cm; height: 0.9cm; text-align: center; vertical-align: middle; border: 2px solid black; padding: 0;';
 					
 					let table = '<table>';
@@ -7793,7 +7792,7 @@ let parseData = [
 			{
 				regex: /The face-up cards are:|The starting grid is:/,
 				handler: function (match, module) {
-					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(4).map(l => l.split(' '));
 					let svg = `<svg viewbox='-5 -5 101 101' style='width: 2.5in; display: block;'>
 							   <rect x='-5' y='-5' width='101' height='101' rx='5' ry='5' fill='#084'/>`;
 					for (let row = 0; row < 4; row++) {
@@ -8158,7 +8157,7 @@ let parseData = [
 			{
 				regex: /Initial state:|Particular solution:/,
 				handler: function(matches, module) {
-					const lines = readLines(6).map(l => l.replace(/\[Mineswapper #\d+\] /, '').split('|'));
+					const lines = readTaggedLines(6).map(l => l.split('|'));
 					const nums = lines.map(row => row.map(cell => cell[1]));
 					const mines = lines.map(row => row.map(cell => cell[0] == '*'));
 					const minePath = 'm49.55 5a4.95 4.95 90 00-4.8 4.95l0 10.05a30 30 90 00-12.6 5.1l-7.05-7.05a4.95 4.95 90 00-7.05 7.05l7.05 7.2a30 30 90 00-5.1 12.45l-10.05 0a4.95 4.95 90 000 10.05l10.05 0a30 30 90 005.1 12.45l-7.05 7.05a4.95 4.95 90 007.05 7.05l7.2-7.05a30 30 90 0012.45 5.25l0 9.9a4.95 4.95 90 0010.05 0l0-9.9a30 30 90 0012.45-5.25l7.05 7.05a4.95 4.95 90 007.05-7.05l-7.05-7.05a30 30 90 005.25-12.45l9.9 0a4.95 4.95 90 000-10.05l-9.9 0a30 30 90 00-5.25-12.45l7.05-7.2a4.95 4.95 90 00-7.05-7.05l-7.05 7.05a30 30 90 00-12.45-5.1l0-10.05a4.95 4.95 90 00-5.25-4.95z';
@@ -8761,7 +8760,7 @@ let parseData = [
 				regex: /Action table:/,
 				handler: function(_, module){
 					linen++;
-					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
+					const grid = readTaggedLines(6);
 					const values = grid.map(r => r.substring(1, 12).split(' '));
 					const fills = { 'x':'#222', '0':'#A00', '1':'#888' };
 					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
@@ -8803,7 +8802,7 @@ let parseData = [
 			{
 				regex: /The (displayed grid|solution) is as follows:/,
 				handler: function(matches, module) {
-					const grid = readLines(6).map(l => l.replace(/\[Nonbinary Puzzle #\d+\] /, '').split(''));
+					const grid = readTaggedLines(6).map(l => l.split(''));
 					const colors = { 'W':'#FFFFFF', 'K':'#000000', 'Y':'#FCF434', 'P':'#9C59D1', '.':'#989898' };
 					const tdStyle = 'width: 1cm; height: 1cm; text-align: center; border: 0.25mm solid black; font-size: 125%;';
 					let table = '<table>';
@@ -8848,7 +8847,7 @@ let parseData = [
 			{
 				regex: /(Starting|Current|Final) matrix :/i,
 				handler: function(matches, module) {
-					const grid = readLines(5).map(l => l.replace(/\[Notre-Dame Cipher #\d+\] /, '').split(''));
+					const grid = readTaggedLines(5).map(l => l.split(''));
 					const tdStyle = 'width: 0.75cm; height: 0.75cm; text-align: center; vertical-align: middle; border: 2px solid black';
 					let table = '<table>';
 					for (let row = 0; row < 5; row++) {
@@ -8901,7 +8900,7 @@ let parseData = [
 			{
 				regex: /Generating manual with rule seed \d+:/,
 				handler: function(match, module){
-					let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
+					let rs = readTaggedLines(36);
 					module.push([ match, [ { obj:pre(rs.join('\n')), nobullet:true } ] ] );
 					return true;
 				}
@@ -8965,7 +8964,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: 'Egyptian Hieroglyphs:',
-						obj: pre([matches[0]].concat(readMultiple(6, function (str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+						obj: pre([matches[0]].concat(readTaggedLines(6)).join("\n"))
 					});
 					return true;
 				}
@@ -9394,7 +9393,7 @@ let parseData = [
 					const imgstyle = 'width: 1cm; margin: 0';
 					const tdstyle = 'border: 1mm solid; text-align: center;	';
 
-					let grid = readLines(6).map(l => l.replace(/\[Pineapple Pen #\d+\] /, '').split('').map(ch => ch - '1'));
+					let grid = readTaggedLines(6).map(l => l.split('').map(ch => ch - '1'));
 					readLine();
 					
 					let start = readLine().match(/[A-F][1-6]/)[0];
@@ -9534,7 +9533,7 @@ let parseData = [
 			{
 				regex: /^Beginning of Matrix/,
 				handler: function (matches, module) {
-					const matrix = readLines(6).map(line => line.replace(/^\[Playfair Cipher #\d+\] /, ""));
+					const matrix = readTaggedLines(6);
 					matrix.splice(5, 1);
 
 					module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
@@ -9733,14 +9732,13 @@ let parseData = [
 					const dirs = [ 'U', 'UR', 'R', 'DR', 'D', 'DL', 'L', 'DL' ];
 					
 					readLine();
-					const colors = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					const colors = readTaggedLines(6).map(l => l.split(' '));
 					readLine();
-					const dispArrows = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					const dispArrows = readTaggedLines(6).map(l => l.split(' '));
 					readLine();
-					const truthDir = readLines(6).map(l => l.replace(/\[Pointer Pointer #\d+\] /, '').split(' '));
+					const truthDir = readTaggedLines(6).map(l => l.split(' '));
 					readLines(2);
-					const path = readLine().replace(/\[Pointer Pointer #\d+\] /, '')
-										  .substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
+					const path = readTaggedLine().substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
 					
 					
 					
@@ -9863,7 +9861,7 @@ let parseData = [
 											'✖':'M5 0l5 5 5-5 5 5-5 5 5 5-5 5-5-5-5 5-5-5 5-5-5-5z',
 											' ': 'M0 0'}
 
-						module.lines = readLines(10).map(l => l.replace(/\[Polygrid #\d+\] /, '').substring(1,10).split('|'));
+						module.lines = readTaggedLines(10).map(l => l.substring(1,10).split('|'));
 						const letters = ['A','B','C','D','E','F','G','H','I','J'];
 						let div = "<div style='display: flex; flex-flow: row wrap'>";
 
@@ -9886,7 +9884,7 @@ let parseData = [
 			{
 				regex: /The rows and columns/,
 				handler: function (_, module) {
-					const grid = readLines(5).map(l => l.replace(/\[Polygrid #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(5).map(l => l.split(' '));
 					const arrowPath = 'M-40-40h80l-40 69.3z';
 					const letters = ['A','B','C','D','E','F','G','H','I','J'];
 					let svg = `<svg viewbox='-100 -100 700 700' style='width: 5in; display: block'>`;
@@ -10429,21 +10427,21 @@ let parseData = [
 			{
 				regex: /ASCII1:/,
 				handler: function (matches, module) {
-					module.push({ label: "The colors are as follows:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The colors are as follows:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /ASCII2:/,
 				handler: function (matches, module) {
-					module.push({ label: "The colored cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The colored cube's maze is as follows, where P = passage and W = wall:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /ASCII3:/,
 				handler: function (matches, module) {
-					module.push({ label: "The input cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The input cube's maze is as follows, where P = passage and W = wall:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
@@ -10490,7 +10488,7 @@ let parseData = [
 			{
 				regex: /The maze has now been locked into the following:/,
 				handler: function(match, module) {
-					const grid = readLines(11).map(l => l.replace(/\[Robit Programming #\d+\] /, '').split('').map(ch => ch == 'X'));
+					const grid = readTaggedLines(11).map(l => l.split('').map(ch => ch == 'X'));
 					
 					let svg = `<svg viewbox='0 0 26 26' style='display: block; width: 3in; margin: 2mm 0'>`;
 					
@@ -10702,7 +10700,7 @@ let parseData = [
 				handler: function (matches, module) {
 					for (let thing of module.Things)
 						module.push(thing);
-					module.push(["SETTINGS", readLines(3).map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
+					module.push(["SETTINGS", readTaggedLines(3)]);
 					module.Things = false;
 					return true;
 				}
@@ -10727,7 +10725,7 @@ let parseData = [
 			{
 				regex: /(Bitmaps shown on module|Reconstructed bitmaps):/,
 				handler: function(matches, module) {
-					let allLines = readLines(15).map(line => line.replace(/^\[The Sapphire Button #\d+\] /, ''));
+					let allLines = readTaggedLines(15);
 					let pixels = '', borders = '';
 					let w = allLines[0].length >> 1;
 					for (let bmp = 0; bmp < 3; bmp++)
@@ -11060,7 +11058,7 @@ let parseData = [
 							<path id='trapezoid' d='M0 80 25 20 75 20 100 80z'/>
 							<path id='triangle' d='M0 100 100 100 50 0z'/>
 						</defs>`;
-					let lines = readLines(6).map(l => l.replace(/\[Shape Fill #\d+\] /, ''));
+					let lines = readTaggedLines(6);
 					const letters = ['A','B','C','D','E'];
 					let ansRow = lines[5][lines[5].length - 1] - '1';
 					let ansCol = letters.indexOf(lines[5][lines[5].length - 2]);
@@ -11265,7 +11263,7 @@ let parseData = [
 			{
 				regex: /Clue #\d+:/,
 				handler: function(match, module) {
-					let grid = readLines(3).map(l => l.replace(/\[Shapes and Colors #\d+\] /, '').split(' '));
+					let grid = readTaggedLines(3).map(l => l.split(' '));;
 					let svg = "<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black'>";
 					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#F00' };
 					const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
@@ -11298,7 +11296,7 @@ let parseData = [
 			{
 				regex: /Possible solution:/,
 				handler: function (matches, module) {
-					var grid = readMultiple(7).replace(/\[Shikaku #\d+\] /g, "");
+					var grid = readTaggedLines(7).join('\n');
 					var lines = grid.replace(/\r/g, '').split('\n');
 					var shapes = lines[6].replace('Shape data for Logfile Analyzer: ', '');
 					var colors = [
@@ -12076,7 +12074,7 @@ let parseData = [
 				//I = Light cyan | O = dark cyan
 				regex: /The initial grid:/,
 				handler: function (matches, module) {
-					let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
+					let lines = readTaggedLines(9).map(l => l.split(' '));;
 					let table = $('<table>').css('table-collapse', 'collapse');
 					for (let i = 0; i < 9; i++) {
 						let tr = $('<tr>').appendTo(table);
@@ -12104,9 +12102,8 @@ let parseData = [
 					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
 					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#1B5EB2' rx='50' ry='50'/>";
 					
-					let grid = readLines(19).map(l => 
-													l.replace(/\[Tesseractivity #\d+\] /, '').replace(/[^*#]/g, '').split('')
-												 ).filter(l => l.length > 0);
+					let grid = readTaggedLines(19).map(l => l.replace(/[^*#]/g, '').split('')
+														).filter(l => l.length > 0);
 					for (let w = 0; w < 4; w++) {
 						for (let z = 0; z < 4; z++) {
 							for (let y = 0; y < 4; y++) {
@@ -12153,14 +12150,14 @@ let parseData = [
 			{
 				regex: /Intended solution:/,
 				handler: function (matches, module) {
-					module.push({ label: "Solution:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+					module.push({ label: "Solution:", obj: pre(readTaggedLines(11).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /Submitted solution:/,
 				handler: function (matches, module) {
-					module.push({ label: "Submitted:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+					module.push({ label: "Submitted:", obj: pre(readTaggedLines(11).join('\n')) });
 					return true;
 				}
 			},
@@ -12279,7 +12276,7 @@ let parseData = [
 			{
 				regex: /^Generated maze:$/,
 				handler: function (matches, module) {
-					let maze = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+					let maze = readTaggedLines(7);
 					module.tileMaze = maze;
 					return true;
 				}
@@ -12294,7 +12291,7 @@ let parseData = [
 			{
 				regex: /^Tile numbers:$/,
 				handler: function (matches, module) {
-					let tileNumbers = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+					let tileNumbers = readTaggedLines(7);
 					module.tileNumbers = tileNumbers;
 					return true;
 				}
@@ -12448,7 +12445,7 @@ let parseData = [
 				regex: /(Visible|Hidden) Maze:/,
 				handler: function (matches, module){
 					linen++;
-					let grid = readLines(9).map(l => l.replace(/\[Tombstone Maze #\d+\] /, '').split(''));
+					let grid = readTaggedLines(9).map(l => l.split(''));
 					let svg = `<svg viewbox='0 0 20 20' style='display: block; width: 3in'>`;
 					for (let row = 0; row < 4; row++){
 						for (let col = 0; col < 4; col++) {
@@ -12481,7 +12478,7 @@ let parseData = [
 			{
 				regex: /^The puzzle is as follows:$/,
 				handler: function (_, module) {
-					let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
+					let grid = readTaggedLines(5).map(l => l.split(' '));
 					module.digits = [];
 					module.grid = grid;
 					return true;
@@ -12623,7 +12620,7 @@ let parseData = [
 				regex: /(The initial configuration of the grid is|Solution|Submitted the following configuration):/,
 				handler: function (matches, module) {
 					const gap = 15;
-					const grid = readLines(12).map(l => l.replace(/\[Twisty Terminals #\d+\] /, '').replace(/ /g, '').split(''));
+					const grid = readTaggedLines(12).map(l => l.replace(/ /g, '').split(''));
 					let svg = `<svg viewbox='-5 -5 470 470' style='width: 4in; display: block'>`;
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
@@ -13284,7 +13281,7 @@ let parseData = [
 			{
 				regex: /The configuration of wires is:/,
 				handler: function (_, module) {
-					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
+					let grid = readTaggedLines(15).map(l => l.split(''));
 					module.hWires = [ ];
 					for (let row = 0; row < 15; row += 2) {
 						for (let col = 3; col < 15; col += 4) {
@@ -13302,7 +13299,7 @@ let parseData = [
 			{
 				regex: /(.+)in these positions:/,
 				handler: function (match, module) {
-					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
+					let grid = readTaggedLines(15).map(l => l.split(''));
 					if (!module.colors)
 						module.colors = [ [], [], [], [] ];
 					for (let row = 0; row < 4; row++) {
