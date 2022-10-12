@@ -918,54 +918,20 @@ let parseData = [
 					};
 
 
-					let obj = $("<div>").css({
-						webkitTouchCallout: "none",
-						webkitUserSelect: "none",
-						khtmlUserSelect: "none",
-						mozUserSelect: "none",
-						msUserSelect: "none",
-						userSelect: "none"
-					});
+					let obj = $("<div class='twok48'>");
 
-					let gridLabel = $("<div>").css({
-						display: "inline-block",
-						padding: "5px 0",
-						margin: "10px 0",
-						minWidth: 150,
-						textAlign: "center"
-					});
-					let gameContainer = $("<div>").css({
-						position: "relative",
-						width: 300,
-						height: 300,
-						backgroundColor: "#bbada0",
-						borderRadius: 6
-					});
-					let gridAndTileCSS = {
-						position: "absolute",
-						width: "70%",
-						height: "70%",
-						top: "15%",
-						left: "15%",
-						zIndex: 10
-					};
-					let gridContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
-					gridAndTileCSS.zIndex = 20;
-					let tileContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+					let gridLabel = $("<div class='grid-label'>");
+					let gameContainer = $("<div class='game-container'>");
+					let gridContainer = $("<div class='grid-container'>").appendTo(gameContainer);
+					let tileContainer = $("<div class='tile-container'>").appendTo(gameContainer);
 
 					let posPerc = function (val) {
 						return `${val / 3 * 100}%`;
 					};
 
-					for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div>").css({
-						position: "absolute",
-						width: 60,
-						height: 60,
-						backgroundColor: "#cdc1b4",
-						borderRadius: 6,
+					for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div class='backing-tile'>").css({
 						left: posPerc(x),
 						top: posPerc(y),
-						transform: "translate(-50%, -50%)"
 					}).appendTo(gridContainer);
 
 					let currentGrid = -1;
@@ -980,28 +946,20 @@ let parseData = [
 						let grid = module.Grids[currentGrid];
 
 						let actuateTile = function (tile) {
-							let wrapper = $("<div>").appendTo(tileContainer);
-							let inner = $("<div>").text(tile.value).appendTo(wrapper);
+							let wrapper = $("<div class='wrapper'>").appendTo(tileContainer);
+							let inner = $("<div class='inner'>").text(tile.value).appendTo(wrapper);
 							let position = tile.previousPosition || { x: tile.x, y: tile.y };
 
 							let style = getTileStyle(tile.value);
 							wrapper.css({
-								width: 60,
-								height: 60,
-								position: "absolute",
 								left: posPerc(position.x),
 								top: posPerc(position.y),
-								transform: "translate(-50%, -50%)",
 								zIndex: tile.mergedFrom ? 20 : 10
 							});
 							inner.css({
-								textAlign: "center",
-								lineHeight: "60px",
 								fontSize: getFontSize(tile.value),
-								fontWeight: 900,
 								backgroundColor: "#" + style.color,
 								color: style.blackText ? "#776e65" : "#f9f6f2",
-								borderRadius: 6
 							});
 
 							if (tile.previousPosition) {
@@ -1041,24 +999,16 @@ let parseData = [
 						grid.tiles.forEach(actuateTile);
 					};
 
-					let buttonStyle = {
-						padding: "5px 10px",
-						margin: 10,
-						cursor: "pointer",
-						backgroundColor: "#eee4da",
-						fontWeight: 900,
-						borderRadius: 6
-					};
 
-					let leftArrow = $("<span>").text("< Prev").click(function () {
+					let leftArrow = $("<span class='arrow-button left'>").text("< Prev").click(function () {
 						if (currentGrid > 0) module.actuateGrid(currentGrid - 1);
-					}).appendTo(obj).css(buttonStyle).css({ marginLeft: -4 });
+					}).appendTo(obj);
 
 					obj.append(gridLabel);
 
-					let rightArrow = $("<span>").text("Next >").click(function () {
+					let rightArrow = $("<span class='arrow-button'>").text("Next >").click(function () {
 						if (currentGrid < module.Grids.length - 1) module.actuateGrid(currentGrid + 1);
-					}).appendTo(obj).css(buttonStyle);
+					}).appendTo(obj);
 
 					obj.append(gameContainer);
 
@@ -1169,41 +1119,41 @@ let parseData = [
 
 					let Colors = { "Red": "#f00", "Green": "#0f0", "Blue": "#00f", "White": "#fff", "Black": "#000" };
 					let svg = [
-						`<circle cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.7 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m2.9 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.7 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m2.9 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<circle class='led' cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}'/>`,
+						`<path class='segment' d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.7 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m2.9 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.8 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.7 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m2.9 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.8 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
 
-						`<path d='m3.2 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.1 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.3 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.1 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.3 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.2 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m3.2 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.1 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m5.3 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.1 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m5.3 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.2 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
 
-						`<path d='m5.6 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.5 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m7.7 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.6 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.5 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m7.7 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.6 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m5.6 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.5 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m7.7 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.6 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.5 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m7.7 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.6 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
 
-						`<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${mix(seg2('a', matches[4], matches[3]), seg2('a', matches[6], matches[5]), seg2('a', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${mix(seg2('b', matches[4], matches[3]), seg2('b', matches[6], matches[5]), seg2('b', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${mix(seg2('c', matches[4], matches[3]), seg2('c', matches[6], matches[5]), seg2('c', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${mix(seg2('d', matches[4], matches[3]), seg2('d', matches[6], matches[5]), seg2('d', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${mix(seg2('e', matches[4], matches[3]), seg2('e', matches[6], matches[5]), seg2('e', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${mix(seg2('f', matches[4], matches[3]), seg2('f', matches[6], matches[5]), seg2('f', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${mix(seg2('g', matches[4], matches[3]), seg2('g', matches[6], matches[5]), seg2('g', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`
+						`<path class='segment' d='m8.2 -.2h2l-.5 .5h-1z' fill='${mix(seg2('a', matches[4], matches[3]), seg2('a', matches[6], matches[5]), seg2('a', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${mix(seg2('b', matches[4], matches[3]), seg2('b', matches[6], matches[5]), seg2('b', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${mix(seg2('c', matches[4], matches[3]), seg2('c', matches[6], matches[5]), seg2('c', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${mix(seg2('d', matches[4], matches[3]), seg2('d', matches[6], matches[5]), seg2('d', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${mix(seg2('e', matches[4], matches[3]), seg2('e', matches[6], matches[5]), seg2('e', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${mix(seg2('f', matches[4], matches[3]), seg2('f', matches[6], matches[5]), seg2('f', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.2 4.2h2l-.5 -.5h-1z' fill='${mix(seg2('g', matches[4], matches[3]), seg2('g', matches[6], matches[5]), seg2('g', matches[8], matches[7]))}'/>`
 					];
 
-					module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+					module.push({ label: matches[0], obj: $('<svg>').html(`<svg class='seven-graphic' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
@@ -1212,16 +1162,16 @@ let parseData = [
 				handler: function (matches, module) {
 					let Colors = { "R": "#f00", "G": "#0f0", "B": "#00f", "W": "#fff", "K": "#000", "C": "#0ff", "M": "#f0f", "Y": "#ff0" };
 					let svg = [
-						`<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${Colors[matches[3]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${Colors[matches[4]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${Colors[matches[5]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${Colors[matches[6]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${Colors[matches[7]]}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}'/>`,
+						`<path class='segment' d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}'/>`,
+						`<path class='segment' d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${Colors[matches[3]]}'/>`,
+						`<path class='segment' d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${Colors[matches[4]]}'/>`,
+						`<path class='segment' d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${Colors[matches[5]]}'/>`,
+						`<path class='segment' d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${Colors[matches[6]]}'/>`,
+						`<path class='segment' d='m8.2 4.2h2l-.5 -.5h-1z' fill='${Colors[matches[7]]}'/>`,
 					];
 
-					module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+					module.push({ label: matches[0], obj: $('<svg>').html(`<svg class='seven-graphic' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
@@ -1240,9 +1190,8 @@ let parseData = [
 					module.push({
 						label: matches[1] + ':',
 						obj: $('<div>').append(
-							$('<img>')
+							$("<img class='algebra-image'>")
 								.attr('src', 'img/Algebra/' + matches[2].replace(/\+/g, '%2B') + '.png')
-								.css({ height: '3em' })
 						)
 					});
 					return true;
@@ -1344,20 +1293,18 @@ let parseData = [
 				regex: /Starting position: (..)/,
 				handler: function (match, module) {
 					const icons = { 'A':'apple', 'P':'pen', 'N':'pineapple' };
-					const imgstyle = 'width: 1cm; margin: 0';
-					const tdstyle = 'border: 1mm solid; text-align: center;	';
 					
 					const startRow = 'ABCDEF'.indexOf(match[1][0]);
 					const startCol = match[1][1] - '1';
 					
-					let table = "<table style='width: 3in;'>";
+					let table = "<table class='ppap-table' style='width: 3in;'>";
 					for (let row = 0; row < 6; row++) {
 						table += '<tr>'; 
 						for (let col = 0; col < 6; col++) {
 							const icon = icons[module.grid[6 * row + col]];
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
-							table += `<td style='${tdstyle} background-color: ${fill}'>
-										<img style='${imgstyle}' src='img/PPAP/${icon}.png'/>
+							table += `<td style='background: ${fill}'> 
+										<img src='img/PPAP/${icon}.png'/> 
 									</td>`;
 						}
 						table += '</tr>';
@@ -1394,10 +1341,8 @@ let parseData = [
 					function p(n) {
 						return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix + n) < 26 ? String.fromCharCode(65 + ix + n) : ['EOF', 'total'][ix + n - 26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n + 14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
 					}
-					let table = $(`<div><table>${p(0)}</table><table>${p(14)}</table></div>`);
-					table.find('table').css({ width: '100%', marginBottom: '.1cm' });
-					table.find('td,th').css({ border: '1px solid black', padding: '.05cm .1cm' });
-					table.find('th').css({ background: '#eee' });
+					let table = $(`<div><table class='arith-c-freq-table'>${p(0)}</table>
+										<table class='arith-c-freq-table'>${p(14)}</table></div>`);
 					module.push({ label: 'Frequency table:', obj: table });
 					return true;
 				}
@@ -1409,16 +1354,17 @@ let parseData = [
 					let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v | 0) : [0, 0];
 					function mark(str) {
 						if (shifts[1] !== 0)
-							str = str.substr(0, shifts[0] + 1) + `<span style='background: hsl(230, 100%, 90%)'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
+							str = str.substr(0, shifts[0] + 1) + `<span class='blue'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
 						if (shifts[0] !== 0)
-							str = `<span style='background: hsl(0, 100%, 90%)'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
+							str = `<span class='red'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
 						return str;
 					}
-					let table = $(`<table><tr><th>High:</th><td class='m'>${mark(lines[0])}</td></tr><tr><th>Low:</th><td class='m'>${mark(lines[1])}</td></tr><tr><th>Code:</th><td class='m'>${mark(lines[2])}</td></tr></table>`);
-					table.find('table').css({ width: '100%', marginBottom: '.1cm' });
-					table.find('td,th').css({ border: '1px solid black', padding: '.05cm .2cm' });
-					table.find('td.m').css({ fontFamily: 'monospace', fontSize: '14pt' });
-					table.find('th').css({ background: '#eee' });
+					let table = $(`<table class='bit-value-table'>
+										<tr><th>High:</th><td class='bits'>${mark(lines[0])}</td></tr>
+										<tr><th>Low:</th><td class='bits'>${mark(lines[1])}</td></tr>
+										<tr><th>Code:</th><td class='bits'>${mark(lines[2])}</td></tr>
+									</table>`);
+					
 					module.push({ label: matches[0], obj: table });
 					return true;
 				}
@@ -1474,7 +1420,7 @@ let parseData = [
 				regex: /^(The hand on the (left|right) is) (.+)—(a(n|)(.+))$/,
 				handler: function (matches, module) {
 					module.push(matches[1] + ':');
-					module.push({ obj: $("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]), nobullet:true });
+					module.push({ obj: $("<span class='badugi-cards'>").text(matches[3]), nobullet:true });
 					module.push(matches[6]);
 					return true;
 				}
@@ -1512,11 +1458,11 @@ let parseData = [
 						}
 					}
 
-					var table = $('<table>').css('border-spacing', '0').css('border-collapse', 'separate');
+					var table = $("<table class='battleship-table'>");
 					for (r = 0; r < 6; r++) {
 						tr = $('<tr>').appendTo(table);
 						for (c = 0; c < 6; c++) {
-							td = $('<td>').css('border', '3px solid transparent').css('text-align', 'center').css('padding', 0).appendTo(tr);
+							td = $('<td>').appendTo(tr);
 							if (c === 0 || r === 0)
 								td.text(stuff[r][c]);
 							else {
@@ -1540,9 +1486,9 @@ let parseData = [
 															waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
 																waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
 
-								$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
+								$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').appendTo(td);
 								if (stuff[r][c].IsSafeLocation)
-									td.css('border', '3px solid red');
+									td.addClass('safe');
 							}
 						}
 					}
@@ -1558,146 +1504,16 @@ let parseData = [
 		loggingTag: "Binary Cipher",
 		matches: [
 			{
-				regex: /Grid 1:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
+				regex: /Grid \d:|Table \w|The 4 by 4 matrix/,
+				handler: function(match, module) {
+					const grid = readTaggedLines(4);
+					let table = $("<table class='binary-c-table'>");
+					for (let row = 0; row < 4; row++) {
+						let tr = $("<tr>").appendTo(table);
+						for (let col = 0; col < 4; col++)
+							$("<td>").text(grid[row][col]).appendTo(tr);
 					}
-
-					module.push({ label: "Grid 1:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 2:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 2:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 3:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 3:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 4:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 4:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 5:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 5:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /The 4 by 4 matrix should be:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "The 4 by 4 matrix should be:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table A, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table A, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table B, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table B, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table C, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table C, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table A, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table A, after shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table B, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table B, after shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table C, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table C, after shift:", obj: pre(lines) });
+					module.push({ label:match.input, obj:table });
 					return true;
 				}
 			},
@@ -1719,11 +1535,10 @@ let parseData = [
 						arr.push(i);
 					module.push({
 						label: matches[1],
-						obj: $(`<table style='border-collapse: collapse'>${arr.map(y => `<tr>${arr.map(x => {
+						obj: $(`<table class='binary-puzzle-table'>${arr.map(y => `<tr>${arr.map(x => {
 							var val = matches[2][x + 6 * y];
-							return `<td${val === '1' ? ` style='background: #cfc'` : val === '0' ? ` style='background: #fcc'` : ''}>${val}</td>`;
+							return `<td${val === '1' ? ` class='green'` : val === '0' ? ` class='red'` : ''}>${val}</td>`;
 						}).join('')}</tr>`).join('')}</table>`)
-							.find('td').css({ border: '1px solid black', padding: '.4em 0', width: '1.1cm', textAlign: 'center' }).end()
 					});
 					return true;
 				}
@@ -1739,7 +1554,7 @@ let parseData = [
 				handler: function (matches, module) {
 					readLine();
 
-					const tree = $('<svg viewBox="-2.5 -0.5 5 3">').css({ "width": "50%", "display": "block" });
+					const tree = $("<svg class='binary-tree' viewBox='-2.5 -0.5 5 3'>");
 					const colors = {
 						"R": "red",
 						"G": "green",
@@ -1767,7 +1582,7 @@ let parseData = [
 					for (const linePair of lines) {
 						const start = positions[linePair[0]];
 						const end = positions[linePair[1]];
-						$SVG(`<line x1=${start[0]} y1=${start[1]} x2=${end[0]} y2=${end[1]} stroke=black stroke-width=0.1>`).appendTo(tree);
+						$SVG(`<line x1=${start[0]} y1=${start[1]} x2=${end[0]} y2=${end[1]}>`).appendTo(tree);
 					}
 
 					// Make nodes
@@ -1779,7 +1594,7 @@ let parseData = [
 						const position = positions[i / 3];
 
 						$SVG(`<circle cx=${position[0]} cy=${position[1]} fill=${buttonColor} r=0.45>`).appendTo(tree);
-						$SVG(`<text x=${position[0]} y=${position[1]} fill=${textColor} font-size=0.9 text-anchor=middle dominant-baseline=central>`)
+						$SVG(`<text x=${position[0]} y=${position[1]} fill=${textColor}>`)
 							.text(text)
 							.appendTo(tree);
 					}
@@ -1802,22 +1617,19 @@ let parseData = [
 			{
 				regex: /^(The (first|second|third) glyph is) ([ABCDE]\d+).$/,
 				handler: function (matches, module) {
-					module.push(matches[1] + ':');
 					const glyph = matches[3];
-					let div = $('<div>');
+					const itempair = [glyph[0], glyph.substring(1)];
+					const index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+					const name = "ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7);
+					const img = `<img class='bioscanner-image' 	src='img/The Bioscanner/${name}.png' height='100' />`;
 
-					let itempair = [glyph.charAt(0), glyph.substring(1)];
-					let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
-					div.append(`<img src='img/The Bioscanner/${"ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString()}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
-
-					module.push(div);
+					module.push({ label:matches[1] + ':', obj:img});
 					return true;
 				}
 			},
 			{
 				regex: /^(The current offset is \d+\. This means the current glyphs are) ((([ABCDE]\d+)(, |, and )*){3})\.$/,
 				handler: function (matches, module) {
-					module.push(matches[1] + ':');
 					const glyphs = matches[2].split(', ').slice(0, 2).concat(matches[2].split(', ')[2].substring(4));
 					let actualGlyphs = [];
 					let div = $('<div>');
@@ -1828,16 +1640,15 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
 					}
-					module.push(div);
+					module.push({ label:matches[1] + ':', obj:div});
 					return true;
 				}
 			},
 			{
 				regex: /^(Fake glyphs are:) (([ABCDE]\d+ )+)$/,
 				handler: function (matches, module) {
-					module.push(matches[1]);
 					const glyphs = matches[2].slice(0, -1).split(' ');
 					let actualGlyphs = [];
 					let div = $('<div>');
@@ -1848,9 +1659,9 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
 					}
-					module.push(div);
+					module.push({ label:matches[1], obj:div });
 					return true;
 				}
 			},
@@ -1959,7 +1770,18 @@ let parseData = [
 				handler: function (matches, module) {
 					readLine();
 
-					var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
+					var svg = $(`<svg class='boolean-venn-diagram' viewBox="0 0 348 348">
+									<g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)">
+										<path class='section' d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z"></path>
+										<circle class='section' cx="280" cy="110" r="24"></circle>
+										<path class='section' d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z"></path>
+										<path class='section' d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z""></path>
+										<path class='section' d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z""></path>
+										<path class='section' d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z"></path>
+										<path class='section' d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z"></path>
+										<path class='section' d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z""></path>
+									</g>
+								</svg>`)
 						.appendTo("body");
 
 					var sections = ["A", "NONE", "AB", "AC", "ABC", "B", "C", "BC"];
@@ -1971,8 +1793,8 @@ let parseData = [
 					};
 
 					readMultiple(16).match(/[UL]/g).forEach(function (letter, index) {
-						var elem = svg.find("path, circle").eq(index);
-						elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
+						var elem = svg.find(".section").eq(index);
+						elem.attr("fill", letter == "L" ? "#FF8F8F" : "#8FFF8F");
 
 						var bbox = elem[0].getBBox();
 						var text = sections[index];
@@ -1980,10 +1802,6 @@ let parseData = [
 							.text(text)
 							.css({
 								transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
-								"text-anchor": "middle",
-								"dominant-baseline": "central",
-								stroke: "none",
-								fill: "black",
 								"font-size": (35 - text.length * 5) + "px"
 							})
 							.appendTo(svg.children("g"));
@@ -2033,13 +1851,13 @@ let parseData = [
 					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'Y':'#FF0', 'G':'#0F0', 'B':'#00F', 'M':'#F0F', 'W':'#FFF' };
 					const octagonPath = 'M0 5l5-5h10l5 5v10l-5 5h-10l-5-5z';
-					let svg = `<svg viewbox='-2 -2 172 172' style='width: 4.5in; display: block; margin: 0'>`;
+					let svg = `<svg class='boozleage' viewbox='-2 -2 172 172'>`;
 
 					for (let row = 0; row < 8; row++) {
 						for (let col = 0; col < 8; col++) {
 							const cell = grid[row][col];
 							const glyphName = `Set ${cell[1]} - ${cell[0]}`;
-							svg += `<path d='${octagonPath}' fill='${colors[cell[2]]}' transform='translate(${20 * col}, ${20 * row})' stroke='#000' stroke-width='2'/>`;
+							svg += `<path class='button' d='${octagonPath}' fill='${colors[cell[2]]}' transform='translate(${20 * col}, ${20 * row})'/>`;
 							svg += `<image href='../HTML/img/Boozleglyphs/${glyphName}.svg' x='${20 * col + 4}' y='${20 * row + 4}' width='12' height='12'/>`;
 						}
 					}
@@ -2049,13 +1867,13 @@ let parseData = [
 									L ${20 * square.vertices[3].x + 10} ${20 * square.vertices[3].y + 10}
 									L ${20 * square.vertices[2].x + 10} ${20 * square.vertices[2].y + 10} z`;
 						console.log(d);
-						svg += `<path d='${d}' stroke='#4FF' stroke-width='4' stroke-opacity='0.7' fill='transparent'/>`;
+						svg += `<path class='square' d='${d}'/>`;
 					}
 					for (let square of module.squares) {
 						const cx = 20 * square.vertices[3].x + 20;
 						const cy = 20 * square.vertices[3].y + 20
-						svg += `<circle r='7' cx='${cx}' cy='${cy}' fill='#FFF' stroke='#000' stroke-width='2'/>
-								<text x='${cx}' y='${cy}' fill='#000' style='font-size: 12px' text-anchor='middle' dominant-baseline='central'>${square.letter}</text>`;
+						svg += `<circle class='letter-circle' r='7' cx='${cx}' cy='${cy}'/>
+								<text class='letter' x='${cx}' y='${cy}'>${square.letter}</text>`;
 					}
 					module.push({ label:'Displayed grid:', obj: svg });
 				}
@@ -2119,11 +1937,11 @@ let parseData = [
 					}
 
 					matches[3].split("; ").forEach(function (spots, i) {
-						var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
+						var braille = $('<svg class="braille-pattern" viewBox="-0.5 -0.5 2 3"></svg>').appendTo(div);
 
 						spots.split("-").forEach(function (posStr) {
 							var pos = parseInt(posStr) - 1;
-							$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
+							$SVG('<circle class="dot" r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 						});
 
 						if (matches[2] == "on module") {
@@ -2163,8 +1981,8 @@ let parseData = [
 						var absPos = pos % 24;
 						var text;
 						if (!module.flippedSVG[absPos]) {
-							var highlight = $SVG('<rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
-							text = $SVG('<text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
+							var highlight = $SVG('<rect class="highlight" width="1" height="1"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
+							text = $SVG('<text class="on-dot"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 
 							module.flippedSVG[absPos] = [highlight, text];
 						} else {
@@ -2176,7 +1994,7 @@ let parseData = [
 
 						var noDot = module.braille[char].children("circle").filter(function (_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 						if (noDot) {
-							text.attr("fill", "black");
+							text.addClass('no-dot');
 						}
 					});
 				}
@@ -2680,7 +2498,7 @@ let parseData = [
 					});
 					readLine();
 					for (let i = 0; i < 3; i++) {
-						module.push(readTaggedLine());
+						module.push(readLine().replace(/\[Colour Flash Translated #\d+\] /, ""));
 					}
 					return true;
 				}
