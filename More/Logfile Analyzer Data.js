@@ -11089,11 +11089,11 @@ let parseData = [
 						for (let col = 0; col < 3; col++) {
 							let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
 							const cell = grid[row][col];
-							if (!cell.match((/^-?[RGB]$|KK/)))
+							if (!cell.match((/^-?[RGBY]$|KK/)))
 								g += "<rect width='100' height='100' fill='#FFF'/>";
-							if (cell.match(/[RGB][CDT]/))
+							if (cell.match(/[RGBY][CDT]/))
 								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
-							else if (cell.match(/-?[RGB]/))
+							else if (cell.match(/-?[RGBY]/))
 								g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
 							else if (cell.match(/-?[CDT]/))
 								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
