@@ -11083,7 +11083,7 @@ let parseData = [
 				handler: function(match, module) {
 					let grid = readTaggedLines(3).map(l => l.split(' '));;
 					let svg = "<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black'>";
-					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#F00' };
+					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
 					const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
 					for (let row = 0; row < 3; row++) {
 						for (let col = 0; col < 3; col++) {
