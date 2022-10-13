@@ -1798,7 +1798,7 @@ let parseData = [
 
 						var bbox = elem[0].getBBox();
 						var text = sections[index];
-						$SVG("<text>")
+						$SVG("<text class='section-text'>")
 							.text(text)
 							.css({
 								transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
@@ -2031,6 +2031,7 @@ let parseData = [
 		]
 	},
 	{
+		//IN NEED OF REMOVING INLINE CSS. THE MODULE HAS NOT BEEN REUPLOADED AT THIS POINT.	
 		displayName: "Brown's Shadow",
 		moduleID: "brownsShadow",
 		loggingTag: "Brown's Shadow",
@@ -2094,16 +2095,16 @@ let parseData = [
 					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'Y':'#FF0', 'K':'#000', 'W':'#FFF', 'I':'#FFA8F3', 'O':'#EE5716', 'A':'#777' };
 					const textColors = { 'R':'#FFF', 'G':'#FFF', 'B':'#FFF', 'W':'#F00', 'Y':'#FF8F00' };
-					let svg = `<svg viewbox='-1 -1 162 162' style='display: block; width: 4in; margin-bottom: 0.5cm'>`;
+					let svg = `<svg class='buttonage' viewbox='-1 -1 162 162'>`;
 					for (let row = 0; row < 8; row++){
 						for (let col = 0; col < 8; col++) {
 							const cell = grid[row][col];
 							const cx = 20 * col + 10;
 							const cy = 20 * row + 10;
-							svg += 	`	<circle r='10' cx='${cx}' cy='${cy}' fill='${colors[cell[1]]}' stroke='#333' stroke-width='0.5' />
-										<circle r='8'  cx='${cx}' cy='${cy}' fill='${colors[cell[0]]}' stroke='#333' stroke-width='0.5' />`;
+							svg += `<circle class='button' r='10' cx='${cx}' cy='${cy}' fill='${colors[cell[1]]}'/>
+									<circle class='button' r='8'  cx='${cx}' cy='${cy}' fill='${colors[cell[0]]}'/>`;
 							if (cell.length > 2)
-								svg += `<text x='${cx}', y='${cy}' fill='${textColors[cell[0]]}' style='font-size: 14px' text-anchor='middle' dominant-baseline='central'>${cell[2]}</text>`;
+								svg += `<text class='button-text' x='${cx}', y='${cy}' fill='${textColors[cell[0]]}'>${cell[2]}</text>`;
 						}
 					}
 					module.push({ label:'Buttons:', obj:svg + '</svg>' });
@@ -2164,13 +2165,13 @@ let parseData = [
 					const colors = { 'R':'#F00', 'P':'#0F0', 'S':'#00F', 'X':'#000' };
 					const pics = { 'R':'Rock', 'P':'Paper', 'S':'Scissors', 'X':'WEEDNUTS' };
 					const grid = readTaggedLines(8);
-					let svg = `<svg viewbox='0 0 60 80' style='width: 3in; display: block'>`;
+					let svg = `<svg class='ca-rps' viewbox='0 0 60 80'>`;
 
 					for (let row = 0; row < 8; row++){
 						for (let col = 0; col < 6; col++) {
 							const sign = grid[row][col];
 							const color = colors[sign];
-							svg += `<rect x='${10 * col}' y='${10 * row}' width='10' height='10' fill='${color}' stroke='#000' stroke-width='0.5'/>`;
+							svg += `<rect class='tile' x='${10 * col}' y='${10 * row}' width='10' height='10' fill='${color}'/>`;
 							if (sign != 'X')
 								svg += `<image href='img/CA-RPS/${pics[sign]}.png' x='${10 * col + 1}' y='${10 * row + 1}' width='8' height='8'/>`;
 						}
@@ -2230,20 +2231,20 @@ let parseData = [
 					module.push("Solution: " + solution);
 					readLine();
 					var board = readMultiple(13);
-					var table = $('<table>').css({ borderCollapse: 'collapse' });
-					$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
+					var table = $('<table class="chess-table">');
+					$('<tr class="coordinate-indicator-row"><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table);
 					for (var y = 0; y < 6; y++) {
-						var tr = $('<tr>').appendTo(table).append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingRight: '1em' }));
+						var tr = $('<tr>').appendTo(table).append($('<td class="coordinate-indicator-cell-left">' + (6 - y) + '</td>'));
 						for (var x = 0; x < 6; x++) {
-							var td = $('<td>').appendTo(tr).css({ width: '50px', height: '50px', border: '1px solid black' });
+							var td = $('<td class="tile">').appendTo(tr);
 							if (x == 0)
-								td.css({ borderLeft: '3px solid black' });
+								td.addClass('left-edge');
 							else if (x == 5)
-								td.css({ borderRight: '3px solid black' });
+								td.addClass('right-edge');
 							if (y == 0)
-								td.css({ borderTop: '3px solid black' });
+								td.addClass('top-edge');
 							else if (y == 5)
-								td.css({ borderBottom: '3px solid black' });
+								td.addClass('bottom-edge');
 							var svg = null;
 							var ch = board[26 * (2 * y + 1) + (4 * x + 2)];
 							switch (ch) {
@@ -2254,15 +2255,18 @@ let parseData = [
 								case 'R': svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M125.2 43.2V32.8H146v35h-7.2l-9.6 13.5V119l9.6 14h7v13.8h13v20.4H41.2v-20.4H54v-14h7L71 119V81.5L61 67.8h-6.7v-35h20.4v10.5H86V32.8h28v10.4z"/><path d="M73.8 74.8h52.4l5-7H68.5zM68.4 132.8H131l-4.8-7H73.8zM139.2 146.8v-7.4H60.5v7.4zM152.2 160.8v-7.4H48v7.3zM139.2 61.4V39h-7.7v10.7H108V39H92v10.7H68V39h-7.7v22.4zM122.7 119V81.4H77.4V119z" fill="#fff"/></svg>'; break;
 							}
 							if (ch === '×')
-								td.css({ backgroundColor: '#fcc' });
+								td.addClass('solution-red');
 							else if ((x + y) % 2 !== 0)
-								td.css({ backgroundColor: '#eee' });
+								td.addClass('gray');
+							else 
+								td.addClass('white');
 							if (svg !== null)
-								td.css({ 'background-image': 'url(\'data:image/svg+xml,' + svg.replace('#', '%23') + '\')', 'background-size': 'contain' });
+								td.css({ 'background-image': 'url(\'data:image/svg+xml,' + svg.replace('#', '%23') + '\')' });
+							
 						}
-						tr.append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingLeft: '1em' }));
+						tr.append($('<td class="coordinate-indicator-cell-right">' + (6 - y) + '</td>'));
 					}
-					$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
+					$('<tr class="coordinate-indicator-row"><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table);
 
 					module.push({ label: "Board:", obj: table });
 				}
@@ -2297,12 +2301,11 @@ let parseData = [
 						for (let j = 0; j < 5; j++) {
 							let color = /\[(\w+)\]/.exec(buttons[j * 5 + i])[1];
 							color = color === "Inactive" ? "black" : color.toLowerCase();
-							groups += `<circle r="9" cx="${10 + 20 * i}" cy="${10 + 20 * j}" fill="#363636"/>`;
+							groups += `<circle class='button' r="9" cx="${10 + 20 * i}" cy="${10 + 20 * j}"/>`;
 							groups += `<rect width="10" height="10" x="${5 + 20 * i}" y="${5 + 20 * j}" transform="rotate(45 ${5 + 20 * i + 5} ${5 + 20 * j + 5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
 						}
 					}
-					const css = { width: "250", height: "auto", display: "block", margin: "5px 0 10px" };
-					const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
+					const svg = $(`<svg class='color-grid-stage' viewBox="0 0 100 100">${groups}</svg>`);
 					return svg;
 				}
 			},
