@@ -8738,7 +8738,7 @@ let parseData = [
 		loggingTag: "Number Pad",
 		matches: [
 			{
-				regex: /Button colors are: (.+)/,
+				regex: /Button colors are \(0–9\): (.+)/,
 				handler: function (matches, module) {
 					var colors = matches[1].split(', ');
 					if (colors.length === 10) {
