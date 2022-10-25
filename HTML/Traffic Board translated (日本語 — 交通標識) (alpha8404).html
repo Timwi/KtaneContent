@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>交通標識 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const rotations = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
+        const directions = (
+            "N NE E SE S SW W NW "+
+            //Monday
+            "SW S E NE S S W N "+
+            "N E NW SW E E E S "+
+            "S SE SE NW E NW N S "+
+            "SE E E NE NW N NW W "+
+            "SW NE NE SE SE NE W NE "+
+            "SE S S W NE NW W NW "+
+            "SE NW SW NE N N N SE "+
+            "N SW SW SW W W W SW "+
+            //Tuesday
+            "NE S N E NW N S NW "+
+            "S SW N SW N NW W SW "+
+            "NE W SW W SE NW SE NW "+
+            "W NW NW E S NW SW W "+
+            "E SE NE W SW S SW E "+
+            "NE SE SE W N SE N E "+
+            "N S N SE SW W E S "+
+            "NE NE E S E SE NE NE "+
+            //Wednesday
+            "S SE SW E S NE N SW "+
+            "W NE SE NE SW SE W E "+
+            "S N N SW E SW S NW "+
+            "NE SW W NW NW E E N "+
+            "SE NW SW S NW E SE S "+
+            "N S S W SW W N W "+
+            "NW N NW NE N E E NW "+
+            "W SE NE W SE SE NE NE "+
+            //Thursday
+            "W SE E NE N NW S S "+
+            "E NW W NE SW SE NW SW "+
+            "S SE S S SE NW S SW "+
+            "NW N SE S W E W S "+
+            "SW NW W N NW SW NW W "+
+            "W SW E E N E SE E "+
+            "SW SW NE N E NE W N "+
+            "SE SE N N NE NE NE NE "+
+            //Friday
+            "S SE W SE NW N NE SE "+
+            "SW S NE N SW SE NE W "+
+            "E W W E W NE N NE "+
+            "NW E E NW SE S S S "+
+            "SE S NE NE E N E N "+
+            "W NE NW E S W SW W "+
+            "S NW E NW SE N NW NW "+
+            "SE N N SW SW SW SW SW "+
+            //Saturday
+            "NE E S NW NE S W E "+
+            "SE SE E NW N W NE SE "+
+            "W SE E N NE NE S NE "+
+            "NE W SW SW SW SE N SE "+
+            "NE W S E SE SE W S "+
+            "W NW N NW SW N NW N "+
+            "NW E N N SW SW NW SW "+
+            "S E W SW E NW S S "+
+            //Sunday
+            "SE SE SE E S SW W NE "+
+            "N SE E W SW NE S NE "+
+            "N E N N W SE NE SE "+
+            "W N E W NE SE W E "+
+            "NE SE W W NW NW SW SW "+
+            "N NE N N NE S S NW "+
+            "E SW NW E E NW NW NW "+
+            "NW S S SW S S SW SW "
+        ).split(" ");
+
+        let cells = $("table td");
+        cells.each(function(i, e) {
+            let svg = MakeSvgTag(100,100,0,0, { class:"arrow" });
+            let arrow = MakeArrow(rotations[ directions[i] ], 100,50,50, "triangle", "medium");
+            svg.append(arrow);
+            $(this).append(svg);
+        });
+    });
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        th img { width: 50px; }
+        td {
+            text-align: center;
+            padding: 0.3em 0.2em 0;
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            grid-gap: 10px;
+            justify-content: space-around;
+        }
+        svg.arrow { width: 43px; }
+        .dark svg .arrow-hs { fill: #DDD; }
+
+        .page-footer::before { content: 'ページ '; }
+        .page-footer::after { content: '/8'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Traffic Board.svg" class="diagram">
+                <h2>モジュール詳細：交通標識</h2>
+                <p class="flavour-text">常に交通ルールを守ろう！</p>
+                <ul>
+                    <li>このモジュールには、3段2列に配置された6つのボタンが表示される。各段には、中央に表示されている対応する英字がある(R=段/C=列/D=送信)。また、「R」ラベルの左側のボタンをR1、右側はR2と呼ばれる。</li>
+                    <li>R1とC1は2つの交通標識を表示する。押すことはできない。</li>
+                    <li>ボタンD1は別の交通標識を表示する。これも押すことはできない。</li>
+                    <li>R2とC2は回答を送信するために使用される。これらを押すと交通標識を切り替えることが出来る。</li>
+                    <li>ボタンD2は送信ボタンである。正解を設定したら押そう！</li>
+                </ul>
+                <p>正しい標識を決定するには、次のルールに従う:</p>
+                <ol>
+                    <li>正しい<u>道路表</u>を選択する。道路状況は曜日によって大きく異なるため、<b>カレンダーを確認すること</b>が重要である。</li>
+                    <li>R1とC1を使用し、開始グリッドを特定する(R1を段、C1を列)。</li>
+                    <li>セルの矢印の方向に1つ移動する(1回の移動で、斜めを含めた隣接するセルのいずれかに移動出来る)。グリッドの外に出ると、反対側に折り返す。</li>
+                    <li>毎回停止する必要があるかを調べる。次の条件のいずれかが真の場合は停止し、全て偽の場合は手順3に戻る:
+                    <ul>
+                        <li>D1の交通標識を<u>参照表</u>で見つける。現在のセルがこの方向と同じ場合である。</li>
+                        <li>開始セルに戻った。</li>
+                        <li>同じセルに2回訪れた。</li>
+                    </ul></li>
+                    <li>最終位置の座標をR2とC2(R2を段、C2を列)を使用して設定する。D2を押して現在のセルを送信する。</li>
+                </ol>
+                <h3>参照表</h3>
+                <table>
+                    <tr>
+                        <th><b>標識</b></th><th><img src="img/Traffic Board/Accident.png"></th><th><img src="img/Traffic Board/Animal.png"></th>
+                        <th><img src="img/Traffic Board/Children.png"></th><th><img src="img/Traffic Board/Construction.png"></th>
+                        <th><img src="img/Traffic Board/Danger.png"></th><th><img src="img/Traffic Board/Signal.png"></th>
+                        <th><img src="img/Traffic Board/Uneven.png"></th><th><img src="img/Traffic Board/Walker.png"></th>
+                    </tr>
+                    <tr><th><b>方向</b></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack">
+                    <a href="#MondayRT">月曜日</a>
+                    <a href="#TuesdayRT">火曜日</a>
+                    <a href="#WednesdayRT">水曜日</a>
+                    <a href="#ThursdayRT">木曜日</a>
+                    <a href="#FridayRT">金曜日</a>
+                    <a href="#SaturdayRT">土曜日</a>
+                    <a href="#SundayRT">日曜日</a>
+                </div>
+
+                <h3 id="MondayRT">月曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="TuesdayRT">火曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="WednesdayRT">水曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="ThursdayRT">木曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="FridayRT">金曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+
+        <div class="page page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="SaturdayRT">土曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">7</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">交通標識</span>
+            </div>
+            <div class="page-content">
+                <h3 id="SundayRT">日曜日の道路表</h3>
+                <table>
+                <tr><th class="corner"></th><th><img src="img/Traffic Board/FORWARD.png"></th><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><th><img src="img/Traffic Board/LEFT.png"></th><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><th><img src="img/Traffic Board/LSIDE.png"></th><th><img src="img/Traffic Board/RIGHT.png"></th><th><img src="img/Traffic Board/RSIDE.png"></th></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/FORWARD RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LEFT RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/LSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RIGHT.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><th><img src="img/Traffic Board/RSIDE.png"></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">8</div>
+        </div>
+    </div>
+</body>
+</html>
