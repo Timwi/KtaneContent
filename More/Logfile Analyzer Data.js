@@ -1294,9 +1294,9 @@ let parseData = [
 				handler: function (match, module) {
 					const icons = { 'A':'apple', 'P':'pen', 'N':'pineapple' };
 					
-					const startRow = 'ABCDEF'.indexOf(match[1][0]);
-					const startCol = match[1][1] - '1';
-					
+					const startCol = 'ABCDEF'.indexOf(match[1][0]);
+					const startRow = match[1][1] - '1';
+				
 					let table = "<table class='ppap-table' style='width: 3in;'>";
 					for (let row = 0; row < 6; row++) {
 						table += '<tr>'; 
@@ -3860,13 +3860,13 @@ let parseData = [
 		loggingTag: "Echolocation",
 		matches: [
 			{
-				regex: /Generating maze with size of (\d\d?)\.$/,
+				regex: /Generating maze with (?:default )?size of (\d\d?)\.$/,
 				handler: function (matches, module) {
 					let lineCount = matches[1] * 2 + 1;
-					let line = readTaggedLine();
+					let legend = readTaggedLine();
 					module.push(matches.input);
 					var maze = readTaggedLines(lineCount).join('\n');
-					module.push({ label: line, obj: pre(maze) });
+					module.push({ label: legend, obj: pre(maze) });
 					return true;
 				}
 			},
