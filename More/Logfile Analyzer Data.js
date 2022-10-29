@@ -6494,7 +6494,7 @@ let parseData = [
 					let order = [ ];
 					let store = [ ];
 					for (let i = 0; i < 4; i++) {
-						order.push( { x: matches[i + 1][1] - '1', y: "ABCD".indexOf(matches[i + 1][0]) } );
+						order.push( { x: "ABCD".indexOf(matches[i + 1][0]), y: matches[i + 1][1] - '1' } );
 						store.push(module.grid[order[i].y][order[i].x]);
 					}
 					for (let i = 0; i < 4; i++) 
