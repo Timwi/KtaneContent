@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>全色忘る — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .red {
+            background-color: #FAA;
+        }
+
+        .orange {
+            background-color: #FCA;
+        }
+
+        .yellow {
+            background-color: #FFA;
+        }
+
+        .green {
+            background-color: #AFA;
+        }
+
+        .cyan {
+            background-color: #AFF;
+        }
+
+        .blue {
+            background-color: #AAF;
+        }
+
+        .purple {
+            background-color: #CAF;
+        }
+
+        .white {
+            background-color: #EEE;
+        }
+        tr.black { color: black; }
+
+        @media print {
+            td {
+                padding: 4px;
+            }
+
+            .right {
+                text-align: right;
+                float: right;
+            }
+
+            .column {
+                margin-top: -16px;
+                float: left;
+                width: 50%;
+            }
+
+            .short {
+                width: 40%;
+            }
+        }
+
+        @media screen and (min-width: 725px) {
+            td {
+                padding: 4px;
+            }
+
+            .right {
+                text-align: right;
+                float: right;
+            }
+
+            .column {
+                margin-top: -16px;
+                float: left;
+                width: 50%;
+            }
+
+            .short {
+                width: 40%;
+            }
+        }
+    </style>
+
+    <script>
+        const sin2Element = document.getElementById("sin2");
+        const cos2Element = document.getElementById("cos2");
+
+        const sin2AnsElement = document.getElementById("sin2Ans");
+        const cos2AnsElement = document.getElementById("cos2Ans");
+
+        const tableLengths = [24, 8];
+
+        function update() {
+            const sin2 = parseInt(sin2Element.value) ? parseInt(sin2Element.value) : 0;
+            const cos2 = parseInt(cos2Element.value) ? parseInt(cos2Element.value) : 0;
+
+            const sin2Ans = parseFloat(sin2AnsElement.value = (Math.trunc(Math.sin(sin2 * Math.PI / 180) * 100000) / 100000) % 1);
+            const cos2Ans = parseFloat(cos2AnsElement.value = (Math.trunc(Math.cos(cos2 * Math.PI / 180) * 100000) / 100000) % 1);
+
+            const sinNeg = sin2Ans.toString()[0] === '-' ? 1 : 0;
+            const cosNeg = cos2Ans.toString()[0] === '-' ? 1 : 0;
+
+            if ((Math.abs(sin2Ans) * 100000) % 1000 === 999)
+                sin2AnsElement.value = sin2Ans > 0 ? (sin2Ans + 0.00001) % 1 : (sin2Ans - 0.00001) % 1;
+
+            if ((Math.abs(cos2Ans) * 100000) % 1000 === 999)
+                cos2AnsElement.value = cos2Ans > 0 ? (cos2Ans + 0.00001) % 1 : (cos2Ans - 0.00001) % 1;
+
+            while (sin2AnsElement.value.length != 1 && sin2AnsElement.value.length < 7 + sinNeg)
+                sin2AnsElement.value += '0';
+
+            while (cos2AnsElement.value.length != 1 && cos2AnsElement.value.length < 7 + cosNeg)
+                cos2AnsElement.value += '0';
+        }
+
+        let defaultRules = null;
+
+        function getDefaultRules() {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = {};
+
+            for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+                defaultRules[`rule-3-${instruction}`] = document.getElementById(`rule-3-${instruction}`).innerText;
+
+            for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+                defaultRules[`rule-4-${instruction}`] = document.getElementById(`rule-4-${instruction}`).innerText;
+        }
+
+        function setDefaultRules() {
+            getDefaultRules();
+
+            for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+                document.getElementById(`rule-3-${instruction}`).innerText = defaultRules[`rule-3-${instruction}`];
+
+            for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+                document.getElementById(`rule-4-${instruction}`).innerText = defaultRules[`rule-4-${instruction}`];
+        }
+
+        function setRules(rnd) {
+            getDefaultRules();
+
+            const edgework = ['バッテリー', '単3バッテリー', '単1バッテリー', 'バッテリーホルダー',
+                'インジケーター', '点灯したインジケーター', '点灯していないインジケーター',
+                'ポートプレート', '単一のポート', '重複したポート', 'ポート',
+                "シリアルナンバーの最初の数字", "シリアルナンバーの最後の数字", "シリアルナンバーの数字の個数", "シリアルナンバーの英字の個数",
+                '解除済モジュール', '無視されないモジュール', 'モジュール', '未解除モジュール', '無視されるモジュール',
+                '左のニキシー管', '右のニキシー管', '歯車の数字', '現在のステージ数',
+                "ディスプレーの1つ目の数字", "ディスプレーの2つ目の数字", "ディスプレーの3つ目の数字", "ディスプレーの4つ目の数字", "ディスプレーの5つ目の数字", "ディスプレーの6つ目の数字"];
+
+            for (let instruction = 0; instruction < tableLengths[0]; instruction++) {
+                const span = document.getElementById(`rule-3-${instruction + 1}`);
+                const rule = { type: rnd.nextMax(10) };
+                span.innerText = rule.type
+            }
+
+            for (let instruction = 0; instruction < tableLengths[1]; instruction++) {
+                const span = document.getElementById(`rule-4-${instruction + 1}`);
+                const rule = { type: rnd.nextMax(edgework.length) };
+                span.innerText = edgework[rule.type]
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">全色忘る</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Forget Any Color.svg" class="diagram">
+                <h2>モジュール詳細：全色忘る</h2>
+                <p class="flavour-text">電卓は不要だって！どうせ使うんだろうけど……。</p>
+                <p>
+                    このモジュールはディスプレー、3つのシリンダー、2つのニキシー管、歯車型のLEDと数字、鍵がある。
+                    音が聞こえる度に、これらを記録する。
+                    背景が青色の場合、「<a href="Forget%20The%20Colors%20translated%20(日本語%20—%20色忘る)%20(hatosable).html">Forget The Colors(色忘る)</a>」を参照する。
+                </p>
+                <h3>シーケンスの獲得：</h3>
+                <ol>
+                    <li style="margin: 20px 0;">ギアの色より色付きの表から数字を獲得する。下一桁のみを取得し、それが7、8、9の場合は6を引く。0は6とみなす。</li>
+                    <li style="margin: 20px 0;">
+                        ディスプレーの数字を書き留める。ただし、ステップ1の数字と同じ位置にある数字は削除する。
+
+                        <table class="right" style="text-align:center;">
+                            <tr>
+                                <th rowspan="2" style="border-left-style:hidden;border-top-style:hidden;"></th>
+                                <th colspan="5">5桁の数字</th>
+                            </tr>
+                            <tr>
+                                <th>1</th>
+                                <th>2</th>
+                                <th>3</th>
+                                <th>4</th>
+                                <th>5</th>
+                            </tr>
+                            <tr>
+                                <th>A</th>
+                                <td colspan="3">左</td>
+                                <td>中央</td>
+                                <td>右</td>
+                            </tr>
+                            <tr>
+                                <th>B</th>
+                                <td>左</td>
+                                <td colspan="3">中央</td>
+                                <td>右</td>
+                            </tr>
+                            <tr>
+                                <th>C</th>
+                                <td>左</td>
+                                <td>中央</td>
+                                <td colspan="3">右</td>
+                            </tr>
+                            <tr>
+                                <th>D</th>
+                                <td>左</td>
+                                <td colspan="2">中央</td>
+                                <td colspan="2">右</td>
+                            </tr>
+                            <tr>
+                                <th>E</th>
+                                <td colspan="2">左</td>
+                                <td>中央</td>
+                                <td colspan="2">右</td>
+                            </tr>
+                            <tr>
+                                <th>F</th>
+                                <td colspan="2">左</td>
+                                <td colspan="2">中央</td>
+                                <td>右</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li>
+                        以下をそれぞれ試し、正しい割り当て図(A-F)を見つける。
+                        <ul>
+                            <li style="margin: 20px 0;">シリンダーの値を色付きの値から獲得する。</li>
+                            <li style="margin: 20px 0;">数字の割り当て<em>ごとに</em>、数字を合算する。</li>
+                            <li style="margin: 20px 0;">各位置のシリンダーの値を足す。</li>
+                            <li style="margin: 20px 0;">左、中央、右の下一桁がモジュールの下部にあった3つの数字に一致する場合、その図は正しい。</li>
+                        </ul>
+                    </li>
+                    <li>正しい図を見つけたら、その中で長さが異なる唯一の位置を記録する。</li>
+                </ol>
+                <table class="right">
+                    <tr>
+                        <th>色</th>
+                        <th>左</th>
+                        <th>中央</th>
+                        <th>右</th>
+                        <th>歯車の色</th>
+                    </tr>
+                    <tr class="red black">
+                        <td>赤(R)</td>
+                        <td><span class='rule' id='rule-3-1'>1</span></td>
+                        <td><span class='rule' id='rule-3-9'>7</span></td>
+                        <td><span class='rule' id='rule-3-17'>3</span></td>
+                        <td><span class='rule' id='rule-4-1'>バッテリー</span></td>
+                    </tr>
+                    <tr class="orange black">
+                        <td>橙(O)</td>
+                        <td><span class='rule' id='rule-3-2'>6</span></td>
+                        <td><span class='rule' id='rule-3-10'>2</span></td>
+                        <td><span class='rule' id='rule-3-18'>8</span></td>
+                        <td><span class='rule' id='rule-4-2'>インジケーター</span></td>
+                    </tr>
+                    <tr class="yellow black">
+                        <td>黄(Y)</td>
+                        <td><span class='rule' id='rule-3-3'>8</span></td>
+                        <td><span class='rule' id='rule-3-11'>5</span></td>
+                        <td><span class='rule' id='rule-3-19'>1</span></td>
+                        <td><span class='rule' id='rule-4-3'>ポートプレート</span></td>
+                    </tr>
+                    <tr class="green black">
+                        <td>緑(G)</td>
+                        <td><span class='rule' id='rule-3-4'>5</span></td>
+                        <td><span class='rule' id='rule-3-12'>4</span></td>
+                        <td><span class='rule' id='rule-3-20'>6</span></td>
+                        <td><span class='rule' id='rule-4-4'>シリアルナンバーの最初の数字</span></td>
+                    </tr>
+                    <tr class="cyan black">
+                        <td>シアン(C)</td>
+                        <td><span class='rule' id='rule-3-5'>2</span></td>
+                        <td><span class='rule' id='rule-3-13'>6</span></td>
+                        <td><span class='rule' id='rule-3-21'>4</span></td>
+                        <td><span class='rule' id='rule-4-5'>バッテリーホルダー</span></td>
+                    </tr>
+                    <tr class="blue black">
+                        <td>青(B)</td>
+                        <td><span class='rule' id='rule-3-6'>7</span></td>
+                        <td><span class='rule' id='rule-3-14'>3</span></td>
+                        <td><span class='rule' id='rule-3-22'>5</span></td>
+                        <td><span class='rule' id='rule-4-6'>点灯していないインジケーター</span></td>
+                    </tr>
+                    <tr class="purple black">
+                        <td>紫(P)</td>
+                        <td><span class='rule' id='rule-3-7'>3</span></td>
+                        <td><span class='rule' id='rule-3-15'>1</span></td>
+                        <td><span class='rule' id='rule-3-23'>7</span></td>
+                        <td><span class='rule' id='rule-4-7'>ポート</span></td>
+                    </tr>
+                    <tr class="white black">
+                        <td>白(W</td>
+                        <td><span class='rule' id='rule-3-8'>4</span></td>
+                        <td><span class='rule' id='rule-3-16'>8</span></td>
+                        <td><span class='rule' id='rule-3-24'>2</span></td>
+                        <td><span class='rule' id='rule-4-8'>シリアルナンバーの英字の個数</span></td>
+                    </tr>
+                </table>
+                <h3>シーケンスの送信：</h3>
+                <p>唯一の長さによる文字列はボタンの押し方に変換でき、モジュールにはいつでも送信できる。</p>
+                <ul class="short">
+                    <li style="margin: 20px 0;"><strong>左 -></strong>左のニキシー管を押す。</li>
+                    <li style="margin: 20px 0;"><strong>中央 -></strong>前回のステージのニキシー管と反対のニキシー管を押す。そのようなステージが存在しない場合、右を押す。</li>
+                    <li><strong>R -></strong>右のニキシー管を押す。</li>
+                </ul>
+                <p><strong>注意：ニキシー管を押す前に鍵を押すと更にステージが生成される。</strong> <span class="right"><a href="../More/Ignore%20Table.html#mod=ForgetAnyColor">無視されるモジュール</a></span></p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
