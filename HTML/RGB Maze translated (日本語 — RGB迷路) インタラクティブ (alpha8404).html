@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>RGB迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function()
+        {
+            var row;
+            var maze = $(".maze");
+            var mazeDiv = $(".tableDiv");
+            var mazeIndex = [0, 0, 0];
+            var selectedMaze = 0;
+            var borderColor = "rgb(255, 0, 0)";
+            var coordinate = [0, 0];
+            //orientation contains flipX and flipY
+            var orientation = ['00', '00', '00'];
+            var keyChosen = [false, false, false];
+            var keyLocation = [[0, 0], [0, 0], [0, 0]];
+            var dotClassName = ["dot-red", "dot-green", "dot-blue"];
+            var currentDotMode = 0;
+            var exitSet = false;
+            var exitLocation = [0, 0];
+            var deletionMode = 0;
+            var mazeData = [
+                [ 
+                  // Maze 0
+                  "█████████████████",
+                  "█     █     █   █",
+                  "█ █████████ █ ███",
+                  "█ █   █   █ █ █ █",
+                  "█████ ███ ███ █ █",
+                  "█   █   █   █ █ █",
+                  "█ █████████████ █",
+                  "█ █     █     █ █",
+                  "█ ███ █████ ███ █",
+                  "█ █ █ █   █ █ █ █",
+                  "███ ███ █████ ███",
+                  "█   █   █ █     █",
+                  "███ █████ ███████",
+                  "█ █ █   █     █ █",
+                  "█ █████ ███████ █",
+                  "█     █   █     █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 1
+                  "█████████████████",
+                  "█       █   █   █",
+                  "███████████ ███ █",
+                  "█   █     █   █ █",
+                  "█ ███████ █████ █",
+                  "█ █     █ █   █ █",
+                  "█ █ ███████ █████",
+                  "█ █ █ █ █   █   █",
+                  "█████ █ █████ ███",
+                  "█ █   █   █   █ █",
+                  "█ ███ █ ███████ █",
+                  "█   █ █ █     █ █",
+                  "█ ███████ █████ █",
+                  "█ █ █   █ █ █ █ █",
+                  "███ ███ ███ █ █ █",
+                  "█     █   █   █ █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 2
+                  "█████████████████",
+                  "█ █     █   █   █",
+                  "█ ███ █████ ███ █",
+                  "█   █ █   █   █ █",
+                  "█ ███████ █████ █",
+                  "█ █     █   █ █ █",
+                  "███████ █████ ███",
+                  "█     █ █   █   █",
+                  "███ ███████ ███ █",
+                  "█ █ █     █ █ █ █",
+                  "█ ███████ █ █ ███",
+                  "█ █   █ █ █ █   █",
+                  "█ █ ███ ███████ █",
+                  "█ █ █   █   █ █ █",
+                  "█ █ █ ███ ███ ███",
+                  "█ █ █ █   █     █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 3
+                  "█████████████████",
+                  "█   █     █     █",
+                  "███ ███ ███ █████",
+                  "█ █   █ █ █ █   █",
+                  "█ ███████ ███ ███",
+                  "█ █   █   █   █ █",
+                  "█ ███ ███ █████ █",
+                  "█   █   █ █   █ █",
+                  "███████████ ███ █",
+                  "█   █     █ █   █",
+                  "███ █████ █ █████",
+                  "█ █   █ █ █ █   █",
+                  "█ █████ █████ ███",
+                  "█   █ █   █ █   █",
+                  "█ ███ ███ █ █████",
+                  "█ █     █ █     █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 4
+                  "█████████████████",
+                  "█ █     █     █ █",
+                  "█ █ █████████ █ █",
+                  "█ █ █       █ █ █",
+                  "█ █████████████ █",
+                  "█   █   █ █ █   █",
+                  "█████ ███ █ █████",
+                  "█ █   █   █   █ █",
+                  "█ █████ ███ ███ █",
+                  "█   █ █ █ █ █   █",
+                  "███ █ ███ ███ ███",
+                  "█ █ █   █   █ █ █",
+                  "█ ███ █████ ███ █",
+                  "█   █ █ █ █ █   █",
+                  "█ █████ █ █████ █",
+                  "█ █     █     █ █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 5
+                  "█████████████████",
+                  "█ █     █     █ █",
+                  "█ █████ █████ █ █",
+                  "█     █ █   █ █ █",
+                  "█████████ █ ███ █",
+                  "█ █     █ █ █   █",
+                  "█ █ █████████████",
+                  "█ █ █ █     █   █",
+                  "█ ███ ███ ███ ███",
+                  "█ █     █ █   █ █",
+                  "█ █████████████ █",
+                  "█ █ █ █   █     █",
+                  "███ █ █ █████████",
+                  "█ █   █ █     █ █",
+                  "█ █████ █ █████ █",
+                  "█     █ █ █     █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 6
+                  "█████████████████",
+                  "█   █     █ █   █",
+                  "█ █████ ███ █ █ █",
+                  "█   █ █ █ █ █ █ █",
+                  "█████ ███ █ █████",
+                  "█ █     █ █   █ █",
+                  "█ ███████ █████ █",
+                  "█   █   █   █   █",
+                  "█ █████ ███████ █",
+                  "█ █   █   █   █ █",
+                  "███ █████████ ███",
+                  "█   █ █ █   █   █",
+                  "█████ █ ███ █████",
+                  "█ █ █ █   █ █   █",
+                  "█ █ █ ███ █ ███ █",
+                  "█   █   █ █ █   █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 7
+                  "█████████████████",
+                  "█   █   █     █ █",
+                  "███ ███ ███ ███ █",
+                  "█ █   █ █ █ █   █",
+                  "█ █████ █ ███ ███",
+                  "█ █   █ █   █ █ █",
+                  "█ ███ ███ █████ █",
+                  "█ █   █ █ █ █   █",
+                  "█ █████ ███ ███ █",
+                  "█ █   █ █   █ █ █",
+                  "███ ███ ███ █ ███",
+                  "█   █ █ █ █ █   █",
+                  "█████ █ █ █████ █",
+                  "█     █ █ █   █ █",
+                  "█████████ ███ ███",
+                  "█       █   █   █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 8
+                  "█████████████████",
+                  "█   █       █   █",
+                  "█ █████████████ █",
+                  "█   █     █ █   █",
+                  "███████ ███ █████",
+                  "█   █ █ █ █   █ █",
+                  "█ ███ ███ ███ █ █",
+                  "█ █   █     █ █ █",
+                  "█ █ ███████████ █",
+                  "█ █ █ █ █     █ █",
+                  "█████ █ █ █████ █",
+                  "█     █ █ █   █ █",
+                  "███████ ███ █████",
+                  "█   █   █   █   █",
+                  "█ █████████████ █",
+                  "█   █       █   █",
+                  "█████████████████"
+                ],
+                [ 
+                  // Maze 9
+                  "█████████████████",
+                  "█     █ █ █     █",
+                  "█████ █ █ █ █████",
+                  "█   █ █ █ █ █   █",
+                  "█ █ ███ █ █████ █",
+                  "█ █ █ █ █   █ █ █",
+                  "█████ █ █████ █ █",
+                  "█ █ █ █ █ █   █ █",
+                  "█ █ █ ███ █ █████",
+                  "█   █   █ █ █   █",
+                  "█████████ █████ █",
+                  "█ █ █   █   █ █ █",
+                  "█ █ ███ █████ █ █",
+                  "█   █ █   █ █ █ █",
+                  "█████ █████ █ ███",
+                  "█     █     █   █",
+                  "█████████████████"
+                ]
+            ];
+            function createMaze()
+            {
+                $("<div>").addClass("dot-white").appendTo(mazeDiv);
+                for (let y = 0; y < 8; y++)
+                {
+                    row = $("<tr>").addClass("maze-row").appendTo(maze);
+                    for (let x = 0; x < 8; x++)
+                    {
+                        var cell = $("<td>").addClass("square").css("border-color", borderColor).appendTo(row);
+                        if (orientation[selectedMaze][0] == 0)
+                        {
+                            //Top-Left
+                            if (orientation[selectedMaze][1] == 0)
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][2 * y + 1][2 * x + 2] == ' ')
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][2 * y + 2][2 * x + 1] == ' ')
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][2 * y + 1][2 * x] == ' ' : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][2 * y][2 * x + 1] == ' ' : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                            //Bottom-Left
+                            else
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][15 - 2 * y][2 * x + 2] == ' ')
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][14 - 2 * y][2 * x + 1] == ' ')
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][15 - 2 * y][2 * x] == ' ' : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16 - 2 * y][2 * x + 1] == ' ' : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                        }
+                        else
+                        {
+                            //Top-Right
+                            if (orientation[selectedMaze][1] == 0)
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][2 * y + 1][14 - 2 * x] == 0)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][2 * y + 2][15 - 2 * x] == 0)
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][2 * y + 1][16 - 2 * x] == 0 : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][2 * y][15 - 2 * x] == 0 : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                            //Bottom-Right
+                            else
+                            {
+                                if (mazeData[mazeIndex[selectedMaze]][15 - 2 * y][14 - 2 * x] == 0)
+                                    cell.css({ "border-right-width": "0px" });
+                                if (mazeData[mazeIndex[selectedMaze]][14 - 2 * y][15 - 2 * x] == 0)
+                                    cell.css({ "border-bottom-width": "0px" });
+                                if (x != 0 ? mazeData[mazeIndex[selectedMaze]][15 - 2 * y][16 - 2 * x] == 0 : false)
+                                    cell.css({ "border-left-width": "0px" });
+                                if (y != 0 ? mazeData[mazeIndex[selectedMaze]][16 - 2 * y][15 - 2 * x] == 0 : false)
+                                    cell.css({ "border-top-width": "0px" });
+                            }
+                        }
+                        cell.click(() =>
+                        {
+                            if (currentDotMode >= 0 && currentDotMode <= 2)
+                            {
+                                if (keyChosen[currentDotMode] == false)
+                                {
+                                    $("<div>").addClass(`${dotClassName[currentDotMode]}`).appendTo(mazeDiv);
+                                    keyChosen[currentDotMode] = true;
+                                }
+                                $(`.${dotClassName[currentDotMode]}`).css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                keyLocation[currentDotMode][0] = x;
+                                keyLocation[currentDotMode][1] = y;
+                            }
+                            else if (currentDotMode == 3)
+                            {
+                                $(".dot-white").css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                coordinate[0] = x;
+                                coordinate[1] = y;
+                            }
+                            else
+                            {
+                                if (exitSet == false)
+                                {
+                                    $("<div>").addClass("dot-yellow").appendTo(mazeDiv);
+                                    exitSet = true;
+                                }
+                                $(".dot-yellow").css({ "top": `calc(4px + 32 * ${y}px)`, "left": `calc(4px + 32 * ${x}px)` });
+                                exitLocation[0] = x;
+                                exitLocation[1] = y;
+                            }
+                        });
+                    }
+                }
+            };
+            createMaze();
+            $(".mazeR").change(function()
+            {
+                mazeIndex[0] = $(this).val();
+                if (selectedMaze == 0)
+                    updateMaze();
+            });
+            $(".mazeG").change(function()
+            {
+                mazeIndex[1] = $(this).val();
+                if (selectedMaze == 1)
+                    updateMaze();
+            });
+            $(".mazeB").change(function()
+            {
+                mazeIndex[2] = $(this).val();
+                if (selectedMaze == 2)
+                    updateMaze();
+            });
+            $(".mazeColor").click(function()
+            {
+                selectedMaze = (selectedMaze + 1) % 3;
+                if (selectedMaze == 0)
+                {
+                    $(".mazeColor").text("赤");
+                    borderColor = "rgb(255, 0, 0)";
+                }
+                else if (selectedMaze == 1)
+                {
+                    $(".mazeColor").text("緑");
+                    borderColor = "rgb(0, 255, 0)";
+                }
+                else
+                {
+                    $(".mazeColor").text("青");
+                    borderColor = "rgb(0, 0, 255)";
+                }
+                $(".mazeColor").css("background", `${borderColor}`);
+                updateMaze();
+            });
+            $(".mazeRRotate").change(function()
+            {
+                orientation[0] = $(this).val();
+                if (selectedMaze == 0)
+                    updateMaze();
+            });
+            $(".mazeGRotate").change(function()
+            {
+                orientation[1] = $(this).children("option:selected").val();
+                if (selectedMaze == 1)
+                    updateMaze();
+            });
+            $(".mazeBRotate").change(function()
+            {
+                orientation[2] = $(this).children("option:selected").val();
+                if (selectedMaze == 2)
+                    updateMaze();
+            });
+            $(".dotMode").change(function()
+            {
+                currentDotMode = $(this).children("option:selected").val();
+            });
+            $(".deleteSelector").change(function()
+            {
+                deletionMode = $(this).children("option:selected").val();
+            });
+            $(".deleteSelectorButton").click(function()
+            {
+                if (deletionMode >= 0 && deletionMode <= 2)
+                {
+                    $(`.${dotClassName[deletionMode]}`).remove();
+                    keyChosen[deletionMode] = false;
+                }
+                else
+                {
+                    $(".dot-yellow").remove();
+                    exitSet = false;
+                }
+            });
+            $(".upButton").click(function()
+            {
+                if (coordinate[1] == 0) return;
+                coordinate[1]--;
+                updatePosition();
+            });
+            $(".downButton").click(function()
+            {
+                if (coordinate[1] == 7) return;
+                coordinate[1]++;
+                updatePosition();
+            });
+            $(".leftButton").click(function()
+            {
+                if (coordinate[0] == 0) return;
+                coordinate[0]--;
+                updatePosition();
+            });
+            $(".rightButton").click(function()
+            {
+                if (coordinate[0] == 7) return;
+                coordinate[0]++;
+                updatePosition();
+            });
+            function updateMaze()
+            {
+                $(".maze").empty();
+                createMaze();
+                for (let i = 0; i < 3; i++)
+                {
+                    if (keyChosen[i] == true)
+                    {
+                        $("<div>").addClass(`${dotClassName[i]}`).css({ "top": `calc(4px + 32 * ${keyLocation[i][1]}px)`, "left": `calc(4px + 32 * ${keyLocation[i][0]}px)` }).appendTo(mazeDiv);
+                    }
+                }
+                if (exitSet == true)
+                {
+                    $("<div>").addClass("dot-yellow").css({ "top": `calc(4px + 32 * ${exitLocation[1]}px)`, "left": `calc(4px + 32 * ${exitLocation[0]}px)` }).appendTo(mazeDiv);
+                }
+                updatePosition();
+            };
+            function updatePosition()
+            {
+                $(".dot-white").css({ 'top': 'calc(4px + 32 *' + coordinate[1] + 'px)', 'left': 'calc(4px + 32 *' + coordinate[0] + 'px)' });
+            };
+        });
+    </script>
+    <style>
+        .tableDiv {
+            position: relative;
+            margin: 0 auto;
+            width: 258px;
+            height: 258px;
+        }
+
+        .maze {
+            table-layout: fixed;
+            margin: 0 auto;
+            width: 258px;
+            height: 258px;
+            overflow: hidden;
+            background-color: rgb(0, 0, 0);
+        }
+
+        .maze-row {
+            height: 32px;
+        }
+
+        .square, .square:not(:hover) {
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            width: 32px;
+            height: 32px;
+            border: 2px solid;
+            color: black;
+            transition: background-color 0.2s;
+        }
+
+            .square:hover {
+                background-color: rgb(0, 255, 255);
+                transition: background-color 0.2s;
+            }
+
+        .dot-white, .dot-red, .dot-green, .dot-blue, .dot-yellow {
+            float: left;
+            position: absolute;
+            height: 26px;
+            width: 26px;
+            border-radius: 50%;
+            display: block;
+            pointer-events: none;
+            top: 4px;
+            left: 4px;
+        }
+
+        .dot-white {
+            background-color: rgb(255, 255, 255);
+            z-index: 100;
+        }
+
+        .dot-red {
+            background-color: rgb(255, 0, 0);
+            z-index: 50;
+        }
+
+        .dot-green {
+            background-color: rgb(0, 255, 0);
+            z-index: 50;
+        }
+
+        .dot-blue {
+            background-color: rgb(0, 0, 255);
+            z-index: 50;
+        }
+
+        .dot-yellow {
+            background-color: rgb(255, 255, 0);
+            z-index: 25;
+        }
+
+        .mazeColor, .deleteSelectorButton {
+            width: auto;
+            border: 2px solid black;
+            padding-top: 5px;
+        }
+
+            .mazeColor, .mazeColor:hover, .mazeColor:not(:hover) {
+                background: red;
+                color: white;
+            }
+
+            .deleteSelectorButton, .deleteSelectorButton:hover, .deleteSelectorButton:not(:hover) {
+                background: rgb(255, 255, 255);
+                color: black;
+            }
+
+        .deleteSelector {
+            background-color: rgb(255, 255, 255);
+            color: rgb(0, 0, 0);
+            border: 2px solid black;
+        }
+
+        .dotMode {
+            background-color: rgb(255, 255, 0);
+            color: rgb(0, 0, 0);
+            border: 2px solid black;
+        }
+
+        .mazeR, .mazeRRotate {
+            background-color: rgb(255, 0, 0);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .mazeG, .mazeGRotate {
+            background-color: rgb(0, 255, 0);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .mazeB, .mazeBRotate {
+            background-color: rgb(0, 0, 255);
+            color: rgb(255, 255, 255);
+            border: 2px solid black;
+        }
+
+        .grid {
+            position: relative;
+            top: 5px;
+            width: 150px;
+            height: 150px;
+            margin: auto;
+        }
+
+            .grid div {
+                width: 50px;
+                height: 50px;
+                float: left;
+            }
+
+        .upButton, .downButton, .leftButton, .rightButton {
+            width: 50px;
+            height: 50px;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RGB Maze.svg" class="diagram">
+                <h2>モジュール詳細：RGB迷路</h2>
+                <p class="flavour-text">今、あなたも同時に3回迷子になるのを体験することができるぞ！</p>
+
+                 <p>このモジュールは、8x8グリッドのLEDと7セグメントディスプレーで構成されている。</p>
+                <p>この8x8グリッドには3つの迷路がある。<br>赤・緑・青である。<br>
+                    これらの迷路のそれぞれに鍵がある。これらの3つの鍵はすべて最初のグリッドに表示されている。</p>
+                <p>7セグメントディスプレーには、各迷路の色に対応する3つの数字が表示される。これらの数字は重なっており混ざっている。</p>
+                <p>LEDのいずれかを押すと、赤い迷路のどこかに現在地点である白いLEDが表示される。</p>
+                <p>隣接する灰色のLEDを押して移動する。次のようなセルに移動しようとすると…</p><ul>
+                   <li>現在地点と押した灰色の間に壁がある…</li>
+                   <li>別の色の迷路で鍵の地点に到着する…</li></ul>
+                   <p>…これらが起こると、ミスが記録される。</p>
+                <p>白のLEDを押すと迷路が切り替わる。これはいつでも切り替えることができ、ミスにつながることはない。</p>
+                <p>3つの鍵が全て収集されると、7セグメントディスプレーが変化する。<br>
+                    RGB成分それぞれが出口の座標を示す。</p>
+                   <ul><li>3色のうち1つは数字である。これを出口の段に使用する。</li>
+                       <li>残りの2色のうち1つは英字である。これを出口の列に使用する。</li>
+                       <li>残りの色は、数字でも英字でもないランダムなパターンである。
+                        <br>出口はこの色の迷路にある。
+                    </li></ul>
+                <p>注：B及びDは、8及び0と差別化するために小文字で表示される。それ以外は大文字で表示される。
+                </p>
+                <p>鍵と同様、出口が置かれている迷路のみ使用することができる。それ以外の迷路で出口に行くとミスが記録される。
+
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB迷路</span>
+            </div>
+            <div class="page-content">
+                <h3>迷路の形</h3>
+                <p>7セグメントの各色は、以下の迷路のいずれかに対応する数字である。</p>
+                <p>
+                    各迷路の隅の1つには迷路と同じ色のLEDがあり、その色の迷路の回転方向を示す。.<br>
+                    迷路はLEDの場所に応じて反転するように水平／垂直方向に反転されている場合がある。<br>
+                    迷路の向きが同じものがある場合、それらに対応したLEDは混ざり合って表示される。
+                </p>
+                <div class="tableDiv">
+                    <table class="maze"></table>
+                    <div class="dot-white"></div>
+                </div>
+                <div>
+                    <div class="grid">
+                        <div></div>
+                        <div><button class="upButton">&#8593;</button></div>
+                        <div></div>
+                        <div><button class="leftButton">&#8592;</button></div>
+                        <div></div>
+                        <div><button class="rightButton">&#8594;</button></div>
+                        <div></div>
+                        <div><button class="downButton">&#8595;</button></div>
+                        <div></div>
+                    </div>
+                    <br>
+                    <div>
+                        <label for="mazeColor">選択中の迷路:</label>
+                        <button id="mazeColor" class="mazeColor">赤</button>
+                        <label for="dotMode">オプション:</label>
+                        <select id="dotMode" class="dotMode">
+                            <option value=0>赤の鍵</option>
+                            <option value=1>緑の鍵</option>
+                            <option value=2>青の鍵</option>
+                            <option value=3>現在位置</option>
+                            <option value=4>出口</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="deleteSelector">削除オプション:</label>
+                        <select id="deleteSelector" class="deleteSelector">
+                            <option value=0>赤の鍵</option>
+                            <option value=1>緑の鍵</option>
+                            <option value=2>蒼の鍵</option>
+                            <option value=3>出口</option>
+                        </select>
+                        <button class="deleteSelectorButton">削除</button>
+                    </div>
+                    <div>
+                        <label for="mazeR"> 赤の迷路: </label>
+                        <select id="mazeR" class="mazeR">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeRRotate"> 回転位置: </label>
+                        <select id="mazeRRotate" class="mazeRRotate">
+                            <option value="00">左上</option>
+                            <option value="10">右上</option>
+                            <option value="01">左下</option>
+                            <option value="11">右下</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mazeG"> 緑の迷路: </label>
+                        <select id="mazeG" class="mazeG">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeGRotate"> 回転位置: </label>
+                        <select id="mazeGRotate" class="mazeGRotate">
+                            <option value="00">左上</option>
+                            <option value="10">右上</option>
+                            <option value="01">左下</option>
+                            <option value="11">右下</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mazeB"> 青の迷路: </label>
+                        <select id="mazeB" class="mazeB">
+                            <option value=0>0</option>
+                            <option value=1>1</option>
+                            <option value=2>2</option>
+                            <option value=3>3</option>
+                            <option value=4>4</option>
+                            <option value=5>5</option>
+                            <option value=6>6</option>
+                            <option value=7>7</option>
+                            <option value=8>8</option>
+                            <option value=9>9</option>
+                        </select>
+                        <label for="mazeBRotate"> 回転位置: </label>
+                        <select id="mazeBRotate" class="mazeBRotate">
+                            <option value="00">左上</option>
+                            <option value="10">右上</option>
+                            <option value="01">左下</option>
+                            <option value="11">右下</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

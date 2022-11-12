@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>鴨羽色ボタン — Keep Talking and Nobody Explodes Mod</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            for (let n = 0; n < 73; n++)
+                rnd.next(0, 2);
+
+            let directions = ["上", "右", "下", "左"];
+            var num = rnd.next(0, 4);
+            document.getElementById('rule-direction').innerText = directions[num];
+            if (num % 2 === 0)
+                document.getElementById('movement').innerText = "列";
+            else
+                document.getElementById('movement').innerText = "段";
+            if (num === 1 || num === 2)
+                document.getElementById('movement-wrap').innerText = "始め";
+            else
+                document.getElementById('movement-wrap').innerText = "終わり";
+
+            let positions = ["1番目", "2番目", "3番目", "4番目", "5番目", "6番目"];
+            rnd.shuffleFisherYates(positions);
+            let spans = Array.from(document.querySelectorAll(`.teal-button-list span`));
+            for (let i = 0; i < 6; i++)
+                spans[i].innerText = positions[i];
+
+            function recurse(sofar, available) {
+                function processAvailable(sq, v) {
+                    let newAvailable = available.slice(0);
+                    for (let c = 0; c < 9; c++) {
+                        let avIx = c + 9 * ((sq / 9) | 0);
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    for (let r = 0; r < 9; r++) {
+                        let avIx = (sq % 9) + 9 * r;
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    return newAvailable;
+                }
+
+                let ixs = [];
+                let lowest = 9;
+                for (let sq = 0; sq < 9 * 9; sq++) {
+                    if (sofar[sq] !== null)
+                        continue;
+                    if (available[sq].length < lowest) {
+                        ixs = [sq];
+                        lowest = available[sq].length;
+                    }
+                    else if (available[sq].length === lowest)
+                        ixs.push(sq);
+                    if (lowest === 1)
+                        break;
+                }
+
+                if (ixs.length === 0)
+                    return sofar;
+
+                let square = ixs[rnd.next(0, ixs.length)];
+                let offset = rnd.next(0, available[square].length);
+                for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++) {
+                    let avIx = (fAvIx + offset) % available[square].length;
+                    let v = available[square][avIx];
+                    sofar[square] = v;
+
+                    let result = recurse(sofar, processAvailable(square, v));
+                    if (result !== null)
+                        return result;
+                }
+                sofar[square] = null;
+                return null;
+            }
+            let grid = recurse(
+                Array(9 * 9).fill(null),
+                Array(9 * 9).fill(null).map(x => Array(9).fill(null).map((_, c) => c)));
+
+            let tds = Array.from(document.querySelectorAll(`.teal-button-table td`));
+            for (let i = 0; i < 81; i++)
+                tds[i].innerText = String.fromCharCode(65 + grid[i]);
+        }
+    </script>
+    <style>
+        .dark table, table {
+            margin-left: auto;
+            margin-right: auto;
+            border: none;
+        }
+
+        .teal-button-table td {
+            text-align: center;
+            font-size: 12pt;
+            padding: .2em .6em .1em;
+        }
+
+        .teal-button-table th {
+            width: 25px;
+            height: 25px;
+            font-size: 16pt;
+            padding: .2em .6em .1em;
+        }
+
+        body.ruleseed-active .rule {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .manual {
+            font-size: 11pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">鴨羽色ボタン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Teal Button.svg" class="diagram">
+                <h2>モジュール詳細：鴨羽色ボタン</h2>
+                <p class="flavour-text">英字を分けよう！</p>
+                <div class="manual">
+                    <p>シリアルナンバーの文字を取得し、2つずつ3つのペアに分割する。</p>
+                    <ul class="teal-button-list">
+                        <li>シリアルナンバーの左から<span class="rule">sixth</span>と<span class="rule">fifth</span>を最初のペアとする。</li>
+                        <li>シリアルナンバーの左から<span class="rule">fourth</span>と<span class="rule">third</span>を2つ目のペアとする。</li>
+                        <li>シリアルナンバーの左から<span class="rule">second</span>と<span class="rule">first</span>を3つ目のペアとする。</li>
+                    </ul>
+                    <p>英字をアルファベットの位置に変換する(A=1,B=2...)。次に、各数字を0~8の範囲になるまで繰り返し9を減算する。</p>
+                    <p>各ペアの1つ目の値を下の表の列に使用する。2つ目の値を段に使用し、交差した英字を取得する。</p>
+                    <p>ボタンに書かれた数字の分だけ、<span id="movement" class="rule">column</span>を<span id="rule-direction" class="rule">down</span>に移動する。グリッドの端に来たら<span id="movement-wrap" class="rule">beginning</span>に折り返す。新たなセルにある3つの英字が送信すべきものである。</p>
+                    <p>ディスプレーの英字を変更するには、タイマーの秒の1の桁が設定したいアルファベット位置の数字と等しいときにボタンを押す。</p>
+                    <p>回答を送信するには、タイマーの秒の1の桁が0のときにボタンを押す。</p>
+                </div>
+                <table class="teal-button-table">
+                    <tr><th class="corner"></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+                    <tr><th>0</th><td>I</td><td>E</td><td>F</td><td>G</td><td>C</td><td>H</td><td>B</td><td>A</td><td>D</td></tr>
+                    <tr><th>1</th><td>F</td><td>H</td><td>G</td><td>A</td><td>E</td><td>B</td><td>I</td><td>D</td><td>C</td></tr>
+                    <tr><th>2</th><td>E</td><td>A</td><td>I</td><td>D</td><td>B</td><td>C</td><td>G</td><td>F</td><td>H</td></tr>
+                    <tr><th>3</th><td>C</td><td>G</td><td>H</td><td>B</td><td>F</td><td>D</td><td>A</td><td>E</td><td>I</td></tr>
+                    <tr><th>4</th><td>G</td><td>F</td><td>B</td><td>C</td><td>D</td><td>E</td><td>H</td><td>I</td><td>A</td></tr>
+                    <tr><th>5</th><td>A</td><td>C</td><td>E</td><td>F</td><td>H</td><td>I</td><td>D</td><td>G</td><td>B</td></tr>
+                    <tr><th>6</th><td>H</td><td>I</td><td>D</td><td>E</td><td>G</td><td>A</td><td>C</td><td>B</td><td>F</td></tr>
+                    <tr><th>7</th><td>D</td><td>B</td><td>A</td><td>H</td><td>I</td><td>F</td><td>E</td><td>C</td><td>G</td></tr>
+                    <tr><th>8</th><td>B</td><td>D</td><td>C</td><td>I</td><td>A</td><td>G</td><td>F</td><td>H</td><td>E</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>

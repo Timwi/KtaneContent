@@ -8,6 +8,7 @@
         <link rel="stylesheet" type="text/css" href="css/normalize.css">
         <link rel="stylesheet" type="text/css" href="css/main.css">
         <script src="js/ktane-utils.js"></script>
+        <script src="js/jquery.3.1.1.min.js"></script>
         <style>
             .appendix-page {
                 margin: 0;
@@ -20,12 +21,14 @@
                      margin: 0 .75in;
                 }
             }
-            .appendix-table {
+            .dark .appendix-table, .appendix-table {
                 margin: auto;
                 border: 0;
             }
+            .dark .appendix-cell, .appendix-cell {
+                border: 0;
+            }
             .appendix-cell {
-               border: 0;
                min-width: 0.8em;
                font-weight: bold;
             }
@@ -44,18 +47,29 @@
                min-height: 5px;
                height: 5px;
             }
+
+            .inactive_color { background-color: #00000000; }
+            .primary_color { background-color: #BCED95; color: #000; }
+            .secondary_color { background-color: #D4F59F; color: #000; }
+
+            .inactive_border_color { background-color: #BBBBBB; }
+            .active_border_color { background-color: #000; }
+
+            .dark .seen_color { background-color: #2B74B18F; }
+            .dark .inactive_border_color { background-color: #555; }
+            .dark .active_border_color { background-color: #FFF; }
         </style>
         <script>
             // Setup Code (DarkSly Mark)
             const TABLE_ROWS = 23;
             const TABLE_COLS = 20;
 
-            const INACTIVE_COLOR = "#00000000";
-            const PRIMARY_COLOR = "#bced95"; //Light Green
-            const SECONDARY_COLOR =  "#d4f59f"; //Even lighter green
+            const INACTIVE_COLOR = "inactive_color";
+            const PRIMARY_COLOR = "primary_color";      //Light Green
+            const SECONDARY_COLOR = "secondary_color";  //Even lighter green
 
-            const INACTIVE_BORDER_COLOR = "#888888"; //Grey
-            const ACTIVE_BORDER_COLOR = "black";
+            const INACTIVE_BORDER_COLOR = "inactive_border_color";  //Grey
+            const ACTIVE_BORDER_COLOR = "active_border_color";
 
             let colors = {
                 blue: "rgba(68, 130, 255, 0.4)",
@@ -86,8 +100,7 @@
                     firstBorderCorner.row = Math.ceil(i/2 - 1) + 0.5;
                     firstBorderCorner.col = -0.5;
                     firstBorderCorner.id = "border_" + firstBorderCorner.row + "_" + firstBorderCorner.col;
-                    firstBorderCorner.className = "appendix-cell border vb hb";
-                    firstBorderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                    firstBorderCorner.className = "appendix-cell border vb hb inactive_border_color";
                     tr.appendChild(firstBorderCorner);
                 } else {
                     //First Vertical border
@@ -95,8 +108,7 @@
                     firstVBorder.row = Math.ceil(i/2 - 1);
                     firstVBorder.col = -0.5;
                     firstVBorder.id = "border_" + firstVBorder.row + "_" + firstVBorder.col;
-                    firstVBorder.className = "appendix-cell border vb";
-                    firstVBorder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                    firstVBorder.className = "appendix-cell border vb inactive_border_color";
                     firstVBorder.onclick = () => onBorderClick(firstVBorder);
                     tr.appendChild(firstVBorder);
                 }
@@ -111,8 +123,7 @@
                         hborder.row = Math.ceil(i/2 - 1) + 0.5;
                         hborder.col = j;
                         hborder.id = "border_" + hborder.row + "_" + hborder.col;
-                        hborder.className = "appendix-cell border hb";
-                        hborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        hborder.className = "appendix-cell border hb inactive_border_color";
                         tr.appendChild(hborder);
 
                         //Border Corners
@@ -120,8 +131,7 @@
                         borderCorner.row = Math.ceil(i/2 - 1) + 0.5;
                         borderCorner.col = j + 0.5;
                         borderCorner.id = "border_" + borderCorner.row + "_" + borderCorner.col;
-                        borderCorner.className = "appendix-cell border vb hb";
-                        borderCorner.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        borderCorner.className = "appendix-cell border vb hb inactive_border_color";
                         tr.appendChild(borderCorner);
                         let nextCorner = borderCorner;
 
@@ -143,8 +153,7 @@
                         vborder.row = Math.ceil(i/2 - 1);
                         vborder.col = j + 0.5;
                         vborder.id = "border_" + vborder.row + "_" + vborder.col;
-                        vborder.className = "appendix-cell border vb";
-                        vborder.style.backgroundColor = INACTIVE_BORDER_COLOR;
+                        vborder.className = "appendix-cell border vb inactive_border_color";
                         vborder.onclick = () => onBorderClick(vborder);
                         tr.appendChild(vborder);
                     }
@@ -173,14 +182,21 @@
             function setBorder(border, active) {
                 let isHorizontal = border.row % 1 != 0;
 
-                border.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-                  if(isHorizontal) {
-                    let lastCorner = getBorder(border.row, border.col - 0.5);
-                    let nextCorner = getBorder(border.row, border.col + 0.5);
+                removeColorClass(border);
+                $(border).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+                if(isHorizontal) {
+                  let lastCorner = getBorder(border.row, border.col - 0.5);
+                  let nextCorner = getBorder(border.row, border.col + 0.5);
 
-                    if(lastCorner) lastCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
-                    if(nextCorner) nextCorner.style.backgroundColor = active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR;
+                  if(lastCorner) {
+                      removeColorClass(lastCorner);
+                      $(lastCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
                   }
+                  if(nextCorner) {
+                      removeColorClass(nextCorner);
+                      $(nextCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+                  }
+                }
             }
 
             function toggleCell(cell, multiselection) {
@@ -188,21 +204,26 @@
 
                 if(multiselection) {
                     // if(isCellNotPainted(cell))
-                        if(getCurrentCell()) getCurrentCell().style.backgroundColor = SECONDARY_COLOR;
+                        if(getCurrentCell()) {
+                            removeColorClass(getCurrentCell());
+                            $(getCurrentCell()).addClass(SECONDARY_COLOR);
+                        }
                     selectedCells.push(cell);
 
                 } else{
                     if(!isSelectionEmpty())
-                      selectedCells.forEach(cell => {
+                      selectedCells.forEach((cell) => {
                         //   if(isCellNotPainted(cell))
-                          cell.style.backgroundColor = INACTIVE_COLOR;
+                            removeColorClass(cell);
+                            $(cell).addClass(INACTIVE_COLOR);
                         });
                     selectedCells = [];
                     selectedCells.push(cell);
                 }
 
                 // if(isCellNotPainted(cell))
-                    cell.style.backgroundColor = PRIMARY_COLOR;
+                    removeColorClass(cell);
+                    $(cell).addClass(PRIMARY_COLOR);
             }
 
             function isCellNotPainted(cell) {
@@ -210,15 +231,11 @@
             }
 
             function isCellColor(cell, color) {
-                const ctx = document.createElement('canvas').getContext('2d');
-                ctx.fillStyle = color;
-                ctx.fillRect( 0, 0, 1, 1 );
-                ctx.fillStyle = getComputedStyle(cell, null).getPropertyValue("background-color");
-                ctx.fillRect( 1, 0, 1, 1 );
-                const a = JSON.stringify(Array.from(ctx.getImageData(0, 0, 1, 1).data));
-                const b = JSON.stringify(Array.from(ctx.getImageData(1, 0, 1, 1).data));
-                ctx.canvas = null;
-                return a === b;
+                return $(cell).hasClass(color);
+            }
+
+            function removeColorClass(cell) {
+                $(cell).removeClass("inactive_color primary_color secondary_color inactive_border_color active_border_color")
             }
 
             function setupEventListeners() {
@@ -241,7 +258,7 @@
             }
 
             function isBorderActive(border) {
-                return border.style.backgroundColor == ACTIVE_BORDER_COLOR;
+                return $(border).hasClass(ACTIVE_BORDER_COLOR);
             }
 
             function copySelection(undoForced) {
@@ -387,8 +404,11 @@
                     firstCell = selectedCells[0];
                     lastCell = getCurrentCell();
                 }
-                
-                selectedCells.forEach(cell => cell.style.backgroundColor = INACTIVE_COLOR);
+
+                selectedCells.forEach(cell => {
+                    removeColorClass(cell);
+                    $(cell).addClass(INACTIVE_COLOR);
+                });
                 selectedCells = [];
 
                 for (let i = 0; i <= Math.abs(firstCell.row - lastCell.row); i++) {
@@ -396,7 +416,7 @@
                         console.log("Cell Row Position: " + (firstCell.row + i).toString());
                         console.log("Cell Col Position: " + (firstCell.col + j).toString());
                         toggleCell(getCell(firstCell.row + (firstCell.row - lastCell.row < 0 ? i : -i), firstCell.col + (firstCell.col - lastCell.col < 0 ? j : -j)), true);
-                    }  
+                    }
                 }
                 console.log("SQUARE");
             }
@@ -418,9 +438,14 @@
             }
 
             function paintCell(cell, color) {
-                if(cell.style.backgroundColor == color)
-                    cell.style.backgroundColor = cell == getCurrentCell() ? PRIMARY_COLOR : SECONDARY_COLOR;
-                else cell.style.backgroundColor = color;
+                if($(cell).hasClass(color)) {
+                    removeColorClass(cell);
+                    $(cell).addClass(cell == getCurrentCell() ? PRIMARY_COLOR : SECONDARY_COLOR);
+                }
+                else {
+                    removeColorClass(cell);
+                    $(cell).addClass(color);
+                }
             }
 
             function onKeyPressed(e, undoForced) {
@@ -461,7 +486,10 @@
                     case 13: //Enter
                         e.preventDefault();
                         if (!isSelectionEmpty()) {
-                            selectedCells.forEach(cell => cell.style.backgroundColor = INACTIVE_COLOR);
+                            selectedCells.forEach(cell => {
+                                removeColorClass(cell);
+                                $(cell).addClass(INACTIVE_COLOR);
+                            });
                             selectedCells = [];
                             if(!undoForced) saveAction({ event: e, action: "keydown" });
                         }
@@ -605,7 +633,7 @@
                 <div class="page-content">
                     <img src="img/Component/Mislocation.svg" class="diagram" />
                     <h2>On the Subject of Mislocation</h2>
-                    <p class="flavour-text">You've never been this lost in an area this tiny.</p>
+                    <p class="flavour-text">You’ve never been this lost in an area this tiny.</p>
                     <br>
                     <div>
                         <table style="width: 100%;">

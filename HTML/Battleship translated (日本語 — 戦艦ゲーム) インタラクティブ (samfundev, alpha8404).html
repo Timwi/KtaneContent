@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>戦艦ゲーム — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            /*eslint-env es6*/
+            var controls = localStorage.getItem("alt-controls");
+            if (controls == null) {
+                localStorage.setItem("alt-controls", false);
+                controls = false;
+            } else {
+                $(".alt-controls").prop("checked", controls == "true");
+                controls = (controls == "true");
+            }
+
+            var grid = $(".grid");
+            var ships = $(".ships");
+            var cells = [];
+            var undos = [];
+            var redos = [];
+            var saves = [];
+            var order = [];
+            var currentState;
+            var animTime;
+            var dragState;
+            var lastSelected;
+
+            function mod(x, m) {
+                return (x % m + m) % m;
+            }
+
+            function deselectCell(cell) {
+                lastSelected = cell;
+                cell.removeClass("selected").css("animation-delay", "");
+            }
+
+            function getCell(x, y) {
+                return cells[y] ? cells[y][x] : undefined;
+            }
+
+            function updateCell(x, y, passed) {
+                var cell = getCell(x, y);
+                var element = cell.element;
+                if (cell.state == 0) {
+                    element.removeClass("water");
+
+                    if (cell.ship) {
+                        cell.ship.remove();
+                        cell.ship = null;
+                    }
+                } else if (cell.state == 1) {
+                    element.addClass("water");
+
+                    if (cell.ship) {
+                        cell.ship.remove();
+                        cell.ship = null;
+                    }
+                } else if (!cell.ship) {
+                    element.addClass("water");
+                    cell.ship = $("<div>").addClass("ship").appendTo(element);
+                }
+
+                var ship = cell.ship;
+                var displayable = true;
+                var surrounding = [];
+
+                // Get every position around the cell.
+                for (var oy = -1; oy <= 1; oy++) {
+                    for (var ox = -1; ox <= 1; ox++) {
+                        if (ox != 0 || oy != 0) {
+                            var nextCell = getCell(x + ox, y + oy);
+                            if (nextCell && nextCell.element.hasClass("placable")) {
+                                var watered = nextCell.element.hasClass("water");
+                                if (!watered) {
+                                    displayable = false;
+                                } else if (nextCell.ship) {
+                                    surrounding.push([x + ox, y + oy]);
+
+                                    if (!passed) {
+                                        updateCell(x + ox, y + oy, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (ship) {
+                    ship.removeClass("diamond left right top down");
+                    if (displayable) {
+                        // Check for any potental errors with ships in different row/column.
+                        var error = false;
+                        surrounding.forEach(function(base) {
+                            surrounding.forEach(function(pos) {
+                                if (pos[0] != base[0] && pos[1] != base[1]) {
+                                    error = true;
+                                }
+                            });
+                        });
+
+                        surrounding.forEach(function(pos) {
+                            if (pos[0] != x && pos[1] != y) {
+                                error = true;
+                            }
+                        });
+
+                        if (!error) {
+                            ship.addClass("left right top bottom");
+                            surrounding.forEach(function(pos) {
+                                if (pos[0] > x) {
+                                    ship.removeClass("right");
+                                }
+
+                                if (pos[0] < x) {
+                                    ship.removeClass("left");
+                                }
+
+                                if (pos[1] > y) {
+                                    ship.removeClass("bottom");
+                                }
+
+                                if (pos[1] < y) {
+                                    ship.removeClass("top");
+                                }
+                            });
+                            return;
+                        }
+                    }
+
+                    ship.addClass("diamond");
+                }
+            }
+
+            function massChange(changes) {
+                changes.forEach(function(change) {
+                    if (change.cell) {
+                        var cell = change.cell;
+                        cell.state = change.state;
+                        updateCell(cell.x, cell.y);
+                    } else if (change.element) {
+                        change.element.prop("checked", change.state);
+                    }
+                });
+            }
+
+            $(document).keydown(function(event) {
+                var n = parseInt(event.key);
+                var k = event.key.toLowerCase();
+                var selected = $(".cell.selected");
+
+                if (selected.length == 0 && n) {
+                    if (lastSelected && lastSelected.length > 0) {
+                        lastSelected.click();
+                    } else {
+                        order[0].click();
+                    }
+
+                    selected = $(".cell.selected");
+                }
+
+                var index = -1;
+                order.forEach(function(e, i) {
+                    if (e.is(selected)) {
+                        index = i;
+                    }
+                });
+
+                if (event.key == "`") {
+                    n = 0;
+                }
+
+                if (selected.length > 0) {
+                    if (!isNaN(n)) {
+                        if (n > 4) {
+                            n = 4;
+                        }
+
+                        selected.text(n);
+                        deselectCell(selected);
+
+                        if (selected.parent().parent().hasClass("ships")) {
+                            selected.text(n);
+                            var row = selected.parent();
+                            row.children().filter("input").remove();
+                            for (var i = 1; i <= n; i++) {
+                                $("<input type=\"checkbox\">").addClass("tracker").appendTo(row).click(function() {
+                                    var element = $(this);
+                                    undos.push([{element: element, state: !element.prop("checked")}]);
+
+                                    if (currentState) {
+                                        var n = currentState - 1;
+                                        saves.forEach(function(button, index) {
+                                            if (index > n) {
+                                                button.remove();
+                                            }
+                                        });
+                                        saves.splice(currentState, saves.length - n);
+
+                                        currentState = null;
+                                    }
+                                });
+                            }
+                        }
+
+                        order[mod(index + 1, order.length)].click();
+                    } else if (event.key == "Backspace") {
+                        order[mod(index - 1, order.length)].click();
+                        event.preventDefault();
+                    } else if (event.key == " ") {
+                        order[mod(index + 1, order.length)].click();
+                        event.preventDefault();
+                    }
+                }
+
+                if (k == "z" && undos.length > 0) {
+                    var state = undos[undos.length - 1];
+                    var redo = [];
+
+                    state.forEach(function(change) {
+                        if (change.cell) {
+                            redo.push({cell: change.cell, state: change.cell.state});
+                        } else {
+                            redo.push({element: change.element, state: change.element.prop("checked")});
+                        }
+                    });
+                    massChange(state);
+
+                    undos.splice(undos.length - 1, 1);
+                    redos.push(redo);
+                }
+
+                if (k == "y" && redos.length > 0) {
+                    state = redos[redos.length - 1];
+                    var undo = [];
+
+                    state.forEach(function(change) {
+                        if (change.cell) {
+                            undo.push({cell: change.cell, state: change.cell.state});
+                        } else {
+                            undo.push({element: change.element, state: change.element.prop("checked")});
+                        }
+                    });
+                    massChange(state);
+
+                    redos.splice(redos.length - 1, 1);
+                    undos.push(undo);
+                }
+            }).click(function() {
+                deselectCell($(".cell.selected"));
+            });
+
+            function clickElement(event, cell, x, y) {
+                var button = event.buttons;
+                if (button == 1 || (button == 2 && controls)) {
+                    undos.push([{cell: cell, state: cell.state}]);
+                    if (!controls) {
+                        cell.state++;
+                        cell.state %= 3;
+                    } else if (button == 1) {
+                        if (cell.state == 0) {
+                            cell.state = 1;
+                        } else {
+                            cell.state = 0;
+                        }
+                    } else {
+                        if (cell.state == 0) {
+                            cell.state = 2;
+                        } else {
+                            cell.state = 0;
+                        }
+                    }
+
+                    if (event.type == "mousedown") {
+                        dragState = cell.state;
+                    } else if (event.type == "mouseenter") {
+                        cell.state = dragState;
+                    }
+
+                    redos = [];
+                    if (currentState) {
+                        var n = currentState - 1;
+                        saves.forEach(function(button, index) {
+                            if (index > n) {
+                                button.remove();
+                            }
+                        });
+                        saves.splice(currentState, saves.length - n);
+
+                        currentState = null;
+                    }
+
+                    updateCell(x, y);
+                }
+            }
+
+            var size = 5;
+            for (let y = 0; y <= size; y++) {
+                cells[y] = [];
+                var row = $("<tr>").addClass("row").appendTo(grid);
+                for (let x = 0; x <= size; x++) {
+                    let element = $("<td>").addClass("cell").appendTo(row);
+                    let cell = {
+                        x: x,
+                        y: y,
+                        element: element,
+                        state: 0
+                    };
+
+                    if (x > 0 && y > 0) {
+                        element
+                            .addClass("placable")
+                            .on("mousedown mouseenter", function(event) { clickElement(event, cell, x, y); })
+                            .contextmenu(function(event) {
+                                if (controls) {
+                                    event.preventDefault();
+                                }
+                            });
+
+                        cells[y][x] = cell;
+                    } else if (x != 0 || y != 0) {
+                        element.text("?");
+
+                        element.click(function(event) {
+                            if (!element.hasClass("selected")) {
+                                var offset;
+                                if (animTime) {
+                                    offset = ((Date.now() - animTime) / 1000) % 2.5;
+                                } else {
+                                    animTime = Date.now();
+                                }
+
+                                deselectCell($(".cell.selected"));
+                                element.addClass("selected");
+
+                                if (offset) {
+                                    element.css("animation-delay", "-" + offset + "s");
+                                }
+                                event.stopPropagation();
+                            }
+                        });
+
+                        cells[y][x] = {
+                            x: x,
+                            y: y,
+                            element: element
+                        };
+                        order.push(element);
+                    }
+                }
+            }
+
+            $("button.save-state").click(function() {
+                if (saves.length < 10) {
+                    var save = {
+                        changes: [],
+                        undos: undos.slice(0),
+                        redos: redos.slice(0),
+                        ships: []
+                    };
+
+                    cells.forEach(function(row, y) {
+                        row.forEach(function(cell, x) {
+                            if (y > 0 && x > 0) {
+                                save.changes.push({
+                                    cell: cell, state: cell.state
+                                });
+                            }
+                        });
+                    });
+
+                    $(".ships .row").each(function(index, row) {
+                        save.ships[index] = $(row).children().filter("input:checked").length;
+                    });
+
+                    var n = saves.length + 1;
+                    var button = $("<button>").appendTo($(".save-states")).click(function() {
+                        massChange(save.changes);
+                        undos = save.undos;
+                        redos = save.redos;
+                        $(".ships .row").each(function(y, row) {
+                            $(row).children().filter("input").each(function(index, element) {
+                                $(element).prop("checked", index <= save.ships[y] - 1);
+                            });
+                        });
+
+                        currentState = parseInt(n);
+                    }).text(n);
+
+                    saves.push(button);
+                }
+            });
+
+            function resetGrid() {
+                var undo = [];
+                cells.forEach(function(row, y) {
+                    row.forEach(function(cell, x) {
+                        if (y > 0 && x > 0) {
+                            undo.push({
+                                cell: cell, state: cell.state
+                            });
+                            cell.state = 0;
+                            updateCell(x, y);
+                        }
+                    });
+                });
+
+                $(".ships input.tracker").each(function() {
+                    var element = $(this);
+                    undo.push({
+                        element: element, state: element.prop("checked")
+                    });
+                    element.prop("checked", false);
+                });
+
+                undos.push(undo);
+            }
+
+            $("button.reset-grid").click(resetGrid);
+
+            $("button.reset").click(function() {
+                resetGrid();
+
+                saves = [];
+                $(".save-states button").remove();
+
+                order.forEach(function(element) {
+                    element.text("?");
+                });
+
+                $("input.tracker").remove();
+
+                lastSelected = null;
+            });
+
+            $("input.alt-controls").click(function() {
+                controls = $(this).prop("checked");
+                localStorage.setItem("alt-controls", controls.toString());
+            });
+
+            for (var i = 4; i >= 1; i--) {
+                row = $("<div>").addClass("row").appendTo(ships);
+
+                for (var x = 1; x <= i; x++) {
+                    var ship = $("<div>").addClass("ship").appendTo(row);
+                    if (x == 1) {
+                        ship.addClass("right top bottom").css("margin-right", (4 - i) * 35);
+                    }
+
+                    if (x == i) {
+                        ship.addClass("left top bottom");
+                    }
+                }
+
+                let cell = $("<div>").addClass("cell").appendTo(row).text("?");
+                order.push(cell);
+                cell.click(function(event) {
+                    if (!cell.hasClass("selected")) {
+                        var offset;
+                        if (animTime) {
+                            offset = ((Date.now() - animTime) / 1000) % 2.5;
+                        } else {
+                            animTime = Date.now();
+                        }
+
+                        deselectCell($(".cell.selected"));
+                        cell.addClass("selected");
+
+                        if (offset) {
+                            cell.css("animation-delay", "-" + offset + "s");
+                        }
+                        event.stopPropagation();
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+        * {
+            user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+        }
+
+        @keyframes flashing {
+            0% { background-color: rgba(255, 255, 0, 0.4); }
+            50% { background-color: rgba(255, 255, 0, 0.6); }
+            100% { background-color: rgba(255, 255, 0, 0.4); }
+        }
+
+        .dark .grid, .grid {
+            margin-bottom: 10px;
+            cursor: default;
+            border: none;
+        }
+
+        .row {
+            height: 55px;
+        }
+
+        .dark .cell, .cell {
+            padding: 0px;
+            height: inherit;
+            width: 55px;
+            text-align: center;
+            font-size: 30px;
+            vertical-align: middle;
+            line-height: 70px;
+            float: left;
+            border: rgba(0, 0, 0, 0) 1px solid;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cell.placable {
+            border: 1px solid;
+            transition: 0.5s;
+        }
+
+        .cell.selected {
+            animation: 2.5s ease-in-out flashing infinite;
+        }
+
+        .cell.placable.water {
+            background-color: rgba(0, 0, 255, 0.5);
+        }
+
+        .ship {
+            border: black 3px solid;
+            background-color: white;
+            height: 40px;
+            width: 40px;
+            align-self: center;
+        }
+
+        .ship.diamond {
+            transform: rotateZ(45deg) scale(0.8);
+        }
+
+        .ship.top.left {
+            border-top-left-radius: 40px;
+        }
+
+        .ship.top.right {
+            border-top-right-radius: 40px;
+        }
+
+        .ship.bottom.left {
+            border-bottom-left-radius: 40px;
+        }
+
+        .ship.bottom.right {
+            border-bottom-right-radius: 40px;
+        }
+
+        .save-states {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .save-states button {
+            margin-left: 5px;
+            margin-bottom: 5px;
+        }
+
+        .ships {
+            float: right;
+            margin-top: 64px;
+        }
+
+        .ships .row {
+            border: rgba(0, 0, 0, 0) 1px solid;
+        }
+
+        .ships .ship, .ships .cell, .ships input {
+            float: right;
+            margin-right: 5px;
+            width: 25px;
+            height: 25px;
+            margin-top: 16px;
+            line-height: 35px;
+        }
+
+        .ships input {
+            margin-top: 19px;
+            float: right;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">戦艦ゲーム</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Battleship.svg" class="diagram">
+                <h2>モジュール詳細：戦艦ゲーム</h2>
+                <p class="flavour-text">発射!... (ポチャン)外れだ</p>
+
+                <p><strong>士官､注目!</strong>我々は敵の居場所を5×5の範囲まで絞り込むことができた。ターゲットの場所は隠れているが､いくつかの諜報がある。</p>
+
+                <p>与えられた情報だけでは､相手の位置を正確に特定することができるかわからない。そこで君が必要である。君には､発見されることなく調査を行える場所を判断していただきたい。</p>
+                <ul>
+                    <li>シリアルナンバーの最初の英字と最初の数字を考える。範囲がA-Eか1-5になるまで値を繰り返し5増減させる。ここが､最初の安全地帯である。</li>
+                    <li>シリアルナンバーの2つ目の英字と2つ目の数字についても同様に考える。これを英字か数字がなくなるまで繰り返す。</li>
+                    <li>最後に､ポートの数を英字A-Eに､インジケーターの数とバッテリーの数の和を数字1-5に上記と同様に変換する。ここが最後の安全地帯である。</li>
+                </ul>
+                <p>追加情報は、<a href="https://ktane.timwi.de/HTML/Battleship%20translated%20(%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E6%B5%B7%E6%88%A6%E3%82%B2%E3%83%BC%E3%83%A0)%20(tchen).html">日本語翻訳済元マニュアル</a>を参照する。</p>
+                <div class="ships"></div>
+                <table class="grid"></table>
+                <button class="save-state">状態を保存</button>
+                <div class="save-states"></div>
+                <button class="reset-grid">グリッドをリセット</button>
+                <br>
+                <button class="reset" style="margin-top: 25px;">全てリセット</button>
+                <div style="margin-top: 25px;">代替操作: <input class="alt-controls" type="checkbox"></div>
+                <h4>操作</h4>
+                <ul>
+                    <li>タイルをクリックして、空/水/船を循環する。</li>
+                    <li>ドラッグして複数同じタイルを配置する。</li>
+                    <li>疑問符をクリックして、数字を入力する。</li>
+                    <li>船の数を入力すると横にチェックボックスが表示される。</li>
+                    <li>バックスペースで1つ戻り、スペースバーで1つ進める。</li>
+                    <li>Zで元に戻り、Yでやり直す。</li>
+                </ul>
+                <h4>代替操作</h4>
+                <ul>
+                    <li>タイルをクリックして、空と水を循環させる。</li>
+                    <li>タイルを右クリックして、空と船を循環させる。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>

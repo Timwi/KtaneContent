@@ -676,12 +676,8 @@ let parseData = [
 				regex: /Showing fur pattern (\d+) rotated (\d+)° clockwise/,
 				handler: function (m, module) {
 					module.push({
-						label: 'Fur pattern shown on module:', obj: $(`<div style="
-							border-radius: 100%;
+						label: 'Fur pattern shown on module:', obj: $(`<div class='dalmatians-pattern' style="
 							background-image: url('img/101 Dalmatians/Fur${m[1]}.png');
-							background-size: contain;
-							width: 10cm;
-							height: 10cm;
 							transform: rotate(${m[2]}deg);
 						"></div>`)
 					});
@@ -708,7 +704,7 @@ let parseData = [
 						module.CorrectValues = {};
 						module.CorrectValuesFull = {};
 						module.ListObject = {
-							label: 'Module information:', obj: $(`<table style='border-collapse: collapse; text-align: center'>
+							label: 'Module information:', obj: $(`<table class='fourteen-table'>
 							<tr>
 								<th colspan='2'>Stages</th>
 								<td class='sep' rowspan='2'></td>
@@ -719,20 +715,19 @@ let parseData = [
 							<tr>
 								<th>#</th>
 								<th>LED</th>
-								<th style='background: #f99'>R</th>
-								<th style='background: #8f8'>G</th>
-								<th style='background: #aaf'>B</th>
-								<th style='background: #f99'>R</th>
-								<th style='background: #8f8'>G</th>
-								<th style='background: #aaf'>B</th>
+								<th class='colored' style='background: #f99'>R</th>
+								<th class='colored' style='background: #8f8'>G</th>
+								<th class='colored' style='background: #aaf'>B</th>
+								<th class='colored' style='background: #f99'>R</th>
+								<th class='colored' style='background: #8f8'>G</th>
+								<th class='colored' style='background: #aaf'>B</th>
 							</tr>
 						</table>`)
 						};
 						module.push({ label: `<a href="../HTML/14%20interactive%20(MásQuéÉlite).html">View stages interactively</a>` });
 						module.push(module.ListObject);
 						module.SetCss = function () {
-							module.ListObject.obj.find('td,th').get().forEach(x => { x.style.border = '1px solid black'; x.style.padding = '.3em .6em'; });
-							module.ListObject.obj.find('.sep').get().forEach(x => { x.setAttribute('rowspan', 2 + module.TableData.length); x.style.border = 'none'; });
+							module.ListObject.obj.find('.sep').get().forEach(x => x.setAttribute('rowspan', 2 + module.TableData.length));
 						};
 					}
 					while (module.TableData.length <= matches[1])
@@ -752,13 +747,14 @@ let parseData = [
 						};
 						let ix = +matches[1];
 						module.ListObject.obj.append($(`<tr>
-							<td>${ix}</td><td style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
-							<td style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
-							<td style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
-							<td style='background: #ccf' title='${module.TableData[ix].B.fulldisplay}'>${module.TableData[ix].B.display}</td>
-							<td style='background: #fbb' title='${module.TableData[ix].R.full}'>${module.TableData[ix].R.result}</td>
-							<td style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
-							<td style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
+							<td>${ix}</td>
+							<td class='colored' style='background: ${ledColors[module.TableData[ix].R.led]}'>${module.TableData[ix].R.led}</td>
+							<td class='colored' style='background: #fbb' title='${module.TableData[ix].R.fulldisplay}'>${module.TableData[ix].R.display}</td>
+							<td class='colored' style='background: #afa' title='${module.TableData[ix].G.fulldisplay}'>${module.TableData[ix].G.display}</td>
+							<td class='colored' style='background: #ccf' title='${module.TableData[ix].B.fulldisplay}'>${module.TableData[ix].B.display}</td>
+							<td class='colored' style='background: #fbb' title='${module.TableData[ix].R.full}'>${module.TableData[ix].R.result}</td>
+							<td class='colored' style='background: #afa' title='${module.TableData[ix].G.full}'>${module.TableData[ix].G.result}</td>
+							<td class='colored' style='background: #ccf' title='${module.TableData[ix].B.full}'>${module.TableData[ix].B.result}</td>
 						</tr>`));
 						module.SetCss();
 						module.JSONs.push(module.Stage);
@@ -775,11 +771,11 @@ let parseData = [
 					module.CorrectValuesFull[matches[1]] = matches[2];
 					module.CorrectValues[matches[1]] = `${matches[3] === 'inverted' ? 'i' : ''}${matches[4]}`;
 					if (matches[1] === 'B') {
-						module.ListObject.obj.append($(`<tr>
-							<th colspan='7' style='text-align: right'>Final answer</th>
-							<td style='border: 1px solid black; background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
-							<td style='border: 1px solid black; background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
-							<td style='border: 1px solid black; background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
+						module.ListObject.obj.append($(`<tr class='stage-answer'>
+							<th colspan='7'>Final answer</th>
+							<td class='colored' style='background: #f99' title='${module.CorrectValuesFull.R}'>${module.CorrectValues.R}</td>
+							<td class='colored' style='background: #8f8' title='${module.CorrectValuesFull.G}'>${module.CorrectValues.G}</td>
+							<td class='colored' style='background: #aaf' title='${module.CorrectValuesFull.B}'>${module.CorrectValues.B}</td>
 						</tr>`));
 						module.SetCss();
 					}
@@ -854,9 +850,10 @@ let parseData = [
 		loggingTag: "1D Chess",
 		matches: [
 			{
-				regex: /The position is.*/,
+				regex: /.+/,
 				handler: function (matches, module) {
-					let html = matches[0].replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span style='background: black; color: white; padding: 0 .1cm'>${m}</span>`);
+					let html = matches[0].replace(/[^\[]([A-Z] [a-z]→[a-z])[^\]]/g, (_, m) => ` <span class='one-d-chess-white-move'>${m}</span>,`)
+										  .replace(/\[([A-Z] [a-z]→[a-z])\]/g, (_, m) => `<span class='one-d-chess-black-move'>${m}</span>`);
 					let obj = document.createElement('span');
 					obj.innerHTML = html;
 					module.push({ obj: obj });
@@ -921,54 +918,20 @@ let parseData = [
 					};
 
 
-					let obj = $("<div>").css({
-						webkitTouchCallout: "none",
-						webkitUserSelect: "none",
-						khtmlUserSelect: "none",
-						mozUserSelect: "none",
-						msUserSelect: "none",
-						userSelect: "none"
-					});
+					let obj = $("<div class='twok48'>");
 
-					let gridLabel = $("<div>").css({
-						display: "inline-block",
-						padding: "5px 0",
-						margin: "10px 0",
-						minWidth: 150,
-						textAlign: "center"
-					});
-					let gameContainer = $("<div>").css({
-						position: "relative",
-						width: 300,
-						height: 300,
-						backgroundColor: "#bbada0",
-						borderRadius: 6
-					});
-					let gridAndTileCSS = {
-						position: "absolute",
-						width: "70%",
-						height: "70%",
-						top: "15%",
-						left: "15%",
-						zIndex: 10
-					};
-					let gridContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
-					gridAndTileCSS.zIndex = 20;
-					let tileContainer = $("<div>").appendTo(gameContainer).css(gridAndTileCSS);
+					let gridLabel = $("<div class='grid-label'>");
+					let gameContainer = $("<div class='game-container'>");
+					let gridContainer = $("<div class='grid-container'>").appendTo(gameContainer);
+					let tileContainer = $("<div class='tile-container'>").appendTo(gameContainer);
 
 					let posPerc = function (val) {
 						return `${val / 3 * 100}%`;
 					};
 
-					for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div>").css({
-						position: "absolute",
-						width: 60,
-						height: 60,
-						backgroundColor: "#cdc1b4",
-						borderRadius: 6,
+					for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) $("<div class='backing-tile'>").css({
 						left: posPerc(x),
 						top: posPerc(y),
-						transform: "translate(-50%, -50%)"
 					}).appendTo(gridContainer);
 
 					let currentGrid = -1;
@@ -983,28 +946,20 @@ let parseData = [
 						let grid = module.Grids[currentGrid];
 
 						let actuateTile = function (tile) {
-							let wrapper = $("<div>").appendTo(tileContainer);
-							let inner = $("<div>").text(tile.value).appendTo(wrapper);
+							let wrapper = $("<div class='wrapper'>").appendTo(tileContainer);
+							let inner = $("<div class='inner'>").text(tile.value).appendTo(wrapper);
 							let position = tile.previousPosition || { x: tile.x, y: tile.y };
 
 							let style = getTileStyle(tile.value);
 							wrapper.css({
-								width: 60,
-								height: 60,
-								position: "absolute",
 								left: posPerc(position.x),
 								top: posPerc(position.y),
-								transform: "translate(-50%, -50%)",
 								zIndex: tile.mergedFrom ? 20 : 10
 							});
 							inner.css({
-								textAlign: "center",
-								lineHeight: "60px",
 								fontSize: getFontSize(tile.value),
-								fontWeight: 900,
 								backgroundColor: "#" + style.color,
 								color: style.blackText ? "#776e65" : "#f9f6f2",
-								borderRadius: 6
 							});
 
 							if (tile.previousPosition) {
@@ -1044,24 +999,16 @@ let parseData = [
 						grid.tiles.forEach(actuateTile);
 					};
 
-					let buttonStyle = {
-						padding: "5px 10px",
-						margin: 10,
-						cursor: "pointer",
-						backgroundColor: "#eee4da",
-						fontWeight: 900,
-						borderRadius: 6
-					};
 
-					let leftArrow = $("<span>").text("< Prev").click(function () {
+					let leftArrow = $("<span class='arrow-button left'>").text("< Prev").click(function () {
 						if (currentGrid > 0) module.actuateGrid(currentGrid - 1);
-					}).appendTo(obj).css(buttonStyle).css({ marginLeft: -4 });
+					}).appendTo(obj);
 
 					obj.append(gridLabel);
 
-					let rightArrow = $("<span>").text("Next >").click(function () {
+					let rightArrow = $("<span class='arrow-button'>").text("Next >").click(function () {
 						if (currentGrid < module.Grids.length - 1) module.actuateGrid(currentGrid + 1);
-					}).appendTo(obj).css(buttonStyle);
+					}).appendTo(obj);
 
 					obj.append(gameContainer);
 
@@ -1172,41 +1119,41 @@ let parseData = [
 
 					let Colors = { "Red": "#f00", "Green": "#0f0", "Blue": "#00f", "White": "#fff", "Black": "#000" };
 					let svg = [
-						`<circle cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.7 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m2.9 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.7 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m2.9 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m0.8 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[4], matches[3]) ? '#f00' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<circle class='led' cx='0' cy='0' r='0.5' fill='${Colors[matches[2]]}'/>`,
+						`<path class='segment' d='m0.8 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.7 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m2.9 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.8 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.7 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m2.9 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
+						`<path class='segment' d='m0.8 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[4], matches[3]) ? '#f00' : '#000'}'/>`,
 
-						`<path d='m3.2 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.1 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.3 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.1 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.3 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m3.2 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[6], matches[5]) ? '#0f0' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m3.2 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.1 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m5.3 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.1 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m5.3 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
+						`<path class='segment' d='m3.2 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[6], matches[5]) ? '#0f0' : '#000'}'/>`,
 
-						`<path d='m5.6 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.5 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m7.7 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.6 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.5 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m7.7 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m5.6 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[8], matches[7]) ? '#00f' : '#000'}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m5.6 -.2h2l-.5 .5h-1z' fill='${seg2('a', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.5 -.1v2l.5 -.25v-1.25z' fill='${seg2('b', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m7.7 -.1v2l-.5 -.25v-1.25z' fill='${seg2('c', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.6 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${seg2('d', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.5 2.1v2l.5 -.5v-1.25z' fill='${seg2('e', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m7.7 2.1v2l-.5 -.5v-1.25z' fill='${seg2('f', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
+						`<path class='segment' d='m5.6 4.2h2l-.5 -.5h-1z' fill='${seg2('g', matches[8], matches[7]) ? '#00f' : '#000'}'/>`,
 
-						`<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${mix(seg2('a', matches[4], matches[3]), seg2('a', matches[6], matches[5]), seg2('a', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${mix(seg2('b', matches[4], matches[3]), seg2('b', matches[6], matches[5]), seg2('b', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${mix(seg2('c', matches[4], matches[3]), seg2('c', matches[6], matches[5]), seg2('c', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${mix(seg2('d', matches[4], matches[3]), seg2('d', matches[6], matches[5]), seg2('d', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${mix(seg2('e', matches[4], matches[3]), seg2('e', matches[6], matches[5]), seg2('e', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${mix(seg2('f', matches[4], matches[3]), seg2('f', matches[6], matches[5]), seg2('f', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${mix(seg2('g', matches[4], matches[3]), seg2('g', matches[6], matches[5]), seg2('g', matches[8], matches[7]))}' stroke='#000' stroke-width='0.1'/>`
+						`<path class='segment' d='m8.2 -.2h2l-.5 .5h-1z' fill='${mix(seg2('a', matches[4], matches[3]), seg2('a', matches[6], matches[5]), seg2('a', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${mix(seg2('b', matches[4], matches[3]), seg2('b', matches[6], matches[5]), seg2('b', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${mix(seg2('c', matches[4], matches[3]), seg2('c', matches[6], matches[5]), seg2('c', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${mix(seg2('d', matches[4], matches[3]), seg2('d', matches[6], matches[5]), seg2('d', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${mix(seg2('e', matches[4], matches[3]), seg2('e', matches[6], matches[5]), seg2('e', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${mix(seg2('f', matches[4], matches[3]), seg2('f', matches[6], matches[5]), seg2('f', matches[8], matches[7]))}'/>`,
+						`<path class='segment' d='m8.2 4.2h2l-.5 -.5h-1z' fill='${mix(seg2('g', matches[4], matches[3]), seg2('g', matches[6], matches[5]), seg2('g', matches[8], matches[7]))}'/>`
 					];
 
-					module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+					module.push({ label: matches[0], obj: $('<svg>').html(`<svg class='seven-graphic' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
@@ -1215,16 +1162,16 @@ let parseData = [
 				handler: function (matches, module) {
 					let Colors = { "R": "#f00", "G": "#0f0", "B": "#00f", "W": "#fff", "K": "#000", "C": "#0ff", "M": "#f0f", "Y": "#ff0" };
 					let svg = [
-						`<path d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${Colors[matches[3]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${Colors[matches[4]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${Colors[matches[5]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${Colors[matches[6]]}' stroke='#000' stroke-width='0.1'/>`,
-						`<path d='m8.2 4.2h2l-.5 -.5h-1z' fill='${Colors[matches[7]]}' stroke='#000' stroke-width='0.1'/>`,
+						`<path class='segment' d='m8.2 -.2h2l-.5 .5h-1z' fill='${Colors[matches[1]]}'/>`,
+						`<path class='segment' d='m8.1 -.1v2l.5 -.25v-1.25z' fill='${Colors[matches[2]]}'/>`,
+						`<path class='segment' d='m10.3 -.1v2l-.5 -.25v-1.25z' fill='${Colors[matches[3]]}'/>`,
+						`<path class='segment' d='m8.2 2l.5 -.25h1l.5 .25 -.5 .25h-1z' fill='${Colors[matches[4]]}'/>`,
+						`<path class='segment' d='m8.1 2.1v2l.5 -.5v-1.25z' fill='${Colors[matches[5]]}'/>`,
+						`<path class='segment' d='m10.3 2.1v2l-.5 -.5v-1.25z' fill='${Colors[matches[6]]}'/>`,
+						`<path class='segment' d='m8.2 4.2h2l-.5 -.5h-1z' fill='${Colors[matches[7]]}'/>`,
 					];
 
-					module.push({ label: matches[0], obj: $('<svg>').html(`<svg style='height: 3cm; display: block' xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
+					module.push({ label: matches[0], obj: $('<svg>').html(`<svg class='seven-graphic' viewBox='-.6 -.6 11.1 5'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
@@ -1243,9 +1190,8 @@ let parseData = [
 					module.push({
 						label: matches[1] + ':',
 						obj: $('<div>').append(
-							$('<img>')
+							$("<img class='algebra-image'>")
 								.attr('src', 'img/Algebra/' + matches[2].replace(/\+/g, '%2B') + '.png')
-								.css({ height: '3em' })
 						)
 					});
 					return true;
@@ -1269,7 +1215,7 @@ let parseData = [
 			{
 				regex: /^The walls of the generated maze are as follows:$/,
 				handler: function (matches, module) {
-					module.push({ label: matches[0], obj: pre(readMultiple(9).replace(/\[Algorithmia #\d+\] /g, "")) });
+					module.push({ label: matches[0], obj: pre(readTaggedLines(9).join('\n')) });
 					return true;
 				}
 			},
@@ -1334,6 +1280,44 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'ApplePenModule',
+		loggingTag: 'Apple Pen',
+		matches: [
+			{
+				regex: /(?:[PAN] ?){36}/,
+				handler: function (match, module) {
+					module.grid = match[0].split(' ');
+				}
+			},
+			{
+				regex: /Starting position: (..)/,
+				handler: function (match, module) {
+					const icons = { 'A':'apple', 'P':'pen', 'N':'pineapple' };
+					
+					const startCol = 'ABCDEF'.indexOf(match[1][0]);
+					const startRow = match[1][1] - '1';
+				
+					let table = "<table class='ppap-table' style='width: 3in;'>";
+					for (let row = 0; row < 6; row++) {
+						table += '<tr>'; 
+						for (let col = 0; col < 6; col++) {
+							const icon = icons[module.grid[6 * row + col]];
+							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
+							table += `<td style='background: ${fill}'> 
+										<img src='img/PPAP/${icon}.png'/> 
+									</td>`;
+						}
+						table += '</tr>';
+					}
+					module.push({ label:'Grid: (starting on green)', obj:table });
+				}
+			},
+			{
+				regex: /Possible solution|submitted/
+			}
+		]
+	},
+	{
 		moduleID: "Keypad",
 		loggingTag: "Assets.Scripts.Rules.KeypadRuleSet",
 		matches: [
@@ -1357,10 +1341,8 @@ let parseData = [
 					function p(n) {
 						return `<tr>${Array(14).fill(null).map((_, ix) => `<th>${(ix + n) < 26 ? String.fromCharCode(65 + ix + n) : ['EOF', 'total'][ix + n - 26]}</th>`).join('')}</tr>` + lines.map(line => `<tr>${line.replace(/^\[Arithmetic Cipher #\d+\] /, '').split(',').slice(n, n + 14).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
 					}
-					let table = $(`<div><table>${p(0)}</table><table>${p(14)}</table></div>`);
-					table.find('table').css({ width: '100%', marginBottom: '.1cm' });
-					table.find('td,th').css({ border: '1px solid black', padding: '.05cm .1cm' });
-					table.find('th').css({ background: '#eee' });
+					let table = $(`<div><table class='arith-c-freq-table'>${p(0)}</table>
+										<table class='arith-c-freq-table'>${p(14)}</table></div>`);
 					module.push({ label: 'Frequency table:', obj: table });
 					return true;
 				}
@@ -1372,16 +1354,17 @@ let parseData = [
 					let shifts = matches[1] === 'formulas' ? /Shifts: (\d+),(\d+)/.exec(readLine()).slice(1).map(v => v | 0) : [0, 0];
 					function mark(str) {
 						if (shifts[1] !== 0)
-							str = str.substr(0, shifts[0] + 1) + `<span style='background: hsl(230, 100%, 90%)'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
+							str = str.substr(0, shifts[0] + 1) + `<span class='blue'>${str.substr(shifts[0] + 1, shifts[1])}</span>` + str.substr(shifts[0] + 1 + shifts[1]);
 						if (shifts[0] !== 0)
-							str = `<span style='background: hsl(0, 100%, 90%)'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
+							str = `<span class='red'>${str.substr(0, shifts[0])}</span>` + str.substr(shifts[0]);
 						return str;
 					}
-					let table = $(`<table><tr><th>High:</th><td class='m'>${mark(lines[0])}</td></tr><tr><th>Low:</th><td class='m'>${mark(lines[1])}</td></tr><tr><th>Code:</th><td class='m'>${mark(lines[2])}</td></tr></table>`);
-					table.find('table').css({ width: '100%', marginBottom: '.1cm' });
-					table.find('td,th').css({ border: '1px solid black', padding: '.05cm .2cm' });
-					table.find('td.m').css({ fontFamily: 'monospace', fontSize: '14pt' });
-					table.find('th').css({ background: '#eee' });
+					let table = $(`<table class='bit-value-table'>
+										<tr><th>High:</th><td class='bits'>${mark(lines[0])}</td></tr>
+										<tr><th>Low:</th><td class='bits'>${mark(lines[1])}</td></tr>
+										<tr><th>Code:</th><td class='bits'>${mark(lines[2])}</td></tr>
+									</table>`);
+					
 					module.push({ label: matches[0], obj: table });
 					return true;
 				}
@@ -1434,10 +1417,10 @@ let parseData = [
 		loggingTag: "Badugi",
 		matches: [
 			{
-				regex: /^(The hand on the (left|right) is )(.+)—(a(n|)(.+))$/,
+				regex: /^(The hand on the (left|right) is) (.+)—(a(n|)(.+))$/,
 				handler: function (matches, module) {
-					module.push(matches[1]);
-					module.push($("<span style=\"font-family: 'Dejavu Sans'; font-size: 50pt;\">").text(matches[3]));
+					module.push(matches[1] + ':');
+					module.push({ obj: $("<span class='badugi-cards'>").text(matches[3]), nobullet:true });
 					module.push(matches[6]);
 					return true;
 				}
@@ -1475,11 +1458,11 @@ let parseData = [
 						}
 					}
 
-					var table = $('<table>').css('border-spacing', '0').css('border-collapse', 'separate');
+					var table = $("<table class='battleship-table'>");
 					for (r = 0; r < 6; r++) {
 						tr = $('<tr>').appendTo(table);
 						for (c = 0; c < 6; c++) {
-							td = $('<td>').css('border', '3px solid transparent').css('text-align', 'center').css('padding', 0).appendTo(tr);
+							td = $('<td>').appendTo(tr);
 							if (c === 0 || r === 0)
 								td.text(stuff[r][c]);
 							else {
@@ -1503,9 +1486,9 @@ let parseData = [
 															waterBelow && waterAbove && shipLeft && shipRight ? "SqShipF" :
 																waterLeft && waterRight && shipAbove && shipBelow ? "SqShipF" : "SqShip";
 
-								$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').css('display', 'block').appendTo(td);
+								$('<img>').attr('src', '../HTML/img/Battleship/' + imgId + '.png').attr('width', '50').appendTo(td);
 								if (stuff[r][c].IsSafeLocation)
-									td.css('border', '3px solid red');
+									td.addClass('safe');
 							}
 						}
 					}
@@ -1521,146 +1504,16 @@ let parseData = [
 		loggingTag: "Binary Cipher",
 		matches: [
 			{
-				regex: /Grid 1:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
+				regex: /Grid \d:|Table \w|The 4 by 4 matrix/,
+				handler: function(match, module) {
+					const grid = readTaggedLines(4);
+					let table = $("<table class='binary-c-table'>");
+					for (let row = 0; row < 4; row++) {
+						let tr = $("<tr>").appendTo(table);
+						for (let col = 0; col < 4; col++)
+							$("<td>").text(grid[row][col]).appendTo(tr);
 					}
-
-					module.push({ label: "Grid 1:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 2:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 2:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 3:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 3:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 4:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 4:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Grid 5:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Grid 5:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /The 4 by 4 matrix should be:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "The 4 by 4 matrix should be:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table A, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table A, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table B, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table B, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table C, before shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table C, before shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table A, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table A, after shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table B, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table B, after shift:", obj: pre(lines) });
-					return true;
-				}
-			},
-			{
-				regex: /Table C, after shift:/,
-				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 3; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Table C, after shift:", obj: pre(lines) });
+					module.push({ label:match.input, obj:table });
 					return true;
 				}
 			},
@@ -1682,11 +1535,10 @@ let parseData = [
 						arr.push(i);
 					module.push({
 						label: matches[1],
-						obj: $(`<table style='border-collapse: collapse'>${arr.map(y => `<tr>${arr.map(x => {
+						obj: $(`<table class='binary-puzzle-table'>${arr.map(y => `<tr>${arr.map(x => {
 							var val = matches[2][x + 6 * y];
-							return `<td${val === '1' ? ` style='background: #cfc'` : val === '0' ? ` style='background: #fcc'` : ''}>${val}</td>`;
+							return `<td${val === '1' ? ` class='green'` : val === '0' ? ` class='red'` : ''}>${val}</td>`;
 						}).join('')}</tr>`).join('')}</table>`)
-							.find('td').css({ border: '1px solid black', padding: '.4em 0', width: '1.1cm', textAlign: 'center' }).end()
 					});
 					return true;
 				}
@@ -1702,7 +1554,7 @@ let parseData = [
 				handler: function (matches, module) {
 					readLine();
 
-					const tree = $('<svg viewBox="-2.5 -0.5 5 3">').css({ "width": "50%", "display": "block" });
+					const tree = $("<svg class='binary-tree' viewBox='-2.5 -0.5 5 3'>");
 					const colors = {
 						"R": "red",
 						"G": "green",
@@ -1730,7 +1582,7 @@ let parseData = [
 					for (const linePair of lines) {
 						const start = positions[linePair[0]];
 						const end = positions[linePair[1]];
-						$SVG(`<line x1=${start[0]} y1=${start[1]} x2=${end[0]} y2=${end[1]} stroke=black stroke-width=0.1>`).appendTo(tree);
+						$SVG(`<line x1=${start[0]} y1=${start[1]} x2=${end[0]} y2=${end[1]}>`).appendTo(tree);
 					}
 
 					// Make nodes
@@ -1742,7 +1594,7 @@ let parseData = [
 						const position = positions[i / 3];
 
 						$SVG(`<circle cx=${position[0]} cy=${position[1]} fill=${buttonColor} r=0.45>`).appendTo(tree);
-						$SVG(`<text x=${position[0]} y=${position[1]} fill=${textColor} font-size=0.9 text-anchor=middle dominant-baseline=central>`)
+						$SVG(`<text x=${position[0]} y=${position[1]} fill=${textColor}>`)
 							.text(text)
 							.appendTo(tree);
 					}
@@ -1765,22 +1617,19 @@ let parseData = [
 			{
 				regex: /^(The (first|second|third) glyph is) ([ABCDE]\d+).$/,
 				handler: function (matches, module) {
-					module.push(matches[1] + ':');
 					const glyph = matches[3];
-					let div = $('<div>');
+					const itempair = [glyph[0], glyph.substring(1)];
+					const index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
+					const name = "ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7);
+					const img = `<img class='bioscanner-image' 	src='img/The Bioscanner/${name}.png' height='100' />`;
 
-					let itempair = [glyph.charAt(0), glyph.substring(1)];
-					let index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
-					div.append(`<img src='img/The Bioscanner/${"ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString()}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
-
-					module.push(div);
+					module.push({ label:matches[1] + ':', obj:img});
 					return true;
 				}
 			},
 			{
 				regex: /^(The current offset is \d+\. This means the current glyphs are) ((([ABCDE]\d+)(, |, and )*){3})\.$/,
 				handler: function (matches, module) {
-					module.push(matches[1] + ':');
 					const glyphs = matches[2].split(', ').slice(0, 2).concat(matches[2].split(', ')[2].substring(4));
 					let actualGlyphs = [];
 					let div = $('<div>');
@@ -1791,16 +1640,15 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
 					}
-					module.push(div);
+					module.push({ label:matches[1] + ':', obj:div});
 					return true;
 				}
 			},
 			{
 				regex: /^(Fake glyphs are:) (([ABCDE]\d+ )+)$/,
 				handler: function (matches, module) {
-					module.push(matches[1]);
 					const glyphs = matches[2].slice(0, -1).split(' ');
 					let actualGlyphs = [];
 					let div = $('<div>');
@@ -1811,9 +1659,9 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
 					}
-					module.push(div);
+					module.push({ label:matches[1], obj:div });
 					return true;
 				}
 			},
@@ -1831,7 +1679,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: matches.input,
-						obj: pre(readMultiple(9, function (str) { return str.replace(/^\[Bitmaps #\d+\] /, ''); }))
+						obj: pre(readTaggedLines(9).join('\n'))
 							.css('color', matches[1] === 'red' ? '#800' :
 								matches[1] === 'green' ? '#080' :
 									matches[1] === 'blue' ? '#008' :
@@ -1922,7 +1770,18 @@ let parseData = [
 				handler: function (matches, module) {
 					readLine();
 
-					var svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348"><g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)" fill="#fff" stroke="#000" stroke-width="3"><path d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z" fill="rgb(127, 255, 127)"></path><circle cx="280" cy="110" r="24" fill="rgb(127, 255, 127)"></circle><path d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z" fill="rgb(127, 255, 127)"></path><path d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z" fill="rgb(255, 127, 127)"></path><path d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z" fill="rgb(255, 127, 127)"></path><path d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z" fill="rgb(127, 255, 127)"></path><path d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z" fill="rgb(127, 255, 127)"></path><path d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z" fill="rgb(255, 127, 127)"></path></g></svg>')
+					var svg = $(`<svg class='boolean-venn-diagram' viewBox="0 0 348 348">
+									<g transform="matrix(1.260512,0,0,1.260512,-59.613368,-83.043883)">
+										<path class='section' d="m254 179.9c-11.8-6.8-25.5-10.6-40-10.6-14.7 0-28.4 3.9-40.2 10.8-11.8-6.9-25.6-10.8-40.2-10.8-14.8 0-28.6 4-40.5 10.9 0-44.4 36.1-80.5 80.5-80.5 44.3 0 80.3 35.9 80.4 80.2z"></path>
+										<circle class='section' cx="280" cy="110" r="24"></circle>
+										<path class='section' d="m173.7 180.1c-0.1 0.1-0.2 0.1-0.3 0.2-23.9 14-40 39.9-40 69.6v0.3l-0.1-0.1c-24.1-13.9-40.3-40-40.3-69.8v-0.1c11.9-6.9 25.7-10.9 40.5-10.9 14.6 0 28.4 3.9 40.2 10.8z"></path>
+										<path class='section' d="m254 180.2c0 29.7-16.1 55.7-40 69.6v-0.1-0.3c-0.1-29.6-16.1-55.4-40-69.3-0.1-0.1-0.2-0.1-0.3-0.2 11.8-6.9 25.6-10.8 40.2-10.8s28.2 3.9 40 10.6c0.1 0.3 0.1 0.4 0.1 0.5z""></path>
+										<path class='section' d="m214 249.5c-0.1 0.2-0.2 0.3-0.3 0.5-11.8 6.8-25.5 10.7-40.2 10.7-14.6 0-28.2-3.9-40-10.6v-0.3c0-29.7 16.1-55.6 40-69.6h0.1 0.5c23.7 14 39.8 39.7 39.9 69.3z""></path>
+										<path class='section' d="m173.7 319.5c-11.8 6.9-25.6 10.8-40.2 10.8-44.5 0-80.5-36-80.5-80.5 0-29.7 16.1-55.7 40-69.6v0.1c0 29.8 16.2 55.9 40.3 69.8 0 0.1 0.1 0.1 0.1 0.2 0.2 29.6 16.4 55.4 40.3 69.2z"></path>
+										<path class='section' d="m294.5 249.8c0 44.5-36.1 80.5-80.5 80.5-14.7 0-28.4-3.9-40.2-10.8 24-13.9 40.2-39.9 40.2-69.7 24-14 40-39.9 40-69.6v-0.3c24.2 13.9 40.5 40 40.5 69.9z"></path>
+										<path class='section' d="m214 249.9c0 29.8-16.2 55.8-40.2 69.7-23.9-13.8-40.1-39.7-40.2-69.3v-0.1c11.8 6.8 25.5 10.6 40 10.6 14.6 0 28.4-3.9 40.2-10.7 0-0.1 0.1-0.2 0.2-0.2z""></path>
+									</g>
+								</svg>`)
 						.appendTo("body");
 
 					var sections = ["A", "NONE", "AB", "AC", "ABC", "B", "C", "BC"];
@@ -1934,19 +1793,15 @@ let parseData = [
 					};
 
 					readMultiple(16).match(/[UL]/g).forEach(function (letter, index) {
-						var elem = svg.find("path, circle").eq(index);
-						elem.attr("fill", letter == "L" ? "rgb(255, 127, 127)" : "rgb(127, 255, 127)");
+						var elem = svg.find(".section").eq(index);
+						elem.attr("fill", letter == "L" ? "#FF8F8F" : "#8FFF8F");
 
 						var bbox = elem[0].getBBox();
 						var text = sections[index];
-						$SVG("<text>")
+						$SVG("<text class='section-text'>")
 							.text(text)
 							.css({
 								transform: positions[text] || "translate(" + (bbox.x + bbox.width / 2) + "px, " + (bbox.y + bbox.height / 2) + "px)",
-								"text-anchor": "middle",
-								"dominant-baseline": "central",
-								stroke: "none",
-								fill: "black",
 								"font-size": (35 - text.length * 5) + "px"
 							})
 							.appendTo(svg.children("g"));
@@ -1964,7 +1819,7 @@ let parseData = [
 			{
 				regex: /(Expecting:|You submitted:)/,
 				handler: function (matches, module) {
-					module.push({ label: matches[0], obj: pre(readMultiple(8).replace(/\[Boomdas #\d+\] /g, "").replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
+					module.push({ label: matches[0], obj: pre(readTaggedLines(8).join('\n').replace(/_/g, " ").split("\n").filter(l => l.trim()).join("\n")) });
 					return true;
 				}
 			},
@@ -1993,16 +1848,16 @@ let parseData = [
 			{
 				regex: /Full grid/,
 				handler: function(_, module){
-					const grid = readLines(8).map(l => l.replace(/\[Boozleage #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'Y':'#FF0', 'G':'#0F0', 'B':'#00F', 'M':'#F0F', 'W':'#FFF' };
 					const octagonPath = 'M0 5l5-5h10l5 5v10l-5 5h-10l-5-5z';
-					let svg = `<svg viewbox='-2 -2 172 172' style='width: 4.5in; display: block; margin: 0'>`;
+					let svg = `<svg class='boozleage' viewbox='-2 -2 172 172'>`;
 
 					for (let row = 0; row < 8; row++) {
 						for (let col = 0; col < 8; col++) {
 							const cell = grid[row][col];
 							const glyphName = `Set ${cell[1]} - ${cell[0]}`;
-							svg += `<path d='${octagonPath}' fill='${colors[cell[2]]}' transform='translate(${20 * col}, ${20 * row})' stroke='#000' stroke-width='2'/>`;
+							svg += `<path class='button' d='${octagonPath}' fill='${colors[cell[2]]}' transform='translate(${20 * col}, ${20 * row})'/>`;
 							svg += `<image href='../HTML/img/Boozleglyphs/${glyphName}.svg' x='${20 * col + 4}' y='${20 * row + 4}' width='12' height='12'/>`;
 						}
 					}
@@ -2012,13 +1867,13 @@ let parseData = [
 									L ${20 * square.vertices[3].x + 10} ${20 * square.vertices[3].y + 10}
 									L ${20 * square.vertices[2].x + 10} ${20 * square.vertices[2].y + 10} z`;
 						console.log(d);
-						svg += `<path d='${d}' stroke='#4FF' stroke-width='4' stroke-opacity='0.7' fill='transparent'/>`;
+						svg += `<path class='square' d='${d}'/>`;
 					}
 					for (let square of module.squares) {
 						const cx = 20 * square.vertices[3].x + 20;
 						const cy = 20 * square.vertices[3].y + 20
-						svg += `<circle r='7' cx='${cx}' cy='${cy}' fill='#FFF' stroke='#000' stroke-width='2'/>
-								<text x='${cx}' y='${cy}' fill='#000' style='font-size: 12px' text-anchor='middle' dominant-baseline='central'>${square.letter}</text>`;
+						svg += `<circle class='letter-circle' r='7' cx='${cx}' cy='${cy}'/>
+								<text class='letter' x='${cx}' y='${cy}'>${square.letter}</text>`;
 					}
 					module.push({ label:'Displayed grid:', obj: svg });
 				}
@@ -2082,11 +1937,11 @@ let parseData = [
 					}
 
 					matches[3].split("; ").forEach(function (spots, i) {
-						var braille = $('<svg viewBox="-0.5 -0.5 2 3"></svg>').css({ width: "10%", border: "1px black solid" }).appendTo(div);
+						var braille = $('<svg class="braille-pattern" viewBox="-0.5 -0.5 2 3"></svg>').appendTo(div);
 
 						spots.split("-").forEach(function (posStr) {
 							var pos = parseInt(posStr) - 1;
-							$SVG('<circle r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
+							$SVG('<circle class="dot" r="0.4"></circle>').attr("cx", Math.floor(pos / 3)).attr("cy", pos % 3).appendTo(braille);
 						});
 
 						if (matches[2] == "on module") {
@@ -2126,8 +1981,8 @@ let parseData = [
 						var absPos = pos % 24;
 						var text;
 						if (!module.flippedSVG[absPos]) {
-							var highlight = $SVG('<rect width="1" height="1" fill="rgba(255, 255, 0, 0.5)"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
-							text = $SVG('<text fill="white" text-anchor="middle" dominant-baseline="middle" font-size="0.6"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
+							var highlight = $SVG('<rect class="highlight" width="1" height="1"></rect>').attr("x", Math.floor(dotPos / 3) - 0.5).attr("y", dotPos % 3 - 0.5).prependTo(module.braille[char]);
+							text = $SVG('<text class="on-dot"></text>').text(flipNumber + 1).attr("x", Math.floor(dotPos / 3)).attr("y", dotPos % 3).appendTo(module.braille[char]);
 
 							module.flippedSVG[absPos] = [highlight, text];
 						} else {
@@ -2139,7 +1994,7 @@ let parseData = [
 
 						var noDot = module.braille[char].children("circle").filter(function (_, circle) { return $(circle).attr("cx") == text.attr("x") && $(circle).attr("cy") == text.attr("y"); }).length == 0;
 						if (noDot) {
-							text.attr("fill", "black");
+							text.addClass('no-dot');
 						}
 					});
 				}
@@ -2176,6 +2031,7 @@ let parseData = [
 		]
 	},
 	{
+		//IN NEED OF REMOVING INLINE CSS. THE MODULE HAS NOT BEEN REUPLOADED AT THIS POINT.	
 		displayName: "Brown's Shadow",
 		moduleID: "brownsShadow",
 		loggingTag: "Brown's Shadow",
@@ -2236,19 +2092,19 @@ let parseData = [
 			{
 				regex: /Buttons:/,
 				handler: function(_, module) {
-					const grid = readLines(8).map(l => l.replace(/\[Buttonage #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(8).map(l => l.split(' '));;
 					const colors = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'Y':'#FF0', 'K':'#000', 'W':'#FFF', 'I':'#FFA8F3', 'O':'#EE5716', 'A':'#777' };
 					const textColors = { 'R':'#FFF', 'G':'#FFF', 'B':'#FFF', 'W':'#F00', 'Y':'#FF8F00' };
-					let svg = `<svg viewbox='-1 -1 162 162' style='display: block; width: 4in; margin-bottom: 0.5cm'>`;
+					let svg = `<svg class='buttonage' viewbox='-1 -1 162 162'>`;
 					for (let row = 0; row < 8; row++){
 						for (let col = 0; col < 8; col++) {
 							const cell = grid[row][col];
 							const cx = 20 * col + 10;
 							const cy = 20 * row + 10;
-							svg += 	`	<circle r='10' cx='${cx}' cy='${cy}' fill='${colors[cell[1]]}' stroke='#333' stroke-width='0.5' />
-										<circle r='8'  cx='${cx}' cy='${cy}' fill='${colors[cell[0]]}' stroke='#333' stroke-width='0.5' />`;
+							svg += `<circle class='button' r='10' cx='${cx}' cy='${cy}' fill='${colors[cell[1]]}'/>
+									<circle class='button' r='8'  cx='${cx}' cy='${cy}' fill='${colors[cell[0]]}'/>`;
 							if (cell.length > 2)
-								svg += `<text x='${cx}', y='${cy}' fill='${textColors[cell[0]]}' style='font-size: 14px' text-anchor='middle' dominant-baseline='central'>${cell[2]}</text>`;
+								svg += `<text class='button-text' x='${cx}', y='${cy}' fill='${textColors[cell[0]]}'>${cell[2]}</text>`;
 						}
 					}
 					module.push({ label:'Buttons:', obj:svg + '</svg>' });
@@ -2308,14 +2164,14 @@ let parseData = [
 
 					const colors = { 'R':'#F00', 'P':'#0F0', 'S':'#00F', 'X':'#000' };
 					const pics = { 'R':'Rock', 'P':'Paper', 'S':'Scissors', 'X':'WEEDNUTS' };
-					const grid = readLines(8).map(l => l.replace(/\[CA-RPS #\d+\] /, ''));
-					let svg = `<svg viewbox='0 0 60 80' style='width: 3in; display: block'>`;
+					const grid = readTaggedLines(8);
+					let svg = `<svg class='ca-rps' viewbox='0 0 60 80'>`;
 
 					for (let row = 0; row < 8; row++){
 						for (let col = 0; col < 6; col++) {
 							const sign = grid[row][col];
 							const color = colors[sign];
-							svg += `<rect x='${10 * col}' y='${10 * row}' width='10' height='10' fill='${color}' stroke='#000' stroke-width='0.5'/>`;
+							svg += `<rect class='tile' x='${10 * col}' y='${10 * row}' width='10' height='10' fill='${color}'/>`;
 							if (sign != 'X')
 								svg += `<image href='img/CA-RPS/${pics[sign]}.png' x='${10 * col + 1}' y='${10 * row + 1}' width='8' height='8'/>`;
 						}
@@ -2375,20 +2231,20 @@ let parseData = [
 					module.push("Solution: " + solution);
 					readLine();
 					var board = readMultiple(13);
-					var table = $('<table>').css({ borderCollapse: 'collapse' });
-					$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
+					var table = $('<table class="chess-table">');
+					$('<tr class="coordinate-indicator-row"><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table);
 					for (var y = 0; y < 6; y++) {
-						var tr = $('<tr>').appendTo(table).append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingRight: '1em' }));
+						var tr = $('<tr>').appendTo(table).append($('<td class="coordinate-indicator-cell-left">' + (6 - y) + '</td>'));
 						for (var x = 0; x < 6; x++) {
-							var td = $('<td>').appendTo(tr).css({ width: '50px', height: '50px', border: '1px solid black' });
+							var td = $('<td class="tile">').appendTo(tr);
 							if (x == 0)
-								td.css({ borderLeft: '3px solid black' });
+								td.addClass('left-edge');
 							else if (x == 5)
-								td.css({ borderRight: '3px solid black' });
+								td.addClass('right-edge');
 							if (y == 0)
-								td.css({ borderTop: '3px solid black' });
+								td.addClass('top-edge');
 							else if (y == 5)
-								td.css({ borderBottom: '3px solid black' });
+								td.addClass('bottom-edge');
 							var svg = null;
 							var ch = board[26 * (2 * y + 1) + (4 * x + 2)];
 							switch (ch) {
@@ -2399,15 +2255,18 @@ let parseData = [
 								case 'R': svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M125.2 43.2V32.8H146v35h-7.2l-9.6 13.5V119l9.6 14h7v13.8h13v20.4H41.2v-20.4H54v-14h7L71 119V81.5L61 67.8h-6.7v-35h20.4v10.5H86V32.8h28v10.4z"/><path d="M73.8 74.8h52.4l5-7H68.5zM68.4 132.8H131l-4.8-7H73.8zM139.2 146.8v-7.4H60.5v7.4zM152.2 160.8v-7.4H48v7.3zM139.2 61.4V39h-7.7v10.7H108V39H92v10.7H68V39h-7.7v22.4zM122.7 119V81.4H77.4V119z" fill="#fff"/></svg>'; break;
 							}
 							if (ch === '×')
-								td.css({ backgroundColor: '#fcc' });
+								td.addClass('solution-red');
 							else if ((x + y) % 2 !== 0)
-								td.css({ backgroundColor: '#eee' });
+								td.addClass('gray');
+							else 
+								td.addClass('white');
 							if (svg !== null)
-								td.css({ 'background-image': 'url(\'data:image/svg+xml,' + svg.replace('#', '%23') + '\')', 'background-size': 'contain' });
+								td.css({ 'background-image': 'url(\'data:image/svg+xml,' + svg.replace('#', '%23') + '\')' });
+							
 						}
-						tr.append($('<td>' + (6 - y) + '</td>').css({ verticalAlign: 'middle', paddingLeft: '1em' }));
+						tr.append($('<td class="coordinate-indicator-cell-right">' + (6 - y) + '</td>'));
 					}
-					$('<tr><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table).find('td').css({ textAlign: 'center' });
+					$('<tr class="coordinate-indicator-row"><td></td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>').appendTo(table);
 
 					module.push({ label: "Board:", obj: table });
 				}
@@ -2442,12 +2301,11 @@ let parseData = [
 						for (let j = 0; j < 5; j++) {
 							let color = /\[(\w+)\]/.exec(buttons[j * 5 + i])[1];
 							color = color === "Inactive" ? "black" : color.toLowerCase();
-							groups += `<circle r="9" cx="${10 + 20 * i}" cy="${10 + 20 * j}" fill="#363636"/>`;
+							groups += `<circle class='button' r="9" cx="${10 + 20 * i}" cy="${10 + 20 * j}"/>`;
 							groups += `<rect width="10" height="10" x="${5 + 20 * i}" y="${5 + 20 * j}" transform="rotate(45 ${5 + 20 * i + 5} ${5 + 20 * j + 5})" fill="${color}"/>`; //https://stackoverflow.com/a/62403727/18917656
 						}
 					}
-					const css = { width: "250", height: "auto", display: "block", margin: "5px 0 10px" };
-					const svg = $(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${groups}</svg>`).css(css);
+					const svg = $(`<svg class='color-grid-stage' viewBox="0 0 100 100">${groups}</svg>`);
 					return svg;
 				}
 			},
@@ -3197,6 +3055,154 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "matchemcruel",
+		loggingTag: "Cruel Match 'em",
+		matches: [
+						{
+				regex: /The initial configuration of cards is:/,
+				handler: function(_, module) {
+					module.cardBacks = { 'R':'#F00', 'O':'#F80', 'Y':'#F8FF00', 'L':'#8F0', 'F':'#082', 'B':'#00F', 'C':'#0FF', 'V':'#80C', 'P':'#E0E', 'W':'#FFF', 'Z':'#A72', 'S':'#888'};
+					module.textColors = { 'R':'#C00','O':'#D60', 'Y':'#C8CC00',    'L':'#4C0', 'F':'#040', 'B':'#009', 'C':'#0CC', 'V':'#408', 'P':'#B0B', 'W':'#CCC', 'Z':'#851', 'S':'#666'};
+					module.invert = [ 'B', 'F', 'V', 'Z', 'S' ];
+					module.grid = [ ];
+					
+					const abbrs = { 'Red':'R', 'Orange':'O', 'Yellow':'Y', 'Lime':'L', 'Forest':'F', 'Blue':'B', 'Cyan':'C', 'Violet':'V', 'Pink':'P', 'White':'W', 'Bronze':'Z', 'Silver':'S' };
+					const paths = { 
+									'Chevron':'M-19-38.5 0-23.5 19-38.5V24.5L0 38.5-19 24.5V-38.5Z', 
+									'Club':'M1-38.2A16.5 16.5 0 00-.6-38.2 16.5 16.5 0 00-16.2-20.8 16.5 16.5 0 00-13.6-12.9 16.5 16.5 0 00-19.1-13.5 16.5 16.5 0 00-34.7 3.9 16.5 16.5 0 00-17.3 19.5 16.5 16.5 0 00-5.9 14C-5.6 22.6-6.6 30.9-11.5 38.3-3.1 38.3 2.5 38.7 11.6 38.5 6.6 30.9 5.8 22.3 6.1 13.6A16.5 16.5 0 0019.7 19.5 16.5 16.5 0 0035.3 2.1L35.3 2A16.5 16.5 0 0017.9-13.5 16.5 16.5 0 0014.3-12.9 16.5 16.5 0 0016.8-22.6L16.8-22.6A16.5 16.5 0 001-38.2Z', 
+									'Diamond':'M.05-37.7-28.15.7.05 38.5 28.75.5Z', 
+									'Coin':'M1.3-30.2 1.3-29.5 1.2-29.6 20.1-21.7 20.4-22.3C15.6-26.7 9.5-29.4 3-30.1L3-30.1H3C2.5-30.1 1.9-30.1 1.4-30.2L1.4-30.2H1.3 1.3ZM-1.3-30.1C-8.4-29.8-15.1-27-20.3-22.3L-20-21.7-1.2-29.5ZM-22.3-20.3-22.4-20.2C-26.7-15.4-29.4-9.3-30.1-2.9V-2.9-2.9C-30.1-2.4-30.1-1.9-30.2-1.4L-29.5-1.3-21.9-19.7H-22C-21.9-19.7-21.9-19.8-21.9-19.8L-21.4-20.3H-22.1ZM22.4-20.3 21.9-19.9 29.6-1.3 30.2-1.4C29.9-8.4 27.1-15.1 22.4-20.3ZM29.6 1.5 22 19.9 22.5 20.2C26.8 15.5 29.5 9.4 30.2 3L30.2 3V3 3C30.2 2.5 30.2 2.1 30.2 1.6ZM-29.5 1.6-30.1 1.7C-29.8 8.5-27.1 15.1-22.5 20.2L-21.9 19.9ZM20.2 21.9 19.8 22.1 1.6 29.6 1.8 30.2C8.6 29.8 15 27.2 20.1 22.6L20.2 22.5ZM-19.7 22.1-20 22.6C-15.3 26.9-9.3 29.5-2.9 30.2H-2.9-2.9C-2.5 30.2-2.1 30.2-1.7 30.2L-1.5 29.6ZM34.7-1.8A34.7 34.7 90 011.9 34.7 34.7 34.7 90 01-34.6 1.9 34.7 34.7 90 01-1.9-34.6 34.7 34.7 90 0134.7-1.9', 
+									'Cup':'M29-38.5C29.2-13.6 29 3.1 9.5 19L9.4 32.1 23.9 38.5C14.7 38.4-13.4 38.5-22.6 38.5L-8.2 32.3-8.4 18.9C-28.8 3.9-29.1-14.5-29-38.5-8.3-38.5 9.2-38.3 29-38.5Z', 
+									'Eye':'M1.4-24A38.2 23.6 0 00-2.4-24 38.2 23.6 0 00-38.4.9 38.2 23.6 0 001.8 23.2 38.2 23.6 0 0037.9-1.6L37.9-1.7A38.2 23.6 0 001.4-24ZM1.3-18.5A31.3 18.2 0 0131.2-1.4L31.2-1.3A31.3 18.2 0 011.6 17.8 31.3 18.2 0 01-31.3.6 31.3 18.2 0 01-1.8-18.5 31.3 18.2 0 011.3-18.5ZM.5-18A17.6 17.6 0 00-1.3-17.9 17.6 17.6 0 00-17.8.6 17.6 17.6 0 00.7 17.2 17.6 17.6 0 0017.3-1.3L17.3-1.4A17.6 17.6 0 00.5-18Z', 
+									'Heart':'M15.21-34.65C9.54-34.92 4.05-32.58 0-28.26L-.09-28.35-.18-28.26C-5.22-33.48-12.42-35.55-19.17-33.75-26.37-31.86-32.04-25.92-34.11-18.18-37.62 6.21-1.8 10.53-.18 35.28 1.44 10.53 36.72 8.64 34.02-18.45 31.95-26.19 26.28-32.13 19.08-34.02 17.73-34.38 16.38-34.56 15.03-34.65Z', 
+									'Pentacle':'M.8-34.75-9.4-13.95H11.1L.8-34.75ZM-11.9-12.15-34.9-8.85-18.2 7.35-11.8-12.25ZM14-12.05 20.3 7.15 36.7-8.85ZM-9.5-11.15-12.7-1.35-15.9 8.45-7.5 14.55.9 20.65 9.3 14.55 17.7 8.45 14.5-1.35 11.3-11.15ZM-17.4 10.65-21.3 33.25-.9 22.65-17.4 10.65ZM19.1 10.85 2.8 22.65 22.9 33.25Z', 
+									'Shield':'M-34.6-29.1C-25-25.7-7.7-28.8 0-34.9 7.1-28.8 23.1-25.5 34.6-29.1 34.6-29.1 34.6-29.1 34.6-29.1 27-8.1 29.9 37.2 0 34.6-30.4 37.4-28.4-8.6-34.6-29.1-34.6-29.1-34.6-29.1-34.6-29.1Z',
+									'star':'M-.5-37.5C7.1-23.8 14.2-18.6 32.2-18.6 23.3-5.1 24 4.2 32.2 19.1 14.9 18.9 6.7 22.4-.5 38-6.8 22.7-15.2 19.3-33.2 19.1-23.2 3.8-23.9-6.4-33.2-18.6-17.4-18.6-8.3-23.8-.5-37.5Z', 
+									'Spade':'M-.15-38.5C-1.55-17.5-31.45-15.9-29.15 7.1-27.45 13.7-22.55 18.7-16.45 20.3-15.35 20.6-14.15 20.8-12.95 20.8-9.95 20.9-6.85 19.8-4.25 18.4-4.75 25.7-7.35 32.5-12.55 38.6-8.55 39.1 6.65 38.9 11.25 38.8 6.35 32.5 4.15 25.9 3.85 18.3 7.55 20.5 11.95 21.1 16.15 20 22.25 18.4 27.05 13.4 28.85 6.8 31.75-13.9 1.45-17.6.05-38.5Z', 
+									'Sword':'M.55-37.9-19.25-23.6-11.35 16.1H-21.25V24.6H-4.75V39.2H5.75V24.6H21.75V16.1H12.55L19.45-23.6Z' };
+					
+					const config = readTaggedLines(5).map(l => l.split(', ').map(x => x.split(' ')));
+					for (let row = 0; row < 5; row++) {
+						module.grid.push( [ ] );
+						for (let col = 0; col < 5; col++) {
+							const cell  = config[row][col];
+							module.grid[row].push( { color: abbrs[cell[0]], suitPath: paths[cell[cell.length - 1]] } );
+						}
+					}
+					
+					module.makeSvg = function (grid) {
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'> 
+						<rect x='-5' y='-5' width='130' height='180' fill='#C33' rx='5' ry='5'/>`;
+					
+						for (let row = 0; row < 5; row++) {
+							for (let col = 0; col < 5; col++) {
+								const cell = grid[row][col];
+								
+								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
+								const fill = module.cardBacks[cell.color];
+								const inner = module.textColors[cell.color];
+
+								group += `<rect width='20' height='30' fill='${fill}' stroke='#000' stroke-width='1.5'/>
+										<path transform='translate(10, 14) scale(0.225)' d='${cell.suitPath}' fill='${inner}' stroke='#000' stroke-width='2.5'/>
+										<text x='5' y='25' style='font-size: 9px' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>`;
+								svg += group + '</g>';
+							}
+						}
+						return svg + '</svg>';
+					};
+					
+					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet:true });
+					return true;
+				}
+			},
+			{
+				regex: /The final configuration of cards is:/,
+				handler: function (_, module){ 
+					module.push({ label: "The final configuration of cards is:", obj:module.makeSvg(module.grid) });
+					linen += 5;
+					return true;
+				}
+			},
+			{
+				regex: /Move \d : ([^+]+) \+ ([^+]+)/,
+				handler: function (matches, module) {
+					
+					for (let movement = 0; movement < 2; movement++) {
+						const cmd = matches[movement + 1];
+						
+						const swapMatch = cmd.match(/Swap (rows|columns) (\d) and (\d)/);
+						const shiftMatch = cmd.match(/Shift (row|column) (\d) one space (\w+)/);
+						const cycleMatch = cmd.match(/Cycle card (\d+) (anti)?clockwise/);
+						const swapTwoMatch = cmd.match(/Swap cards (\d+) and (\d+)/);
+						if (swapMatch) { 
+							let store = [ ];
+							let s1 = swapMatch[2] - '1';
+							let s2 = swapMatch[3] - '1';
+							for (let ix = 0; ix < 5; ix++) {
+								if (swapMatch[1] == 'rows') {
+									store.push(module.grid[s1][ix]);
+									module.grid[s1][ix] = module.grid[s2][ix];
+								}
+								else {
+									store.push(module.grid[ix][s1]);
+									module.grid[ix][s1] = module.grid[ix][s2];
+								}
+							}
+							for (let ix = 0; ix < 5; ix++) {
+								if (swapMatch[1] == 'rows')
+									module.grid[s2][ix] = store[ix];
+								else module.grid[ix][s2] = store[ix];
+							}
+						}		
+						else if (shiftMatch) {
+							const digit = shiftMatch[2] - '1';
+							const row = shiftMatch[1] == 'row'
+							let section = [ ];
+							for (let i = 0; i < 5; i++) {
+								if (row) 
+									section.push(module.grid[digit][i]);
+								else section.push(module.grid[i][digit]);
+							}
+							const adder = shiftMatch[3] == 'up' || shiftMatch[3] == 'left' ? 1 : 4;
+							for (let i = 0; i < 5; i++) {
+								if (row)
+									module.grid[digit][i] = section[(i + adder) % 5];
+								else module.grid[i][digit] = section[(i + adder) % 5];
+							}
+						}
+						else if (cycleMatch) {
+							const root = { x: (cycleMatch[1] - '1') % 5, y: Math.floor((cycleMatch[1] - '1') / 5) };
+							const x = root.x;
+							const y = root.y;
+							const order = cycleMatch[2] ? 
+										[ root, { x: y, y: 4 - x }, { x: 4 - x, y: 4 - y }, { x: 4 - y, y: x } ] :
+										[ root, { x: 4 - y, y: x }, { x: 4 - x, y: 4 - y }, { x: y, y: 4 - x } ];
+							let store = [ ];
+							for (let i = 0; i < 4; i++)
+								store.push(module.grid[order[i].y][order[i].x]);
+							for (let i = 0; i < 4; i++) 
+								module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
+						}
+						else if (swapTwoMatch) {
+							let a = { x: (swapTwoMatch[1] - '1') % 5, y: Math.floor((swapTwoMatch[1] - '1') / 5) };
+							let b = { x: (swapTwoMatch[2] - '1') % 5, y: Math.floor((swapTwoMatch[2] - '1') / 5) };
+							let temp = module.grid[b.y][b.x];
+							module.grid[b.y][b.x] = module.grid[a.y][a.x];
+							module.grid[a.y][a.x] = temp;
+						}
+					}
+					
+					
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Cruel Synesthesia",
 		moduleID: "cruelSynesthesia",
 		loggingTag: "Cruel Synesthesia",
@@ -3412,7 +3418,7 @@ let parseData = [
 			{
 				regex: /^Generated Maze:$/,
 				handler: function (matches, module) {
-					let maze = readMultiple(9).replace(/\[Cursor Maze #\d+\]/g, '').split('\n').slice(0, 8);
+					let maze = readTaggedLines(9).slice(0, 8);
 					let table = $('<table>');
 					for (let i = 0; i < 8; i++) {
 						let tr = $('<tr>').appendTo(table);
@@ -3854,13 +3860,13 @@ let parseData = [
 		loggingTag: "Echolocation",
 		matches: [
 			{
-				regex: /Generating maze with size of (\d\d?)\.$/,
+				regex: /Generating maze with (?:default )?size of (\d\d?)\.$/,
 				handler: function (matches, module) {
 					let lineCount = matches[1] * 2 + 1;
-					let line = readTaggedLine();
+					let legend = readTaggedLine();
 					module.push(matches.input);
-					var maze = readMultiple(lineCount).replace(/\[Echolocation #\d+\] /g, '');
-					module.push({ label: line, obj: pre(maze) });
+					var maze = readTaggedLines(lineCount).join('\n');
+					module.push({ label: legend, obj: pre(maze) });
 					return true;
 				}
 			},
@@ -4011,7 +4017,7 @@ let parseData = [
 			{
 				regex: /The generated with its walls is as follows:/,
 				handler: function (matches, module) {
-					module.push({ label: "The maze generated with its walls as follows:", obj: pre(readMultiple(9).replace(/\[Factoring Maze #\d+\] /g, "")) });
+					module.push({ label: "The maze generated with its walls as follows:", obj: pre(readTaggedLines(9).join('\n')) });
 					return true;
 				}
 			},
@@ -4773,7 +4779,7 @@ let parseData = [
 			{
 				regex: /Initial Board State:|Expected board state after \d+ iterations?:/,
 				handler: function (matches, module) {
-					let grid = readLines(6).map(l => l.replace(/\[Game Changer #\d+\] /, ''));
+					let grid = readTaggedLines(6);
 					let svg = `<svg style='display: block; width: 2in' viewbox='0 0 38 74'>`;
 					svg += `<rect fill='#89b' x='0' y='0' width='38' height='74'/>`;
 					for (let row = 0; row < 6; row++){
@@ -4806,7 +4812,7 @@ let parseData = [
 						"yellow": "#FFFF00",
 						"cyan": "#00FFFF"
 					}[matches[1]];
-					let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+					let grid = readTaggedLines(5);
 					let table = $('<table>').css('border-collapse', 'collapse');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
@@ -4839,7 +4845,7 @@ let parseData = [
 						'W': "#FFFFFF",
 						'K': "#000000"
 					};
-					let grid = readLines(5).map(x => x.replace(/\[Game of Colors #\d+\] /, ""));
+					let grid = readTaggedLines(5);
 					let table = $('<table>').css('border-collapse', 'collapse');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
@@ -5463,9 +5469,9 @@ let parseData = [
 		loggingTag: "The Hypercolor",
 		matches: [
 			{
-				regex: /^Cube (\d+) is/,
+				regex: /^Cube (\w+) is/,
 				handler: function (matches, module) {
-					let lines = readLines(9).map(line => line.replace(/^\[The Hypercolor #\d+\]/, ''));
+					let lines = readTaggedLines(9);
 					let vertices = [
 						{ line: 0, col: 3, x: 1, y: 0 },
 						{ line: 0, col: 13, x: 3, y: 0 },
@@ -5484,14 +5490,14 @@ let parseData = [
 						`<path d='M0 1 2 1 2 3 0 3z' stroke='black' stroke-width='.2' fill='none' />`,
 						`<path d='M0 1 2 1 2 3 0 3z' stroke='#ccc' stroke-width='.125' fill='none' />`
 					];
-					let colors = { 'K': '#000', 'B': '#00f', 'G': '#0f0', 'C': '#0ff', 'R': '#f00', 'M': '#f0f', 'Y': '#ff0', 'W': '#fff' };
+					let colors = { 'K': '#000', 'R':'#F00', 'M':'#800', 'G':'#0F0', 'F':'#080', 'B':'#00F', 'I':'#008' };
+					
 					const radius = .4;
 					for (let v of vertices) {
-						//rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y
 						svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col]]}' d='M ${v.x + radius * Math.cos(-Math.PI / 4)} ${v.y + radius * Math.sin(-Math.PI / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} z' />`);
 						svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col + 2]]}' d='M ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 7 / 4)} ${v.y + radius * Math.sin(Math.PI * 7 / 4)} z' />`);
 					}
-					module.push({ label: 'Cube ' + matches[1], obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
+					module.push({ label: 'Cube ' + matches[1] + ':', obj: $('<svg>').html(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='-.6 -.6 10 4.2'>${svg.join('')}</svg>`) });
 					return true;
 				}
 			},
@@ -5558,7 +5564,7 @@ let parseData = [
 					var div = $('<div>');
 					var photos = matches[3].split(' ');
 					for (var i = 0; i < photos.length; i++) {
-						div.append(`<img src='img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
+						div.append(`<img src='../HTML/img/The Icon Kit/${photos[i]}.png' height='100' style='display: inline-block; margin-right: 5px; margin-bottom: 5px' />`);
 					}
 					module.push(div);
 					if (matches[6] != '.') {
@@ -5721,7 +5727,7 @@ let parseData = [
 			{
 				regex: /^(Solution|Codings|New codings):$/,
 				handler: function (matches, module) {
-					var lines = readLines(6).map(l => l.replace(/\[Kyudoku #\d+\] /g, "").trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
+					var lines = readTaggedLines(6).map(l => l.trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
 					module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse; text-align: center;'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
 					return true;
 				}
@@ -5973,6 +5979,66 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'latinHypercube',
+		loggingTag: 'Latin Hypercube',
+		matches: [ 
+			{
+				regex: /The given shapes are:|Solution:/,
+				handler: function(matches, module){
+					
+					const paths = { 
+						'T':'M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30',
+						'H':'M0-2.2 37.6-21 0-39.8-37.6-21 0-2.2 0 39.8 37.6 21 37.6-21M-37.6-21-37.6 21 0 39.8 0-2.2 0-2.2',
+						'O':'M0 40 40 0 0-40-40 0zV-40M-40 0h80',
+						'D':'M0-26.7 25.3-8.3 15.7 21.6-15.7 21.6-25.3-8.3ZM15.7 21.6 23.5 32.4 38 12.4 37.3-12 25.3-8.3ZM-15.7 21.6-23.5 32.4 0 40 23.5 32.4 15.7 21.6M-23.5 32.4-38 12.4-37.3-12-25.3-8.3-15.7 21.6M0-26.7 0-40-23.5-32.4-37.3-12-25.3-8.3M0-40 23.5-32.4 37.3-12 25.3-8.3 0-26.7'
+					};
+					const fills = { 'T':'#FF0000', 'H':'#FF5800', 'O':'#FF9E00', 'D':'#FFFF00' };
+					const arrowHead = 'M-30 30 0 0 30 30 0 0';
+					
+					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
+					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#222' rx='50' ry='50'/>";
+					
+					let grid = readTaggedLines(19).map(l => l.replace(/ /g, '').split('')
+												 ).filter(l => l.length > 0);
+					for (let w = 0; w < 4; w++) {
+						for (let z = 0; z < 4; z++) {
+							for (let y = 0; y < 4; y++) {
+								for (let x = 0; x < 4; x++) {
+									let xPosition = 475 * y + 100 * x;
+									let yPosition = 475 * w + 100 * z;
+									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#47E9D4' stroke-width='15'/>`;
+									let shape = grid[4 * w + z][4 * y + x];
+									if (shape != '#')
+										svg += `<path transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}' 
+													fill='${fills[shape]}' stroke='#FFF' stroke-width='5' stroke-linejoin='round'/>`;
+								}
+							}
+						}
+					}
+					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+							
+							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							
+							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							
+							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+					module.push({ label:matches[0], obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /Placed|does not belong/
+			}
+		]
+	},
+	{
 		moduleID: "Laundry",
 		loggingTag: "Laundry",
 		matches: [
@@ -6150,6 +6216,134 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "matchem",
+		loggingTag: "Match 'em",
+		matches: [ 
+			{
+				regex: /The initial configuration of cards is:/,
+				handler: function(_, module) {
+					module.cardBacks = { 'R':'#F00', 'O':'#F80', 'Y':'#F8FF00', 'L':'#8F0', 'F':'#082', 'B':'#00F', 'C':'#0FF', 'V':'#80C', 'P':'#E0E', 'W':'#FFF'};
+					module.textColors = { 'R':'#C00','O':'#D60', 'Y':'#C8CC00', 'L':'#4C0', 'F':'#040', 'B':'#009', 'C':'#0CC', 'V':'#408', 'P':'#B0B', 'W':'#CCC' };
+					module.invert = [ 'B', 'F', 'V' ];
+					module.grid = [ ];
+					
+					const config = readTaggedLines(5).map(l => l.split(' '));
+					for (let row = 0; row < 5; row++) {
+						module.grid.push( [ ] );
+						for (let col = 0; col < 5; col++) {
+							const cell = config[row][col];
+							module.grid[row].push( { color: cell[0], suit: cell[1] } );
+						}
+					}
+					
+					module.makeSvg = function (grid) {
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'> 
+						<rect x='-5' y='-5' width='130' height='180' fill='#4C4' rx='5' ry='5'/>`;
+					
+						for (let row = 0; row < 5; row++) {
+							for (let col = 0; col < 5; col++) {
+								const cell = grid[row][col];
+								
+								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
+								const fill = module.cardBacks[cell.color];
+								const inner = module.textColors[cell.color];
+								group += `<rect width='20' height='30' fill='${fill}' stroke='#000' stroke-width='1.5'/>
+										<text x='10' y='12' style='font-size: 24px' fill='${inner}' stroke='#000' stroke-width='0.5' text-anchor='middle' dominant-baseline='central'>${cell.suit}</text>
+										<text x='5' y='25' style='font-size: 9px' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>`;
+								svg += group + '</g>';
+							}
+						}
+						return svg + '</svg>';
+					};
+					
+					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet: true});
+					return true;
+				}
+			},
+			{
+				regex: /The final configuration of cards is:/,
+				handler: function (_, module){ 
+					module.push({ label: "The final configuration of cards is:", obj:module.makeSvg(module.grid) });
+					linen += 5;
+					return true;
+				}
+			},
+			{
+				regex: /Move \d: (.+)/,
+				handler: function (matches, module) {
+					
+					const cmd = matches[1];
+					const swapMatch = cmd.match(/Swap (rows|columns) (\d) and (\d)/);
+					const shiftMatch = cmd.match(/Shift (row|column) (\d) one space (\w+)/);
+					const cycleMatch = cmd.match(/Cycle card (\d+) (anti)?clockwise/);
+					const swapTwoMatch = cmd.match(/Swap cards (\d+) and (\d+)/);
+					if (swapMatch) { 
+						let store = [ ];
+						let s1 = swapMatch[2] - '1';
+						let s2 = swapMatch[3] - '1';
+						for (let ix = 0; ix < 5; ix++) {
+							if (swapMatch[1] == 'rows') {
+								store.push(module.grid[s1][ix]);
+								module.grid[s1][ix] = module.grid[s2][ix];
+							}
+							else {
+								store.push(module.grid[ix][s1]);
+								module.grid[ix][s1] = module.grid[ix][s2];
+							}
+						}
+						for (let ix = 0; ix < 5; ix++) {
+							if (swapMatch[1] == 'rows')
+								module.grid[s2][ix] = store[ix];
+							else module.grid[ix][s2] = store[ix];
+						}
+					}		
+					else if (shiftMatch) {
+						const digit = shiftMatch[2] - '1';
+						const row = shiftMatch[1] == 'row'
+						let section = [ ];
+						for (let i = 0; i < 5; i++) {
+							if (row) 
+								section.push(module.grid[digit][i]);
+							else section.push(module.grid[i][digit]);
+						}
+						const adder = shiftMatch[3] == 'up' || shiftMatch[3] == 'left' ? 1 : 4;
+						for (let i = 0; i < 5; i++) {
+							if (row)
+								module.grid[digit][i] = section[(i + adder) % 5];
+							else module.grid[i][digit] = section[(i + adder) % 5];
+						}
+					}
+					else if (cycleMatch) {
+						const root = { x: (cycleMatch[1] - '1') % 5, y: Math.floor((cycleMatch[1] - '1') / 5) };
+						const x = root.x;
+						const y = root.y;
+						const order = cycleMatch[2] ? 
+									[ root, { x: y, y: 4 - x }, { x: 4 - x, y: 4 - y }, { x: 4 - y, y: x } ] :
+									[ root, { x: 4 - y, y: x }, { x: 4 - x, y: 4 - y }, { x: y, y: 4 - x } ];
+						let store = [ ];
+						for (let i = 0; i < 4; i++)
+							store.push(module.grid[order[i].y][order[i].x]);
+						for (let i = 0; i < 4; i++) 
+							module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
+					}
+					else if (swapTwoMatch) {
+						let a = { x: (swapTwoMatch[1] - '1') % 5, y: Math.floor((swapTwoMatch[1] - '1') / 5) };
+						let b = { x: (swapTwoMatch[2] - '1') % 5, y: Math.floor((swapTwoMatch[2] - '1') / 5) };
+						let temp = module.grid[b.y][b.x];
+						module.grid[b.y][b.x] = module.grid[a.y][a.x];
+						module.grid[a.y][a.x] = temp;
+					}
+					
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'matchematics',
 		loggingTag: 'Matchematics',
 		matches: [
@@ -6199,6 +6393,119 @@ let parseData = [
 					let style = '<style>.dark-mode .msigns img { filter: invert(87%) }</style>';
 					module.push({obj: `${style} <span class='msigns' style='display: flex; align-items: center; font-size: 36px'>${a} → ${b}</span>` });
 				}
+			}
+		]
+	},
+	{
+		moduleID: "mathem",
+		loggingTag: "Math 'em",
+		matches: [ 
+			{
+				regex: /The arrangement of the tiles is:/,
+				handler: function (_, module) {
+					module.cardBacks = { 'W':'#FFFFFF', 'S':'#AFAFAF', 'G':'#E6C832', 'B':'#C89632' };
+					module.grid = [ ];
+					const nameReplace = { '+':'Plus', '-':'Diff', '^':'Xor', '/':'Mod' };
+					
+					const config = readTaggedLines(4).map(l => l.split(' '));
+					for (let row = 0; row < 4; row++) {
+						module.grid.push( [ ] );
+						for (let col = 0; col < 4; col++) {
+							const cell = config[row][col];
+							const suit = nameReplace[cell[1]] ?? cell[1];
+							module.grid[row].push( { color: cell[0], suit: suit, ch: cell[1] } );
+						}
+					}
+					
+					module.makeSvg = function (grid) {
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 105 130'> 
+						<rect x='-5' y='-5' width='105' height='130' fill='#458' rx='5' ry='5'/>`;
+						
+						for (let row = 0; row < 4; row++) {
+							for (let col = 0; col < 4; col++) {
+								const cell = grid[row][col];
+								
+								let group = `<g transform='translate(${25 * col} ${30 * row	})'>`;
+								const fill = module.cardBacks[cell.color];
+								group += `<image href='../HTML/img/Math em/${cell.suit}.svg' width='20' height='30' style='background-color: ${fill}'	/>
+										<rect width='20' height='25' y='2.5' fill='${fill}AA' stroke='#223' stroke-width='1.5'/>
+										<text x='4.5' y='23.5' style='font-size: 8px' fill='#000' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>
+										<text x='15.5' y='7.5' style='font-size: 8px' fill='#000' text-anchor='middle' dominant-baseline='central'>${cell.ch}</text>`;
+								svg += group + '</g>';
+							}
+						}
+						return svg + '</svg>';
+					};
+					
+					module.push({ label: "The arrangement of tiles is:", obj:module.makeSvg(module.grid), nobullet:true });
+					return true;
+				}
+			},
+			{
+				regex: /Swap (rows|columns) (\d) and (\d)/,
+				handler: function (matches, module) {
+					let store = [ ];
+					let s1 = matches[2] - '1';
+					let s2 = matches[3] - '1';
+					for (let ix = 0; ix < 4; ix++) {
+						if (matches[1] == 'rows') {
+							store.push(module.grid[s1][ix]);
+							module.grid[s1][ix] = module.grid[s2][ix];
+						}
+						else {
+							store.push(module.grid[ix][s1]);
+							module.grid[ix][s1] = module.grid[ix][s2];
+						}
+					}
+					for (let ix = 0; ix < 4; ix++) {
+						if (matches[1] == 'rows')
+							module.grid[s2][ix] = store[ix];
+						else module.grid[ix][s2] = store[ix];
+					}
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Shift (row|column) (\d) (\w+)/,
+				handler: function (matches, module) {
+					const digit = matches[2] - '1';
+					const row = matches[1] == 'row'
+					let section = [ ];
+					for (let i = 0; i < 4; i++) {
+						if (row) 
+							section.push(module.grid[digit][i]);
+						else section.push(module.grid[i][digit]);
+					}
+					const adder = matches[3] == 'up' || matches[3] == 'left' ? 1 : 3;
+					for (let i = 0; i < 4; i++) {
+						if (row)
+							module.grid[digit][i] = section[(i + adder) % 4];
+						else module.grid[i][digit] = section[(i + adder) % 4];
+					}
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Cycle tiles ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4])/,
+				handler: function (matches, module) {
+					
+					let order = [ ];
+					let store = [ ];
+					for (let i = 0; i < 4; i++) {
+						order.push( { x: "ABCD".indexOf(matches[i + 1][0]), y: matches[i + 1][1] - '1' } );
+						store.push(module.grid[order[i].y][order[i].x]);
+					}
+					for (let i = 0; i < 4; i++) 
+						module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
+					
+					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
@@ -6340,8 +6647,8 @@ let parseData = [
 			},
 			{
 				regex: /Solution:/,
-				handler: function (matches, module) {
-					module.push({ label: "Solution:", obj: pre(readMultiple(15).replace(/\[Logic Gates #\d\] {5}/g, "")) });
+				handler: function (matches, module) {;
+					module.push({ label: "Solution:", obj: pre(readTaggedLines(15).join('\n')) });
 					return true;
 				}
 			},
@@ -6704,7 +7011,7 @@ let parseData = [
 			{
 				regex: /The dots\/circles are in the following pattern, where 0=blank,1=white,2=black.../,
 				handler: function (matches, module) {
-					var board = readMultiple(8).replace(/\[Masyu #\d+\] /g, "");
+					var board = readTaggedLines(8).join('\n');
 					var row = board.replace(/\r/g, '').split('\n');
 					var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
 					for (let i = 0; i < 7; i++) {
@@ -7144,7 +7451,7 @@ let parseData = [
 			{
 				regex: /Solution:/,
 				handler: function(_, module){
-					let grid = readLines(18).map(l => l.replace(/\[Mazeswapper #\d+\] /,'').split(' '));
+					let grid = readTaggedLines(18).map(l => l.split(' '));
 
 					let svg = `<svg viewbox='-5 -5 670 670' style='display: block; width: 4in'>`;
 
@@ -7279,7 +7586,7 @@ let parseData = [
 			{
 				regex: /The (suit|rank) table used is:/,
 				handler: function (matches, module) {
-					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(4).map(l => l.split(' '));
 					const tdStyle = 'width: 0.9cm; height: 0.9cm; text-align: center; vertical-align: middle; border: 2px solid black; padding: 0;';
 					
 					let table = '<table>';
@@ -7303,7 +7610,7 @@ let parseData = [
 			{
 				regex: /The face-up cards are:|The starting grid is:/,
 				handler: function (match, module) {
-					const grid = readLines(4).map(l => l.replace(/\[Memory Poker #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(4).map(l => l.split(' '));
 					let svg = `<svg viewbox='-5 -5 101 101' style='width: 2.5in; display: block;'>
 							   <rect x='-5' y='-5' width='101' height='101' rx='5' ry='5' fill='#084'/>`;
 					for (let row = 0; row < 4; row++) {
@@ -7668,7 +7975,7 @@ let parseData = [
 			{
 				regex: /Initial state:|Particular solution:/,
 				handler: function(matches, module) {
-					const lines = readLines(6).map(l => l.replace(/\[Mineswapper #\d+\] /, '').split('|'));
+					const lines = readTaggedLines(6).map(l => l.split('|'));
 					const nums = lines.map(row => row.map(cell => cell[1]));
 					const mines = lines.map(row => row.map(cell => cell[0] == '*'));
 					const minePath = 'm49.55 5a4.95 4.95 90 00-4.8 4.95l0 10.05a30 30 90 00-12.6 5.1l-7.05-7.05a4.95 4.95 90 00-7.05 7.05l7.05 7.2a30 30 90 00-5.1 12.45l-10.05 0a4.95 4.95 90 000 10.05l10.05 0a30 30 90 005.1 12.45l-7.05 7.05a4.95 4.95 90 007.05 7.05l7.2-7.05a30 30 90 0012.45 5.25l0 9.9a4.95 4.95 90 0010.05 0l0-9.9a30 30 90 0012.45-5.25l7.05 7.05a4.95 4.95 90 007.05-7.05l-7.05-7.05a30 30 90 005.25-12.45l9.9 0a4.95 4.95 90 000-10.05l-9.9 0a30 30 90 00-5.25-12.45l7.05-7.2a4.95 4.95 90 00-7.05-7.05l-7.05 7.05a30 30 90 00-12.45-5.1l0-10.05a4.95 4.95 90 00-5.25-4.95z';
@@ -8168,7 +8475,7 @@ let parseData = [
 			{
 				regex: /Generated Maze is/,
 				handler: function (matches, module) {
-					var table = $('<table>').css({ 'border-collapse': "collapse", "width": "50%", "margin-left": "auto", "margin-right": "auto" });
+					var table = $('<table>').css({ 'border-collapse': "collapse", "width": "10cm", "display":"block" });
 					var maze = readLines(17);
 					for (var i = 0; i < 8; i++) {
 						var row = $('<tr>').appendTo(table);
@@ -8178,11 +8485,11 @@ let parseData = [
 							width += maze[2 * i + 1][2 * j + 2] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 2][2 * j + 1] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 1][2 * j] !== "■" ? " 0px" : " 5px";
-							var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "12.5%", "padding-bottom": "12.5%" }).appendTo(row);
+							var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "1.25cm", "padding-bottom": "12.5%" }).appendTo(row);
 							var cellValue = /[IKYE]/.exec(maze[2 * i + 1][2 * j + 1]);
 							if (cellValue !== null) {
 								cell.css("padding-bottom", "0%");
-								$('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "15pt", "height": "12.5%" }).appendTo(cell);
+								$('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "18pt", "height": "12.5%" }).appendTo(cell);
 							}
 						}
 					}
@@ -8271,7 +8578,7 @@ let parseData = [
 				regex: /Action table:/,
 				handler: function(_, module){
 					linen++;
-					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
+					const grid = readTaggedLines(6);
 					const values = grid.map(r => r.substring(1, 12).split(' '));
 					const fills = { 'x':'#222', '0':'#A00', '1':'#888' };
 					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
@@ -8313,7 +8620,7 @@ let parseData = [
 			{
 				regex: /The (displayed grid|solution) is as follows:/,
 				handler: function(matches, module) {
-					const grid = readLines(6).map(l => l.replace(/\[Nonbinary Puzzle #\d+\] /, '').split(''));
+					const grid = readTaggedLines(6).map(l => l.split(''));
 					const colors = { 'W':'#FFFFFF', 'K':'#000000', 'Y':'#FCF434', 'P':'#9C59D1', '.':'#989898' };
 					const tdStyle = 'width: 1cm; height: 1cm; text-align: center; border: 0.25mm solid black; font-size: 125%;';
 					let table = '<table>';
@@ -8358,7 +8665,7 @@ let parseData = [
 			{
 				regex: /(Starting|Current|Final) matrix :/i,
 				handler: function(matches, module) {
-					const grid = readLines(5).map(l => l.replace(/\[Notre-Dame Cipher #\d+\] /, '').split(''));
+					const grid = readTaggedLines(5).map(l => l.split(''));
 					const tdStyle = 'width: 0.75cm; height: 0.75cm; text-align: center; vertical-align: middle; border: 2px solid black';
 					let table = '<table>';
 					for (let row = 0; row < 5; row++) {
@@ -8411,8 +8718,8 @@ let parseData = [
 			{
 				regex: /Generating manual with rule seed \d+:/,
 				handler: function(match, module){
-					let rs = readLines(36).map(l => l.replace(/\[Not Poker #\d+\] /, ''));
-					module.push([ match, [ pre(rs.join('\n'))]]);
+					let rs = readTaggedLines(36);
+					module.push([ match, [ { obj:pre(rs.join('\n')), nobullet:true } ] ] );
 					return true;
 				}
 			},
@@ -8431,7 +8738,7 @@ let parseData = [
 		loggingTag: "Number Pad",
 		matches: [
 			{
-				regex: /Button colors are: (.+)/,
+				regex: /Button colors are \(0–9\): (.+)/,
 				handler: function (matches, module) {
 					var colors = matches[1].split(', ');
 					if (colors.length === 10) {
@@ -8475,7 +8782,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: 'Egyptian Hieroglyphs:',
-						obj: pre([matches[0]].concat(readMultiple(6, function (str) { return str.replace(/^\[Only Connect #\d+\] /, ''); })).join("\n"))
+						obj: pre([matches[0]].concat(readTaggedLines(6)).join("\n"))
 					});
 					return true;
 				}
@@ -8894,6 +9201,46 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'PineapplePenModule',
+		loggingTag: 'Pineapple Pen',
+		matches: [ 
+			{
+				regex: /Generated Grid:/,
+				handler: function (_, module) {
+					const icons = [ 'apple', 'pen', 'pineapple' ];
+					const imgstyle = 'width: 1cm; margin: 0';
+					const tdstyle = 'border: 1mm solid; text-align: center;	';
+
+					let grid = readTaggedLines(6).map(l => l.split('').map(ch => ch - '1'));
+					readLine();
+					
+					let start = readLine().match(/[A-F][1-6]/)[0];
+					let startCol = 'ABCDEF'.indexOf(start[0]);
+					let startRow = start[1] - '1';
+					console.log(start);
+					
+					let table = "<table style='width: 3in;'>";
+					for (let row = 0; row < 6; row++) {
+						table += '<tr>'; 
+						for (let col = 0; col < 6; col++) {
+							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
+							table += `<td style='${tdstyle} background-color: ${fill}'>`;
+							if (grid[row][col] != -1)
+								table += `<img style='${imgstyle}' src='img/PPAP/${icons[grid[row][col]]}.png'/>`;
+							table += '</td>';
+						}
+						table += '</tr>';
+					}
+					module.push({ label:'Grid: (starting on green)', obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: ["PixelArt"],
 		loggingTag: ["Pixel Art"],
 		matches: [
@@ -9004,7 +9351,7 @@ let parseData = [
 			{
 				regex: /^Beginning of Matrix/,
 				handler: function (matches, module) {
-					const matrix = readLines(6).map(line => line.replace(/^\[Playfair Cipher #\d+\] /, ""));
+					const matrix = readTaggedLines(6);
 					matrix.splice(5, 1);
 
 					module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
@@ -9193,6 +9540,115 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "pointerPointerModule",
+		loggingTag: "Pointer Pointer",
+		matches: [
+			{
+				regex: /Stage \d+/,
+				handler: function (matches, module) {
+					const colorDict = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0', 'W':'#FFF', 'K':'#444' };
+					const dirs = [ 'U', 'UR', 'R', 'DR', 'D', 'DL', 'L', 'DL' ];
+					
+					readLine();
+					const colors = readTaggedLines(6).map(l => l.split(' '));
+					readLine();
+					const dispArrows = readTaggedLines(6).map(l => l.split(' '));
+					readLine();
+					const truthDir = readTaggedLines(6).map(l => l.split(' '));
+					readLines(2);
+					const path = readTaggedLine().substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
+					
+					
+					
+					let svg = "<svg viewbox='-5 -5 610 610' style='display: block; width: 3in'>";
+					const arrPath = 'M-15 40V10H-30L0-40 30 10H15V40Z';
+					const triPath = 'M-15 30H15L0 4Z';
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 6; col++) {
+							
+							const start = col == path[0].x && row == path[0].y;
+							const end = col == path[path.length - 1].x && row == path[path.length - 1].y;
+							const rectFill = start ? '#6C8' : '#888';
+							 
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'> 
+										<rect width='100', height='100' stroke='#222' stroke-width='5' fill='${rectFill}'/>`;
+							if (end)
+								g += `<circle cx='50' cy='50' r='45' fill='#F0F0F0'/> 
+									  <circle cx='50' cy='50' r='30' fill='${rectFill}'/>`;
+							
+							const fill = colorDict[colors[row][col]];
+							const dir = 45 * dirs.indexOf(dispArrows[row][col]);
+							g += `<path d='${arrPath}' fill='${fill}' transform='translate(50, 50) rotate(${dir})'/>`;
+							svg += g + '</g>';
+						}
+					}
+					let prev = path[0];
+					let line = `M ${100 * prev.x + 50} ${100 * prev.y + 50} `;
+					svg += `<circle r='15' cx='${100 * prev.x + 50}' cy='${100 * prev.y + 50}' fill='#000'/>`;
+					
+					for (let i = 1; i < path.length; i++) 
+					{
+						let node = path[i];
+						let cx = 100 * node.x + 50;
+						let cy = 100 * node.y + 50;
+						let xDiff = node.x - prev.x;
+						let yDiff = node.y - prev.y;
+						const xWrap = Math.abs(xDiff) == 5;
+						const yWrap = Math.abs(yDiff) == 5;
+						if (xWrap)
+							xDiff /= -5;
+						if (yWrap)
+							yDiff /= -5;
+						let midpointX = 100 * prev.x + 50 + 50 * xDiff;
+						let midpointY = 100 * prev.y + 50 + 50 * yDiff;
+						
+						
+						const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI + 90;
+						
+						line += `L ${midpointX} ${midpointY} `;
+						svg += `<path transform='translate(${midpointX}, ${midpointY}) rotate(${angle})' 
+									fill='#000' d='${triPath}'/>`;
+						if (xWrap)
+							midpointX = 600 - midpointX;
+						if (yWrap)
+							midpointY = 600 - midpointY;
+						line += `M ${midpointX} ${midpointY} L ${cx} ${cy} `;
+						prev = node;
+						svg += `<circle r='15' cx='${cx}' cy='${cy}' fill='#000'/>`;
+					}
+					svg += `<path d='${line}' fill='none' stroke-width='7.5' stroke='#000'/>`;
+					
+					const last = 'ABCDEF'[path[path.length - 1].x] + '123456'[path[path.length - 1].y];
+					
+					module.push([ matches[0] + ': Press ' + last, [ { obj: svg + '</svg>', nobullet:true } ] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Total Stages Generatable/,
+				handler: function (_, module) { 
+					module.push('Stage Legend: Green cell = starting point, Ring = stage answer');
+				}
+			},
+			{
+				regex: /Actions Performed/,
+				handler: function (_, module) {
+					module.actions = [ ];
+					module.push([ 'Actions Performed', module.actions ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (module.actions)
+						module.actions.push(match[0]);
+					else module.push(match[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "PointOfOrderModule",
 		loggingTag: "Point of Order",
 		matches: [
@@ -9223,9 +9679,8 @@ let parseData = [
 											'✖':'M5 0l5 5 5-5 5 5-5 5 5 5-5 5-5-5-5 5-5-5 5-5-5-5z',
 											' ': 'M0 0'}
 
-						module.lines = readLines(10).map(l => l.replace(/\[Polygrid #\d+\] /, '').substring(1,10).split('|'));
+						module.lines = readTaggedLines(10).map(l => l.substring(1,10).split('|'));
 						const letters = ['A','B','C','D','E','F','G','H','I','J'];
-						console.log(module.lines);
 						let div = "<div style='display: flex; flex-flow: row wrap'>";
 
 						for (let line = 0; line < 10; line++) {
@@ -9247,7 +9702,7 @@ let parseData = [
 			{
 				regex: /The rows and columns/,
 				handler: function (_, module) {
-					const grid = readLines(5).map(l => l.replace(/\[Polygrid #\d+\] /, '').split(' '));
+					const grid = readTaggedLines(5).map(l => l.split(' '));
 					const arrowPath = 'M-40-40h80l-40 69.3z';
 					const letters = ['A','B','C','D','E','F','G','H','I','J'];
 					let svg = `<svg viewbox='-100 -100 700 700' style='width: 5in; display: block'>`;
@@ -9790,21 +10245,21 @@ let parseData = [
 			{
 				regex: /ASCII1:/,
 				handler: function (matches, module) {
-					module.push({ label: "The colors are as follows:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The colors are as follows:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /ASCII2:/,
 				handler: function (matches, module) {
-					module.push({ label: "The colored cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The colored cube's maze is as follows, where P = passage and W = wall:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /ASCII3:/,
 				handler: function (matches, module) {
-					module.push({ label: "The input cube's maze is as follows, where P = passage and W = wall:", obj: pre(readMultiple(20).replace(/\[RGB Hypermaze #\d+\] /g, "")) });
+					module.push({ label: "The input cube's maze is as follows, where P = passage and W = wall:", obj: pre(readTaggedLines(20).join('\n')) });
 					return true;
 				}
 			},
@@ -9836,6 +10291,46 @@ let parseData = [
 					}
 					finalLine += "\n           Red                        Green                        Blue";
 					module.push({ label: "The grid:", obj: pre(finalLine) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: 'robitProgramming',
+		loggingTag: 'Robit Programming',
+		matches: [
+			{
+				regex: /The maze has now been locked into the following:/,
+				handler: function(match, module) {
+					const grid = readTaggedLines(11).map(l => l.split('').map(ch => ch == 'X'));
+					
+					let svg = `<svg viewbox='0 0 26 26' style='display: block; width: 3in; margin: 2mm 0'>`;
+					
+					for (let row = 0; row < 5; row++){
+						for (let col = 0; col < 5; col++) {
+							let g = `<g fill='#000' transform='translate(${5 * col}, ${5 * row})'>`
+							if (grid[2 * row][2 * col + 1])
+								g += "<rect x='0' y='0' width='6' height='1'/>";
+							if (grid[2 * row + 1][2 * col])
+								g += "<rect x='0' y='0' width='1' height='6'/>";
+							g += "<rect width='1' height='1' x='2.5' y='2.5' fill='#444'/>"
+							svg += g + '</g>';
+							
+						}
+					}
+					svg += "<rect x='0' y='25' fill='#000' width='26' height='1'/>";
+					svg += "<rect x='25' y='0' fill='#000' width='1' height='26'/>";
+					module.push({ label:match, obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /(.+(?:the following string, |quirks: ))\[?([01]+|[\w, ]+)/,
+				handler: function(matches, module) {
+					module.push({ label: matches[1], obj: pre(matches[2]) });
 					return true;
 				}
 			},
@@ -9992,100 +10487,6 @@ let parseData = [
 		loggingTag: "WireSequenceComponent",
 	},
 	{
-		moduleID: "wireTerminals",
-		loggingTag: "Wire Terminals",
-		matches: [
-			{
-				regex: /The configuration of wires is:/,
-				handler: function (_, module) {
-					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
-					module.hWires = [ ];
-					for (let row = 0; row < 15; row += 2) {
-						for (let col = 3; col < 15; col += 4) {
-							module.hWires.push(grid[row][col]);
-						}
-					}
-					module.vWires = [ ];
-					for (let row = 3; row < 15; row += 4) {
-						for (let col = 0; col < 15; col += 2) {
-							module.vWires.push(grid[row][col]);
-						}
-					}
-				}
-			},
-			{
-				regex: /(.+)in these positions:/,
-				handler: function (match, module) {
-					let grid = readLines(15).map(l => l.replace(/\[Wire Terminals #\d+\] /, '').split(''));
-					if (!module.colors)
-						module.colors = [ [], [], [], [] ];
-					for (let row = 0; row < 4; row++) {
-						for (let col = 0; col < 4; col++) {
-							module.colors[row][col] = grid[row * 4 + 1][col * 4 + 1];
-						}
-					}
-
-					module.hCut = [ ];
-					for (let row = 0; row < 15; row += 2) {
-						for (let col = 3; col < 15; col += 4) {
-							module.hCut.push(grid[row][col]);
-						}
-					}
-					module.vCut = [ ];
-					for (let row = 3; row < 15; row += 4) {
-						for (let col = 0; col < 15; col += 2) {
-							module.vCut.push(grid[row][col]);
-						}
-					}
-
-					const colors = { 'R':'#F00', 'B':'#00F', 'Y':'#FF0', 'W':'#EEE', 'K':'#222' };
-					const xPath = 'M-30-8h60v16h-60z';
-
-					let svg = `<svg viewbox='-5 -5 530 530' style='width: 4in; display: block'>`;
-					for (let row = 0; row < 8; row++){
-						for (let col = 0; col < 3; col++) {
-							let ix = 3 * row + col;
-							const hColor = colors[module.hWires[ix]];
-							const x = 140 * col + 100;
-							const y = 60 * row + 20 * Math.floor(row / 2) + 5;
-							svg += `<rect x='${x - 5}' y='${y}' width='50' height='30' fill='${hColor}' stroke='#222' stroke-width='3'/>`;
-							if (module.hCut[ix] == 'X'){
-								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-6.4-24v48h12.8v-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
-							} else if (module.hCut[ix] == '/') {
-								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-8-24v48h16v-48z' fill='#FFF' />`
-							}
-						}
-					}
-					for (let row = 0; row < 3; row++){
-						for (let col = 0; col < 8; col++) {
-							let ix = 8 * row + col;
-							const vColor = colors[module.vWires[ix]];
-							const x = 60 * col + 20 * Math.floor(col / 2) + 5;
-							const y = 140 * row + 100;
-							svg += `<rect x='${x}' y='${y - 5}' width='30' height='50' fill='${vColor}' stroke='#222' stroke-width='3'/>`;
-							if (module.vCut[ix] == 'X'){
-								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-6.4h48v12.8h-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
-							} else if (module.vCut[ix] == '/') {
-								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-8h48v16h-48z' fill='#FFF'/>`;
-							}
-						}
-					}
-					for (let row = 0; row < 4; row++) {
-						for (let col = 0; col < 4; col++) {
-							const color = colors[module.colors[row][col]];
-							svg += `<rect x='${140 * col}' y='${140 * row}' width='100' height='100' fill='#888' stroke='#222' stroke-width='5'/>
-									<circle r='30' cx='${140 * col + 50}' cy='${140 * row + 50}' fill='${color}' stroke='#999' stroke-width='5'/>`;
-						}
-					}
-					module.push({label:match[1] + 'in the positions marked below', obj:svg + '</svg>' });
-				}
-			},
-			{
-				regex: /The terminals transmit through these wires:/
-			}
-		]
-	},
-	{
 		displayName: "Safety Safe",
 		moduleID: "PasswordV2",
 		loggingTag: "Safety Safe",
@@ -10117,7 +10518,7 @@ let parseData = [
 				handler: function (matches, module) {
 					for (let thing of module.Things)
 						module.push(thing);
-					module.push(["SETTINGS", readLines(3).map(entry => entry.replace(/^\[The Samsung #\d+\] /, ''))]);
+					module.push(["SETTINGS", readTaggedLines(3)]);
 					module.Things = false;
 					return true;
 				}
@@ -10142,7 +10543,7 @@ let parseData = [
 			{
 				regex: /(Bitmaps shown on module|Reconstructed bitmaps):/,
 				handler: function(matches, module) {
-					let allLines = readLines(15).map(line => line.replace(/^\[The Sapphire Button #\d+\] /, ''));
+					let allLines = readTaggedLines(15);
 					let pixels = '', borders = '';
 					let w = allLines[0].length >> 1;
 					for (let bmp = 0; bmp < 3; bmp++)
@@ -10475,7 +10876,7 @@ let parseData = [
 							<path id='trapezoid' d='M0 80 25 20 75 20 100 80z'/>
 							<path id='triangle' d='M0 100 100 100 50 0z'/>
 						</defs>`;
-					let lines = readLines(6).map(l => l.replace(/\[Shape Fill #\d+\] /, ''));
+					let lines = readTaggedLines(6);
 					const letters = ['A','B','C','D','E'];
 					let ansRow = lines[5][lines[5].length - 1] - '1';
 					let ansCol = letters.indexOf(lines[5][lines[5].length - 2]);
@@ -10680,22 +11081,22 @@ let parseData = [
 			{
 				regex: /Clue #\d+:/,
 				handler: function(match, module) {
-					let grid = readLines(3).map(l => l.replace(/\[Shapes and Colors #\d+\] /, '').split(' '));
+					let grid = readTaggedLines(3).map(l => l.split(' '));;
 					let svg = "<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black'>";
-					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F' };
+					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
 					const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
 					for (let row = 0; row < 3; row++) {
 						for (let col = 0; col < 3; col++) {
 							let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
 							const cell = grid[row][col];
-							if (!cell.match((/^-?[RGB]$|KK/)))
+							if (!cell.match((/^-?[RGBY]$|KK/)))
 								g += "<rect width='100' height='100' fill='#FFF'/>";
-							if (cell.match(/[RGB][CDT]/))
-								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}'/>`;
-							else if (cell.match(/-?[RGB]/))
+							if (cell.match(/[RGBY][CDT]/))
+								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
+							else if (cell.match(/-?[RGBY]/))
 								g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
 							else if (cell.match(/-?[CDT]/))
-								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888'/>`;
+								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
 							if (cell[0] == '-')
 								g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
 							svg += g + '</g>';
@@ -10713,7 +11114,7 @@ let parseData = [
 			{
 				regex: /Possible solution:/,
 				handler: function (matches, module) {
-					var grid = readMultiple(7).replace(/\[Shikaku #\d+\] /g, "");
+					var grid = readTaggedLines(7).join('\n');
 					var lines = grid.replace(/\r/g, '').split('\n');
 					var shapes = lines[6].replace('Shape data for Logfile Analyzer: ', '');
 					var colors = [
@@ -11491,7 +11892,7 @@ let parseData = [
 				//I = Light cyan | O = dark cyan
 				regex: /The initial grid:/,
 				handler: function (matches, module) {
-					let lines = readLines(9).map(x => x.replace(/\[Termite #\d+\] /g, "").split(' '));
+					let lines = readTaggedLines(9).map(l => l.split(' '));;
 					let table = $('<table>').css('table-collapse', 'collapse');
 					for (let i = 0; i < 9; i++) {
 						let tr = $('<tr>').appendTo(table);
@@ -11508,6 +11909,58 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'Tesseractivity',
+		loggingTag: 'Tesseractivity',
+		matches: [
+			{
+				regex: /Grid:/,
+				handler: function(_, module) {
+										const arrowHead = 'M-30 30 0 0 30 30 0 0';
+					
+					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
+					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#1B5EB2' rx='50' ry='50'/>";
+					
+					let grid = readTaggedLines(19).map(l => l.replace(/[^*#]/g, '').split('')
+														).filter(l => l.length > 0);
+					for (let w = 0; w < 4; w++) {
+						for (let z = 0; z < 4; z++) {
+							for (let y = 0; y < 4; y++) {
+								for (let x = 0; x < 4; x++) {
+									const xPosition = 475 * y + 100 * x;
+									const yPosition = 475 * w + 100 * z;
+									const fill = grid[4 * w + z][4 * y + x] == '#' ? '#FFF' : '#KKK'
+									
+									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#5CF' stroke-width='15'/>`;	
+									svg += `<circle r='20' cx='${xPosition + 50}' cy='${yPosition  + 50}' fill='${fill}'/>`;
+								}
+							}
+						}
+					}
+					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+							
+							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							
+							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							
+							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
+							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+					module.push({ label:'Grid', obj:svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "TetraVex",
 		moduleID: "ksmTetraVex",
 		loggingTag: "TetraVex",
@@ -11515,14 +11968,14 @@ let parseData = [
 			{
 				regex: /Intended solution:/,
 				handler: function (matches, module) {
-					module.push({ label: "Solution:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+					module.push({ label: "Solution:", obj: pre(readTaggedLines(11).join('\n')) });
 					return true;
 				}
 			},
 			{
 				regex: /Submitted solution:/,
 				handler: function (matches, module) {
-					module.push({ label: "Submitted:", obj: pre(readMultiple(11).replace(/\[TetraVex #\d+\] /g, "")) });
+					module.push({ label: "Submitted:", obj: pre(readTaggedLines(11).join('\n')) });
 					return true;
 				}
 			},
@@ -11641,7 +12094,7 @@ let parseData = [
 			{
 				regex: /^Generated maze:$/,
 				handler: function (matches, module) {
-					let maze = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+					let maze = readTaggedLines(7);
 					module.tileMaze = maze;
 					return true;
 				}
@@ -11656,7 +12109,7 @@ let parseData = [
 			{
 				regex: /^Tile numbers:$/,
 				handler: function (matches, module) {
-					let tileNumbers = readLines(7).map(x => x.replace(/^\[The Tile Maze #\d+\] /g, ''));
+					let tileNumbers = readTaggedLines(7);
 					module.tileNumbers = tileNumbers;
 					return true;
 				}
@@ -11810,7 +12263,7 @@ let parseData = [
 				regex: /(Visible|Hidden) Maze:/,
 				handler: function (matches, module){
 					linen++;
-					let grid = readLines(9).map(l => l.replace(/\[Tombstone Maze #\d+\] /, '').split(''));
+					let grid = readTaggedLines(9).map(l => l.split(''));
 					let svg = `<svg viewbox='0 0 20 20' style='display: block; width: 3in'>`;
 					for (let row = 0; row < 4; row++){
 						for (let col = 0; col < 4; col++) {
@@ -11843,7 +12296,7 @@ let parseData = [
 			{
 				regex: /^The puzzle is as follows:$/,
 				handler: function (_, module) {
-					let grid = readLines(5).map(x => x.replace(/\[Towers #\d+\] /g, '').split(' '));
+					let grid = readTaggedLines(5).map(l => l.split(' '));
 					module.digits = [];
 					module.grid = grid;
 					return true;
@@ -11985,19 +12438,19 @@ let parseData = [
 				regex: /(The initial configuration of the grid is|Solution|Submitted the following configuration):/,
 				handler: function (matches, module) {
 					const gap = 15;
-					const grid = readLines(12).map(l => l.replace(/\[Twisty Terminals #\d+\] /, '').replace(/ /g, '').split(''));
+					const grid = readTaggedLines(12).map(l => l.replace(/ /g, '').split(''));
 					let svg = `<svg viewbox='-5 -5 470 470' style='width: 4in; display: block'>`;
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
-							let group = `<g transform='translate(${(100 + gap) * row}, ${(100 + gap) * col})'>
+							let group = `<g transform='translate(${(100 + gap) * col}, ${(100 + gap) * row})'>
 											<rect width='100' height='100' stroke='#000' stroke-width='5' fill='#654'/>
 											<circle r='12.5' cx='50' cy='50' stroke='#222' stroke-width='3' fill='#3C3333'/>`;
 										//URDL
 							const chars = [ grid[3*row + 0][3*col + 1], grid[3*row + 1][3*col + 2], grid[3*row + 2][3 * col + 1], grid[3*row + 1][3*col + 0] ];
-							group += `<text font-size='37.5' transform='translate(50, 20) rotate(0)  ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[0]}</text>`;
-							group += `<text font-size='37.5' transform='translate(80, 50) rotate(90) ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[1]}</text>`;
-							group += `<text font-size='37.5' transform='translate(50, 80) rotate(180)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[2]}</text>`;
-							group += `<text font-size='37.5' transform='translate(20, 50) rotate(270)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[3]}</text>`;
+							group += `<text font-size='37.5' transform='translate(50, 20) rotate(180)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[0]}</text>`;
+							group += `<text font-size='37.5' transform='translate(80, 50) rotate(270)' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[1]}</text>`;
+							group += `<text font-size='37.5' transform='translate(50, 80) rotate(0)  ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[2]}</text>`;
+							group += `<text font-size='37.5' transform='translate(20, 50) rotate(90) ' fill='#FFF' text-anchor='middle' dominant-baseline='central'>${chars[3]}</text>`;
 
 							svg += group + '</g>';
 						}
@@ -12071,6 +12524,81 @@ let parseData = [
 				}
 			}
 		]
+	},
+	{
+		moduleID: "understand",
+		loggingTag: "Understand",
+		matches: [
+			{
+				regex: /Stage #\d+: (.+)/,
+				handler: function (matches, module) {
+					if (!module.stages)
+						module.stages = [ ];
+					const grid = matches[1].split(';').map(l => l.split(' '));
+					const shapes = {
+						'.':'M0 0',
+						'Tu':'M-40 34.5H40L0-34.5Z',
+						'Tr':'M34 0-34.5-40v80Z',
+						'Td':'M-40-34.5H40L0 34.5Z',
+						'Tl':'M-34 0 34.5-40v80Z',
+						'St':'M0-35.9-7.4-10.1-34-11-11 3.7-21.2 29.4 0 12 21.2 29.4 11 3.7 34-11 7.4-10.1Z',
+						'Sq':'M-36-36H36V36H-36Z',
+						'H':'M0 36.8-33.1 3.7A11 11 90 010-30.4 11 11 90 0133.1 3.7Z',
+						'D':'M0 36 36 0 0-36-36 0z',
+						'O':'M-36 0A36 36 0 0036 0 36 36 0 00-36 0'
+					};
+					let svg = "<svg viewbox='-20 -20 860 860' style='display: block; width: 3in'>";
+					svg += "<rect x='-20' y='-20' width='860' height='860' fill='#22222C' rx='20' ry='20'/>";
+					let symbols = [ ];
+					
+					for (let row = 0; row < 7; row++) {
+						for (let col = 0; col < 7; col++) {
+							svg += `<rect x='${120 * row}' y='${120 * col}' width='100' height='100' fill='none' stroke='#888' stroke-width='5'/>`;
+							if (grid[row][col] != '.')
+								symbols.push(`<path transform='translate(${120 * row + 50}, ${120 * col + 50})' d='${shapes[grid[row][col]]}' fill='#222' stroke='#AAA' stroke-width='5' stroke-linejoin='round'/>`);
+						}
+					}
+					module.stages.push(symbols);
+					module.grid = svg;
+				}
+			},
+			{
+				regex: /Stage #(\d+) (solution|attempt): (..) ([urdl]+)(.*)/,
+				handler: function(matches, module) {
+					const stage = matches[1] - '1';
+					let svg = module.grid;
+					let symbols = module.stages[stage];
+					let start = { x: 'ABCDEFG'.indexOf(matches[3][0]), y: matches[3][1] - '1' };
+					let d = `M ${120 * start.x + 50} ${120 * start.y + 50} l `;
+					for (let direction of matches[4]) {
+						switch (direction){
+							case 'u': d += '0 -120 '; break;
+							case 'r': d += '120 0 '; break;
+							case 'd': d += '0 120 '; break;
+							case 'l': d += '-120 0 '; break;	
+						}
+					}
+					svg += `<path d='${d}' stroke='#AAA' stroke-width='12' fill='none'/>`;
+					for (let s of symbols)
+						svg += s;
+					svg += `<circle cx='${120 * start.x + 50}' cy='${120 * start.y + 50}' r='20' fill='#AAA'/>`
+					
+					if (matches[2] == 'solution')
+						module.push({ label:`Stage #${matches[1]} solution:`, obj:svg});
+					else module.push([ `Stage #${matches[1]} submission${matches[5]}`, [{ obj:svg + '</svg>', nobullet:true }] ]);
+				}
+			},
+			{
+				regex: /Rule #\d+.+/,
+				handler: function (match, module) {
+					if (!module.rules){
+						module.rules = [ ];
+						module.push([ 'Rules', module.rules ]);
+					}
+					module.rules.push(match[0]);
+				}
+			}
+		]	
 	},
 	{
 		moduleID: "USA",
@@ -12344,26 +12872,47 @@ let parseData = [
 		loggingTag: "Wander",
 		matches: [
 			{
-				regex: /Maze walls, before transformation:/,
+				regex: /Maze walls, (before|after) transformation:/,
 				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 8; i++) {
-						lines += `\n${readTaggedLine()}`;
-					}
-
-					module.push({ label: "Maze walls, before transformation:", obj: pre(lines) });
+					if (matches[1] == 'before')
+						module.beforeMaze = readTaggedLines(9);
+					else 
+						module.push({ label: matches[0], obj:module.genSVG(readTaggedLines(9)) });
 					return true;
 				}
 			},
 			{
-				regex: /Maze walls, after transformation:/,
+				regex: /The color of the walls is (\w+)./,
 				handler: function (matches, module) {
-					let lines = readTaggedLine();
-					for (let i = 0; i < 8; i++) {
-						lines += `\n${readTaggedLine()}`;
+					module.genSVG = function (maze) {
+						
+						let svg = "<svg viewbox='-50 -50 500 500' style='width: 2in; display: block'>";
+						svg += "<rect x='-50' y='-50' width='500' height='500' fill='#000' rx='33' ry='33'/>";
+						
+						const color = module.wallColor ?? '#FFF';
+						for (let row = 0; row < 5; row++) {
+							for (let col = 0; col < 5; col++) {
+								let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
+								g += `<circle r='15' fill='${color}'/>`;
+								if (col != 4 && row != 4) {
+									if (maze[2 * row][2 * col + 1] == '#')
+										g += `<line x2='100' stroke='${color}' stroke-width='10'/>`;
+									if (maze[2 * row + 1][2 * col] == '#')
+										g += `<line y2='100' stroke='${color}' stroke-width='10'/>`;										
+								}
+								svg += g + '</g>';
+							}
+						}
+						svg += `<line y1='400' x2='400' y2='400' stroke='${color}' stroke-width='10'/>`;
+						svg += `<line x1='400' x2='400' y2='400' stroke='${color}' stroke-width='10'/>`;
+						return svg + '</svg>';
 					}
-
-					module.push({ label: "Maze walls, after transformation:", obj: pre(lines) });
+					const colors = { 'BLACK':'#888', 'RED':'#F00', 'GREEN':'#0F0', 'BLUE':'#00F', 'CYAN':'#0FF', 'MAGENTA':'#F0F', 'YELLOW':'#FF0', 'WHITE':'#FFF' };
+					module.wallColor = colors[matches[1]];
+					
+					module.push(matches[0]);
+					if (module.beforeMaze)
+						module.push({ label:'Maze walls, before transformation:', obj:module.genSVG(module.beforeMaze) });
 					return true;
 				}
 			},
@@ -12565,6 +13114,100 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "wireTerminals",
+		loggingTag: "Wire Terminals",
+		matches: [
+			{
+				regex: /The configuration of wires is:/,
+				handler: function (_, module) {
+					let grid = readTaggedLines(15).map(l => l.split(''));
+					module.hWires = [ ];
+					for (let row = 0; row < 15; row += 2) {
+						for (let col = 3; col < 15; col += 4) {
+							module.hWires.push(grid[row][col]);
+						}
+					}
+					module.vWires = [ ];
+					for (let row = 3; row < 15; row += 4) {
+						for (let col = 0; col < 15; col += 2) {
+							module.vWires.push(grid[row][col]);
+						}
+					}
+				}
+			},
+			{
+				regex: /(.+)in these positions:/,
+				handler: function (match, module) {
+					let grid = readTaggedLines(15).map(l => l.split(''));
+					if (!module.colors)
+						module.colors = [ [], [], [], [] ];
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							module.colors[row][col] = grid[row * 4 + 1][col * 4 + 1];
+						}
+					}
+
+					module.hCut = [ ];
+					for (let row = 0; row < 15; row += 2) {
+						for (let col = 3; col < 15; col += 4) {
+							module.hCut.push(grid[row][col]);
+						}
+					}
+					module.vCut = [ ];
+					for (let row = 3; row < 15; row += 4) {
+						for (let col = 0; col < 15; col += 2) {
+							module.vCut.push(grid[row][col]);
+						}
+					}
+
+					const colors = { 'R':'#F00', 'B':'#00F', 'Y':'#FF0', 'W':'#EEE', 'K':'#222' };
+					const xPath = 'M-30-8h60v16h-60z';
+
+					let svg = `<svg viewbox='-5 -5 530 530' style='width: 4in; display: block'>`;
+					for (let row = 0; row < 8; row++){
+						for (let col = 0; col < 3; col++) {
+							let ix = 3 * row + col;
+							const hColor = colors[module.hWires[ix]];
+							const x = 140 * col + 100;
+							const y = 60 * row + 20 * Math.floor(row / 2) + 5;
+							svg += `<rect x='${x - 5}' y='${y}' width='50' height='30' fill='${hColor}' stroke='#222' stroke-width='3'/>`;
+							if (module.hCut[ix] == 'X'){
+								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-6.4-24v48h12.8v-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+							} else if (module.hCut[ix] == '/') {
+								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-8-24v48h16v-48z' fill='#FFF' />`
+							}
+						}
+					}
+					for (let row = 0; row < 3; row++){
+						for (let col = 0; col < 8; col++) {
+							let ix = 8 * row + col;
+							const vColor = colors[module.vWires[ix]];
+							const x = 60 * col + 20 * Math.floor(col / 2) + 5;
+							const y = 140 * row + 100;
+							svg += `<rect x='${x}' y='${y - 5}' width='30' height='50' fill='${vColor}' stroke='#222' stroke-width='3'/>`;
+							if (module.vCut[ix] == 'X'){
+								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-6.4h48v12.8h-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+							} else if (module.vCut[ix] == '/') {
+								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-8h48v16h-48z' fill='#FFF'/>`;
+							}
+						}
+					}
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							const color = colors[module.colors[row][col]];
+							svg += `<rect x='${140 * col}' y='${140 * row}' width='100' height='100' fill='#888' stroke='#222' stroke-width='5'/>
+									<circle r='30' cx='${140 * col + 50}' cy='${140 * row + 50}' fill='${color}' stroke='#999' stroke-width='5'/>`;
+						}
+					}
+					module.push({label:match[1] + 'in the positions marked below', obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /The terminals transmit through these wires:/
+			}
+		]
+	},
+	{
 		moduleID: "WireSequence",
 		loggingTag: "WireSequencePage",
 		matches: [
@@ -12721,9 +13364,9 @@ let parseData = [
 		]
 	},
 	{
-		displayName: ["X-Ray", "Not X-Ray"],
-		moduleID: ["XRayModule", "NotXRayModule"],
-		loggingTag: ["X-Ray", "Not X-Ray"],
+		displayName: ["X-Ray", "Not X-Ray", "X-RGB"],
+		moduleID: ["XRayModule", "NotXRayModule", "xrgb"],
+		loggingTag: ["X-Ray", "Not X-Ray", "X-RGB"],
 		matches: [
 			{
 				regex: /.+/,
