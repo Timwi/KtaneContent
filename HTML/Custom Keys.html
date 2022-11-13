@@ -7,210 +7,17 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="js/Custom Keys/style.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/Custom Keys/manual.cjs"></script>
     <style>
         table {
             margin: 1em auto;
         }
-
-        #second-page {
-            display: none;
-        }
-
-        #code-form {
-            padding: 10px 0;
-            text-align: center;
-        }
-
-        #code-input {
-            font-family: "Special Elite";
-            font-size: 36px;
-            padding: 7px 10px 0;
-            outline: 0;
-            border: 2px solid #000;
-            width: 150px;
-            max-width: 100%;
-            text-align: center;
-            box-sizing: border-box;
-            margin: 1px 0;
-        }
-
-        #code-input.error {
-            color: #f00;
-            border-color: #f00;
-            background-color: #f001;
-        }
-
-        #code-input:disabled {
-            cursor: not-allowed;
-        }
-
-        #code-error {
-            text-align: center;
-            color: #f00;
-            display: none;
-            font-size: 18px;
-            margin-bottom: 4px;
-        }
-
-        #code-form>button {
-            font-family: "Special Elite";
-            font-size: 24px;
-            padding: 7px 10px 0;
-            outline: 0;
-            border: 2px solid #000;
-            width: 150px;
-            max-width: 100%;
-            text-align: center;
-            margin: 1px 0;
-            background-color: #fff;
-        }
-
-        #code-form>button:not(:disabled):hover {
-            background-color: #ccc;
-        }
-
-        #code-form>button:disabled {
-            cursor: not-allowed;
-        }
-
-        .solve-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000d;
-        }
-
-        .solve-popup-message {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            color: #fff;
-            font-size: 24px;
-            text-align: center;
-            transform: translateY(-100%);
-            padding: 0 20px 10px;
-            box-sizing: border-box;
-            line-height: 100%;
-        }
-
-        .solve-popup-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 24px;
-            text-align: center;
-            font-family: "Special Elite";
-            padding: 7px 10px 0;
-            outline: 0;
-            border: 2px solid #000;
-            width: 150px;
-            max-width: 100%;
-            background-color: #fff;
-            color: #000;
-        }
-
-        .solve-popup-button:hover {
-            background-color: #ccc;
-        }
     </style>
-    <script>
-        window.onload = () => {
-            const disableInput = (disable) => {
-                $("#code-form>*").attr("disabled", disable);
-                $("#code-input").focus();
-            };
-
-            $("#code-input").on("input", () => {
-                $("#code-input").removeClass("error");
-                $("#code-error").hide();
-            });
-
-            let solvePopup;
-            const solveMessage = (message) => {
-                if (solvePopup) solvePopup.remove();
-                solvePopup = $("<div>").addClass("solve-popup").append($("<div>").addClass("solve-popup-message").html(message), $("<button>").addClass("solve-popup-button").html("Reload").click(() => window.location.reload())).appendTo(document.body);
-            };
-
-            const socket = new WebSocket("wss://remoteturnthekeys.herokuapp.com");
-            socket.onmessage = e => {
-                const params = e.data.split("::");
-                if (params.length > 1) {
-                    switch (params[0]) {
-                        case "Ping":
-                            socket.send("Expert::Pong");
-                            break;
-                        case "Expert":
-                            if (params[1] == "Invalid") {
-                                disableInput(false);
-                                $("#code-input").addClass("error");
-                                $("#code-error").html("Invalid code.").show();
-                            }
-                            break;
-                        case "Modules":
-                            const sections = JSON.parse(params[1]);
-                            console.group("Retrieved modules:");
-                            sections.forEach((s, i) => {
-                                console.group("Section " + (i + 1));
-                                s.forEach(n => console.log(n));
-                                console.groupEnd();
-                            });
-                            console.groupEnd();
-                            $("#code-form").hide();
-                            $("#page-number").html("Page 1 of 2");
-                            const secondPage = $("#second-page").show();
-                            sections.forEach((s, i) => $("#section-" + i).append(...s.map(n => $("<li>").text("Solved " + (i % 2 == 0 ? "all" : "any") + " " + n + " modules."))));
-                            $("html,body").animate({
-                                scrollTop: secondPage.offset().top
-                            }, 1000);
-                            break;
-                        case "Defuser":
-                            switch (params[1]) {
-                                case "Solved":
-                                    solveMessage("The module has been solved.");
-                                    break;
-                                case "Disconnected":
-                                    solveMessage("The defuser has disconnected.");
-                                    break;
-                            }
-                            break;
-                    }
-                }
-            };
-
-            const ping = () => {
-                if (socket.readyState == WebSocket.OPEN) {
-                    socket.send("Expert::Ping");
-                    setTimeout(ping, 1000);
-                }
-            };
-            socket.onopen = () => ping();
-
-            const connectionError = () => {
-                disableInput(true);
-                $("#code-input").addClass("error");
-                $("#code-error").html("Error connecting to remote server.<br>Please reload the page and try again.").show();
-            };
-            socket.onerror = connectionError;
-            socket.onclose = connectionError;
-
-            $("#code-form").on("submit", e => {
-                e.preventDefault();
-                const code = $("#code-input").val().trim();
-                if (code && /[0-9]{5}/.test(code)) {
-                    socket.send("Expert::" + code);
-                    disableInput(true);
-                } else $("#code-input").addClass("error");
-            });
-        };
-    </script>
 </head>
 <body>
+    <div id="app"></div>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
@@ -226,43 +33,11 @@
                 <p>The keys must be turned before and after certain modules on the bomb are solved. To figure out what these modules are, enter the code on the module into the box below.</p>
                 <p>If the wifi icon below the module glows red and the display reads “Error,” the keys can be turned at any time in any order.</p>
 
-                <form id="code-form">
-                    <p id="code-error"></p>
-                    <input id="code-input" type="text" placeholder="12345" maxlength="5" autocomplete="off">
-                    <br>
-                    <button type="submit">Enter</button>
-                </form>
+                <div id="ttks-form"></div>
             </div>
-            <div class="page-footer relative-footer" id="page-number">Page 1 of 1</div>
+            <div class="page-footer relative-footer" id="ttks-page-number">Page 1 of 1</div>
         </div>
-        <div class="page page-bg-02" id="second-page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Custom Keys</span>
-            </div>
-            <div class="page-content">
-                <h3>LEFT KEY</h3>
-
-                <p>Turn the left key after you have done <strong>all</strong> of the following:</p>
-                <ul id="section-0">
-                    <li>Turned the right key.</li>
-                </ul>
-
-                <p>But before you have done <strong>any</strong> of the following:</p>
-                <ul id="section-1"></ul>
-
-                <h3>RIGHT KEY</h3>
-
-                <p>Turn the right key after you have done <strong>all</strong> of the following:</p>
-                <ul id="section-2"></ul>
-
-                <p>But before you have done <strong>any</strong> of the following:</p>
-                <ul id="section-3">
-                    <li>Turned any left keys.</li>
-                </ul>
-            </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
-        </div>
+        <div id="ttks-content"></div>
     </div>
 </body>
 </html>
