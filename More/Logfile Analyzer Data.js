@@ -2333,7 +2333,7 @@ let parseData = [
 							lightColors: ['{L0}', '{L1}', '{L2}', '{L3}', '{L4}'],
 							darkColors: ['{D0}', '{D1}', '{D2}', '{D3}', '{D4}'],
 							set: function () {
-								module.SwitchInfo.dom.obj = $("<svg stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50 * module.SwitchInfo.y + 5) + "'>" + module.SwitchInfo.svg + "</svg>")
+								module.SwitchInfo.dom.obj = $("<svg class='colored-switches' stroke-width='0.25' stroke='black' viewBox='-5 -5 135 " + (50 * module.SwitchInfo.y + 5) + "'>" + module.SwitchInfo.svg + "</svg>")
 									.css({ width: '300px', display: 'block' });
 							}
 						};
@@ -2346,7 +2346,7 @@ let parseData = [
 					for (i = 0; i < 5; i++)
 						svg +=
 							"<g transform='translate(" + (11 * i) + ",0)'>" +
-							"<ellipse fill='#bdc4d3' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
+							"<ellipse class='switch-base' cx='5.5' cy='17.5' rx='4.2' ry='2' />" +
 							"<path fill='" + (module.SwitchInfo.lightColors[i]) + "' d='" + (state[i] === '▼' ? 'M3.8 17 2.2 32 8.8 32 7.2 17z' : 'M3.8 18 2.2 3 8.8 3 7.2 18z') + "' />" +
 							"<rect fill='" + (module.SwitchInfo.darkColors[i]) + "' x='2.2' y='" + (state[i] === '▼' ? '32' : '2') + "' width='6.6' height='1' />" +
 							"</g>";
@@ -2360,7 +2360,7 @@ let parseData = [
 								if (state[i] !== module.SwitchInfo.prevState[i])
 									ix = i;
 							module.SwitchInfo.svg =
-								"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' />"
+								"<line class='connector' x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' />"
 									.replace(/\{x\}/g, 11 * ix + 5.5)
 									.replace(/\{y1\}/g, 50 * (module.SwitchInfo.y - 1) + 35)
 									.replace(/\{y2\}/g, 50 * module.SwitchInfo.y)
@@ -2377,11 +2377,11 @@ let parseData = [
 							// Desired state
 							module.SwitchInfo.y--;
 							x = 70;
-							module.SwitchInfo.svg = "<text font-size='7' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
+							module.SwitchInfo.svg = "<text class='desired-state' x='70' y='" + (50 * module.SwitchInfo.y - 3) + "'>Desired state:</text>" + module.SwitchInfo.svg;
 							break;
 					}
 
-					svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect fill='#d7dbe5' x='0' y='0' width='55' height='35' />" + svg + "</g>";
+					svg = "<g transform='translate(" + x + "," + (50 * module.SwitchInfo.y) + ")'><rect class='state' x='0' y='0' width='55' height='35' />" + svg + "</g>";
 
 					module.SwitchInfo.y++;
 					module.SwitchInfo.svg += svg;
@@ -2396,7 +2396,7 @@ let parseData = [
 						return;
 
 					module.SwitchInfo.svg =
-						"<line x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' stroke-width='4' /><g transform='translate({x}, {y2})' stroke-width='3' stroke='red'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
+						"<line class='connector' x1='{x}' y1='{y1}' x2='{x}' y2='{y2}' /><g class='incorrect' transform='translate({x}, {y2})'><line x1='-4' y1='-4' x2='4' y2='4' /><line x1='4' y1='-4' x2='-4' y2='4' /></g>"
 							.replace(/\{x\}/g, 11 * (parseInt(matches[1]) - 1) + 5.5)
 							.replace(/\{y1\}/g, 50 * (module.SwitchInfo.y - 1) + 35)
 							.replace(/\{y2\}/g, 50 * module.SwitchInfo.y - 7.5)
@@ -2472,12 +2472,12 @@ let parseData = [
 			{
 				regex: /Module generated/,
 				handler: function (matches, module) {
-					let table = $('<table>').css({ 'border-collapse': 'collapse', 'border-style': 'solid', 'border-width': '2px', 'margin-left': 'auto', 'margin-right': 'auto' });
+					let table = $('<table class="colour-flash-table">');
 					let rowHeader = $('<tr>').appendTo(table);
-					$('<th>').text("#").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
-					$('<th>').text("Word").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
-					$('<th>').text("Color").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
-					$('<th>').text("Valid Response").css({ 'border-style': 'solid', 'border-width': '2px', 'text-align': 'center', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(rowHeader);
+					$('<th>').text("#").appendTo(rowHeader);
+					$('<th>').text("Word").appendTo(rowHeader);
+					$('<th>').text("Color").appendTo(rowHeader);
+					$('<th>').text("Valid Response").appendTo(rowHeader);
 					let count = 0;
 					let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? (.+)\b\s+(?:\||,)(?: Color)? (.+)\b\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
 					for (let i = 0; i < 15; i++) {
@@ -2487,9 +2487,9 @@ let parseData = [
 							let tr = $('<tr>').appendTo(table);
 							let match = exp.exec(line);
 							for (let j = 1; j <= 4; j++) {
-								let td = $('<td>').text(match[j]).css({ 'border-style': 'solid', 'border-width': '2px', 'paddingLeft': '7px', 'paddingRight': '7px' }).appendTo(tr);
+								let td = $('<td>').text(match[j]).appendTo(tr);
 								if (j == 4)
-									td.css('text-align', 'center');
+									td.addClass('centered');
 							}
 						}
 						if (count == 8)
@@ -2545,7 +2545,7 @@ let parseData = [
 					const wireData = /\[VennWireRuleSet\] Checking cut wire: index=(\d), color=([\w, ]+)\. Red=(True|False), Blue=(True|False), Symbol=(True|False), LED=(True|False), Rule=(\w+), Cut=(True|False)/.exec(lines[linen - 2]);
 					if (wireData) {
 						if (!('diagram' in module)) {
-							module.diagram = $SVG(`<svg width="300px">`);
+							module.diagram = $SVG(`<svg class='comp-wires'>`);
 							module.splice(0, 0, { obj: module.diagram, nobullet: true, });
 						}
 
@@ -2558,18 +2558,18 @@ let parseData = [
 						module.diagram.attr("viewBox", `-0.05 -0.05 ${x + 1.1} 2.75`);
 
 						// LED
-						$SVG(`<circle cx=${x + 0.25} cy=.25 r=.25 fill=${wireData[6] == "True" ? "white" : "black"} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+						$SVG(`<circle class='led ${wireData[6] == "True" ? 'lit' : 'unlit'}' cx=${x + 0.25} cy=.25 r=.25 >`).appendTo(module.diagram);
 
 						// Wire
 						const wireColors = wireData[2].split(", ");
-						$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} stroke="black" stroke-width="0.025">`).appendTo(module.diagram);
+						$SVG(`<rect x=${x} y=.55 width=.5 height=1 fill=${wireColors[0]} class='wire'>`).appendTo(module.diagram);
 						if (wireColors.length == 2) $SVG(`<rect x=${x + 0.0125} y=${0.55 + (1 / 3)} width=0.475 height=${1 / 3} fill=${wireColors[1]}>`).appendTo(module.diagram);
 
 						// Star
-						if (wireData[5] == "True") $SVG(`<path d="m55,237 74-228 74,228L9,96h240" fill="black" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
+						if (wireData[5] == "True") $SVG(`<path class='star' d="m55,237 74-228 74,228L9,96h240" transform="translate(${x}, 1.6) scale(0.00208333333)">`).appendTo(module.diagram);
 
 						// Rule/Should cut
-						$SVG(`<text x=${x + 0.25} y=2.45 fill="${wireData[8] == "True" ? "green" : "red"}" font-size="0.2">${rules[wireData[7]].split("\n").map((a, i) => `<tspan text-anchor="middle" x=${x + 0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
+						$SVG(`<text class='cut ${wireData[8] == "True" ? "green" : "red"}' x=${x + 0.25} y=2.45>${rules[wireData[7]].split("\n").map((a, i) => `<tspan x=${x + 0.25} dy=${i * .2}>${a}</tspan>`).join("")}</text>`).appendTo(module.diagram);
 					}
 				}
 			},
@@ -2589,38 +2589,14 @@ let parseData = [
 				regex: /(?:Monitor: (\d+) \| Number: (\d+) \| Color: (\w+) \| Indicators: (.+) \| Display color: (\w+))/,
 				handler: function (matches, module) {
 					if (!('infoTable' in module)) {
-						var table = $('<table>')
-							.css('font-size', '12px')
-							.css('border-collapse', 'collapse')
-							.css('border-style', 'solid')
-							.css('border-width', '1px');
+						var table = $('<table class="connected-monitors">');
 						module.infoTable = table;
-						var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
-						$('<th>')
-							.text("Monitor")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '60px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("Number")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '60px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("Color")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '60px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("Indicator Color(s)")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '300px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("Display Color")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '60px')
-							.appendTo(trHead);
+						var trHead = $('<tr>').appendTo(table);
+						$('<th>').addClass('w60').text("Monitor").appendTo(trHead);
+						$('<th>').addClass('w60').text("Number").appendTo(trHead);
+						$('<th>').addClass('w60').text("Color").appendTo(trHead);
+						$('<th>').addClass('w300').text("Indicator Color(s)").appendTo(trHead);
+						$('<th>').addClass('w60').text("Display Color").appendTo(trHead);
 						module.push({ label: "Monitors Information:", obj: table });
 					}
 					var moniPos = matches[1];
@@ -2628,33 +2604,13 @@ let parseData = [
 					var moniCol = matches[3];
 					var moniInd = matches[4].replace(/Index: (\d): Color: /g, "").replace(/, It is /g, " ").replace(/;/g, ", ");
 					var moniDispCol = matches[5];
-					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(module.infoTable);
+					var tr = $('<tr>').appendTo(module.infoTable);
 
-					$('<td>')
-						.text(moniPos)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(tr);
-					$('<td>')
-						.text(moniNum)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(tr);
-					$('<td>')
-						.text(moniCol)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(tr);
-					$('<td>')
-						.text(moniInd)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '300px')
-						.appendTo(tr);
-					$('<td>')
-						.text(moniDispCol)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(tr);
+					$('<td>').addClass('w60').text(moniPos).appendTo(tr);
+					$('<td>').addClass('w60').text(moniNum).appendTo(tr);
+					$('<td>').addClass('w60').text(moniCol).appendTo(tr);
+					$('<td>').addClass('w60').text(moniInd).appendTo(tr);
+					$('<td>').addClass('w60').text(moniDispCol).appendTo(tr);
 					return true;
 				}
 			},
@@ -2662,48 +2618,17 @@ let parseData = [
 				regex: /Monitor: (\d+):/,
 				handler: function (matches, module) {
 					if (!('calculationTable' in module)) {
-						var table = $('<table>')
-							.css('font-size', '12px')
-							.css('border-collapse', 'collapse')
-							.css('border-style', 'solid')
-							.css('border-width', '1px');
+						var table = $('<table class="connected-monitors">')
 						module.calculationTable = table;
-						var trHead = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(table);
-						$('<th>')
-							.text("Monitor")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '60px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("S1")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '40px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("S2")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '40px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("S3")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '40px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("S4")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '40px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("S5")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '40px')
-							.appendTo(trHead);
-						$('<th>')
-							.text("Final")
-							.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-							.css('width', '80px')
-							.appendTo(trHead);
+						var trHead = $('<tr>').appendTo(table);
+						
+						$('<th>').addClass('w60').text("Monitor").appendTo(trHead);
+						$('<th>').addClass('w40').text("S1").appendTo(trHead);
+						$('<th>').addClass('w40').text("S2").appendTo(trHead);
+						$('<th>').addClass('w40').text("S3").appendTo(trHead);
+						$('<th>').addClass('w40').text("S4").appendTo(trHead);
+						$('<th>').addClass('w40').text("S5").appendTo(trHead);
+						$('<th>').addClass('w80').text("Final").appendTo(trHead);
 						module.push({ label: "Calculation:", obj: table });
 					}
 					var Monitor = matches[1];
@@ -2713,43 +2638,15 @@ let parseData = [
 					var Sec4 = readTaggedLine().replace(/Monitor: (\d+), Section: 4, Score: /, "");
 					var Sec5 = readTaggedLine().replace(/Monitor: (\d+), Section: 5, Score: /, "");
 					var TScr = readTaggedLine().replace(/Monitor: (\d+), Total score: /, "");
-					var tr = $('<tr>').css('border-style', 'solid').css('border-width', '1px').appendTo(module.calculationTable);
+					var tr = $('<tr>').appendTo(module.calculationTable);
 
-					$('<td>')
-						.text(Monitor)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '60px')
-						.appendTo(tr);
-					$('<td>')
-						.text(Sec1)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(tr);
-					$('<td>')
-						.text(Sec2)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(tr);
-					$('<td>')
-						.text(Sec3)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(tr);
-					$('<td>')
-						.text(Sec4)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(tr);
-					$('<td>')
-						.text(Sec5)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '40px')
-						.appendTo(tr);
-					$('<th>')
-						.text(TScr)
-						.css('text-align', 'center').css('border-style', 'solid').css('border-width', '1px')
-						.css('width', '80px')
-						.appendTo(tr);
+					$('<td>').addClass('w60').text(Monitor).appendTo(tr);
+					$('<td>').addClass('w40').text(Sec1).appendTo(tr);
+					$('<td>').addClass('w40').text(Sec2).appendTo(tr);
+					$('<td>').addClass('w40').text(Sec3).appendTo(tr);
+					$('<td>').addClass('w40').text(Sec4).appendTo(tr);
+					$('<td>').addClass('w40').text(Sec5).appendTo(tr);
+					$('<th>').addClass('w80').text(TScr).appendTo(tr);
 					return true;
 				}
 			},
@@ -2810,16 +2707,18 @@ let parseData = [
 				handler: function (_, module) {
 					var x;
 
-					var table = $('<table>').css({ borderCollapse: 'collapse', width: '99%', tableLayout: 'fixed' });
+					var table = $('<table class="coordinates-table">');
 					for (x = 0; x < module.Width; x++)
 						$('<col>').attr('width', (99 / module.Width) + '%').appendTo(table);
 					for (var y = 0; y < module.Height; y++) {
-						var tr = $('<tr>').css('height', '4em').appendTo(table);
+						var tr = $('<tr>').appendTo(table);
 						for (x = 0; x < module.Width; x++) {
 							var key = String.fromCharCode(65 + x) + (y + 1);
-							var td = $('<td>').appendTo(tr).css({ border: '1px solid black', textAlign: 'center' });
+							var td = $('<td>').appendTo(tr);
 							if (key in module.Coordinates)
-								td.text(module.Coordinates[key].Text).css({ border: '3px solid ' + (module.Coordinates[key].Legal ? '#0c0' : '#f00'), fontSize: module.Coordinates[key].Text.length > 6 ? "80%" : "125%", whiteSpace: 'pre-line' });
+								td.text(module.Coordinates[key].Text).addClass(`clue 
+																			${module.Coordinates[key].Legal ? 'green' : 'red'} 
+																			${module.Coordinates[key].Text.length > 6 ? 'small' : 'large'}`);
 						}
 					}
 
@@ -2839,8 +2738,7 @@ let parseData = [
 			{
 				regex: /One possible solution:/,
 				handler: function (matches, module) {
-					var table = $('<table>')
-						.css('font-size', '20px')
+					var table = $('<table class="crackbox">');
 					let gridfinal = "";
 					let gridinitial = "";
 					for (var r = 0; r < 4; r++) {
@@ -2855,74 +2753,21 @@ let parseData = [
 						var tr = $('<tr>').appendTo(table)
 						for (var c = 0; c < 4; c++) {
 							if (gridinitial[c + 4 * r] === "B") {
-								$('<td>')
-									.text(' ')
-									.css('background-color', '#000000')
-									.css('text-align', 'center')
-									.css('width', '30px')
-									.css('height', '30px').appendTo(tr);
+								$('<td>').addClass('black').text(' ').appendTo(tr);
 							}
 							else if (gridinitial[c + 4 * r] === gridfinal[c + 4 * r]) {
 								if (gridfinal[c + 4 * r] === "0")
-									$('<td>')
-										.text('10')
-										.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
-								else $('<td>')
-									.text(gridfinal[c + 4 * r])
-									.css('background-color', 'rgb(60,155,58)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+									$('<td>').addClass('number submitted').text('10').appendTo(tr);
+								else $('<td>').addClass('number submitted').text(gridfinal[c + 4 * r]).appendTo(tr);
 							}
 							else {
-								if (gridfinal[c + 4 * r] === "0") $('<td>').text('10')
-									.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
-								else $('<td>').text(gridfinal[c + 4 * r])
-									.css('background-color', 'rgb(194,185,178)').css('text-align', 'center').css('width', '30px').css('height', '30px').appendTo(tr);
+								if (gridfinal[c + 4 * r] === "0") 
+									$('<td>').addClass('number given').text('10').appendTo(tr);
+								else $('<td>').addClass('number given').text(gridfinal[c + 4 * r]).appendTo(tr);
 							}
 						}
 					};
 					module.push({ label: "Possible solution:", obj: table });
-					return true;
-				}
-			},
-			{
-				regex: /One possible solution:/,
-				handler: function (matches, module) {
-					var table = $('<table>')
-						.css('font-size', '20px')
-					for (var r = 0; r < 4; r++) {
-						var tr = $('<tr>').appendTo(table);
-						var grid = readTaggedLine().replace(/10/g, "0").replace(/,/g, "").replace(/ /g, "");
-						for (var c = 0; c < 4; c++) {
-							if (grid[c] === "B") {
-								$('<td>')
-									.text(' ')
-									.css('background-color', '#000000')
-									.css('text-align', 'center')
-									.css('width', '30px')
-									.css('height', '30px').appendTo(tr);
-							}
-							else if (grid[c] === "*") {
-								$('<td>')
-									.text(' ')
-									.css('width', '30px')
-									.css('height', '30px').appendTo(tr);
-							}
-							else if (grid[c] === "0") {
-								$('<td>')
-									.text('10')
-									.css('text-align', 'center')
-									.css('width', '30px')
-									.css('height', '30px').appendTo(tr);
-							}
-							else {
-								$('<td>')
-									.text(grid[c])
-									.css('text-align', 'center')
-									.css('width', '30px')
-									.css('height', '30px').appendTo(tr);
-							}
-						}
-					};
-					module.push({ label: "Possible Solution:", obj: table });
 					return true;
 				}
 			}
@@ -2959,36 +2804,14 @@ let parseData = [
 				handler: function (matches, module) {
 					let binary = readTaggedLine();
 					let grid = binary.match(/.{1,8}/g);
-					let table = $('<table>').css('table-collapse', 'collapse');
+					let table = $('<table>').addClass('critters');
 					for (let x = 0; x < 8; x++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let y = 0; y < 8; y++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('border-width', 'thin')
-								.css('width', '25px')
-								.css('height', '25px')
-								.appendTo(tr)
-							switch (grid[x][y]) {
-								case '0':
-									td.css('background-color', '#888888')
-									break;
-								case '1':
-									switch (module.color) {
-										case "Blue":
-											td.css('background-color', '#7BC0F9')
-											break;
-										case "Pink":
-											td.css('background-color', '#F97BF5')
-											break;
-										case "Yellow":
-											td.css('background-color', '#F9EB7B')
-											break;
-									}
-									break;
-							}
+							let td = $('<td>').text(' ').appendTo(tr)
+							if (grid[x][y] == '0') 
+								td.addClass('gray');
+							else td.addClass(module.color.toLowerCase());
 						}
 					}
 					module.push({ label: matches[0], obj: table });
@@ -3009,36 +2832,14 @@ let parseData = [
 					let tables = [];
 					for (let i = 0; i < 2; i++) {
 						let grid = matches[i + 1].match(/.{1,8}/g);
-						let table = $('<table>').css('table-collapse', 'collapse');
+						let table = $('<table>').addClass('critters');
 						for (let x = 0; x < 8; x++) {
 							let tr = $('<tr>').appendTo(table);
 							for (let y = 0; y < 8; y++) {
-								let td = $('<td>')
-									.text(' ')
-									.css('text-align', 'center')
-									.css('border', 'solid')
-									.css('border-width', 'thin')
-									.css('width', '25px')
-									.css('height', '25px')
-									.appendTo(tr)
-								switch (grid[x][y]) {
-									case '0':
-										td.css('background-color', '#888888')
-										break;
-									case '1':
-										switch (module.color) {
-											case "Blue":
-												td.css('background-color', '#7BC0F9')
-												break;
-											case "Pink":
-												td.css('background-color', '#F97BF5')
-												break;
-											case "Yellow":
-												td.css('background-color', '#F9EB7B')
-												break;
-										}
-										break;
-								}
+								let td = $('<td>').text(' ').appendTo(tr)
+								if (grid[x][y] == '0') 
+									td.addClass('gray');
+								else td.addClass(module.color.toLowerCase());
 							}
 						}
 						tables.push(table);
@@ -3091,8 +2892,8 @@ let parseData = [
 					}
 					
 					module.makeSvg = function (grid) {
-						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'> 
-						<rect x='-5' y='-5' width='130' height='180' fill='#C33' rx='5' ry='5'/>`;
+						let svg = `<svg class='cruel-matchem' viewbox='-5 -5 130 180'> 
+						<rect x='-5' y='-5' width='130' height='180' rx='5' ry='5'/>`;
 					
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
@@ -3102,9 +2903,9 @@ let parseData = [
 								const fill = module.cardBacks[cell.color];
 								const inner = module.textColors[cell.color];
 
-								group += `<rect width='20' height='30' fill='${fill}' stroke='#000' stroke-width='1.5'/>
-										<path transform='translate(10, 14) scale(0.225)' d='${cell.suitPath}' fill='${inner}' stroke='#000' stroke-width='2.5'/>
-										<text x='5' y='25' style='font-size: 9px' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>`;
+								group += `<rect width='20' height='30' fill='${fill}'/>
+										<path class='symbol' transform='translate(10, 14) scale(0.225)' d='${cell.suitPath}' fill='${inner}'/>
+										<text class='color-text' x='5' y='25' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}'>${cell.color}</text>`;
 								svg += group + '</g>';
 							}
 						}
@@ -3229,10 +3030,11 @@ let parseData = [
 						colours.push(colour);
 					}
 
-					let svg = `<br><svg transform="translate(75 0)" width="400" height="200" viewbox="100 250 1125 275">`;
+					let svg = `<br><svg class='cruel-synesthesia' transform="translate(75 0)" width="400" height="200" viewbox="100 250 1125 275">`;
 					for(let i = 0; i < finalInfo.length; i++) {
-						svg += `<rect x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:#${colours[i]};stroke:#444;stroke-width:1" />`;
-						svg += `<rect x="${cellSize * (i % 4) + cellSize + 300 + 300}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:#ccc;stroke:#888;stroke-width:1" /><text x="${cellSize * (i % 4) + cellSize + 300 + 362}" y="${cellSize * Math.floor(i / 4) + cellSize + 80}" text-anchor="middle" style="font-size:50px">${finalInfo[i]}</text>`;
+						svg += `<rect class='color-cell' x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" fill='${colours[i]}'/>`;
+						svg += `<rect class='gray-cell' x="${cellSize * (i % 4) + cellSize + 300 + 300}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}"/>
+										<text x="${cellSize * (i % 4) + cellSize + 300 + 362}" y="${cellSize * Math.floor(i / 4) + cellSize + 80}">${finalInfo[i]}</text>`;
 					}
 
 					module.push({label: matches[1], obj: svg});
@@ -3341,8 +3143,8 @@ let parseData = [
 							'white': '#eee'
 						};
 						var calcTable = $(`
-							<table style='border-collapse: collapse; border: 2px solid black; margin: 8pt 0 24pt;'>
-								<tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
+							<table class='cube-table'>
+								<tr><th>Rotation</th>    ${many(6, x => `<td><div class='icon rotation rotation-${module.Rotations[x].replace(/ /g, '')}'></div><div>${module.RotationCodes[x]}</div></td>`)}</tr>
 								<tr><th>Face digit</th>  ${many(6, x => `<td><div class='icon' style='background-position: -${x * 50}px -50px'></div><div>${module.Faces[5 - x]}</div></td>`)}</tr>
 								<tr><th>Wires</th>       ${many(4, x => `<td><div class='wire' style='background-color: ${colors[module.Wires[wireMap[x]]]}'><div>${wireMap[x] + 1}${wireOrd[x]}</div></div><div>${module.WireCodes[wireMap[x]]}</div></td>`)}</tr>
 								<tr><th>After modulo</th>${many(6, x => `<td>${module.Cipher1.substr(x, 1)}</td>`)}</tr>
@@ -3351,31 +3153,17 @@ let parseData = [
 								<tr class='final'><th>FINAL CIPHER</th>${many(8, x => `<td>${module.Cipherfinal.substr(x, 1)}</td>`)}</tr>
 							</table>
 						`);
-						calcTable.find('td').css({ textAlign: 'center', border: '1px solid #888', padding: '.2em .3em' });
-						calcTable.find('th').css({ textAlign: 'left', border: '1px solid #888', padding: '.2em .4em' });
-						calcTable.find('.icon').css({ backgroundImage: "url('img/The Cube/Rotations.png')", backgroundSize: '300px 100px', backgroundRepeat: 'no-repeat', width: '50px', height: '50px' });
-						calcTable.find('.rotation-tipbackwards').css({ backgroundPosition: '0 0' });
-						calcTable.find('.rotation-tipforwards').css({ backgroundPosition: '-50px 0' });
-						calcTable.find('.rotation-tipright').css({ backgroundPosition: '-100px 0' });
-						calcTable.find('.rotation-tipleft').css({ backgroundPosition: '-150px 0' });
-						calcTable.find('.rotation-rotateright').css({ backgroundPosition: '-200px 0' });
-						calcTable.find('.rotation-rotateleft').css({ backgroundPosition: '-250px 0' });
-						calcTable.find('.wire').css({ width: '50px', height: '20px', border: '1px solid black', boxSizing: 'border-box', position: 'relative', display: 'inline-block' });
-						calcTable.find('.wire>div').css({ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontSize: '10pt' });
-						calcTable.find('.symbol').css({ fontFamily: 'KRA', fontSize: '28pt' });
-						calcTable.find('tr.final td,tr.final th').css({ backgroundColor: '#ddffee' });
 						module.push({ label: 'Calculations:', obj: calcTable });
 						module.push({
 							label: 'Submit button:', obj:
-								$(`<div><div class='inner'>${module.SubmitButton.color} <span>${module.SubmitButton.label}</span></div></div>`)
-									.find('.inner').css({ backgroundColor: colors[module.SubmitButton.color], border: '1px solid black', padding: '.1em .4em', margin: '.5em 0 2em', display: 'inline-block' })
-									.find('span').css({ fontFamily: 'KRA', fontSize: '28pt' })
+								$(`<div class='cube-submit-button'><div class='inner'>${module.SubmitButton.color} <span>${module.SubmitButton.label}</span></div>	</div>`)
+									.find('.inner').css({ backgroundColor: colors[module.SubmitButton.color] })
 									.end().end()
 						});
 
-						const key = ix => `<td style='background: ${colors[module.Buttons[ix].color]}; padding: 8pt; border: 6px solid rgba(233, 244, 255, .4); border-right-color: rgba(0, 0, 0, .3); border-bottom-color: rgba(0, 0, 0, .3);'>${module.Buttons[ix].label}</td>`;
+						const key = ix => `<td style='background: ${colors[module.Buttons[ix].color]}'>${module.Buttons[ix].label}</td>`;
 						var keypad = $(`
-							<table style="background: #cdf; border-spacing: 5px; border: 2px solid black; font-family: 'KRA'; font-size: 28pt; margin: 8pt 0 24pt;">
+							<table class='cube-keypad'">
 								${many(4, x => `<tr>${key(2 * x)}${key(2 * x + 1)}</tr>`)}
 							</table>
 						`);
@@ -3394,11 +3182,11 @@ let parseData = [
 						return str;
 					}
 					function key(ix) {
-						return `<td style='color: ${matches[ix + 3] === 'True' ? '#0c0' : '#c00'}; border: 1px solid #888; width: 12pt; text-align: center;'>${matches[ix + 3] === 'True' ? '✓' : '✗'}</td>`;
+						return `<td style='color: ${matches[ix + 3] === 'True' ? '#0F0' : '#F00'};'>${matches[ix + 3] === 'True' ? '✓' : '✗'}</td>`;
 					}
 					module.push({
 						label: matches[2] ? matches[2] + ' solution:' : matches[1],
-						obj: $(`<table style='border-collapse: collapse; margin: 4pt 0 12pt;'>${many(4, x => `<tr>${key(2 * x)}${key(2 * x + 1)}</tr>`)}</table>`)
+						obj: $(`<table class='cube-stage-solution'>${many(4, x => `<tr>${key(2 * x)}${key(2 * x + 1)}</tr>`)}</table>`)
 					});
 					if (matches[11].length > 0)
 						module.push(matches[11].trim());
@@ -3419,47 +3207,16 @@ let parseData = [
 				regex: /^Generated Maze:$/,
 				handler: function (matches, module) {
 					let maze = readTaggedLines(9).slice(0, 8);
-					let table = $('<table>');
+					let table = $('<table>').addClass('cursor-maze');
 					for (let i = 0; i < 8; i++) {
 						let tr = $('<tr>').appendTo(table);
 						maze[i].split('').forEach(element => {
+							let td = $('<td>').text(' ').appendTo(tr);
 							switch (element) {
-								case 'X':
-									$('<td>')
-										.text(' ')
-										.css('background-color', '#000000')
-										.css('text-align', 'center')
-										.css('width', '20px')
-										.css('height', '20px')
-										.appendTo(tr);
-									break;
-								case 'O':
-									$('<td>')
-										.text(' ')
-										.css('background-color', '#00FFFF')
-										.css('text-align', 'center')
-										.css('width', '20px')
-										.css('height', '20px')
-										.appendTo(tr);
-									break;
-								case 'G':
-									$('<td>')
-										.text(' ')
-										.css('background-color', '#00FF00')
-										.css('text-align', 'center')
-										.css('width', '20px')
-										.css('height', '20px')
-										.appendTo(tr);
-									break;
-								case 'R':
-									$('<td>')
-										.text(' ')
-										.css('background-color', '#FF0000')
-										.css('text-align', 'center')
-										.css('width', '20px')
-										.css('height', '20px')
-										.appendTo(tr);
-									break;
+								case 'X': td.addClass('black'); break;
+								case 'O': td.addClass('cyan'); break;
+								case 'G': td.addClass('green'); break;
+								case 'R': td.addClass('red'); break;
 							}
 						});
 					}
