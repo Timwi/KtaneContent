@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>色忘る — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+<style>
+    div > input {
+        background-color:#AAA;
+        border: 0px;
+        float: left;
+        height: 15px;
+        margin-left: 45px;
+        text-align: center;
+        transform: scale(1.25);
+    }
+
+    .red {
+        background-color: #FAA;
+    }
+
+    .orange {
+        background-color: #FCA;
+    }
+
+    .yellow {
+        background-color: #FFA;
+    }
+
+    .green {
+        background-color: #AFA;
+    }
+
+    .cyan {
+        background-color: #AFF;
+    }
+
+    .blue {
+        background-color: #AAF;
+    }
+
+    .purple {
+        background-color: #CAF;
+    }
+
+    .pink {
+        background-color: #FCF;
+    }
+
+    .maroon {
+        background-color: #CAA;
+    }
+
+    .white {
+        background-color: #EEE;
+    }
+
+    .showPDF {
+        display: none;
+    }
+    table.black td { color: black; }
+    .dark img:not(.diagram) {
+        filter: invert(90%);
+    }
+
+    ol li {
+        padding-bottom: 5mm;
+    }
+
+    @media print {
+        td {
+            padding: 4px;
+        }
+
+        .right {
+            text-align: right;
+            float: right;
+        }
+
+        .column {
+        margin-top: -16px;
+        float: left;
+        width: 50%;
+        }
+
+        .short {
+            width: 50%;
+        }
+
+        .shorter {
+            width: 40%;
+        }
+
+        .showPDF {
+            display: inline;
+        }
+
+        .hidePDF {
+            display: none;
+        }
+    }
+
+    @media screen and (min-width: 725px) {
+        td {
+            padding: 4px;
+        }
+
+        .right {
+            text-align: right;
+            float: right;
+        }
+
+        .column {
+        margin-top: -16px;
+        float: left;
+        width: 50%;
+        }
+
+        .short {
+            width: 50%;
+        }
+
+        .shorter {
+            width: 40%;
+        }
+
+        div > input {
+            transform: scale(1.5);
+        }
+    }
+
+    @media print {
+            a[href]:after {
+                content: "";
+            }
+        }
+        a {
+            color: black;
+            text-decoration: underline;
+        }
+</style>
+
+<script>
+    let sinElement = null;
+    let cosElement = null;
+    let acosElement = null;
+
+    let sinAnsElement = null;
+    let cosAnsElement = null;
+    let acosAnsElement = null;
+
+    let ruleExtraLegacy = null;
+    function setup() {
+        sinElement = document.getElementById("sin");
+        cosElement = document.getElementById("cos");
+        acosElement = document.getElementById("acos");
+
+        sinAnsElement = document.getElementById("sinAns");
+        cosAnsElement = document.getElementById("cosAns");
+        acosAnsElement = document.getElementById("acosAns");
+
+        ruleExtraLegacy = document.getElementById(`rule-extra-legacy`);
+
+        function update() {
+            const sin = parseInt(sinElement.value) ? parseInt(sinElement.value) : 0;
+            const cos = parseInt(cosElement.value) ? parseInt(cosElement.value) : 0;
+            const acos = parseFloat(acosElement.value) ? parseFloat(acosElement.value) : 0;
+
+            const sinAns = parseFloat(sinAnsElement.value = (Math.trunc(Math.sin(sin * Math.PI / 180) * 100000) / 100000) % 1);
+            const cosAns = parseFloat(cosAnsElement.value = (Math.trunc(Math.abs(Math.cos(cos * Math.PI / 180)) * 100000) / 100000) % 1);
+            const acosAns = Math.trunc(Math.acos(acos) / Math.PI * 180);
+
+            if ((Math.abs(sinAns) * 100000) % 1000 === 999)
+                sinAnsElement.value = sinAns > 0 ? (sinAns + 0.00001) % 1 : (sinAns - 0.00001) % 1;
+
+            if ((Math.abs(cosAns) * 100000) % 1000 === 999)
+                cosAnsElement.value = ((cosAns) + 0.00001) % 1;
+
+            acosAnsElement.value = acosAns;
+        }
+        setInterval(update, 100);
+    }
+
+    let defaultRules = null;
+    const tableLengths = [20, 10, 24, 8];
+
+    function getDefaultRules() {
+        if (defaultRules !== null)
+            return;
+
+        defaultRules = {};
+
+        for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+            defaultRules[`rule-1-${instruction}`] = document.getElementById(`rule-1-${instruction}`).innerText;
+
+        for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+            defaultRules[`rule-2-${instruction}`] = document.getElementById(`rule-2-${instruction}`).innerText;
+    }
+
+    function setDefaultRules() {
+        setup();
+        getDefaultRules();
+        ruleExtraLegacy.innerText = "";
+
+        for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+            document.getElementById(`rule-1-${instruction}`).innerText = defaultRules[`rule-1-${instruction}`];
+
+        for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+            document.getElementById(`rule-2-${instruction}`).innerText = defaultRules[`rule-2-${instruction}`];
+    }
+
+    function setRules(rnd) {
+        setup();
+        getDefaultRules();
+        ruleExtraLegacy.innerText = " 左から右に(小数点以下、0での除算[/]や剰余[%]は無視)";
+
+        const action = ['+', '-', '*', '/', "%"];
+        const edgework = ['バッテリー', '単3バッテリー', '単1バッテリー', 'バッテリーホルダー',
+                          'インジケーター', '点灯したインジケーター', '点灯していないインジケーター',
+                          'ポートプレート', '単一のポート', '重複したポート', 'ポート',
+                          "シリアルナンバーの最初の数字", "シリアルナンバーの最後の数字", "シリアルナンバーの数字の個数", "シリアルナンバーの英字の個数",
+                          '解除済モジュール', '無視されないモジュール', 'モジュール', '未解除モジュール', '無視されるモジュール',
+                          '2桁のディスプレー', '3桁のディスプレー'];
+
+        for (let instruction = 0; instruction < tableLengths[0]; instruction++) {
+            const span = document.getElementById(`rule-1-${instruction + 1}`);
+            const rule = { type: rnd.nextMax(10), parameter: rnd.nextMax(action.length) };
+            span.innerText = `${action[rule.parameter]}${rule.type}`;
+        }
+
+        for (let instruction = 0; instruction < tableLengths[1]; instruction++) {
+            const span = document.getElementById(`rule-2-${instruction + 1}`);
+            const rule = { type: rnd.nextMax(edgework.length), parameter: rnd.nextMax(action.length) };
+            span.innerText = `${action[rule.parameter]} ${edgework[rule.type]}`
+        }
+    }
+</script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色忘る</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Forget The Colors.svg" class="diagram">
+                <h2>モジュール詳細：色忘る</h2>
+                <p class="flavour-text">三角関数が色に関係するようになったのはいつからだろう？</p>
+                <p>
+                    このモジュールは2つのディスプレー、歯車型のLEDと数字、2つのニキシー管、3つのシリンダー、鍵がある。
+                    開始時及び各モジュールの解除ごとに、これらを書き留める。
+                    色覚モードが有効の場合、桃色は「I」、紫色は「P」で示される。
+                    背景が緑色の場合、<a href="Forget%20Any%20Color%20translated%20(日本語%20—%20全色忘る)%20(hatosable).html">「Forget Any Color(全色忘る)」</a>を参照する。
+                </p>
+                <h4>モジュールの各ステージに対して、</h4>
+                <ol>
+                    <li>表を使用して、<span class='rule' id='rule-extra-legacy'>左から右に(小数点以下は記録せず、0での除算や剰余は無視)</span>全てのシリンダーで「左」/「右」に対応する列のニキシー管を調整する。両方のニキシー管の値を10で割った余りを求める。</li>
+                    <li>表内において、歯車のLEDの色から開始する。必要に応じてループしながら、<strong>左のニキシー管</strong>だけ上に移動し<strong>右のニキシー管</strong>だけ下に移動する。</li>
+                    <li>左のニキシー管、右のニキシー管、現在の「エッジワーク」の色の数に両方のニキシー管を足しギアの数字を足し10で割った余りの順に3桁の数字を作成する。
+                    <div class="column">
+                        <br><p><span class="showPDF">その3桁の数値の正弦（sin）を求め、小数点以下の最初の5桁を獲得する。この数値は負になることもある。</span>
+                            <span class="hidePDF">3桁の数字を以下に入力し、<br>正弦(sin)の小数点以下先頭5桁を獲得する。</span></p>
+                        <div class="hidePDF">
+                            <img src="img/Forget The Colors/sin(.png" width="36" height="20" style="margin-left:-195px; vertical-align:top;">
+                            <input type="text" maxlength="3" id="sin" style="width:30px">
+                            <img src="img/Forget The Colors/)=.png" width="16" height="20" style="margin-left:45px; vertical-align:top;">
+                            <input type="text" maxlength="3" id="sinAns" style="width:70px;" readonly><br>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <br><p><span class="showPDF">ディスプレー3桁の数字を取得し、余弦（cos）の小数点以下の最初の5桁を獲得する。負の符号は削除し、正の値を維持する。</span>
+                            <span class="hidePDF">ディスプレーの数字を以下に入力し、|余弦(cos)|の小数点以下先頭5桁を獲得する。</span></p>
+                        <div class="hidePDF">
+                            <img src="img/Forget The Colors/cos(.png" width="38" height="20" style="margin-left:-200px; vertical-align:top;">
+                            <input type="text" maxlength="3" id="cos" style="width:30px;">
+                            <img src="img/Forget The Colors/)=.png" width="16" height="20" style="margin-left:48px; vertical-align:top;">
+                            <input type="text" maxlength="3" id="cosAns" style="width:70px;" readonly><br>
+                        </div>
+                    </div>
+                    <div style="height: 22mm"></div></li>
+                    <li>正弦と余弦の和を取得する。 <strong>この数字は後ほど使用する。</strong></li>
+                </ol>
+                <table class="right black">
+                    <tr>
+                        <th>色</th>
+                        <th>左</th>
+                        <th>右</th>
+                        <th>エッジワーク</th>
+                    </tr>
+                    <tr class="red">
+                        <td>赤(R)</td>
+                        <td><span class='rule' id='rule-1-1'>+5</span></td>
+                        <td><span class='rule' id='rule-1-11'>-1</span></td>
+                        <td><span class='rule' id='rule-2-1'>+ バッテリー</span></td>
+                    </tr>
+                    <tr class="orange">
+                        <td>橙(O)</td>
+                        <td><span class='rule' id='rule-1-2'>-1</span></td>
+                        <td><span class='rule' id='rule-1-12'>-6</span></td>
+                        <td><span class='rule' id='rule-2-2'>- ポート</span></td>
+                    </tr>
+                    <tr class="yellow">
+                        <td>黄(Y)</td>
+                        <td><span class='rule' id='rule-1-3'>+3</span></td>
+                        <td><span class='rule' id='rule-1-13'>+0</span></td>
+                        <td><span class='rule' id='rule-2-3'>+ シリアルナンバーの最後の数字</span></td>
+                    </tr>
+                    <tr class="green">
+                        <td>緑(G)</td>
+                        <td><span class='rule' id='rule-1-4'>+7</span></td>
+                        <td><span class='rule' id='rule-1-14'>-4</span></td>
+                        <td><span class='rule' id='rule-2-4'>- 解除済モジュール</span></td>
+                    </tr>
+                    <tr class="cyan">
+                        <td>シアン(C)</td>
+                        <td><span class='rule' id='rule-1-5'>-7</span></td>
+                        <td><span class='rule' id='rule-1-15'>-5</span></td>
+                        <td><span class='rule' id='rule-2-5'>+ ポートプレート</span></td>
+                    </tr>
+                    <tr class="blue">
+                        <td>青(B)</td>
+                        <td><span class='rule' id='rule-1-6'>+8</span></td>
+                        <td><span class='rule' id='rule-1-16'>+9</span></td>
+                        <td><span class='rule' id='rule-2-6'>- モジュール</span></td>
+                    </tr>
+                    <tr class="purple">
+                        <td>紫(P)</td>
+                        <td><span class='rule' id='rule-1-7'>+5</span></td>
+                        <td><span class='rule' id='rule-1-17'>-9</span></td>
+                        <td><span class='rule' id='rule-2-7'>+ バッテリーホルダー</span></td>
+                    </tr>
+                    <tr class="pink">
+                        <td>桃(I)</td>
+                        <td><span class='rule' id='rule-1-9'>-9</span></td>
+                        <td><span class='rule' id='rule-1-19'>+4</span></td>
+                        <td><span class='rule' id='rule-2-9'>- 点灯したインジケーター</span></td>
+                    </tr>
+                    <tr class="maroon">
+                        <td>茶(M)</td>
+                        <td><span class='rule' id='rule-1-10'>+0</span></td>
+                        <td><span class='rule' id='rule-1-20'>+7</span></td>
+                        <td><span class='rule' id='rule-2-10'>+ インジケーター</span></td>
+                    </tr>
+                    <tr class="white">
+                        <td>白(W)</td>
+                        <td><span class='rule' id='rule-1-8'>-3</span></td>
+                        <td><span class='rule' id='rule-1-18'>+5</span></td>
+                        <td><span class='rule' id='rule-2-8'>- 点灯していないインジケーター</span></td>
+                    </tr>
+                </table>
+                <div class="short">
+                    <h4>シリンダーが灰色になった場合</h4>
+                    <p>各ステージの数字を合計し、小数点以下のみを取得する。</p>
+                    <p><span class="showPDF">この値を逆余弦関数(cos<sup>-1</sup>)に代入する。これには少なくとも関数電卓が必要となる。整数に切り捨てて全ての小数点以下の数を削除し、0から90の値を取得する。</span>
+                        <span class="hidePDF">負の値であれば正の値に変換し、以下を使用して逆余弦(cos<sup>-1</sup>)の整数値を取得する。</span></p>
+                    <div class="hidePDF">
+                        <img src="img/Forget The Colors/cos-1(.png" width="44" height="20" style="margin-left:-216px; vertical-align:top;">
+                        <input type="text" id="acos" class="top padding" style="width:70px; text-align:left">
+                        <img src="img/Forget The Colors/)=.png" width="16" height="20" style="margin-left:108px; vertical-align:top;">
+                        <input type="text" id="acosAns" class="top padding" style="width:30px; text-align:left" readonly>
+                    </div>
+                    <p>2つのニキシーに数字を入力し、鍵を回す。ミスが記録されると、ニキシー管のステージが循環する。リトライするには鍵を回す。ステージ数が0の場合、90を送信する。</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
