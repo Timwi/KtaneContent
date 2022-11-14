@@ -42,7 +42,7 @@
            height: 50px;
        }
 
-       table.interactive td.white>.box {
+       table.interactive td.red>.box {
            background: rgba(255,0,0,0.6);
        }
 
@@ -54,12 +54,11 @@
            transition: background 0.2s;
        }
 
-       table.interactive td.yellow>.box::after{
+       table.interactive td.blue>.box::after{
         background: rgba(0,0,255,0.5);
            width: 50px;
            height: 50px;
        }
-
 
        button {
            margin: 5px;
@@ -87,9 +86,7 @@
             border: none;
             margin: 1em auto;
         }
-        img {
-            width: 100%;
-        }
+        img { width: 100%; }
 
         @media print {
             a[href]:after {
@@ -97,6 +94,74 @@
             }
         }
     </style>
+    <script>
+     //based on game of life cruel
+     $(function() {
+        const interactive = $("table.interactive");
+        const symbol=["◼","◆","▲","▼","◉","◍","◈","Ж","Ӝ","Җ"];
+        let saveStates = [];
+        let currentState = 0;
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        for (let y = 0; y < 11; y++) {
+            const row = $("<tr>").appendTo(interactive);
+            for (let x = 0; x < 11; x++) {
+                if (x == 0 && y == 0) {
+                    $("<th>").appendTo(row);
+                } else if (y == 0 && x > 0) {
+                    $("<th>").text(symbol[x-1]).appendTo(row);
+                } else if (y > 0 && x == 0) {
+                    $("<th>").text(y-1).appendTo(row);
+                } else {
+                    $("<td>").click(function() {
+                        $(this).toggleClass("red");
+                        removeFutureSaves();
+                    }).contextmenu(function() {
+                        $(this).toggleClass("blue");
+                        removeFutureSaves();
+                        return false;
+                    }).append('<div class="box"></div>').appendTo(row);
+                }
+            }
+        }
+
+        $("button.reset").click(function() {
+            $("table.interactive td").removeClass("red blue");
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.reset-grid").click(function() {
+            $("table.interactive td").removeClass("red blue");
+        });
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+            }).appendTo(".saves");
+
+            saveStates.push(button);
+        });
+    });
+    </script>
 </head>
 <body>
     <div class="section">
@@ -110,7 +175,7 @@
                 <h2>モジュール詳細：灯台下暗し</h2>
                 <p class="flavour-text">見えないのかい?<br><span class="hideText">違う、いやそうか。</span></p>
                 <p class="appendix-reference" id="appendix-reference">空白モジュールの特定については、<a href="Blind%20Alley%20translated%20(日本語%20—%20ブラインド・アレイ%20)%20(tchen).html">ブラインド・アレイ</a>の付録BLANKを参照する。</p>
-                
+
                 <p>モジュールには3つの数字と図形が含まれるが、そのままでは確認する事ができない。それらは、その上にカーソルをあわせる事によって徐々に浮かび上がってくる。</p>
                 <p>図形と3つの数字の中央値を利用して、以下の表のセルを特定する。中央値以外の2つの数字を小さい方から順に<strong>数字 - パターン変換</strong>に当てはめて、すべてのセルの色を決定する。グリッドを同じ大きさの2×2に分割したときに黒のセルが最も少ない区分の白のセルの数がタイマーの秒数と一致するときに、ステータスライトにカーソルを合わせ始める。黒のセルが最も多い区分の白のセルの数がタイマーの秒数と一致するときにカーソルを合わせることをやめると、モジュールは解除される。</p>
                 <p>右クリックで、セルを青色にできる。左クリックで、セルを赤色にできる。2つの色は重ね合わせて紫色にすることができる。</p>
@@ -136,34 +201,14 @@
                 <h3>数字 - パターン変換</h3>
                 <p>数字を表に当てはめるとき、その数字と関連するパターンと現在の表の状態を考える。次のルールに従って色を決定する。</p>
                 <table>
-                    <tr>
-                        <th>パターン上のセルの色</th>
-                        <th>表のセルの色</th>
-                        <th>結果</th>
-                    </tr>
-                    <tr>
-                        <td>白</td>
-                        <td>白</td>
-                        <td>白</td>
-                    </tr>
-                    <tr>
-                        <td>黒</td>
-                        <td>白</td>
-                        <td>黒</td>
-                    </tr>
-                    <tr>
-                        <td>白</td>
-                        <td>黒</td>
-                        <td>黒</td>
-                    </tr>
-                    <tr>
-                        <td>黒</td>
-                        <td>黒</td>
-                        <td>白</td>
-                    </tr>
+                    <tr><th>パターン上のセルの色</th><th>表のセルの色</th><th>結果</th></tr>
+                    <tr><td>白</td><td>白</td><td>白</td></tr>
+                    <tr><td>黒</td><td>白</td><td>黒</td></tr>
+                    <tr><td>白</td><td>黒</td><td>黒</td></tr>
+                    <tr><td>黒</td><td>黒</td><td>白</td></tr>
                 </table>
                 <p>以下のパターンにおいて、特定された位置のセルと同じ位置のセルの色が黒である場合、パターンの全てのセルの色を反転してから入力する。</p>
-                
+
                 <table>
                     <tr>
                         <td><img src="img/Hidden In Plain Sight/grid0.png"></td>
@@ -199,72 +244,4 @@
         </div>
     </div>
 </body>
-<script>
- //based on game of life cruel
- $(function() {
-    const interactive = $("table.interactive");
-    const symbol=["◼","◆","▲","▼","◉","◍","◈","Ж","Ӝ","Җ"];
-    let saveStates = [];
-    let currentState = 0;
-
-    function removeFutureSaves() {
-        if (currentState < saveStates.length - 1) {
-            for (let i = currentState + 1; i < saveStates.length; i++) {
-                saveStates[i].remove();
-            }
-
-            saveStates.splice(currentState + 1, saveStates.length - currentState);
-        }
-    }
-
-    for (let y = 0; y < 11; y++) {
-        const row = $("<tr>").appendTo(interactive);
-        for (let x = 0; x < 11; x++) {
-            if (x == 0 && y == 0) {
-                $("<th>").appendTo(row);
-            } else if (y == 0 && x > 0) {
-                $("<th>").text(symbol[x-1]).appendTo(row);
-            } else if (y > 0 && x == 0) {
-                $("<th>").text(y-1).appendTo(row);
-            } else {
-                $("<td>").click(function() {
-                    $(this).toggleClass("white");
-                    removeFutureSaves();
-                }).contextmenu(function() {
-                    $(this).toggleClass("yellow");
-                    removeFutureSaves();
-                    return false;
-                }).append('<div class="box"></div>').appendTo(row);
-            }
-        }
-    }
-
-    $("button.reset").click(function() {
-        $("table.interactive td").removeClass("white yellow");
-        saveStates.forEach(x => x.remove());
-        saveStates = [];
-        currentState = 0;
-    });
-
-    $("button.reset-grid").click(function() {
-        $("table.interactive td").removeClass("white yellow");
-    });
-
-    $("button.save").click(function() {
-        removeFutureSaves();
-
-        let saveState = Array.from($("table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
-        console.log(saveStates);
-        let stateNumber = saveStates.length;
-        currentState = stateNumber;
-
-        let button = $("<button>").text(stateNumber + 1).click(function() {
-            $("table.interactive td").each((i, x) => $(x).attr("class", saveState[i]));
-            currentState = stateNumber;
-        }).appendTo(".saves");
-
-        saveStates.push(button);
-    });
-});
- </script>
 </html>
