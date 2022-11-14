@@ -8334,8 +8334,9 @@ let parseData = [
 			{
 				regex: /Action table:/,
 				handler: function(_, module){
-					linen++;
-					const grid = readTaggedLines(6);
+					readLine();
+					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
+					console.log(grid);
 					const values = grid.map(r => r.substring(1, 12).split(' '));
 					const fills = { 'x':'#222', '0':'#A00', '1':'#888' };
 					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
