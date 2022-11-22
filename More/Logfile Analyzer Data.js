@@ -11367,6 +11367,80 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'Skewers',
+		loggingTag: 'Skewers',
+		matches: [
+			{
+				regex: /The colors are:/,
+				handler: function(_, module) {
+					const hexCodes = { 'blue':'#00F', 'cyan':'#0FF', 'green':'#00A651', 'magenta':'#F0F', 'red':'#F00', 'white':'#FFF', 'yellow':'#FF0', 'black':'#000' };
+					const grid = readTaggedLines(4).map(l => l.split(' '));
+					module.svgContents = '';
+					module.svgContents += "<rect class='background' width='400' height='400' rx='25' ry='25'/>";
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							let fill = hexCodes[grid[row][col]];
+							
+							let letter = grid[row][col][0].toUpperCase();
+							let g = `<g class='cell' transform='translate(${100 * col + 50}, ${100 * row + 50})'>`;
+							g += `<path class='diamond' d='M-35 0 0 35 35 0 0-35Z' fill='${fill}'/>`;
+							if (grid[row][col] == 'black')
+								g += `<text class='color' fill='#FFF'>K</text>`;
+							else g += `<text class='color' fill='#000'>${letter}</text>`;
+							module.svgContents += g + '</g>';
+						}
+					}
+					const svg = `<svg class='skewers displayed' viewbox='-10 -10 420 420'>${module.svgContents}</svg>`;
+					
+					module.push({ label:'The colors are:', obj:svg });
+				}
+			},
+			{
+				regex: /will be always be at position (.)/,
+				handler: function(matches, module) {
+					module.firstSword = matches[1];
+					module.push(matches.input);
+				}
+			},
+			{
+				regex: /At \d+ solves, the swords will be at: (.+)/,
+				handler: function(matches, module) {
+					let svg = `<svg class='skewers solution' viewbox='-100 -100 600 600'>` + module.svgContents;
+					const swordParts = `<path class='handle' d='M-5 5a25 100 0 000 90l10 0a25 100 0 000-90z'/>
+										<path class='blade' d='M-50 10l0 5a50 5 0 00100 0l0-5a50 15 0 01-40 0L10-250c0-10 0-25-10-50-10 25-10 40-10 50L-10 10a50 15 0 01-40 0z'/>
+										<path class='bottom' d='M-10 97.5a20 15 0 0020 0l0-5a20 15 0 00-20 0z'/>`;
+					let positions = { 
+						'A':{ x:50, y:0, rot:180 },
+						'9':{ x:150, y:0, rot:180 },
+						'4':{ x:250, y:0, rot:180 },
+						'C':{ x:350, y:0, rot:180 },
+						'0':{ x:400, y:50, rot:-90 },
+						'7':{ x:400, y:150, rot:-90 },
+						'F':{ x:400, y:250, rot:-90 },
+						'B':{ x:400, y:350, rot:-90 },
+						'D':{ x:350, y:400, rot:0 },
+						'8':{ x:250, y:400, rot:0 },
+						'5':{ x:150, y:400, rot:0 },
+						'1':{ x:50, y:400, rot:0 },
+						'3':{ x:0, y:350, rot:90 },
+						'E':{ x:0, y:250, rot:90 },
+						'6':{ x:0, y:150, rot:90 },
+						'2':{ x:0, y:50, rot:90 }
+					};
+					let swords = module.firstSword + matches[1];
+					for (let sword of swords) {
+						const position = positions[sword];
+						svg += `<g class='sword' transform='translate(${position.x}, ${position.y}) rotate(${position.rot})'>${swordParts}</g>`
+					}
+					module.push([ matches.input, [{ obj:svg + '</svg>', nobullet:true }] ]);
+				}
+			},
+			{
+				regex: /You submitted/
+			}
+		]
+	},
+	{
 		moduleID: "skyrim",
 		loggingTag: "Skyrim",
 		matches: [
