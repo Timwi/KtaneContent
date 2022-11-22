@@ -10219,9 +10219,9 @@ let parseData = [
 		]
 	},
 	{
-		displayName: "Rubik’s Clock",
-		moduleID: "rubiksClock",
-		loggingTag: "Rubik’s Clock",
+		displayName: [ "Rubik’s Clock", "Blindfolded Rubik’s Clock" ],
+		moduleID: [ "rubiksClock", "blindfoldedRubiksClockModule" ], 
+		loggingTag: [ "Rubik’s Clock", "Blindfolded Rubik’s Clock" ],
 		matches: [
 			{
 				regex: /Moves to solve, move \d+:/,
