@@ -2892,7 +2892,7 @@ let parseData = [
 					
 					module.makeSvg = function (grid) {
 						let svg = `<svg class='cruel-matchem' viewbox='-5 -5 130 180'> 
-						<rect x='-5' y='-5' width='130' height='180' rx='5' ry='5'/>`;
+						<rect class='background' x='-5' y='-5' width='130' height='180' rx='5' ry='5'/>`;
 					
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
@@ -2902,7 +2902,7 @@ let parseData = [
 								const fill = module.cardBacks[cell.color];
 								const inner = module.textColors[cell.color];
 
-								group += `<rect width='20' height='30' fill='${fill}'/>
+								group += `<rect class='card' width='20' height='30' fill='${fill}'/>
 										<path class='symbol' transform='translate(10, 14) scale(0.225)' d='${cell.suitPath}' fill='${inner}'/>
 										<text class='color-text' x='5' y='25' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}'>${cell.color}</text>`;
 								svg += group + '</g>';
