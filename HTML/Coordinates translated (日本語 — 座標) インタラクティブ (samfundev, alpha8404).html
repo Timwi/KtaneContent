@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>座標 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        span.footnote-marker {
+            vertical-align: super;
+            font-size: 70%;
+        }
+        .dark table, table {
+            border: none;
+        }
+        table.grid {
+            border-collapse: separate;
+            border-spacing: .5mm;
+        }
+        p.footnote {
+            font-size: 70%;
+        }
+        div.column {
+            float: left;
+            margin: 0 0 .7em;
+        }
+        div.column-1 { width: 37.5%; }
+        div.column-2 { width: 40.5%; }
+        div.column-3 { width: 22%; }
+        h4 {
+            clear: both;
+            margin: .7em 0 .2em;
+        }
+        div.footnotes {
+            position: relative;
+            margin-top: 2em;
+            padding-top: 1em;
+        }
+        div.footnotes:before {
+            border-top: 1px solid;
+            left: 0;
+            top: 0;
+            position: absolute;
+            width: 50mm;
+            content: '';
+        }
+        table.coordinate-notations th {
+            white-space: nowrap;
+        }
+        table.two-column-groups tr th:not(:first-child) {
+            border-left: 1mm solid;
+        }
+
+        input {
+            width: 25px;
+        }
+
+        .input-grid, .input-grid td, .input-grid th {
+            border: none;
+            text-align: center;
+        }
+
+        .marked.cell {
+            background-color: rgba(0, 0, 255, 0.25) !important; /* I’m sorry. */
+        }
+
+        .selected, .selected.cell {
+            background-color: rgba(255, 255, 0, 0.5) !important; /* Really sorry. */
+        }
+
+        .grid td {
+            padding: 0px 0px;
+            width: 0px;
+            height: 0px;
+            transition: padding 0.5s, border-color 0.5s, font-size 0.5s, background-color 0.5s;
+            border: 1px solid rgba(0, 0, 0, 0);
+            background-color: rgba(0, 0, 0, 0);
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            font-size: 0;
+            line-height: 0;
+            max-width: 0;
+        }
+
+        .grid td.cell {
+            font-size: initial;
+            padding: 25px 25px;
+            border-color: #222;
+            background-color: white;
+        }
+
+        .grid td span {
+            position: relative;
+            left: -5px;
+        }
+
+        .input {
+            float: left;
+            margin-right: 5px;
+            padding-top: 10px;
+        }
+
+        .input.width, .input.height {
+            padding: 10px;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button.arrow-down {
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        .page-content {
+            position: relative;
+        }
+
+        /* Side grid */
+        .section {
+            display: grid !important; /* !important because multipage changes the section to flex. */
+            grid-template-columns: 0.5fr 1fr;
+            gap: 1em;
+            margin: 1em;
+        }
+
+        .page {
+            margin: 0;
+            width: auto;
+        }
+
+        .left-wrapper {
+            height: calc(100vh - 2em);
+        }
+
+        .center {
+            padding: 10px;
+            margin: 1px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: min-content min-content;
+            grid-template-rows: min-content min-content;
+        }
+
+        /* Only add empty space if there’s enough horizontal room */
+        @media screen and (min-width: 1400px) {
+            .section {
+                grid-template-columns: 0.5fr 1fr 0.5fr;
+            }
+        }
+
+        /* Only show it as a "floating page" if we’re displayed separate pages. */
+        @media screen and (min-width: 900px) {
+            .center {
+                margin: 0px;
+                border: 1px solid #222;
+                box-shadow: #222 0.0em 0em 0.6em;
+                background: white;
+            }
+            .dark .center { background: #222; }
+        }
+
+        /* Only if the grid can fit on the page should it be sticky. */
+        @media screen and (min-height: 715px) {
+            .left-wrapper {
+                position: sticky;
+                top: 1em;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: calc(100vh - 2em);
+            }
+        }
+    </style>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function() {
+            var grid = $(".grid");
+            var selected;
+            var helm = $(".height");
+            var welm = $(".width");
+            let undos = [];
+            let redos = [];
+
+            function massChange(changes) {
+                changes.forEach(function(change) {
+                    var cell = change.cell;
+                    cell.toggleClass("marked", change.state != "").children("span").text(change.state);
+                });
+            }
+
+            $(document).click(function() {
+                selected = null;
+
+                updateSelection();
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                if (!selected && k != "z" && k != "y") {
+                    selected = welm;
+                    updateSelection();
+                }
+
+                var n;
+                if (k == "w") {
+                    selected = welm;
+                    updateSelection();
+                } else if (k == "h") {
+                    selected = helm;
+                    updateSelection();
+                } else if (k == "z") {
+                    if (undos.length > 0) {
+                        var state = undos[undos.length - 1];
+                        var redo = [];
+
+                        state.forEach(function(change) {
+                            redo.push({cell: change.cell, state: change.cell[0].children[0].textContent});
+                        });
+                        massChange(state);
+
+                        undos.splice(undos.length - 1, 1);
+                        redos.push(redo);
+                    }
+                } else if (k == "y") {
+                    if (redos.length > 0) {
+                        state = redos[redos.length - 1];
+                        var undo = [];
+
+                        state.forEach(function(change) {
+                            undo.push({cell: change.cell, state: change.cell[0].children[0].textContent});
+                        });
+                        massChange(state);
+
+                        redos.splice(redos.length - 1, 1);
+                        undos.push(undo);
+                    }
+                } else if (selected.hasClass("cell")) {
+                    n = parseInt(event.key);
+                    if (n && n < 9) {
+                        undos.push([{cell: selected, state: selected.children("span").text()}]);
+                        redos = [];
+                        // $(".grid td.marked span").each(function() {
+                        //     if ($(this).text() == n.toString()) {
+                        //         $(this).text("").parent().removeClass("marked");
+                        //     }
+                        // });
+                        selected.children("span").text(n);
+                        selected.addClass("marked");
+                    } else if (event.key == "Backspace" || event.key == "Delete") {
+                        undos.push([{cell: selected, state: selected.children("span").text()}]);
+                        redos = [];
+                        selected.children("span").text("");
+                        selected.removeClass("marked");
+                    }
+                } else {
+                    n = parseInt(event.key);
+                    if (n) {
+                        selected.text(n);
+                        width = parseInt(welm.text());
+                        height = parseInt(helm.text());
+                        updateGrid();
+
+                        if (selected.is(welm)) {
+                            selected = helm;
+                        } else if (selected.is(helm)) {
+                            selected = welm;
+                        }
+
+                        updateSelection();
+                    }
+                }
+            });
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                }
+            }
+
+            for (var i = 0; i < 8; i++) {
+                var row = $("<tr>").appendTo(grid);
+                for (var n = 0; n < 8; n++) {
+                    let cell = $("<td>").appendTo(row).click(function(event) {
+                        selected = $(this);
+                        updateSelection();
+
+                        event.stopPropagation();
+                    }).contextmenu(function(event) {
+                        var span = $(this).children("span");
+                        undos.push([{cell: $(this), state: span.text()}]);
+                        if (span.text() == "") {
+                            // $(".grid td.marked span").each(function() {
+                            //     if ($(this).text() == mark.toString()) {
+                            //         $(this).text("").parent().removeClass("marked");
+                            //     }
+                            // });
+                            span.text(mark);
+                            mark = Math.min(mark + 1, 8);
+                            $(".mark").text(mark);
+                            $(this).addClass("marked");
+                        } else {
+                            span.text("");
+                            $(this).removeClass("marked");
+                        }
+                        redos = [];
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }).append($("<span>"));
+                }
+            }
+
+            var width = parseInt(welm.text());
+            var height = parseInt(helm.text());
+            var mark = 1;
+
+            function updateGrid() {
+                width = Math.min(Math.max(width, 3), 8);
+                height = Math.min(Math.max(height, 3), 8);
+
+                welm.text(width);
+                helm.text(height);
+                grid.children().each(function(index) {
+                    var row = $(this);
+                    row.children().each(function(index2) {
+                        $(this).toggleClass("cell", index2 < width && index < height);
+                    });
+                });
+            }
+            updateGrid();
+
+            $(".width, .height").click(function(event) {
+                selected = $(this);
+                updateSelection();
+
+                event.stopPropagation();
+            });
+
+            function resetGrid() {
+                var undo = [];
+
+                $(".marked").each(function() {
+                    var cell = $(this);
+                    undo.push({
+                        cell: cell, state: cell[0].children[0].textContent
+                    });
+                    cell.removeClass("marked").children("span").text("");
+                });
+
+                undos.push(undo);
+            }
+
+            $(".reset").click(function() {
+                $(".width, .height").text(5);
+                width = 5;
+                height = 5;
+                updateGrid();
+                resetGrid();
+            });
+
+            $(".reset-grid").click(function() {
+                resetGrid();
+            });
+
+            $(".arrow-up").click(function() {
+                height--;
+                updateGrid();
+            });
+
+            $(".arrow-down").click(function() {
+                height++;
+                updateGrid();
+            });
+
+            $(".arrow-left").click(function() {
+                width--;
+                updateGrid();
+            });
+
+            $(".arrow-right").click(function() {
+                width++;
+                updateGrid();
+            });
+
+            $(".mark-down").click(function() {
+                if (mark > 1) {
+                    mark--;
+                    $(".mark").text(mark);
+                }
+            });
+
+            $(".mark-up").click(function() {
+                if (mark < 8) {
+                    mark++;
+                    $(".mark").text(mark);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="left-wrapper">
+            <div class="center">
+                <table class="input-grid">
+                    <tr>
+                        <th>マーカー</th>
+                        <td><button class="mark-down">←</button></td>
+                        <td><span class="mark">1</span></td>
+                        <td><button class="mark-up">→</button></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>グリッドサイズ</th>
+                        <td>横</td>
+                        <th class="width">5</th>
+                        <td>縦</td>
+                        <th class="height">5</th>
+                    </tr>
+                </table>
+                <div class="grid-wrapper">
+                    <div style="grid-column: 2;">
+                        <button class="arrow-left">←</button> <button class="arrow-right">→</button>
+                    </div>
+                    <div style="grid-row: 2">
+                        <button class="arrow-up" style="margin-top: 0px;">↑</button>
+                        <br>
+                        <button class="arrow-down">↓</button>
+                    </div>
+                    <table class="grid"></table>
+                </div>
+                <button class="reset-grid">グリッドをリセット</button>
+                <button class="reset">リセット</button>
+                <table>
+                    <tr>
+                        <th>操作</th>
+                        <th>動作</th>
+                    </tr>
+                    <tr>
+                        <td>Backspace<br>Delete<br>右クリック</td>
+                        <td>セルを削除する<div style="height: 5mm"></div>(数字がある場合のみ)</td>
+                    </tr>
+                    <tr>
+                        <td>1-8<br>右クリック</td>
+                        <td>セルに数字を入力する<br>(数字がない場合のみ)</td>
+                    </tr>
+                    <tr>
+                        <td>Z/Y</td><td>元に戻す/やり直し</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">座標</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Coordinates.svg">
+                <h2>モジュール詳細：座標</h2>
+
+                <p class="flavour-text">列が先か段が先か。</p>
+
+                <p>モジュールに関する全ての情報は、元のマニュアルに記載されてある。</p>
+
+                <h4>表1:グリッドサイズ</h4>
+                <table>
+                    <tr><th>種類</th><th>解釈</th></tr>
+                    <tr><th><var>x</var></th><td>数字xは、２つの素数の積である。２つの素数のうち大きいほうを幅、小さいほうを高さに使用する。</td></tr>
+                    <tr><th>(<var>x</var>)</th><td>上の形式xと違い、素数の大きいほうを高さ、小さいほうを幅に使用する。</td></tr>
+                    <tr><th><var>x</var>×<var>y</var></th><td>xを幅、yを高さに使用する</td></tr>
+                    <tr><th><var>x</var> by <var>y</var></th><td>xを高さ、yを幅に使用する。</td></tr>
+                    <tr><th><var>x</var>*<var>y</var></th><td>xはグリッドの合計、yを高さに使用する。</td></tr>
+                    <tr><th><var>x</var> : <var>y</var></th><td>xはグリッドの合計、yを幅に使用する。</td></tr>
+                </table>
+
+                <h4>表2:座標</h4>
+                <table class='coordinate-notations'>
+                    <tr><th>[<var>x</var>,<var>y</var>]</th><td>列、段の形式。左上は[0,0]になる。</td></tr>
+                    <tr><th><var>letter</var> <var>number</var></th><td>列、段の形式。左上はA1になる。</td></tr>
+                    <tr><th>&lt;<var>x</var>, <var>y</var>&gt;</th><td>段、列の形式。左上は&lt;0, 0&gt;になる。</td></tr>
+                    <tr><th><var>x</var>, <var>y</var></th><td>段、列の形式。左上は1,1になる。</td></tr>
+                    <tr><th>(<var>x</var>,<var>y</var>)</th><td>列、段の形式。左下は(0,0)になる。</td></tr>
+                    <tr><th><var>letter</var>-<var>number</var></th><td>列、段の形式。左下はA-1になる。</td></tr>
+                    <tr><th>“<var>x</var>, <var>y</var>”</th><td>段、列の形式。左下は“0, 0”になる。</td></tr>
+                    <tr><th><var>x</var>/<var>y</var></th><td>段、列の形式。左下は1/1になる。</td></tr>
+                    <tr><th>[<var>x</var>]</th><td>読み順の形式[<span class='footnote-marker'>[1]</span>。左上は[0]になる。</td></tr>
+                    <tr><th><var>x</var>th</th><td>読み順の形式<span class='footnote-marker'>[1]</span>。左上は1stになる。</td></tr>
+                    <tr><th>#<var>x</var></th><td>デカルト順の形式<span class='footnote-marker'>[2]</span>。左下は#1になる。</td></tr>
+                    <tr><th>四十七</th><td>中国語の読み順の形式<span class='footnote-marker'>[3]</span>。右上は一になる。</td></tr>
+                </table>
+
+                <div class='footnotes'>
+                    <p class='footnote'>
+                        [1] 読み順…左上から開始する。左から右へ読み、一番右に着くと一段下の左に行く。</p>
+                    <p class='footnote'>
+                        [2] デカルト順…左下から開始する。左から右へ進み、一番右に着くと一段上の左に行く。</p>
+                    <p class='footnote'>
+                        [3] 中国語の読み順…右上から開始する。上から下へ進み、一番下に着くと一列左の上に行く。</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>

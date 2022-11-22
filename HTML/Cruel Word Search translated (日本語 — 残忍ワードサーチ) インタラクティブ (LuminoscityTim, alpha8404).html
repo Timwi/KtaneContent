@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>残忍ワードサーチ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script>
+    $(function() {
+        const list = (
+            "PERCENT KNOWLEDGE TENDENCY STIMULATE FASHION BREAKFAST DIFFICULTY EXPLAIN SLIPPERY MAJORITY CHILDISH ABILITY SERVICE SHALLOW SOFTWARE APPRECIATE LABORATORY PRESENT EXPLOSION MULTIPLY QUOTATION RESTROOM PRESENCE TENSION CONTAIN "+
+            "PASTURE BUTTOCKS PROFOUND PSYCHOLOGY ABSTRACT CHALLENGE WARRANT MINIMUM INTENTION ELECTRON EMERGENCY LANGUAGE CONFUSION FRIENDLY PRIVATE PROTECTION INSTINCT CRIMINAL DIRECTORY SENTIMENT BATTERY CEREMONY CONTRARY NEIGHBOUR PAVEMENT "+
+            "INHIBITION ASSEMBLY DIGITAL RESTAURANT EXAMINE NEUTRAL EVALUATE ESTABLISH CHARACTER ACCIDENT CHEMISTRY OFFSPRING TEXTURE POSSESSION PURSUIT DIALOGUE TROUBLE DISGRACE ASSAULT APPLIED COMPUTER BACKGROUND CUNNING PROBLEM DRAMATIC MONOPOLY "+
+            "CHANNEL PROMOTE CREATION BROADCAST MISERABLE REHEARSAL QUARTER CLASSIFY VANQUISH SALVATION ENTHUSIASM DESCENT IMPOUND PARTNER UNPLEASANT CONVICT SELECTION DIAMOND REPLACE PRESTIGE IMPRESS RECYCLE ADVENTURE CONSTRAINT PREOCCUPY WILDERNESS"
+        ).split(" ").sort();
+        let currX = 0;
+        let currY = 0;
+        const rows = 6;
+        const cols = 6;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        var selected;
+        var chosen;
+        let wordtable = $("table.list");
+        let grid = $(".grid");
+
+        for (let r = 0; r < Math.floor(list.length / 6); r++) {
+            let tr = $("<tr>").appendTo(wordtable);
+            for (let c = 0; c < 6; c++)
+                $("<td>").text(list[r*cols + c]).appendTo(tr);
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+        function updateChosen() {
+            $(".netsquare.chosen").removeClass("chosen");
+            if (chosen && chosen.length > 0) {
+                chosen.addClass("chosen");
+            }
+        }
+
+        function highlightSurrounding(x, y) {
+            $(".netsquare.highlighted").removeClass("highlighted");
+            $(".netsquare").filter(function(i, el) {
+                let dx = Math.abs(i % cols - x);
+                let dy = Math.abs(Math.floor(i / cols) - y);
+                return (dx < 2 || dx == cols-1) && (dy < 2 || dy == rows-1);
+            }).each((i, el) => {
+                $(el).addClass("highlighted");
+            });
+        }
+
+        function mode() {
+            if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toUpperCase();
+            if (k == " " || IsLetter(k)) {
+                if (mode() == MODE_READ) {
+                    if (selected && selected.hasClass("netsq") && NoSpecialKeys(event)) {
+                        if (k != " ") {
+                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                            elem.find(".celltext").text(k);
+                        }
+                        if (currX == rows - 1)
+                            currY = (currY + 1) % cols;
+                        currX = (currX + 1) % rows;
+                        var elem2 = grid.children().eq(currY+1).children().eq(currX+1);
+                        selected = elem2;
+                        updateSelection();
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }
+            }
+            down = false;
+        });
+
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass("netsquare square netsq").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+
+                    $("<div>").addClass("celltext").text("A").appendTo(element);
+                    $("<div>").addClass("pathnum").appendTo(element);
+                    element.click(function(event) {
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            selected = $(this);
+                            updateSelection();
+                        }
+                        else {
+                            let removal = element.hasClass("chosen");
+                            $(this).toggleClass("chosen");
+                            let pathnum = element.find(".pathnum");
+                            if (removal) {
+                                let n = parseInt(pathnum.text());
+                                pathN.splice(pathN.indexOf(n), 1);
+                                pathnum.text("");
+                            } else {
+                                pathnum.text(nextPathN());
+                            }
+                        }
+                    }).hover(function() {   //hover
+                        if (mode() == MODE_SOLVE) highlightSurrounding(x-1, y-1);
+                    }, function() {         //leave
+                        if (mode() == MODE_SOLVE) $(".netsquare.highlighted").removeClass("highlighted");
+                    });
+                });
+            }
+        }
+        resetSelection();
+
+        let buttons = $(".buttons");
+        $("<button>").addClass("read-solve").click(function() {
+            $(this).toggleClass("solve");
+            if (mode() == MODE_READ)
+                resetSelection();
+            else
+                selectNone();
+            // $(".reset-grid").click();
+        }).appendTo(buttons);
+
+        let resetButton = $("<button>").addClass("reset-grid").text("リセット").click(function() {
+            $(".netsquare.chosen, .netsquare.highlighted").removeClass("chosen highlighted");
+            $(".netsquare .pathnum").text("");
+            pathN.splice(0, pathN.length);
+        }).appendTo(buttons);
+
+        function resetSelection() {
+            selected = grid.children().eq(1).children().eq(1);
+            currX = currY = 0;
+            updateSelection();
+        }
+        function selectNone() {
+            $(".selected").removeClass("selected");
+            selected = null;
+        }
+        if ((/mobi/i).test(navigator.userAgent))
+            $(".letterbox").removeClass("invisible");
+
+        let pathN = [];
+        function nextPathN() {
+            pathN.sort(function(a, b) {
+                return a - b;
+            });
+            let first = 1;
+            for (let i = 1; i <= pathN.length; i++) {
+                first = pathN[i-1];
+                if (first !== i) {
+                    first = i;
+                    break;
+                }
+                first = i + 1;
+            }
+            pathN.push(first);
+            return first;
+        }
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        table {
+            margin: 1em auto;
+            font-size: 14px;
+            text-align: center;
+        }
+        .invisible { display: none; }
+
+        .square-row {
+            height: 55px;
+            margin: 1.5px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .square-row.letters {
+            margin-left: 60px;
+        }
+
+        .square {
+            margin: 1.5px;
+            width: 55px;
+            height: 55px;
+            float: left;
+            font-size: 30px;
+            font-family: 'Special Elite';
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.1s, color 0.1s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 8px;
+            border-width: 0;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .netsquare {
+            height: 55px;
+            width: 55px;
+            font-size: 35px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+        }
+        .netsquare .pathnum {
+            position: absolute;
+            left: 4px;
+            bottom: 12px;
+            font-size: 12px;
+        }
+        .netsquare .celltext {
+            position: absolute;
+            height: 55px;
+            width: 53px;
+            font-size: 35px;
+        }
+        .netsquare.selected {
+            border: 5px dashed black;
+        }
+        .netsquare.selected .pathnum {
+            left: 0px;
+            line-height: 52px;
+        }
+        .netsquare.selected .celltext {
+            width: 45px;
+            line-height: 52px;
+        }
+        .dark .netsquare.selected { border-color: #AAA; }
+        .netsquare.highlighted { background-color: #FF8; }
+        .dark .netsquare.highlighted { background-color: #772; }
+        .netsquare.chosen { background-color: #F88; }
+        .dark .netsquare.chosen { background-color: #822; }
+
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+
+        .tools {
+            width: 80px;
+        }
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 20px;
+            border-radius: 5px;
+            border: black 2px solid;
+            padding: 4px 7px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        .letterbox {
+            margin-top: 10px;
+            width: 60px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.read-solve.solve::before {
+            content: '解除';
+        }
+        button.read-solve:not(.solve)::before {
+            content: '入力';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍ワードサーチ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Word Search.svg" class="diagram">
+                <h2>モジュール詳細：残忍ワードサーチ</h2>
+                <p class="flavour-text">AOXITBJQEASIERZOPESWLOOKSXNRTDTHANCKIB</p>
+                <p>このモジュールには、36個の赤い文字があるグリッドが表示されたディスプレーがある。これらの文字の中に、下の表の単語が一つある。</p>
+                <p>グリッド内の単語の各文字は、単語内の隣の文字と隣接する(斜めを含む)。グリッドは折り返される(例えば、A1とF1は隣接していると見なされる)。</p>
+                <p>これらの文字をそれぞれ選択した後、以前に選択した文字を選択して送信する。選択した文字は長押しで選択解除できる。</p>
+                <p>正しい単語が送信されると、モジュールが解除される。間違った単語が送信されるとミスが記録され、モジュールがリセットする。</p>
+                <h3 style="text-align:center">有効単語一覧</h3>
+                <table class="list"></table>
+                <div class="hstack just-left">
+                    <div class="vstack tools buttons"></div>
+                    <div class="grid"></div>
+                </div>
+                <input type="text" class="letterbox invisible">
+                <h3>インタラクティブの操作方法</h3>
+                <ul>
+                    <li><b>入力モード</b>では、キーボードのスペースキー/任意の文字キーを押して各セルに入力できる。</li>
+                    <li><b>解除モード</b>では、セルにカーソルを合わせることでそのセルに隣接しているセルが強調表示され、そのセルをクリックすることで数字を付けることが出来る。</li>
+                    <li>リセットボタンは、数字と選択した文字のハイライトのみをリセットする。</li>
+                    <li>モバイルでは、テキストボックスを使用してセルに文字を入力する。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
