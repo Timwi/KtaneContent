@@ -3361,6 +3361,53 @@ let parseData = [
 		loggingTag: "Needy Determinants"
 	},
 	{
+		moduleID: "dischargeMaze",
+		loggingTag: "Discharge Maze",
+		matches: [
+			{
+				regex: /The starting position of the (\w+).+/,
+				handler: function(matches, module) {
+					const colorDict = { 'Red':'#FF0000', 'Green':'#00FF00', 'Blue':'#005FFF', 'Yellow':'#F5EA00' };
+					module.color = colorDict[matches[1]];
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The maze to navigate through is:/,
+				handler: function(_, module) {
+					let grid = readTaggedLines(15).map(l => l.split(''));
+					let svg = "<svg class='discharge-maze' viewbox='-10 -10 720 720'>";
+
+					for (let row = 0; row < 7; row++) {
+						for (let col = 0; col < 7; col++) {
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
+							if (grid[2 * row + 0][2 * col + 1] == '■') //Up
+								g += '<line x1=-3 y1=0 x2=103 y2=0/>';
+							if (grid[2 * row + 1][2 * col + 0] == '■') //Left
+								g += '<line x1=0 y1=-3 x2=0 y2=103/>';
+							if (grid[2 * row + 1][2 * col + 2] == '■') //Right
+								g += '<line x1=100 y1=-3 x2=100 y2=103/>';
+							if (grid[2 * row + 2][2 * col + 1] == '■') //Down
+								g += '<line x1=-3 y1=100 x2=103 y2=100/>';
+							const center = grid[2 * row + 1][2 * col + 1];
+							if (center == '◯' || center == '◉')
+								g += '<circle class="indicator" cx=50 cy=50 r=30/>';
+							if (center == '▣' || center == '◉')
+								g += `<circle class='led' cx=50 cy=50 r=20 fill='${module.color}'>`;
+							svg += g + '</g>';
+						}
+					}
+					module.push({ label:'The maze to navigate through:', obj: svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Diffusion",
 		moduleID: "diffusion",
 		loggingTag: "Diffusion",
