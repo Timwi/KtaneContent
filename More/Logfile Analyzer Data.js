@@ -8659,6 +8659,35 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: [ 'orderedKeys', 'unorderedKeys', 'reorderedKeys', 'misorderedKeys', 'borderedKeys', 'disorderedKeys' ],
+		loggingTag: [ 'Ordered Keys', 'Unordered Keys', 'Reordered Keys', 'Misordered Keys', 'Bordered Keys', 'Disordered Keys' ],
+		matches: [
+			{
+				regex: /After (\d+) reset/,
+				handler: function(matches, module) {
+					if (!module.stages)
+						module.stages = { };
+					let resets = matches[1] - '0';
+					if (!module.stages[resets]){
+						module.stages[resets] = [ ];
+						module.push([ `After ${resets} reset${resets == 1 ? '' : 's'}:`, module.stages[resets] ]);
+					}
+					module.currentStage = resets;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(match, module) {
+					let line = match.input.replace(/After \d+ reset\(s\), t/, 'T')
+											.replace('had', 'have')
+											.replace('was', 'is')
+											.replace(/(buttons|labels|displays|keys) were/, '$1 are');
+					module.stages[module.currentStage].push(line);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Parallel Mazes",
 		moduleID: "parallel_mazes",
 		loggingTag: "Parallel Mazes",
