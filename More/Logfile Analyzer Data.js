@@ -11247,7 +11247,13 @@ let parseData = [
 		loggingTag: "Simon's Stages",
 		matches: [
 			{
-				regex: /There are no more|Inputs correct|Strike!/,
+				regex: /The arrangement of colors is: (.+)/,
+				handler: function(matches, module) {
+					module.colorOrder = matches[1].replace(/[\s/,]+/g, '|').split('|');
+				}
+			},
+			{
+				regex: /There are no more|Inputs correct|Strike!|The arrangement/,
 				handler: function (matches, module) {
 					module.push(matches.input);
 					return true;
@@ -11274,11 +11280,21 @@ let parseData = [
 			{
 				regex: /.+/,
 				handler: function (matches, module) {
+					let line = matches.input;
+					const m = line.match(/(?:\w+(?:, |\.$)){2,}/);
+					if (m && module.colorOrder)
+					{
+						let colors = m[0].substring(0,m[0].length - 1).split(', ');
+						let nums = [ ];
+						for (let color of colors)
+							nums.push(module.colorOrder.indexOf(color) + 1);					
+						line += ` (${nums.join(', ')})`;
+					}
 					if ('Stage' in module)
-						module.Stage[1].push(matches.input);
+						module.Stage[1].push(line);
 					else
 						// Any messages logged before the start
-						module.push(matches.input);
+						module.push(line);
 				}
 			}
 		]
