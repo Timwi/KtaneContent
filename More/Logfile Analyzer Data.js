@@ -1866,7 +1866,6 @@ let parseData = [
 									L ${20 * square.vertices[1].x + 10} ${20 * square.vertices[1].y + 10}
 									L ${20 * square.vertices[3].x + 10} ${20 * square.vertices[3].y + 10}
 									L ${20 * square.vertices[2].x + 10} ${20 * square.vertices[2].y + 10} z`;
-						console.log(d);
 						svg += `<path class='square' d='${d}'/>`;
 					}
 					for (let square of module.squares) {
@@ -3853,6 +3852,68 @@ let parseData = [
 		displayName: "Find The Date",
 		moduleID: "DateFinder",
 		loggingTag: "Date Finder"
+	},
+	{
+		moduleID: 'FittingInModule',
+		loggingTag: 'Fitting In',
+		matches: [
+			{
+				regex: /Piece color: (.{6})/,
+				handler: function(matches, module) {
+					module.color = matches[1];
+				}
+			},
+			{
+				regex: /Piece:/,
+				handler: function (_, module) {					
+					
+					module.rows = [ ];
+					let line;
+					while ((line = readTaggedLine()).match(/^[#*]+/)) {
+						let row = line.split('').map(x => x == '#');
+						module.rows.push(row);
+					}
+					linen--;
+					
+					const height = module.rows.length;
+					const width = module.rows[0].length;
+					//each square 10 units wide. 1 unit gap between. 5 units padding on edges.
+					let svg = `<svg class='fitting-in' viewbox='-5 -5 ${11 * width + 9} ${11 * height + 9}' style='width: ${width / 2}in' >`;
+					svg += `<rect class='background' x='-5' y='-5' width='${11 * width + 9}' height='${11 * height + 9}' rx='5' ry='5'/>`;
+					for (let y = 0; y < height; y++) {
+						for (let x = 0; x < width; x++) {
+							if (module.rows[y][x])
+								svg += `<rect x='${11 * x}' y='${11 * y}' width='10' height='10' fill='#${module.color ?? 'C6F'}'/>`;
+						}
+					}
+					module.push({ label:'Piece:', obj:svg + '</svg>'});
+				}
+			},
+			{
+				regex: /Grid:/,
+				handler: function(_, module) {
+					let rows = [ ];
+					for (let i = 0; i < 10; i++)
+						rows.push(readTaggedLine().split('').map(x => x == '*'));
+					let cells = readTaggedLine().substring(15).split(', ').map(cell => 
+						({ x: 'ABCDEFGHIJ'.indexOf(cell[0]), y: cell.substring(1) - '1' }));
+					let svg = `<svg class='fitting-in grid' viewbox='-5 -5 119 119'>`;
+					svg += `<rect class='background' x='-5' y='-5' width='119' height='119' rx='5' ry='5'/>`;
+					for (let row = 0; row < 10; row++){
+						for (let col = 0; col < 10; col++) {
+							const type = rows[row][col] ? 'black' : 'white';
+							svg += `<rect class='${type}' x='${11 * col}' y='${11 * row}' width='10' height='10'/>`;
+						}
+					}
+					for (let cell of cells)
+						svg += `<rect x='${11 * cell.x}' y='${11 * cell.y}' width='10' height='10' fill='#${module.color ?? 'C6F'}'/>`;
+					module.push({ label:'Grid & Solution:', obj:svg + '</svg>' });
+				}
+			},
+			{
+				regex: /Correctly pressed|Incorrectly pressed|Pressed all correct/
+			}
+		]
 	},
 	{
 		displayName: "FizzBuzz",
@@ -6107,7 +6168,7 @@ let parseData = [
 			{
 				regex: /(Equation|Possible answer|Submitting):/,
 				handler: function (matches, module) {
-					const m = readLine().match(/([01]{7}) ([-+*%]) ([01]{7}) = ([01]{7})/);
+					const m = readLine().match(/([01]{7}) ([-+*%/]) ([01]{7}) = ([01]{7})/);
 					const seqs = [ m[1], m[3], m[4] ];
 					const tfs = [  '7.5, 30', '14, 22.5',  '0, 22.5',  '7.5, 15',  '14, 7.5',  '0, 7.5',  '7.5, 0' ];
 					const verts = [ 1, 2, 4, 5 ];
