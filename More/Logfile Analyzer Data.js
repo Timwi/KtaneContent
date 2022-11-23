@@ -8615,6 +8615,126 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'notCoordinates',
+		loggingTag: 'Not Coordinates',
+		matches: [
+			{
+				regex: /The displays were: (.+)/,
+				handler: function(matches, module) {
+					
+					const cardinals = [ 'NW', 'N', 'NE', 'W', 'centre', 'E', 'SW', 'S', 'SE' ];
+					const displays = matches[1].split(' | ');
+					
+					getCoordinate = function(str) {
+						let m;
+						if (m = str.match(/\[(\d),(\d)\]/)) {
+							return { x: m[1] - '0', y: m[2] - '0' };
+						} else if (m = str.match(/([A-Z])(\d)/)) {
+							return { x: 'ABCEFGHI'.indexOf(m[1]), y: m[2] - '1' };
+						} else if (m = str.match(/<(\d), (\d)>/)) {
+							return { x: m[2] - '0', y: m[1] - '0' };
+						} else if (m = str.match(/^(\d), (\d)/)) {
+							return { x: m[2] - '1', y: m[1] - '1' };
+						} else if (m = str.match(/\((\d),(\d)\)/)) {
+							return { x: m[1] - '0', y: 8 - (m[2] - '0') };
+						} else if (m = str.match(/([A-Z])-(\d)/)) {
+							return { x: 'ABCDEFGHI'.indexOf(m[1]), y: 8 - (m[2] - '1') };
+						} else if (m = str.match(/"(\d), (\d)"/)) {
+							return { x: m[2] - '0', y: 8 - (m[1] - '0') };
+						} else if (m = str.match(/(\d)\/(\d)/)) {
+							return { x: m[2] - '1', y: 8 - (m[1] - '1') };
+						} else if (m = str.match(/\[(\d+)\]/)) {
+							return { x: m[1] % 9, y: Math.floor(m[1] / 9) };
+						} else if (m = str.match(/(\d+)(?:st|nd|rd|th)/)) {
+							return { x: (m[1] - '1') % 9, y: Math.floor((m[1] - '1') / 9) };
+						} else if (m = str.match(/#(\d+)/)) {
+							return { x: (m[1] - '1') % 9, y: 8 - Math.floor((m[1] - '1') / 9) };
+						} else if (m = str.match(/([一二三四五六七八九十]+)/)) {
+							const getValue = (ch) => '一二三四五六七八九十'.indexOf(ch) + 1;
+							let num = 0;
+							for (let ch of m[1]) {
+								if (ch == '十' && num != 0)
+									num *= 10;
+								else num += getValue(ch);
+							}
+							num--;
+							return { x: 8 - Math.floor(num / 9), y: num % 9 };
+						} else if (m = str.match(/(\d) (\w+), (\d) (\w+)/)) {
+							return { x: m[4] == 'west' ? 4 - m[3] : 4 + parseInt(m[3]),
+										y: m[2] == 'north' ? 4 - m[1] : 4 + parseInt(m[1]) };
+						} else if (m = str.match(/(\d) (\w+)/)) {
+							switch (m[2]){
+								case 'north': return { x: 4, y: 4 - m[1] };
+								case 'south': return { x: 4, y: 4 + parseInt(m[1]) };
+								case 'west': return { x: 4 - m[1], y: 4 };
+								case 'east': return { x: 4 + parseInt(m[1]), y: 4 };
+							}
+							throw 'Unexpected cardinal ' + m[2];
+						} else if (m = str.match(/(\w+) from (\w+)/)) {
+							let firstMove = cardinals.indexOf(m[2]);
+							let secondMove = cardinals.indexOf(m[1]);
+							return { x: 3 * (firstMove % 3) + (secondMove % 3), 
+									y: 3 * Math.floor(firstMove / 3) + Math.floor(secondMove / 3) };
+						} else if (m = str.match(/(\w+)/)) {
+							let move = cardinals.indexOf(m[1]);
+							return { x: 3 * (move % 3) + 1, y: 3 * Math.floor(move / 3) + 1 };
+						} else 
+							throw "Unexpected format with string " + str;
+					}
+					module.displays = [ ];
+					for (let i = 0; i < 9; i++) 
+						module.displays.push(Array(9));
+					for (let disp of displays){
+						let coord = getCoordinate(disp);
+						module.displays[coord.y][coord.x] = disp;
+					}
+				}
+			},
+			{
+				regex: /The square can be found in this location:/,
+				handler: function(matches, module) {
+					const grid = readTaggedLines(9).map(l => l.split(' '));
+					let isVertex = [ ];
+					for (let row = 0; row < 9; row++) {	
+						isVertex.push(Array(9));
+						for (let col = 0; col < 9; col++) {
+							isVertex[row][col] = grid[row][col] != '○';
+						}
+					}
+					
+					let table = `<table class='not-coords-table'>`;
+					
+					for (let row = 0; row < 9; row++) {
+						table += '<tr>';
+						for (let col = 0; col < 9; col++) {
+							const content = module.displays[row][col] ?? '';
+							if (isVertex[row][col])
+								table += `<td class='vertex'>${content}</td>`;
+							else table += `<td>${content}</td>`;
+						}
+						table += '</tr>';
+					}
+					
+					module.push({ label: 'Generated coordinates: (vertices of the square in green)', obj:table + '</table>' });
+				}
+			},
+			{
+				regex: /([A-Z]+)-([A-Z]+)/i,
+				handler: function(matches, module) {
+					const shapes = [ "Flat", "Round", "Point", "Ticket", "Bumps", "Ribbon", "Sawtooth", "Track", "Hammer" ];
+					const a = shapes.indexOf(matches[1]);
+					const b = shapes.indexOf(matches[2]);
+					const msg = matches.input.replace(/([A-Z]+)-([A-Z]+)/i, `<img class='not-coords-shape' src='../HTML/img/Not Coordinates/${a}${b}.svg'>`);
+					module.push({ obj: `<span>${msg}</span>` });
+					return true;
+				}
+			},
+			{
+				regex:/submitted|second moves/
+			}
+		]
+	},
+	{
 		moduleID: 'NotPokerModule',
 		loggingTag: 'Not Poker',
 		matches: [
