@@ -6055,6 +6055,43 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "levenshteinDistance",
+		loggingTag: "Levenshtein Distance",
+		matches: [
+			{
+				regex: /The matrix for words (\w+) and (\w+):/,
+				handler: function (matches, module) {
+					let rowCount = 2 * matches[1].length + 5;
+					const grid = readTaggedLines(rowCount);
+					let rows = [ ];
+					for (let ix = 3; ix < rowCount; ix += 2) {
+						let row = grid[ix].split('|').map(x => parseInt(x)).filter(x => !isNaN(x));
+						console.log(row);
+						rows.push(row);
+					}
+					let table = "<table class='levenshtein'> <tr> <td class='empty'></td> <td class='empty'></td>";
+					for (let ch of matches[2]) 
+						table += `<th>${ch}</th>`;
+					table += "</tr> <tr> <td class='empty'></td>";
+					for (let num of rows[0])
+						table += `<td>${num}</td>`;
+					table += "</tr>";
+					for (let row = 1; row < rows.length; row++) {
+						table += `<tr> <th>${matches[1][row - 1]}</th>`;
+						for (let num of rows[row])
+							table += `<td>${num}</td>`;
+						table += "</tr>";
+					}
+					module.push({ label:matches.input, obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "LightCycleModule",
 		loggingTag: "Light Cycle",
 		matches: [
