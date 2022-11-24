@@ -11372,6 +11372,81 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'simonSmothers',
+		loggingTag: 'Simon Smothers',
+		matches: [		
+			{
+				regex: /Square (\d) color (\w+) at \((-?\d+),(-?\d+)\)/,
+				handler: function(matches, module) {
+					module.squares ??= [ ];
+					module.squares.push({ size: parseInt(matches[1]), color: matches[2], x: parseInt(matches[3]), y: parseInt(matches[4]) });
+				}
+			},
+			{
+				regex: /(Generated|Submitted) Grid: (.+)/,
+				handler: function(matches, module) {
+					const hexCodes = [ '#000', '#00F', '#0F0', '#0FF', '#F00', '#F0F', '#FF0', '#DDD' ];
+					const strokeCodes = { 'Black':'#222', 'Blue':'#006', 'Green':'#060', 'Cyan':'#066', 'Red':'#600', 'Magenta':'#606', 'Yellow':'#660', 'White':'#666' };
+					const colorLetters = 'KBGCRMYW';
+					const colorLettersByNames = { 'Black':'K', 'Blue':'B', 'Green':'G', 'Cyan':'C', 'Red':'R', 'Magenta':'M', 'Yellow':'Y', 'White':'W' };
+					const triplets = matches[2].split('|').map(str => 
+																 str.split(',').map(digit => 
+																                    parseInt(digit)
+																));
+					const coords = triplets.map(t => ({ color: t[0], x: t[1], y: t[2] }));
+					
+					const xMin = Math.min(0, coords.reduce((acc, coord) => Math.min(acc, coord.x), +1000));
+					const xMax = Math.max(0, coords.reduce((acc, coord) => Math.max(acc, coord.x), -1000));
+					const yMin = Math.min(0, coords.reduce((acc, coord) => Math.min(acc, coord.y), +1000));
+					const yMax = Math.max(0, coords.reduce((acc, coord) => Math.max(acc, coord.y), -1000));
+					const width = xMax - xMin + 1;
+					const height = yMax - yMin + 1;
+					let svg = `<svg class='simon-smothers' viewbox='${xMin - 0.25} ${yMin - 0.25} ${width + 0.5} ${height + 0.5}'>`;
+					for (let coord of coords) {
+						if (matches[1] == 'Submitted') {
+							svg += `<rect fill='#888' x='${coord.x}' y='${coord.y}' width='1.01' height='1.01'/>`;
+						} else {
+							svg += `<rect fill='${hexCodes[coord.color]}' x='${coord.x}' y='${coord.y}' width='1.05' height='1.05'/>
+									<text class='tile-color' x='${coord.x + .5}' y='${coord.y + .5}'>${colorLetters[coord.color]}</text>`;
+						}
+					}
+					if (matches[1] == 'Generated') {
+						let i = 0;
+						for (let square of module.squares ?? [ ]) {
+							svg += `<rect class='square' x='${square.x}' y='${square.y}' width='${square.size}' height='${square.size}' stroke='${strokeCodes[square.color]}'/>
+									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${square.color == 'Black' ? '#FFF' : '#000'}'
+										>${colorLettersByNames[square.color]}</text>`;						
+						}						
+						svg += "<circle cx='0.5' cy='0.5' r='0.125' fill='#444'/>";
+					}
+					else {
+						const diffs = readTaggedLine().split(' / ').map(diff => 
+								diff.match(/\((-?\d+),(-?\d+)\) != \((-?\d+),(-?\d+)\)/));
+						for (let d of diffs) {
+							const x = [ parseInt(d[1]) + xMin, parseInt(d[3]) + xMin ];
+							const y = [ parseInt(d[2]) + yMin, parseInt(d[4]) + yMin ];
+							
+							if (x[0] < x[1]) //Right
+								svg += `<line class='difference' x1='${x[0] + 1}' y1='${y[0]}' x2='${x[1]}' y2='${y[1] + 1}'/>`;
+							else if (x[0] > x[1]) //Left
+								svg += `<line class='difference' x1='${x[0]}' y1='${y[0]}' x2='${x[1] + 1}' y2='${y[1] + 1}'/>`;
+							else if (y[0] < y[1]) //Down
+								svg += `<line class='difference' x1='${x[0]}' y1='${y[0] + 1}' x2='${x[1] + 1}' y2='${y[1]}'/>`;
+							else if (y[0] > y[1]) //Up
+								svg += `<line class='difference' x1='${x[0]}' y1='${y[0]}' x2='${x[1] + 1}' y2='${y[1] + 1}'/>`;
+								
+						}
+					}
+					
+					module.push({ label:`${matches[1]} grid: ${matches[1] == 'Generated' ? '(Dot markes the coordinate (0,0))' : '(Differences between cells marked in red)'}`, obj:svg });
+				}
+			},
+			{
+				regex: /Added|Total flash/
+			}
+		]
+	},
+	{
 		moduleID: "simonStores",
 		loggingTag: "Simon Stores",
 		matches: [
