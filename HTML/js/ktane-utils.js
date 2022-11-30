@@ -305,9 +305,20 @@ e.onload = function()
                 let thisMode = getMode(event);
                 let highlighterEnabled = $('#highlighter-enabled').prop('checked');
 
+                // Allow elements to specify data-mode='element/row/column' to specify
+                // that it should trigger on Alt/Shift/Ctrl respectively
+                let reqMode = element.data('mode');
+
                 if (highlighterEnabled && thisMode !== null)
                 {
                     let svg = element.is("svg *");
+
+                    if (svg && reqMode && reqMode !== thisMode) {
+                        element.hide();
+                        $(document.elementFromPoint(event.clientX, event.clientY)).trigger(event);
+                        element.show();
+                        return false;
+                    }
 
                     if (svg && element.hasClass("svgIsHighlighted")) {
                         if (element.hasClass("stroke-highlightable")) {
@@ -345,7 +356,7 @@ e.onload = function()
                             a = table;
                             b = element;
                         }
-                        else if (thisMode === 'element')
+                        else if (thisMode === (reqMode || 'element'))
                         {
                             a = element;
                             b = element;
