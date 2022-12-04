@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ラングトンのアリ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        body{
+            -webkit-print-color-adjust:exact;
+        }
+
+        table {
+            border: none;
+            margin: 1em auto;
+        }
+    </style>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        $(function(){
+            var selectedTable = $(".selectedTable");
+            var antGrid = $(".antGridTable");
+            var directions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            var colorArray = ["#8A8A8A", "red", "lime", "white", "yellow", "blue", "SaddleBrown", "darkgreen", "orange", "black", "cyan", "magenta", "purple"];
+            var selectedColor = 0;
+            let antGridElements = [];
+            let saveStates = [];
+            let currentState = 0;
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+            function generateSelectedGrid(){
+                directions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                selectedColor = 0;
+                for (let i = 0; i < 6; i++){
+                    var row = $("<tr>").appendTo(selectedTable);
+                    if (i === 0 || i === 5){
+                        row.addClass("selectedRowLED");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").appendTo(row);
+                        if (i === 0) {
+                            var deleteCell = $("<td>").css({"width": "30px", "background-color": "#8A8A8A", "border-left": "2px solid black"}).attr("rowspan", "6").appendTo(row);
+                            $("<td>").css({"width": "10px", "background-color": "green"}).attr("rowspan", "6").appendTo(row);
+                            deleteCell.hover(
+                                function(){
+                                    if (selectedColor === 0) return;
+                                    deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "yellow"});
+                                },
+                                function(){
+                                    if (selectedColor === 0) return;
+                                    deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "white"});
+                                }
+                            );
+                            deleteCell.click(() => {
+                                if (selectedColor === 0) return;
+                                for (let l = 0; l < 2; l++)
+                                    for (let m = 0; m < 6; m++)
+                                        deleteCell.parent().parent().children().eq(5 * l).children().eq(m).css({"background-color": "white"});
+                                deleteCell.parent().parent().children().eq(0).children().eq(7).css({"background-color": "green"});
+                                selectedColor = 0;
+                            });
+                        }
+                    }
+                    else if (i === 1 || i === 4){
+                        row.addClass("selectedRowNote");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").addClass("selectedRowNoteCell").appendTo(row).each(function(_,e){
+                                var element3 = $(e);
+                                element3.on("contextmenu", function(e){
+                                    return false;
+                                });
+                                element3.mousedown(function(event){
+                                    switch (event.which){
+                                        case 1:
+                                            switch (directions[(i - 1)/3 + k]){
+                                                case 0:
+                                                    element3.empty();
+                                                    element3.append('<img style="width: 25px; height: 25px; margin-left: 2px; margin-top: 1px;" src="img/Langton Ant/Clockwise Arrow.svg">');
+                                                    break;
+                                                case 1:
+                                                    element3.empty();
+                                                    element3.append('<img style="width: 25px; height: 25px; margin-left: 2px; margin-top: 1px;" src="img/Langton Ant/Anticlockwise Arrow.svg">');
+                                                    break;
+                                                case 2:
+                                                    element3.empty();
+                                                    element3.css({"background-color": "black"});
+                                                    break;
+                                                default:
+                                                    element3.css({"background-color": "#8A8A8A"});
+                                            }
+                                            directions[(i - 1)/3 + k] = (directions[(i - 1)/3 + k] + 1) % 4;
+                                            break;
+                                        case 3:
+                                            directions[(i - 1)/3 + k] = 0;
+                                            element3.empty();
+                                            element3.css({"background-color": "#8A8A8A"});
+                                            break;
+                                    }
+                                });
+                            });
+                    }
+                    else {
+                        row.addClass("selectedRow");
+                        for (let k = 0; k < 6; k++)
+                            $("<td>").addClass("selectedSquare").css({"background-color": colorArray[6 * (i - 2) + k + 1]}).appendTo(row).each(function(_,e){
+                                var element = $(e);
+                                if (k === 6)
+                                    element.css({"border-right-width": "2px"});
+                                element.hover(
+                                    function(){
+                                        if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                        element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "yellow"});
+                                    },
+                                    function(){
+                                        if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                        element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "white"});
+                                    }
+                                );
+                                element.click(() => {
+                                    if (selectedColor === 6 * (i - 2) + k + 1) return;
+                                    for (let l = 0; l < 2; l++)
+                                        element.parent().parent().children().eq(5 * l).children().each(function(index, e2){
+                                            var element2 = $(e2);
+                                            if (index !== 6)
+                                                element2.css({"background-color": "white"});
+                                        });
+                                    element.parent().parent().children().eq(5 * (i - 2)).children().eq(k).css({"background-color": "green"});
+                                    selectedColor = 6 * (i - 2) + k + 1;
+                                });
+                            });
+                    }
+                }
+            }
+            generateSelectedGrid();
+            function generateAntGrid(){
+                for (let i = 0; i < 5; i++){
+                    var antRow = $("<tr>").addClass("antGridRow").appendTo(antGrid);
+                    for (let j = 0; j < 5; j++){
+                        $("<td>").addClass("antGridCell").appendTo(antRow).each(function(_,e){
+                            var element4 = $(e);
+                            element4.on("contextmenu", function(e){
+                                return false;
+                            });
+                            element4.mousedown(function(event) {
+                                switch(event.which){
+                                    case 1:
+                                        element4.css({"background-color": colorArray[selectedColor]});
+
+                                        break;
+                                    case 3:
+                                        element4.css({"background-color": colorArray[0]});
+                                        break;
+                                }
+                            });
+                            antGridElements.push(element4);
+                        })
+                    }
+                }
+            }
+            generateAntGrid();
+            function resetGrid() {
+                selectedTable.empty();
+                antGrid.empty();
+                generateSelectedGrid();
+                generateAntGrid();
+            }
+            $(".selectedDivButton").click(() => { resetGrid(); });
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($(".antGridCell")).map(x => $(x)).map(x => x.attr("style") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(".antGridCell").each((i, x) => $(x).attr("style", saveState[i]));
+                    currentState = stateNumber;
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+            $(".resetAllButton").click(() => {
+                resetGrid();
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+        });
+    </script>
+    <style>
+        .selectedDiv {
+            float: left;
+            margin: auto;
+        }
+        @media screen and (max-width: 559px) {
+            .selectedDiv {
+              float: none;
+              position: relative;
+              padding-bottom: 10%;
+            }
+            .resetAllButton, .selectedDivButton {
+              display: block;
+              margin-left: auto;
+              margin-right: auto;
+            }
+        }
+        .selectedDivButton, .resetAllButton:not(:hover),
+        .resetAllButton,  .selectedDivButton:not(:hover) {
+            font-family: "Special Elite";
+            font-size: 20px;
+            padding-top: 5px;
+            border: 2px solid black;
+            background-color: white;
+        }
+        .resetAllButton:hover, .selectedDivButton:hover {
+            background-color: #FFCD58;
+        }
+        .selectedTable {
+            table-layout: fixed;
+            width: 220px;
+            height: 130px;
+            border: 2px solid black;
+        }
+        .selectedRowLED {
+            height: 10px;
+            font-size: 0px;
+        }
+        .selectedRowNote {
+            height: 30px;
+            background-color: #8A8A8A;
+        }
+        .selectedRowNoteCell {
+            font-size: 0px;
+        }
+        .selectedRow {
+            height: 30px;
+            font-size: 0px;
+        }
+        .selectedSquare {
+            width: 30px;
+            height: 30px;
+            font-size: 0px;
+        }
+        .antGridTable {
+            table-layout: fixed;
+            width: 250px;
+            height: 250px;
+            font-size: 0px;
+            border: 4px solid black;
+        }
+        .antGridRow {
+            height: 50px;
+        }
+        .antGridCell {
+            width: 50px;
+            background-color: #8A8A8A;
+            border: 2px solid black;
+        }
+
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ラングトンのアリ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Langton's Ant.svg" class="diagram">
+                <h2>モジュール詳細：ラングトンのアリ</h2>
+                <p class="flavour-text" style="font-size: 5px">アリとして、これを読むためにテキストを変更する必要はない。</p>
+
+                <p class="appendix-reference" id="appendix-reference">インジケーターに関しては、付録Aを参照する。<br>バッテリーに関しては、付録Bを参照する。<br>ポートに関しては、付録Cを参照する。</p>
+
+                <p>このモジュールは、アリが中央にいる灰色の5×5グリッド、カラーパレット、およびアリのラベルが付いたボタンで構成されている。</p>
+                <p>モジュールの各セルを押すと、セルの色がカラーパレットから現在選択されている色に変更される。カラーパレットの色は<span style="color: red">赤</span>/<span style="color: lime">ライム</span>/<span style="color: lightgray">白</span>/<span style="color: yellow">黄</span>/<span style="color: blue">青</span>/<span style="color: chocolate">茶</span>/<span style="color: darkgreen">深緑</span>/<span style="color: orangered">オレンジ</span>/黒<span style="color: cyan">シアン</span>/<span style="color: magenta">マゼンタ</span>/<span style="color: purple">紫</span>である。これは着色シークエンスの順序でもある。</p>
+
+                <p>モジュールを解除するには、アリの進路にある各セルを最終的な状態の色で塗りつぶし、アリのボタンを押して送信する必要がある。</p>
+
+                <p>アリはグリッドから離れるまで移動する。アリの各移動は、現在のセルの色をシークエンスのセ現在のセルの色に続く有効な色(まだ色が塗られていない場合は赤)に変更することで構成される。着色シークエンスはループする。次に、アリは現在のセルの色に応じて時計回りまたは反時計回りに回転し、向いている方向に1マス進む。</p>
+
+                <p>以下の表を使用し、有効な色とアリに適用される回転を確認する事が出来る。</p>
+
+                <table>
+                    <tr>
+                        <td style="font-size: 9pt; background-color: red; color: white; width: 16%;">常に有効である。<br>バッテリーがちょうど1つの場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: lime; color: black; width: 16%;">解除済モジュールの数が素数の場合は有効である。<br>少なくとも5つのバッテリーがある場合は時計である。それ以外の場合は反時計である。</td>
+                        <td style="font-size: 9pt; background-color: white; color: black; width: 16%;">ポートプレートが3つ以上ある場合は有効である。<br>改造ポートがある場合は時計である。それ以外の場合は反時計である。</td>
+                        <td style="font-size: 9pt; background-color: yellow; color: black; width: 16%;">少なくとも1つの空のポートプレートがある場合は有効である。<br>ポートプレートの数が奇数の場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: blue; color: white; width: 16%;">FRKインジケーターがある場合は有効である。<br>インジケーターが3つ未満の場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: SaddleBrown ; color: white; width: 16%;">シリアルナンバーの奇数と偶数の数字の数が等しい場合は有効である。<br>バッテリーホルダーの数が偶数の場合は時計である。それ以外の場合は反時計である。</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 9pt; background-color: darkgreen; color: white;">シリアルナンバーに母音が2つ以上ある場合は有効である。<br>バッテリーの数が偶数の場合は時計である。それ以外の場合は反時計である。</td>
+                        <td style="font-size: 9pt; background-color: orange; color: black;">未解除モジュールの数が素数の場合は有効である。<br>NLLインジケーターがある場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: black; color: white;">ポートの数がバッテリーまたはインジケーターの数と等しい場合は有効である。<br>シリアルナンバーに数字が3つ以上ある場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: cyan; color: black;">解除済モジュールの数が5つ以下の場合は有効である。<br>インジケーターがちょうど3つある場合は反時計である。それ以外の場合は時計である。</td>
+                        <td style="font-size: 9pt; background-color: magenta; color: black;">BOBインジケーターがある場合は有効である。<br>DVI-Dがない場合は時計回りである。それ以外の場合は反時計である。</td>
+                        <td style="font-size: 9pt; background-color: purple; color: white;">常に有効である。<br>他に反時計がない場合は反時計である。それ以外の場合は時計である。</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ラングトンのアリ</span>
+            </div>
+            <div class="page-content">
+                <h2>アリのグリッド</h2>
+                <ul>
+                    <li>左の表はカラーパレットである。3・4段目のセルをクリックして色を選択する。</li>
+                    <li>1・6段目には、現在選択されている色が表示される。そのセルに対応する色が選択されていない場合は白に、色にカーソルが置かれている場合は黄に、選択された場合は緑に変化する。</li>
+                    <li>2・5段目には、各色の方向を記録できるセルがある。空白、時計回り、反時計回り、及び無効の4つの状態を循環できる。</li>
+                    <li>右側には2つの縦長のセルがある。そのうち左は灰色である。右は1・6段目と同じように機能するセルである。これは灰色に対応している。</li>
+                    <li>右の表はアリのグリッドである。この表を使用し、ボードの中心から始まるアリの経路をたどる。セルに色を付けるには、色を選択し、任意のセルをクリックして塗りつぶす。セルを消去するには灰色を塗るか、そのセルを右クリックする。</li>
+                    <li>左の表のすぐ下にリセットボタンがある。このボタンを押すとボードを全て削除できる。</li>
+                </ul>
+                <div class="selectedDiv">
+                    <table class="selectedTable"></table>
+                    <button class="resetAllButton">保存を削除</button>
+                    <button class="selectedDivButton">ボードをリセット</button>
+                </div>
+                <table class="antGridTable"></table>
+                <div class="saves buttons">
+                    <button class="save">保存</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
