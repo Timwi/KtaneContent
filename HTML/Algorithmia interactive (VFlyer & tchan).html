@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Algorithmia — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        p, li {
+            font-size: 11pt;
+        }
+        .edgeDiag {
+            float: right;
+            margin-top: 0.75cm;
+            width: 150px;
+            height: 150px;
+        }
+        .dark .edgeDiag { filter: invert(85%); }
+        .diagram { margin-bottom: 0; }
+        .page-bg-01 ul, .page-bg-01 ol {
+            margin-top: 0;
+        }
+        .click-box,
+        .grid-box {
+            fill-opacity: 0;
+        }
+
+            .click-box:hover,
+            .grid-box:hover {
+                fill-opacity: 0.3;
+            }
+
+        .canvas {
+            margin-top: 32px;
+        }
+
+        .line {
+            stroke: #555;
+            stroke-width: 0.5px;
+            stroke-dasharray: 0.1 1;
+            stroke-linecap: round;
+        }
+
+            .line.solid {
+                stroke-dasharray: none;
+                stroke: #888;
+                stroke-width: 1px;
+            }
+
+        .select-button {
+            border: #222 solid 1px;
+            width: 64px;
+            height: 64px;
+            margin-right: 16px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+            .select-button img {
+                width: 100%;
+            }
+
+            .select-button.selected {
+                border-width: 4px;
+            }
+
+        #canvas {
+            display: block;
+            width: 80%;
+            margin: 16px auto 0
+        }
+
+        @media screen and (min-width:900px) and (max-width:1652px) {
+            .multipage {
+                align-items: flex-start;
+            }
+
+                .multipage .interactive-page {
+                    max-width: 4in;
+                    min-height: unset;
+                    position: sticky;
+                    top: 10%;
+                    order: 1;
+                }
+
+                .multipage .interactive-section {
+                    align-items: start;
+                }
+
+                .multipage .interactive-page .page-header {
+                    display: none;
+                }
+
+                .multipage .interactive-page .page-content {
+                    margin: 24px;
+                    min-height: unset;
+                    padding-top: 0;
+                }
+
+                .multipage .interactive-page .page-footer {
+                    display: none;
+                }
+
+                .multipage .page:not(.interactive-page) {
+                    min-width: unset;
+                    max-width: 8.5in;
+                    width: calc(100% - 4.1in);
+                    order: 2;
+                }
+
+            #canvas {
+                display: block;
+                width: 100%;
+                margin: 16px auto 0
+            }
+        }
+    </style>
+    <script>
+
+        class MazeDrawer {
+            constructor(h, w, options = {}) {
+                this.h = h;
+                this.w = w;
+                this.options = options;
+                this.viewWidth = options.viewWidth || 100;
+                this.viewHeight = options.viewHeight || 100;
+                this.hoverLineWidth = options.hoverLineWidth || 2;
+                this.vert = Array.from({
+                    length: w + 1
+                }, () => Array.from({
+                    length: h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: w
+                }, () => Array.from({
+                    length: h + 1
+                }, () => 0));
+                this.setMode(options.initMode || "");
+                this.modes = options.modes || {};
+                this.iconpos = {};
+
+            }
+
+            setCanvas(id) {
+                this.canvas = document.getElementById(id);
+            }
+
+            init() {
+                if (!this.canvas) {
+                    throw new Error("You must set canvas before initialization");
+                }
+
+                this.icons = {}
+                for (let mode in this.modes) {
+                    this.icons[mode] = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                    this.icons[mode].setAttribute("visibility", "hidden");
+                    this.icons[mode].setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("href", this.modes[mode]);
+                    this.canvas.appendChild(this.icons[mode]);
+                }
+
+                this.$vertline = [];
+                this.$horizline = [];
+
+                for (let i = 0; i < this.w + 1; i++) {
+                    this.$vertline[i] = [];
+                    for (let j = 0; j < this.h; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("x2", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("y1", this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        line.setAttribute("y2", this.hoverLineWidth / 2 + (j + 1) * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        this.canvas.appendChild(line);
+                        this.$vertline[i][j] = line;
+
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth + (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("width", this.hoverLineWidth);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleVert(i, j))
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    this.$horizline[i] = [];
+                    for (let j = 0; j < this.h + 1; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", (this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("x2", (this.hoverLineWidth / 2 + (i + 1) * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("y1", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        line.setAttribute("y2", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        this.canvas.appendChild(line);
+                        this.$horizline[i][j] = line;
+
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth);
+                        linehover.setAttribute("width", this.hoverLineWidth + (this.viewWidth - this.hoverLineWidth) / this.w);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleHoriz(i, j))
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h; j++) {
+                        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        rect.setAttribute("class", "grid-box");
+                        rect.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                        rect.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                        rect.setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                        rect.setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                        this.canvas.appendChild(rect);
+                        rect.addEventListener("click", () => this.setIcon(i, j));
+                        rect.addEventListener("contextmenu", e => {
+                            e.preventDefault();
+                            this.removeIcon(i, j);
+                        });
+
+                    }
+                }
+                if (this.options.onInit) this.options.onInit();
+            }
+
+            toggleVert(x, y) {
+                if (!this.vert[x]) {
+                    this.vert[x] = [];
+                }
+                if (!this.vert[x][y]) {
+                    this.vert[x][y] = 1;
+                    this.draw();
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+                    return;
+                }
+                this.vert[x][y] = 1 - this.vert[x][y];
+                this.draw();
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+            }
+
+            toggleHoriz(x, y) {
+                if (!this.horiz[x]) {
+                    this.horiz[x] = [];
+                }
+                if (!this.horiz[x][y]) {
+                    this.horiz[x][y] = 1;
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+                    this.draw();
+                    return;
+                }
+                this.horiz[x][y] = 1 - this.horiz[x][y];
+                this.draw();
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+            }
+
+            draw() {
+                for (let i = 0; i < this.w + 1; i++) {
+                    for (let j = 0; j < this.h; j++) {
+                        this.$vertline[i][j].setAttribute(
+                            "class",
+                            this.vert[i] && this.vert[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h + 1; j++) {
+                        this.$horizline[i][j].setAttribute(
+                            "class",
+                            this.horiz[i] && this.horiz[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) {
+                        this.icons[mode].setAttribute("visibility", "hidden");
+                        continue;
+                    }
+                    this.icons[mode].setAttribute("visibility", "visible");
+                    this.icons[mode].setAttribute("x", (this.iconpos[mode][0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                    this.icons[mode].setAttribute("y", (this.iconpos[mode][1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                }
+                if (this.options.onDraw) this.options.onDraw();
+            }
+
+            shift(dx, dy) {
+                if (
+                    (this.vert.some(v1 => v1.some(v2 => v2)) && (
+                        this.vert.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.vert.length - this.vert.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 > this.w ||
+                        Math.min.apply(null, this.vert.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.vert.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy >= this.h
+                    )) ||
+                    (this.horiz.some(v1 => v1.some(v2 => v2)) && (
+                        this.horiz.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.horiz.length - this.horiz.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 >= this.w ||
+                        Math.min.apply(null, this.horiz.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.horiz.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy > this.h
+                    )) ||
+                    Object.keys(this.modes)
+                        .filter(mode => this.iconpos[mode])
+                        .some(mode => (
+                            this.iconpos[mode][0] - dx < 0 ||
+                            this.iconpos[mode][0] - dx >= this.w ||
+                            this.iconpos[mode][1] - dy < 0 ||
+                            this.iconpos[mode][1] - dy >= this.h
+                        ))
+
+                ) return;
+                this.vert = this.vert.map(
+                    (v1, i) => (i + dx < 0 || i + dx > this.w) ?
+                        Array.from({ length: this.h }, () => 0) :
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy >= this.h) ?
+                                0 :
+                                this.vert[i + dx][j + dy]
+                        )
+                );
+                this.horiz = this.horiz.map(
+                    (v1, i) => (i + dx < 0 || i + dx >= this.w) ?
+                        Array.from({ length: this.h + 1 }, () => 0) :
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy > this.h) ?
+                                0 :
+                                this.horiz[i + dx][j + dy]
+                        )
+                );
+                for (let mode in this.modes) {
+                    if (this.iconpos[mode]) {
+                        this.iconpos[mode][0] -= dx;
+                        this.iconpos[mode][1] -= dy;
+                    }
+                }
+                this.draw();
+                if (this.options.onShift) this.options.onShift(dx, dy);
+            }
+
+            setIcon(x, y) {
+                if (!(this.mode in this.modes) || this.iconpos[this.mode]) return;
+                for (let mode in this.modes) {
+                    if (mode === this.mode || !this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        return;
+                    }
+                }
+                this.iconpos[this.mode] = [x, y];
+                this.draw();
+                if (this.options.onSetIcon) this.options.onSetIcon(x, y);
+            }
+
+            removeIcon(x, y) {
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        delete this.iconpos[mode];
+                        this.draw();
+                        if (this.options.onRemoveIcon) this.options.onRemoveIcon(x, y);
+                        return;
+                    }
+                }
+
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+                if (this.options.onSetMode) this.options.onSetMode(mode);
+            }
+
+            reset() {
+                this.vert = Array.from({
+                    length: this.w + 1
+                }, () => Array.from({
+                    length: this.h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: this.w
+                }, () => Array.from({
+                    length: this.h + 1
+                }, () => 0));
+                this.iconpos = {};
+                this.draw();
+                if (this.options.onReset) this.options.onReset();
+
+            }
+
+        }
+
+        window.addEventListener("load", () => {
+            const $left = document.getElementById("left-button");
+            const $right = document.getElementById("right-button");
+            const $up = document.getElementById("up-button");
+            const $down = document.getElementById("down-button");
+            const $reset = document.getElementById("reset-button");
+            $blankButton = document.getElementById("blank-select");
+            $keyButton = document.getElementById("key-select");
+            $exitButton = document.getElementById("exit-select");
+            $blank = document.getElementById("img-blank");
+            $key = document.getElementById("img-key");
+            $exit = document.getElementById("img-exit");
+
+            let maze = new MazeDrawer(4, 4, {
+                hoverLineWidth: 6,
+                modes: {
+                    blank: "img/Mystic Maze interactive (VFlyer)/marker.svg",
+                    key: "img/Mystic Maze interactive (VFlyer)/key.png",
+                    exit: "img/Mystic Maze interactive (VFlyer)/exit.svg"
+                },
+                initMode: "blank",
+                onSetMode: (mode) => {
+                    if (mode === "blank") {
+                        $blankButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $blankButton.setAttribute("class", "select-button");
+                    }
+                    if (mode === "key") {
+                        $keyButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $keyButton.setAttribute("class", "select-button");
+                    }
+                    if (mode === "exit") {
+                        $exitButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $exitButton.setAttribute("class", "select-button");
+                    }
+                }
+            });
+            maze.setCanvas("canvas");
+            maze.init();
+
+            $left.addEventListener("click", () => maze.shift(1, 0));
+            $right.addEventListener("click", () => maze.shift(-1, 0));
+            $up.addEventListener("click", () => maze.shift(0, 1));
+            $down.addEventListener("click", () => maze.shift(0, -1));
+            $reset.addEventListener("click", () => maze.reset());
+
+            $blankButton.addEventListener("click", () => maze.setMode("blank"));
+            $keyButton.addEventListener("click", () => maze.setMode("key"));
+            $exitButton.addEventListener("click", () => maze.setMode("exit"));
+
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Algorithmia.svg" class="diagram">
+                <h2>On the Subject of Algorithmia</h2>
+                <p class="flavour-text">There appears to have been an accident at the restaurant placemat factory.</p>
+
+                    <ul>
+                        <li>The screen at the top of the module cycles through 10 two-digit numbers. This sequence is the module’s <strong>seed</strong>, starting with the number in blue.</li>
+                        <li>The module will generate a 4×4 maze, where each cell is represented by a bulb in its corresponding position on  the module.</li>
+                        <li>Two of the bulbs will be lit. The white bulb represents your current position, while the colored bulb represents the goal. Use the bars on the sides of the grid to navigate to the goal without passing through a wall in the maze.</li>
+                    </ul>
+                    <h3>Determining the Walls of the Maze</h3>
+                    <ul>
+                        <li>The module generates its maze using a certain algorithm. The algorithm used is determined by the color of the non-white bulb.</li>
+                        <li>When generating the maze, the algorithm at many points requires the use of random numbers.
+                        <ul>
+                            <li>Place a “pointer” on the first number of the seed.</li>
+                            <li><strong>Any</strong> time the algorithm requests a random number, a number <var>n</var> will be supplied. Modulo the number the pointer is on by <var>n</var> to obtain the number used for the calculation.</li>
+                            <li>Then, move the pointer to the next number of the seed, which wraps around from the end to the beginning.</li>
+                        </ul></li>
+                    </ul>
+                    <h3>Important things you probably shouldn’t forget</h3>
+                    <ul>
+                        <li>The edges of the 4×4 grid are <strong>not</strong> classified as “edges” in the following algorithms. You still cannot pass through them on the module.</li>
+                        <li>All counting is <strong>zero-indexed</strong>: The first entry of a sequence is index 0, the second is index 1, the third is index 2, etc.</li>
+                        <li>Unless stated otherwise, all edges begin in an impassable state.</li>
+                    </ul>
+
+                <h3>Red Bulb: Kruskal’s Algorithm:</h3>
+                <img class="edgeDiag" src="img/Algorithmia/KruskalEdgeDiagram.svg">
+                <ol>
+                    <li>Begin with 16 independent “groups” representing each cell in the maze.</li>
+                    <li>Let <var>L</var> be the list of all edges on the module in the order depicted to the right.</li>
+                    <li>Generate a random number with <var>n</var>= the number of edges in <var>L</var>. Count this many entries into <var>L</var>.</li>
+                    <li>Remove the edge at this position from the list, make this edge passable, and unify the two groups connected by this edge into one group.</li>
+                    <li>Remove any edges from <var>L</var> which connect a group to itself.</li>
+                    <li>Repeat steps 3–5 until there is only one group on the module.</li>
+                </ol>
+
+           </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Green Bulb: Prim's Algorithm:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of every unvisited cell which is adjacent to an already-visited cell ordered in reading order.</li>
+                    <li>Generate a random number using <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var> and let this cell be called <var>C</var>.</li>
+                    <li>Generate a random number using <var>n</var>= the number of visited cells adjacent to <var>C</var>. Number these cells starting from north going clockwise, and use the cell with that number. The edge between this cell and <var>C</var> is passable.</li>
+                    <li>Repeat steps 2–4 until every cell has been visited.</li>
+                </ol>
+
+                <h3>Blue Bulb: Recursive Backtracker:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of unvisited cells adjacent to the current cell, ordered starting from north going clockwise.</li>
+                    <li>If <var>A</var> is empty, back up to the previously visited cell until you have reached a cell such that <var>A</var> is not empty.</li>
+                    <li>Generate a random number with <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var>. Let this cell be called <var>D</var>.</li>
+                    <li>The edge between <var>D</var> and the current cell is passable. Mark <var>D</var> as visited. <var>D</var> becomes the current position.</li>
+                    <li>Repeat steps 2–5 until every cell has been visited.</li>
+                </ol>
+
+                <h3>Cyan Bulb: Hunt-and-Kill:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of unvisited cells adjacent to the current cell, ordered starting from north going clockwise.</li>
+                    <li>If <var>A</var> is empty, set the current position to the first unvisited cell in reading order which is adjacent to an already-visited cell. Then:
+                    <ul>
+                        <li>Let <var>V</var> be the list of visited cells adjacent to this new cell, ordered starting from north going clockwise.</li>
+                        <li>Generate a random number with <var>n</var>= the number of cells in <var>V</var>. Count this many entries into <var>V</var>. The edge between this cell and the new cell is passable.</li>
+                        <li>Return to step 2.</li>
+                    </ul></li>
+                    <li>Generate a random number with <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var>, and let this cell be called <var>D</var>.</li>
+                    <li>The edge between the current cell and <var>D</var> is passable. Mark <var>D</var> as visited. <var>D</var> becomes the current position.</li>
+                    <li>Repeat steps 2–5 until every cell has been visited.</li>
+                </ol>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Magenta Bulb: Sidewinder:</h3>
+                <ol>
+                    <li>Begin with every edge impassable <strong>except</strong> for the three edges connecting the cells of the top row to each other.</li>
+                    <li>Let <var>R</var> be an initially empty list of cells.</li>
+                    <li>Start at the leftmost cell of the second row and proceed in reading order. Perform the following steps on each cell, which will be called <var>C</var>.</li>
+                    <li>Add <var>C</var> to <var>R</var>.</li>
+                    <li>If <var>C</var> is not the rightmost cell of its row, generate a random number with <var>n</var>= 2. If this number is <strong>0</strong>, make the <strong>right</strong> edge of <var>C</var> passable.</li>
+                    <li>Otherwise, if <var>C</var> is the rightmost cell of its row, or the generated number is <strong>1</strong>, generate a random number with <var>n</var>= the number of cells in <var>R</var>. Count this many entries into <var>R</var>, and make the <strong>top</strong> edge of that cell passable. Then, empty <var>R</var>’s contents.</li>
+                    <li>Repeat steps 3–6 until every cell has been processed.</li>
+                </ol>
+
+                <h3>Yellow Bulb: Recursive Division:</h3>
+                <ol>
+                    <li>Begin with all edges in a <strong>passable</strong> state. All 16 cells are initially one “group”. Groups are always rectangular. A partition is a line which divides a group into two others. A partition’s direction is the way its line points.</li>
+                    <li>Let group <var>G</var> be the first group in reading order whose width and height are both not equal to 1.</li>
+                        <li>Use the following rules to obtain a direction of partitioning <var>G</var>:
+                        <ul>
+                            <li>If <var>G</var> is wider than it is tall, partition it <strong>vertically</strong>.</li>
+                            <li>If <var>G</var> is taller than it is wide, partition it <strong>horizontally</strong>.</li>
+                            <li>If <var>G</var> is square, generate a random number with <var>n</var>= 2. If this number is 0, partition it <strong>vertically</strong>, otherwise partition it <strong>horizontally</strong>.</li>
+                        </ul></li>
+                    <li>Generate a random number with <var>n</var>= the number of ways <var>G</var> can be partitioned using the obtained direction. Count this many into the list of possible partitions in top-down and left-right order, and call this partition <var>P</var>.</li>
+                    <li>Every edge along <var>P</var> becomes <strong>impassable</strong>, and the sections of <var>G</var> segmented by <var>P</var> become two new groups.</li>
+                    <li>Generate a random number with <var>n</var>= the length of <var>P</var>’s line. Make the edge in that position of <var>P</var> passable, counting in top-down and left-right order.</li>
+                    <li>Repeat steps 2–6 until all groups have a width or height of 1.</li>
+                </ol>
+
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-02 interactive-page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive Maze</h3>
+                <ul>
+                    <li>Left-click on edges to place/remove walls.</li>
+                    <li>Left-click on cells to place icons.</li>
+                    <li>Right-click on cells to remove icons.</li>
+                    <li>Click on arrows to shift walls and icons in that direction.</li>
+                    <li>You can select which icons you want to place by clicking on the icons above the maze.</li>
+                </ul>
+                <div>
+                    <button id="blank-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/marker.svg"></button>
+                    <button id="key-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/key.png"></button>
+                    <button id="exit-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/exit.svg"></button>
+                </div>
+                <div>
+                    <button id="reset-button">Reset</button>
+                    Shift:
+                    <button id="left-button">←</button>
+                    <button id="up-button">↑</button>
+                    <button id="down-button">↓</button>
+                    <button id="right-button">→</button>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" id="canvas">
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>
