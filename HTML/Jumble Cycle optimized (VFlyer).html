@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Jumble Cycle Optimized — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        .keywords > table {
+            margin: 1em auto;
+            font-size: 9.5pt;
+            text-align: center;
+        }
+        #giantTable
+        {
+            text-align: center;
+            width: 100%;
+            font-size: 70%;
+        }
+        .dark .heading td { background-color: #444; }
+        .heading td { background-color: #888; }
+        .dark .lookup th { background-color: #666; }
+        .lookup th { background-color: #aaa; }
+        .dark #giantTable tr td:nth-child(3n+3) { background-color: #660; }
+        #giantTable tr td:nth-child(3n+3) { background-color: #ff8; }
+        .dark #giantTable tr td:nth-child(3n+4) { background-color: #606; }
+        #giantTable tr td:nth-child(3n+4) { background-color: #f8f; }
+        .fit { column-count: 1; }
+        @media only screen and (min-width:900px){
+            .fit { column-count: 2; }
+        }
+        @media print {
+            .fit { column-count: 2; }
+        }
+    </style>
+    <script>
+        $(function() {
+            let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let pigpens = [ "ASCUIVGT", "BKFOHQDM", "JWLYRZPX", "EN" ]; // Pigpen code SpeakingEvil used for Pigpen Cycle
+            let alphaLength = alphabet.length;
+            var affineEncodeMulti = [1, 3, 5, 7, 9, 11, 13, 15];
+            var affineDecodeMulti = [1, 9, 21, 15, 3, 19, 0 , 7]; // NOTE: 0 is there for completion sakes. 
+            
+            var outputEncodes = [];
+            for (var x = 0; x < alphabet.length; x++)
+                {
+                    var curLetterEncodings = [];
+                    for (var trn = 1; trn < 8; trn++)
+                        {
+                            // Caesar
+                            var caesarEncodes = alphabet[(x + alphaLength - trn) % alphaLength] + alphabet[(x + trn) % alphaLength];
+                            curLetterEncodings.push(caesarEncodes);
+                            // Affine
+                            var alphaPos = x + 1;
+                            var affineEncodes = alphabet[((alphaPos * affineDecodeMulti[trn]) - 1) % alphaLength] + alphabet[((alphaPos * affineEncodeMulti[trn]) - 1) % alphaLength];
+                            if (trn == 6)
+                                curLetterEncodings.push("--");
+                            else
+                                curLetterEncodings.push(affineEncodes);
+                            // Pigpen
+                            var usedPigpen = alphabet;
+                            for (var idx = 0; idx < pigpens.length; idx++)
+                                {
+                                    if (pigpens[idx].includes(alphabet[x]))
+                                        {
+                                            usedPigpen = pigpens[idx];
+                                            break;
+                                        }
+                                }
+                            var pigpenEncodes = usedPigpen[((x - trn) % usedPigpen.length + usedPigpen.length) % usedPigpen.length] + usedPigpen[(x + trn) % usedPigpen.length];
+                            curLetterEncodings.push(pigpenEncodes);
+                        }
+                    outputEncodes.push(curLetterEncodings);
+                }
+            //console.log(outputEncodes);
+            var lookUpTable = document.getElementById("giantTable");
+            for (var x = 0; x < alphabet.length; x++)
+                lookUpTable.innerHTML += "<tr><th>" + alphabet.charAt(x) + "</th><td>" + outputEncodes[x].join("</td><td>") + "</td></tr>";
+            var cyanTable = document.getElementById("cyanTable");
+            for (var x = 0; x < 8; x++)
+                {
+                    var encodingsFinal = "<tr><th>" + x + "</th>";
+                    for (var y = 0; y < 8; y++)
+                        encodingsFinal += "<td>" + alphabet[(8 * y + x) % alphaLength] + "</td>";
+                    encodingsFinal += "</tr>";
+                    cyanTable.innerHTML += encodingsFinal;
+                }
+        })
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Jumble Cycle</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Jumble Cycle.svg" class="diagram">
+                <h2>On the Optimization of Jumble Cycles</h2>
+                <p class="flavour-text">Deja-vu happens four times on one cycle.</p>
+                <p>This module consists of a screen, eight labelled dials, and a QWERTY keyboard.</p>
+                <p>The labels on the dials, when decrypted and read from left to right, spell out an eight letter word.</p>
+                <p>Each letter has been encrypted by one of four different ciphers, depending on their colours.<br><strong>(There will always be a pair of cyan labelled dials.)</strong></p>
+                <p>Once deciphered, find the word in the keyword table below, the word written below it is the word that should be entered.</p>
+                <p>Apply the same ciphers to the letters of the response word, and type out the encrypted response word using the keys.</p>
+                <p>The word is automatically submitted when eight keys are pressed.</p>
+                <p>The red button can be pressed at any time before the eighth key is pressed to cancel the input.</p>
+                <p>Inputting any of the eight letters incorrectly will cause a strike to be issued and reset the module.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Jumble Cycle</span>
+            </div>
+            <div class="page-content">
+                <h3>Case: White, Yellow, Magenta Labels</h3>
+                <p>Use the letter on the dial, the dial’s direction, and the color of the label in the below table to encrypt or decrypt a message. If a dial’s direction is north, do not modify the letter. If decrypting, use the left letter of the pair. If encrypting, use the right letter of the pair.</p>
+                <p>For convenience, the tiles are color-coded in respect to the colors of the labels, and each individual column containing the letter's pair is labeled with the first letter of the color's name (W = White, M = Magenta, Y = Yellow).</p>
+                <table class="lookup centered" id="giantTable">
+                    <tr class="heading"><td rowspan="3"></td><th colspan="3">1</th><th colspan="3">2</th><th colspan="3">3</th><th colspan="3">4</th><th colspan="3">5</th><th colspan="3">6</th><th colspan="3">7</th></tr>
+                    <tr class="heading"><th colspan="3">NE</th><th colspan="3">E</th><th colspan="3">SE</th><th colspan="3">S</th><th colspan="3">SW</th><th colspan="3">W</th><th colspan="3">NW</th></tr>
+                    <tr class="heading"><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Jumble Cycle</span>
+            </div>
+            <div class="page-content">
+                <h3>Case: Cyan Labels</h3>
+                <div class="fit">
+                    <div>
+                        <p>Take the rotations from the current dial as the column and the dial to the right of this dial in zig-zag order as the row on the table provided to obtain a letter for the 5&times;5 Playfair Matrix. Do this for the 1st to 7th dials to obtain the first 7 letters in reading order. Fill in the rest of the alphabet in reading order: <code>ABCDEFGHIJKLMNOPQRSTUVWYZ</code> and maintain first instances.</p>
+                    </div>
+                    <div>
+                        <table class="centered lookup" id="cyanTable">
+                            <tr class="heading">
+                                <td></td><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <h4>Encrypting</h4>
+                <ol style="font-size: 9.5pt;">
+                    <li>Split the message into pairs of letters. If a pair consist of the same letter, change the 2nd letter of that pair to a Z.</li>
+                    <li>For each pair, find their corresponding positions in the constructed Playfair matrix:<ul>
+                        <li>If the pairs are in the same column, take the letters underneath the paired letters, wrapping around to the top if necessary.</li>
+                        <li>Otherwise, if the pairs are in the same row, take the letters to the right of the paired letters, wrapping around to the left if necessary.</li>
+                        <li>Otherwise, take the row of the first and the column of the second to get the first encrypted letter of the pair. Take the row of the second and the column of the first to get the second encrypted letter of the pair.</li>
+                        </ul></li>
+                </ol>
+                <h4>Decrypting</h4>
+                <ol style="font-size: 9.5pt;">
+                    <li>Split the message into pairs of letters.</li>
+                    <li>For each pair, find their corresponding positions in the constructed Playfair matrix:<ul>
+                        <li>If the pairs are in the same column, take the letters above the paired letters, wrapping around to the bottom if necessary.</li>
+                        <li>Otherwise, if the pairs are in the same row, take the letters to the left of the paired letters, wrapping around to the right if necessary.</li>
+                        <li>Otherwise, take the row of the first and the column of the second to get the first encrypted letter of the pair. Take the row of the second and the column of the first to get the second encrypted letter of the pair.</li>
+                        </ul></li>
+                    <li>If the 2nd letter in the pair is a Z, change it to the first letter.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Jumble Cycle</span>
+            </div>
+            <div class="page-content">
+                <h3>Keyword Table</h3>
+                <div class="keywords">
+                    <table>
+                        <tr><th>ADVERTED</th><th>ADVOCATE</th><th>ALLOTYPE</th><th>ALLOTTED</th><th>BINORMAL</th><th>BINOMIAL</th><th>BULLHORN</th><th>BULWARKS</th></tr>
+                        <tr><td>ULTRAHOT</td><td>DECEIVED</td><td>QUITTERS</td><td>QUIRKISH</td><td>RELAYING</td><td>ADVERTED</td><td>WEAPONED</td><td>ZYMOLOGY</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>CONNECTS</th><th>CONQUERS</th><th>COMMANDO</th><th>COMPILER</th><th>DECEIVED</th><th>DECIMATE</th><th>DISPATCH</th><th>DISCRETE</th></tr>
+                        <tr><td>JUNCTURE</td><td>YOURSELF</td><td>NUMERATE</td><td>HUNTRESS</td><td>UNDOINGS</td><td>ADVOCATE</td><td>HUNDREDS</td><td>ALLOTYPE</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>ENCRYPTS</th><th>ENCODING</th><th>EQUATORS</th><th>EQUALISE</th><th>FINALISE</th><th>FINNICKY</th><th>FORMULAE</th><th>FORTUNES</th></tr>
+                        <tr><td>STANDOUT</td><td>MONOMIAL</td><td>YOKOZUNA</td><td>COMPILER</td><td>TRIGONAL</td><td>LANGUAGE</td><td>ILLUSORY</td><td>GATEWAYS</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>GARRISON</th><th>GARNERED</th><th>GATEPOST</th><th>GATEWAYS</th><th>HOTLINKS</th><th>HOTHEADS</th><th>HUNTRESS</th><th>HUNDREDS</th></tr>
+                        <tr><td>QUARTICS</td><td>TOMAHAWK</td><td>WHATNESS</td><td>POSTSYNC</td><td>POSITRON</td><td>REVEALED</td><td>ZYGOTENE</td><td>JOURNEYS</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>INCOMING</th><th>INDIRECT</th><th>ILLUSORY</th><th>ILLUDING</th><th>JOURNEYS</th><th>JOUSTING</th><th>JUNKYARD</th><th>JUNCTURE</th></tr>
+                        <tr><td>NUMEROUS</td><td>ORDERING</td><td>VENDETTA</td><td>WHATSITS</td><td>PROPHASE</td><td>BINOMIAL</td><td>QUARTILE</td><td>INDIRECT</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>KILOVOLT</th><th>KILOBYTE</th><th>KNOCKING</th><th>KNOWABLE</th><th>LANGUAGE</th><th>LANDMARK</th><th>LINKWORK</th><th>LINGERED</th></tr>
+                        <tr><td>DISPATCH</td><td>BINORMAL</td><td>DECIMATE</td><td>REVERSED</td><td>VENOMOUS</td><td>BULWARKS</td><td>STOCKADE</td><td>KNOWABLE</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>MONOMIAL</th><th>MONOLITH</th><th>MULTITON</th><th>MULCTING</th><th>NANOWATT</th><th>NANOBOTS</th><th>NUMEROUS</th><th>NUMERATE</th></tr>
+                        <tr><td>JOUSTING</td><td>ZYMOGENE</td><td>JUNKYARD</td><td>HOTLINKS</td><td>TRICKIER</td><td>STANZAIC</td><td>HOTHEADS</td><td>GARNERED</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>ORDERING</th><th>ORDINALS</th><th>OBSTRUCT</th><th>OBSTACLE</th><th>PROPHASE</th><th>PROPHECY</th><th>POSTSYNC</th><th>POSITRON</th></tr>
+                        <tr><td>LANDMARK</td><td>KILOVOLT</td><td>EQUALISE</td><td>PROPHECY</td><td>MONOLITH</td><td>WEAKENED</td><td>KILOBYTE</td><td>DISCRETE</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>QUARTILE</th><th>QUARTICS</th><th>QUIRKISH</th><th>QUITTERS</th><th>REVERSED</th><th>REVEALED</th><th>RELAYING</th><th>RELATIVE</th></tr>
+                        <tr><td>ENCODING</td><td>ILLUDING</td><td>EQUATORS</td><td>ORDINALS</td><td>CONNECTS</td><td>FINALISE</td><td>FORTUNES</td><td>COMMANDO</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>STANZAIC</th><th>STANDOUT</th><th>STOCKADE</th><th>STOCCATA</th><th>TRIGONAL</th><th>TRICKIER</th><th>TOMOGRAM</th><th>TOMAHAWK</th></tr>
+                        <tr><td>INCOMING</td><td>OBSTACLE</td><td>FORMULAE</td><td>OBSTRUCT</td><td>ULTERIOR</td><td>CONQUERS</td><td>GATEPOST</td><td>MULCTING</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>UNDERWAY</th><th>UNDOINGS</th><th>ULTERIOR</th><th>ULTRAHOT</th><th>VENOMOUS</th><th>VENDETTA</th><th>VOLITION</th><th>VOLUMING</th></tr>
+                        <tr><td>KNOCKING</td><td>GARRISON</td><td>MULTITON</td><td>YEARLONG</td><td>LINGERED</td><td>TOMOGRAM</td><td>ENCRYPTS</td><td>BULLHORN</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>WEAKENED</th><th>WEAPONED</th><th>WHATNESS</th><th>WHATSITS</th><th>YEARLONG</th><th>YEARNING</th><th>YOKOZUNA</th><th>YOURSELF</th></tr>
+                        <tr><td>ALLOTTED</td><td>UNDERWAY</td><td>ZYGOMATA</td><td>YEARNING</td><td>STOCCATA</td><td>FINNICKY</td><td>LINKWORK</td><td>VOLITION</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>ZYGOMATA</th><th>ZYGOTENE</th><th>ZYMOLOGY</th><th>ZYMOGENE</th></tr>
+                        <tr><td>NANOBOTS</td><td>NANOWATT</td><td>RELATIVE</td><td>VOLUMING</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
