@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>色変え格子 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        body {
+            --url: url('img/Discolored%20Squares/Motion.svg');
+        }
+        ul {
+            padding-left: 1.5em;
+        }
+        .dark table, table {
+            border: none;
+        }
+        table.order {
+            display: inline-block;
+            margin-right: .7cm;
+        }
+            table.order td {
+                padding: .3em 0 .2em;
+                text-align: center;
+                width: 2.1em;
+            }
+        table#rules {
+            width: 100%;
+        }
+        caption {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        #orders {
+            text-align: center;
+        }
+        .instr {
+            float: left;
+            width: 1.125cm;
+            height: 1.125cm;
+            margin-right: .2cm;
+            background-image: var(--url);
+            background-size: 4.5cm 4.5cm;
+            background-repeat: no-repeat;
+        }
+            .instr-0 { background-position: 0cm 0cm; }
+            .instr-1 { background-position: -1.125cm 0cm; }
+            .instr-2 { background-position: -2.25cm 0cm; }
+            .instr-3 { background-position: -3.375cm 0cm; }
+            .instr-4 { background-position: 0cm -1.125cm; }
+            .instr-5 { background-position: -1.125cm -1.125cm; }
+            .instr-6 { background-position: -2.25cm -1.125cm; }
+            .instr-7 { background-position: -3.375cm -1.125cm; }
+            .instr-8 { background-position: 0cm -2.25cm; }
+            .instr-9 { background-position: -1.125cm -2.25cm; }
+            .instr-10 { background-position: -2.25cm -2.25cm; }
+            .instr-11 { background-position: -3.375cm -2.25cm; }
+            .instr-12 { background-position: 0cm -3.375cm; }
+            .instr-13 { background-position: -1.125cm -3.375cm; }
+            .instr-14 { background-position: -2.25cm -3.375cm; }
+            .instr-15 { background-position: -3.375cm -3.375cm; }
+        .dark .instr { filter: invert(87%); }
+
+        /* -------------------------------------- INTERACTIVE */
+
+        .instr-int {
+            background-image: var(--url);
+            background-size: 10cm;
+            background-repeat: no-repeat;
+            background-origin: border-box;
+        }
+        .instr-int-0 { background-position: -0.1cm -0.1cm; }
+        .instr-int-1 { background-position: -5.105cm -0.1cm; }
+        .instr-int-2 { background-position: -2.6cm -0.1cm; }
+        .instr-int-3 { background-position: -5.105cm -7.6cm; }
+        .instr-int-4 { background-position: -5.105cm -5.1cm; }
+        .instr-int-5 { background-position: -5.105cm -2.6cm; }
+        .instr-int-6 { background-position: -0.1cm -5.1cm; }
+        .instr-int-7 { background-position: -7.61cm -7.6cm; }
+        .instr-int-8 { background-position: -7.61cm -5.1cm; }
+        .instr-int-9 { background-position: -7.61cm -0.1cm; }
+        .instr-int-10 { background-position: -0.1cm -7.6cm; }
+        .instr-int-11 { background-position: -7.61cm -2.6cm; }
+        .instr-int-12 { background-position: -2.6cm -5.1cm; }
+        .instr-int-13 { background-position: -2.6cm -2.6cm; }
+        .instr-int-15 { background-position: -0.1cm -2.6cm; }
+        .instr-int-14 { background-position: -2.6cm -7.6cm; }
+        h3.interactive {
+            text-align: center;
+            margin-top: 3em;
+        }
+        #interactive-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 27rem;
+            position: relative;
+        }
+        div.interactive {
+            display: grid;
+            grid-template-columns: repeat(4, 5.5rem);
+            margin: auto;
+            gap: 1px;
+            outline: 5px solid;
+            border-radius: 5px;
+            position: absolute;
+        }
+        div.interactive div { /* table children */
+            outline: 2px solid;
+            color: #0008;
+            aspect-ratio: 1;
+            cursor: pointer;
+            font-size: 55px;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .dark div.interactive div {
+            outline: 2px solid #ddd;
+            color: #ddd8;
+        }
+        div.interactive div:hover {
+            border: 4px solid orangered;
+        }
+        .force-black-text {
+            color: #000 !important;
+        }
+        #color-pallet {
+            display: grid;
+            grid-template-columns: repeat(6, 3rem);
+            grid-auto-rows: 3rem;
+        }
+        #color-pallet>span {
+            margin: 2px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #color-pallet>span:nth-of-type(1) { background-color: rgb(68, 130, 255) }
+        #color-pallet>span:nth-of-type(2) { background-color: rgb(223, 32, 32)  }
+        #color-pallet>span:nth-of-type(3) { background-color: rgb(34, 195, 34)  }
+        #color-pallet>span:nth-of-type(4) { background-color: rgb(223, 223, 32) }
+        #color-pallet>span:nth-of-type(5) { background-color: rgb(223, 0, 223)  }
+        #color-pallet>span:nth-of-type(6) { background-color: rgb(230, 230, 230) } /* imitating the module's colors */
+        #options {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        #options>button {
+            display: inline-block;
+            height: 35px;
+            width: 70px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        #buttons {
+            display: flex;
+            flex-flow: column wrap;
+            align-items: center;
+            gap: 5px;
+        }
+        #pages {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+        }
+    </style>
+    <script>
+        var _instructions = [
+            "北西に移動<br>(ループする)",
+            "北に移動<br>(ループする)",
+            "北東に移動<br>(ループする)",
+            "東に移動<br>(ループする)",
+            "南東に移動<br>(ループする)",
+            "南に移動<br>(ループする)",
+            "南西に移動<br>(ループする)",
+            "西に移動<br>(ループする)",
+            "|の線で<br>折り返す",
+            "—の線で<br>折り返す",
+            "\\の線で<br>折り返す",
+            "/の線で<br>折り返す",
+            "90°時計<br>回りに回転",
+            "90°反時計<br>回りに回転",
+            "180°回転",
+            "その場に<br>留まる"
+        ];
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 6);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+            var four = [0, 1, 2, 3];
+            var numbers = [];
+            for (var i = 0; i < 16; i++)
+                numbers.push(i);
+            rnd.shuffleFisherYates(numbers);
+            document.getElementById('rules').innerHTML = '<caption>命令表</caption>' + four.map(row =>
+                `<tr>${four.map(col => `<td><div class='instr instr-${numbers[col + 4*row]}'></div>${_instructions[numbers[col + 4*row]]}</td>`).join('')}</tr>`
+            ).join('');
+
+            numbers = [];
+            for (var i = 0; i < 16; i++)
+                numbers.push(i);
+            var html = '';
+            for (var stage = 0; stage < 4; stage++)
+            {
+                rnd.shuffleFisherYates(numbers);
+                html += `<table class='order'><caption>ステージ ${(stage + 1)}</caption>${four.map(row => `<tr>${four.map(col => `<td>${numbers[col + 4*row] + 1}</td>`).join('')}</tr>`).join('')}</table>`;
+            }
+            document.getElementById('orders').innerHTML = html;
+
+            setLinks(`#${rnd.seed}`);
+        }
+
+        function setLinks(hash)
+        {
+            document.querySelectorAll('.link > a').forEach(lnk => {
+                lnk.setAttribute('href', /^(.*?)(#.*)?$/.exec(lnk.getAttribute('href'))[1] + hash);
+            });
+        }
+    /* -------------------------------------- INTERACTIVE */
+        $(() => {
+            /* The colors at the bottom of the table. */
+            const $colors = $("#color-pallet").children();
+            let isMouseOnColors = false;
+            const $resetButton = $("#reset");
+            /* "Next stage" */
+            const $layerButton = $("#new-layer");
+            /* "0" "1" "2" "3" "4" */
+            const $pageButtons = $("#pages").children();
+            const $tablesContainer = $("#interactive-container");
+            const $tableRef = $("div.interactive");
+            $tableRef.css("display", "none");
+            /* Table layers.
+               It isn’t by itself a $, but it contains $'s. */
+            let tables$ = [];
+            /* Table layers' cells/children.
+               Item. */
+            let cells$ = [];
+            /* Starting from 0*/
+            let numberOfTables;
+            let currentColor;
+            /* Corresponds to the respective button label */
+            let indexOfButtonPressed;
+            /* Stores colors pressed in the 0th stage. (0-3) */
+            let colorsPressed = Array(4);
+            /* Stores the index of the colors pressed in the 0th stage. */
+            let indexesPressed = Array(4);
+            /* The buttons I can press at a certain stage */
+            let restrictions = null;
+            /* Example: If the BG color of c is equal to the color grey (i.e. rgb(230, 230, 230)) */
+            const BGof_IsEqualToColor = ($element, color) => $element.css("background-color") === color;
+            /* moar data.
+               I would've added this to the bottom but TDZ's exist*/
+            const stages = [
+                [5, 12, 1, 15, 14, 13, 7, 3, 9, 4, 6, 10, 16, 2, 8, 11],
+                [1, 14, 6, 7, 12, 15, 3, 10, 16, 4, 2, 11, 9, 8, 13, 5],
+                [16, 9, 7, 12, 6, 15, 3, 5, 11, 8, 13, 14, 2, 10, 1, 4],
+                [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
+            ];
+            const resetZIndex = () => $(tables$).each((i, el) => el.css("z-index", i));
+            const [whiteText, blackText] = ["rgba(221, 221, 221, 0.5)", "rgba(0, 0, 0, 0.5)"]
+            /* Quering the class in an event handler doesn’t give reliable results. */
+
+            $colors.click(e=>selectColor($(e.target)));
+            $pageButtons.click(e=>manageLayers($(e.target)));
+
+            function selectColor($colorBox) {
+                if (!restrictions[0] || restrictions.includes($colorBox[0])) {
+                    currentColor = $colorBox.css("background-color");
+                    $colors.css("border", "3px solid"); //all elements
+                    $colorBox.css("border", "solid 5px purple"); //one element
+                }
+            }
+
+            function managePreviousLayer(previous) {
+                /* Manages removing any squares but white ones. */
+                cells$[previous].each((_,c) => {
+                    const $c = $(c);
+                    if (!BGof_IsEqualToColor($c, "rgb(230, 230, 230)"))
+                        $c.css("background-color", "rgba(0, 0, 0, 0)");
+                    else
+                        $c.text("X");
+                });
+
+                cells$[previous].each((_,c) => {
+                    if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) {
+                        $(c).text("");
+                        $(c).removeClass();
+                    }
+                });
+            }
+
+            function manageLayers($buttonClicked) {
+                if (indexOfButtonPressed) managePreviousLayer(indexOfButtonPressed);
+                indexOfButtonPressed = $pageButtons.index($buttonClicked);
+
+                hoistLayer(indexOfButtonPressed)
+                $pageButtons.css({"border": "","border-radius": ""}); //all elements
+                $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); //one element
+                cells$[indexOfButtonPressed].each((_,c) => {
+                    if (BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text("");
+                });
+
+                /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
+                const tablesCopy = $.extend(true, [], tables$) //it eats the first element for some reason.
+                    , zerothTable = tables$[0]
+                    , visibility = ["hidden", "visible"]
+                    , iobp = +!!indexOfButtonPressed;
+                $(tablesCopy).each((_,e) => $(e).css("visibility", visibility[+iobp]));
+                $(zerothTable).css("visibility", visibility[+!iobp]);
+
+                doTopTableChanges();
+            }
+
+            function hoistLayer(i) {
+                resetZIndex(); //all elements
+                tables$[i].css("z-index", "9999"); //one element
+            }
+
+            function selectNewColor(params) {
+                const newSelectedColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), colorsPressed[indexOfButtonPressed-1]));
+                /* Restrict the color to only accept the current color and white. */
+                restrictions = [newSelectedColor[0], $colors[5]];
+                selectColor(newSelectedColor);
+            }
+
+            function doTopTableChanges() {
+                /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
+                tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
+                selectNewColor();
+
+                if (indexOfButtonPressed <= 0) return;
+                setTableNumbers();
+            }
+
+            function isWhiteOnAnyLayer(position) {
+                for (let i = 1; i < cells$.length; i++)
+                    if (BGof_IsEqualToColor($(cells$[i][position]), "rgb(230, 230, 230)"))
+                        return true;
+                return false;
+            }
+
+            /* Puts the numbers of the manual tables in these tables/layers */
+            function setTableNumbers() {
+                /* The target numbers for the current stage. */
+                const stageNumbers = stages[indexOfButtonPressed-1];
+                /* The text color of all the cells in that table */
+                const currentTextColor = cells$[indexOfButtonPressed].css("color");
+                cells$[indexOfButtonPressed].each((i,c) => {
+                    if (!isWhiteOnAnyLayer(i)) {
+                        $(c).text(stageNumbers[i]);
+                    }
+                });
+            }
+
+            /* when it tries to remove something, if that element was already removed, then it will fail to remove it
+               and thus all the references to that element (and to the children of that element) will fail. That’s why I reset the arrays after removing */
+            function resetAll() {
+                $pageButtons.css("visibility", "hidden");
+                $colors.css("border", "3px solid");
+                cells$.forEach(c => c.remove());
+                tables$.forEach(t => t.remove());
+                cells$ = [];
+                tables$ = [];
+                colorsPressed = Array.from({length:4},()=>"");
+                currentColor = null;
+                indexOfButtonPressed = null;
+                numberOfTables = -1;
+                makeTable();
+            }
+
+            function manage0thStage(t) {
+                /* Returns the lowerst number that is not present on the table. */
+                let decideShownNumber = () => {
+                    for (let i = 1; i <= 4; i++)
+                        if (!colorsPressed[i-1]) return i;
+                };
+                let n = decideShownNumber();
+                t.text(n);
+                colorsPressed[n-1] = currentColor;
+                indexesPressed[n-1] = t.index();
+            }
+
+            function cellClick(t) {
+                if (t.css("background-color") === "rgba(0, 0, 0, 0)" && currentColor) { //fill
+                    if (!indexOfButtonPressed) {
+                        /* No more than 4 buttons can be pressed on this layer, and only unique colors can be here. It also can’t be the gray color. */
+                        if (!colorsPressed.includes("") || colorsPressed.includes(currentColor) || currentColor === "rgb(230, 230, 230)") return;
+                        manage0thStage(t);
+                    }
+                    /* Sets the cell to the color selected */
+                    t.addClass("force-black-text");
+                    t.css("background-color", currentColor);
+                    if (indexOfButtonPressed) {
+                        if (!BGof_IsEqualToColor(t, "rgba(0, 0, 0, 0)")) {
+                            if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)")) {
+                                t.text("");
+                            }
+                            else {
+                                t.addClass("instr-int instr-int-"+indexesPressed[indexOfButtonPressed-1]);
+                            }
+                        }
+                    }
+                }
+                else { //clear
+                    t.css("background-color", "rgba(0, 0, 0, 0)");
+                    t.removeClass();
+                    if (!indexOfButtonPressed) {
+                        colorsPressed[t.text()-1] = "";
+                        t.text("");
+                    }
+                    else {
+                        t.text("");
+                        setTableNumbers(true);
+                    }
+                }
+            }
+
+            /* Creates a new table/layer. */
+            function makeTable(notFirstTable) {
+                if (numberOfTables >= 4) return;
+                numberOfTables++;
+                /* Save the table */
+                tables$.push($tableRef.clone());
+                /* Set the clone table as visible */
+                tables$[numberOfTables].css("display", "");
+                /* Save the cells */
+                cells$.push(tables$[numberOfTables].children());
+                /* The page button whose table is just created will be shown. (ie "show the button"). All buttons are preset. */
+                $pageButtons.eq(numberOfTables).css("visibility", "visible");
+                /* Color a cell. */
+                cells$[numberOfTables].click(e => cellClick($(e.target)));
+                /* Table ready: add it to the tree. */
+                $tablesContainer.append(tables$[numberOfTables]);
+                manageLayers($pageButtons.eq(numberOfTables));
+            }
+
+            function manageWheelSelection(direction) {
+                const wrap05 = n => (n + 6) % 6 //range: [0, 5], n € Z
+                    , indexOfCurrentColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), currentColor)).index();
+                let newSelectedColor;
+                /* If there’s nothing selected, default */
+                if (indexOfCurrentColor < 0) newSelectedColor = $colors[0];
+                /* neg -> -1 ; pos -> +1*/
+                else newSelectedColor = $colors[wrap05(indexOfCurrentColor-[-1, +1][Math.ceil(Math.sin(direction))])];
+                selectColor($(newSelectedColor));
+            }
+
+            $resetButton.click(resetAll);
+            $layerButton.click(makeTable);
+            window.addEventListener("wheel", e => {
+                if (!isMouseOnColors || indexOfButtonPressed) return;
+                manageWheelSelection(e.deltaY);
+                e.preventDefault();
+            }, {passive: false});
+            $tablesContainer.mouseenter(()=>isMouseOnColors=true);
+            $tablesContainer.mouseleave(()=>isMouseOnColors=false);
+            $(window).on("beforeunload", ()=>"");
+            resetAll();
+            currentColor = "rgb(68, 130, 255)";
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色変え格子</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Discolored Squares.svg">
+                <h2>モジュール詳細：色変え格子</h2>
+                <p class="flavour-text">秩序はエントロピーに取って代わられる。エントロピーは秩序の消失である。真のカオスへようこそ。</p>
+
+                <div style='font-size: 11pt;'>
+
+                <ul>
+                    <li>開始時に、4つの異なる色がちょうど一度のみ出現していない場合、間違ったモジュールを参照している。</li>
+                    <li>その4つの色の正方形を押して開始する。<em>押した順番で、位置と色を覚える</em>。そして、ステージ1が開始する。もし、覚えた色の正方形がステージ1で表れない場合、間違ったモジュールを参照している。</li>
+                    <li>各ステージで、命令テーブルを見て、ステージ数に対応した押した順番の<em>覚えた位置</em>のセルを参照する。</li>
+                </ul>
+                <table id="rules"><caption>命令テーブル</caption><tbody><tr><td><div class="instr instr-0"></div>Move NW<br>(wrap)</td><td><div class="instr instr-2"></div>Move NE<br>(wrap)</td><td><div class="instr instr-1"></div>Move N<br>(wrap)</td><td><div class="instr instr-14"></div>Rotate<br>180°</td></tr><tr><td><div class="instr instr-10"></div>Mirror<br>about \</td><td><div class="instr instr-6"></div>Move SW<br>(wrap)</td><td><div class="instr instr-8"></div>Mirror<br>about |</td><td><div class="instr instr-15"></div>Stay in<br>place</td></tr><tr><td><div class="instr instr-11"></div>Mirror<br>about /</td><td><div class="instr instr-3"></div>Move E<br>(wrap)</td><td><div class="instr instr-12"></div>Rotate<br>90° CW</td><td><div class="instr instr-7"></div>Move W<br>(wrap)</td></tr><tr><td><div class="instr instr-9"></div>Mirror<br>about —</td><td><div class="instr instr-5"></div>Move S<br>(wrap)</td><td><div class="instr instr-13"></div>Rotate<br>90° CCW</td><td><div class="instr instr-4"></div>Move SE<br>(wrap)</td></tr></tbody></table>
+                <ul>
+                    <li>ステージ数に対応した押した順番の<em>覚えた色</em>と同じ色の全ての正方形について、後述の順序で次の手順を踏む:
+                        <ul>
+                            <li>命令テーブルの命令のとおりに位置を調整する。</li>
+                            <li>調整された位置が既に白い正方形である場合は、白い正方形でなくなるまで同じ調整を行う。</li>
+                            <li>最初に当てはまったの白以外の正方形を押す。</li>
+                            <li>押した正方形が現在の<em>覚えた色</em>である場合、このステージ中ではその正方形に関する手順を踏まない。</li>
+                        </ul>
+                    </li>
+                    <li>正方形の手順は次の順序で行う:</li>
+                </ul>
+                <div id="orders">                    <table class="order">
+                    <caption>ステージ1</caption>
+                    <tbody>
+                        <tr><td>5</td><td>12</td><td>1</td><td>15</td></tr>
+                        <tr><td>14</td><td>13</td><td>7</td><td>3</td></tr>
+                        <tr><td>9</td><td>4</td><td>6</td><td>10</td></tr>
+                        <tr><td>16</td><td>2</td><td>8</td><td>11</td></tr>
+                    </tbody>
+                </table>
+                <table class="order">
+                    <caption>ステージ2</caption>
+                    <tbody>
+                        <tr><td>1</td><td>14</td><td>6</td><td>7</td></tr>
+                        <tr><td>12</td><td>15</td><td>3</td><td>10</td></tr>
+                        <tr><td>16</td><td>4</td><td>2</td><td>11</td></tr>
+                        <tr><td>9</td><td>8</td><td>13</td><td>5</td></tr>
+                    </tbody>
+                </table>
+                <table class="order">
+                    <caption>ステージ3</caption>
+                    <tbody>
+                        <tr><td>16</td><td>9</td><td>7</td><td>12</td></tr>
+                        <tr><td>6</td><td>15</td><td>3</td><td>5</td></tr>
+                        <tr><td>11</td><td>8</td><td>13</td><td>14</td></tr>
+                        <tr><td>2</td><td>10</td><td>1</td><td>4</td></tr>
+                    </tbody>
+                </table>
+                <table class="order">
+                    <caption>ステージ4</caption>
+                    <tbody>
+                        <tr><td>4</td><td>11</td><td>3</td><td>14</td></tr>
+                        <tr><td>16</td><td>12</td><td>7</td><td>8</td></tr>
+                        <tr><td>5</td><td>2</td><td>6</td><td>9</td></tr>
+                        <tr><td>1</td><td>13</td><td>15</td><td>10</td></tr>
+                    </tbody>
+                </table></div>
+
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <!--Page 2-->
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色変え格子</span>
+            </div>
+            <div class="page-content">
+                <h3 class="interactive">インタラクティブ</h3>
+                <div id="interactive-container">
+                    <div class="interactive">
+                        <div></div><div></div><div></div><div></div>
+                        <div></div><div></div><div></div><div></div>
+                        <div></div><div></div><div></div><div></div>
+                        <div></div><div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div id="options">
+                    <span id="color-pallet">
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </span>
+                    <span id="buttons">
+                        <span id="pages">
+                            <button>0</button>
+                            <button>1</button>
+                            <button>2</button>
+                            <button>3</button>
+                            <button>4</button>
+                        </span>
+                        <span>
+                            <button id="new-layer">次のステージ</button>
+                            <button id="reset">リセット</button>
+                        </span>
+                    </span>
+                </div>
+                <br>
+                <h4>操作方法:</h4>
+                <ul>
+                    <li>色を選択してからセルをクリックし、そのセルに選択した色を付ける。</li>
+                    <li>そのセルをもう一度クリックすると、押された状態を切り替える。</li>
+                    <li>「次のステージ」ボタンを押して、ステージを切り替える。</li>
+                    <li>数字のボタンを押すと、選択されたステージに切り替える。</li>
+                    <li>色/ステージ/レイヤー/選択をリセットするには「リセット」ボタンを押す。</li>
+                    <li>ヒント1:ステージ0では、マウスホイールで色を選択できる。</li>
+                    <li>ヒント2:ステージ0では、白は消しゴムとして機能する。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+        <!--Page 3-->
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色変え格子</span>
+            </div>
+            <div class="page-content">
+                <table class="movements" style="text-align:center; margin-left: auto; margin-right: auto;">
+                    <caption>移動</caption>
+                    <tbody>
+                        <tr><td class='corner'></td><td><div class="instr instr-0"></div></td><td><div class="instr instr-2"></div></td><td><div class="instr instr-1"></div></td><td><div class="instr instr-14"></div></td><td><div class="instr instr-10"></div></td><td><div class="instr instr-6"></div></td><td><div class="instr instr-8"></div></td><td><div class="instr instr-15"></div></td><td><div class="instr instr-11"></div></td></tr>
+                        <tr><th>A1</th><td>D4</td><td>B4</td><td>A4</td><td>D4</td><td>A1</td><td>D2</td><td>D1</td><td>A1</td><td>D4</td></tr>
+                        <tr><th>A2</th><td>D1</td><td>B1</td><td>A1</td><td>D3</td><td>B1</td><td>D3</td><td>D2</td><td>A2</td><td>C4</td></tr>
+                        <tr><th>A3</th><td>D2</td><td>B2</td><td>A2</td><td>D2</td><td>C1</td><td>D4</td><td>D3</td><td>A3</td><td>B4</td></tr>
+                        <tr><th>A4</th><td>D3</td><td>B3</td><td>A3</td><td>D1</td><td>D1</td><td>D1</td><td>D4</td><td>A4</td><td>A4</td></tr>
+                        <tr><th>B1</th><td>A4</td><td>C4</td><td>B4</td><td>C4</td><td>A2</td><td>A2</td><td>C1</td><td>B1</td><td>D3</td></tr>
+                        <tr><th>B2</th><td>A1</td><td>C1</td><td>B1</td><td>C3</td><td>B2</td><td>A3</td><td>C2</td><td>B2</td><td>C3</td></tr>
+                        <tr><th>B3</th><td>A2</td><td>C2</td><td>B2</td><td>C2</td><td>C2</td><td>A4</td><td>C3</td><td>B3</td><td>B3</td></tr>
+                        <tr><th>B4</th><td>A3</td><td>C3</td><td>B3</td><td>C1</td><td>D2</td><td>A1</td><td>C4</td><td>B4</td><td>A3</td></tr>
+                        <tr><th>C1</th><td>B4</td><td>D4</td><td>C4</td><td>B4</td><td>A3</td><td>B2</td><td>B1</td><td>C1</td><td>D2</td></tr>
+                        <tr><th>C2</th><td>B1</td><td>D1</td><td>C1</td><td>B3</td><td>B3</td><td>B3</td><td>B2</td><td>C2</td><td>C2</td></tr>
+                        <tr><th>C3</th><td>B2</td><td>D2</td><td>C2</td><td>B2</td><td>C3</td><td>B4</td><td>B3</td><td>C3</td><td>B2</td></tr>
+                        <tr><th>C4</th><td>B3</td><td>D3</td><td>C3</td><td>B1</td><td>D3</td><td>B1</td><td>B4</td><td>C4</td><td>A2</td></tr>
+                        <tr><th>D1</th><td>C4</td><td>A4</td><td>D4</td><td>A4</td><td>A4</td><td>C2</td><td>A1</td><td>D1</td><td>D1</td></tr>
+                        <tr><th>D2</th><td>C1</td><td>A1</td><td>D1</td><td>A3</td><td>B4</td><td>C3</td><td>A2</td><td>D2</td><td>C1</td></tr>
+                        <tr><th>D3</th><td>C2</td><td>A2</td><td>D2</td><td>A2</td><td>C4</td><td>C4</td><td>A3</td><td>D3</td><td>B1</td></tr>
+                        <tr><th>D4</th><td>C3</td><td>A3</td><td>D3</td><td>A1</td><td>D4</td><td>C1</td><td>A4</td><td>D4</td><td>A1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <!--Page 4-->
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">色変え格子</span>
+            </div>
+            <div class="page-content">
+                <table class="movements" style="text-align:center; margin-left: auto; margin-right: auto;">
+                    <tbody>
+                        <tr><td class='corner'></td><td><div class="instr instr-3"></div></td><td><div class="instr instr-12"></div></td><td><div class="instr instr-7"></div></td><td><div class="instr instr-9"></div></td><td><div class="instr instr-5"></div></td><td><div class="instr instr-13"></div></td><td><div class="instr instr-4"></div></td></tr>
+                        <tr><th>A1</th><td>B1</td><td>D1</td><td>D1</td><td>A4</td><td>A2</td><td>A4</td><td>B2</td></tr>
+                        <tr><th>A2</th><td>B2</td><td>C1</td><td>D2</td><td>A3</td><td>A3</td><td>B4</td><td>B3</td></tr>
+                        <tr><th>A3</th><td>B3</td><td>B1</td><td>D3</td><td>A2</td><td>A4</td><td>C4</td><td>B4</td></tr>
+                        <tr><th>A4</th><td>B4</td><td>A1</td><td>D4</td><td>A1</td><td>A1</td><td>D4</td><td>B1</td></tr>
+                        <tr><th>B1</th><td>C1</td><td>D2</td><td>A1</td><td>B4</td><td>B2</td><td>A3</td><td>C2</td></tr>
+                        <tr><th>B2</th><td>C2</td><td>C2</td><td>A2</td><td>B3</td><td>B3</td><td>B3</td><td>C3</td></tr>
+                        <tr><th>B3</th><td>C3</td><td>B2</td><td>A3</td><td>B2</td><td>B4</td><td>C3</td><td>C4</td></tr>
+                        <tr><th>B4</th><td>C4</td><td>A2</td><td>A4</td><td>B1</td><td>B1</td><td>D3</td><td>C1</td></tr>
+                        <tr><th>C1</th><td>D1</td><td>D3</td><td>B1</td><td>C4</td><td>C2</td><td>A2</td><td>D2</td></tr>
+                        <tr><th>C2</th><td>D2</td><td>C3</td><td>B2</td><td>C3</td><td>C3</td><td>B2</td><td>D3</td></tr>
+                        <tr><th>C3</th><td>D3</td><td>B3</td><td>B3</td><td>C2</td><td>C4</td><td>C2</td><td>D4</td></tr>
+                        <tr><th>C4</th><td>D4</td><td>A3</td><td>B4</td><td>C1</td><td>C1</td><td>D2</td><td>D1</td></tr>
+                        <tr><th>D1</th><td>A1</td><td>D4</td><td>C1</td><td>D4</td><td>D2</td><td>A1</td><td>A2</td></tr>
+                        <tr><th>D2</th><td>A2</td><td>C4</td><td>C2</td><td>D3</td><td>D3</td><td>B1</td><td>A3</td></tr>
+                        <tr><th>D3</th><td>A3</td><td>B4</td><td>C3</td><td>D2</td><td>D4</td><td>C1</td><td>A4</td></tr>
+                        <tr><th>D4</th><td>A4</td><td>A4</td><td>C4</td><td>D1</td><td>D1</td><td>D1</td><td>A1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+</html>
