@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>二進数記憶 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    function generatePriorityString(rnd) {
+        const res = [1, 2, 3, 4];
+        for (let i = 0; i < res.length; i++) {
+            const j = rnd.nextMax(res.length);
+            [res[i], res[j]] = [res[j], res[i]];
+        }
+        return res.join("");
+    }
+
+    function setDefaultRules(rnd) { setRules(rnd); }
+
+    function setRules(rnd) {
+        const table = $("#priority-table");
+        table.html("");
+        $('<tr><th rowspan="2">条件</th><th colspan="10">ステージ番号の下一桁</th></tr>').appendTo(table);
+
+        let tr1 = $("<tr>").appendTo(table);
+        let th = [
+            "ポートプレート > 2",
+            "シリアルナンバーの英字の数 = 3",
+            "バッテリーホルダー = 1",
+            "モジュール数が29以上",
+            "それ以外"
+        ];
+        for (let i = 0; i < 10; i++)
+            $("<th>").text((i + 1) % 10).appendTo(tr1);
+        for (let i = 0; i < 5; i++) {
+            let tr = $("<tr>").appendTo(table);
+            $("<th>").text(th[i]).appendTo(tr);
+            for (let j = 0; j < 10; j++) {
+                $("<td>").text(generatePriorityString(rnd)).appendTo(tr);
+            }
+        }
+    }
+    </script>
+    <style>
+        table {
+            margin: auto;
+            text-align: center;
+        }
+
+        table tr:not(:first-child):not(:nth-child(2)) {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title card-name">Binary Memory</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Binary Memory.svg" class="diagram">
+                <h2>モジュール詳細：二進数記憶</h2>
+                <p class="flavour-text">それらを忘れるステージを思い出せない。</p>
+                <p>
+                    モジュールには、ディスプレー、4つのボタン、及び5つのLEDがある。各ボタンには読み順に1~4の番号が記されている。モジュールは5つのモードのいずれかになり、点灯しているLEDの数で現在のモードを判断することが出来る。
+                </p>
+                <h3>点灯LEDが1つ:記憶モード</h3>
+                <p>
+                    これはモジュールの初期モードである。ディスプレーには数字「1」が表示される。<a href="../More/Ignore%20Table.html#mod=binary_memory" target="_blank" rel="noopener noreferrer">無視されないモジュール</a>が解除されるたびに、数字が1増加する。この番号がステージ番号である。表示される数字は、赤または緑の2色のいずれかになる。この色が現在のステージの値になる。各ステージの値を記録しておく必要がある。
+                </p>
+                <p>
+                    4ステージ連続で値が一致した場合、いずれかのボタンを押して「<b>送信モード</b>」に移行する。別の無視されないモジュールが解除される前に、このモードに移行しなければならない。解除してしまうとミスが記録され、モジュールは「<b>準備モード</b>」に移行する。
+                </p>
+                <p>無視されないモジュールがすべて解除されるかステージ数が45になると、モジュールは「<b>準備モード</b>」に移行する。</p>
+                <h3>点灯LEDが2つ:準備モード</h3>
+                <p>最後のステージの値がディスプレーに表示される。いずれかのボタンを押して「<b>送信モード</b>」に移行する。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title card-name">二進数記憶</span>
+            </div>
+            <div class="page-content">
+                <h3>点灯LEDが3つ:送信モード</h3>
+                <p>
+                    以下の表を使用して、各ステージのボタンに優先順位を付ける。モジュールを解除するには、各ステージにおいて優先度が最も高く有効であるボタンを押す。ボタンが以前押されていない場合、それは有効である。それ以外の場合、最後にそのボタンを押した時のステージの値が逆の値の場合、それは有効である。有効なボタンが無い場合、ボタン「<b>1</b>」が有効である。現在のステージがディスプレーに表示される。
+                </p>
+                <table id="priority-table"></table>
+                <p>間違ったボタンを押すとミスが記録され、モジュールは「<b>回復モード</b>」に移行する。</p>
+                <p>各ステージにおいて正しいボタンを押すと、モジュールが解除される。</p>
+                <h3>点灯LEDが4つ:回復モード</h3>
+                <p>
+                    このモードに入ると、ディスプレーには現在のステージの値が表示される。いずれかのボタンを押すと、このボタンが最後に押されたステージの値がディスプレーに表示される。ボタンがまだ正しく押されていない場合、ディスプレーの値は灰色になる。同じボタンを連続して2回押すと、ディスプレーには現在のステージの値が再び表示される。同じボタンを3回連続で押すと、モジュールは「<b>送信モード</b>」に移行する。
+                </p>
+                <h3>点灯LEDが5つ:モジュールが解除された。おめでとう！！</h3>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

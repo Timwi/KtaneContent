@@ -1,14 +1,39 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="ja">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Shifting Maze — Keep Talking and Nobody Explodes Module</title>
+    <title>切り替え迷路 — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        $("table.mazes td").addClass("nohighlight");
+        $("td img").wrap( $("<div>").addClass("img-holder") );
+
+        let rows = 6;
+        let cols = 6;
+        let h = 10;
+        let w = 10;
+        $(".img-holder").each((i, e) => {
+            let svg = MakeSvgTag(rows*h, cols*w).appendTo( $(e) );
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable", x:(x*w), y:(y*h),
+                        width:w, height:h, fill:"transparent"
+                    });
+                    svg.append(cell);
+                }
+            }
+        });
+    });
+    </script>
     <style>
         table {
             margin: 1em auto;
@@ -21,71 +46,77 @@
             src: local('Mate Regular'), local('Mate Regular'), url('font/Mate Regular.ttf');
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
+        .bluebg { background-color:#DDF; }
+        .dark .bluebg { background-color:#225; }
         .fonttoday {
             font-family: 'Mate Regular';
         }
-        .bluebg { background-color: #ddf; }
-        .dark .bluebg { background-color:#225; }
+        .img-holder {
+            position: relative;
+            width: 125px;
+            height: 125px;
+        }
+        .img-holder img, .img-holder svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 125px;
+            height: 125px;
+        }
+        .dark td img { filter: invert(90%); }
     </style>
 </head>
-
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Shifting Maze</span>
+                <span class="page-header-section-title">切り替え迷路</span>
             </div>
             <div class="page-content">
-                <img src="img/Component/Shifting Maze.svg" class="diagram">
-                <h2>On the Subject of Shifting Maze</h2>
-                <p class="flavour-text">I hope RNG will be nice with this one.</p>
+                <img src="img/Component/Switching Maze.svg" class="diagram">
+                <h2>モジュール詳細：切り替え迷路</h2>
+                <p class="flavour-text">特定の条件を持つ人に対してはよくない。</p>
 
-                <p>The module contains a <strong>Set</strong> button and a <strong>Seed</strong> identifier. Certain
-                    buttons will appear when you hover over certain areas of the module.</p>
+                <p>このモジュールには、<strong>Set</strong>と書かれたボタンと<strong>Seed</strong>値が表示されている。モジュールの特定の領域にカーソルを合わせることでボタンが表示される。</p>
 
-                <p>You are currently trapped in a virtual dungeon. You have no light source available. You only have a
-                    sound frequency generator on your inventory.
-                    You are currently placed on a random cell on a 6 by 6 celled maze. However, you are able to identify the
-                    seed of your current maze.</p>
+                <p>現在、仮想迷路に閉じ込められており、迷路には色が付いている。迷路は6×6であり、ランダムなセルに配置される。迷路にあるSeed値を使用することで、この迷路に関する十分な情報を得ることが出来る。</p>
 
-                <p>You need to use the seed to identify your actions. To identify your current position and exit, pair the first and second character, the third and the fourth character, the fifth and the sixth character, and the seventh and eighth character. Convert the 4 Base 64 pairs into a decimal, modulo 6.</p>
+                <p>Seed値を使用し、現在地点と目的地点を求める。Seed値の1，2番目、3，4番目、5，6番目、7，8番目をそれぞれペアにする。それらを2桁の六十四進数と見なし、十進数に変換して6でモジュロする。</p>
 
-                <p>Pair the first and second number and the third and fourth number. The first pair is your current position and the second pair is the exit of the maze. The first number of each pair is the row and the second number of each pair is the column. You noted that the top-left section of the maze has a coordinance of (0, 0).</p>
+                <p>次に、結果の1，2つ目、3，4つ目をペアにする。最初のペアを現在地点に、2つ目のペアを目的地点とする。各ペアの最初の数字を段、2つ目の数字を列とする。迷路の左上のセルは0，0とする。</p>
 
-                <p>Move your way around the maze until you reach the exit cell. However, every time you move to another cell; some walls will appear in your current maze position. You can’t see the walls.</p>
+                <p>目的地点のセルまで迷路を移動する必要がある。ただし、別のセルに移動するごとにダンジョンの色が変化する可能性(1/3)がある。前のパターンとは違う迷路になる。</p>
 
-                <p>To locate the walls around your position, use the sound frequency generator on your inventory. You
-                    will scan your current cell starting north, moving clockwise.</p>
+                <p>壁を見ることはできない。ただし、使用される可能性のある各迷路のパターンが下にある。</p>
 
-                <p>If the sound bounces back loudly, there is a wall in that direction. You can only use the item once, however. It will recharge after your next movement. If you slam on a wall, the dungeon will shake and generate a brand-new maze with a brand-new seed. Then, the module will strike.</p>
+                <p>壁にぶつかるとミスが記録され、Seed値と色がリセットされる。</p>
 
-                <p>If you are standing on the exit, press the <b>Set</b> button. This will forcefully activate that platform. The dungeon will shake after that. If the selected platform is incorrect, the dungeon will reset with a brand-new seed. Then, the module will strike. If the selected platform is correct, the module will be solved. However, did you escape the dungeon?</p>
+                <p>目的地点に到着したら、<strong>Set</strong>ボタンを押して送信する。間違ったセルで押した場合、ミスが記録され、Seed値と色がリセットされる。正しいセルでボタンを押すとモジュールが解除される。迷路を脱出できたか？</p>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Shifting Maze</span>
+                <span class="page-header-section-title">切り替え迷路</span>
             </div>
             <div class="page-content">
-                <table style="text-align: center;">
+                <table class="centered">
                     <tr>
-                        <th colspan="11" class="bluebg">The BASE64 Alphabet</th>
+                        <th colspan="11" class="bluebg">六十四進数アルファベット一覧</th>
                     </tr>
                     <tr>
-                        <th>Char.</th>
-                        <th>Dec.</th>
-                        <th>Hex.</th>
+                        <th>文字</th>
+                        <th>十進数</th>
+                        <th>十六進数</th>
                         <th class="bluebg">&nbsp;</th>
-                        <th>Char.</th>
-                        <th>Dec.</th>
-                        <th>Hex.</th>
+                        <th>文字</th>
+                        <th>十進数</th>
+                        <th>十六進数</th>
                         <th class="bluebg">&nbsp;</th>
-                        <th>Char.</th>
-                        <th>Dec.</th>
-                        <th>Hex.</th>
+                        <th>文字</th>
+                        <th>十進数</th>
+                        <th>十六進数</th>
                     </tr>
                     <tr>
                         <td class="fonttoday">A</td>
@@ -278,6 +309,7 @@
                         <td>36</td>
                         <td>24</td>
                         <td class="bluebg">&nbsp;</td>
+
                         <td class="fonttoday">6</td>
                         <td>58</td>
                         <td>3A</td>
@@ -356,7 +388,7 @@
                         <td>42</td>
                         <td>2A</td>
                         <td class="bluebg">&nbsp;</td>
-                        <td class="fonttoday">&nbsp;</td>
+                        <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
@@ -375,9 +407,69 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">切り替え迷路</span>
+            </div>
+            <div class="page-content">
+                <h2 class="centered">迷路一覧</h2>
+
+                <table class="centered mazes" style="float: left">
+                    <tr>
+                        <th style="background-color:#F00;color:#000">赤</th>
+                        <td><img src="img/Switching Maze/1 - Red.png"></td>
+                    </tr>
+                    <tr>
+                        <th style="background-color:#183C00;color:#FFF">緑</th>
+                        <td><img src="img/Switching Maze/2 - Green.png"></td>
+                    </tr>
+                    <tr>
+                        <th style="background-color:#090BFF;color:#FFF">青</th>
+                        <td><img src="img/Switching Maze/3 - Blue.png"></td>
+                    </tr>
+                    <tr>
+                        <th style="background-color:#F0F;color:#FFF">マゼンタ</th>
+                        <td><img src="img/Switching Maze/4 - Magenta.png"></td>
+                    </tr>
+                    <tr>
+                        <th style="background-color:#0FF;color:#000">シアン</th>
+                        <td><img src="img/Switching Maze/5 - Cyan.png"></td>
+                    </tr>
+                    <tr>
+                        <th style="background-color:#FFF800;color:#000">黄</th>
+                        <td><img src="img/Switching Maze/6 - Yellow.png"></td>
+                </table>
+                <table class="centered mazes" style="float: right">
+                    <tr>
+                        <td><img src="img/Switching Maze/7 - Black.png"></td>
+                        <th style="background-color:#000;color:#FFF">黒</th>
+                    </tr>
+                    <tr>
+                        <td><img src="img/Switching Maze/8 - White.png"></td>
+                        <th style="background-color:#FFF;color:#000">白</th>
+                    </tr>
+                    <tr>
+                        <td><img src="img/Switching Maze/9 - Gray.png"></td>
+                        <th style="background-color:#636363;color:#000">グレー</th>
+                    </tr>
+                    <tr>
+                        <td><img src="img/Switching Maze/10 - Orange.png"></td>
+                        <th style="background-color:#B85F00;color:#000">オレンジ</th>
+                    </tr>
+                    <tr>
+                        <td><img src="img/Switching Maze/11 - Pink.png"></td>
+                        <th style="background-color:#FFA7F2;color:#000">ピンク</th>
+                    </tr>
+                    <tr>
+                        <td><img src="img/Switching Maze/12 - Brown.png"></td>
+                        <th style="background-color:#3A2C09;color:#FFF">茶</th>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
         </div>
     </div>
 </body>
-
 </html>
