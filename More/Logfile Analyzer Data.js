@@ -3029,10 +3029,12 @@ let parseData = [
 						colours.push(colour);
 					}
 
+					console.log(colours)
+
 					let svg = `<br><svg class='cruel-synesthesia' transform="translate(75 0)" width="400" height="200" viewbox="100 250 1125 275">`;
 					for(let i = 0; i < finalInfo.length; i++) {
-						svg += `<rect class='color-cell' x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" fill='${colours[i]}'/>`;
-						svg += `<rect class='gray-cell' x="${cellSize * (i % 4) + cellSize + 300 + 300}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}"/>
+						svg += `<rect class="color-cell" x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:#${colours[i]}"/>`;
+						svg += `<rect class="gray-cell" x="${cellSize * (i % 4) + cellSize + 300 + 300}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}"/>
 										<text x="${cellSize * (i % 4) + cellSize + 300 + 362}" y="${cellSize * Math.floor(i / 4) + cellSize + 80}">${finalInfo[i]}</text>`;
 					}
 
