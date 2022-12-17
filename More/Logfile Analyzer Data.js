@@ -11378,10 +11378,10 @@ let parseData = [
 		loggingTag: 'Simon Smothers',
 		matches: [		
 			{
-				regex: /Square (\d) color (\w+) at \((-?\d+),(-?\d+)\)/,
+				regex: /Square (\d) color (\d) at \((-?\d+),(-?\d+)\)/,
 				handler: function(matches, module) {
 					module.squares ??= [ ];
-					module.squares.push({ size: parseInt(matches[1]), color: matches[2], x: parseInt(matches[3]), y: parseInt(matches[4]) });
+					module.squares.push({ size: parseInt(matches[1]), color: parseInt(matches[2]), x: parseInt(matches[3]), y: parseInt(matches[4]) });
 				}
 			},
 			{
@@ -11417,7 +11417,7 @@ let parseData = [
 						for (let square of module.squares ?? [ ]) {
 							svg += `<rect class='square' x='${square.x}' y='${square.y}' width='${square.size}' height='${square.size}' stroke='${strokeCodes[square.color]}'/>
 									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${square.color == 'Black' ? '#FFF' : '#000'}'
-										>${colorLettersByNames[square.color]}</text>`;						
+										>${colorLetters[square.color]}</text>`;						
 						}						
 						svg += "<circle cx='0.5' cy='0.5' r='0.125' fill='#444'/>";
 					}
