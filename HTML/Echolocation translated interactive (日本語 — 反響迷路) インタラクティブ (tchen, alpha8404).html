@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>反響迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        .click-box,
+        .grid-box {
+            fill-opacity: 0;
+        }
+
+            .click-box:hover,
+            .grid-box:hover {
+                fill-opacity: 0.3;
+            }
+
+        .canvas {
+            margin-top: 32px;
+        }
+
+        .line {
+            stroke: #555;
+            stroke-width: 0.5px;
+            stroke-dasharray: 0.1 1;
+            stroke-linecap: round;
+        }
+
+            .line.solid {
+                stroke-dasharray: none;
+                stroke: #888;
+                stroke-width: 1px;
+            }
+
+        .select-button {
+            border: #222 solid 1px;
+            width: 64px;
+            height: 64px;
+            margin-right: 16px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+            .select-button img {
+                width: 100%;
+            }
+
+            .select-button.selected {
+                border-width: 4px;
+            }
+
+        #canvas {
+            display: block;
+            width: 80%;
+            margin: 16px auto 0
+        }
+
+        @media screen and (min-width:900px) and (max-width:1652px) {
+            .multipage {
+                align-items: flex-start;
+            }
+
+                .multipage .interactive-page {
+                    max-width: 4in;
+                    min-height: unset;
+                    position: sticky;
+                    top: 10%;
+                    order: 1;
+                }
+
+                .multipage .interactive-section {
+                    align-items: start;
+                }
+
+                .multipage .interactive-page .page-header {
+                    display: none;
+                }
+
+                .multipage .interactive-page .page-content {
+                    margin: 24px;
+                    min-height: unset;
+                    padding-top: 0;
+                }
+
+                .multipage .interactive-page .page-footer {
+                    display: none;
+                }
+
+                .multipage .page:not(.interactive-page) {
+                    min-width: unset;
+                    max-width: 8.5in;
+                    width: calc(100% - 4.1in);
+                    order: 2;
+                }
+
+            #canvas {
+                display: block;
+                width: 100%;
+                margin: 16px auto 0
+            }
+        }
+
+        a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+            a:hover:not(.failed):not(.playing) {
+                color: #ff8;
+            }
+
+            a.playing {
+                color: #8f8;
+            }
+
+            a.failed {
+                cursor: not-allowed;
+                color: red;
+            }
+    </style>
+
+    <script>
+
+        class MazeDrawer {
+            constructor(h, w, options = {}) {
+                this.h = h;
+                this.w = w;
+                this.options = options;
+                this.viewWidth = options.viewWidth || 100;
+                this.viewHeight = options.viewHeight || 100;
+                this.hoverLineWidth = options.hoverLineWidth || 2;
+                this.vert = Array.from({
+                    length: w + 1
+                }, () => Array.from({
+                    length: h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: w
+                }, () => Array.from({
+                    length: h + 1
+                }, () => 0));
+                this.setMode(options.initMode || "");
+                this.modes = options.modes || {};
+                this.iconpos = {};
+
+            }
+
+            setCanvas(id) {
+                this.canvas = document.getElementById(id);
+            }
+
+            init() {
+                if (!this.canvas) {
+                    throw new Error("You must set canvas before initialization");
+                }
+
+                this.icons = {}
+                for (let mode in this.modes) {
+                    this.icons[mode] = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                    this.icons[mode].setAttribute("visibility", "hidden");
+                    this.icons[mode].setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                    this.icons[mode].setAttribute("href", this.modes[mode]);
+                    this.canvas.appendChild(this.icons[mode]);
+                }
+
+                this.$vertline = [];
+                this.$horizline = [];
+
+                for (let i = 0; i < this.w + 1; i++) {
+                    this.$vertline[i] = [];
+                    for (let j = 0; j < this.h; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("x2", this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        line.setAttribute("y1", this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        line.setAttribute("y2", this.hoverLineWidth / 2 + (j + 1) * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        this.canvas.appendChild(line);
+                        this.$vertline[i][j] = line;
+
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth + (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("width", this.hoverLineWidth);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleVert(i, j))
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    this.$horizline[i] = [];
+                    for (let j = 0; j < this.h + 1; j++) {
+                        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("class", "line");
+                        line.setAttribute("x1", (this.hoverLineWidth / 2 + i * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("x2", (this.hoverLineWidth / 2 + (i + 1) * (this.viewWidth - this.hoverLineWidth) / this.w));
+                        line.setAttribute("y1", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        line.setAttribute("y2", (this.hoverLineWidth / 2 + j * (this.viewHeight - this.hoverLineWidth) / this.h));
+                        this.canvas.appendChild(line);
+                        this.$horizline[i][j] = line;
+
+                        let linehover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        linehover.setAttribute("class", "click-box");
+                        linehover.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w);
+                        linehover.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h);
+                        linehover.setAttribute("height", this.hoverLineWidth);
+                        linehover.setAttribute("width", this.hoverLineWidth + (this.viewWidth - this.hoverLineWidth) / this.w);
+                        this.canvas.appendChild(linehover);
+                        linehover.addEventListener("click", () => this.toggleHoriz(i, j))
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h; j++) {
+                        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        rect.setAttribute("class", "grid-box");
+                        rect.setAttribute("x", i * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                        rect.setAttribute("y", j * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                        rect.setAttribute("height", (this.viewHeight - this.hoverLineWidth) / this.h - this.hoverLineWidth);
+                        rect.setAttribute("width", (this.viewWidth - this.hoverLineWidth) / this.w - this.hoverLineWidth);
+                        this.canvas.appendChild(rect);
+                        rect.addEventListener("click", () => this.setIcon(i, j));
+                        rect.addEventListener("contextmenu", e => {
+                            e.preventDefault();
+                            this.removeIcon(i, j);
+                        });
+
+                    }
+                }
+                if (this.options.onInit) this.options.onInit();
+            }
+
+            toggleVert(x, y) {
+                if (!this.vert[x]) {
+                    this.vert[x] = [];
+                }
+                if (!this.vert[x][y]) {
+                    this.vert[x][y] = 1;
+                    this.draw();
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+                    return;
+                }
+                this.vert[x][y] = 1 - this.vert[x][y];
+                this.draw();
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "vert");
+            }
+
+            toggleHoriz(x, y) {
+                if (!this.horiz[x]) {
+                    this.horiz[x] = [];
+                }
+                if (!this.horiz[x][y]) {
+                    this.horiz[x][y] = 1;
+                    if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+                    this.draw();
+                    return;
+                }
+                this.horiz[x][y] = 1 - this.horiz[x][y];
+                this.draw();
+                if (this.options.onToggleEdge) this.options.onToggleEdge(x, y, "horiz");
+            }
+
+            draw() {
+                for (let i = 0; i < this.w + 1; i++) {
+                    for (let j = 0; j < this.h; j++) {
+                        this.$vertline[i][j].setAttribute(
+                            "class",
+                            this.vert[i] && this.vert[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+
+                for (let i = 0; i < this.w; i++) {
+                    for (let j = 0; j < this.h + 1; j++) {
+                        this.$horizline[i][j].setAttribute(
+                            "class",
+                            this.horiz[i] && this.horiz[i][j] ? "line solid" : "line"
+                        );
+                    }
+                }
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) {
+                        this.icons[mode].setAttribute("visibility", "hidden");
+                        continue;
+                    }
+                    this.icons[mode].setAttribute("visibility", "visible");
+                    this.icons[mode].setAttribute("x", (this.iconpos[mode][0]) * (this.viewWidth - this.hoverLineWidth) / this.w + this.hoverLineWidth);
+                    this.icons[mode].setAttribute("y", (this.iconpos[mode][1]) * (this.viewHeight - this.hoverLineWidth) / this.h + this.hoverLineWidth);
+                }
+                if (this.options.onDraw) this.options.onDraw();
+            }
+
+            shift(dx, dy) {
+                if (
+                    (this.vert.some(v1 => v1.some(v2 => v2)) && (
+                        this.vert.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.vert.length - this.vert.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 > this.w ||
+                        Math.min.apply(null, this.vert.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.vert.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy >= this.h
+                    )) ||
+                    (this.horiz.some(v1 => v1.some(v2 => v2)) && (
+                        this.horiz.findIndex(v1 => v1.some(v2 => v2)) - dx < 0 ||
+                        this.horiz.length - this.horiz.slice().reverse().findIndex(v1 => v1.some(v2 => v2)) - dx - 1 >= this.w ||
+                        Math.min.apply(null, this.horiz.map(v1 => v1.findIndex(v2 => v2)).filter(i => i >= 0)) - dy < 0 ||
+                        Math.max.apply(null, this.horiz.filter(v1 => v1.some(v2 => v2)).map(v1 => v1.length - v1.slice().reverse().findIndex(v2 => v2) - 1)) - dy > this.h
+                    )) ||
+                    Object.keys(this.modes)
+                        .filter(mode => this.iconpos[mode])
+                        .some(mode => (
+                            this.iconpos[mode][0] - dx < 0 ||
+                            this.iconpos[mode][0] - dx >= this.w ||
+                            this.iconpos[mode][1] - dy < 0 ||
+                            this.iconpos[mode][1] - dy >= this.h
+                        ))
+
+                ) return;
+                this.vert = this.vert.map(
+                    (v1, i) => (i + dx < 0 || i + dx > this.w) ?
+                        Array.from({ length: this.h }, () => 0) :
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy >= this.h) ?
+                                0 :
+                                this.vert[i + dx][j + dy]
+                        )
+                );
+                this.horiz = this.horiz.map(
+                    (v1, i) => (i + dx < 0 || i + dx >= this.w) ?
+                        Array.from({ length: this.h + 1 }, () => 0) :
+                        v1.map(
+                            (v2, j) => (j + dy < 0 || j + dy > this.h) ?
+                                0 :
+                                this.horiz[i + dx][j + dy]
+                        )
+                );
+                for (let mode in this.modes) {
+                    if (this.iconpos[mode]) {
+                        this.iconpos[mode][0] -= dx;
+                        this.iconpos[mode][1] -= dy;
+                    }
+                }
+                this.draw();
+                if (this.options.onShift) this.options.onShift(dx, dy);
+            }
+
+            setIcon(x, y) {
+                if (!(this.mode in this.modes) || this.iconpos[this.mode]) return;
+                for (let mode in this.modes) {
+                    if (mode === this.mode || !this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        return;
+                    }
+                }
+                this.iconpos[this.mode] = [x, y];
+                this.draw();
+                if (this.options.onSetIcon) this.options.onSetIcon(x, y);
+            }
+
+            removeIcon(x, y) {
+                for (let mode in this.modes) {
+                    if (!this.iconpos[mode]) continue;
+                    if (this.iconpos[mode][0] === x && this.iconpos[mode][1] === y) {
+                        delete this.iconpos[mode];
+                        this.draw();
+                        if (this.options.onRemoveIcon) this.options.onRemoveIcon(x, y);
+                        return;
+                    }
+                }
+
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+                if (this.options.onSetMode) this.options.onSetMode(mode);
+            }
+
+            reset() {
+                this.vert = Array.from({
+                    length: this.w + 1
+                }, () => Array.from({
+                    length: this.h
+                }, () => 0));
+                this.horiz = Array.from({
+                    length: this.w
+                }, () => Array.from({
+                    length: this.h + 1
+                }, () => 0));
+                this.iconpos = {};
+                this.draw();
+                if (this.options.onReset) this.options.onReset();
+
+            }
+
+        }
+
+        window.addEventListener("load", () => {
+            const $left = document.getElementById("left-button");
+            const $right = document.getElementById("right-button");
+            const $up = document.getElementById("up-button");
+            const $down = document.getElementById("down-button");
+            const $reset = document.getElementById("reset-button");
+            $blankButton = document.getElementById("blank-select");
+            $keyButton = document.getElementById("key-select");
+            $exitButton = document.getElementById("exit-select");
+            $blank = document.getElementById("img-blank");
+            $key = document.getElementById("img-key");
+            $exit = document.getElementById("img-exit");
+
+            let maze = new MazeDrawer(4, 4, {
+                hoverLineWidth: 6,
+                modes: {
+                    blank: "img/Mystic Maze interactive (VFlyer)/marker.svg",
+                    key: "img/Mystic Maze interactive (VFlyer)/key.png",
+                    exit: "img/Mystic Maze interactive (VFlyer)/exit.svg"
+                },
+                initMode: "blank",
+                onSetMode: (mode) => {
+                    if (mode === "blank") {
+                        $blankButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $blankButton.setAttribute("class", "select-button");
+                    }
+                    if (mode === "key") {
+                        $keyButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $keyButton.setAttribute("class", "select-button");
+                    }
+                    if (mode === "exit") {
+                        $exitButton.setAttribute("class", "select-button selected");
+                    } else {
+                        $exitButton.setAttribute("class", "select-button");
+                    }
+                }
+            });
+            maze.setCanvas("canvas");
+            maze.init();
+
+            $left.addEventListener("click", () => maze.shift(1, 0));
+            $right.addEventListener("click", () => maze.shift(-1, 0));
+            $up.addEventListener("click", () => maze.shift(0, 1));
+            $down.addEventListener("click", () => maze.shift(0, -1));
+            $reset.addEventListener("click", () => maze.reset());
+
+            $blankButton.addEventListener("click", () => maze.setMode("blank"));
+            $keyButton.addEventListener("click", () => maze.setMode("key"));
+            $exitButton.addEventListener("click", () => maze.setMode("exit"));
+
+        });
+        $(function () {
+            $("span:contains(ping), span:contains(ding), span:contains(sonar)").next().each(function () {
+                let audio = $("<audio>")
+                    .on("error", function () {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "../HTML/audio/Echolocation/" + $(this).prev().text() + ".mp3")
+                    .on("ended", function () {
+                        button.removeClass("playing");
+                    })
+                    .appendTo($(this));
+
+                let button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function () {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo($(this));
+            })
+        });
+    </script>
+</head>
+
+<body>
+    <div class="section interactive-section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">反響迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Echolocation.svg" class="diagram">
+                <h2>モジュール詳細：反響迷路</h2>
+                <p class="flavour-text">目を閉じ、心を開こう…</p>
+                <ul>
+                    <li>このモジュールは真っ黒だが、見えないボタンが5つ存在する。</li>
+                    <li>各方位には「矢印ボタン」があり、東/西/南を押すとその方向に向き、北を押すとその方向に1つ移動する。</li>
+                    <li>中央のボタンを押すと、自身から音を前方に発する。</li>
+                    <li>反響音はオブジェクトから跳ね返り、自身に戻ってくる。</li>
+                    <li>鍵の反響音は「<span>ピーン</span><span></span>」、出口の反響音は「<span>リーン</span><span></span>」、壁の反響音は「<span>ソナー音</span><span></span>」である。</li>
+                    <li>音が1スペース移動するのには1秒かかる。ボタンを押すとタイマーが開始する。</li>
+                    <li>迷路には鍵と出口が存在し、それらがある方向に対して音を発すると異なる反響音が返される。</li>
+                    <li>鍵があるセルに移動し、中央のボタンを長押しすることで鍵を拾う事ができる。</li>
+                    <li>鍵を取得したら、出口のあるセルに移動し、中央のボタンを長押しすることで鍵を解除し、モジュールも解除される。鍵が無い状態で鍵を開けようとするとミスが記録される。また、間違った場所で鍵を拾おうとしたり、壁にぶつかったりした場合もミスが記録される。</li>
+                </ul>
+
+                <h3>迷路の仕様</h3>
+                    <ul>
+                        <li>迷路は4×4であり、外は壁で覆われている。</li>
+                        <li>壁/鍵/出口はランダムである。</li>
+                        <li>壁は2つのセルの間を直交するように区切っている。</li>
+                        <li>自身/鍵/出口はセルの中心にあるため、鍵と出口の反響音は必ず整数秒で返ってくる。一方壁はセルの端にあるので、整数秒+0.5秒遅く返ってくる。</li>
+                    </ul>
+                </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02 interactive-page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">反響迷路</span>
+            </div>
+            <div class="page-content">
+                <h3>インタラクティブ</h3>
+                <ul>
+                    <li>壁を左クリックして、壁を配置/削除する。</li>
+                    <li>セルを左クリックしてアイコンを配置する。</li>
+                    <li>アイコンを削除するには、セルを右クリックする。</li>
+                    <li>矢印をクリックして、壁とアイコンをその方向に移動する。</li>
+                    <li>迷路の上にあるアイコンをクリックして、配置するアイコンを選択できる。</li>
+                </ul>
+                <div>
+                    <button id="blank-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/marker.svg"></button>
+                    <button id="key-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/key.png"></button>
+                    <button id="exit-select" class="select-button"><img class="fullwidth" src="img/Mystic Maze interactive (VFlyer)/exit.svg"></button>
+                </div>
+                <div>
+                    <button id="reset-button">リセット</button>
+                    シフト:
+                    <button id="left-button">←</button>
+                    <button id="up-button">↑</button>
+                    <button id="down-button">↓</button>
+                    <button id="right-button">→</button>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" id="canvas">
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+
+</html>
