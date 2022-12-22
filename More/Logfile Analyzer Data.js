@@ -3478,6 +3478,70 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'digitalGrid',
+		loggingTag: 'Digital Grid',
+		matches: [		
+			{
+				regex: /The grid is now:/,
+				handler: function(_, module) {
+					const grid = readTaggedLines(5).map(l => l.substring(2).split(' '));
+					const fills = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0', 'W':'#FFF' };
+					let contents = '';
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+							const color = grid[row][col][0];
+							const num = grid[row][col][1];
+							const textColor = color == 'B' ? '#FFF' : '#000'; 
+							contents += `<g transform='translate(${12 * col}, ${12 * row})'>
+									<rect class='tile' width='10' height='10' ry='1' fill='${fills[color]}'/>
+									<text class='digit' x='5' y='5' fill='${textColor}'>${num}</text>
+									<text class='color-name' x='2' y='2' fill='${textColor}'>${color}</text>
+								</g>`;
+						}
+					}
+					module.svgContents = contents;
+					module.push({ label:'Displayed grid:', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` });
+					return true;
+				}
+			},
+			{
+				regex: /Correct Presses|Presses Submitted/,
+				handler: function(matches, module) {
+					let pressed = readTaggedLines(5).map(l => l.substring(2).split('').map(t => t == 'O'));
+					let contents = module.svgContents;
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+							if (!pressed[row][col])
+								contents += `<rect class='cover' x='${12 * col}' y='${12 * row}' width='10' height='10' ry='1'/>`;
+						}
+					}
+					if (matches[0][0] == 'C')
+						module.push({ label:'Press the tiles shown below:', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` });
+					else {
+						if (readTaggedLine().startsWith(': Strike!')){
+							const wrongs = readTaggedLines(5).map(l => l.substring(2).split('').map(t => t == '!'));
+							for (let row = 0; row < 5; row++) {
+								for (let col = 0; col < 5; col++) {
+									if (wrongs[row][col])
+										contents += `<path class='cross' transform='translate(${12 * col}, ${12 * row})' d='m1.5 2.9 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1-1.4 1.4-2.1-2.1-2.1 2.1-1.4-1.4 2.1-2.1z'/>`
+								}
+							}
+							module.push({ label:'The tiles shown below were pressed. Strike! The tiles marked with an X were set incorrectly', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` }); 
+						}
+						else {
+							linen--;
+							module.push({ label:'The tiles shown below were pressed.', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` });
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Dominosa",
 		moduleID: "DominosaModule",
 		loggingTag: "Dominosa",
