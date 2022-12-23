@@ -6158,6 +6158,35 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "LightBulbs",
+		loggingTag: "Light Bulbs",
+		matches: [
+			{
+				regex: /Table for Ruleseed Number/,
+				handler: function (match, module) {
+					const data = readTaggedLines(8).map(l => l.split(', '));
+					readLine();
+					const order = [ 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Cyan', 'Magenta' ];
+					let table = "<table class='light-bulbs'> <tr> <th class='corner'></th>";
+					for (let i = 0; i < 8; i++) 
+						table += `<th>${order[i]}</th>`;
+					table += '</tr>';
+					for (let row = 0; row < 8; row++) {
+						table += `<tr> <th>${order[row]}</th>`;
+						for (let col = 0; col < 8; col++)
+							table += `<td>${data[row][col]}</td>`;
+						table += "</tr>";
+					}
+					module.push([ match.input, [{ obj: table + '</table>', nobullet: true }] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "LightCycleModule",
 		loggingTag: "Light Cycle",
 		matches: [
