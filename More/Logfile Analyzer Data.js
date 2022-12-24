@@ -2469,7 +2469,7 @@ let parseData = [
 		loggingTag: ["Colour Flash", "Colour Flash PL", "Colour Flash ES", "Colour Flash Translated"],
 		matches: [
 			{
-				regex: /Module generated/,
+				regex: /Module ge/,
 				handler: function (matches, module) {
 					let table = $('<table class="colour-flash-table">');
 					let rowHeader = $('<tr>').appendTo(table);
@@ -2478,7 +2478,7 @@ let parseData = [
 					$('<th>').text("Color").appendTo(rowHeader);
 					$('<th>').text("Valid Response").appendTo(rowHeader);
 					let count = 0;
-					let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? (.+)\b\s+(?:\||,)(?: Color)? (.+)\b\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
+					let exp = /(?:\[Colour Flash Translated #\d+\] )?(\d)\s?(?:\||:)(?: Word)? ([^\s]+)\s+(?:\||,)(?: Color)? ([^\s]+)\s+(?:\||:)(?: Valid Response)?\s+(.+)/;
 					for (let i = 0; i < 15; i++) {
 						let line = readLine();
 						if (exp.test(line)) {
