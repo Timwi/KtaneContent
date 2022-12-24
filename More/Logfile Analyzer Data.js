@@ -3358,6 +3358,29 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "derivatives",
+		loggingTag: "Derivatives",
+		matches: [
+			{
+				regex: /generating (\d+) equations/,
+				handler: function (matches, module) {
+					module.eqs = parseInt(matches[1]);
+				}
+			},
+			{
+				regex: /the (equations|solutions) are:/,
+				handler: function (matches, module) {
+					const rows = readTaggedLines(module.eqs).map(l => ({ obj: pre(l), nobullet:true }));
+					module.push([ matches.input, rows ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Determinants",
 		moduleID: "determinant",
 		loggingTag: "Needy Determinants"
