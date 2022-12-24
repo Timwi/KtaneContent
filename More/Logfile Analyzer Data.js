@@ -12913,6 +12913,106 @@ let parseData = [
 		]	
 	},
 	{
+		moduleID: "unfairsForgottenCiphers",
+		loggingTag: "Unfair's Forgotten Ciphers",
+		displayName: "Unfair’s Forgotten Ciphers",
+		matches: [
+			{
+				regex: /((?:Final binary string|Substituted Encodings|Binary string obtained from constucting up to this point|Encoded with the current Huffman Tree|Encoded With Keystring and Huffman Tree): )(.+)/,
+				handler: function (matches, module) {
+					module.push({ label: matches[1], obj:pre(matches[2]) });
+					return true;
+				}
+			},
+			{
+				regex: /Constructing Huffman Tree for Digits/,
+				handler: function(match, module) {
+					module.buildDigits ??= [ ];
+					module.buildMode = 'digits';
+					module.push([ match.input, module.buildDigits ]);
+					return true;
+				}
+			},
+			{
+				regex: /Resuming Constructing Huffman Tree for Letters/,
+				handler: function(match, module) {
+					module.buildLetters ??= [ ];
+					module.buildMode = 'letters';
+					module.push([ match.input, module.buildLetters ]);
+					return true;
+				}
+			},
+			{
+				regex: /Leafing|Detected "/,
+				handler: function(match, module) {
+					if (module.buildMode == 'digits') 
+						module.buildDigits.push(match.input);
+					else if (module.buildMode == 'letters') 
+						module.buildLetters.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /(Generated 3x3 Matrix in \d+ attempts: )(.+)/,
+				handler: function(matches, module) {
+					const data = matches[2].split(' ');
+					module.push({ label: matches[0], obj: `<table class='ufc-matrix'>
+						<tr> <td class='bracket top left'></td> <td>${data[0]}</td> <td>${data[1]}</td> <td>${data[2]}</td> <td class='bracket top right'></td> </tr>
+						<tr> <td class='bracket left'></td> <td>${data[3]}</td> <td>${data[4]}</td> <td>${data[5]}</td> <td class='bracket right'></td> </tr>
+						<tr> <td class='bracket bottom left'></td> <td>${data[6]}</td> <td>${data[7]}</td> <td>${data[8]}</td> <td class='bracket bottom right'></td> </tr> </table>` 
+					});
+					return true;
+				}
+			},
+			{
+				regex: /In Depth Huffman Key:/,
+				handler: function(match, module) {
+					const entries = readTaggedLine().split(', ');
+					let table = "<table class='ufc-huffman-key'>";
+					for (let entry of entries) {
+						let entryMatch = entry.match(/\[([01]+): (\w)\]/);
+						table += `<tr> <th>${entryMatch[1]}</th> <td>${entryMatch[2]}</td> </tr>`;
+					}
+					module.push([ match.input, [{ obj: table + '</table>', nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /(In depth keystring to color: )(.+)/,
+				handler: function(matches, module) {
+					const entries = matches[2].split(', ');
+					
+					//Directly lifted from the manual with <text> elements removed
+					let baseSVG = "<svg class='ufc-keystring-colors' viewBox='0 0 200 118.92'> <path d='M38.8 30.21v2.57h139.58V30.2z'></path> <path class='s' d='m32.48 109.15 1.2-1.2-4.2 1.2 4.2 1.2zm144.81 0-1.2 1.2 4.2-1.2-4.2-1.2z' fill-rule='evenodd' stroke='#000' stroke-width='2' transform='matrix(.95427 0 0 1 8.5 -77.65)'></path> <path d='M110.7 2.41q0 .76-.37 1.31t-1.08.82q.42.27.7.6.29.31.88 1.21l1.53 2.31h-1.48l-1.37-2.13q-.6-.97-1.06-1.3-.46-.34-.97-.34h-.56v3.77h-1.24V0h2.39q.82 0 1.42.34.6.32.9.88.3.55.3 1.2zm-1.27 0q0-.63-.38-.97-.37-.35-1.07-.35h-1.06V3.8h.8q.79 0 1.25-.29.46-.3.46-1.1z' aria-label='R'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 3.2 -81.36)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <path class='s' d='M111.23 19.66q0 1.34-.38 2.36-.37 1-1.01 1.56-.63.54-1.4.54-.83 0-1.47-.56-.63-.56-.99-1.56-.35-1.01-.35-2.32 0-1.41.41-2.42.41-1 1.06-1.52.66-.5 1.38-.5.8 0 1.42.57.63.58.98 1.58t.35 2.27zm-2.81 3.32q.71 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8t-.56-1.13q-.36-.39-.8-.39-.44 0-.78.4-.35.38-.55 1.12-.2.74-.2 1.77 0 1.55.4 2.44.43.88 1.13.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path d='M161.06 13.68h2.27v4.8h4.8v2.3h-4.8v4.79h-2.27v-4.8h-4.81V18.5h4.8z' aria-label='+'></path> <path d='M5.18 57.89q0 1.28-1.32 1.83.95.17 1.51.79.56.6.56 1.43 0 .81-.45 1.34-.45.54-1.17.78t-1.54.24H0v-8.66h2.5q1.28 0 1.98.62t.7 1.63zm-1.29.1q0-.66-.37-.96-.37-.3-1.23-.3H1.23v2.64h.88q.91 0 1.34-.39.44-.4.44-1zm.75 3.84q0-1.4-2.15-1.4H1.23v2.78h1.3q1.09 0 1.6-.34.52-.34.52-1.04z' aria-label='B'></path> <path d='M28.61 41.75h-2.57V80.8h2.57z'></path> <path class='s' d='m27.32 44.04 1.2 1.15-1.2-4.01-1.2 4zm0 34.47-1.2-1.14 1.2 4 1.2-4z' fill-rule='evenodd' stroke='#000' stroke-width='1.95'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 -37.57 -25.86)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <path class='s' d='M18.47 60.7q0 1.35-.38 2.37-.37 1-1 1.55-.64.55-1.41.55-.83 0-1.47-.56-.63-.56-.98-1.56-.35-1.01-.35-2.32 0-1.41.4-2.42.42-1.01 1.07-1.52.65-.5 1.38-.5.8 0 1.42.57.62.58.97 1.58t.35 2.26zm-2.8 3.33q.7 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8-.21-.75-.57-1.13-.35-.39-.8-.39-.43 0-.78.4-.35.38-.55 1.12-.2.73-.2 1.76 0 1.56.41 2.45.42.88 1.12.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path d='M14.81 38.26h2.27v4.8h4.81v2.3h-4.8v4.79H14.8v-4.8h-4.8v-2.28h4.8z' aria-label='+'></path> <path d='M75.03 90.63v-2.56H35.98v2.56z'></path> <path class='s' d='m72.74 89.35-1.14 1.2 4-1.2-4-1.2zm-34.47 0 1.15-1.2-4.01 1.2 4 1.2z' fill-rule='evenodd' stroke='#000' stroke-width='1.95'></path> <path d='M55.38 111.13q-.93 0-1.7.44-.77.44-1.22 1.2-.45.76-.45 1.7 0 .96.44 1.72t1.22 1.2q.78.44 1.76.44.48 0 .85-.08.37-.07 1.1-.3v-1.8h-1.66v-1.1h2.91v3.66q-1.55.7-3.17.7-1.57 0-2.63-.63-1.07-.64-1.6-1.64-.51-1.01-.51-2.09 0-1.22.58-2.26.59-1.03 1.66-1.65 1.08-.6 2.45-.6.75 0 1.42.15.67.16 1.62.58v1.26q-.73-.42-1.53-.66-.8-.24-1.54-.24z' aria-label='G'></path> <path d='M70.01 94.25h2.27v4.81h4.81v2.29h-4.8v4.8H70v-4.8h-4.8v-2.29H70z' aria-label='+'></path> <path class='s' d='M58.09 100.24q0 1.35-.38 2.36-.38 1.01-1.01 1.56-.64.54-1.41.54-.83 0-1.47-.55-.63-.56-.98-1.57-.35-1-.35-2.32 0-1.4.41-2.41.41-1.01 1.06-1.52.65-.51 1.38-.51.8 0 1.42.57.62.58.97 1.59.36 1 .36 2.26zm-2.82 3.32q.72 0 1.14-.86.43-.87.43-2.42 0-1.06-.2-1.8-.21-.76-.57-1.14-.35-.38-.8-.38-.43 0-.78.39-.34.39-.55 1.12-.2.74-.2 1.77 0 1.56.41 2.44.43.88 1.13.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 -13.58 -2.51)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <rect x='32' y='38' width='14.5' height='14.5' fill='#44F'></rect><rect x='48.1' y='38' width='14.5' height='14.5' fill='#08F'></rect><rect x='64.2' y='38' width='14.5' height='14.5' fill='#0FF'></rect><rect x='85.30000000000001' y='38' width='14.5' height='14.5' fill='#80F'></rect><rect x='101.4' y='38' width='14.5' height='14.5' fill='#88F'></rect><rect x='117.5' y='38' width='14.5' height='14.5' fill='#8FF'></rect><rect x='138.60000000000002' y='38' width='14.5' height='14.5' fill='#F0F'></rect><rect x='154.70000000000002' y='38' width='14.5' height='14.5' fill='#F8F'></rect><rect x='170.8' y='38' width='14.5' height='14.5' fill='#FFF'></rect><rect x='32' y='54.1' width='14.5' height='14.5' fill='#448'></rect><rect x='48.1' y='54.1' width='14.5' height='14.5' fill='#088'></rect><rect x='64.2' y='54.1' width='14.5' height='14.5' fill='#0F8'></rect><rect x='85.30000000000001' y='54.1' width='14.5' height='14.5' fill='#808'></rect><rect x='101.4' y='54.1' width='14.5' height='14.5' fill='#888'></rect><rect x='117.5' y='54.1' width='14.5' height='14.5' fill='#8F8'></rect><rect x='138.60000000000002' y='54.1' width='14.5' height='14.5' fill='#F08'></rect><rect x='154.70000000000002' y='54.1' width='14.5' height='14.5' fill='#F88'></rect><rect x='170.8' y='54.1' width='14.5' height='14.5' fill='#FF8'></rect><rect x='32' y='70.2' width='14.5' height='14.5' fill='#000'></rect><rect x='48.1' y='70.2' width='14.5' height='14.5' fill='#080'></rect><rect x='64.2' y='70.2' width='14.5' height='14.5' fill='#0F0'></rect><rect x='85.30000000000001' y='70.2' width='14.5' height='14.5' fill='#844'></rect><rect x='101.4' y='70.2' width='14.5' height='14.5' fill='#880'></rect><rect x='117.5' y='70.2' width='14.5' height='14.5' fill='#8F0'></rect><rect x='138.60000000000002' y='70.2' width='14.5' height='14.5' fill='#F00'></rect><rect x='154.70000000000002' y='70.2' width='14.5' height='14.5' fill='#F80'></rect><rect x='170.8' y='70.2' width='14.5' height='14.5' fill='#FF0'></rect><rect x='170.9' y='38.1' width='14.3' height='14.3' fill='transparent' stroke='#000' stroke-width='0.3'></rect>";
+					
+					const positions = { 'Blue':[0,0,2], 'Azure':[0,1,2], 'Cyan':[0,2,2], 'Indigo':[0,0,1], 'Teal':[0,1,1], 'Jade':[0,2,1], 'Black':[0,0,0], 'Forest':[0,1,0], 'Green':[0,2,0], 'Violet':[1,0,2], 'Maya':[1,1,2], 'Aqua':[1,2,2], 'Plum':[1,0,1], 'Gray':[1,1,1], 'Mint':[1,2,1], 'Maroon':[1,0,0], 'Olive':[1,1,0], 'Lime':[1,2,0], 'Magenta':[2,0,2], 'Pink':[2,1,2], 'White':[2,2,2], 'Rose':[2,0,1], 'Salmon':[2,1,1], 'Cream':[2,2,1], 'Red':[2,0,0], 'Orange':[2,1,0], 'Yellow':[2,2,0] };
+					const whiteText = [ 'Blue', 'Indigo', 'Black', 'Teal', 'Forest', 'Violet', 'Plum', 'Maroon', 'Olive', 'Rose', 'Red' ];
+					const xBase = 39.2; //X POSITION OF BLACK
+					const yBase = 78.7; //Y POSITION OF BLACK
+					const xModBig = 53.3; //RED MODIFIER
+					const xModSmall = 16.1; //GREEN MODIFIER
+					const yMod = -16.1; //BLUE MODIFIER
+					
+					for (let entry of entries) {
+						const entryMatch = entry.match(/\[([\w-]): (\w+)\]/);
+						const channels = positions[entryMatch[2]];
+						
+						const xCoord = xBase + xModBig * channels[0] + xModSmall * channels[1];
+						const yCoord = yBase + yMod * channels[2];
+						const textColor = whiteText.includes(entryMatch[2]) ? '#FFF' : '#000';
+						
+						baseSVG += `<text x='${xCoord}' y='${yCoord}' fill='${textColor}'>${entryMatch[1]}</text>`;
+					}
+					module.push({ label:matches[1], obj:baseSVG + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "USA",
 		loggingTag: "USA Maze",
 		displayName: "USA Maze",
