@@ -5636,6 +5636,36 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'juxtacolourFlash',
+		loggingTag: 'Juxtacolour Flash',
+		matches: [
+			{
+				regex: /The configuration of the walls that must be avoided:/,
+				handler: function (match, module) {
+					const grid = readTaggedLines(23).map(l => l.split(''));
+					let svg = "<svg class='juxtacolour-flash' viewBox='-20 -20 1140 1140'>"
+					for (let row = 0; row < 11; row++) {
+						for (let col = 0; col < 11; col++) {
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
+							if (grid[2 * row][2 * col + 1] == '■') //Up
+								g += '<line x1=-10 y1=0 x2=110 y2=0/>';
+							if (grid[2 * row + 1][2 * col] == '■') //Left
+								g += '<line x1=0 y1=-10 x2=0 y2=110/>';
+							svg += g + '</g>';
+						}
+					}
+					svg += "<line x1=0 y1=1100 x2=1110 y2=1100 />";
+					svg += "<line x1=1100 y1=0 x2=1100 y2=1110 />";
+					module.push({ label:match.input, obj:svg + '</svg>' });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "keepClicking",
 		loggingTag: "Keep Clicking",
 		matches: [
