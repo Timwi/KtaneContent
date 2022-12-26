@@ -11504,9 +11504,8 @@ let parseData = [
 				regex: /(Generated|Submitted) Grid: (.+)/,
 				handler: function(matches, module) {
 					const hexCodes = [ '#000', '#00F', '#0F0', '#0FF', '#F00', '#F0F', '#FF0', '#DDD' ];
-					const strokeCodes = { 'Black':'#222', 'Blue':'#006', 'Green':'#060', 'Cyan':'#066', 'Red':'#600', 'Magenta':'#606', 'Yellow':'#660', 'White':'#666' };
+					const strokeCodes = [ '#222', '#006', '#060', '#066', '#600', '#606', '#660', '#666' ];
 					const colorLetters = 'KBGCRMYW';
-					const colorLettersByNames = { 'Black':'K', 'Blue':'B', 'Green':'G', 'Cyan':'C', 'Red':'R', 'Magenta':'M', 'Yellow':'Y', 'White':'W' };
 					const triplets = matches[2].split('|').map(str => 
 																 str.split(',').map(digit => 
 																                    parseInt(digit)
