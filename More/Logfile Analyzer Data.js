@@ -11388,6 +11388,68 @@ let parseData = [
 		loggingTag: "String Order"
 	},
 	{
+		moduleID: "Signals",
+		loggingTag: "Signals",
+		matches: [
+			{
+				regex: /S1 Mapping:/,
+				handler: function(match, module) {
+					const lines = [ match.input, readTaggedLine(), readTaggedLine() ];
+					const signs = { 'NEGATIVE':'–', 'ZERO':'0', 'POSITIVE':'+' };
+					let matches = lines.map(l => l.match(/S\d Mapping: UP->(\w+),DOWN->(\w+),CENTER->(\w+)/));
+					let mappingMatch = readTaggedLine().match(/S1->C(\d),S2->C(\d),S3->C(\d)/);
+					let switchBase = `<g class='switch-base'><rect width='10' height='30' ry='5'/> <circle r='2.5' cx='5' cy='15'/></g>`;
+					let svg = `<svg class='signals-switches' viewbox='-1 -1 42 32'>`;
+					for (let sw = 0; sw < 3; sw++ ){
+						let g = `<g transform='translate(${15 * sw}, 0)'> ${switchBase}`;
+						g += `<text class='channel' x='5' y='27'>C${mappingMatch[sw + 1]}</text>`;
+						for (let i = 0; i < 3; i++) {
+							g += `<text class='sign' x='5' y='${6 * i + 9}'>${signs[matches[sw][i + 1]]}</text>`;
+						}
+						svg += g + '</g>';
+					}
+					module.push({ label:'Switch Mappings:', obj:svg });
+				}
+			},
+			{
+				regex: /(INPUT|GENERATOR): (\(C1=(\w+),C2=(\w+),C3=(\w+)\))/,
+				handler: function (matches, module) {
+					
+					module.generateState ??= function(str) {
+						const nums = { 'NEGATIVE':-1, 'ZERO':0, 'POSITIVE':1 };
+						const getFigureNum = (c1, c2, c3) => 9 * c1 + 3 * c2 + c3 + 1;
+						
+						let channels = str.match(/\(C1=(\w+),C2=(\w+),C3=(\w+)\)/);
+						let values = [ nums[channels[1]], nums[channels[2]], nums[channels[3]] ];
+						let tern = values.map(c => c == -1 ? 2 : c);
+						let fig = getFigureNum(tern[0], tern[1], tern[2]);
+						return `${values.join(',')} (fig.${fig})`;
+					}
+					
+					let label = matches[1] == 'INPUT' ? "Input signal: " : "Current generator signal: ";
+					module.push(label + module.generateState(matches[2]));
+				}
+			},
+			{
+				regex: /S(\d)->(UP|DOWN|CENTER)/,
+				handler: function (matches, module) {
+					module.push(`Switch ${matches[1]} set to ${matches[2].toLowerCase()}.`);
+				}
+			},
+			{
+				regex: /(PASS|STRIKE)! INPUT:([^\s]+) GENERATOR:([^\s]+) SOLUTION:([^\s]+)/,
+				handler: function(matches, module) {
+					let lines = [ ];
+					lines.push("Input signal: " + module.generateState(matches[2]));
+					lines.push("Generator signal: " + module.generateState(matches[3]));
+					lines.push("Solution: " + module.generateState(matches[4]));
+					lines.push(matches[1] == 'PASS' ? 'Module solved!' : 'Strike!');
+					module.push([ 'Submission:', lines ]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SillySlots",
 		loggingTag: "Silly Slots",
 		matches: [
