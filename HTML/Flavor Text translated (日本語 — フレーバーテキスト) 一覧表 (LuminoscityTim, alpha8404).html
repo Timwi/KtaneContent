@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>フレーバーテキスト — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        // const JSON_URL = "http://localhost:8990/json/flavourtext";
+        const JSON_URL = "https://ktane.timwi.de/json/flavourtext";
+
+        let table = $("table.texts");
+        let display = $("span.showing");
+        function fetchJSON() {
+            return fetch(JSON_URL)
+            .then((v) => v.json())
+            .then((json) => {
+                const allMods = json.KtaneModules.filter(
+                    (module) => module.Flavour && module.Flavour.length > 0 && module.Flavour[0].length > 0
+                );
+                allMods.sort((e1, e2) => e1.Name.localeCompare(e2.Name));
+
+                return allMods;
+            });
+        }
+
+        function fillTable(allMods) {
+            let count = 0;
+            allMods.forEach((mod, idx) => {
+                // if (mod.Flavour.length > 1) {
+                // if (mod.Flavour.some(x => x.includes("\""))) {
+                count++;
+                let tr = $("<tr>").appendTo(table);
+                let tdN = $("<td>").text(mod.Name).appendTo(tr);
+                let tdF = $("<td>").appendTo(tr);
+                mod.Flavour.forEach((flav, i) => {
+                    if (i > 0)
+                        $("<div>").addClass("vspace").appendTo(tdF);
+                    $("<div>").html(flav).appendTo(tdF);            //toggle the comment state of these lines
+                    // let div = $("<div>").html(flav);             //to remove all formatting of the
+                    // $("<div>").text(div.text()).appendTo(tdF);   //flavour-texts in table
+                });
+                // }
+            });
+            display.text(`${count}モジュールを表示`);
+        }
+
+        fetchJSON().then((allMods) => {
+            fillTable(allMods);
+        });
+    });
+    </script>
+    <style>
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            width: 9.5in;
+        }
+        table.texts td:nth-child(2) {
+            max-width: 50%;
+        }
+        table.texts td:nth-child(1) {
+            padding: 0.1em 0.2em 0.1em;
+        }
+        .vspace { height: 6mm; }
+        span.showing {
+            font-size: 25px;
+            font-weight: bold;
+        }
+        .page-bg-03 .page-content {
+            margin: 0 0.2in;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">フレーバーテキスト</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Flavor Text.svg" class="diagram">
+                <h2>モジュール詳細：フレーバーテキスト</h2>
+                <p class="flavour-text">あなたは役に立ちました。</p>
+                <ul>
+                    <li>モジュールは、他のマニュアルページ(MODマニュアルを含む)のフレーバーテキストを表示する。</li>
+                    <li>フレーバーテキストが爆弾のモジュールのいずれかのものなら「Ｙ」を、そうでないなら「Ｎ」を押す。</li>
+                    <li>間違ったボタンを押すとミスが発生し、表示されるフレーバーテキストが変更される。</li>
+                    <li>注：同じフレーバーテキストを持つモジュールが複数ある場合、いずれかが爆弾にあれば「Ｙ」を、いずれも含まれていない場合のみ「Ｎ」を押す。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">フレーバーテキスト</span>
+            </div>
+            <div class="page-content">
+                <span class="showing"></span>
+                <table class="texts">
+                    <tr><th>名前</th><th>フレーバーテキスト</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
