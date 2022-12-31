@@ -8,26 +8,12 @@ class DungeonMap {
 
     constructor(html) {
         this.id = this.idcounter++;
-        this.HTML = $(`<div>`)
-            .css("background-image", 'url("./img/Dungeon/MapWalls.png")')
-            .css("background-repeat", 'no-repeat')
-            .css("min-height", '612px')
-            .css("color", "#363636")
-            .css("font-weight", "bold")
-            .css("font-size", "larger")
-            .appendTo(
-                html.css("background-image", 'url("./img/Dungeon/Map.png")')
-                    .css("background-repeat", 'no-repeat')
-                    .css("min-height", '612px')
-            );
+        this.HTML = $(`<div>`).addClass('walls') .appendTo( html.addClass('dungeon-map') );
         for (let i = 1; i <= 15; ++i) {
             this.HTML.append(
-                $(`<div>`)
-                    .css("position", "absolute")
+                $(`<div>`).addClass('stage')
                     .css("left", this.getLeft(i))
                     .css("top", this.getTop(i))
-                    .css("min-width", "80px")
-                    .css("min-height", "55px")
             );
         }
 
@@ -176,35 +162,14 @@ class DungeonMap {
 
         this.HTML.children(`:nth-child(${stage})`)
             .append(
-                $(`<div>`)
-                    .css("margin", "auto")
-                    .css("width", "min-content")
-                    .css("padding-top", "3px")
-                    .css("padding-right", "10px")
+                $(`<div>`).addClass('stage-info')
                     .append(
-                        $(`<div>`)
-                            .css("background-image", 'url("./img/Dungeon/Die.png")')
-                            .css("background-repeat", 'no-repeat')
-                            .css("width", "min-content")
-                            .append(
-                                $(`<p>${roll}</p>`)
-                                    .css("margin", "0 0 0 25px")
-                                    .css("width", "min-content")
-                            )
-                    )
-                    .append(
-                        $(`<div>`)
-                            .css("background-image", 'url("./img/Dungeon/Stairs.png")')
-                            .css("background-repeat", 'no-repeat')
-                            .css("background-size", "auto 100%")
-                            .css("width", "min-content")
-                            .append(
-                                $(`<p>${level}</p>`)
-                                    .css("margin", "0 0 0 25px")
-                                    .css("width", "min-content")
-                            )
-                    )
-            );
+                        $(`<div>`).addClass('die')
+                            .append($(`<p>${roll}</p>`).addClass('value')))
+                    .append( 
+						$(`<div>`).addClass('stairs')
+							.append( $(`<p>${level}</p>`).addClass('value')))
+            );	
     }
 
     addFight(enemy) {
@@ -222,8 +187,7 @@ class DungeonMap {
             info.fadeOut();
         };
 
-        $(`<div>`)
-            .css("position", "absolute")
+        $(`<div>`).addClass('enemy-encounter')
             .css("left", this.getEnemyLeft(this.lastStage))
             .css("top", this.getEnemyTop(this.lastStage))
             .append(
@@ -234,18 +198,13 @@ class DungeonMap {
 
         this.HTML.children(":nth-child(17)")
             .append(
-                $(`<div>`)
-                    .css("position", "absolute")
+                $(`<div>`).addClass('enemy-encounter')
                     .css("left", this.getEnemyLeft(this.lastStage))
                     .css("top", this.getEnemyTop(this.lastStage))
                     .append(
                         info =
-                        $(
-                            `<div style="background-color: #ddd; border-radius: 5px; text-align: center; padding: 15px;">
-                                <p style="margin: auto;">${enemy}</p>
-                            </div>`
-                        )
-                            .hover(show2, hide2)
+                        $(`<div> <p class='label'>${enemy}</p> </div>`).addClass('enemy-popup')
+							.hover(show2, hide2)
                     )
             );
 
@@ -258,8 +217,8 @@ class DungeonMap {
             .children(":last-child")
             .children(":first-child")
             .append($(
-                `<p style="margin: auto;">(${num})</p>`
-            ));
+                `<ps>(${num})</p>`
+            ).addClass('label'));
     }
 
     addStrike(reason) {
@@ -268,8 +227,8 @@ class DungeonMap {
             .children(":last-child")
             .children(":first-child")
             .append($(
-                `<p style="margin: auto; color: red;">${reason}</p>`
-            ));
+                `<p>${reason}</p>`
+            ).addClass('label').addClass('strike'));
         this.HTML
             .children(":nth-child(16)")
             .children(":last-child")
@@ -282,18 +241,11 @@ class DungeonMap {
             this.HTML
                 .children(`:nth-child(${this.lastStage})`)
                 .children(`:first-child`)
-                .css("transform", "scale(.8) translate(0, -10px)")
+				.addClass('struck-stage')
                 .append(
-                    $(`<div>`)
-                        .css("background-image", 'url("./img/Dungeon/X.png")')
-                        .css("background-repeat", 'no-repeat')
-                        .css("background-size", "auto 100%")
-                        .css("width", "min-content")
+                    $(`<div>`).addClass('strike-indicator')
                         .append(
-                            $(`<p>${++this.lastStageStrikes}</p>`)
-                                .css("margin", "0 0 0 25px")
-                                .css("width", "min-content")
-                                .css("color", "red")
+                            $(`<p>${++this.lastStageStrikes}</p>`).addClass('strike-count')
                         )
                 );
         }
