@@ -500,6 +500,9 @@
 					},
 					deleteMod: function(mod) {
 						this.mods.splice(this.mods.indexOf(mod), 1);
+					},
+					deleteAllUnknown: function() {
+						this.mods = this.mods.filter(m => !m.Unknown);
 					}
 				}
 			});
@@ -711,7 +714,7 @@
 		</div>
 		<div class="sections">
 			<template v-for="(name, type) in modTypes">
-				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).filter(mod => operation==OpComb ? mod.Enabled != ModEither : mod.Enabled==ModNo).length }}/{{ getMods(type).length }})</span></h3>
+				<h3 class="section" :class="{ visible: visibleTypes[type] }">{{ (visibleTypes[type] ? "▼ " : "▶ ") }}<button @click="toggleType(type)"><u>{{ name }}</u></button><span> ({{ getMods(type).filter(mod => operation==OpComb ? mod.Enabled != ModEither : operation==OpExp ? mod.Enabled!=ModNo : mod.Enabled==ModNo).length }}/{{ getMods(type).length }})</span></h3>
 				<div class="toggleMods" v-if="visibleTypes[type]">
 					<button @click="setAllMods(type, ModYes)" class="clickable">Enable</button>
 					/
@@ -720,7 +723,9 @@
 					<button v-if="operation == OpComb" @click="setAllMods(type, ModEither)" class="clickable">Either</button>
 					/
 					<button @click="toggleAllMods(type)" class="clickable">Toggle</button>
-					All
+					All &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<button v-if="getMods(type).some(m => m.Unknown)" @click="deleteAllUnknown()" class="clickable">Remove All Unknown</button>
+					
 				</div>
 				<div class="mods" v-if="visibleTypes[type]">
 					<template v-for="mod in getMods(type)">
