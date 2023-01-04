@@ -6370,6 +6370,25 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "linesOfCode",
+		loggingTag: "Lines of Code",
+		matches: [
+			{
+				regex: /The code: '(.+)'/,
+				handler: function(matches, module) {
+					let code = matches[1].replace(/; /g, ';\n')
+						.replace(' if', '\nif')
+						.replace("{   Pass();\n} else {   Strike();\n}", "{\n  Pass();\n} else {\n  Strike();\n}");
+					module.push({ label:"The code:", obj: pre(code) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "matchem",
 		loggingTag: "Match 'em",
 		matches: [ 
