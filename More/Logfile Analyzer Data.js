@@ -1280,6 +1280,23 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ANDmodule",
+		loggingTag: "A>N<D",
+		matches: [
+			{
+				regex: /Stage \d+:/,
+				handler: function(match, module) {
+					let lines = readTaggedLines(3).map(l => ({ obj: l.replace(/([∧∨⊻→|↓↔←])/g, "<span class='and-logic-symbol'>$1</span>")}) );
+					module.push([ match.input, lines]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'ApplePenModule',
 		loggingTag: 'Apple Pen',
 		matches: [
@@ -3592,6 +3609,38 @@ let parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "doubleExpert",
+		loggingTag: "Double Expert",
+		matches: [
+			{
+				regex: /^-+([\w\s]+)-+$/,
+				handler: function(matches, module) {
+					const label = matches[1];
+					module[label] = new Array();
+					if (label.match(/Instruction Set \d+/))
+						module["Instruction Sets"].push([ label, module[label] ]);
+					else 
+						module.push([ label, module[label] ]);
+					module.currentSection = label;
+					return true;
+				}
+			},
+			{
+				regex: /Strike!|solved|handler/,
+				handler: function(match, module) {
+					module.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(match, module) {
+					module[module.currentSection].push(match.input);
+				}
 			}
 		]
 	},
