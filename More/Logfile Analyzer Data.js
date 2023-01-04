@@ -3765,7 +3765,7 @@ let parseData = [
 			{
 				regex: /^Puzzle on module: “([^“”]+)”$/,
 				handler: function (matches, module) {
-					let span = $("span").addClass('emotion-math').text(matches[1]);
+					let span = $("span").addClass('emoticon-math').text(matches[1]);
 					module.push({ label: "Puzzle on module: ", obj: span });
 					return true;
 				}
@@ -4546,6 +4546,36 @@ let parseData = [
 					}
 
 					module.push({ label: matches[1], obj: table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "MemoryV2",
+		loggingTag: "Forget Me Not",
+		matches: [
+			{
+				regex: /(Display|Solution): ([\d\s]+)/,
+				handler: function(matches, module) {
+					let nums = matches[2].replace(/\s+/g, '').split('');
+					let full = '';
+					let three = '';
+					let five = '';
+					
+					for (let i = 0; i < nums.length; i++){
+						if (i % 3 == 0 && i != 0)
+							three += ' ';
+						if (i % 5 == 0 && i != 0)
+							five += ' ';
+						full += nums[i];
+						three += nums[i];
+						five += nums[i];
+					}
+					module.push([ matches[1] + ": (in different group sizes)", [ pre(full), three, five ]]);
 					return true;
 				}
 			},
