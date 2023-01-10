@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ジャクスタカラーフラッシュ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        let holder = $(".mazeholder");
+        let mazesvg = MakeSvgTag(110,110,0,0, {class:"maze"}).appendTo(holder);
+
+        for (let r = 0; r < 11; r++) {
+            for (let c = 0; c < 11; c++) {
+                let cell = MakeSvgElem("rect", {
+                    class: "highlightable", x:(c*10), y:(r*10),
+                    width:10, height:10, fill:"transparent"
+                });
+                mazesvg.append(cell);
+            }
+        }
+    });
+    </script>
+    <style>
+        table.colors {
+            margin: auto;
+            table-layout: fixed;
+            margin-bottom: 20px;
+        }
+        table.colors th {
+            width:20px;
+            height:20px;
+        }
+        .magenta { background-color:#ff00ff; color: black; }
+        .red { background-color:#ff0000; color: white; }
+        .green { background-color:#00ff00; color: black; }
+        .white { background-color:#ffffff; color: black; }
+        .blue { background-color:#0000ff; color: white; }
+        .yellow { background-color:#ffff00; color: black; }
+        /* th img {
+            height: 250px;
+            width: 250px;
+         } */
+        .dark th img { filter: invert(85%); }
+
+        .mazeholder {
+            position: relative;
+            height: 250px;
+            width: 250px;
+        }
+        img.maze, svg.maze {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 250px;
+            width: 250px;
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: start;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ジャクスタカラーフラッシュ</span>
+            </div>
+            <div class="page-content" style="font-size:13.5px">
+                <img src="img/Component/Not Colour Flash.svg" class="diagram">
+                <h2>モジュール詳細：ジャクスタカラーフラッシュ</h2>
+                <p class="flavour-text">四郎の格言:「黒人でも白人でも黄色人種でも紫色人種でも、みんなで紫色人種を助けよう。彼は窒息している！」</p>
+                <ul>
+                 <li>「ジャクスタカラーフラッシュ」モジュールは、色を表す単語を異なる色で休みなく繰り返し、順番に表示する。</li>
+                 <li>このシーケンスは、下の11&#x00d7;11グリッドのどこかにある長さ5のセルのレールに沿って、2台のスキャナーが交互に移動することによって生成される。最初は、一方が水平に、もう一方が垂直に動く。</li>
+                 <li>スキャナーの一方はセルの色を単語に変換し、もう一方は単語の色を生成する。</li>
+                 <li>ボタンを押して、レールを初期位置から対応する目標位置まで、無効な移動をすることなく移動させる。</li>
+             </ul>
+             <h3>初期位置と目標位置</h3>
+             <ul>
+                 <li>レールの初期位置の中心は、グリッドの端から少なくとも2スペース以上離れている。</li>
+                 <li>単語レールの目標位置は、シリアルナンバーの1文字目の位置である。</li>
+                 <li>色レールの目標位置は、シリアルナンバーの2文字目の位置である。</li>
+             </ul>
+             <h3>移動</h3>
+             <ul>
+                 <li>ボタンを押すとスキャナーの再調整が行われ、レールの中心がスキャナーで表示されている位置に移動し、90&deg; 回転する。</li>
+                 <li>「Yes」ボタンを押すと単語スキャナーのレールが再調整され、「No」ボタンを押すと色スキャナーのレールが再調整される。</li>
+                 <li>レールはグリッドの端からはみ出ることができない。その代わり、レールの中心はグリッドの端から2スペース離れたセルになる。実際に移動させたレールの位置自体は変わらないため、この場合移動位置と中央のセルは一致しない。</li>
+                 <li>移動が無効である場合、再調整は行われない。</li>
+             </ul>
+             <h3>無効な移動</h3>
+             <ul>
+                 <li>スキャナーとレールの位置の間に壁が存在する場合。
+                 <br>壁がある場所を探すには、
+                 <ol>
+                     <li>シリアルナンバーの最後の英字に該当する文字の範囲で対応する壁の構成をとる。</li>
+                     <li>シリアルナンバーの数字の和を6で割った余りに対応する回転の変換を適用する。</li>
+                 </ol></li>
+                 <li>移動により、2本のレールが互いに交差する場合。
+                 <ul>
+                     <li>交点がレールの目標位置の1つである場合、このルールは適用されない。</li>
+                     <li>レールの交差が避けられない位置にある場合、現在の向きを維持したまま、モジュールはレールを初期位置にリセットされる。</li>
+                 </ul></li>
+             </ul>
+             <p>最後の移動の後、レールが交差するかどうかに関わらず、両方のレールがそれぞれの目標位置に配置された場合、このモジュールは解除される。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ジャクスタカラーフラッシュ</span>
+            </div>
+            <div class="page-content">
+                <table class="colors">
+                    <tr><th class="red"><code>0</code></th><th class="green"></th><th class="blue">1</th><th class="yellow"></th><th class="white">2</th><th class="magenta"></th><th class="green">3</th><th class="yellow"></th><th class="blue">4</th><th class="red"></th><th class="white">5</th></tr>
+                    <tr><th class="magenta"></th><th class="yellow"></th><th class="green"></th><th class="white"></th><th class="red"></th><th class="blue"></th><th class="white"></th><th class="green"></th><th class="white"></th><th class="magenta"></th><th class="blue"></th></tr>
+                    <tr><th class="white">6</th><th class="green"></th><th class="blue">7</th><th class="red"></th><th class="magenta">8</th><th class="green"></th><th class="yellow">9</th><th class="blue"></th><th class="magenta">A</th><th class="yellow"></th><th class="red">B</th></tr>
+                    <tr><th class="yellow"></th><th class="blue"></th><th class="red"></th><th class="green"></th><th class="white"></th><th class="yellow"></th><th class="magenta"></th><th class="red"></th><th class="green"></th><th class="blue"></th><th class="yellow"></th></tr>
+                    <tr><th class="blue">C</th><th class="white"></th><th class="magenta">D</th><th class="yellow"></th><th class="magenta">E</th><th class="red"></th><th class="green">F</th><th class="white"></th><th class="magenta">G</th><th class="white"></th><th class="red">H</th></tr>
+                    <tr><th class="white"></th><th class="yellow"></th><th class="red"></th><th class="blue"></th><th class="green"></th><th class="yellow"></th><th class="red"></th><th class="magenta"></th><th class="yellow"></th><th class="red"></th><th class="green"></th></tr>
+                    <tr><th class="green">I</th><th class="magenta"></th><th class="yellow">J</th><th class="white"></th><th class="blue">K</th><th class="white"></th><th class="blue">L</th><th class="green"></th><th class="red">M</th><th class="magenta"></th><th class="yellow">N</th></tr>
+                    <tr><th class="red"></th><th class="blue"></th><th class="green"></th><th class="magenta"></th><th class="yellow"></th><th class="magenta"></th><th class="white"></th><th class="red"></th><th class="white"></th><th class="yellow"></th><th class="blue"></th></tr>
+                    <tr><th class="white">O</th><th class="magenta"></th><th class="blue">P</th><th class="red"></th><th class="green">Q</th><th class="blue"></th><th class="magenta">R</th><th class="yellow"></th><th class="blue">S</th><th class="green"></th><th class="yellow">T</th></tr>
+                    <tr><th class="yellow"></th><th class="red"></th><th class="yellow"></th><th class="blue"></th><th class="magenta"></th><th class="green"></th><th class="red"></th><th class="white"></th><th class="red"></th><th class="white"></th><th class="magenta"></th></tr>
+                    <tr><th class="magenta">U</th><th class="white"></th><th class="red">V</th><th class="green"></th><th class="yellow">W</th><th class="blue"></th><th class="green">X</th><th class="magenta"></th><th class="white">Y</th><th class="blue"></th><th class="green">Z</th></tr>
+                </table>
+                <div class="hstack">
+                    <table style="width:73%">
+                        <tr><th>A-F</th><th>G-M</th></tr>
+                        <tr>
+                            <th class="nohighlight"><div class="mazeholder"><img class="maze" src="img/Juxtacolour Flash/A.svg"></div></th>
+                            <th class="nohighlight"><div class="mazeholder"><img class="maze" src="img/Juxtacolour Flash/B.svg"></div></th>
+                        </tr>
+                        <tr><th>N-T</th><th>U-Z</th></tr>
+                        <tr>
+                            <th class="nohighlight"><div class="mazeholder"><img class="maze" src="img/Juxtacolour Flash/C.svg"></div></th>
+                            <th class="nohighlight"><div class="mazeholder"><img class="maze" src="img/Juxtacolour Flash/D.svg"></div></th>
+                        </tr>
+                    </table>
+                    <div style="min-width: 2mm"></div>
+                    <table style="width:20%; font-size: 14px">
+                        <tr><th><code>0</code></th><th>なし</th></tr>
+                        <tr><th>1</th><th>時計回りに90&deg; 回転</th></tr>
+                        <tr><th>2</th><th>反時計回りに90&deg; 回転</th></tr>
+                        <tr><th>3</th><th>上下反転</th></tr>
+                        <tr><th>4</th><th>水平反転</th></tr>
+                        <tr><th>5</th><th>180&deg; 回転</th></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
