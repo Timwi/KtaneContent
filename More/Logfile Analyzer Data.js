@@ -3525,6 +3525,31 @@ let parseData = [
 		]
 	},	
 	{
+		moduleID: [ 'GSDirectingButtons', 'GSUncolouredButtons' ],
+		loggingTag: [ 'Directing Buttons', 'Uncoloured Buttons' ],
+		matches: [
+			{
+				regex: /The grid of buttons:/,
+				handler: function (match, module) {
+					let grid = readLines(4).map(l => l.split(' '));
+					let table = "<table class='blank-buttons'>";
+					for (let row = 0; row < 4; row++) {
+						table += "<tr>";
+						for (let col = 0; col < 4; col++) {
+							table += `<td class='${grid[row][col].toLowerCase()}'></td>`;
+						}
+						table += "</tr>";
+					}
+					module.push({ label: match.input, obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "dischargeMaze",
 		loggingTag: "Discharge Maze",
 		matches: [
