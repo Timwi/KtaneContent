@@ -9509,7 +9509,7 @@ let parseData = [
 					module.push(readLine().trim());
 					module.push(readLine().trim());
 					readLine();
-					module.push(readLine().replace(/[|]/g, ""));
+					module.push(readLine().replace(/[|]/g, "").replace('Jurrasic', 'Jurassic'));
 					module.push(["Key Presses", input]);
 
 					return true;
@@ -9518,7 +9518,7 @@ let parseData = [
 			{
 				regex: /Input .+ was received|The current valid sequence/,
 				handler: function (matches, module) {
-					module.Input.push(matches.input);
+					module.Input.push(matches.input.replace('Jurrasic', 'Jurassic'));
 				}
 			}
 		]
