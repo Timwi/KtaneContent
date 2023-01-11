@@ -13746,7 +13746,7 @@ let parseData = [
 						'#0c3368', //'Dark Blue':
 						'#591c67', //'Purple-Magenta':
 						'#0a5169', //'Turquoise':
-						'#a0a669', //'Indigo':
+						'#101669', //'Indigo':
 						'#351a69', //'Purple':
 						'#6d1d56', //'Magenta':
 						'#6c1b33', //'Pink':
