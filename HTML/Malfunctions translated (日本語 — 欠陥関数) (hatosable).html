@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>欠陥関数 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        td {
+            padding: .2em .6em .1em;
+        }
+        .morse-digits {
+            width: 50%;
+            display: block;
+            margin: 1em auto;
+        }
+        .list-of-functions {
+            line-height: 1.3;
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+    <script>
+        var theNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                        25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 /* 36, 37, 38, 39, 40, 41,
+        42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59 */];
+
+        var theFunctions = [
+        "(aから3を引いた数)の絶対値の(bから3を引いた数)の絶対値倍","大きい方の数を小さい方の数でモジュロした数","10,000を大きい方の数でモジュロした数","7","(大きい方の数を小さい方の数で除算した数)を10でモジュロした数","奇数の個数を三倍した数",
+        "10から((aの桁数からbの桁数を引いた数)の絶対値)を引いた数","(aの各桁の和)の(bの各桁の和)倍","aのb倍","aにbを加えた数を12でモジュロした数","最も高い桁",
+        "((aを10でモジュロした数)の立方)に((bを10でモジュロした数)の立方)を加えた数","月の加算","(10,000からaを引いた数)の絶対値の(10,000からbを引いた数)の絶対値倍","(大きい方の数を小さい方の数でモジュロした数)を8でモジュロした数",
+        "他と異なっている桁の数字の個数","小さい方の数引く(大きい方の数を小さい方の数でモジュロした数)","他と異なっている奇数の桁の数字の個数","((a + b)の10倍)に((a - b)の絶対値を10でモジュロした数)を加えた数",
+        "aにbを加えた数","(aのb倍)を(ポート + 2)で除算した数","(aのb倍)を10でモジュロした数","他と異なる存在しない桁の数字の個数",
+        "a + (bの平方)","11から二桁ではない変数の個数の二倍を引いた数","(aから(2のb倍)を引いた数)の絶対値","(aのb倍)を73でモジュロした数","aとbの桁数の1,500倍","3に2500より大きい数字の個数を加えた数",
+        "(aの平方) + b","大きい方の数を(aとbの桁数)で除算した数","a + b + シリアルナンバーの各数字を連結した数+ 1","8から(100未満の数字の個数)を引いた数","(aを50でモジュロした数) + b","大きい方の数を小さい方の数で除算した数"
+        ];
+
+        function setRules(rnd)
+        {
+            var list = document.getElementsByClassName('rule');
+            var list2 = document.getElementsByClassName('rule2');
+            var list3 = document.getElementsByClassName('rule3');
+            var letterRuleHit = 0;
+            var letterRuleMiss = 0;
+            var theShuffledNumbers = rnd.shuffleFisherYates(theNumbers.slice(0));
+            for (var i = 0; i < 36; i++)
+            {
+                list[i].innerText = theFunctions[theShuffledNumbers[i]];
+            }
+            for (var i = 0; i < 26; i++)
+            {
+                list[i].innerText = theFunctions[theShuffledNumbers[i]];
+                letterRuleHit = rnd.next(1, 10);
+                letterRuleMiss = rnd.next(1, 10);
+                if (letterRuleMiss == letterRuleHit || rnd.next(0, 4) != 0)
+                {
+                    letterRuleMiss = letterRuleMiss * -1;
+                }
+                list2[i].innerText = "+" + letterRuleHit;
+                if (letterRuleMiss > 0)
+                {
+                    list3[i].innerText = "+" + letterRuleMiss;
+                }
+                else
+                {
+                    list3[i].innerText = letterRuleMiss;
+                }
+
+            }
+        }
+
+        function setDefaultRules()
+        {
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = list[i].getAttribute('data-original');
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">欠陥関数</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Malfunctions.svg" class="diagram">
+                <h2>モジュール詳細：欠陥関数</h2>
+                <p class="flavour-text">一体、こいつからどうやって何かを入手するんだ??!?</p>
+
+                <p><strong>注意：このモジュールは誤作動の傾向がある。</strong>初期化時、+1または-1のいずれかがランダムに選択され、その数がXに代入される。その後、「最後のクエリの結果(結果は0未満にならない)にXを加える」「各クエリ実行後、関数リストをX移動(0から35、その逆はループする。最終的な関数を求める際には最初の問い合わせ関数のみが必要)」「各変数にXを加える(変数は0になったり9999を超えたりすることはない)」の3つの特性のうち一つがランダムに選択される。</p>
+                <ul>
+                    <li>リスト1の36個の中からランダムに問い合わせ関数が選択され、下部のディスプレーには1から999までの2つの数字とその間に英字が表示される。</li>
+                    <li>数字のキーパッドを押して数字を入力できる。これらは入力値として中央のディスプレーに表示される。12桁入力すると、新たな桁を配置するために左端の桁が削除される。</li>
+                    <li>「a」として入力された数値は、カンマボタン「,」を押すことでメモすることができる。「a」は2変数関数の一つ目の数値である、すると、左上のディスプレーに入力された数値（4桁以上表示されている場合は下4桁のみが入力される）が表示され、中央上のディスプレーにカンマが表示される。その後、二つ目の別の数値を、最初に入力したのと同じ方法で入力することができる。<strong>問い合わせの際、表示された両方の数値が同じか、どちらかの数値が直前のミスが記録されていない問い合わせで使用した数値と等しいか、どちらかの数値が0であれば、ミスが記録される。</strong></li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/5</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">欠陥関数</span>
+            </div>
+            <div class="page-content">
+                <ul>
+                    <li>両方の数字が入力されたら、「Q」ボタンを押す。これにより二つ目の数字(4桁以上表示されている場合は下4桁のみが入力される)が右上のディスプレーに配置される。この値は「b」とする。さらに、入力結果が問い合わせ関数の出力結果に置き換えられる。モジュールを解除するのに必要な回答を含め、計算結果は最大12桁のみが使用され、関数が言及していない限り、表示直前にすべての小数が削除される。それが表示されている限りは、カンマボタンを押しても何も影響を与えず、カンマが入力されていない限り「Q」ボタンを押しても何も影響を与えない。</li>
+                    <li>クリアボタン「C」を押すと、上と真ん中の入力内容が全て削除され新たな変数の入力が可能になる。</li>
+                    <li>1回以上問い合わせを使用したり、リスト1を使用して、使用されている問い合わせ関数を求め、上段の英字を表2に使用する。その英字の条件が真かどうかを確かめ、その補正値を使ってX段移動(-1は上、+1は下)し、それに見つけた初期値を使用して最終的な関数を求める。必要であればループする。</li>
+                    <li>下のディスプレーに入力値とした最終的な関数の結果をキーパッドを使って回答し、送信ボタン「S」を押して送信する。</li>
+                    <li>最上位桁は左端にあり、最も重みがある桁であるため、一の位よりも十の位の方が上位である。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/5</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">欠陥関数</span>
+            </div>
+            <div class="page-content">
+                <h3>リスト1：関数一覧</h3>
+                <ul class='list-of-functions'>
+                    <li>#0: <span class='rule' data-original='(aから3を引いた数)の絶対値の(bから3を引いた数)の絶対値倍'>(aから3を引いた数)の絶対値の(bから3を引いた数)の絶対値倍</span></li>
+                    <li>#1: <span class='rule' data-original='大きい方の数を小さい方の数でモジュロした数'>大きい方の数を小さい方の数でモジュロした数</span></li>
+                    <li>#2: <span class='rule' data-original='10,000を大きい方の数でモジュロした数'>10,000を大きい方の数でモジュロした数</span></li>
+                    <li>#3: <span class='rule' data-original='7'>7</span></li>
+                    <li>#4: <span class='rule' data-original='(大きい方の数を小さい方の数で除算した数)を10でモジュロした数'>(大きい方の数を小さい方の数で除算した数)を10でモジュロした数</span></li>
+                    <li>#5: <span class='rule' data-original='奇数の個数を三倍した数'>奇数の個数を三倍した数</span></li>
+                    <li>#6: <span class='rule' data-original='10から((aの桁数からbの桁数を引いた数)の絶対値)を引いた数'>10から((aの桁数からbの桁数を引いた数)の絶対値)を引いた数</span></li>
+                    <li>#7: <span class='rule' data-original='(aの各桁の和)の(bの各桁の和)倍'>(aの各桁の和)の(bの各桁の和)倍</span></li>
+                    <li>#8: <span class='rule' data-original='aのb倍'>aのb倍</span></li>
+                    <li>#9: <span class='rule' data-original='aにbを加えた数を12でモジュロした数'>aにbを加えた数を12でモジュロした数</span></li>
+                    <li>#10: <span class='rule' data-original='最も高い桁'>最も高い桁</span></li>
+                    <li>#11: <span class='rule' data-original='((aを10でモジュロした数)の立方)に((bを10でモジュロした数)の立方)を加えた数'>((aを10でモジュロした数)の立方)に((bを10でモジュロした数)の立方)を加えた数</span></li>
+                    <li>#12: <span class='rule' data-original='月の加算'>月の加算</span></li>
+                    <li>#13: <span class='rule' data-original='(10,000からaを引いた数)の絶対値の(10,000からbを引いた数)の絶対値倍'>(10,000からaを引いた数)の絶対値の(10,000からbを引いた数)の絶対値倍</span></li>
+                    <li>#14: <span class='rule' data-original='(大きい方の数を小さい方の数でモジュロした数)を8でモジュロした数'>(大きい方の数を小さい方の数でモジュロした数)を8でモジュロした数</span></li>
+                    <li>#15: <span class='rule' data-original='他と異なっている桁の数字の個数'>他と異なっている桁の数字の個数</span></li>
+                    <li>#16: <span class='rule' data-original='小さい方の数引く(大きい方の数を小さい方の数でモジュロした数)'>小さい方の数引く(大きい方の数を小さい方の数でモジュロした数)</span></li>
+                    <li>#17: <span class='rule' data-original='他と異なっている奇数の桁の数字の個数'>他と異なっている奇数の桁の数字の個数</span></li>
+                    <li>#18: <span class='rule' data-original='((a + b)の10倍)に((a - b)の絶対値を10でモジュロした数)を加えた数'>((a + b)の10倍)に((a - b)の絶対値を10でモジュロした数)を加えた数</span></li>
+                    <li>#19: <span class='rule' data-original='aにbを加えた数'>aにbを加えた数</span></li>
+                    <li>#20: <span class='rule' data-original='(aのb倍)を(ポート + 2)で除算した数'>(aのb倍)を(ポート + 2)で除算した数</span></li>
+                    <li>#21: <span class='rule' data-original='(aのb倍)を10でモジュロした数'>(aのb倍)を10でモジュロした数</span></li>
+                    <li>#22: <span class='rule' data-original='他と異なる存在しない桁の数字の個数'>他と異なる存在しない桁の数字の個数</span></li>
+                    <li>#23: <span class='rule' data-original='(大きい方の数を小さい方の数でモジュロした数)の小さい方の数倍'>(大きい方の数を小さい方の数でモジュロした数)の小さい方の数倍</span></li>
+                    <li>#24: <span class='rule' data-original='a + (bの平方)'>a + (bの平方)</span></li>
+                    <li>#25: <span class='rule' data-original='11から二桁ではない変数の個数の二倍を引いた数'>11から二桁ではない変数の個数の二倍を引いた数</span></li>
+                    <li>#26: <span class='rule' data-original='(aから(2のb倍)を引いた数)の絶対値'>(aから(2のb倍)を引いた数)の絶対値</span></li>
+                    <li>#27: <span class='rule' data-original='(aのb倍)を73でモジュロした数'>(aのb倍)を73でモジュロした数</span></li>
+                    <li>#28: <span class='rule' data-original='aとbの桁数の1,500倍'>aとbの桁数の1,500倍</span></li>
+                    <li>#29: <span class='rule' data-original='3に2500より大きい数字の個数を加えた数'>3に2500より大きい数字の個数を加えた数</span></li>
+                    <li>#30: <span class='rule' data-original='(aの平方) + b'>(aの平方) + b</span></li>
+                    <li>#31: <span class='rule' data-original='大きい方の数を(aとbの桁数)で除算した数'>大きい方の数を(aとbの桁数)で除算した数</span></li>
+                    <li>#32: <span class='rule' data-original='a + b + シリアルナンバーの各数字を連結した数+ 1'>a + b + シリアルナンバーの各数字を連結した数+ 1</span></li>
+                    <li>#33: <span class='rule' data-original='8から(100未満の数字の個数)を引いた数'>8から(100未満の数字の個数)を引いた数</span></li>
+                    <li>#34: <span class='rule' data-original='(aを50でモジュロした数) + b'>(aを50でモジュロした数) + b</span></li>
+                    <li>#35: <span class='rule' data-original='大きい方の数を小さい方の数で除算した数'>大きい方の数を小さい方の数で除算した数</span></li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/5</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">欠陥関数</span>
+            </div>
+            <div class="page-content">
+                <h3>表2：英字による補正</h3>
+                <table>
+                 <tbody>
+                     <tr><th>条件</th><th>真</th><th>偽</th></tr>
+                     <tr>
+                         <td>A：シリアルナンバーにKBUMのいずれかが含まれている？</td>
+                         <td><span class='rule2' data-original='+6'>+6</span></td>
+                         <td><span class='rule3' data-original='-4'>-4</span></td>
+                     </tr>
+                     <tr>
+                         <td>B：バッテリー、インジケーター、ポートのうちいずれかの個数 = 2？</td>
+                         <td><span class='rule2' data-original='+2'>+2</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>C：シリアルナンバーの最初の文字は数字？</td>
+                         <td><span class='rule2' data-original='+5'>+5</span></td>
+                         <td><span class='rule3' data-original='-4'>-4</span></td>
+                     </tr>
+                     <tr>
+                         <td>D：点灯したBOBインジケーターがある？</td>
+                         <td><span class='rule2' data-original='+8'>+8</span></td>
+                         <td><span class='rule3' data-original='-8'>-8</span></td>
+                     </tr>
+                     <tr>
+                         <td>E：点灯していないBOBインジケーターがある？</td>
+                         <td><span class='rule2' data-original='+6'>+6</span></td>
+                         <td><span class='rule3' data-original='-2'>-2</span></td>
+                     </tr>
+                     <tr>
+                         <td>F：シリアルナンバーの最初の文字は英字？</td>
+                         <td><span class='rule2' data-original='+6'>+6</span></td>
+                         <td><span class='rule3' data-original='-5'>-5</span></td>
+                     </tr>
+                     <tr>
+                         <td>G：パラレルポートがあるが、シリアルポートがない？</td>
+                         <td><span class='rule2' data-original='+1'>+1</span></td>
+                         <td><span class='rule3' data-original='-5'>-5</span></td>
+                     </tr>
+                     <tr>
+                         <td>H：空のポートプレートが少なくとも1つある？</td>
+                         <td><span class='rule2' data-original='+1'>+1</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>I：バッテリーがない？</td>
+                         <td><span class='rule2' data-original='+1'>+1</span></td>
+                         <td><span class='rule3' data-original='+5'>+5</span></td>
+                     </tr>
+                     <tr>
+                         <td>J：シリアルナンバーに母音がある？</td>
+                         <td><span class='rule2' data-original='+5'>+5</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>K：インジケーターの個数 > 3？</td>
+                         <td><span class='rule2' data-original='+4'>+4</span></td>
+                         <td><span class='rule3' data-original='-1'>-1</span></td>
+                     </tr>
+                     <tr>
+                         <td>L：バッテリーの個数は偶数？</td>
+                         <td><span class='rule2' data-original='+6'>+6</span></td>
+                         <td><span class='rule3' data-original='+7'>+7</span></td>
+                     </tr>
+                     <tr>
+                         <td>M：ポート > インジケーター？</td>
+                         <td><span class='rule2' data-original='+3'>+3</span></td>
+                         <td><span class='rule3' data-original='-7'>-7</span></td>
+                     </tr>
+                     <tr>
+                         <td>N：点灯していないインジケーターより点灯したインジケーターの方が多い？</td>
+                         <td><span class='rule2' data-original='+3'>+3</span></td>
+                         <td><span class='rule3' data-original='-5'>-5</span></td>
+                     </tr>
+                     <tr>
+                         <td>O：インジケーター > バッテリー？</td>
+                         <td><span class='rule2' data-original='+6'>+6</span></td>
+                         <td><span class='rule3' data-original='-1'>-1</span></td>
+                     </tr>
+                     <tr>
+                         <td>P：インジケーターの個数は偶数？</td>
+                         <td><span class='rule2' data-original='+2'>+2</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>Q：シリアルナンバーにERISのいずれかが含まれている？</td>
+                         <td><span class='rule2' data-original='+1'>+1</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>R：シリアルナンバーにちょうど3つの英字が含まれている？</td>
+                         <td><span class='rule2' data-original='+3'>+3</span></td>
+                         <td><span class='rule3' data-original='-2'>-2</span></td>
+                     </tr>
+                     <tr>
+                         <td>S：バッテリー > ポート？</td>
+                         <td><span class='rule2' data-original='+2'>+2</span></td>
+                         <td><span class='rule3' data-original='+4'>+4</span></td>
+                     </tr>
+                     <tr>
+                         <td>T：バッテリーの個数 > 4？</td>
+                         <td><span class='rule2' data-original='+4'>+4</span></td>
+                         <td><span class='rule3' data-original='+1'>+1</span></td>
+                     </tr>
+                     <tr>
+                         <td>U：点灯したインジケーターと点灯していないインジケーターの数が同じ？</td>
+                         <td><span class='rule2' data-original='+2'>+2</span></td>
+                         <td><span class='rule3' data-original='-2'>-2</span></td>
+                     </tr>
+                     <tr>
+                         <td>V：シリアルナンバーにJQXZのいずれかが含まれている？</td>
+                         <td><span class='rule2' data-original='+7'>+7</span></td>
+                         <td><span class='rule3' data-original='+1'>+1</span></td>
+                     </tr>
+                     <tr>
+                         <td>W：少なくとも3つのポートがある？</td>
+                         <td><span class='rule2' data-original='+3'>+3</span></td>
+                         <td><span class='rule3' data-original='-5'>-5</span></td>
+                     </tr>
+                     <tr>
+                         <td>X：インジケーターがない？</td>
+                         <td><span class='rule2' data-original='+3'>+3</span></td>
+                         <td><span class='rule3' data-original='-3'>-3</span></td>
+                     </tr>
+                     <tr>
+                         <td>Y：シリアルナンバー内の数字の個数が4以上？</td>
+                         <td><span class='rule2' data-original='+4'>+4</span></td>
+                         <td><span class='rule3' data-original='-1'>-1</span></td>
+                     </tr>
+                     <tr>
+                         <td>Z：ポートがない？</td>
+                         <td><span class='rule2' data-original='+5'>+5</span></td>
+                         <td><span class='rule3' data-original='-1'>-1</span></td>
+                     </tr>
+                 </tbody>
+             </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/5</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">欠陥関数</span>
+            </div>
+            <div class="page-content">
+             <h3>付録F：数学(とその他)の用語</h3>
+             <strong>絶対値もしくは|x|</strong>：Xと0との距離。|2 - 6| = 4<br />
+             <strong>すべての桁の整列</strong>：重複した桁を無視してから、左から右に読んだ各桁。12814のすべての桁を整列すると1284となる。<br />
+             <strong>連結</strong>：つなぎ合わせること。「Cheese」と「burger」を連結させると「Cheeseburger」になる。7と3を連結させると73になる。<br />
+             <strong>立方</strong>：自身を乗算し、更に乗算する。2の立方は8。<br />
+             <strong>数字根</strong>：各桁同士を、一桁になるまで足し続ける。129の数字根は3である。<br />
+             <strong>月の加算</strong>：各桁を合計する代わりに、各位(一の位、十の位など)で大きい方の桁を取得する加算方法。月の算術では、184+229 = 289になる。<br />
+             <strong>モジュロ</strong>：除算の剰余を示す。10を3でモジュロすると1になる。<br />
+             <strong>べき乗数</strong>：自身を乗算する回数。立方数はべき乗数が3のときの結果と等しい。<br />
+             <strong>sqrt(x)</strong>：平方根を示す。sqrt(9) = 3である。技術的には-3も取れるが爆弾解除では正の値にするため、このモジュールでは平方根の負の値は考えなくてよい。<br />
+             <strong>平方</strong>：自身を乗算する。5の平方は25である。<br />
+             <strong>ゼロ</strong>：0は偶数である。出力が存在しない場合、出力は0になる。<br />
+            </div>
+            <div class="page-footer relative-footer">ページ 5/5</div>
+        </div>
+    </div>
+</body>
+</html>
