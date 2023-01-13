@@ -3525,18 +3525,24 @@ let parseData = [
 		]
 	},	
 	{
-		moduleID: [ 'GSDirectingButtons', 'GSUncolouredButtons' ],
-		loggingTag: [ 'Directing Buttons', 'Uncoloured Buttons' ],
+		moduleID: 'GSDirectingButtons',
+		loggingTag: 'Directing Buttons',
 		matches: [
 			{
 				regex: /The grid of buttons:/,
 				handler: function (match, module) {
 					let grid = readLines(4).map(l => l.split(' '));
 					let table = "<table class='blank-buttons'>";
+					const rotations = { 'Y':0, 'G':90, 'B':180, 'R':270 };
 					for (let row = 0; row < 4; row++) {
 						table += "<tr>";
 						for (let col = 0; col < 4; col++) {
-							table += `<td class='${grid[row][col].toLowerCase()}'></td>`;
+							const color = grid[row][col];
+							table += `<td class='${color.toLowerCase()}'>
+										<svg class='arrow' viewbox='-6 -6 12 12'>
+											<path class='arrow-shape' transform='rotate(${rotations[color]})' d='m-5 0h10l-3-2 3 2-3 2 3-2-10 0'/>
+										</svg>
+									</td>`;
 						}
 						table += "</tr>";
 					}
@@ -4027,6 +4033,30 @@ let parseData = [
 					if (module.length == 0 || !(module[module.length - 1] instanceof Array) || (matches[2] && module[module.length - 1][0] !== "Stage " + matches[2]))
 						module.push(["Stage " + matches[2], []]);
 					module[module.length - 1][1].push(matches[3] || matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "GSFaultyButtons",
+		loggingTag: "Faulty Buttons",
+		matches: [
+			{
+				regex: /The referred buttons for each button in reading order are:/,
+				handler: function(match, module) {
+					let grid = readLines(4).map(l => l.split(' '));
+					let table = "<table class='blank-buttons faulty'>";
+					for (let row = 0; row < 4; row++) {
+						table += "<tr>";
+						for (let col = 0; col < 4; col++)
+							table += `<td>${grid[row][col]}</td>`;
+						table += "</tr>";
+					}
+					module.push({ label: match.input, obj:table });
 					return true;
 				}
 			},
@@ -13138,6 +13168,31 @@ let parseData = [
 					module.push({ obj: matches[1], nobullet: true });
 					return true;
 				}
+			}
+		]
+	},
+	{
+		moduleID: 'GSUncolouredButtons',
+		loggingTag: 'Uncoloured Buttons',
+		matches: [
+			{
+				regex: /The grid of buttons:/,
+				handler: function (match, module) {
+					let grid = readLines(4).map(l => l.split(' '));
+					let table = "<table class='blank-buttons'>";
+					for (let row = 0; row < 4; row++) {
+						table += "<tr>";
+						for (let col = 0; col < 4; col++) {
+							table += `<td class='${grid[row][col].toLowerCase()}'></td>`;
+						}
+						table += "</tr>";
+					}
+					module.push({ label: match.input, obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
