@@ -12908,7 +12908,7 @@ let parseData = [
 						svg += `<rect x="${50 * (i % 4)}" y="${50 * Math.floor(i / 4)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
 						svg += `<text font-size='32' x="${50 * (i % 4) + 16}" y="${50 * Math.floor(i / 4) + 37}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
 					}
-					module.largeSvg = `<br><svg width="900" height="900" viewbox="0 0 900 900">`
+					module.largeSvg = `<br><svg width="930" height="930" viewbox="0 0 930 930">`
 					module.push({label: `${matches[1]}` + (matches[1] == "The solution grid" ? " (press counts)" : "") + `: `, obj: svg});
 				}
 			},
@@ -12919,11 +12919,11 @@ let parseData = [
 					let grid = [].concat.apply([], matches[2].split("|").map(x => x.split("")));
 					let partial = ``;
 					let index = (matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 4 + (matches[1].charCodeAt(1) - "1".charCodeAt(0));
-					partial += `<rect x="${200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0))}" y="${200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0))}" width="220" height="220" style="fill:${((index ^ (index >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+					partial += `<rect x="${200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="220" height="220" style="fill:${((index ^ (index >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
 					for(let i = 0; i < 16; i++)
 					{
-						partial += `<rect x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 10}" y="${50 * Math.floor(i / 4) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 10}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-						partial += `<text font-size='32' x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 26}" y="${50 * (Math.floor(i / 4)) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 47}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
+						partial += `<rect x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * Math.floor(i / 4) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+						partial += `<text font-size='32' x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 26 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * (Math.floor(i / 4)) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 47 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i] == 0 ? "" : grid[i]}</text>`
 						module.largeSvg += partial;
 					}
 					if(matches[1] == "D4")
