@@ -13312,10 +13312,10 @@ let parseData = [
 				}
 			},
 			{
-				regex: /(Generated 3x3 Matrix in \d+ attempts: )(.+)/,
+				regex: /(Generated 3x3 Matrix in \d+ attempts?: )(.+)/,
 				handler: function(matches, module) {
 					const data = matches[2].split(' ');
-					module.push({ label: matches[0], obj: `<table class='ufc-matrix'>
+					module.push({ label: matches[1], obj: `<table class='ufc-matrix'>
 						<tr> <td class='bracket top left'></td> <td>${data[0]}</td> <td>${data[1]}</td> <td>${data[2]}</td> <td class='bracket top right'></td> </tr>
 						<tr> <td class='bracket left'></td> <td>${data[3]}</td> <td>${data[4]}</td> <td>${data[5]}</td> <td class='bracket right'></td> </tr>
 						<tr> <td class='bracket bottom left'></td> <td>${data[6]}</td> <td>${data[7]}</td> <td>${data[8]}</td> <td class='bracket bottom right'></td> </tr> </table>` 
