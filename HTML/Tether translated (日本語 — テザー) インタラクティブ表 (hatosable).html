@@ -703,11 +703,6 @@
 
         .page-footer::before { content: 'ページ '; }
         .page-footer::after { content: '/21'; }
-        .relative-footer{
-        bottom: 0;
-        height: 0.5in;
-        display: block;
-         }
         
     </style>
 </head>
@@ -731,11 +726,59 @@
                     <li>単語は、以下の「ワード集」にあるものでなければならない。</li>
                     <li>各単語は<b><u>異なる</u></b>。</li>
                 </ul>
+                <form id="searchlist">
+                 <input type="text" id="search-text" placeholder="英字3文字を入力" maxlength="3">
+                 <input type="radio" name="expselect" checked value="first">最初一致
+                 <input type="radio" name="expselect" value="last">最後一致
+               </form>         
+                <span class="search-result">
+                 <span class="search-result__list"></span>
+               </span>
                 <p>キーボードを使用し、文字のないタイルに文字を入力する。チェス盤は読み順で文字を埋めていく。<b>Backspace</b>キーを押すことで、前の文字を削除できる。</p>
                 <p>チェス盤が完全に埋まったら、Enterキーを押して回答を送信する。送信した全ての単語が基準に従っている場合、モジュールが解除される。それ以外の場合はミスが記録される。</p>
             </div>
-            <div class="relative-footer">ページ 1/1</div>
+            <div class="page-footer relative-footer">1</div>
         </div>
     </div>
-</body>
+<script>
+ searchWord = function(){
+  var searchResult,
+      searchText = $(this).val(),
+      targetText,
+      hitNum;
+
+  searchResult = [];
+
+  $('.search-result__list').empty();
+  $('.search-result__hit-num').empty();
+  var exp;
+  const selectexp = document.getElementById('searchlist').expselect;
+
+  if (searchText != '') {
+   if(selectexp.value =='first'){
+   exp = new RegExp('^'+searchText+'..', "gi");
+  }else{
+   exp = new RegExp(".."+searchText+'$', "gi");
+  }
+    $('.highlightable').each(function() {
+      targetText = $(this).text();
+      if (exp.test(targetText) == true) {
+        searchResult.push(targetText);
+      }
+    });
+
+    // output
+    for (var i = 0; i < searchResult.length; i ++) {
+     
+      $('<span>').text(searchResult[i]+" ").appendTo('.search-result__list');
+    }
+
+  }
+
+};
+
+// searchWordの実行
+$('#search-text').on('input', searchWord);
+ </script>
+ </body>
 </html>
