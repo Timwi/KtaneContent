@@ -42,6 +42,336 @@
             width: 50%;
         }
     </style>
+     <script>
+      var options1;
+      var options2;
+      var options3;
+      var possibilities;
+      var ports =
+          [
+              "DVI", "Parallel", "PS/2", "RJ-45", "Serial", "Stereo RCA", "Component Video",
+              "Composite Video", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+          ];
+      var indicators =
+          [
+              "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"
+          ];
+      var indicatorColors =
+          [
+              "Blue", "Gray", "Green", "Magenta", "Orange", "Purple", "Red", "Yellow"
+          ];
+      var coordX =
+          [
+              "A", "D", "C", "D", "B", "F", "E", "B", "C", "E"
+          ];
+      var coordXCopy;
+      var coordY =
+          [
+              "C", "B", "E", "D", "F", "E", "B", "C", "D", "A"
+          ];
+      var coordYCopy;
+      var ManualTable =
+          [
+              3, 2, 9, 1, 7, 4,
+              7, 9, 8, 8, 2, 3,
+              5, 1, 7, 4, 4, 6,
+              6, 4, 2, 6, 8, 5,
+              5, 1, 5, 3, 9, 9,
+              1, 2, 3, 6, 7, 8
+          ];
+      var ManualTableCopy;
+      function setRules(rnd)
+      {
+          //Make clones of the lists to avoid randomization issues when changing seeds
+          coordXCopy = coordX.slice();
+          coordYCopy = coordY.slice();
+          ManualTableCopy = ManualTable.slice();
+          if (rnd.seed != 1)
+          {
+              rnd.shuffleFisherYates(coordXCopy);
+              rnd.shuffleFisherYates(coordYCopy);
+              rnd.shuffleFisherYates(ManualTableCopy);
+          }
+          for (var j = 0; j < coordXCopy.length; j++)
+              document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
+          for (var j = 0; j < coordYCopy.length; j++)
+              document.getElementById('background-r-' + j).innerHTML = coordYCopy[j];
+          for (var j = 0; j < ManualTableCopy.length; j++)
+              document.getElementById('background-tbl-' + j).innerHTML = ManualTableCopy[j];
+          //Primaries randomization
+          var i = rnd.next(0, 2);
+          //Initialize lists for current randomization
+          options1 = [];
+          options2 = [];
+          options3 = [];
+          possibilities = [];
+          chosen = [];
+          //Create possible options for Possibilities
+          AddToOptions(i, rnd.seed == 1);
+          //Generate all possible rules
+          Possibilities();
+          //Variable for holding the chosen Possibilty indicies
+          var RuleIndicies = []
+          //Function for generating the original manual for rule seed 1
+          Swap();
+          //Choose the rules for the manual
+          for (var j = 0; j < 9; j++)
+          {
+              var value = rnd.next(0, possibilities.length);
+              while (RuleIndicies.includes(value))
+                  value = rnd.next(0, possibilities.length);
+              RuleIndicies.push(value);
+              chosen.push(possibilities[RuleIndicies[j]]);
+          }
+          //Apply the chosen rules
+          for (var j = 0; j < chosen.length; j++)
+          {
+              var hold = "";
+              //Add if to all of the rules
+              chosen[j] = "if " + chosen[j];
+              //Set the first letter to uppercase
+              if (j == 0) hold = chosen[0].substr(0, 1).toUpperCase() + chosen[0].substr(1);
+              else hold = "Otherwise, " + chosen[j];
+              document.getElementById('background-rule-' + j).innerHTML = hold;
+          }
+          console.log(options1);
+          console.log(options2);
+          console.log(options3);
+          console.log(possibilities);
+          console.log(chosen);
+      }
+      function Swap()
+      {
+          var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+          var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+          for (var i = 0; i < values.length; i++)
+          {
+              var hold = possibilities[values[i]];
+              possibilities[values[i]] = possibilities[newValues[i]];
+              possibilities[newValues[i]] = hold;
+          }
+      }
+      function setDefaultRules(rnd)
+      {
+          setRules(rnd);
+      }
+      function AddToOptions(i, r)
+      {
+          options1.push("backing");
+          options1.push("button");
+          options1.push("submit button");
+          options1.push("screen");
+          DetermineColors(i, r);
+          for (var j = 0; j < ports.length; j++)
+              options3.push(ports[j]);
+          for (var j = 0; j < indicators.length; j++)
+              options3.push(indicators[j]);
+          var listSize = 1;
+          while (listSize < 4)
+          {
+              var coloredArray = ["red", i == 0 ? "orange" : "cyan", "yellow", "green", "blue",
+                  i == 0 ? "purple" : "magenta", "white", "gray", "black"];
+              var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+              var intList = [[]];
+              var current = -1;
+              for (var j = 0; j < orderedArray.length; j++)
+              {
+                  if (current != -1)
+                      intList.push([]);
+                  current++;
+                  intList[current].push(coloredArray[j]);
+                  if (listSize > 1)
+                  {
+                      var list = orderedArray.slice(j + 1);
+                      for (var k = 0; k < list.length; k++)
+                      {
+                          intList[current].push(" or " + coloredArray[list[k]]);
+                          if (listSize > 2)
+                          {
+                              intList[current].pop();
+                              intList[current].push(" " + coloredArray[list[k]]);
+                              var list2 = orderedArray.slice(list[k] + 1);
+                              for (var l = 0; l < list2.length; l++)
+                              {
+                                  intList[current].push(" or " + coloredArray[list2[l]]);
+                                  current++;
+                                  intList.push([]);
+                                  intList[current].push(coloredArray[j]);
+                                  intList[current].push(" " + coloredArray[list[k]]);
+                              }
+                              intList.pop();
+                              current--;
+                          }
+                          current++;
+                          intList.push([]);
+                          intList[current].push(coloredArray[j]);
+                      }
+                      intList.pop();
+                      current--;
+                  }
+              }
+              for (var j = 0; j < intList.length; j++)
+              {
+                  //Check if options already has the sequences created
+                  var check = [false, false, false];
+                  var check2 = [false, false, false];
+                  for (var k = 0; k < options2[0].length; k++)
+                  {
+                      check[k] = options2[0][k] == intList[j][k];
+                      check2[k] = options2[1][k] == intList[j][k];
+                  }
+                  if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                  options2.push(intList[j]);
+              }
+              listSize++;
+          }
+      }
+      //Checking the primary colors chosen
+      function DetermineColors(i, r) {
+          if (i == 0)
+          {
+              options2.push(["red", " yellow", " or blue"]);
+              options2.push(["orange", " green", " or purple"]);
+              options2.push(" mixed with red ");
+              options2.push(" mixed with yellow ");
+              var foot0 = document.getElementById('background-foot-0');
+              var foot1 = document.getElementById('background-foot-1');
+              foot0.innerHTML = foot0.innerHTML.replace("Green", "Yellow");
+              foot1.innerHTML = foot1.innerHTML.replace("Cyan, Yellow, and Magenta", "Orange, Green, and Purple");
+              if (r){
+                  document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.";
+                  }
+              else
+                  document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing any color with White will <strong>not</strong> make the original color";
+          }
+          else
+          {
+              options2.push(["red", " green", " or blue"]);
+              options2.push(["cyan", " yellow", " or magenta"]);
+              options2.push(" mixed with red ");
+              options2.push(" mixed with green ");
+              var foot0 = document.getElementById('background-foot-0');
+              var foot1 = document.getElementById('background-foot-1');
+              foot0.innerHTML = foot0.innerHTML.replace("Yellow", "Green");
+              foot1.innerHTML = foot1.innerHTML.replace("Orange, Green, and Purple", "Cyan, Yellow, and Magenta");
+              document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Green will make Yellow, Blue and Green will make Cyan, and Red and Blue will make Magenta. Mixing any color with White will <strong>not</strong> make the original color."
+          }
+          options2.push(" mixed with blue ");
+      }
+      function Possibilities() {
+          var check = false;
+
+          possibilities.push("the color of the " + options1[0] + " matches the color of the " + options1[1]);
+          possibilities.push("the color of the " + options1[0] + " does not match the color of the " + options1[1]);
+          possibilities.push("the submit button contains a digit");
+          possibilities.push("the submit button does not contain a digit");
+          for (var i = 0; i < options2.length; i++) {
+              if (options2[i].length == 2)
+                  options2[i] = ("" + options2[i]).replace(",", "");
+              if (i < 2) {
+                  var word = i == 0 ? "primary color **" : "secondary color ***";
+                  possibilities.push("the button or the backing (or both) are a " + word);
+                  possibilities.push("only the button is a " + word);
+                  possibilities.push("only the backing is a " + word);
+                  possibilities.push("the button or the backing (but not both) is a " + word);
+                  var word2 = i == 0 ? "primary colors **" : "secondary colors ***";
+                  possibilities.push("the button and the backing are " + word2);
+                  possibilities.push("neither the button or the backing are " + word2);
+                  for (var j = 0; j < 2; j++) {
+                      possibilities.push("the color of the " + options1[j] + " is a " + word);
+                      possibilities.push("the color of the " + options1[j] + " is not a " + word);
+                  }
+              }
+              else if (i < 5) {
+                  for (var j = 0; j < 2; j++)
+                      possibilities.push("the " + options1[j] + "'s color" + options2[i] + "creates the " + (j == 0 ? "button's" : "backing's") + " color ****");
+              }
+              else {
+                  var word = i < 16 ? "is " : "is either ";
+                  var word2 = "are ";
+                  possibilities.push("the button or the backing (or both) " + word2 + options2[i]);
+                  possibilities.push("only the button " + word + options2[i]);
+                  possibilities.push("only the backing " + word + options2[i]);
+                  possibilities.push("the button or the backing (but not both) " + word2 + options2[i]);
+                  possibilities.push("the button and the backing " + word + options2[i]);
+                  possibilities.push("neither the button or the backing " + word + options2[i]);
+                  for (var j = 0; j < 2; j++) {
+                      possibilities.push("the color of the " + options1[j] + " " + word + options2[i]);
+                      possibilities.push("the color of the " + options1[j] + " " + word.replace("is", "is not") + options2[i]);
+                  }
+              }
+          }
+          possibilities.push("there are no ports present on the bomb");
+          possibilities.push("there is an empty port plate present on the bomb");
+          possibilities.push("there is one port present on the bomb");
+          possibilities.push("there are more than two ports present on the bomb");
+          possibilities.push("there is more than one port plate present on the bomb");
+          possibilities.push("there are no batteries present on the bomb");
+          possibilities.push("there are an odd amount of batteries present on the bomb");
+          possibilities.push("there are an even amount of batteries present on the bomb");
+          possibilities.push("there are no D batteries present on the bomb *");
+          possibilities.push("there is a D battery present on the bomb *");
+          possibilities.push("there is more than one D battery present on the bomb *");
+          possibilities.push("there are no AA batteries present on the bomb");
+          possibilities.push("there are two AA batteries present on the bomb");
+          possibilities.push("there are exactly three AA batteries present on the bomb");
+          possibilities.push("there are four AA batteries present on the bomb");
+          possibilities.push("there are more than four AA batteries present on the bomb");
+          possibilities.push("there are no battery holders present on the bomb");
+          possibilities.push("there is exactly one battery holder present on the bomb");
+          possibilities.push("there is more than one battery holder present on the bomb");
+          possibilities.push("there is a battery holder with no batteries present on the bomb");
+          possibilities.push("there is a battery holder with two batteries present on the bomb");
+          possibilities.push("there is a battery holder with three batteries present on the bomb");
+          possibilities.push("there are multiple battery holders with an odd amount of batteries present on the bomb");
+          possibilities.push("there is a battery holder with four batteries present on the bomb");
+          possibilities.push("there are multiple holders with an even amount of batteries present on the bomb");
+          possibilities.push("there are no indicators present on the bomb");
+          possibilities.push("there is exactly one indicator present on the bomb");
+          possibilities.push("there is more than one indicator present on the bomb");
+          possibilities.push("there are no lit indicators present on the bomb");
+          possibilities.push("there is exactly one lit indicator present on the bomb");
+          possibilities.push("there is more than one lit indicator present on the bomb");
+          possibilities.push("there are no unlit indicators present on the bomb");
+          possibilities.push("there is exactly one unlit indicator present on the bomb");
+          possibilities.push("there is more than one unlit indicator present on the bomb");
+          for (var i = 0; i < options3.length; i++) {
+              if (i < 13) {
+                  possibilities.push("the bomb contains a " + options3[i] + " port");
+                  possibilities.push("the bomb contains more than one " + options3[i] + " port");
+                  possibilities.push("the bomb contains exactly one " + options3[i] + " port");
+                  possibilities.push("the bomb does not contain a " + options3[i] + " port");
+                  continue;
+              }
+              else {
+                  possibilities.push("there is a " + options3[i] + " indicator present on the bomb");
+                  possibilities.push("there is not a " + options3[i] + " indicator present on the bomb");
+                  possibilities.push("there is a lit " + options3[i] + " indicator present on the bomb");
+                  possibilities.push("there is not a lit " + options3[i] + " indicator present on the bomb");
+                  possibilities.push("there is an unlit " + options3[i] + " indicator present on the bomb");
+                  possibilities.push("there is not an unlit " + options3[i] + " indicator present on the bomb");
+                  for (var j = 0; j < indicatorColors.length; j++) {
+                      if (!check)
+                          possibilities.push("there is a " + indicatorColors[j] + " indicator present");
+                      possibilities.push("there is a " + indicatorColors[j] + " " + options3[i] + " indicator present");
+                  }
+                  check = true;
+              }
+          }
+          possibilities.push("there are no two factors present on the bomb");
+          possibilities.push("there is exactly one two factor present on the bomb");
+          possibilities.push("there is more than one two factor present on the bomb");
+          possibilities.push("there is not a Date of Manufacture widget present on the bomb");
+          possibilities.push("there is a Date of Manufacture widget present on the bomb");
+          possibilities.push("there is not a Day of Week widget present on the bomb");
+          possibilities.push("there is a Day of Week widget present on the bomb");
+          possibilities.push("there is a Day of Week and Date of Manufacture widget present on the bomb");
+          possibilities.push("there is not a Random Time widget present on the bomb");
+          possibilities.push("there are less than two Random Time widgets present on the bomb");
+          possibilities.push("there are exactly two Random Time widgets present on the bomb");
+          possibilities.push("there are more than two Random Time widgets present on the bomb");
+      }
+  </script>
 </head>
 <body>
     <div class="section">
