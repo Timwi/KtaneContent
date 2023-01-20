@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>うんざりチェス — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dia {
+            float: right;
+        }
+        td、th {
+            padding: .1em .4em .2em;
+        }
+        .dark table、table {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">うんざりチェス</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Lousy Chess.svg" class="diagram">
+                <h2>モジュール詳細：うんざりチェス</h2>
+                <p class="flavour-text">
+                    適当に動かして遊んでいるみたいなもの。良いとこなし。
+                </p>
+                <p>二つの<a href="https://japanchess.org/chess_rule/">チェス</a>エンジンが互いに戦い合っている。あなたは駒の移動とゲームの結末を予測しなければいけない。</p>
+                <p>ここでは<a href="http://wiki.cs.pdx.edu/mc-howto/rules.html">「MinitChess」</a>というルールを使用している。これは通常のチェスと以下のような点が異なっている。 </p>
+                <img src="img/Lousy Chess/diagram.png" width="30%" height="30%" class="dia">
+                <ul>
+                    <li>盤面と駒数が縮小している(図参照)。</li>
+                    <li>ビショップは隣接する <strong>空</strong>のマスにも移動可能である。異なる色のマスに移動してもよい。</li>
+                    <li>ポーンの2マス移動や「アンパサン」は禁止されている。キャスリングも禁止されており、プロモーションの際は、ポーンは常にクイーンに変更される。</li>
+                    <li>「チェック」をしなかったり「ステイルメイト」になったままキングを捕まえても勝利する。</li>
+                    <li>同じ盤面が発生することや駒を捕獲した後の移動回数による引き分けは存在しない。</li>
+                    <li>互いが40手動かすと引き分けとなる。</li>
+                </ul>
+                <p>ディスプレーには白のエンジンの文字コードとシード値、黒のエンジンの文字コードとシード値、そのプレイヤーの現在の手数が表示されている。どちらの駒が選択可能か確認し、現在の手番を確認する。FALL/FLATボタンは二つの駒のセットを切り替えることができ、いつでも動かしてもよい。</p>
+                <p>移動時は駒を選んでから、その行き先を選択する。これをゲームが終了するまで続ける。間違った駒や移動先を選ぶと、ミスが記録される。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">うんざりチェス</span>
+            </div>
+            <div class="page-content">
+                <h3>エンジン</h3>
+                <p>各エンジンは次の移動を以下のようなステップで決定する。</p>
+                <ul>
+                    <li>各エンジンはそれぞれ目標リストを所持している。リストの上部から、有効な移動によって目標を達成するようにする。</li>
+                    <li>どのエンジンも最初の目標は<strong>相手のキングを捕まえる</strong>ことである。</li>
+                    <li>どのエンジンも最後の目標は<strong>いずれかの有効な移動を行う</strong>である。</li>
+                    <li>各目標に対して目標に到達できる有効な移動がない場合、次の目標に設定する。</li>
+                    <li>目標に到達する移動が一つ以上ある場合、まずそれをa1、a2、...、e6のような座標を使用した「移動前-移動先」の形式で定義し、アルファベット順に並べる。前回の乱数が偶数の場合、更にそれを昇順に並べ、奇数の場合は降順に並べる(例えば乱数が偶数の場合、開始位置における最初の有効な移動はa2-a3であり、最後はe5-e4となる)。</li>
+                    <li>下の乱数生成機を用いて、数字を取得する。</li>
+                    <li>0から開始し、リスト内を求めた乱数と同じ回数だけ移動する。表の端に到達した場合はループする。これが次の手である。</li>
+                </ul>
+                <table>
+                    <tr>
+                        <td class='corner'></td>
+                        <th>エンジン</th>
+                        <th>目標</th>
+                    </tr>
+                    <tr>
+                        <th>D</th>
+                        <th>Dark squares are lava<br>(暗い穴は溶岩)</th>
+                        <td><ul><li>暗いマスの駒を明るいマスに移動させる。</li><li>明るいマスの駒を明るいマスに移動させる。</li></ul></td>
+                    </tr>
+                    <tr>
+                        <th>K</th>
+                        <th>The king must die<br>(王は死すべし)</th>
+                        <td><ul><li>相手のキングと自分のいずれかの駒の最短距離が短くなるようにする。</li></ul></td>
+                    </tr>
+                    <tr>
+                        <th>L</th>
+                        <th>Light squares are lava<br>(明るい穴は溶岩)</th>
+                        <td><ul><li>明るいマスの駒を暗いマスに移動させる。</li><li>暗いマスの駒を暗いマスに移動させる。</li></ul></td>
+                    </tr>
+                    <tr>
+                        <th>M</th>
+                        <th>Mirror、mirror<br>(鏡よ、鏡)</th>
+                        <td><ul><li>相手と同じ駒を使用して、相手の最後の一手を盤面中央に対して点対称になるように移動する。</li><li>相手と同じ駒を動かす。</li></ul></td>
+                    </tr>
+                    <tr>
+                        <th>S</th>
+                        <th>Let’s switch sides<br>(交換しよう)</th>
+                        <td><ul><li>相手の初期配置に駒を近づける(ポーンは自分の前方にあるスタート地点のマスのみを参照する)。</li></ul></td>
+                    </tr>
+                </table>
+                <p>距離は上下左右の直線距離で計測する。例：初期配置のクイーン間の距離は7、キング間の距離は9になる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">うんざりチェス</span>
+            </div>
+            <div class="page-content">
+                <h3>乱数生成機</h3>
+                <ul>
+                    <li><strong>基本値</strong>を、シリアルナンバーを取得し各英字は数字に変換することで求める。</li>
+                    <li>新たな乱数を獲得するには、</li>
+                    <ul>
+                        <li>前回の値から開始する(一回目の場合は、エンジンのシード値を使用する)。</li>
+                        <li>基本値の次の数字を加算する（最後の場合は、最初にループする）。</li>
+                        <li>下一桁を取得する。</li>
+                    </ul>
+                </ul>
+                <h3>例</h3>
+                <ul>
+                    <li>白 = L4 (エンジンLを使用。シード値4)</li>
+                    <li>手数 = 1 (初期位置)</li>
+                    <li>シリアルナンバー：CH3SS5</li>
+                    <li>基本値：C=3、H=8、3、S=19、S=19、5 → 38319195</li>
+                    <li>4 (シード値) + 3 (基本値の一番目) = 7</li>
+                    <li>最初の目標：相手のキングを捕まえる。この目標を達成する移動方法はない。</li>
+                    <li>次の目標：明るいマスの駒を暗いマスに移動させる。</li>
+                    <li>整理後の考えられる移動方法：0:a2-a3、1:b1-a3、2:b1-c3、3:c2-c3、4:e2-e3</li>
+                    <li>4番目に到達した後は0番目にループするため、7回目の移動では2:b1-c3に到達する。</li>
+                </ul>
+                <p>白の次の乱数生成は、以下のように行われる。</p>
+                <ul>
+                    <li>7 (現在の乱数) + 8 (次の基本値) = 15 → 下一桁 = 5.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>
