@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>タングラム — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem)
+        {
+            return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+        };
+
+        var mainSVG = null;
+        var selectedElement = null;
+        var globalPoint = null;
+        var currentMatrix = null;
+
+        $(document).ready(function()
+        {
+            mainSVG = document.getElementById("mainSVG");
+            $(".piece").on("mouseover", function()
+                {
+                 selectedElement = this;
+                 document.getElementById("idname").innerHTML = this.id;
+                });
+
+                $(".piece").on("mouseout", function()
+                {
+                 selectedElement = this;
+                 document.getElementById("idname").innerHTML = "";
+                });
+                
+            $(".piece").click(function(event)
+            {
+                if (event.shiftKey)
+                {
+                    selectedElement = this;
+
+                    if ($(selectedElement).attr("transform") == null)
+                    {
+                        $(selectedElement).attr("transform", "matrix(1 0 0 1 0 0))");
+                    }
+
+                    var width = parseFloat($(selectedElement).attr("width"));
+                    var height = parseFloat($(selectedElement).attr("height"));
+
+                    currentMatrix = $(selectedElement).attr("transform").slice(7, -1).split(' ');
+                    for (var i = 0; i < currentMatrix.length; i++)
+                    {
+                        currentMatrix[i] = parseFloat(currentMatrix[i]);
+                    }
+
+                    //To 90deg
+                    if (currentMatrix[0] == 1)
+                    {
+                        currentMatrix[0] = 0;
+                        currentMatrix[1] = 1;
+                        currentMatrix[2] = -1;
+                        currentMatrix[3] = 0;
+                        currentMatrix[4] += (width + height) / 2;
+                        currentMatrix[5] += (height - width) / 2;
+                    }
+                    //To 270deg
+                    else if (currentMatrix[0] == -1)
+                    {
+                        currentMatrix[0] = 0;
+                        currentMatrix[1] = -1;
+                        currentMatrix[2] = 1;
+                        currentMatrix[3] = 0;
+                        currentMatrix[4] += (-width - height) / 2;
+                        currentMatrix[5] += (width - height) / 2;
+                    }
+                    //To 0deg
+                    else if (currentMatrix[2] == 1)
+                    {
+                        currentMatrix[0] = 1;
+                        currentMatrix[1] = 0;
+                        currentMatrix[2] = 0;
+                        currentMatrix[3] = 1;
+                        currentMatrix[4] += (height - width) / 2;
+                        currentMatrix[5] += (-width - height) / 2;
+                    }
+                    //To 180deg
+                    else
+                    {
+                        currentMatrix[0] = -1;
+                        currentMatrix[1] = 0;
+                        currentMatrix[2] = 0;
+                        currentMatrix[3] = -1;
+                        currentMatrix[4] += (width - height) / 2;
+                        currentMatrix[5] += (width + height) / 2;
+                    }
+
+                    newTransform = "matrix(" + currentMatrix.join(' ') + ")";
+                    $(selectedElement).attr("transform", newTransform);
+                }
+            });
+
+            $(".piece").mousedown(function(event)
+            {
+                selectedElement = this;
+
+                globalPoint = mainSVG.createSVGPoint();
+                globalPoint.x = event.clientX;
+                globalPoint.y = event.clientY;
+
+                var ctm = mainSVG.getScreenCTM();
+                ctm = ctm.inverse();
+                globalPoint = globalPoint.matrixTransform(ctm);
+
+                if ($(selectedElement).attr("transform") == null)
+                {
+                    $(selectedElement).attr("transform", "matrix(1 0 0 1 0 0))");
+                }
+
+                currentMatrix = $(selectedElement).attr("transform").slice(7, -1).split(' ');
+                for (var i = 0; i < currentMatrix.length; i++)
+                {
+                    currentMatrix[i] = parseFloat(currentMatrix[i]);
+                }
+
+                $(mainSVG).on("mousemove", function(event)
+                {
+                    var newGlobalPoint = mainSVG.createSVGPoint();
+                    newGlobalPoint.x = event.clientX;
+                    newGlobalPoint.y = event.clientY;
+
+                    var ctm = mainSVG.getScreenCTM();
+                    ctm = ctm.inverse();
+                    newGlobalPoint = newGlobalPoint.matrixTransform(ctm);
+
+                    dx = newGlobalPoint.x - globalPoint.x;
+                    dy = newGlobalPoint.y - globalPoint.y;
+
+                    dx = Math.round(dx / 20) * 20;
+                    dy = Math.round(dy / 20) * 20;
+
+                    globalPoint.x += dx;
+                    globalPoint.y += dy;
+
+                    currentMatrix[4] += dx;
+                    currentMatrix[5] += dy;
+                    newTransform = "matrix(" + currentMatrix.join(' ') + ")";
+                    $(selectedElement).attr("transform", newTransform);
+                });
+
+                $(mainSVG).on("mouseup", function()
+                {
+                    $(mainSVG).off("mousemove").off("mouseup");
+                    selectedElement = null;
+                });
+                
+            });
+            
+        });
+
+        var oldTemplateID = null;
+
+        $(document).ready(function()
+        {
+            var templateSelect = $("#template-select");
+
+            templateSelect.change(function()
+            {
+                var templateID = $(this).val();
+
+                if (oldTemplateID != null)
+                {
+                    $(oldTemplateID).hide();
+                }
+
+                $(templateID).show();
+                oldTemplateID = templateID;
+            });
+
+            $(".template").each(function()
+            {
+                templateSelect.append($("<option>",
+                    {
+                        value: "#" + $(this).attr("id"),
+                        text: $(this).attr("id")
+                    }));
+            });
+
+            var firstTemplate = $(".template").first();
+
+            firstTemplate.show();
+            oldTemplateID = "#" + firstTemplate.attr("id");
+
+            $(".piece").each(function()
+            {
+                $(this).data("default-transform", $(this).attr("transform"));
+            });
+
+            $("#reset").click(function()
+            {
+                $(".piece").each(function()
+                {
+                    $(this).attr("transform", $(this).data("default-transform"));
+                });
+            });
+        });
+    </script>
+    <style>
+
+        @font-face {
+            font-family: 'OCR A Extended';
+            src: url('font/OCRAExtended.ttf');
+        }
+
+        @font-face {
+            font-family: 'Autobus Bold';
+            src: url('font/Autobus-Bold.ttf');
+        }
+
+        h1 {
+            line-height: 1em;
+            margin: .4em 1em .4em 0;
+        }
+
+        svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .piece {
+            cursor: move;
+        }
+
+            .piece text {
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+            }
+
+        .template {
+            display: none;
+        }
+
+        .form {
+            font-size: 1.2em;
+            text-align: center;
+            margin: 0 0 10px 0;
+        }
+
+        select, button {
+            border: 2px solid #000000;
+            background-color: rgba(0, 0, 0, .27);
+            padding: 6px;
+            font-family: 'Autobus Bold', sans-serif;
+            font-size: 1em;
+        }
+        .idname{
+         text-align: center;
+         margin: 10px;
+         font-size: larger;
+        }
+    </style>
+</head>
+<body>
+ <div class="section">
+  <div class="page page-bg-01">
+   <div class="page-header">
+       <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+       <span class="page-header-section-title">タングラム</span>
+   </div>
+   <div class="page-content">
+       <img src="img/Component/Tangrams.svg" class="diagram" />
+       <h2>モジュール詳細：タングラム</h2>
+       <p class="flavour-text">
+        「量産型集積回路の新たな概念。それが『ITC：Integrated Tangram Circuit』<sup>特許出願中</sup>」
+       </p>
+       <p>
+           このモジュールには正方形型の集積回路チップがあり、周囲には接点がはみ出している。内部では、同封されている<em>「TAN-M Poly Modular Chipset」の図面</em>で示された組み立てピース、また<em>「TAN-S」</em>と<em>「TAN-D」</em>の図面で示されたページを型として集積回路が組み立てられている。
+       </p>
+       <h3>モジュールの解除方法</h3>
+       <p>
+           モジュールを解除するには、3回正しく集積回路に過負荷を与えて焼き切らなければいけない。このためには、正極の接点から負極の接点へ電流が途切れることなく流れるような接点の組を特定する。
+       </p>
+       <p>
+           常に正極の接点を最初に選び、それから負極を選び、回路に過負荷が加わるまで待つ。回路に正常に過負荷を与えられた場合、小さな破裂音が聞こえる。
+       </p>
+       <p>
+          有効な接点のペアごとに異なる正極の接点を使用する必要がある(負極の接点は再利用可能)。以前に使用した有効な正極の接点を含むペアを選択すると、ミスが記録される。正極から負極へ電流が途切れずに流れない接点のペアを選択しても、ミスが記録される。さらに、モジュールが回路に負荷を与えているときに任意の接点を選択しても、ミスが記録される。
+       </p>
+       <p>
+           どの接点のペアが有効であるかを特定するには、備え付けの集積回路チップから内部の回路を再構築する必要がある。
+       </p>
+       <h3>回路の再構築</h3>
+       <p>
+           備え付けの集積回路チップには短い文字コード(<em>TAN-S</em>か<em>TAN-D</em>の型のいずれかを指す)と数字のシーケンスが書いてある。チップコード内の桁数は、回路の型を埋めるために必要なピースの個数を示している。
+       </p>
+       <p>
+           設計図には、関連する型の構造タイプのうちちょうどその数のピースを必要とする(型内に空白の空間が存在しない)型が、<em>1</em>つだけある。
+       </p>
+   </div>
+   <div class="page-footer relative-footer">ページ 1/2</div>
+</div>
+<div class="page page-bg-02">
+   <div class="page-header">
+       <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+       <span class="page-header-section-title">タングラム</span>
+   </div>
+   <div class="page-content">
+    <p>
+     各番号のセルに対して、チップコードの対応する数字を使用して、そのセルを埋めるために使用すべきピースの番号を求める。例えば、TAN-D 376581のコードは、TAN-D-6471の型(TAN-D、6ピース)を指し、1番の部分にはMT-03（中くらいの三角形、コードの1桁目は3）、2番の部分にはST-07（小さい三角形、コードの2桁目は7）等を使用することになる。
+ </p>
+ <p>
+    複数の向きが考えられるピースについては、ピースの白い点と型の白い点を一致させると、ピースの向きが正しくなる。ピースをはめる際に、裏返しにする必要はない。
+ </p>
+ <p>
+     回路を組み立てたら、回路図を読み適切な接点のペアを求める必要がある。
+ </p>
+ <h3>回路図の読み方</h3>
+ <p>
+     各ピースには、ピースからピースへ正しく電流が流れるように隣り合うピースと繋がっている接点を含んでいる。回路に繋がっていない接点もあり、このような接点は電気的に「端点」として扱う。
+ </p>
+ <p>
+     交差する線は、その交点に接点がある場合のみ接続されている。接点がない場合、線は互いに「飛び越え」ている。
+ </p>
+ <p>
+     電流には方向性があり、正極から負極へしか流れない。回路の中のダイオードは、電流を一方向(ダイオードの向いている方向は垂線の方向)にしか流せず、ダイオードを通過して反対方向には流せない。
+ </p>
+   </div>
+   <div class="page-footer relative-footer">ページ 2/2</div>
+</div>
+</div>
+ <div class="page page-bg-01">
+     <div class="page-header">
+         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+         <span class="page-header-section-title">タングラム</span>
+     </div>
+     <div class="page-content">
+    <h1>タングラムのインタラクティブ設計図</h1>
+    <p>
+        以下の設計図を使用して、<strong>「TAN-M Poly Modular Chipset」</strong>のピースを対応する <strong>TAN-S</strong>と<strong>TAN-D</strong>の型に合わせる。<br />
+        ピースをドラッグして配置する。Shiftキーを押しながらクリックすることで、90度回転する。
+    </p>
+    <div class="form">
+        表示中のテンプレート
+        <select id="template-select"></select>
+        <button id="reset">リセット</button>
+    </div>
+    <svg id="mainSVG" width="100%" viewBox="0 0 1600 640" preserveAspectRatio="xMaxYMin meet" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+        <g id="bg" fill="none" stroke="#9bc9ff">
+            <g>
+                <g stroke-width="2">
+                    <path d="m80 0v640" />
+                    <path d="m160 0v640" />
+                    <path d="m240 0v640" />
+                    <path d="m320 0v640" />
+                    <path d="m400 0v640" />
+                    <path d="m480 0v640" />
+                    <path d="m560 0v640" />
+                    <path d="m640 0v640" />
+                    <path d="m720 0v640" />
+                    <path d="m800 0v640" />
+                    <path d="m880 0v640" />
+                    <path d="m960 0v640" />
+                    <path d="m1040 0v640" />
+                    <path d="m1120 0v640" />
+                    <path d="m1200 0v640" />
+                    <path d="m1280 0v640" />
+                    <path d="m1360 0v640" />
+                    <path d="m1440 0v640" />
+                    <path d="m1520 0v640" />
+                </g>
+                <g stroke-width="2">
+                    <path d="m0 80h1600" />
+                    <path d="m0 160h1600" />
+                    <path d="m0 240h1600" />
+                    <path d="m0 320h1600" />
+                    <path d="m0 400h1600" />
+                    <path d="m0 480h1600" />
+                    <path d="m0 560h1600" />
+                    <path d="m0 640h1600" />
+                </g>
+                <g stroke-width="1">
+                    <path d="m20 0v640" />
+                    <path d="m40 0v640" />
+                    <path d="m60 0v640" />
+                    <path d="m100 0v640" />
+                    <path d="m120 0v640" />
+                    <path d="m140 0v640" />
+                    <path d="m180 0v640" />
+                    <path d="m200 0v640" />
+                    <path d="m220 0v640" />
+                    <path d="m260 0v640" />
+                    <path d="m280 0v640" />
+                    <path d="m300 0v640" />
+                    <path d="m340 0v640" />
+                    <path d="m360 0v640" />
+                    <path d="m380 0v640" />
+                    <path d="m420 0v640" />
+                    <path d="m440 0v640" />
+                    <path d="m460 0v640" />
+                    <path d="m500 0v640" />
+                    <path d="m520 0v640" />
+                    <path d="m540 0v640" />
+                    <path d="m580 0v640" />
+                    <path d="m600 0v640" />
+                    <path d="m620 0v640" />
+                    <path d="m660 0v640" />
+                    <path d="m680 0v640" />
+                    <path d="m700 0v640" />
+                    <path d="m740 0v640" />
+                    <path d="m760 0v640" />
+                    <path d="m780 0v640" />
+                    <path d="m820 0v640" />
+                    <path d="m840 0v640" />
+                    <path d="m860 0v640" />
+                    <path d="m900 0v640" />
+                    <path d="m920 0v640" />
+                    <path d="m940 0v640" />
+                    <path d="m980 0v640" />
+                    <path d="m1e3 0v640" />
+                    <path d="m1020 0v640" />
+                    <path d="m1060 0v640" />
+                    <path d="m1080 0v640" />
+                    <path d="m1100 0v640" />
+                    <path d="m1140 0v640" />
+                    <path d="m1160 0v640" />
+                    <path d="m1180 0v640" />
+                    <path d="m1220 0v640" />
+                    <path d="m1240 0v640" />
+                    <path d="m1260 0v640" />
+                    <path d="m1300 0v640" />
+                    <path d="m1320 0v640" />
+                    <path d="m1340 0v640" />
+                    <path d="m1380 0v640" />
+                    <path d="m1400 0v640" />
+                    <path d="m1420 0v640" />
+                    <path d="m1460 0v640" />
+                    <path d="m1480 0v640" />
+                    <path d="m1500 0v640" />
+                    <path d="m1540 0v640" />
+                    <path d="m1560 0v640" />
+                    <path d="m1580 0v640" />
+                </g>
+                <g stroke-width="1">
+                    <path d="m0 20h1600" />
+                    <path d="m0 40h1600" />
+                    <path d="m0 60h1600" />
+                    <path d="m0 100h1600" />
+                    <path d="m0 120h1600" />
+                    <path d="m0 140h1600" />
+                    <path d="m0 180h1600" />
+                    <path d="m0 200h1600" />
+                    <path d="m0 220h1600" />
+                    <path d="m0 260h1600" />
+                    <path d="m0 280h1600" />
+                    <path d="m0 300h1600" />
+                    <path d="m0 340h1600" />
+                    <path d="m0 360h1600" />
+                    <path d="m0 380h1600" />
+                    <path d="m0 420h1600" />
+                    <path d="m0 440h1600" />
+                    <path d="m0 460h1600" />
+                    <path d="m0 500h1600" />
+                    <path d="m0 520h1600" />
+                    <path d="m0 540h1600" />
+                    <path d="m0 580h1600" />
+                    <path d="m0 600h1600" />
+                    <path d="m0 620h1600" />
+                </g>
+            </g>
+            <rect width="1600" height="640" stroke-width="6" />
+        </g>
+        <g id="TAN-D-6471" class="template" transform="translate(640, 160)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m160 0 160 160-160 160-160-160z" fill-opacity=".4" />
+                <g fill="none" stroke="#fff" stroke-linejoin="miter" stroke-opacity=".6" stroke-width="3">
+                    <path d="m160 320v-160l80-80" />
+                    <path d="m0 160h160l80 80" />
+                    <path d="m80 80 80 80h160" />
+                </g>
+            </g>
+            <g fill="#fff">
+                <circle cx="200" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="13" cy="155" r="3" style="paint-order:normal" />
+                <circle cx="13" cy="165" r="3" style="paint-order:normal" />
+                <circle cx="173" cy="155" r="3" style="paint-order:normal" />
+                <circle cx="307" cy="165" r="3" style="paint-order:normal" />
+                <circle cx="160" cy="10" r="3" style="paint-order:normal" />
+                <circle cx="165" cy="173" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="227.23296" y="147.418" style="line-height:1.25" xml:space="preserve"><tspan x="227.23296" y="147.418">3</tspan></text>
+                <text x="228.19174" y="217.40959" style="line-height:1.25" xml:space="preserve"><tspan x="228.19174" y="217.40959">5</tspan></text>
+                <text x="173.06139" y="262.47266" style="line-height:1.25" xml:space="preserve"><tspan x="173.06139" y="262.47266">4</tspan></text>
+                <text x="93.961304" y="232.7502" style="line-height:1.25" xml:space="preserve"><tspan x="93.961304" y="232.7502">1</tspan></text>
+                <text x="64.238846" y="148.85617" style="line-height:1.25" xml:space="preserve"><tspan x="64.238846" y="148.85617">2</tspan></text>
+                <text x="146.69469" y="99.957939" style="line-height:1.25" xml:space="preserve"><tspan x="146.69469" y="99.957939">6</tspan></text>
+            </g>
+        </g>
+        <g id="TAN-D-7583" class="template" transform="translate(560, 80)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m240 0 240 240-240 240-240-240z" fill-opacity=".4" />
+                <path d="m400 160-80 80-80-80-160 160h320l-80-80" fill="none" />
+                <path d="m80 320v-160h320" fill="none" />
+            </g>
+            <g fill="#fff">
+                <circle cx="280" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="360" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="440" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="440" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="360" cy="360" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="440" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="440" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="360" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="75" cy="307" r="3" style="paint-order:normal" />
+                <circle cx="85" cy="307" r="3" style="paint-order:normal" />
+                <circle cx="93" cy="315" r="3" style="paint-order:normal" />
+                <circle cx="93" cy="155" r="3" style="paint-order:normal" />
+                <circle cx="387" cy="165" r="3" style="paint-order:normal" />
+                <circle cx="330" cy="240" r="3" style="paint-order:normal" />
+                <circle cx="387" cy="325" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="226.36351" y="116.6016" style="line-height:1.25" xml:space="preserve"><tspan x="226.36351" y="116.6016">3</tspan></text>
+                <text x="306.90176" y="216.55534" style="line-height:1.25" xml:space="preserve"><tspan x="306.90176" y="216.55534">5</tspan></text>
+                <text x="115.62337" y="235.97081" style="line-height:1.25" xml:space="preserve"><tspan x="115.62337" y="235.97081">4</tspan></text>
+                <text x="226.36348" y="275.52084" style="line-height:1.25" xml:space="preserve"><tspan x="226.36348" y="275.52084">2</tspan></text>
+                <text x="382.40637" y="263.2963" style="line-height:1.25" xml:space="preserve"><tspan x="382.40637" y="263.2963">7</tspan></text>
+                <text x="41.556927" y="262.57718" style="line-height:1.25" xml:space="preserve"><tspan x="41.556927" y="262.57718">6</tspan></text>
+                <text x="233.5544" y="408.5528" style="line-height:1.25" xml:space="preserve"><tspan x="233.5544" y="408.5528">1</tspan></text>
+            </g>
+        </g>
+        <g id="TAN-D-9702" class="template" transform="translate(560, 80)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m240 0 240 240-240 240-240-240z" fill-opacity=".4" />
+                <g fill="none" stroke="#fff" stroke-linejoin="miter" stroke-opacity=".6" stroke-width="3">
+                    <path d="m320 80h-160v320l80-80 80 80v-160l-80 80v-160l80 80z" />
+                    <path d="m240 320-80-80" />
+                    <path d="m240 160-80-80" />
+                </g>
+            </g>
+            <g fill="#fff">
+                <circle cx="280" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="360" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="440" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="440" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="360" cy="360" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="440" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="440" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="360" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="173" cy="75" r="3" style="paint-order:normal" />
+                <circle cx="173" cy="85" r="3" style="paint-order:normal" />
+                <circle cx="165" cy="93" r="3" style="paint-order:normal" />
+                <circle cx="325" cy="93" r="3" style="paint-order:normal" />
+                <circle cx="245" cy="173" r="3" style="paint-order:normal" />
+                <circle cx="165" cy="253" r="3" style="paint-order:normal" />
+                <circle cx="240" cy="330" r="3" style="paint-order:normal" />
+                <circle cx="155" cy="387" r="3" style="paint-order:normal" />
+                <circle cx="315" cy="387" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="224.88243" y="70.579735" style="line-height:1.25" xml:space="preserve"><tspan x="224.88243" y="70.579735">7</tspan></text>
+                <text x="260.83701" y="150.39891" style="line-height:1.25" xml:space="preserve"><tspan x="260.83701" y="150.39891">3</tspan></text>
+                <text x="186.05147" y="225.90353" style="line-height:1.25" xml:space="preserve"><tspan x="186.05147" y="225.90353">9</tspan></text>
+                <text x="255.08427" y="266.17267" style="line-height:1.25" xml:space="preserve"><tspan x="255.08427" y="266.17267">5</tspan></text>
+                <text x="277.37613" y="343.11548" style="line-height:1.25" xml:space="preserve"><tspan x="277.37613" y="343.11548">6</tspan></text>
+                <text x="173.10783" y="345.27274" style="line-height:1.25" xml:space="preserve"><tspan x="173.10783" y="345.27274">4</tspan></text>
+                <text x="83.940468" y="263.2963" style="line-height:1.25" xml:space="preserve"><tspan x="83.940468" y="263.2963">1</tspan></text>
+                <text x="223.44424" y="422.21555" style="line-height:1.25" xml:space="preserve"><tspan x="223.44424" y="422.21555">8</tspan></text>
+                <text x="378.76804" y="266.17267" style="line-height:1.25" xml:space="preserve"><tspan x="378.76804" y="266.17267">2</tspan></text>
+            </g>
+        </g>
+        <g id="TAN-S-7331" class="template" transform="translate(640, 160)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m320 0v320h-320v-320z" fill-opacity=".4" />
+                <g fill="none" stroke="#fff" stroke-linejoin="miter" stroke-opacity=".6" stroke-width="3">
+                    <path d="m319.47-0.21967-80 80 80 80-80 80h-160l80-80-160-160" />
+                    <path d="m160 320 80-80-80-80 80-80" />
+                    <path d="m0 320 80-80" />
+                </g>
+            </g>
+            <g fill="#fff">
+                <circle cx="200" r="7" style="paint-order:normal" />
+                <circle cx="280" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" r="7" style="paint-order:normal" />
+                <circle cx="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="40" r="7" style="paint-order:normal" />
+                <circle cy="40" r="7" style="paint-order:normal" />
+                <circle cy="120" r="7" style="paint-order:normal" />
+                <circle cy="200" r="7" style="paint-order:normal" />
+                <circle cy="280" r="7" style="paint-order:normal" />
+                <circle cx="5" cy="13" r="3" style="paint-order:normal" />
+                <circle cx="307" cy="5" r="3" style="paint-order:normal" />
+                <circle cx="240" cy="90" r="3" style="paint-order:normal" />
+                <circle cx="315" cy="147" r="3" style="paint-order:normal" />
+                <circle cx="315" cy="173" r="3" style="paint-order:normal" />
+                <circle cx="93" cy="235" r="3" style="paint-order:normal" />
+                <circle cx="227" cy="245" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="146.26173" y="87.715981" style="line-height:1.25" xml:space="preserve"><tspan x="146.26173" y="87.715981">2</tspan></text>
+                <text x="276.17764" y="102.57721" style="line-height:1.25" xml:space="preserve"><tspan x="276.17764" y="102.57721">4</tspan></text>
+                <text x="225.36183" y="183.59486" style="line-height:1.25" xml:space="preserve"><tspan x="225.36183" y="183.59486">6</tspan></text>
+                <text x="53.738613" y="184.55365" style="line-height:1.25" xml:space="preserve"><tspan x="53.738613" y="184.55365">1</tspan></text>
+                <text x="145.30295" y="230.57552" style="line-height:1.25" xml:space="preserve"><tspan x="145.30295" y="230.57552">5</tspan></text>
+                <text x="109.82777" y="302.96408" style="line-height:1.25" xml:space="preserve"><tspan x="109.82777" y="302.96408">7</tspan></text>
+                <text x="261.31641" y="292.89679" style="line-height:1.25" xml:space="preserve"><tspan x="261.31641" y="292.89679">3</tspan></text>
+            </g>
+        </g>
+        <g id="TAN-S-8274" class="template" transform="translate(640, 160)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m320 0v320h-320v-320z" fill-opacity=".4" />
+                <g fill="none" stroke="#fff" stroke-linejoin="miter" stroke-opacity=".6" stroke-width="3">
+                    <path d="m320 0-80 80-80-80-80 80-80-80" />
+                    <path d="m80 80 80 80 80-80" />
+                    <path d="m0 320 160-160 80 80h-160" />
+                    <path d="m160 320 80-80 80 80" />
+                </g>
+            </g>
+            <g fill="#fff">
+                <circle cx="200" r="7" style="paint-order:normal" />
+                <circle cx="280" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" r="7" style="paint-order:normal" />
+                <circle cx="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="0" cy="40" r="7" style="paint-order:normal" />
+                <circle cx="0" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="0" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="0" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="5" cy="13" r="3" style="paint-order:normal" />
+                <circle cx="147" cy="5" r="3" style="paint-order:normal" />
+                <circle cx="160" cy="10" r="3" style="paint-order:normal" />
+                <circle cx="307" cy="5" r="3" style="paint-order:normal" />
+                <circle cx="93" cy="235" r="3" style="paint-order:normal" />
+                <circle cx="227" cy="245" r="3" style="paint-order:normal" />
+                <circle cx="315" cy="307" r="3" style="paint-order:normal" />
+                <circle cx="173" cy="315" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="65.24408" y="57.514126" style="line-height:1.25" xml:space="preserve"><tspan x="65.24408" y="57.514126">3</tspan></text>
+                <text x="225.84122" y="57.51413" style="line-height:1.25" xml:space="preserve"><tspan x="225.84122" y="57.51413">4</tspan></text>
+                <text x="144.82356" y="105.45358" style="line-height:1.25" xml:space="preserve"><tspan x="144.82356" y="105.45358">7</tspan></text>
+                <text x="49.424061" y="184.07426" style="line-height:1.25" xml:space="preserve"><tspan x="49.424061" y="184.07426">1</tspan></text>
+                <text x="243.09943" y="183.11546" style="line-height:1.25" xml:space="preserve"><tspan x="243.09943" y="183.11546">2</tspan></text>
+                <text x="145.30295" y="230.09613" style="line-height:1.25" xml:space="preserve"><tspan x="145.30295" y="230.09613">5</tspan></text>
+                <text x="108.86897" y="302.48468" style="line-height:1.25" xml:space="preserve"><tspan x="108.86897" y="302.48468">8</tspan></text>
+                <text x="224.88243" y="310.155" style="line-height:1.25" xml:space="preserve"><tspan x="224.88243" y="310.155">6</tspan></text>
+            </g>
+        </g>
+        <g id="TAN-S-9160" class="template" transform="translate(640, 160)">
+            <g stroke="#fff" fill="#000" stroke-linejoin="round" stroke-opacity=".6" stroke-width="3">
+                <path d="m320 0v320h-320v-320z" fill-opacity=".4" />
+                <g fill="none" stroke="#fff" stroke-linejoin="miter" stroke-opacity=".6" stroke-width="3">
+                    <path d="m0 0 80 80-80 80h160l80-80v160l80 80" />
+                    <path d="M 320,160 160,0 80,80 240,240" />
+                    <path d="m0 320 160-160" />
+                </g>
+            </g>
+            <g fill="#fff">
+                <circle cx="200" r="7" style="paint-order:normal" />
+                <circle cx="280" r="7" style="paint-order:normal" />
+                <circle cx="280" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="200" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="120" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" cy="320" r="7" style="paint-order:normal" />
+                <circle cx="40" r="7" style="paint-order:normal" />
+                <circle cx="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="280" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="200" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="120" r="7" style="paint-order:normal" />
+                <circle cx="320" cy="40" r="7" style="paint-order:normal" />
+                <circle cy="40" r="7" style="paint-order:normal" />
+                <circle cy="120" r="7" style="paint-order:normal" />
+                <circle cy="200" r="7" style="paint-order:normal" />
+                <circle cy="280" r="7" style="paint-order:normal" />
+                <circle cx="5" cy="13" r="3" style="paint-order:normal" />
+                <circle cx="147" cy="5" r="3" style="paint-order:normal" />
+                <circle cx="160" cy="10" r="3" style="paint-order:normal" />
+                <circle cx="173" cy="5" r="3" style="paint-order:normal" />
+                <circle cx="245" cy="93" r="3" style="paint-order:normal" />
+                <circle cx="13" cy="155" r="3" style="paint-order:normal" />
+                <circle cx="235" cy="227" r="3" style="paint-order:normal" />
+                <circle cx="5" cy="307" r="3" style="paint-order:normal" />
+                <circle cx="13" cy="315" r="3" style="paint-order:normal" />
+            </g>
+            <g fill="#000000" fill-opacity=".43137" font-family="'Autobus Bold'" font-size="64px" letter-spacing="0px" stroke="#fbffff" stroke-dasharray="4, 1" word-spacing="0px">
+                <text x="66.682266" y="58.472923" style="line-height:1.25" xml:space="preserve"><tspan x="66.682266" y="58.472923">6</tspan></text>
+                <text x="10.113723" y="104.49479" style="line-height:1.25" xml:space="preserve"><tspan x="10.113723" y="104.49479">5</tspan></text>
+                <text x="63.3265" y="149.55786" style="line-height:1.25" xml:space="preserve"><tspan x="63.3265" y="149.55786">4</tspan></text>
+                <text x="145.78235" y="101.13902" style="line-height:1.25" xml:space="preserve"><tspan x="145.78235" y="101.13902">8</tspan></text>
+                <text x="259.87823" y="70.457779" style="line-height:1.25" xml:space="preserve"><tspan x="259.87823" y="70.457779">2</tspan></text>
+                <text x="196.59816" y="183.11546" style="line-height:1.25" xml:space="preserve"><tspan x="196.59816" y="183.11546">7</tspan></text>
+                <text x="266.58975" y="217.63185" style="line-height:1.25" xml:space="preserve"><tspan x="266.58975" y="217.63185">9</tspan></text>
+                <text x="151.5351" y="274.20041" style="line-height:1.25" xml:space="preserve"><tspan x="151.5351" y="274.20041">1</tspan></text>
+                <text x="34.08345" y="231.5343" style="line-height:1.25" xml:space="preserve"><tspan x="34.08345" y="231.5343">3</tspan></text>
+            </g>
+        </g>
+        <g id="BT-01" class="piece bt" width="160" height="320" transform="matrix(0 1 -1 0 340 20)">
+            <path d="m0 0 160 160-160 160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 20 20v40l100 100" />
+                <path d="m0 120 20-20" />
+                <path d="m40 40v40l40 40h40" />
+                <path d="m0 200 80-80" />
+                <path d="m0 280h40" />
+            </g>
+            <g transform="translate(0,-6)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-90,82,58)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="100" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-129.79242" y="223.35454" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-129.79242" y="223.35454" font-size="10.667px">BT-01</tspan></text>
+        </g>
+        <g id="BT-02" class="piece bt" width="160" height="320" transform="matrix(0 -1 1 0 200 180)">
+            <path d="m0 0 160 160-160 160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 20 20v160l20 20h20l20-20v-60l40-40" />
+                <path d="m40 40v40l20 20v80l-20 20h-40" />
+                <path d="m0 120h40l20 20" />
+                <path d="m80 200h40" />
+                <path d="m40 240v40" />
+            </g>
+            <g transform="rotate(-90,122,98)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(225 59.024 125.79)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(45 -19.669 203.57)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="60" cy="140" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="240" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-129.79242" y="223.35454" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-129.79242" y="223.35454" font-size="10.667px">BT-02</tspan></text>
+        </g>
+        <g id="BT-03" class="piece bt" width="160" height="320" transform="matrix(0 1 -1 0 340 200)">
+            <path d="m0 0 160 160-160 160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40h40" />
+                <path d="m20 40v20l80 80v40l-20 20h-40l-20 20v40l-20 20" />
+                <path d="m20 260 20 20" />
+                <path d="m0 120h40l20-20" />
+                <path d="m100 180 20 20" />
+            </g>
+            <g transform="rotate(-90,42,98)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-90,102,118)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="translate(80,84)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="60" cy="100" r="5.5" style="paint-order:normal" />
+                <circle cx="100" cy="180" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="260" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-129.79242" y="223.35454" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-129.79242" y="223.35454" font-size="10.667px">BT-03</tspan></text>
+        </g>
+        <g id="BT-04" class="piece bt" width="160" height="320" transform="matrix(0 -1 1 0 200 360)">
+            <path d="m0 0 160 160-160 160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 20 20v60l20 20-20 20v100l-20 20" />
+                <path d="m40 40v40l60 60v20l-60 60v60" />
+                <path d="m40 140h20l60 60" />
+            </g>
+            <g transform="translate(0,4)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(180,20,148)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-45 88.456 31.645)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="280" r="5.5" style="paint-order:normal" />
+                <circle cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="140" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-129.79242" y="223.35454" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-129.79242" y="223.35454" font-size="10.667px">BT-04</tspan></text>
+        </g>
+        <g id="MT-01" class="piece mt" width="160" height="160" transform="matrix(-1 0 0 -1 1400 220)">
+            <path d="m0 0h160v160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m40 0 20 20h40l20 20v40l40 40" />
+                <path d="m40 40h20l20 20h60l20-20" />
+                <path d="m120 40v-40" />
+                <path d="m120 120 20-20" />
+            </g>
+            <g transform="rotate(180 70 48)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="140" cy="100" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="13" cy="5" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="95.41964" y="-2.7206461" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="95.41964" y="-2.7206461" font-size="10.667px">MT-01</tspan></text>
+        </g>
+        <g id="MT-02" class="piece mt" width="160" height="160" transform="matrix(1 0 0 1 1240 40)">
+            <path d="m0 0h160v160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m40 0 20 20h40l20 20v60l-10-10v-40l-20-20h-40l-10 10" />
+                <path d="m120 120v-20h10l20-20v-30l10-10" />
+                <path d="m120 0v20l10 10v50l20 20v10l10 10" />
+            </g>
+            <g transform="rotate(-90,17,33)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(90,83,83)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="translate(110,-16)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(180,85,68)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="100" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="13" cy="5" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="95.41964" y="-2.7206461" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="95.41964" y="-2.7206461" font-size="10.667px">MT-02</tspan></text>
+        </g>
+        <g id="MT-03" class="piece mt" width="160" height="160" transform="matrix(0 -1 1 0 1420 200)">
+            <path d="m0 0h160v160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m40 0v40" />
+                <path d="m120 0v20l20 20v80" />
+                <path d="m120 120h40" />
+                <path d="m140 40h20" />
+            </g>
+            <g transform="rotate(180 80 78)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" r="5.5" style="paint-order:normal" />
+                <circle cx="140" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="140" cy="120" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="13" cy="5" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="95.41964" y="-2.7206461" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="95.41964" y="-2.7206461" font-size="10.667px">MT-03</tspan></text>
+        </g>
+        <g id="MT-04" class="piece mt" width="160" height="160" transform="matrix(0 1 -1 0 1580 60)">
+            <path d="m0 0h160v160z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m40 0 20 20h80l-20 20 20 20v40l-20 20" />
+                <path d="m40 40h80" />
+                <path d="m120 0-20 20" />
+                <path d="m140 20 20 20" />
+            </g>
+            <g transform="rotate(90,98,98)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-90,32,28)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(135 81.213 87.782)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="160" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" r="5.5" style="paint-order:normal" />
+                <circle cx="102.56" cy="20" r="5.5" style="paint-order:normal" />
+                <circle cx="140" cy="20" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="13" cy="5" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="95.41964" y="-2.7206461" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="95.41964" y="-2.7206461" font-size="10.667px">MT-04</tspan></text>
+        </g>
+        <g id="PL-01" class="piece pl" width="80" height="240" transform="matrix(1 0 0 1 80 380)">
+            <path d="m0 0 80 80v160l-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m20 40v40l20 20v100" />
+                <path d="m0 40h40" />
+                <path d="m0 120h80" />
+                <path d="m60 120v60l20 20" />
+            </g>
+            <g transform="translate(20,74)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(90,-2,98)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="60" cy="120" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="117.35194" y="110.53629" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="117.35194" y="110.53629" font-size="10.667px">PL-01</tspan></text>
+        </g>
+        <g id="PL-02" class="piece pl" width="80" height="240" transform="matrix(1 0 0 1 180 380)">
+            <path d="m0 0 80 80v160l-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 20 20v20l20 20v60l40 40" />
+                <path d="m40 200v-20l-20-20v-60l20-20h20l-20-20v-20" />
+                <path d="m60 80v20l20 20" />
+                <path d="m0 120h40" />
+            </g>
+            <g transform="rotate(180,20,73)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(180,20,108)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="translate(20,64)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="60" cy="80" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="117.35194" y="110.53629" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="117.35194" y="110.53629" font-size="10.667px">PL-02</tspan></text>
+        </g>
+        <g id="PL-03" class="piece pl" width="80" height="240" transform="matrix(1 0 0 1 280 380)">
+            <path d="m0 0 80 80v160l-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 20 20v80l60 60" />
+                <path d="m0 120h80" />
+                <path d="m40 40v160" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="120" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="117.35194" y="110.53629" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="117.35194" y="110.53629" font-size="10.667px">PL-03</tspan></text>
+        </g>
+        <g id="PL-04" class="piece pl" width="80" height="240" transform="matrix(1 0 0 1 380 380)">
+            <path d="m0 0 80 80v160l-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g transform="translate(20,44)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m0 40 80 80" />
+                <path d="m0 120 80 80" />
+                <path d="m40 40v160" />
+            </g>
+            <g transform="rotate(-45 3.1005 67)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-45 71.385 38.716)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(-45 167.95 78.716)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(135 6.331 107)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="200" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="80" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="160" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="117.35194" y="110.53629" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="117.35194" y="110.53629" font-size="10.667px">PL-04</tspan></text>
+        </g>
+        <g id="SQ-01" class="piece sq" width="160" height="160" transform="matrix(1 0 0 1 1060 440)">
+            <g stroke-width="1.5">
+                <path d="m80 0 80 80-80 80-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m40 40 20 20h20l20-20h20" fill="none" stroke="#25a100" stroke-linejoin="bevel" />
+                <path d="m80 60v20l40 40" fill="none" stroke="#25a100" stroke-linejoin="bevel" />
+            </g>
+            <g transform="rotate(135 54.615 103.57)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="80" cy="60" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="80" cy="10" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="127.41921" y="53.488358" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="127.41921" y="53.488358" font-size="10.667px">SQ-01</tspan></text>
+        </g>
+        <g id="SQ-02" class="piece sq" width="160" height="160" transform="matrix(1 0 0 1 1240 440)">
+            <path d="m80 0 80 80-80 80-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5">
+                <path d="m40 40h40l20 20v40h-10l-10-10v-20l-10-10h-10v40l20 20h40" />
+                <path d="m40 120v-40l20-20" />
+                <path d="m120 40v40l-20 20" />
+            </g>
+            <g transform="rotate(-90,22,38)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="translate(60,4)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(180,30,83)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(225 68.314 63.36)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="60" cy="60" r="5.5" style="paint-order:normal" />
+                <circle cx="100" cy="100" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="80" cy="10" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="127.41921" y="53.488358" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="127.41921" y="53.488358" font-size="10.667px">SQ-02</tspan></text>
+        </g>
+        <g id="SQ-03" class="piece sq" width="160" height="160" transform="matrix(1 0 0 1 1420 440)">
+            <g stroke-width="1.5">
+                <path d="m80 0 80 80-80 80-80-80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m40 40h20l40 40v20l20 20" fill="none" stroke="#25a100" stroke-linejoin="bevel" />
+                <path d="m40 120v-20l20-20h20l40-40" fill="none" stroke="#25a100" stroke-linejoin="bevel" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="120" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="80" cy="10" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(45)" x="127.41921" y="53.488358" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="127.41921" y="53.488358" font-size="10.667px">SQ-03</tspan></text>
+        </g>
+        <g id="ST-01" class="piece st" width="80" height="160" transform="matrix(0 -1 1 0 1120 320)">
+            <g stroke-width="1.5">
+                <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m0 40 40 40v40" fill="none" stroke="#25a100" />
+                <path d="m0 120 10-10v-40l30-30" fill="none" stroke="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-01</tspan></text>
+        </g>
+        <g id="ST-02" class="piece st" width="80" height="160" transform="matrix(0 1 -1 0 1380 240)">
+            <g stroke-width="1.5">
+                <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m0 40 20 20v40l-20 20" fill="none" stroke="#25a100" />
+                <path d="m40 40v80" fill="none" stroke="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-02</tspan></text>
+        </g>
+        <g id="ST-03" class="piece st" width="80" height="160" transform="matrix(0 -1 1 0 1320 320)">
+            <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-width="1.5">
+                <path d="m0 40 20 20v40l-20 20" />
+                <path d="m40 40v80" />
+                <path d="m20 80h20" />
+            </g>
+            <g transform="translate(20,-16)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g transform="rotate(180 30 88)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="80" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="80" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-03</tspan></text>
+        </g>
+        <g id="ST-04" class="piece st" width="80" height="160" transform="matrix(0 1 -1 0 1580 240)">
+            <g stroke-width="1.5">
+                <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m0 40h40" fill="none" stroke="#25a100" />
+                <path d="m0 120h40" fill="none" stroke="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-04</tspan></text>
+        </g>
+        <g id="ST-05" class="piece st" width="80" height="160" transform="matrix(0 1 -1 0 1280 340)">
+            <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <path d="m0 40 40 40v40" fill="none" stroke="#25a100" stroke-width="1.5" />
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-05</tspan></text>
+        </g>
+        <g id="ST-06" class="piece st" width="80" height="160" transform="matrix(0 -1 1 0 1220 420)">
+            <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" stroke-width="1.5" />
+            <g fill="none" stroke="#25a100" stroke-width="1.5">
+                <path d="m0 40 20 20v50l-10 10h-10" />
+                <path d="m20 110 10 10h10" />
+                <path d="m20 60 20-20" />
+            </g>
+            <g transform="translate(0,14)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="60" r="5.5" style="paint-order:normal" />
+                <circle cx="20" cy="110" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-06</tspan></text>
+        </g>
+        <g id="ST-07" class="piece st" width="80" height="160" transform="matrix(0 1 -1 0 1480 340)">
+            <g stroke-width="1.5">
+                <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m0 40h20l20 20v20l-40 40" fill="none" stroke="#25a100" />
+                <path d="m40 80v40" fill="none" stroke="#25a100" />
+            </g>
+            <g transform="rotate(45 -11.385 87)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="80" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-07</tspan></text>
+        </g>
+        <g id="ST-08" class="piece st" width="80" height="160" transform="matrix(0 -1 1 0 1420 420)">
+            <g stroke-width="1.5">
+                <path d="m0 0 80 80-80 80z" fill="#0f3700" stroke="#001c00" stroke-linejoin="round" />
+                <path d="m0 40 40 40v20l-10-10h-10l-10 10v10l-10 10" fill="none" stroke="#25a100" />
+                <path d="m40 100v20" fill="none" stroke="#25a100" />
+            </g>
+            <g transform="rotate(-45 3.1005 67)">
+                <path d="m16 80h8" fill="none" stroke="#25a100" stroke-linejoin="bevel" stroke-width="1.5" />
+                <path d="m20 80-4-8h8z" fill="#25a100" />
+            </g>
+            <g fill="#25a100">
+                <circle cx="40" cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="120" r="5.5" style="paint-order:normal" />
+                <circle cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="40" r="5.5" style="paint-order:normal" />
+                <circle cx="40" cy="100" r="5.5" style="paint-order:normal" />
+            </g>
+            <circle cx="5" cy="13" r="3" fill="#fff" style="paint-order:normal" />
+            <text transform="rotate(-45)" x="-99.715637" y="110.5822" fill="#fff500" font-family="'OCR A Extended'" font-size="10.667px" letter-spacing="0px" word-spacing="0px" style="line-height:1" xml:space="preserve"><tspan x="-99.715637" y="110.5822" font-size="10.667px">ST-08</tspan></text>
+        </g>
+    </svg>
+    <p class="idname">選択中のパーツ：<span id="idname"></span></p>
+   </div>
+</div>
+</body>
+</html>
