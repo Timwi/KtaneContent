@@ -1310,18 +1310,18 @@ let parseData = [
 				regex: /Starting position: (..)/,
 				handler: function (match, module) {
 					const icons = { 'A':'apple', 'P':'pen', 'N':'pineapple' };
-					
+
 					const startCol = 'ABCDEF'.indexOf(match[1][0]);
 					const startRow = match[1][1] - '1';
-				
+
 					let table = "<table class='ppap-table' style='width: 3in;'>";
 					for (let row = 0; row < 6; row++) {
-						table += '<tr>'; 
+						table += '<tr>';
 						for (let col = 0; col < 6; col++) {
 							const icon = icons[module.grid[6 * row + col]];
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
-							table += `<td style='background: ${fill}'> 
-										<img src='img/PPAP/${icon}.png'/> 
+							table += `<td style='background: ${fill}'>
+										<img src='img/PPAP/${icon}.png'/>
 									</td>`;
 						}
 						table += '</tr>';
@@ -1381,7 +1381,7 @@ let parseData = [
 										<tr><th>Low:</th><td class='bits'>${mark(lines[1])}</td></tr>
 										<tr><th>Code:</th><td class='bits'>${mark(lines[2])}</td></tr>
 									</table>`);
-					
+
 					module.push({ label: matches[0], obj: table });
 					return true;
 				}
@@ -2047,7 +2047,7 @@ let parseData = [
 		]
 	},
 	{
-		//IN NEED OF REMOVING INLINE CSS. THE MODULE HAS NOT BEEN REUPLOADED AT THIS POINT.	
+		//IN NEED OF REMOVING INLINE CSS. THE MODULE HAS NOT BEEN REUPLOADED AT THIS POINT.
 		displayName: "Brown's Shadow",
 		moduleID: "brownsShadow",
 		loggingTag: "Brown's Shadow",
@@ -2274,11 +2274,11 @@ let parseData = [
 								td.addClass('solution-red');
 							else if ((x + y) % 2 !== 0)
 								td.addClass('gray');
-							else 
+							else
 								td.addClass('white');
 							if (svg !== null)
 								td.css({ 'background-image': 'url(\'data:image/svg+xml,' + svg.replace('#', '%23') + '\')' });
-							
+
 						}
 						tr.append($('<td class="coordinate-indicator-cell-right">' + (6 - y) + '</td>'));
 					}
@@ -2637,7 +2637,7 @@ let parseData = [
 						var table = $('<table class="connected-monitors">')
 						module.calculationTable = table;
 						var trHead = $('<tr>').appendTo(table);
-						
+
 						$('<th>').addClass('w60').text("Monitor").appendTo(trHead);
 						$('<th>').addClass('w40').text("S1").appendTo(trHead);
 						$('<th>').addClass('w40').text("S2").appendTo(trHead);
@@ -2732,8 +2732,8 @@ let parseData = [
 							var key = String.fromCharCode(65 + x) + (y + 1);
 							var td = $('<td>').appendTo(tr);
 							if (key in module.Coordinates)
-								td.text(module.Coordinates[key].Text).addClass(`clue 
-																			${module.Coordinates[key].Legal ? 'green' : 'red'} 
+								td.text(module.Coordinates[key].Text).addClass(`clue
+																			${module.Coordinates[key].Legal ? 'green' : 'red'}
 																			${module.Coordinates[key].Text.length > 6 ? 'small' : 'large'}`);
 						}
 					}
@@ -2777,7 +2777,7 @@ let parseData = [
 								else $('<td>').addClass('number submitted').text(gridfinal[c + 4 * r]).appendTo(tr);
 							}
 							else {
-								if (gridfinal[c + 4 * r] === "0") 
+								if (gridfinal[c + 4 * r] === "0")
 									$('<td>').addClass('number given').text('10').appendTo(tr);
 								else $('<td>').addClass('number given').text(gridfinal[c + 4 * r]).appendTo(tr);
 							}
@@ -2825,7 +2825,7 @@ let parseData = [
 						let tr = $('<tr>').appendTo(table);
 						for (let y = 0; y < 8; y++) {
 							let td = $('<td>').text(' ').appendTo(tr)
-							if (grid[x][y] == '0') 
+							if (grid[x][y] == '0')
 								td.addClass('gray');
 							else td.addClass(module.color.toLowerCase());
 						}
@@ -2853,7 +2853,7 @@ let parseData = [
 							let tr = $('<tr>').appendTo(table);
 							for (let y = 0; y < 8; y++) {
 								let td = $('<td>').text(' ').appendTo(tr)
-								if (grid[x][y] == '0') 
+								if (grid[x][y] == '0')
 									td.addClass('gray');
 								else td.addClass(module.color.toLowerCase());
 							}
@@ -2882,22 +2882,22 @@ let parseData = [
 					module.textColors = { 'R':'#C00','O':'#D60', 'Y':'#C8CC00',    'L':'#4C0', 'F':'#040', 'B':'#009', 'C':'#0CC', 'V':'#408', 'P':'#B0B', 'W':'#CCC', 'Z':'#851', 'S':'#666'};
 					module.invert = [ 'B', 'F', 'V', 'Z', 'S' ];
 					module.grid = [ ];
-					
+
 					const abbrs = { 'Red':'R', 'Orange':'O', 'Yellow':'Y', 'Lime':'L', 'Forest':'F', 'Blue':'B', 'Cyan':'C', 'Violet':'V', 'Pink':'P', 'White':'W', 'Bronze':'Z', 'Silver':'S' };
-					const paths = { 
-									'Chevron':'M-19-38.5 0-23.5 19-38.5V24.5L0 38.5-19 24.5V-38.5Z', 
-									'Club':'M1-38.2A16.5 16.5 0 00-.6-38.2 16.5 16.5 0 00-16.2-20.8 16.5 16.5 0 00-13.6-12.9 16.5 16.5 0 00-19.1-13.5 16.5 16.5 0 00-34.7 3.9 16.5 16.5 0 00-17.3 19.5 16.5 16.5 0 00-5.9 14C-5.6 22.6-6.6 30.9-11.5 38.3-3.1 38.3 2.5 38.7 11.6 38.5 6.6 30.9 5.8 22.3 6.1 13.6A16.5 16.5 0 0019.7 19.5 16.5 16.5 0 0035.3 2.1L35.3 2A16.5 16.5 0 0017.9-13.5 16.5 16.5 0 0014.3-12.9 16.5 16.5 0 0016.8-22.6L16.8-22.6A16.5 16.5 0 001-38.2Z', 
-									'Diamond':'M.05-37.7-28.15.7.05 38.5 28.75.5Z', 
-									'Coin':'M1.3-30.2 1.3-29.5 1.2-29.6 20.1-21.7 20.4-22.3C15.6-26.7 9.5-29.4 3-30.1L3-30.1H3C2.5-30.1 1.9-30.1 1.4-30.2L1.4-30.2H1.3 1.3ZM-1.3-30.1C-8.4-29.8-15.1-27-20.3-22.3L-20-21.7-1.2-29.5ZM-22.3-20.3-22.4-20.2C-26.7-15.4-29.4-9.3-30.1-2.9V-2.9-2.9C-30.1-2.4-30.1-1.9-30.2-1.4L-29.5-1.3-21.9-19.7H-22C-21.9-19.7-21.9-19.8-21.9-19.8L-21.4-20.3H-22.1ZM22.4-20.3 21.9-19.9 29.6-1.3 30.2-1.4C29.9-8.4 27.1-15.1 22.4-20.3ZM29.6 1.5 22 19.9 22.5 20.2C26.8 15.5 29.5 9.4 30.2 3L30.2 3V3 3C30.2 2.5 30.2 2.1 30.2 1.6ZM-29.5 1.6-30.1 1.7C-29.8 8.5-27.1 15.1-22.5 20.2L-21.9 19.9ZM20.2 21.9 19.8 22.1 1.6 29.6 1.8 30.2C8.6 29.8 15 27.2 20.1 22.6L20.2 22.5ZM-19.7 22.1-20 22.6C-15.3 26.9-9.3 29.5-2.9 30.2H-2.9-2.9C-2.5 30.2-2.1 30.2-1.7 30.2L-1.5 29.6ZM34.7-1.8A34.7 34.7 90 011.9 34.7 34.7 34.7 90 01-34.6 1.9 34.7 34.7 90 01-1.9-34.6 34.7 34.7 90 0134.7-1.9', 
-									'Cup':'M29-38.5C29.2-13.6 29 3.1 9.5 19L9.4 32.1 23.9 38.5C14.7 38.4-13.4 38.5-22.6 38.5L-8.2 32.3-8.4 18.9C-28.8 3.9-29.1-14.5-29-38.5-8.3-38.5 9.2-38.3 29-38.5Z', 
-									'Eye':'M1.4-24A38.2 23.6 0 00-2.4-24 38.2 23.6 0 00-38.4.9 38.2 23.6 0 001.8 23.2 38.2 23.6 0 0037.9-1.6L37.9-1.7A38.2 23.6 0 001.4-24ZM1.3-18.5A31.3 18.2 0 0131.2-1.4L31.2-1.3A31.3 18.2 0 011.6 17.8 31.3 18.2 0 01-31.3.6 31.3 18.2 0 01-1.8-18.5 31.3 18.2 0 011.3-18.5ZM.5-18A17.6 17.6 0 00-1.3-17.9 17.6 17.6 0 00-17.8.6 17.6 17.6 0 00.7 17.2 17.6 17.6 0 0017.3-1.3L17.3-1.4A17.6 17.6 0 00.5-18Z', 
-									'Heart':'M15.21-34.65C9.54-34.92 4.05-32.58 0-28.26L-.09-28.35-.18-28.26C-5.22-33.48-12.42-35.55-19.17-33.75-26.37-31.86-32.04-25.92-34.11-18.18-37.62 6.21-1.8 10.53-.18 35.28 1.44 10.53 36.72 8.64 34.02-18.45 31.95-26.19 26.28-32.13 19.08-34.02 17.73-34.38 16.38-34.56 15.03-34.65Z', 
-									'Pentacle':'M.8-34.75-9.4-13.95H11.1L.8-34.75ZM-11.9-12.15-34.9-8.85-18.2 7.35-11.8-12.25ZM14-12.05 20.3 7.15 36.7-8.85ZM-9.5-11.15-12.7-1.35-15.9 8.45-7.5 14.55.9 20.65 9.3 14.55 17.7 8.45 14.5-1.35 11.3-11.15ZM-17.4 10.65-21.3 33.25-.9 22.65-17.4 10.65ZM19.1 10.85 2.8 22.65 22.9 33.25Z', 
+					const paths = {
+									'Chevron':'M-19-38.5 0-23.5 19-38.5V24.5L0 38.5-19 24.5V-38.5Z',
+									'Club':'M1-38.2A16.5 16.5 0 00-.6-38.2 16.5 16.5 0 00-16.2-20.8 16.5 16.5 0 00-13.6-12.9 16.5 16.5 0 00-19.1-13.5 16.5 16.5 0 00-34.7 3.9 16.5 16.5 0 00-17.3 19.5 16.5 16.5 0 00-5.9 14C-5.6 22.6-6.6 30.9-11.5 38.3-3.1 38.3 2.5 38.7 11.6 38.5 6.6 30.9 5.8 22.3 6.1 13.6A16.5 16.5 0 0019.7 19.5 16.5 16.5 0 0035.3 2.1L35.3 2A16.5 16.5 0 0017.9-13.5 16.5 16.5 0 0014.3-12.9 16.5 16.5 0 0016.8-22.6L16.8-22.6A16.5 16.5 0 001-38.2Z',
+									'Diamond':'M.05-37.7-28.15.7.05 38.5 28.75.5Z',
+									'Coin':'M1.3-30.2 1.3-29.5 1.2-29.6 20.1-21.7 20.4-22.3C15.6-26.7 9.5-29.4 3-30.1L3-30.1H3C2.5-30.1 1.9-30.1 1.4-30.2L1.4-30.2H1.3 1.3ZM-1.3-30.1C-8.4-29.8-15.1-27-20.3-22.3L-20-21.7-1.2-29.5ZM-22.3-20.3-22.4-20.2C-26.7-15.4-29.4-9.3-30.1-2.9V-2.9-2.9C-30.1-2.4-30.1-1.9-30.2-1.4L-29.5-1.3-21.9-19.7H-22C-21.9-19.7-21.9-19.8-21.9-19.8L-21.4-20.3H-22.1ZM22.4-20.3 21.9-19.9 29.6-1.3 30.2-1.4C29.9-8.4 27.1-15.1 22.4-20.3ZM29.6 1.5 22 19.9 22.5 20.2C26.8 15.5 29.5 9.4 30.2 3L30.2 3V3 3C30.2 2.5 30.2 2.1 30.2 1.6ZM-29.5 1.6-30.1 1.7C-29.8 8.5-27.1 15.1-22.5 20.2L-21.9 19.9ZM20.2 21.9 19.8 22.1 1.6 29.6 1.8 30.2C8.6 29.8 15 27.2 20.1 22.6L20.2 22.5ZM-19.7 22.1-20 22.6C-15.3 26.9-9.3 29.5-2.9 30.2H-2.9-2.9C-2.5 30.2-2.1 30.2-1.7 30.2L-1.5 29.6ZM34.7-1.8A34.7 34.7 90 011.9 34.7 34.7 34.7 90 01-34.6 1.9 34.7 34.7 90 01-1.9-34.6 34.7 34.7 90 0134.7-1.9',
+									'Cup':'M29-38.5C29.2-13.6 29 3.1 9.5 19L9.4 32.1 23.9 38.5C14.7 38.4-13.4 38.5-22.6 38.5L-8.2 32.3-8.4 18.9C-28.8 3.9-29.1-14.5-29-38.5-8.3-38.5 9.2-38.3 29-38.5Z',
+									'Eye':'M1.4-24A38.2 23.6 0 00-2.4-24 38.2 23.6 0 00-38.4.9 38.2 23.6 0 001.8 23.2 38.2 23.6 0 0037.9-1.6L37.9-1.7A38.2 23.6 0 001.4-24ZM1.3-18.5A31.3 18.2 0 0131.2-1.4L31.2-1.3A31.3 18.2 0 011.6 17.8 31.3 18.2 0 01-31.3.6 31.3 18.2 0 01-1.8-18.5 31.3 18.2 0 011.3-18.5ZM.5-18A17.6 17.6 0 00-1.3-17.9 17.6 17.6 0 00-17.8.6 17.6 17.6 0 00.7 17.2 17.6 17.6 0 0017.3-1.3L17.3-1.4A17.6 17.6 0 00.5-18Z',
+									'Heart':'M15.21-34.65C9.54-34.92 4.05-32.58 0-28.26L-.09-28.35-.18-28.26C-5.22-33.48-12.42-35.55-19.17-33.75-26.37-31.86-32.04-25.92-34.11-18.18-37.62 6.21-1.8 10.53-.18 35.28 1.44 10.53 36.72 8.64 34.02-18.45 31.95-26.19 26.28-32.13 19.08-34.02 17.73-34.38 16.38-34.56 15.03-34.65Z',
+									'Pentacle':'M.8-34.75-9.4-13.95H11.1L.8-34.75ZM-11.9-12.15-34.9-8.85-18.2 7.35-11.8-12.25ZM14-12.05 20.3 7.15 36.7-8.85ZM-9.5-11.15-12.7-1.35-15.9 8.45-7.5 14.55.9 20.65 9.3 14.55 17.7 8.45 14.5-1.35 11.3-11.15ZM-17.4 10.65-21.3 33.25-.9 22.65-17.4 10.65ZM19.1 10.85 2.8 22.65 22.9 33.25Z',
 									'Shield':'M-34.6-29.1C-25-25.7-7.7-28.8 0-34.9 7.1-28.8 23.1-25.5 34.6-29.1 34.6-29.1 34.6-29.1 34.6-29.1 27-8.1 29.9 37.2 0 34.6-30.4 37.4-28.4-8.6-34.6-29.1-34.6-29.1-34.6-29.1-34.6-29.1Z',
-									'star':'M-.5-37.5C7.1-23.8 14.2-18.6 32.2-18.6 23.3-5.1 24 4.2 32.2 19.1 14.9 18.9 6.7 22.4-.5 38-6.8 22.7-15.2 19.3-33.2 19.1-23.2 3.8-23.9-6.4-33.2-18.6-17.4-18.6-8.3-23.8-.5-37.5Z', 
-									'Spade':'M-.15-38.5C-1.55-17.5-31.45-15.9-29.15 7.1-27.45 13.7-22.55 18.7-16.45 20.3-15.35 20.6-14.15 20.8-12.95 20.8-9.95 20.9-6.85 19.8-4.25 18.4-4.75 25.7-7.35 32.5-12.55 38.6-8.55 39.1 6.65 38.9 11.25 38.8 6.35 32.5 4.15 25.9 3.85 18.3 7.55 20.5 11.95 21.1 16.15 20 22.25 18.4 27.05 13.4 28.85 6.8 31.75-13.9 1.45-17.6.05-38.5Z', 
+									'star':'M-.5-37.5C7.1-23.8 14.2-18.6 32.2-18.6 23.3-5.1 24 4.2 32.2 19.1 14.9 18.9 6.7 22.4-.5 38-6.8 22.7-15.2 19.3-33.2 19.1-23.2 3.8-23.9-6.4-33.2-18.6-17.4-18.6-8.3-23.8-.5-37.5Z',
+									'Spade':'M-.15-38.5C-1.55-17.5-31.45-15.9-29.15 7.1-27.45 13.7-22.55 18.7-16.45 20.3-15.35 20.6-14.15 20.8-12.95 20.8-9.95 20.9-6.85 19.8-4.25 18.4-4.75 25.7-7.35 32.5-12.55 38.6-8.55 39.1 6.65 38.9 11.25 38.8 6.35 32.5 4.15 25.9 3.85 18.3 7.55 20.5 11.95 21.1 16.15 20 22.25 18.4 27.05 13.4 28.85 6.8 31.75-13.9 1.45-17.6.05-38.5Z',
 									'Sword':'M.55-37.9-19.25-23.6-11.35 16.1H-21.25V24.6H-4.75V39.2H5.75V24.6H21.75V16.1H12.55L19.45-23.6Z' };
-					
+
 					const config = readTaggedLines(5).map(l => l.split(', ').map(x => x.split(' ')));
 					for (let row = 0; row < 5; row++) {
 						module.grid.push( [ ] );
@@ -2906,15 +2906,15 @@ let parseData = [
 							module.grid[row].push( { color: abbrs[cell[0]], suitPath: paths[cell[cell.length - 1]] } );
 						}
 					}
-					
+
 					module.makeSvg = function (grid) {
-						let svg = `<svg class='cruel-matchem' viewbox='-5 -5 130 180'> 
+						let svg = `<svg class='cruel-matchem' viewbox='-5 -5 130 180'>
 						<rect class='background' x='-5' y='-5' width='130' height='180' rx='5' ry='5'/>`;
-					
+
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
 								const cell = grid[row][col];
-								
+
 								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
 								const fill = module.cardBacks[cell.color];
 								const inner = module.textColors[cell.color];
@@ -2927,14 +2927,14 @@ let parseData = [
 						}
 						return svg + '</svg>';
 					};
-					
+
 					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet:true });
 					return true;
 				}
 			},
 			{
 				regex: /The final configuration of cards is:/,
-				handler: function (_, module){ 
+				handler: function (_, module){
 					module.push({ label: "The final configuration of cards is:", obj:module.makeSvg(module.grid) });
 					linen += 5;
 					return true;
@@ -2943,15 +2943,15 @@ let parseData = [
 			{
 				regex: /Move \d : ([^+]+) \+ ([^+]+)/,
 				handler: function (matches, module) {
-					
+
 					for (let movement = 0; movement < 2; movement++) {
 						const cmd = matches[movement + 1];
-						
+
 						const swapMatch = cmd.match(/Swap (rows|columns) (\d) and (\d)/);
 						const shiftMatch = cmd.match(/Shift (row|column) (\d) one space (\w+)/);
 						const cycleMatch = cmd.match(/Cycle card (\d+) (anti)?clockwise/);
 						const swapTwoMatch = cmd.match(/Swap cards (\d+) and (\d+)/);
-						if (swapMatch) { 
+						if (swapMatch) {
 							let store = [ ];
 							let s1 = swapMatch[2] - '1';
 							let s2 = swapMatch[3] - '1';
@@ -2970,13 +2970,13 @@ let parseData = [
 									module.grid[s2][ix] = store[ix];
 								else module.grid[ix][s2] = store[ix];
 							}
-						}		
+						}
 						else if (shiftMatch) {
 							const digit = shiftMatch[2] - '1';
 							const row = shiftMatch[1] == 'row'
 							let section = [ ];
 							for (let i = 0; i < 5; i++) {
-								if (row) 
+								if (row)
 									section.push(module.grid[digit][i]);
 								else section.push(module.grid[i][digit]);
 							}
@@ -2991,13 +2991,13 @@ let parseData = [
 							const root = { x: (cycleMatch[1] - '1') % 5, y: Math.floor((cycleMatch[1] - '1') / 5) };
 							const x = root.x;
 							const y = root.y;
-							const order = cycleMatch[2] ? 
+							const order = cycleMatch[2] ?
 										[ root, { x: y, y: 4 - x }, { x: 4 - x, y: 4 - y }, { x: 4 - y, y: x } ] :
 										[ root, { x: 4 - y, y: x }, { x: 4 - x, y: 4 - y }, { x: y, y: 4 - x } ];
 							let store = [ ];
 							for (let i = 0; i < 4; i++)
 								store.push(module.grid[order[i].y][order[i].x]);
-							for (let i = 0; i < 4; i++) 
+							for (let i = 0; i < 4; i++)
 								module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
 						}
 						else if (swapTwoMatch) {
@@ -3008,8 +3008,8 @@ let parseData = [
 							module.grid[a.y][a.x] = temp;
 						}
 					}
-					
-					
+
+
 					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
 					return true;
 				}
@@ -3031,7 +3031,7 @@ let parseData = [
 					let loggingInfo = matches[2].split(", ");
 					let colourLayout = ["00", "55", "aa", "ff"];
 					let cellSize = 125;
-					
+
 					let finalInfo = [];
 					for(let i = 0; i < order.length; i++) {
 						finalInfo.push(loggingInfo[order[i]]);
@@ -3412,7 +3412,7 @@ let parseData = [
 				handler: function(matches, module) {
 					let partialInfo = matches[1].split(", ");
 					partialInfo.push("A0B0");
-					
+
 					let order = [0, 1, 2, 3, 11, 12, 12, 4, 10, 12, 12, 5, 9, 8, 7, 6];
 					let colourPalette = ["00", "40", "80", "c0", "ff"];
 					let cellSize = 135;
@@ -3447,7 +3447,7 @@ let parseData = [
 					for(let i = 0; i < order.length; i++) {
 						info.push(partialInfo[order[i]]);
 					}
-					
+
 					let svg = `<svg class='diffusion solution' viewbox="130 130 550 550">`;
 					const hexCodes = { "0":"#000", "A":"#F00", "B":"#00F" };
 					for (let i = 0; i < info.length; i++) {
@@ -3463,7 +3463,7 @@ let parseData = [
 	{
 		moduleID: 'digitalGrid',
 		loggingTag: 'Digital Grid',
-		matches: [		
+		matches: [
 			{
 				regex: /The grid is now:/,
 				handler: function(_, module) {
@@ -3474,7 +3474,7 @@ let parseData = [
 						for (let col = 0; col < 5; col++) {
 							const color = grid[row][col][0];
 							const num = grid[row][col][1];
-							const textColor = color == 'B' ? '#FFF' : '#000'; 
+							const textColor = color == 'B' ? '#FFF' : '#000';
 							contents += `<g transform='translate(${12 * col}, ${12 * row})'>
 									<rect class='tile' width='10' height='10' ry='1' fill='${fills[color]}'/>
 									<text class='digit' x='5' y='5' fill='${textColor}'>${num}</text>
@@ -3509,7 +3509,7 @@ let parseData = [
 										contents += `<path class='cross' transform='translate(${12 * col}, ${12 * row})' d='m1.5 2.9 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1-1.4 1.4-2.1-2.1-2.1 2.1-1.4-1.4 2.1-2.1z'/>`
 								}
 							}
-							module.push({ label:'The tiles shown below were pressed. Strike! The tiles marked with an X were set incorrectly', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` }); 
+							module.push({ label:'The tiles shown below were pressed. Strike! The tiles marked with an X were set incorrectly', obj:`<svg class='digital-grid' viewbox='-1 -1 60 60'>${contents}</svg>` });
 						}
 						else {
 							linen--;
@@ -3523,7 +3523,7 @@ let parseData = [
 				regex: /.+/
 			}
 		]
-	},	
+	},
 	{
 		moduleID: 'GSDirectingButtons',
 		loggingTag: 'Directing Buttons',
@@ -3654,7 +3654,7 @@ let parseData = [
 					module[label] = new Array();
 					if (label.match(/Instruction Set \d+/))
 						module["Instruction Sets"].push([ label, module[label] ]);
-					else 
+					else
 						module.push([ label, module[label] ]);
 					module.currentSection = label;
 					return true;
@@ -4130,8 +4130,8 @@ let parseData = [
 			},
 			{
 				regex: /Piece:/,
-				handler: function (_, module) {					
-					
+				handler: function (_, module) {
+
 					module.rows = [ ];
 					let line;
 					while ((line = readTaggedLine()).match(/^[#*]+/)) {
@@ -4139,7 +4139,7 @@ let parseData = [
 						module.rows.push(row);
 					}
 					linen--;
-					
+
 					const height = module.rows.length;
 					const width = module.rows[0].length;
 					//each square 10 units wide. 1 unit gap between. 5 units padding on edges.
@@ -4160,7 +4160,7 @@ let parseData = [
 					let rows = [ ];
 					for (let i = 0; i < 10; i++)
 						rows.push(readTaggedLine().split('').map(x => x == '*'));
-					let cells = readTaggedLine().substring(15).split(', ').map(cell => 
+					let cells = readTaggedLine().substring(15).split(', ').map(cell =>
 						({ x: 'ABCDEFGHIJ'.indexOf(cell[0]), y: cell.substring(1) - '1' }));
 					let svg = `<svg class='fitting-in grid' viewbox='-5 -5 119 119'>`;
 					svg += `<rect class='background' x='-5' y='-5' width='119' height='119' rx='5' ry='5'/>`;
@@ -4669,7 +4669,7 @@ let parseData = [
 					let full = '';
 					let three = '';
 					let five = '';
-					
+
 					for (let i = 0; i < nums.length; i++){
 						if (i % 3 == 0 && i != 0)
 							three += ' ';
@@ -5604,7 +5604,7 @@ let parseData = [
 						`<path d='M0 1 2 1 2 3 0 3z' stroke='#ccc' stroke-width='.125' fill='none' />`
 					];
 					let colors = { 'K': '#000', 'R':'#F00', 'M':'#800', 'G':'#0F0', 'F':'#080', 'B':'#00F', 'I':'#008' };
-					
+
 					const radius = .4;
 					for (let v of vertices) {
 						svg.push(`<path stroke='black' stroke-width='.02' fill='${colors[lines[v.line][v.col]]}' d='M ${v.x + radius * Math.cos(-Math.PI / 4)} ${v.y + radius * Math.sin(-Math.PI / 4)} A .4 .4 0 0 0 ${v.x + radius * Math.cos(Math.PI * 3 / 4)} ${v.y + radius * Math.sin(Math.PI * 3 / 4)} z' />`);
@@ -6124,12 +6124,12 @@ let parseData = [
 	{
 		moduleID: 'latinHypercube',
 		loggingTag: 'Latin Hypercube',
-		matches: [ 
+		matches: [
 			{
 				regex: /The given shapes are:|Solution:/,
 				handler: function(matches, module){
-					
-					const paths = { 
+
+					const paths = {
 						'T':'M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30',
 						'H':'M0-2.2 37.6-21 0-39.8-37.6-21 0-2.2 0 39.8 37.6 21 37.6-21M-37.6-21-37.6 21 0 39.8 0-2.2 0-2.2',
 						'O':'M0 40 40 0 0-40-40 0zV-40M-40 0h80',
@@ -6137,10 +6137,10 @@ let parseData = [
 					};
 					const fills = { 'T':'#FF0000', 'H':'#FF5800', 'O':'#FF9E00', 'D':'#FFFF00' };
 					const arrowHead = 'M-30 30 0 0 30 30 0 0';
-					
+
 					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
 					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#222' rx='50' ry='50'/>";
-					
+
 					let grid = readTaggedLines(19).map(l => l.replace(/ /g, '').split('')
 												 ).filter(l => l.length > 0);
 					for (let w = 0; w < 4; w++) {
@@ -6152,7 +6152,7 @@ let parseData = [
 									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#47E9D4' stroke-width='15'/>`;
 									let shape = grid[4 * w + z][4 * y + x];
 									if (shape != '#')
-										svg += `<path transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}' 
+										svg += `<path transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}'
 													fill='${fills[shape]}' stroke='#FFF' stroke-width='5' stroke-linejoin='round'/>`;
 								}
 							}
@@ -6161,15 +6161,15 @@ let parseData = [
 					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
 							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
-							
+
 							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
 							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
-							
+
 							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
 							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
-							
+
 							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
 							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
@@ -6348,7 +6348,7 @@ let parseData = [
 						rows.push(row);
 					}
 					let table = "<table class='levenshtein'> <tr> <td class='empty'></td> <td class='empty'></td>";
-					for (let ch of matches[2]) 
+					for (let ch of matches[2])
 						table += `<th>${ch}</th>`;
 					table += "</tr> <tr> <td class='empty'></td>";
 					for (let num of rows[0])
@@ -6380,7 +6380,7 @@ let parseData = [
 					readLine();
 					const order = [ 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Cyan', 'Magenta' ];
 					let table = "<table class='light-bulbs'> <tr> <th class='corner'></th>";
-					for (let i = 0; i < 8; i++) 
+					for (let i = 0; i < 8; i++)
 						table += `<th>${order[i]}</th>`;
 					table += '</tr>';
 					for (let row = 0; row < 8; row++) {
@@ -6446,7 +6446,7 @@ let parseData = [
 	{
 		moduleID: "matchem",
 		loggingTag: "Match 'em",
-		matches: [ 
+		matches: [
 			{
 				regex: /The initial configuration of cards is:/,
 				handler: function(_, module) {
@@ -6454,7 +6454,7 @@ let parseData = [
 					module.textColors = { 'R':'#C00','O':'#D60', 'Y':'#C8CC00', 'L':'#4C0', 'F':'#040', 'B':'#009', 'C':'#0CC', 'V':'#408', 'P':'#B0B', 'W':'#CCC' };
 					module.invert = [ 'B', 'F', 'V' ];
 					module.grid = [ ];
-					
+
 					const config = readTaggedLines(5).map(l => l.split(' '));
 					for (let row = 0; row < 5; row++) {
 						module.grid.push( [ ] );
@@ -6463,15 +6463,15 @@ let parseData = [
 							module.grid[row].push( { color: cell[0], suit: cell[1] } );
 						}
 					}
-					
+
 					module.makeSvg = function (grid) {
-						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'> 
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'>
 						<rect x='-5' y='-5' width='130' height='180' fill='#4C4' rx='5' ry='5'/>`;
-					
+
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
 								const cell = grid[row][col];
-								
+
 								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
 								const fill = module.cardBacks[cell.color];
 								const inner = module.textColors[cell.color];
@@ -6483,14 +6483,14 @@ let parseData = [
 						}
 						return svg + '</svg>';
 					};
-					
+
 					module.push({ label: "The initial configuration of cards is:", obj:module.makeSvg(module.grid), nobullet: true});
 					return true;
 				}
 			},
 			{
 				regex: /The final configuration of cards is:/,
-				handler: function (_, module){ 
+				handler: function (_, module){
 					module.push({ label: "The final configuration of cards is:", obj:module.makeSvg(module.grid) });
 					linen += 5;
 					return true;
@@ -6499,13 +6499,13 @@ let parseData = [
 			{
 				regex: /Move \d: (.+)/,
 				handler: function (matches, module) {
-					
+
 					const cmd = matches[1];
 					const swapMatch = cmd.match(/Swap (rows|columns) (\d) and (\d)/);
 					const shiftMatch = cmd.match(/Shift (row|column) (\d) one space (\w+)/);
 					const cycleMatch = cmd.match(/Cycle card (\d+) (anti)?clockwise/);
 					const swapTwoMatch = cmd.match(/Swap cards (\d+) and (\d+)/);
-					if (swapMatch) { 
+					if (swapMatch) {
 						let store = [ ];
 						let s1 = swapMatch[2] - '1';
 						let s2 = swapMatch[3] - '1';
@@ -6524,13 +6524,13 @@ let parseData = [
 								module.grid[s2][ix] = store[ix];
 							else module.grid[ix][s2] = store[ix];
 						}
-					}		
+					}
 					else if (shiftMatch) {
 						const digit = shiftMatch[2] - '1';
 						const row = shiftMatch[1] == 'row'
 						let section = [ ];
 						for (let i = 0; i < 5; i++) {
-							if (row) 
+							if (row)
 								section.push(module.grid[digit][i]);
 							else section.push(module.grid[i][digit]);
 						}
@@ -6545,13 +6545,13 @@ let parseData = [
 						const root = { x: (cycleMatch[1] - '1') % 5, y: Math.floor((cycleMatch[1] - '1') / 5) };
 						const x = root.x;
 						const y = root.y;
-						const order = cycleMatch[2] ? 
+						const order = cycleMatch[2] ?
 									[ root, { x: y, y: 4 - x }, { x: 4 - x, y: 4 - y }, { x: 4 - y, y: x } ] :
 									[ root, { x: 4 - y, y: x }, { x: 4 - x, y: 4 - y }, { x: y, y: 4 - x } ];
 						let store = [ ];
 						for (let i = 0; i < 4; i++)
 							store.push(module.grid[order[i].y][order[i].x]);
-						for (let i = 0; i < 4; i++) 
+						for (let i = 0; i < 4; i++)
 							module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
 					}
 					else if (swapTwoMatch) {
@@ -6561,7 +6561,7 @@ let parseData = [
 						module.grid[b.y][b.x] = module.grid[a.y][a.x];
 						module.grid[a.y][a.x] = temp;
 					}
-					
+
 					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
 					return true;
 				}
@@ -6583,7 +6583,7 @@ let parseData = [
 					const tfs = [  '7.5, 30', '14, 22.5',  '0, 22.5',  '7.5, 15',  '14, 7.5',  '0, 7.5',  '7.5, 0' ];
 					const verts = [ 1, 2, 4, 5 ];
 					const matchObj = "<rect x='-4' y='-.375' width='8' height='0.75' fill='#FE9'/> <rect x='-4.5' y='-0.75' width='2' height='1.5' fill='#D33' rx='1' ry='0.5'/>";
-					
+
 					let svg = `<svg viewbox='-4 -3 80 36' style='display: block; width: 3.5in;'>
 								<rect x='-4' y='-3' width='70' height='36' fill='#000' rx='2' ry='2'/>`;
 					for (let i = 0; i < 3; i++) {
@@ -6627,14 +6627,14 @@ let parseData = [
 	{
 		moduleID: "mathem",
 		loggingTag: "Math 'em",
-		matches: [ 
+		matches: [
 			{
 				regex: /The arrangement of the tiles is:/,
 				handler: function (_, module) {
 					module.cardBacks = { 'W':'#FFFFFF', 'S':'#AFAFAF', 'G':'#E6C832', 'B':'#C89632' };
 					module.grid = [ ];
 					const nameReplace = { '+':'Plus', '-':'Diff', '^':'Xor', '/':'Mod' };
-					
+
 					const config = readTaggedLines(4).map(l => l.split(' '));
 					for (let row = 0; row < 4; row++) {
 						module.grid.push( [ ] );
@@ -6644,15 +6644,15 @@ let parseData = [
 							module.grid[row].push( { color: cell[0], suit: suit, ch: cell[1] } );
 						}
 					}
-					
+
 					module.makeSvg = function (grid) {
-						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 105 130'> 
+						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 105 130'>
 						<rect x='-5' y='-5' width='105' height='130' fill='#458' rx='5' ry='5'/>`;
-						
+
 						for (let row = 0; row < 4; row++) {
 							for (let col = 0; col < 4; col++) {
 								const cell = grid[row][col];
-								
+
 								let group = `<g transform='translate(${25 * col} ${30 * row	})'>`;
 								const fill = module.cardBacks[cell.color];
 								group += `<image href='../HTML/img/Math em/${cell.suit}.svg' width='20' height='30' style='background-color: ${fill}'	/>
@@ -6664,7 +6664,7 @@ let parseData = [
 						}
 						return svg + '</svg>';
 					};
-					
+
 					module.push({ label: "The arrangement of tiles is:", obj:module.makeSvg(module.grid), nobullet:true });
 					return true;
 				}
@@ -6701,7 +6701,7 @@ let parseData = [
 					const row = matches[1] == 'row'
 					let section = [ ];
 					for (let i = 0; i < 4; i++) {
-						if (row) 
+						if (row)
 							section.push(module.grid[digit][i]);
 						else section.push(module.grid[i][digit]);
 					}
@@ -6718,16 +6718,16 @@ let parseData = [
 			{
 				regex: /Cycle tiles ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4]) . ([A-D][1-4])/,
 				handler: function (matches, module) {
-					
+
 					let order = [ ];
 					let store = [ ];
 					for (let i = 0; i < 4; i++) {
 						order.push( { x: "ABCD".indexOf(matches[i + 1][0]), y: matches[i + 1][1] - '1' } );
 						store.push(module.grid[order[i].y][order[i].x]);
 					}
-					for (let i = 0; i < 4; i++) 
+					for (let i = 0; i < 4; i++)
 						module.grid[order[(i + 1) % 4].y][order[(i + 1) % 4].x] = store[i];
-					
+
 					module.push([ matches[0], [ {obj: module.makeSvg(module.grid) } ] ]);
 					return true;
 				}
@@ -7342,7 +7342,7 @@ let parseData = [
 							module.convertedModuleColours[i].push(`rgb(${r}, ${g}, ${b})`);
 						}
 					}
-                    
+
                     let svg = `<svg width="630" height="320" viewbox="-30 135 600 100">`;
 
 					for(let i = 0; i < puzzleData.length; i++) {
@@ -7651,6 +7651,13 @@ let parseData = [
 				}
 			},
 			{
+				regex: /For reference, the numbers in the grid are:/,
+				handler: function (matches, module) {
+					module.push({ label: matches.input, obj: pre(readMultiple(6)) });
+					return true;
+				}
+			},
+			{
 				regex: /.+/
 			}
 		]
@@ -7816,7 +7823,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const grid = readTaggedLines(4).map(l => l.split(' '));
 					const tdStyle = 'width: 0.9cm; height: 0.9cm; text-align: center; vertical-align: middle; border: 2px solid black; padding: 0;';
-					
+
 					let table = '<table>';
 					for (let row = 0; row < 4; row++) {
 						table += '<tr>';
@@ -7845,7 +7852,7 @@ let parseData = [
 						for (let col = 0; col < 4; col++) {
 							let g = `<g transform='translate(${24 * col}, ${24 * row})'>`;
 							g += '<rect width=20 height=20 fill=#FFF rx=3 ry=3/>';
-							
+
 							const cell = grid[row][col];
 							if (cell == '..'){
 								g += '<rect x=1 y=1 width=18 height=18 fill=#CCC rx=2 ry=2/>'
@@ -8890,7 +8897,7 @@ let parseData = [
 	{
 		moduleID: 'notreDameCipher',
 		loggingTag: 'Notre-Dame Cipher',
-		matches: [ 
+		matches: [
 			{
 				regex: /(Starting|Current|Final) matrix :/i,
 				handler: function(matches, module) {
@@ -8947,10 +8954,10 @@ let parseData = [
 			{
 				regex: /The displays were: (.+)/,
 				handler: function(matches, module) {
-					
+
 					const cardinals = [ 'NW', 'N', 'NE', 'W', 'centre', 'E', 'SW', 'S', 'SE' ];
 					const displays = matches[1].split(' | ');
-					
+
 					getCoordinate = function(str) {
 						let m;
 						if (m = str.match(/\[(\d),(\d)\]/)) {
@@ -8999,16 +9006,16 @@ let parseData = [
 						} else if (m = str.match(/(\w+) from (\w+)/)) {
 							let firstMove = cardinals.indexOf(m[2]);
 							let secondMove = cardinals.indexOf(m[1]);
-							return { x: 3 * (firstMove % 3) + (secondMove % 3), 
+							return { x: 3 * (firstMove % 3) + (secondMove % 3),
 									y: 3 * Math.floor(firstMove / 3) + Math.floor(secondMove / 3) };
 						} else if (m = str.match(/(\w+)/)) {
 							let move = cardinals.indexOf(m[1]);
 							return { x: 3 * (move % 3) + 1, y: 3 * Math.floor(move / 3) + 1 };
-						} else 
+						} else
 							throw "Unexpected format with string " + str;
 					}
 					module.displays = [ ];
-					for (let i = 0; i < 9; i++) 
+					for (let i = 0; i < 9; i++)
 						module.displays.push(Array(9));
 					for (let disp of displays){
 						let coord = getCoordinate(disp);
@@ -9021,15 +9028,15 @@ let parseData = [
 				handler: function(matches, module) {
 					const grid = readTaggedLines(9).map(l => l.split(' '));
 					let isVertex = [ ];
-					for (let row = 0; row < 9; row++) {	
+					for (let row = 0; row < 9; row++) {
 						isVertex.push(Array(9));
 						for (let col = 0; col < 9; col++) {
 							isVertex[row][col] = grid[row][col] != '○';
 						}
 					}
-					
+
 					let table = `<table class='not-coords-table'>`;
-					
+
 					for (let row = 0; row < 9; row++) {
 						table += '<tr>';
 						for (let col = 0; col < 9; col++) {
@@ -9040,7 +9047,7 @@ let parseData = [
 						}
 						table += '</tr>';
 					}
-					
+
 					module.push({ label: 'Generated coordinates: (vertices of the square in green)', obj:table + '</table>' });
 				}
 			},
@@ -9581,7 +9588,7 @@ let parseData = [
 	{
 		moduleID: 'PineapplePenModule',
 		loggingTag: 'Pineapple Pen',
-		matches: [ 
+		matches: [
 			{
 				regex: /Generated Grid:/,
 				handler: function (_, module) {
@@ -9591,15 +9598,15 @@ let parseData = [
 
 					let grid = readTaggedLines(6).map(l => l.split('').map(ch => ch - '1'));
 					readLine();
-					
+
 					let start = readLine().match(/[A-F][1-6]/)[0];
 					let startCol = 'ABCDEF'.indexOf(start[0]);
 					let startRow = start[1] - '1';
 					console.log(start);
-					
+
 					let table = "<table style='width: 3in;'>";
 					for (let row = 0; row < 6; row++) {
-						table += '<tr>'; 
+						table += '<tr>';
 						for (let col = 0; col < 6; col++) {
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
 							table += `<td style='${tdstyle} background-color: ${fill}'>`;
@@ -9926,7 +9933,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const colorDict = { 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0', 'W':'#FFF', 'K':'#444' };
 					const dirs = [ 'U', 'UR', 'R', 'DR', 'D', 'DL', 'L', 'DL' ];
-					
+
 					readLine();
 					const colors = readTaggedLines(6).map(l => l.split(' '));
 					readLine();
@@ -9935,25 +9942,25 @@ let parseData = [
 					const truthDir = readTaggedLines(6).map(l => l.split(' '));
 					readLines(2);
 					const path = readTaggedLine().substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
-					
-					
-					
+
+
+
 					let svg = "<svg viewbox='-5 -5 610 610' style='display: block; width: 3in'>";
 					const arrPath = 'M-15 40V10H-30L0-40 30 10H15V40Z';
 					const triPath = 'M-15 30H15L0 4Z';
 					for (let row = 0; row < 6; row++) {
 						for (let col = 0; col < 6; col++) {
-							
+
 							const start = col == path[0].x && row == path[0].y;
 							const end = col == path[path.length - 1].x && row == path[path.length - 1].y;
 							const rectFill = start ? '#6C8' : '#888';
-							 
-							let g = `<g transform='translate(${100 * col}, ${100 * row})'> 
+
+							let g = `<g transform='translate(${100 * col}, ${100 * row})'>
 										<rect width='100', height='100' stroke='#222' stroke-width='5' fill='${rectFill}'/>`;
 							if (end)
-								g += `<circle cx='50' cy='50' r='45' fill='#F0F0F0'/> 
+								g += `<circle cx='50' cy='50' r='45' fill='#F0F0F0'/>
 									  <circle cx='50' cy='50' r='30' fill='${rectFill}'/>`;
-							
+
 							const fill = colorDict[colors[row][col]];
 							const dir = 45 * dirs.indexOf(dispArrows[row][col]);
 							g += `<path d='${arrPath}' fill='${fill}' transform='translate(50, 50) rotate(${dir})'/>`;
@@ -9963,8 +9970,8 @@ let parseData = [
 					let prev = path[0];
 					let line = `M ${100 * prev.x + 50} ${100 * prev.y + 50} `;
 					svg += `<circle r='15' cx='${100 * prev.x + 50}' cy='${100 * prev.y + 50}' fill='#000'/>`;
-					
-					for (let i = 1; i < path.length; i++) 
+
+					for (let i = 1; i < path.length; i++)
 					{
 						let node = path[i];
 						let cx = 100 * node.x + 50;
@@ -9979,12 +9986,12 @@ let parseData = [
 							yDiff /= -5;
 						let midpointX = 100 * prev.x + 50 + 50 * xDiff;
 						let midpointY = 100 * prev.y + 50 + 50 * yDiff;
-						
-						
+
+
 						const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI + 90;
-						
+
 						line += `L ${midpointX} ${midpointY} `;
-						svg += `<path transform='translate(${midpointX}, ${midpointY}) rotate(${angle})' 
+						svg += `<path transform='translate(${midpointX}, ${midpointY}) rotate(${angle})'
 									fill='#000' d='${triPath}'/>`;
 						if (xWrap)
 							midpointX = 600 - midpointX;
@@ -9995,16 +10002,16 @@ let parseData = [
 						svg += `<circle r='15' cx='${cx}' cy='${cy}' fill='#000'/>`;
 					}
 					svg += `<path d='${line}' fill='none' stroke-width='7.5' stroke='#000'/>`;
-					
+
 					const last = 'ABCDEF'[path[path.length - 1].x] + '123456'[path[path.length - 1].y];
-					
+
 					module.push([ matches[0] + ': Press ' + last, [ { obj: svg + '</svg>', nobullet:true } ] ]);
 					return true;
 				}
 			},
 			{
 				regex: /Total Stages Generatable/,
-				handler: function (_, module) { 
+				handler: function (_, module) {
 					module.push('Stage Legend: Green cell = starting point, Ring = stage answer');
 				}
 			},
@@ -10685,9 +10692,9 @@ let parseData = [
 				regex: /The maze has now been locked into the following:/,
 				handler: function(match, module) {
 					const grid = readTaggedLines(11).map(l => l.split('').map(ch => ch == 'X'));
-					
+
 					let svg = `<svg viewbox='0 0 26 26' style='display: block; width: 3in; margin: 2mm 0'>`;
-					
+
 					for (let row = 0; row < 5; row++){
 						for (let col = 0; col < 5; col++) {
 							let g = `<g fill='#000' transform='translate(${5 * col}, ${5 * row})'>`
@@ -10697,7 +10704,7 @@ let parseData = [
 								g += "<rect x='0' y='0' width='1' height='6'/>";
 							g += "<rect width='1' height='1' x='2.5' y='2.5' fill='#444'/>"
 							svg += g + '</g>';
-							
+
 						}
 					}
 					svg += "<rect x='0' y='25' fill='#000' width='26' height='1'/>";
@@ -10732,7 +10739,7 @@ let parseData = [
 	},
 	{
 		displayName: [ "Rubik’s Clock", "Blindfolded Rubik’s Clock" ],
-		moduleID: [ "rubiksClock", "blindfoldedRubiksClockModule" ], 
+		moduleID: [ "rubiksClock", "blindfoldedRubiksClockModule" ],
 		loggingTag: [ "Rubik’s Clock", "Blindfolded Rubik’s Clock" ],
 		matches: [
 			{
@@ -10817,7 +10824,7 @@ let parseData = [
 					let loggingInfo = matches[2].split(", ");
 					let colourLayout = ["00", "80", "ff"];
 					let cellSize = 125;
-					
+
 					let finalInfo = [];
 					for(let i = 0; i < order.length; i++) {
 						finalInfo.push(loggingInfo[order[i]]);
@@ -11622,18 +11629,18 @@ let parseData = [
 			{
 				regex: /(INPUT|GENERATOR): (\(C1=(\w+),C2=(\w+),C3=(\w+)\))/,
 				handler: function (matches, module) {
-					
+
 					module.generateState ??= function(str) {
 						const nums = { 'NEGATIVE':-1, 'ZERO':0, 'POSITIVE':1 };
 						const getFigureNum = (c1, c2, c3) => 9 * c1 + 3 * c2 + c3 + 1;
-						
+
 						let channels = str.match(/\(C1=(\w+),C2=(\w+),C3=(\w+)\)/);
 						let values = [ nums[channels[1]], nums[channels[2]], nums[channels[3]] ];
 						let tern = values.map(c => c == -1 ? 2 : c);
 						let fig = getFigureNum(tern[0], tern[1], tern[2]);
 						return `${values.join(',')} (fig.${fig})`;
 					}
-					
+
 					let label = matches[1] == 'INPUT' ? "Input signal: " : "Current generator signal: ";
 					module.push(label + module.generateState(matches[2]));
 				}
@@ -11762,7 +11769,7 @@ let parseData = [
 	{
 		moduleID: 'simonSmothers',
 		loggingTag: 'Simon Smothers',
-		matches: [		
+		matches: [
 			{
 				regex: /Square (\d) color (\d) at \((-?\d+),(-?\d+)\)/,
 				handler: function(matches, module) {
@@ -11776,12 +11783,12 @@ let parseData = [
 					const hexCodes = [ '#000', '#00F', '#0F0', '#0FF', '#F00', '#F0F', '#FF0', '#DDD' ];
 					const strokeCodes = [ '#222', '#006', '#060', '#066', '#600', '#606', '#660', '#666' ];
 					const colorLetters = 'KBGCRMYW';
-					const triplets = matches[2].split('|').map(str => 
-																 str.split(',').map(digit => 
+					const triplets = matches[2].split('|').map(str =>
+																 str.split(',').map(digit =>
 																                    parseInt(digit)
 																));
 					const coords = triplets.map(t => ({ color: t[0], x: t[1], y: t[2] }));
-					
+
 					const xMin = Math.min(0, coords.reduce((acc, coord) => Math.min(acc, coord.x), +1000));
 					const xMax = Math.max(0, coords.reduce((acc, coord) => Math.max(acc, coord.x), -1000));
 					const yMin = Math.min(0, coords.reduce((acc, coord) => Math.min(acc, coord.y), +1000));
@@ -11802,17 +11809,17 @@ let parseData = [
 						for (let square of module.squares ?? [ ]) {
 							svg += `<rect class='square' x='${square.x}' y='${square.y}' width='${square.size}' height='${square.size}' stroke='${strokeCodes[square.color]}'/>
 									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${square.color == 'Black' ? '#FFF' : '#000'}'
-										>${colorLetters[square.color]}</text>`;						
-						}						
+										>${colorLetters[square.color]}</text>`;
+						}
 						svg += "<circle cx='0.5' cy='0.5' r='0.125' fill='#444'/>";
 					}
 					else {
-						const diffs = readTaggedLine().split(' / ').map(diff => 
+						const diffs = readTaggedLine().split(' / ').map(diff =>
 								diff.match(/\((-?\d+),(-?\d+)\) != \((-?\d+),(-?\d+)\)/));
 						for (let d of diffs) {
 							const x = [ parseInt(d[1]) + xMin, parseInt(d[3]) + xMin ];
 							const y = [ parseInt(d[2]) + yMin, parseInt(d[4]) + yMin ];
-							
+
 							if (x[0] < x[1]) //Right
 								svg += `<line class='difference' x1='${x[0] + 1}' y1='${y[0]}' x2='${x[1]}' y2='${y[1] + 1}'/>`;
 							else if (x[0] > x[1]) //Left
@@ -11821,10 +11828,10 @@ let parseData = [
 								svg += `<line class='difference' x1='${x[0]}' y1='${y[0] + 1}' x2='${x[1] + 1}' y2='${y[1]}'/>`;
 							else if (y[0] > y[1]) //Up
 								svg += `<line class='difference' x1='${x[0]}' y1='${y[0]}' x2='${x[1] + 1}' y2='${y[1] + 1}'/>`;
-								
+
 						}
 					}
-					
+
 					module.push({ label:`${matches[1]} grid: ${matches[1] == 'Generated' ? '(Dot markes the coordinate (0,0))' : '(Differences between cells marked in red)'}`, obj:svg });
 				}
 			},
@@ -11935,7 +11942,7 @@ let parseData = [
 						let colors = m[0].substring(0,m[0].length - 1).split(', ');
 						let nums = [ ];
 						for (let color of colors)
-							nums.push(module.colorOrder.indexOf(color) + 1);					
+							nums.push(module.colorOrder.indexOf(color) + 1);
 						line += ` (${nums.join(', ')})`;
 					}
 					if ('Stage' in module)
@@ -11999,7 +12006,7 @@ let parseData = [
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
 							let fill = hexCodes[grid[row][col]];
-							
+
 							let letter = grid[row][col][0].toUpperCase();
 							let g = `<g class='cell' transform='translate(${100 * col + 50}, ${100 * row + 50})'>`;
 							g += `<path class='diamond' d='M-35 0 0 35 35 0 0-35Z' fill='${fill}'/>`;
@@ -12010,7 +12017,7 @@ let parseData = [
 						}
 					}
 					const svg = `<svg class='skewers displayed' viewbox='-10 -10 420 420'>${module.svgContents}</svg>`;
-					
+
 					module.push({ label:'The colors are:', obj:svg });
 				}
 			},
@@ -12028,7 +12035,7 @@ let parseData = [
 					const swordParts = `<path class='handle' d='M-5 5a25 100 0 000 90l10 0a25 100 0 000-90z'/>
 										<path class='blade' d='M-50 10l0 5a50 5 0 00100 0l0-5a50 15 0 01-40 0L10-250c0-10 0-25-10-50-10 25-10 40-10 50L-10 10a50 15 0 01-40 0z'/>
 										<path class='bottom' d='M-10 97.5a20 15 0 0020 0l0-5a20 15 0 00-20 0z'/>`;
-					let positions = { 
+					let positions = {
 						'A':{ x:50, y:0, rot:180 },
 						'9':{ x:150, y:0, rot:180 },
 						'4':{ x:250, y:0, rot:180 },
@@ -12520,10 +12527,10 @@ let parseData = [
 				regex: /Grid:/,
 				handler: function(_, module) {
 										const arrowHead = 'M-30 30 0 0 30 30 0 0';
-					
+
 					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
 					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#1B5EB2' rx='50' ry='50'/>";
-					
+
 					let grid = readTaggedLines(19).map(l => l.replace(/[^*#]/g, '').split('')
 														).filter(l => l.length > 0);
 					for (let w = 0; w < 4; w++) {
@@ -12533,8 +12540,8 @@ let parseData = [
 									const xPosition = 475 * y + 100 * x;
 									const yPosition = 475 * w + 100 * z;
 									const fill = grid[4 * w + z][4 * y + x] == '#' ? '#FFF' : '#KKK'
-									
-									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#5CF' stroke-width='15'/>`;	
+
+									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#5CF' stroke-width='15'/>`;
 									svg += `<circle r='20' cx='${xPosition + 50}' cy='${yPosition  + 50}' fill='${fill}'/>`;
 								}
 							}
@@ -12543,15 +12550,15 @@ let parseData = [
 					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
 							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
-							
+
 							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
 							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
-							
+
 							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
 							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
-							
+
 							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
 							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
 							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
@@ -13221,7 +13228,7 @@ let parseData = [
 					let svg = "<svg viewbox='-20 -20 860 860' style='display: block; width: 3in'>";
 					svg += "<rect x='-20' y='-20' width='860' height='860' fill='#22222C' rx='20' ry='20'/>";
 					let symbols = [ ];
-					
+
 					for (let row = 0; row < 7; row++) {
 						for (let col = 0; col < 7; col++) {
 							svg += `<rect x='${120 * row}' y='${120 * col}' width='100' height='100' fill='none' stroke='#888' stroke-width='5'/>`;
@@ -13246,14 +13253,14 @@ let parseData = [
 							case 'u': d += '0 -120 '; break;
 							case 'r': d += '120 0 '; break;
 							case 'd': d += '0 120 '; break;
-							case 'l': d += '-120 0 '; break;	
+							case 'l': d += '-120 0 '; break;
 						}
 					}
 					svg += `<path d='${d}' stroke='#AAA' stroke-width='12' fill='none'/>`;
 					for (let s of symbols)
 						svg += s;
 					svg += `<circle cx='${120 * start.x + 50}' cy='${120 * start.y + 50}' r='20' fill='#AAA'/>`
-					
+
 					if (matches[2] == 'solution')
 						module.push({ label:`Stage #${matches[1]} solution:`, obj:svg});
 					else module.push([ `Stage #${matches[1]} submission${matches[5]}`, [{ obj:svg + '</svg>', nobullet:true }] ]);
@@ -13269,7 +13276,7 @@ let parseData = [
 					module.rules.push(match[0]);
 				}
 			}
-		]	
+		]
 	},
 	{
 		moduleID: "unfairsForgottenCiphers",
@@ -13304,9 +13311,9 @@ let parseData = [
 			{
 				regex: /Leafing|Detected "/,
 				handler: function(match, module) {
-					if (module.buildMode == 'digits') 
+					if (module.buildMode == 'digits')
 						module.buildDigits.push(match.input);
-					else if (module.buildMode == 'letters') 
+					else if (module.buildMode == 'letters')
 						module.buildLetters.push(match.input);
 					return true;
 				}
@@ -13318,7 +13325,7 @@ let parseData = [
 					module.push({ label: matches[1], obj: `<table class='ufc-matrix'>
 						<tr> <td class='bracket top left'></td> <td>${data[0]}</td> <td>${data[1]}</td> <td>${data[2]}</td> <td class='bracket top right'></td> </tr>
 						<tr> <td class='bracket left'></td> <td>${data[3]}</td> <td>${data[4]}</td> <td>${data[5]}</td> <td class='bracket right'></td> </tr>
-						<tr> <td class='bracket bottom left'></td> <td>${data[6]}</td> <td>${data[7]}</td> <td>${data[8]}</td> <td class='bracket bottom right'></td> </tr> </table>` 
+						<tr> <td class='bracket bottom left'></td> <td>${data[6]}</td> <td>${data[7]}</td> <td>${data[8]}</td> <td class='bracket bottom right'></td> </tr> </table>`
 					});
 					return true;
 				}
@@ -13340,10 +13347,10 @@ let parseData = [
 				regex: /(In depth keystring to color: )(.+)/,
 				handler: function(matches, module) {
 					const entries = matches[2].split(', ');
-					
+
 					//Directly lifted from the manual with <text> elements removed
 					let baseSVG = "<svg class='ufc-keystring-colors' viewBox='0 0 200 118.92'> <path d='M38.8 30.21v2.57h139.58V30.2z'></path> <path class='s' d='m32.48 109.15 1.2-1.2-4.2 1.2 4.2 1.2zm144.81 0-1.2 1.2 4.2-1.2-4.2-1.2z' fill-rule='evenodd' stroke='#000' stroke-width='2' transform='matrix(.95427 0 0 1 8.5 -77.65)'></path> <path d='M110.7 2.41q0 .76-.37 1.31t-1.08.82q.42.27.7.6.29.31.88 1.21l1.53 2.31h-1.48l-1.37-2.13q-.6-.97-1.06-1.3-.46-.34-.97-.34h-.56v3.77h-1.24V0h2.39q.82 0 1.42.34.6.32.9.88.3.55.3 1.2zm-1.27 0q0-.63-.38-.97-.37-.35-1.07-.35h-1.06V3.8h.8q.79 0 1.25-.29.46-.3.46-1.1z' aria-label='R'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 3.2 -81.36)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <path class='s' d='M111.23 19.66q0 1.34-.38 2.36-.37 1-1.01 1.56-.63.54-1.4.54-.83 0-1.47-.56-.63-.56-.99-1.56-.35-1.01-.35-2.32 0-1.41.41-2.42.41-1 1.06-1.52.66-.5 1.38-.5.8 0 1.42.57.63.58.98 1.58t.35 2.27zm-2.81 3.32q.71 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8t-.56-1.13q-.36-.39-.8-.39-.44 0-.78.4-.35.38-.55 1.12-.2.74-.2 1.77 0 1.55.4 2.44.43.88 1.13.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path d='M161.06 13.68h2.27v4.8h4.8v2.3h-4.8v4.79h-2.27v-4.8h-4.81V18.5h4.8z' aria-label='+'></path> <path d='M5.18 57.89q0 1.28-1.32 1.83.95.17 1.51.79.56.6.56 1.43 0 .81-.45 1.34-.45.54-1.17.78t-1.54.24H0v-8.66h2.5q1.28 0 1.98.62t.7 1.63zm-1.29.1q0-.66-.37-.96-.37-.3-1.23-.3H1.23v2.64h.88q.91 0 1.34-.39.44-.4.44-1zm.75 3.84q0-1.4-2.15-1.4H1.23v2.78h1.3q1.09 0 1.6-.34.52-.34.52-1.04z' aria-label='B'></path> <path d='M28.61 41.75h-2.57V80.8h2.57z'></path> <path class='s' d='m27.32 44.04 1.2 1.15-1.2-4.01-1.2 4zm0 34.47-1.2-1.14 1.2 4 1.2-4z' fill-rule='evenodd' stroke='#000' stroke-width='1.95'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 -37.57 -25.86)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <path class='s' d='M18.47 60.7q0 1.35-.38 2.37-.37 1-1 1.55-.64.55-1.41.55-.83 0-1.47-.56-.63-.56-.98-1.56-.35-1.01-.35-2.32 0-1.41.4-2.42.42-1.01 1.07-1.52.65-.5 1.38-.5.8 0 1.42.57.62.58.97 1.58t.35 2.26zm-2.8 3.33q.7 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8-.21-.75-.57-1.13-.35-.39-.8-.39-.43 0-.78.4-.35.38-.55 1.12-.2.73-.2 1.76 0 1.56.41 2.45.42.88 1.12.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path d='M14.81 38.26h2.27v4.8h4.81v2.3h-4.8v4.79H14.8v-4.8h-4.8v-2.28h4.8z' aria-label='+'></path> <path d='M75.03 90.63v-2.56H35.98v2.56z'></path> <path class='s' d='m72.74 89.35-1.14 1.2 4-1.2-4-1.2zm-34.47 0 1.15-1.2-4.01 1.2 4 1.2z' fill-rule='evenodd' stroke='#000' stroke-width='1.95'></path> <path d='M55.38 111.13q-.93 0-1.7.44-.77.44-1.22 1.2-.45.76-.45 1.7 0 .96.44 1.72t1.22 1.2q.78.44 1.76.44.48 0 .85-.08.37-.07 1.1-.3v-1.8h-1.66v-1.1h2.91v3.66q-1.55.7-3.17.7-1.57 0-2.63-.63-1.07-.64-1.6-1.64-.51-1.01-.51-2.09 0-1.22.58-2.26.59-1.03 1.66-1.65 1.08-.6 2.45-.6.75 0 1.42.15.67.16 1.62.58v1.26q-.73-.42-1.53-.66-.8-.24-1.54-.24z' aria-label='G'></path> <path d='M70.01 94.25h2.27v4.81h4.81v2.29h-4.8v4.8H70v-4.8h-4.8v-2.29H70z' aria-label='+'></path> <path class='s' d='M58.09 100.24q0 1.35-.38 2.36-.38 1.01-1.01 1.56-.64.54-1.41.54-.83 0-1.47-.55-.63-.56-.98-1.57-.35-1-.35-2.32 0-1.4.41-2.41.41-1.01 1.06-1.52.65-.51 1.38-.51.8 0 1.42.57.62.58.97 1.59.36 1 .36 2.26zm-2.82 3.32q.72 0 1.14-.86.43-.87.43-2.42 0-1.06-.2-1.8-.21-.76-.57-1.14-.35-.38-.8-.38-.43 0-.78.39-.34.39-.55 1.12-.2.74-.2 1.77 0 1.56.41 2.44.43.88 1.13.88z' stroke='#000' stroke-width='.8' aria-label='0'></path> <path class='s' d='M25.72 191.69v-2.25h5.73v2.25z' transform='matrix(1.85685 0 0 .53855 -13.58 -2.51)' aria-label='-' stroke='#000' stroke-width='1.5'></path> <rect x='32' y='38' width='14.5' height='14.5' fill='#44F'></rect><rect x='48.1' y='38' width='14.5' height='14.5' fill='#08F'></rect><rect x='64.2' y='38' width='14.5' height='14.5' fill='#0FF'></rect><rect x='85.30000000000001' y='38' width='14.5' height='14.5' fill='#80F'></rect><rect x='101.4' y='38' width='14.5' height='14.5' fill='#88F'></rect><rect x='117.5' y='38' width='14.5' height='14.5' fill='#8FF'></rect><rect x='138.60000000000002' y='38' width='14.5' height='14.5' fill='#F0F'></rect><rect x='154.70000000000002' y='38' width='14.5' height='14.5' fill='#F8F'></rect><rect x='170.8' y='38' width='14.5' height='14.5' fill='#FFF'></rect><rect x='32' y='54.1' width='14.5' height='14.5' fill='#448'></rect><rect x='48.1' y='54.1' width='14.5' height='14.5' fill='#088'></rect><rect x='64.2' y='54.1' width='14.5' height='14.5' fill='#0F8'></rect><rect x='85.30000000000001' y='54.1' width='14.5' height='14.5' fill='#808'></rect><rect x='101.4' y='54.1' width='14.5' height='14.5' fill='#888'></rect><rect x='117.5' y='54.1' width='14.5' height='14.5' fill='#8F8'></rect><rect x='138.60000000000002' y='54.1' width='14.5' height='14.5' fill='#F08'></rect><rect x='154.70000000000002' y='54.1' width='14.5' height='14.5' fill='#F88'></rect><rect x='170.8' y='54.1' width='14.5' height='14.5' fill='#FF8'></rect><rect x='32' y='70.2' width='14.5' height='14.5' fill='#000'></rect><rect x='48.1' y='70.2' width='14.5' height='14.5' fill='#080'></rect><rect x='64.2' y='70.2' width='14.5' height='14.5' fill='#0F0'></rect><rect x='85.30000000000001' y='70.2' width='14.5' height='14.5' fill='#844'></rect><rect x='101.4' y='70.2' width='14.5' height='14.5' fill='#880'></rect><rect x='117.5' y='70.2' width='14.5' height='14.5' fill='#8F0'></rect><rect x='138.60000000000002' y='70.2' width='14.5' height='14.5' fill='#F00'></rect><rect x='154.70000000000002' y='70.2' width='14.5' height='14.5' fill='#F80'></rect><rect x='170.8' y='70.2' width='14.5' height='14.5' fill='#FF0'></rect><rect x='170.9' y='38.1' width='14.3' height='14.3' fill='transparent' stroke='#000' stroke-width='0.3'></rect>";
-					
+
 					const positions = { 'Blue':[0,0,2], 'Azure':[0,1,2], 'Cyan':[0,2,2], 'Indigo':[0,0,1], 'Teal':[0,1,1], 'Jade':[0,2,1], 'Black':[0,0,0], 'Forest':[0,1,0], 'Green':[0,2,0], 'Violet':[1,0,2], 'Maya':[1,1,2], 'Aqua':[1,2,2], 'Plum':[1,0,1], 'Gray':[1,1,1], 'Mint':[1,2,1], 'Maroon':[1,0,0], 'Olive':[1,1,0], 'Lime':[1,2,0], 'Magenta':[2,0,2], 'Pink':[2,1,2], 'White':[2,2,2], 'Rose':[2,0,1], 'Salmon':[2,1,1], 'Cream':[2,2,1], 'Red':[2,0,0], 'Orange':[2,1,0], 'Yellow':[2,2,0] };
 					const whiteText = [ 'Blue', 'Indigo', 'Black', 'Teal', 'Forest', 'Violet', 'Plum', 'Maroon', 'Olive', 'Rose', 'Red' ];
 					const xBase = 39.2; //X POSITION OF BLACK
@@ -13351,15 +13358,15 @@ let parseData = [
 					const xModBig = 53.3; //RED MODIFIER
 					const xModSmall = 16.1; //GREEN MODIFIER
 					const yMod = -16.1; //BLUE MODIFIER
-					
+
 					for (let entry of entries) {
 						const entryMatch = entry.match(/\[([\w-]): (\w+)\]/);
 						const channels = positions[entryMatch[2]];
-						
+
 						const xCoord = xBase + xModBig * channels[0] + xModSmall * channels[1];
 						const yCoord = yBase + yMod * channels[2];
 						const textColor = whiteText.includes(entryMatch[2]) ? '#FFF' : '#000';
-						
+
 						baseSVG += `<text x='${xCoord}' y='${yCoord}' fill='${textColor}'>${entryMatch[1]}</text>`;
 					}
 					module.push({ label:matches[1], obj:baseSVG + '</svg>' });
@@ -13650,7 +13657,7 @@ let parseData = [
 				handler: function (matches, module) {
 					if (matches[1] == 'before')
 						module.beforeMaze = readTaggedLines(9);
-					else 
+					else
 						module.push({ label: matches[0], obj:module.genSVG(readTaggedLines(9)) });
 					return true;
 				}
@@ -13659,10 +13666,10 @@ let parseData = [
 				regex: /The color of the walls is (\w+)./,
 				handler: function (matches, module) {
 					module.genSVG = function (maze) {
-						
+
 						let svg = "<svg viewbox='-50 -50 500 500' style='width: 2in; display: block'>";
 						svg += "<rect x='-50' y='-50' width='500' height='500' fill='#000' rx='33' ry='33'/>";
-						
+
 						const color = module.wallColor ?? '#FFF';
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
@@ -13672,7 +13679,7 @@ let parseData = [
 									if (maze[2 * row][2 * col + 1] == '#')
 										g += `<line x2='100' stroke='${color}' stroke-width='10'/>`;
 									if (maze[2 * row + 1][2 * col] == '#')
-										g += `<line y2='100' stroke='${color}' stroke-width='10'/>`;										
+										g += `<line y2='100' stroke='${color}' stroke-width='10'/>`;
 								}
 								svg += g + '</g>';
 							}
@@ -13683,7 +13690,7 @@ let parseData = [
 					}
 					const colors = { 'BLACK':'#888', 'RED':'#F00', 'GREEN':'#0F0', 'BLUE':'#00F', 'CYAN':'#0FF', 'MAGENTA':'#F0F', 'YELLOW':'#FF0', 'WHITE':'#FFF' };
 					module.wallColor = colors[matches[1]];
-					
+
 					module.push(matches[0]);
 					if (module.beforeMaze)
 						module.push({ label:'Maze walls, before transformation:', obj:module.genSVG(module.beforeMaze) });
@@ -14028,7 +14035,7 @@ let parseData = [
 				regex: /Generated Puzzle:/,
 				handler: function (_, module) {
 					let syms = readLines(4).map(l => l.replace(/\[The Witness #\d+\] \w\w Symbol: /, ''));
-					
+
 					let imgs = [ ];
 					for (let row = 0; row < 2; row++){
 						for (let col = 0; col < 2; col++) {
@@ -14044,7 +14051,7 @@ let parseData = [
 											<image href='img/The Witness/${type}.svg' width='100' height='100'/></g>`);
 						}
 					}
-					
+
 					let svg = `<svg style='display: block; width: 2in' viewbox='-30 -30 260 260'>
 								<rect x='-30' y='-30' width='260' height='260' fill='#EDB' rx='5' ry='5' />
 								<path d='m0 0h100v100h-100v-100zm100 0h100v100h-100v-100m-100 100h100v100h-100v-100m100 0h100v100h-100v-100zm100 100h20'
@@ -14053,7 +14060,7 @@ let parseData = [
 					for (let i = 0; i < 4; i++)
 						if (imgs[i])
 							svg += imgs[i];
-					
+
 					module.baseSvg = svg;
 					module.push({ label:'Generated Puzzle:', obj:module.baseSvg + '</svg>' });
 				}
@@ -14061,12 +14068,12 @@ let parseData = [
 			{
 				regex: /(Inputted|Possible solution) line crosses these intersections in reading order: "(.+)"/,
 				handler: function (matches, module) {
-					let nums = matches[2].split(', ').map(d => d - '1').map(num => num = { 
-																				x: 100 * (num % 3), 
+					let nums = matches[2].split(', ').map(d => d - '1').map(num => num = {
+																				x: 100 * (num % 3),
 																				y: 100 * Math.floor(num / 3) });
 					let svg = module.baseSvg + "<circle r='20' fill='#004'/>";
 					let path = 'M 0 0';
-					for (let num of nums) 
+					for (let num of nums)
 						path += ' L ' + num.x + ' ' + num.y;
 					if (nums[nums.length - 1].x == '200' && nums[nums.length - 1].y == '200')
 						path += ' h 20';
