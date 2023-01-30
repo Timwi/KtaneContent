@@ -32,64 +32,152 @@
             border: none;
         }
 
-
     </style>
     <script>
-        
-        const url = "https://ktane.timwi.de/json/raw";
-        const maxRows = 45;
-        function mapCharToColor(char) {
-            switch(char) {
-                case "A": case "N": case "0":
-                    return "Y";
-                case "B": case "O": case "1":
-                    return "A";
-                case "C": case "P": case "2":
-                    return "B";
-                case "D": case "Q": case "3":
-                    return "G";
-                case "E": case "R": case "4":
-                    return "O";
-                case "F": case "S": case "5":
-                    return "R";
-                case "G": case "T": case "6":
-                    return "L";
-                case "H": case "U": case "7":
-                    return "C";
-                case "I": case "V": case "8":
-                    return "N";
-                case "J": case "W": case "9":
-                    return "W";
-                case "K": case "X":
-                    return "P";
-                case "L": case "Y":
-                    return "M";
-                case "M": case "Z":
-                    return "I";
-                default:
-                    return null;
-                
-            }
+      const url = "https://ktane.timwi.de/json/raw";
+      const maxRows = 45;
+      const pageBgRegexp = /page-bg-0\d/;
+
+      function updatePageNum() {
+        Array.from(document.getElementsByClassName("page")).forEach(
+          ($page, i, $pages) => {
+            const bgIdx = (i % 7) + 1;
+            $page.className = $page.className.replace(pageBgRegexp, "");
+            $page.classList.add(`page-bg-${("0" + bgIdx).slice(-2)}`);
+            $page.getElementsByClassName("page-footer")[0].innerText = `Page ${
+              i + 1
+            } of ${$pages.length}`;
+          }
+        );
+      }
+
+      function createPage($el) {
+        const $pages = document.getElementsByClassName("page");
+        if ($pages.length === 0)
+          throw new Error("You must create at least one .page element.");
+        const $pageHeader = $pages[0].getElementsByClassName("page-header");
+        if ($pageHeader.length === 0)
+          throw new Error(
+            "First .page element must contain .page-header element."
+          );
+
+        const $parent = $pages[0].parentElement;
+
+        const $newPage = $pages[0].cloneNode();
+        const $newPageHeader = $pageHeader[0].cloneNode(true);
+        $newPage.appendChild($newPageHeader);
+        const $newPageContent = document.createElement("div");
+        $newPageContent.classList.add("page-content");
+        $newPageContent.appendChild($el);
+        $newPage.appendChild($newPageContent);
+        const $newPageFooter = document.createElement("div");
+        $newPageFooter.classList.add("page-footer", "relative-footer");
+        $newPage.appendChild($newPageFooter);
+
+        $parent.appendChild($newPage);
+      }
+
+      function createPages($els) {
+        for (let $el of $els) {
+          createPage($el, false);
         }
-        
-        function getBrokenLEDs(name) {
-            const upper = name.toUpperCase();
-            const result = [];
-            if(/WIRE/.test(upper)) result.push("Y");
-            if(/(BUTTON|KEY)/.test(upper)) result.push("A");
-            if(/MAZE/.test(upper)) result.push("B");
-            if(/SIMON/.test(upper)) result.push("G");
-            if(/MORSE/.test(upper)) result.push("O");
-            if(/(CRUEL|COMPLICATED|BROKEN|CURSED|FAULTY)/.test(upper)) result.push("R");
-            if(/(MATH|NUMBER|DIGIT|EQUATION|LOGIC)/.test(upper)) result.push("L");
-            if(/(WORD|LETTER|PHRASE|TEXT|TALK|ALPHABET)/.test(upper)) result.push("C");
-            if(/(CODE|CIPHER)/.test(upper)) result.push("N");
-            if(/(LIGHT|LED)/.test(upper)) result.push("W");
-            if(/(SQUARE|CIRCLE|TRIANGLE|CUBE|SPHERE)/.test(upper)) result.push("P");
-            if(/(COLOR|COLOUR)/.test(upper)) result.push("M");
-            if(/(MELODY|HARMONY|CHORD|PIANO)/.test(upper)) result.push("I");
-            return result.join("");
+        updatePageNum();
+      }
+
+      const contentTemplate = `
+            <table class="cheatsheet">
+                <tr>
+                    <th>Module name</th>
+                    <th>Wires to cut</th>
+                    <th>LEDs</th>
+                </tr>
+            </table>
+            <table class="cheatsheet">
+                <tr>
+                    <th>Module name</th>
+                    <th>Wires to cut</th>
+                    <th>LEDs</th>
+                </tr>
+            </table>
+        `;
+
+      function mapCharToColor(char) {
+        switch (char) {
+          case "A":
+          case "N":
+          case "0":
+            return "Y";
+          case "B":
+          case "O":
+          case "1":
+            return "A";
+          case "C":
+          case "P":
+          case "2":
+            return "B";
+          case "D":
+          case "Q":
+          case "3":
+            return "G";
+          case "E":
+          case "R":
+          case "4":
+            return "O";
+          case "F":
+          case "S":
+          case "5":
+            return "R";
+          case "G":
+          case "T":
+          case "6":
+            return "L";
+          case "H":
+          case "U":
+          case "7":
+            return "C";
+          case "I":
+          case "V":
+          case "8":
+            return "N";
+          case "J":
+          case "W":
+          case "9":
+            return "W";
+          case "K":
+          case "X":
+            return "P";
+          case "L":
+          case "Y":
+            return "M";
+          case "M":
+          case "Z":
+            return "I";
+          default:
+            return null;
         }
+      }
+
+      function getBrokenLEDs(name) {
+        const upper = name.toUpperCase();
+        const result = [];
+        if (/WIRE/.test(upper)) result.push("Y");
+        if (/(BUTTON|KEY)/.test(upper)) result.push("A");
+        if (/MAZE/.test(upper)) result.push("B");
+        if (/SIMON/.test(upper)) result.push("G");
+        if (/MORSE/.test(upper)) result.push("O");
+        if (/(CRUEL|COMPLICATED|BROKEN|CURSED|FAULTY)/.test(upper))
+          result.push("R");
+        if (/(MATH|NUMBER|DIGIT|EQUATION|LOGIC)/.test(upper)) result.push("L");
+        if (/(WORD|LETTER|PHRASE|TEXT|TALK|ALPHABET)/.test(upper))
+          result.push("C");
+        if (/(CODE|CIPHER)/.test(upper)) result.push("N");
+        if (/(LIGHT|LED)/.test(upper)) result.push("W");
+        if (/(SQUARE|CIRCLE|TRIANGLE|CUBE|SPHERE)/.test(upper))
+          result.push("P");
+        if (/(COLOR|COLOUR)/.test(upper)) result.push("M");
+        if (/(MELODY|HARMONY|CHORD|PIANO)/.test(upper)) result.push("I");
+        return result.join("");
+      }
 
         async function getData() {
             const data = await fetch(url);
@@ -109,35 +197,41 @@
             });
         }
 
-        window.addEventListener("load", async () => {
+      window.addEventListener("load", async () => {
+        const data = await getData();
+        const $contents = [];
+        let $tableContainer;
+        let $table;
+        for (let i = 0; i < data.length; i++) {
+          const row = data[i];
+          if (i % (maxRows * 2) === 0) {
+            $tableContainer = document.createElement("div");
+            $tableContainer.classList.add("cheatsheet-container");
+            $tableContainer.innerHTML = contentTemplate;
+            $contents.push($tableContainer);
+            $table = $tableContainer.getElementsByClassName("cheatsheet")[0];
+          } else if (i % maxRows === 0) {
+            $table = $tableContainer.getElementsByClassName("cheatsheet")[1];
+          }
+          const $tr = document.createElement("tr");
+          const $nameTd = document.createElement("td");
+          $nameTd.appendChild(document.createTextNode(row[0]));
+          $tr.appendChild($nameTd);
+          const $colorTd = document.createElement("td");
+          $colorTd.appendChild(
+            document.createTextNode(row[1].length > 0 ? row[1] : "(cut any)")
+          );
+          $tr.appendChild($colorTd);
+          $table.appendChild($tr);
+          const $brokenTd = document.createElement("td");
+          $brokenTd.appendChild(document.createTextNode(row[2]));
+          $tr.appendChild($brokenTd);
+          $table.appendChild($tr);
+        }
 
-            // auto pager
-            Array.from(document.getElementsByClassName("page")).forEach(($page, i, $pages) => {
-                const bgIdx = (i % 7) + 1; 
-                $page.classList.add(`page-bg-${("0" + bgIdx).slice(-2)}`)
-                $page.getElementsByClassName("page-footer")[0].appendChild(document.createTextNode(`Page ${i+1} of ${$pages.length}`))
-            });
-
-            const data = await getData();
-            const $tables = document.getElementsByClassName("cheatsheet");
-            for(let i = 0; i < data.length; i++) {
-                const row = data[i];
-                const $table = $tables[Math.floor(i/maxRows)];
-                const $tr = document.createElement("tr");
-                const $nameTd = document.createElement("td");
-                $nameTd.appendChild(document.createTextNode(row[0]));
-                $tr.appendChild($nameTd);
-                const $colorTd = document.createElement("td");
-                $colorTd.appendChild(document.createTextNode(row[1].length > 0 ? row[1] : "(cut any)"));
-                $tr.appendChild($colorTd);
-                $table.appendChild($tr);
-                const $brokenTd = document.createElement("td");
-                $brokenTd.appendChild(document.createTextNode(row[2]));
-                $tr.appendChild($brokenTd);
-                $table.appendChild($tr);
-            }
-        
-        })
+        createPages($contents);
+        updatePageNum();
+      });
     </script>
 </head>
 <body>
@@ -239,492 +333,6 @@
                         <td class="entry finalCount"># of D Batteries</td>
                     </tr>
                 </table>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
-            </div>
-           <div class="page-footer relative-footer"></div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Them All</span>
-            </div>
-            <div class="page-content">
-                <div class="cheatsheet-container">
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-                    <table class="cheatsheet">
-                        <tr>
-                            <th>Module name</th>
-                            <th>Wires to cut</th>
-                            <th>LEDs</th>
-                        </tr>
-                    </table>
-
-                </div>
             </div>
            <div class="page-footer relative-footer"></div>
         </div>
