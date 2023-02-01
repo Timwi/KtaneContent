@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>迷路³ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+
+    $(function() {
+        let mazeGroup = document.getElementById("themaze");
+        var mazeRotation = 0;
+
+        let mazesvg = $(".mazesvg");
+
+        $("button.rotate-left").click(function() {
+            rotateMaze(false);
+        });
+        $("button.rotate-right").click(function() {
+            rotateMaze(true);
+        });
+
+        for (let r = 0; r < 12; r++) {
+            for (let c = 3; c < 6; c++) {
+                let ring = MakeSvgElem("circle", {
+                    class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                    r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                });
+                mazesvg.append(ring);
+                if (c != 4 || r % 3 != 1) {
+                    let dot = MakeSvgElem("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:10.5, fill: "#000"
+                    });
+                    mazesvg.append(dot);
+                }
+            }
+        }
+        for (let r = 3; r < 6; r++) {
+            for (let c = 0; c < 12; c++) {
+                if (c >= 3 && c < 6) { continue; }
+                let ring = MakeSvgElem("circle", {
+                    class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                    r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                });
+                mazesvg.append(ring);
+                if (r != 4 || c % 3 != 1) {
+                    let dot = MakeSvgElem("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:10.5, fill: "#000"
+                    });
+                    mazesvg.append(dot);
+                }
+            }
+        }
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:150, r:11, fill: "#00F" }));
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:150, cy:450, r:11, fill: "#FF0" }));
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:450, r:11, fill: "#F00" }));
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:750, cy:450, r:11, fill: "#0F0" }));
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:750, r:11, fill: "#F0F" }));
+        mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:1050, r:11, fill: "#F70" }));
+
+        for (let r = 0; r < 12; r++) {
+            for (let c = 3; c < 6; c++) {
+                let cell = MakeSvgElem("rect", {
+                    class: "highlightable mcell", x:(c*100), y:(r*100 + (r == 0 ? 2 : 0)),
+                    width:100, height:(r == 0 ? 98 : 100), fill:"transparent"
+                });
+                mazesvg.append(cell);
+            }
+        }
+        for (let r = 3; r < 6; r++) {
+            for (let c = 0; c < 12; c++) {
+                if (c >= 3 && c < 6) { continue; }
+                let cell = MakeSvgElem("rect", {
+                    class: "highlightable mcell", x:(c*100 + (c == 0 ? 2 : 0)),
+                    y:(r*100),
+                    width:(c == 0 ? 98 : 100), height:100, fill:"transparent"
+                });
+                mazesvg.append(cell);
+            }
+        }
+
+        function rotateMaze(clockwise) {
+            if (clockwise) {
+                mazeRotation += 1;
+            } else {
+                mazeRotation -= 1;
+            }
+
+            mazeGroup.style.transform = `rotate(${mazeRotation * 90}deg)`;
+        }
+    });
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            width: 80%;
+            border: none;
+        }
+
+        td {
+            width: 25%;
+            text-align: center;
+        }
+        .dark svg path, .dark circle.dot {
+            filter: invert(100%) contrast(90%);
+        }
+
+        .mazeimg {
+            width: 90%;
+            margin: 0 auto;
+            display: block;
+            margin-top: .5cm;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .italics {
+            font-style: italic;
+        }
+
+        img.center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        img.example-image {
+            width: 60%;
+        }
+        .appendix-reference {
+            font-style: italic;
+        }
+
+        .rotate-left, .rotate-right {
+            font-size: 30px;
+            height: 38px;
+            width: 68px;
+            background-size: 60px 110px;
+            background-position: 2px -38px;
+            background-repeat: no-repeat;
+            transition: 0.5s;
+        }
+        .rotate-left {
+            background-image: url('img/Common/ccw-arrow.svg');
+        }
+        .rotate-right {
+            background-image: url('img/Common/cw-arrow.svg');
+        }
+
+        button.rotate-left:hover {
+            background-image: url('img/Common/ccw-arrowW.svg');
+            background-color: #000;
+        }
+        button.rotate-right:hover {
+            background-image: url('img/Common/cw-arrowW.svg');
+            background-color: #000;
+        }
+        .maze-wall {
+            fill: none;
+            stroke: #000;
+            stroke-width: 6;
+        }
+        .maze-fold {
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+        }
+        .themaze {
+            transition: 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路³</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Maze³.svg" class="diagram">
+                <h2>モジュール詳細：迷路³</h2>
+                <p class="flavour-text">それはオリジナルのようだが、全体として別のスケールだ。</p>
+                <p class="appendix-reference" id="appendix-reference">インジケーターの識別は付録Aを参照。<br>バッテリーの識別は付録Bを参照。<br>ポートの識別は付録Cを参照。</p>
+                <ul>
+                    <li>このモジュールは、各面に9つのドットがある立方体と、モジュールの左上隅にある円形の送信ボタンで構成されている。</li>
+                    <li>モジュールを解除するには、壁にぶつからずに立方体の端に表示される矢印を押して白色の光を動かし、3つの正しい中央の色の点に移動して送信ボタンを押す。壁にぶつかったり、間違ったドットで送信ボタンを押すとミスが記録される。</li>
+                    <li>以下の表を見て、モジュールを解除するために送信する必要がある3つのドットの色を特定する。ドットは表の上から順番に送信する必要がある。モジュールでは、全ての面の色が点灯している訳ではない。
+                    </li>
+                    <li>
+                        壁がどこにあるかを見つけるには、モジュールに表示されている色付きの光の位置を迷路に一致させる。迷路は回転する可能性がある。
+                    </li>
+                </ul>
+                <br>
+
+                <table>
+                    <tr>
+                        <td class="empty"></td>
+                        <th>1つ以下</th>
+                        <th>2，3，4</th>
+                        <th>5以上</th>
+                    </tr>
+                    <tr>
+                        <th>バッテリー</th>
+                        <td>マゼンタ</td>
+                        <td>オレンジ</td>
+                        <td>青</td>
+                    </tr>
+                    <tr>
+                        <th>インジケーター</th>
+                        <td>赤</td>
+                        <td>黄</td>
+                        <td>緑</td>
+                    </tr>
+                    <tr>
+                        <th>ポート</th>
+                        <td>青</td>
+                        <td>マゼンタ</td>
+                        <td>オレンジ</td>
+                    </tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-03" style="width: 260mm; height: 250mm">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路³</span>
+            </div>
+            <div class="page-content">
+                <button class="rotate-left floating"></button>
+                <button class="rotate-right floating"></button>
+                <div class="themaze" id="themaze" style="width: 170mm; margin: auto">
+                    <svg class="mazesvg" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
+                        <path class="maze-fold" stroke-dasharray="4,4" d="M300 4v1194h300V4z"/>
+                        <path class="maze-fold" stroke-dasharray="4,4" d="M4 300h894v300H4z"/>
+                        <path class="maze-fold" stroke-dasharray="4,4" d="M300 900h300"/>
+                        <path class="maze-wall" d="M300 2v100h200v-100"/>
+                        <path class="maze-wall" d="M300 100v100h300"/>
+                        <path class="maze-wall" d="M300 300h100v-100"/>
+                        <path class="maze-wall" d="M600 100v200h200"/>
+                        <path class="maze-wall" d="M4 400v-100h200"/>
+                        <path class="maze-wall" d="M500 300v100h300"/>
+                        <path class="maze-wall" d="M500 400v100"/>
+                        <path class="maze-wall" d="M700 400v100h200"/>
+                        <path class="maze-wall" d="M600 500h100v100"/>
+                        <path class="maze-wall" d="M800 500v100h100"/>
+                        <path class="maze-wall" d="M4 600h96v-100h100v-100"/>
+                        <path class="maze-wall" d="M100 400h300"/>
+                        <path class="maze-wall" d="M300 500h100v300h-100v100"/>
+                        <path class="maze-wall" d="M200 600h100v100h100"/>
+                        <path class="maze-wall" d="M500 600v100h100"/>
+                        <path class="maze-wall" d="M400 800h200v100"/>
+                        <path class="maze-wall" d="M400 900v100h200"/>
+                        <path class="maze-wall" d="M300 1000h100v200"/>
+                        <path class="maze-wall" d="M500 1000v100h100"/>
+                        <path class="maze-wall" d="M300 1100v100"/>
+                    </svg>
+                </div>
+            </div>
+           <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

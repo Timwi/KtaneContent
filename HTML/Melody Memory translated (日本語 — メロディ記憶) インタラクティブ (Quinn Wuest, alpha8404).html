@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>メロディ記憶 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        .dark table, table {
+            border: none;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        @media screen and (min-width: 900px) {
+            .half-column {
+                float: left;
+                width: 45%;
+                padding-right: 5%;
+            }
+        }
+        @media print {
+            .half-column {
+                float: left;
+                width: 45%;
+                padding-right: 5%;
+            }
+        }
+        a.play-button {
+            margin-left: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 130%;
+            transition: color .1s;
+            line-height: normal;
+
+            background: #008;
+            border-radius: 50%;
+            width: 1.1em;
+            height: 1.1em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+            float: right;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">メロディ記憶</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Melody Memory.svg" class="diagram">
+                <h2>モジュール詳細：メロディ記憶</h2>
+                <p class="flavour-text">音楽はあなたの制御を失わせる！</p>
+                <ul>
+                    <li>このモジュールは4つの鍵盤、再生ボタン(Play)、録音ボタン(Record)、及びモジュールの進行状況を示すLEDで構成されている。モジュールを解除するには、5つのステージ全てを完了する必要がある。</li>
+                    <li>4つの鍵盤を押すと、それぞれが異なる楽器を使用して4つの異なる音を鳴らす。鍵盤は何の影響もなく自由に押せる。入力は、録音ボタンが押された後、1ステージ間でのみ記録される。</li>
+                    <li>再生ボタンはモジュールにある1つの音を再生するが、4つの鍵盤に存在しない楽器を使用している。この音を鳴らす楽器を段に、この音と同じ音程を再生した鍵盤の色を列に使用して文字を取得する。</li>
+                </ul>
+                <table>
+                    <tr>
+                        <th class='corner'></th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>赤</th>
+                        <th>黄</th>
+                        <th>緑</th>
+                        <th>青</th>
+                    </tr>
+                    <tr>
+                        <th>アコーディオン</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>A</td>
+                        <td>C</td>
+                        <td>B</td>
+                        <td>D</td>
+                    </tr>
+                    <tr>
+                        <th>アコースティックギター</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>A</td>
+                        <td>B</td>
+                        <td>C</td>
+                        <td>D</td>
+                    </tr>
+                    <tr>
+                        <th>チェロ</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>B</td>
+                        <td>C</td>
+                        <td>A</td>
+                        <td>D</td>
+                    </tr>
+                    <tr>
+                        <th>エレキギター</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>A</td>
+                        <td>D</td>
+                        <td>C</td>
+                        <td>B</td>
+                    </tr>
+                    <tr>
+                        <th>ホルン</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>C</td>
+                        <td>D</td>
+                        <td>A</td>
+                        <td>B</td>
+                    </tr>
+                    <tr>
+                        <th>オルガン</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>B</td>
+                        <td>A</td>
+                        <td>D</td>
+                        <td>C</td>
+                    </tr>
+                    <tr>
+                        <th>ピアノ</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>B</td>
+                        <td>D</td>
+                        <td>A</td>
+                        <td>C</td>
+                    </tr>
+                    <tr>
+                        <th>シタール</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>D</td>
+                        <td>B</td>
+                        <td>A</td>
+                        <td>C</td>
+                    </tr>
+                    <tr>
+                        <th>トランペット</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>C</td>
+                        <td>D</td>
+                        <td>B</td>
+                        <td>A</td>
+                    </tr>
+                    <tr>
+                        <th>バイオリン</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>B</td>
+                        <td>D</td>
+                        <td>C</td>
+                        <td>A</td>
+                    </tr>
+                    <tr>
+                        <th>声</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>D</td>
+                        <td>C</td>
+                        <td>B</td>
+                        <td>A</td>
+                    </tr>
+                    <tr>
+                        <th>木琴</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>D</td>
+                        <td>B</td>
+                        <td>C</td>
+                        <td>A</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">メロディ記憶</span>
+            </div>
+            <div class="page-content">
+                <p>取得した文字に対応するリストと現在のステージ数を見て、押す必要がある鍵盤を特定する。</p>
+                <div class='half-column'>
+                    <strong>A:</strong>
+                    <ol>
+                        <li>赤の鍵盤</li>
+                        <li>ステージ1で緑の鍵盤があった位置の鍵盤</li>
+                        <li>ステージ2で青の鍵盤だった音程の鍵盤</li>
+                        <li>ステージ3で押した鍵盤と同じ色の鍵盤</li>
+                        <li>ステージ1で黄の音程と同じだったステージ4の鍵盤の色の鍵盤</li>
+                    </ol>
+                    <strong>C:</strong>
+                    <ol>
+                        <li>存在する楽器のうち、表の上から3番目にある楽器の鍵盤</li>
+                        <li>ステージ1で押された鍵盤の楽器に、表において最も近い楽器を持つ鍵盤</li>
+                        <li>ステージ2の赤の鍵盤の楽器に、表において最も近い楽器を持つ鍵盤</li>
+                        <li>ステージ3の2番目に低かった音程の鍵盤の楽器に、表において最も近い楽器を持つ鍵盤</li>
+                        <li>ステージ4の2番目にあった鍵盤の楽器に、表において最も近い楽器を持つ鍵盤</li>
+                    </ol>
+                </div>
+                <div class='half-column'>
+                    <strong>B:</strong>
+                    <ol>
+                        <li>2番目に高い音程の鍵盤</li>
+                        <li>ステージ1の最も低い音程の鍵盤の色の鍵盤</li>
+                        <li>ステージ2で押された鍵盤の音程と同じ鍵盤</li>
+                        <li>ステージ3の青の鍵盤の音程と反対の音程の鍵盤</li>
+                        <li>ステージ3で押された鍵盤と同じ色のステージ4の鍵盤と同じ位置にある鍵盤</li>
+                    </ol>
+                    <strong>D:</strong>
+                    <ol>
+                        <li>4番目の鍵盤</li>
+                        <li>ステージ1の3番目にあった鍵盤の色の鍵盤</li>
+                        <li>ステージ2の1番目にあった鍵盤の音程の鍵盤</li>
+                        <li>ステージ1で押された鍵盤と同じ色のステージ3の鍵盤と同じ位置にある鍵盤</li>
+                        <li>ステージ3で押された鍵盤と同じ色のステージ2の鍵盤と同じ音程のステージ4の鍵盤と同じ位置にある鍵盤</li>
+                    </ol>
+                    <p>注：表における楽器の距離については、同点がある場合はそのうち最も左にある鍵盤を使用する。</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+    <script>
+        const sounds = [
+            "Assets_Sounds_accordion1.mp3",
+            "Assets_Sounds_accordion2.mp3",
+            "Assets_Sounds_accordion3.mp3",
+            "Assets_Sounds_accordion4.mp3",
+            "Assets_Sounds_acousticguitar1.mp3",
+            "Assets_Sounds_acousticguitar2.mp3",
+            "Assets_Sounds_acousticguitar3.mp3",
+            "Assets_Sounds_acousticguitar4.mp3",
+            "Assets_Sounds_cello1.mp3",
+            "Assets_Sounds_cello2.mp3",
+            "Assets_Sounds_cello3.mp3",
+            "Assets_Sounds_cello4.mp3",
+            "Assets_Sounds_electricguitar1.mp3",
+            "Assets_Sounds_electricguitar2.mp3",
+            "Assets_Sounds_electricguitar3.mp3",
+            "Assets_Sounds_electricguitar4.mp3",
+            "Assets_Sounds_frenchhorn1.mp3",
+            "Assets_Sounds_frenchhorn2.mp3",
+            "Assets_Sounds_frenchhorn3.mp3",
+            "Assets_Sounds_frenchhorn4.mp3",
+            "Assets_Sounds_organ1.mp3",
+            "Assets_Sounds_organ2.mp3",
+            "Assets_Sounds_organ3.mp3",
+            "Assets_Sounds_organ4.mp3",
+            "Assets_Sounds_piano1.mp3",
+            "Assets_Sounds_piano2.mp3",
+            "Assets_Sounds_piano3.mp3",
+            "Assets_Sounds_piano4.mp3",
+            "Assets_Sounds_sitar1.mp3",
+            "Assets_Sounds_sitar2.mp3",
+            "Assets_Sounds_sitar3.mp3",
+            "Assets_Sounds_sitar4.mp3",
+            "Assets_Sounds_trumpet1.mp3",
+            "Assets_Sounds_trumpet2.mp3",
+            "Assets_Sounds_trumpet3.mp3",
+            "Assets_Sounds_trumpet4.mp3",
+            "Assets_Sounds_violin1.mp3",
+            "Assets_Sounds_violin2.mp3",
+            "Assets_Sounds_violin3.mp3",
+            "Assets_Sounds_violin4.mp3",
+            "Assets_Sounds_voice1.mp3",
+            "Assets_Sounds_voice2.mp3",
+            "Assets_Sounds_voice3.mp3",
+            "Assets_Sounds_voice4.mp3",
+            "Assets_Sounds_xylophone1.mp3",
+            "Assets_Sounds_xylophone2.mp3",
+            "Assets_Sounds_xylophone3.mp3",
+            "Assets_Sounds_xylophone4.mp3"
+        ];
+        
+        let index = 0;
+        $("table").slice(0, 1).find("td:nth-child(2), td:nth-child(3), td:nth-child(4), td:nth-child(5)").each(function() {
+            var elem = $(this);
+            var i = Math.floor(index / 2);
+            if (i <= 60)
+                var audio = $("<audio>")
+                    .on("error", function() {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "audio/Melody Memory/" + sounds[index])
+                    .on("ended", function() {
+                        button.removeClass("playing");
+                    })
+                    .appendTo(elem);
+    
+                var button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function() {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo(elem);
+                index++;
+        });
+    </script>
+</body>
+</html>
