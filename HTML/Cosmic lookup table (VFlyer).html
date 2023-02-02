@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+        <title>Cosmic Massive Look Up Table — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <script src="js/jquery.3.1.1.min.js"></script>
+        <script>
+            
+            function ChangeRedirect() {
+                let idNum = document.getElementById("numInput");
+                if (idNum.value > 9999)
+                    idNum.value = 9999;
+                else if (idNum.value == "")
+                    idNum.value = 0;
+                let idRedir = $("#redirect");
+                idRedir.attr("href", "#num" + idNum.value);
+            }
+
+            function CalculateWordLength(number) {
+                const normalValues = [4, 3, 3, 5, 4, 4, 3, 5, 5, 4, 3, 6, 6, 8, 8, 7, 7, 9, 8, 8];
+                // Number of letters in the following numbers: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+                const value10Offsets = [0, 0, 6, 6, 5, 5, 5, 7, 6, 6];
+                // Offset modifiers for number of letters in the following numbers 0, 10, 20, 30, 40, 50, 60, 70, 80, 90. Note that 0 and 10 are included but not accessible.
+                if (number < 20)
+                    return normalValues[number];
+                else if (number < 100)
+                {
+                    let outputValue = value10Offsets[Math.floor(number / 10)];
+                    if (number % 10 != 0)
+                        outputValue += normalValues[number % 10];
+                    return outputValue;
+                }
+                else if (number < 1000)
+                {
+                    let outputValue = normalValues[Math.floor(number / 100)] + 7;
+                    if (number % 100 != 0)
+                        outputValue += CalculateWordLength(number % 100);
+                    return outputValue;
+                }
+                else
+                {
+                    // This current chain can go on up to 19999, though values past 9999 are not needed.
+                    let outputValue = normalValues[Math.floor(number / 1000)] + 8;
+                    if (number % 1000 != 0)
+                        outputValue += CalculateWordLength(number % 1000);
+                    return outputValue;
+                }
+            }
+
+        $(function() {
+            // Generate the sequence of numbers from 0-9999.
+            let sequencesAll = [];
+            for (let p = 0; p < 10000; p++) {
+                let nextSequence = [];
+                let currentValue = p;
+                do {
+                    let obtainedSequence = sequencesAll[currentValue];
+                    if (obtainedSequence == null) {
+                        currentValue = CalculateWordLength(currentValue);
+                        nextSequence.push(currentValue);
+                    }
+                    else { // To reduce the amount of repetition needed, we can just copy the values from another array, and concatenate this to the current sequence.
+                        nextSequence = nextSequence.concat(obtainedSequence);
+                        currentValue = obtainedSequence[obtainedSequence.length - 1];
+                    }
+                }
+                while (currentValue != 4)
+                sequencesAll.push(nextSequence);
+                //console.log(nextSequence);
+            }
+            //console.log(sequencesAll);
+            // Add as many pages as there are elements in the list.
+            let body = $("div.section");
+            let curPageNum = 2;
+            let extraPagesToCreate = 115;
+            for (let x = 0; x < extraPagesToCreate; x++) {
+                let page = $("<div>").addClass(`page page-bg-0${curPageNum % 7 + 1}`).appendTo(body);
+                $('<div class="page-header"><span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span><span class="page-header-section-title">Cosmic</span></div>').appendTo(page);
+                let content = $("<div>").addClass(`page-content page-0${curPageNum - 1}`).appendTo(page);
+                // Page content begins here.
+                let divider = $("<div>").addClass('fit').appendTo(content);
+                if (x >= extraPagesToCreate - 1) // Since the last set of values will exceed the amount needed, we need to remove the class 'fit' from the div to not obtain weird tables.
+                    divider.removeClass('fit');
+                // Add a table corresponding to this.
+                for (let t = 0; t < 3 && (x < extraPagesToCreate - 1 || t <= 0); t++) {
+                    let table = $("<table>").addClass('lookup centered').appendTo(divider);
+                    let curRow = $("<tr>").appendTo(table);
+                    $("<th>Dis.</th><td>Sequence</td>").appendTo(curRow);
+                }
+                $("<div>").addClass("page-footer relative-footer").text(curPageNum).appendTo(page);
+                curPageNum++;
+            }
+            
+            // Fill each table up with its appropriate values.
+            const amountLengths = [20, 20, 20, 29];
+            let pos = 0;
+            let allLookUpTables = $(".lookup");
+            //console.log(allLookUpTables);
+            for (let x = 0; x < allLookUpTables.length; x++) {
+                let maxEntryCnt = amountLengths[Math.min(x, amountLengths.length - 1)];
+                let curTable = allLookUpTables[x];
+                for (let y = 0; y < maxEntryCnt; y++) {
+                    // This can happen if the amount of items we can put in the tables exceed 9999.
+                    if (pos >= sequencesAll.length)
+                        break;
+                    let nextRow = $("<tr>");
+                    $("<th id='num"+ pos.toString() +"'>"+ pos.toString() +"</th>").appendTo(nextRow);
+                    let curSeq = sequencesAll[pos];
+                    $("<td>"+ curSeq.join(" ") +"</td>").appendTo(nextRow);
+                    nextRow.appendTo(curTable);
+                    pos++;
+                }
+            }
+
+        });
+        </script>
+        <style>
+            .page-footer::before { content: "Page " }
+            .page-footer::after { content: " of 116" }
+            .lookup { width: 100% }
+            .fit { column-count: 1; }
+            @media only screen and (min-width:660px){
+                .fit { column-count: 3; }
+            }
+            @media print {
+                .fit { column-count: 3; }
+            }
+            td, th { padding: .3em .6em .05em; }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Cosmic</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Cosmic.svg" class="diagram">
+                    <h2>On the Look Up of Cosmic</h2>
+                    <p class="flavour-text">The time it would take to write out the number of digits in 10<sup>10<sup>100</sup></sup> would far exceed the length of this universe.</p>
+                    <p><a href="Cosmic.html">Original Manual</a></p>
+                    <p>Find the number on the left of the table, and submit its sequence on the right.</p>
+                    <div class="centered">
+                    <input id="numInput" maxlength="4" type="number" max="9999" min="0" value="0" onchange="ChangeRedirect()">
+                    <a id="redirect" href="#">Find</a>
+                    </div>
+                    <div class="fit">
+                    <table class="lookup centered">
+                        <tr>
+                            <th>Dis.</th>
+                            <td>Sequence</td>
+                        </tr>
+                    </table>
+                    <table class="lookup centered">
+                        <tr>
+                            <th>Dis.</th>
+                            <td>Sequence</td>
+                        </tr>
+                    </table>
+                    <table class="lookup centered">
+                        <tr>
+                            <th>Dis.</th>
+                            <td>Sequence</td>
+                        </tr>
+                    </table>
+                    </div>
+                </div>
+                <div class="page-footer relative-footer">1</div>
+            </div>
+        </div>
+    </body>
+</html>
