@@ -36,60 +36,63 @@
         @media print {
             .fit { column-count: 2; }
         }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
     </style>
     <script>
-        $(function() {
-            let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            let pigpens = [ "ASCUIVGT", "BKFOHQDM", "JWLYRZPX", "EN" ]; // Pigpen code SpeakingEvil used for Pigpen Cycle
-            let alphaLength = alphabet.length;
-            var affineEncodeMulti = [1, 3, 5, 7, 9, 11, 13, 15];
-            var affineDecodeMulti = [1, 9, 21, 15, 3, 19, 0 , 7]; // NOTE: 0 is there for completion sakes. 
-            
-            var outputEncodes = [];
-            for (var x = 0; x < alphabet.length; x++)
+    $(function() {
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const pigpens = [ "ASCUIVGT", "BKFOHQDM", "JWLYRZPX", "EN" ]; // Pigpen code SpeakingEvil used for Pigpen Cycle
+        const alphaLength = alphabet.length;
+        let affineEncodeMulti = [1, 3, 5, 7, 9, 11, 13, 15];
+        let affineDecodeMulti = [1, 9, 21, 15, 3, 19, 0 , 7]; // NOTE: 0 is there for completion sakes. 
+        
+        let outputEncodes = [];
+        for (let x = 0; x < alphabet.length; x++)
+        {
+            let curLetterEncodings = [];
+            for (let trn = 1; trn < 8; trn++)
+            {
+                // Caesar
+                let caesarEncodes = alphabet[(x + alphaLength - trn) % alphaLength] + alphabet[(x + trn) % alphaLength];
+                curLetterEncodings.push(caesarEncodes);
+                // Affine
+                let alphaPos = x + 1;
+                let affineEncodes = alphabet[((alphaPos * affineDecodeMulti[trn]) - 1) % alphaLength] + alphabet[((alphaPos * affineEncodeMulti[trn]) - 1) % alphaLength];
+                if (trn == 6)
+                    curLetterEncodings.push("--");
+                else
+                    curLetterEncodings.push(affineEncodes);
+                // Pigpen
+                let usedPigpen = alphabet;
+                for (let idx = 0; idx < pigpens.length; idx++)
                 {
-                    var curLetterEncodings = [];
-                    for (var trn = 1; trn < 8; trn++)
-                        {
-                            // Caesar
-                            var caesarEncodes = alphabet[(x + alphaLength - trn) % alphaLength] + alphabet[(x + trn) % alphaLength];
-                            curLetterEncodings.push(caesarEncodes);
-                            // Affine
-                            var alphaPos = x + 1;
-                            var affineEncodes = alphabet[((alphaPos * affineDecodeMulti[trn]) - 1) % alphaLength] + alphabet[((alphaPos * affineEncodeMulti[trn]) - 1) % alphaLength];
-                            if (trn == 6)
-                                curLetterEncodings.push("--");
-                            else
-                                curLetterEncodings.push(affineEncodes);
-                            // Pigpen
-                            var usedPigpen = alphabet;
-                            for (var idx = 0; idx < pigpens.length; idx++)
-                                {
-                                    if (pigpens[idx].includes(alphabet[x]))
-                                        {
-                                            usedPigpen = pigpens[idx];
-                                            break;
-                                        }
-                                }
-                            var pigpenEncodes = usedPigpen[((x - trn) % usedPigpen.length + usedPigpen.length) % usedPigpen.length] + usedPigpen[(x + trn) % usedPigpen.length];
-                            curLetterEncodings.push(pigpenEncodes);
-                        }
-                    outputEncodes.push(curLetterEncodings);
+                    if (pigpens[idx].includes(alphabet[x]))
+                    {
+                        usedPigpen = pigpens[idx];
+                        break;
+                    }
                 }
-            //console.log(outputEncodes);
-            var lookUpTable = document.getElementById("giantTable");
-            for (var x = 0; x < alphabet.length; x++)
-                lookUpTable.innerHTML += "<tr><th>" + alphabet.charAt(x) + "</th><td>" + outputEncodes[x].join("</td><td>") + "</td></tr>";
-            var cyanTable = document.getElementById("cyanTable");
-            for (var x = 0; x < 8; x++)
-                {
-                    var encodingsFinal = "<tr><th>" + x + "</th>";
-                    for (var y = 0; y < 8; y++)
-                        encodingsFinal += "<td>" + alphabet[(8 * y + x) % alphaLength] + "</td>";
-                    encodingsFinal += "</tr>";
-                    cyanTable.innerHTML += encodingsFinal;
-                }
-        })
+                let idxPigpen = usedPigpen.indexOf(alphabet[x]);
+                let pigpenEncodes = usedPigpen[((idxPigpen - trn) % usedPigpen.length + usedPigpen.length) % usedPigpen.length] + usedPigpen[(idxPigpen + trn) % usedPigpen.length];
+                curLetterEncodings.push(pigpenEncodes);
+            }
+            outputEncodes.push(curLetterEncodings);
+        }
+        //console.log(outputEncodes);
+        let lookUpTable = document.getElementById("giantTable");
+        for (let x = 0; x < alphabet.length; x++)
+            lookUpTable.innerHTML += "<tr><th>" + alphabet.charAt(x) + "</th><td>" + outputEncodes[x].join("</td><td>") + "</td></tr>";
+        let cyanTable = document.getElementById("cyanTable");
+        for (let x = 0; x < 8; x++)
+        {
+            let encodingsFinal = "<tr><th>" + x + "</th>";
+            for (let y = 0; y < 8; y++)
+                encodingsFinal += "<td>" + alphabet[(8 * y + x) % alphaLength] + "</td>";
+            encodingsFinal += "</tr>";
+            cyanTable.innerHTML += encodingsFinal;
+        }
+    });
     </script>
 </head>
 <body>
@@ -112,7 +115,7 @@
                 <p>The red button can be pressed at any time before the eighth key is pressed to cancel the input.</p>
                 <p>Inputting any of the eight letters incorrectly will cause a strike to be issued and reset the module.</p>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 3</div>
+            <div class="page-footer relative-footer">1</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -129,7 +132,7 @@
                     <tr class="heading"><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th><th>W</th><th>Y</th><th>M</th></tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 3</div>
+            <div class="page-footer relative-footer">2</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -170,7 +173,7 @@
                     <li>If the 2nd letter in the pair is a Z, change it to the first letter.</li>
                 </ol>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 3</div>
+            <div class="page-footer relative-footer">3</div>
         </div>
         <div class="page page-bg-03">
             <div class="page-header">
@@ -234,7 +237,7 @@
                     </table>
                 </div>
             </div>
-            <div class="page-footer relative-footer">Page 3 of 3</div>
+            <div class="page-footer relative-footer">4</div>
         </div>
     </div>
 </body>
