@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Memory Poker — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const ranks = ['Q','T','J','J','K','A','T','K','Q','A','Q','T','T','J','K','A'];
+        const suits = ['♦','♥','♦','♣','♥','♥','♠','♣','♥','♦','♠','♣','♣','♠','♠','♦'];
+        let netRotation = [0,0];
+        let netflipX = [1,1];
+        let netflipY = [1,1];
+
+        let holder = [$(".tableholder.grid1"), $(".tableholder.grid2")];
+
+        let gridsvg = $("svg.grid");
+        for (let x = 0; x < 4; x++) {
+            for (let y = 0; y < 4; y++) {
+                let w = 50;
+                let cell = MakeSvgElem("rect", {
+                    class: "highlightable", x:(x*w), y:(y*w),
+                    width:w, height:w, fill:"transparent"
+                });
+                gridsvg.append(cell);
+            }
+        }
+        for (let i = 0; i < ranks.length; i++) {
+            let x = i % 4;
+            let y = Math.floor(i / 4);
+            let svg = MakeSvgTag(10,10,0,0, {class:'floating-text grid1', 'text-anchor':'middle'}).appendTo(holder[0]);
+            svg.css("top", `${y*25}%`);
+            svg.css("left", `${x*25}%`);
+            let text = MakeSvgElem("text", { "font-size":"5px", x:5, y:6.5 }, ranks[i]);
+            svg.append(text);
+        }
+
+        for (let i = 0; i < ranks.length; i++) {
+            let x = i % 4;
+            let y = Math.floor(i / 4);
+            let svg = MakeSvgTag(10,10,0,0, {class:'floating-text grid2', 'text-anchor':'middle'}).appendTo(holder[1]);
+            svg.css("top", `${y*25}%`);
+            svg.css("left", `${x*25}%`);
+            let text = MakeSvgElem("text", {
+                "font-size":"7px", class:(['♥','♦'].includes(suits[i]) ? "red" : ""), x:5, y:7
+            }, suits[i]);
+            svg.append(text);
+        }
+        let text1 = $("svg.floating-text.grid1");
+        let text2 = $("svg.floating-text.grid2");
+
+        function rotateFlipNet(net, which, r, nfX, nfY) {
+            net.css("transform", `rotate(${90*r}deg) scale(${nfX}, ${nfY})`);
+            let textF = r % 2 != 0 && nfX != nfY ? -1 : 1;
+            (which == 0 ? text1 : text2).css("transform", `rotate(${-90*r}deg) scale(${nfX * textF}, ${nfY * textF})`);
+        }
+
+        $("button.rotate-cc").click(function() {
+            let net = $(this).hasClass("grid1") ? 0 : 1;
+            netRotation[net] -= 1;
+            rotateFlipNet(holder[net], net, netRotation[net], netflipX[net], netflipY[net]);
+        });
+        $("button.rotate-cw").click(function() {
+            let net = $(this).hasClass("grid1") ? 0 : 1;
+            netRotation[net] += 1;
+            rotateFlipNet(holder[net], net, netRotation[net], netflipX[net], netflipY[net]);
+        });
+        $("button.flipnet").click(function() {
+            let net = $(this).hasClass("grid1") ? 0 : 1;
+            let r = netRotation[net];
+            if (r % 2 != 0) { netflipX[net] *= -1; }
+            else { netflipY[net] *= -1; }
+            rotateFlipNet(holder[net], net, r, netflipX[net], netflipY[net]);
+        });
+        $("button.reset").click(function() {
+            let net = $(this).hasClass("grid1") ? 0 : 1;
+            netRotation[net] = 0;
+            netflipX[net] = netflipY[net] = 1;
+            rotateFlipNet(holder[net], net, netRotation[net], netflipX[net], netflipY[net]);
+        });
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        .rankSuitTables {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: center;
+        }
+        .tableholder {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+        svg.floating-text {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            user-select: none;
+            pointer-events: none;
+        }
+        .tableholder, svg.floating-text {
+            transition: transform 0.6s;
+        }
+        svg text.red { fill: red; }
+        .dark svg path { stroke: #DDD; }
+        .dark svg.floating-text text:not(.red) { fill: #DDD; }
+        .item {
+            margin: 5%;
+        }
+        .item table {
+            width:  150px;
+            height: 150px;
+            margin: 0%;
+        }
+        .item table td {
+            text-align: center;
+            font-size: 150%;
+        }
+        .item p {
+            text-align: center;
+            font-size: 125%;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding: 2px;
+            margin: 10px 0;
+        }
+        .rotate-cc, .rotate-cw, .reset, .flipnet {
+            font-size: 15px;
+            height: 28.5px;
+            width: 51px;
+            background-position: 1px 0;
+            background-repeat: no-repeat;
+            transition: 0.5s;
+        }
+        .rotate-cc {
+            background-image: url('img/Common/ccw-arrow.svg');
+        }
+        .rotate-cw {
+            background-image: url('img/Common/cw-arrow.svg');
+        }
+        .buttons button.rotate-cc:hover {
+            background-image: url('img/Common/ccw-arrowW.svg');
+        }
+        .buttons button.rotate-cw:hover {
+            background-image: url('img/Common/cw-arrowW.svg');
+        }
+        .buttons button:hover {
+            color: #FFF;
+            background-color: #000;
+        }
+        button.flipnet {
+            font-family: 'Logic-round';
+            width: 45px;
+            font-size: 30px;
+            font-weight: bold;
+            padding: 0;
+            line-height: 25px;
+        }
+        button.flipnet::after { content: '↕'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Memory Poker</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory Poker.svg" class="diagram">
+                <h2>On the Subject of Memory Poker</h2>
+                <p class="flavour-text">“If a group you belonged to needed a scapegoat, who would you choose? If it was me, I would choose neither friend nor foe, but the person whose sacrifice would make no one angry or sad.”</p>
+                <p>The module will initially display a 4×4 grid of cards. Some of the cards will be face down, while others will be face up. The cards are arranged within the grid so that:</p>
+                <ul>
+                    <li>Every card will be a Jack, Queen, King, or Ace.</li>
+                    <li>Every card will be a Club, Heart, Spade, or Diamond.</li>
+                    <li>No two cards will be exactly the same.</li>
+                    <li>Every row, column, and main diagonal will have exactly one card of each suit and rank.</li>
+                </ul>
+
+                <p>Determine the suit and rank of all 16 cards. This is the module’s <strong>starting configuration</strong>. When you are ready to begin playing, select any card. Upon doing so, all face up cards will flip face down, and three cards will flip face up.</p>
+                <p>Each of the face up cards will represent a “table card”. For each face up card, use its current position, combined with the location of the matching card in the starting configuration (its “initial position”) to get a rank and a suit using the conditions on page 2.</p>
+                <p>Using these table cards, and the 16 cards from the starting configuration, determine the best possible 5-card poker hand using two different cards from the starting configuration.</p>
+                <p>If there is a tie, any valid answer will be accepted. Submit your answer by selecting the positions of those two cards in the module’s starting configuration. If the two cards selected do not form the optimal poker hand, the module will reset back to its initial state. Submit 3 correct answers to solve the module.</p>
+                <br>
+                <p>Note that all ranks are abbreviated by their first letter (including ten).<br>
+                    Also note that you cannot choose cards which have already flipped over.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Memory Poker</span>
+            </div>
+            <div class="page-content">
+
+                <h3>If the bomb has exactly 3 batteries in 2 holders:</h3>
+                <ul>
+                    <li>Use the rank table for the current card position, and the suit table for the initial card position.</li>
+                </ul>
+
+                <h3>Otherwise, if the bomb's serial number has an “S” or “G”:</h3>
+                <ul>
+                    <li>Use the suit table for the current card position, and the rank table for the initial card position.</li>
+                </ul>
+
+                <h3>Otherwise, if there is an empty port plate:</h3>
+                <ul>
+                    <li>Rotate both tables 90° clockwise.</li>
+                    <li>If there are no ports on the bomb, use the suit table for the current card position, and the rank table for the initial card position.</li>
+                    <li>Otherwise, use the rank table for the current card position, and the suit table for the initial card position.</li>
+                </ul>
+
+                <h3>Otherwise, if there are at least two indicators:</h3>
+                <ul>
+                    <li>Take the first two indicators in alphabetical order. Assign the first indicator to the rank table, and the second one to the suit table.</li>
+                    <li>For both of these indicators, if the indicator is lit, flip its respective table across the x-axis. Otherwise, rotate it 180° clockwise.</li>
+                    <li>If any indicators on the bomb share a letter with each other, use the suit table for the current card position, and the rank table for the initial card position.</li>
+                    <li>Otherwise, use the rank table for the current card position, and the suit table for the initial card position.</li>
+                </ul>
+
+                <h3>Otherwise:</h3>
+                <ul>
+                    <li>Convert each character in the serial number from base-36 (A=10, B=11, C=12...) to base-10, then take the sum of these base-10 numbers.</li>
+                    <li>Rotate both tables 90° counterclockwise a number of times equal to this sum, modulo 3, plus one.</li>
+                    <li>If the last two digits of this sum (including a leading zero if it is one digit long) are both even or both odd, use the suit table for the current card position, and the rank table for the initial card position.</li>
+                    <li>Otherwise, use the rank table for the current card position, and the suit table for the initial card position.</li>
+                </ul>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Memory Poker</span>
+            </div>
+            <div class="page-content">
+
+                <div class="rankSuitTables">
+                    <div class="item">
+                        <p>Rank Table</p>
+                        <div class="buttons">
+                            <button class="grid1 rotate-cc"></button>
+                            <button class="grid1 flipnet"></button>
+                            <button class="grid1 reset">0</button>
+                            <button class="grid1 rotate-cw"></button>
+                        </div>
+                        <div class="tableholder grid1">
+                            <svg class="grid" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" text-anchor="middle">
+                                <path stroke="#000" fill="none" d="M.5 .5h199v199h-199z M50 0v200h50v-200h50v200 M0 50h200v50h-200v50h200"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <p>Suit Table</p>
+                        <div class="buttons">
+                            <button class="grid2 rotate-cc"></button>
+                            <button class="grid2 flipnet"></button>
+                            <button class="grid2 reset">0</button>
+                            <button class="grid2 rotate-cw"></button>
+                        </div>
+                        <div class="tableholder grid2">
+                            <svg class="grid" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" text-anchor="middle">
+                                <path stroke="#000" fill="none" d="M.5 .5h199v199h-199z M50 0v200h50v-200h50v200 M0 50h200v50h-200v50h200"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <h2>Poker Hand Reference</h2>
+                <p style="font-size: 10pt"><i>Higher ranking hands towards the top of the table.</i></p>
+                <table>
+                    <tr> <th>Name</th>        <th>Description</th> </tr>
+                    <tr> <td>Royal Flush</td> <td>An ace, a ten, a jack, a queen, and a king, all of the same suit.</td> </tr>
+                    <tr> <td>5 of a Kind</td> <td>Exactly 5 cards with the same rank.</td> </tr>
+                    <tr> <td>4 of a Kind</td> <td>Exactly 4 cards with the same rank.</td> </tr>
+                    <tr> <td>Full House</td>  <td>3 cards of one rank, and 2 of another rank.</td> </tr>
+                    <tr> <td>Flush</td>       <td>5 cards of any rank and the same suit.</td> </tr>
+                    <tr> <td>Straight</td>    <td>An ace, a ten, a jack, a queen, and a king, with any suits.</td> </tr>
+                    <tr> <td>3 of a Kind</td> <td>Exactly 3 cards with the same rank.</td> </tr>
+                    <tr> <td>Two Pair</td>    <td>2 cards with the same rank, 2 cards with a different rank, and 1 card with a unique rank.</td> </tr>
+                    <tr> <td>Pair</td>        <td>Exactly 2 cards with the same rank.</td> </tr>
+
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
