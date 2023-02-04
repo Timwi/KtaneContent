@@ -1,4 +1,4 @@
-var getTable = document.getElementById("interactiveModule").getElementsByTagName("tbody")[0];
+var getTable = document.getElementById("interactiveModule");
 
 for (var i = 0; i < 8; i++) {
 	var newRow = getTable.insertRow(i);
