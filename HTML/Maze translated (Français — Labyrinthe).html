@@ -9,19 +9,18 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
     <style>
-        .maze {
-            display: inline-block;
-            width: 12em;
-            height: 12em;
-            position: relative;
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
         }
-
-        .square {
-            width: 2em;
-            height: 2em;
-            position: absolute;
-        }
+        svg { width: 200px; }
+        .dark svg :is(line, circle.big, path) { stroke: #DDD; }
+        .dark svg circle:not(.big) { fill: #DDD; }
     </style>
     <script>
         function removeWalls(m1, m2)
@@ -53,19 +52,19 @@
             constructor()
             {
                 this.CellGrid = new Array(6);
-                for (var i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++)
                 {
                     this.CellGrid[i] = new Array(6);
-                    for (var j = 0; j < 6; j++)
+                    for (let j = 0; j < 6; j++)
                         this.CellGrid[i][j] = { x: i, y: j, visited: false, wallUp: true, wallDown: true, wallLeft: true, wallRight: true };
                 }
             }
 
             BuildMaze(rnd, candidateIndicators)
             {
-                for (var i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++)
                 {
-                    for (var j = 0; j < 6; j++)
+                    for (let j = 0; j < 6; j++)
                     {
                         if (i > 0) rnd.nextDouble();
                         if (j > 0) rnd.nextDouble();
@@ -73,7 +72,7 @@
                 }
                 this.PopulateMaze(rnd);
                 this.indicators = [];
-                var ix = rnd.next(0, candidateIndicators.length);
+                let ix = rnd.next(0, candidateIndicators.length);
                 this.indicators.push(candidateIndicators[ix]);
                 candidateIndicators.splice(ix, 1);
                 ix = rnd.next(0, candidateIndicators.length);
@@ -83,8 +82,8 @@
 
             PopulateMaze(rnd)
             {
-                var x = rnd.next(0, 6);
-                var y = rnd.next(0, 6);
+                let x = rnd.next(0, 6);
+                let y = rnd.next(0, 6);
                 this.VisitCell(this.CellGrid[x][y], [], rnd);
             }
 
@@ -93,7 +92,7 @@
                 while (cell != null)
                 {
                     cell.visited = true;
-                    var mazeCell = this.GetNextNeigbour(cell, rnd);
+                    let mazeCell = this.GetNextNeigbour(cell, rnd);
                     if (mazeCell != null)
                     {
                         removeWalls(cell, mazeCell);
@@ -107,7 +106,7 @@
 
             GetNextNeigbour(cell, rnd)
             {
-                var list = [];
+                let list = [];
                 if (cell.x > 0 && !this.CellGrid[cell.x - 1][cell.y].visited) list.push(this.CellGrid[cell.x - 1][cell.y]);
                 if (cell.x < 5 && !this.CellGrid[cell.x + 1][cell.y].visited) list.push(this.CellGrid[cell.x + 1][cell.y]);
                 if (cell.y > 0 && !this.CellGrid[cell.x][cell.y - 1].visited) list.push(this.CellGrid[cell.x][cell.y - 1]);
@@ -117,28 +116,25 @@
 
             ToSVG()
             {
-                var svg = '';
-                for (var i = 0; i < 6; i++)
+                let svg = '';
+                for (let i = 0; i < 6; i++)
                 {
-                    for (var j = 0; j < 6; j++)
+                    for (let j = 0; j < 6; j++)
                     {
-                        var mazeCell = this.CellGrid[i][j];
-                        var x = i * 50;
-                        var y = j * 50;
+                        let mazeCell = this.CellGrid[i][j];
+                        let x = i * 50;
+                        let y = j * 50;
                         svg += `<circle cx='${x + 25}' cy='${y + 25}' r='3' fill='black' />`;
-                        for (var k = 0; k < this.indicators.length; k++)
+                        for (let k = 0; k < this.indicators.length; k++)
                             if (this.indicators[k].x === i && this.indicators[k].y === j)
-                                svg += `<circle cx='${x + 25}' cy='${y + 25}' r='15' stroke='black' fill='none' stroke-width='1.5' />`;
+                                svg += `<circle cx='${x + 25}' cy='${y + 25}' r='15' class='big' stroke='black' fill='none' stroke-width='1.5' />`;
                         if (mazeCell.wallUp)
-                            svg += `<line x1='${x}' y1='${y}' x2='${x + 50}' y2='${y}' stroke-width='${j === 0 ? 10 : 3}' stroke='black' fill='none' />`;
+                            svg += `<line x1='${x-1.3}' y1='${y}' x2='${x + 51.3}' y2='${y}' stroke-width='${j === 0 ? 10 : 3}' stroke='black' fill='none' />`;
                         if (mazeCell.wallLeft)
-                            svg += `<line x1='${x}' y1='${y}' x2='${x}' y2='${y + 50}' stroke-width='${i === 0 ? 10 : 3}' stroke='black' fill='none' />`;
-                        if (i == 5)
-                            svg += `<line x1='${x + 50}' y1='${y}' x2='${x + 50}' y2='${y + 50}' stroke-width='10' stroke='black' fill='none' />`;
-                        if (j == 5)
-                            svg += `<line x1='${x}' y1='${y + 50}' x2='${x + 50}' y2='${y + 50}' stroke-width='10' stroke='black' fill='none' />`;
+                            svg += `<line x1='${x}' y1='${y-1.3}' x2='${x}' y2='${y + 51.3}' stroke-width='${i === 0 ? 10 : 3}' stroke='black' fill='none' />`;
                     }
                 }
+                svg += `<path stroke-width='10' stroke='black' fill='none' d='M0 0h300v300h-300z'/>`;
                 return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>${svg}</svg>`;
             }
         }
@@ -146,16 +142,25 @@
         function setRules(rnd)
         {
             console.log('seed = ' + rnd.seed);
-            var mazeIndicators = [];
-            for (var i = 0; i < 6; i++)
-                for (var j = 0; j < 6; j++)
+            let mazeIndicators = [];
+            for (let i = 0; i < 6; i++)
+                for (let j = 0; j < 6; j++)
                     mazeIndicators.push({ x: i, y: j });
 
-            for (var i = 0; i < 9; i++)
+            $('#mazes').html('');
+            for (let i = 0; i < 9; i++)
             {
-                var maze = new Maze();
+                let maze = new Maze();
                 maze.BuildMaze(rnd, mazeIndicators);
-                document.getElementById('maze-' + i).style.backgroundImage = `url('data:image/svg+xml,${escape(maze.ToSVG())}')`;
+                let svg = $(maze.ToSVG());
+                for (let x = 0; x < 6; x++)
+                    for (let y = 0; y < 6; y++) {
+                        svg.append(MakeSvgElem('rect', {
+                            class:"highlightable", width:50, height:50, x:(x*50), y:(y*50), fill:"transparent"
+                        }));
+                    }
+
+                $('#mazes').append(svg);
             }
         }
 
@@ -183,17 +188,7 @@
                     <li><strong>Attention :</strong> Ne pas traverser les lignes visibles dans les labyrinthes. Ces lignes sont invisibles sur la bombe.</li>
                 </ul>
 
-                <div class="maze-grid invertible">
-                    <div style='background-image: url(img/Mazes/maze0.svg)' class='maze' id='maze-0'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze1.svg)' class='maze' id='maze-1'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze2.svg)' class='maze' id='maze-2'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze3.svg)' class='maze' id='maze-3'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze4.svg)' class='maze' id='maze-4'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze5.svg)' class='maze' id='maze-5'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze6.svg)' class='maze' id='maze-6'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze7.svg)' class='maze' id='maze-7'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                    <div style='background-image: url(img/Mazes/maze8.svg)' class='maze' id='maze-8'><div class='highlightable square' style='left: 0em; top: 0em;'></div><div class='highlightable square' style='left: 0em; top: 2em;'></div><div class='highlightable square' style='left: 0em; top: 4em;'></div><div class='highlightable square' style='left: 0em; top: 6em;'></div><div class='highlightable square' style='left: 0em; top: 8em;'></div><div class='highlightable square' style='left: 0em; top: 10em;'></div><div class='highlightable square' style='left: 2em; top: 0em;'></div><div class='highlightable square' style='left: 2em; top: 2em;'></div><div class='highlightable square' style='left: 2em; top: 4em;'></div><div class='highlightable square' style='left: 2em; top: 6em;'></div><div class='highlightable square' style='left: 2em; top: 8em;'></div><div class='highlightable square' style='left: 2em; top: 10em;'></div><div class='highlightable square' style='left: 4em; top: 0em;'></div><div class='highlightable square' style='left: 4em; top: 2em;'></div><div class='highlightable square' style='left: 4em; top: 4em;'></div><div class='highlightable square' style='left: 4em; top: 6em;'></div><div class='highlightable square' style='left: 4em; top: 8em;'></div><div class='highlightable square' style='left: 4em; top: 10em;'></div><div class='highlightable square' style='left: 6em; top: 0em;'></div><div class='highlightable square' style='left: 6em; top: 2em;'></div><div class='highlightable square' style='left: 6em; top: 4em;'></div><div class='highlightable square' style='left: 6em; top: 6em;'></div><div class='highlightable square' style='left: 6em; top: 8em;'></div><div class='highlightable square' style='left: 6em; top: 10em;'></div><div class='highlightable square' style='left: 8em; top: 0em;'></div><div class='highlightable square' style='left: 8em; top: 2em;'></div><div class='highlightable square' style='left: 8em; top: 4em;'></div><div class='highlightable square' style='left: 8em; top: 6em;'></div><div class='highlightable square' style='left: 8em; top: 8em;'></div><div class='highlightable square' style='left: 8em; top: 10em;'></div><div class='highlightable square' style='left: 10em; top: 0em;'></div><div class='highlightable square' style='left: 10em; top: 2em;'></div><div class='highlightable square' style='left: 10em; top: 4em;'></div><div class='highlightable square' style='left: 10em; top: 6em;'></div><div class='highlightable square' style='left: 10em; top: 8em;'></div><div class='highlightable square' style='left: 10em; top: 10em;'></div></div>
-                </div>
+                <div class="grid" id="mazes"></div>
             </div>
             <div class='page-footer relative-footer'>Page 1 sur 1</div>
         </div>
