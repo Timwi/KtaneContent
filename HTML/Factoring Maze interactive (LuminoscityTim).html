@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Factoring Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        var selectedTool;
+        let maze = $("svg.themaze");
+        let body = $("body");
+        let sizeNumber = $(".sizeNumber");
+        let currX = 0;
+        let currY = 0;
+        let mazeSize = 4;
+        let startPos = 0;
+        let pressing = false;
+        let movementList = [];
+        let answerList = [];
+        let generating = false;
+        let modeWasSolve = true;
+        let saveStates = [];
+        let currentState = 0;
+        let offsets = [mazeSize, 1, -mazeSize, -1];
+        let mazeWalls;
+        let shownMazeWalls = Array(mazeSize * mazeSize).fill('');
+        const SQUARE_WIDTH = 90;
+        const MOV_RANGE = 9;
+        const MIN_SIZE = 3;
+        const MAX_SIZE = 10;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_EXPERT= 2;
+        const MODE_PLAY = 3;
+        const MOV_FREE = 0;
+        const MOV_ENFORCE = 1;
+        const NUM_DIR = 4;
+        const CARD_MAX = 13000;
+        const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+
+        const fulldir = {
+            Up: [0, -1],
+            Left: [-1, 0],
+            Down: [0, 1],
+            Right: [1, 0],
+            w: [0, -1],
+            a: [-1, 0],
+            s: [0, 1],
+            d: [1, 0],
+            0: [0, -1],
+            1: [-1, 0],
+            2: [0, 1],
+            3: [1, 0]
+        }
+        const directions = {
+            Up: [0, 0],
+            Left: [0, 0],
+            Down: [0, 1],
+            Right: [1, 0],
+            w: [0, 0],
+            a: [0, 0],
+            s: [0, 1],
+            d: [1, 0],
+            0: [0, 0],
+            1: [0, 0],
+            2: [0, 1],
+            3: [1, 0]
+        };
+        const dirIndex = {
+            Up: 0,
+            Left: 1,
+            Down: 2,
+            Right: 3,
+            w: 0,
+            a: 1,
+            s: 2,
+            d: 3,
+        };
+        const walldir = {
+            Up: "h",
+            Left: "v",
+            Down: "h",
+            Right: "v",
+            w: "h",
+            a: "v",
+            s: "h",
+            d: "v"
+        }
+        const dirLetter = {
+            Up: "U",
+            Left: "L",
+            Down: "D",
+            Right: "R",
+            w: "U",
+            a: "L",
+            s: "D",
+            d: "R",
+            0: "U",
+            1: "L",
+            2: "D",
+            3: "R"
+        }
+
+        const viewboxSize = {
+            3:"0 0 350 350",
+            4:"0 0 450 450",
+            5:"0 0 550 550",
+            6:"0 0 650 650",
+            7:"0 0 750 750",
+            8:"0 0 850 850",
+            9:"0 0 950 950",
+            10:"-7 0 1057 1050",
+        }
+
+        function selectNone() {
+            selectedTool = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function getXY(pos) {
+            return [pos % mazeSize, Math.floor(pos / mazeSize)];
+        } 
+
+        function resetPos() {
+            $(".square.visited").removeClass("visited");
+            $(".solved-text").addClass("invis");
+            [currX, currY] = getXY(startPos);
+            selected = $(`.square.x${currX+1}.y${currY+1}`);
+            selected.addClass("visited");
+            updateSelection();
+            movementList = [];
+            $(".path .str").text("");
+        }
+
+        //This function is taken from the module source code
+        function generate() {
+            generating = true;
+            let mList = [];
+            let movementAmount = Math.floor(Math.random() * MOV_RANGE) + mazeSize;
+
+            let startingNode = Math.floor(Math.random() * mazeSize * mazeSize);
+            let currentNode = startingNode;
+            let visitOrder = [];
+            let visited = Array(mazeSize * mazeSize).fill(false);
+            mazeWalls = Array(mazeSize * mazeSize).fill('');
+            let shufPrimes = ShuffleFisherYates(ShuffleFisherYates([...primes])).slice(0, NUM_DIR).sort((a,b) => a-b);
+            let done = false;
+            do
+            {
+                visitOrder.push(currentNode);
+                visited[currentNode] = true;
+                while (getAdjacents(currentNode).every(x => visited[x]) && !done)
+                    if (visitOrder.length > 0)
+                        currentNode = visitOrder.pop();
+                    else {
+                        done = true;
+                        break;
+                    }
+                if (done) break;
+                let chosenDestination = getAdjacents(currentNode).filter(x => !visited[x]).sample();
+                let dir = offsets.indexOf(currentNode - chosenDestination);
+                mazeWalls[currentNode] += dirLetter[dir];
+                mazeWalls[chosenDestination] += dirLetter[(dir + 2) % NUM_DIR];
+                currentNode = chosenDestination;
+            } while (currentNode != startingNode);
+
+            let endPos = Math.floor(Math.random() * mazeSize * mazeSize);
+            let sol;
+            let min = Math.pow(mazeSize / 2, 2);
+            do {
+                startPos = Math.floor(Math.random() * mazeSize * mazeSize);
+                sol = FindPath(startPos, endPos);
+            } while (sol.length < min);
+            answerList = sol.split(/(?!^)/);
+
+            [currX, currY] = getXY(startPos);
+            selected = $(`.square.x${currX+1}.y${currY+1}`);
+            updateSelection();
+            $(".square").removeClass("goal start");
+            let [gx,gy] = getXY(endPos);
+            $(`.square.x${gx+1}.y${gy+1}`).addClass("goal");
+            selected.addClass("start");
+            $(".square.visited").removeClass("visited");
+
+            for (let y = 0; y < mazeSize; y++)
+                for (let x = 0; x < mazeSize; x++) {
+                    let pos = y * mazeSize + x;
+                    let n = 1;
+                    for (let i = 0; i < NUM_DIR; i++)
+                        if (!mazeWalls[pos].includes(dirLetter[i]))
+                            n *= shufPrimes[i];
+                    $(`.square.x${x+1}.y${y+1} text`).html(n);
+                    $(`.readinp.x${x+1}.y${y+1}`).val(n);
+                }
+            
+            $(".prime-box").removeClass("highlighted");
+            $("path.wall").removeClass("solid");
+            updateSize();
+            // console.log(shufPrimes);
+
+            $(".solution .str").html(answerList.join(" "));
+            $(".solved-text").addClass("invis");
+            generating = false;
+        }
+
+        function getAdjacents(pos) {
+            let adjacents = [];
+            if (pos % mazeSize != 0) adjacents.push(pos - 1);
+            if (pos % mazeSize != mazeSize - 1) adjacents.push(pos + 1);
+            if (pos > mazeSize - 1) adjacents.push(pos - mazeSize);
+            if (pos < mazeSize * (mazeSize - 1)) adjacents.push(pos + mazeSize);
+            return adjacents;
+        }
+
+        Array.prototype.sample = function(){
+            return this[Math.floor(Math.random()*this.length)];
+        }
+
+        class Movement {
+            constructor(s, e, d) {
+                this.start = s;
+                this.end = e;
+                this.direction = "ULDR"[d];
+            }
+        }
+        Movement.prototype.toString = function() {
+            return `(${this.start}, ${this.end}, ${this.direction})`;
+        }
+
+        function FindPath(start, end) {
+            if (start == end)
+                return '';
+            let q = [];
+            let allMoves = [];
+            q.push(start);
+            while (q.length > 0) {
+                let subject = q.shift();
+                for (let i = 0; i < NUM_DIR; i++) {
+                    if (mazeWalls[subject].includes(dirLetter[i]) && !allMoves.some(x => x.start == subject - offsets[i])) {
+                        q.push(subject - offsets[i]);
+                        allMoves.push(new Movement(subject, subject - offsets[i], i));
+                    }
+                }
+                if (subject == end) break;
+            }
+            if (allMoves.length != 0) {
+                let lastMove = allMoves.find(x => x.end == end);
+                let path = [lastMove];
+                while (lastMove.start != start) {
+                    lastMove = allMoves.find(x => x.end == lastMove.start);
+                    path.push(lastMove);
+                }
+                path.reverse();
+                let solution = '';
+                for (let i = 0; i < path.length; i++)
+                    solution += path[i].direction;
+                return solution;
+            }
+            else return '';
+        }
+
+        function attemptMove(pos) {
+            let cur = currY * mazeSize + currX;
+            let offset = cur - pos;
+            if (!pressing && getAdjacents(cur).includes(pos)) {
+                let dirPressed = dirLetter[offsets.indexOf(offset)];
+                if (!(shownMazeWalls[cur].includes(dirPressed))) {
+                    pressing = true;
+                    return true;
+                }
+                else return false;
+            }
+            return false;
+        }
+
+        function arrowPressed(direction, type, fdir, dirIdx) {
+            if ([MODE_READ,MODE_EXPERT].includes(mode())) {
+                let x = currX + direction[0];
+                let y = currY + direction[1];
+                let p = currY * mazeSize + currX;
+                let ox = currX + fdir[0];
+                let oy = currY + fdir[1];
+                let wallv = `v${letter(x-1)}${letter(x)}${y+1}`;
+                let wallh = `h${y}${y+1}${letter(x)}`;
+                let wall = null;
+                if (type == "v" && x > 0 && x < mazeSize && y >= 0 && y < mazeSize)
+                    wall = $(`svg .wall.${wallv}`);
+                else if (type == "h" && x >= 0 && x < mazeSize && y > 0 && y < mazeSize)
+                    wall = $(`svg .wall.${wallh}`);
+
+                if (wall != null) {
+                    wall.toggleClass("solid");
+                    if (wall.hasClass("solid")) {
+                        if (!shownMazeWalls[p].includes(dirLetter[dirIdx])) shownMazeWalls[p] += dirLetter[dirIdx];
+                        if (ox >= 0 && ox < mazeSize && oy >= 0 && oy < mazeSize) {
+                            p = oy * mazeSize + ox;
+                            let idx = (dirIdx + 2) % NUM_DIR;
+                            if (!shownMazeWalls[p].includes(dirLetter[idx])) shownMazeWalls[p] += dirLetter[idx];
+                        }
+                    }
+                    else {
+                        shownMazeWalls[p] = shownMazeWalls[p].replaceAll(dirLetter[dirIdx], '');
+                        if (ox >= 0 && ox < mazeSize && oy >= 0 && oy < mazeSize) {
+                            p = oy * mazeSize + ox;
+                            shownMazeWalls[p] = shownMazeWalls[p].replaceAll(dirLetter[(dirIdx + 2) % NUM_DIR], '');
+                        }
+                    }
+                }
+            }
+            else {
+                let x = currX + fdir[0];
+                let y = currY + fdir[1];
+                if (x >= 0 && x < mazeSize && y >= 0 && y < mazeSize)
+                    $(`.square.x${x+1}.y${y+1}`).click();
+            }
+        }
+
+        let down = false;
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (event.key.startsWith("Arrow")) {
+                let direction = directions[event.key.substring(5)];
+                let wallt = walldir[event.key.substring(5)];
+                let fdir = fulldir[event.key.substring(5)];
+                let dirIdx = dirIndex[event.key.substring(5)];
+                arrowPressed(direction, wallt, fdir, dirIdx);
+                event.preventDefault();
+            } else if (NoSpecialKeys(event) && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                let direction = directions[k];
+                let wallt = walldir[k];
+                let fdir = fulldir[k];
+                let dirIdx = dirIndex[k];
+                arrowPressed(direction, wallt, fdir, dirIdx);
+            }
+            else if (k == "-")
+                sizeDec();
+            else if (k == "=" || k == "+")
+                sizeInc();
+ 
+            down = false;
+        });
+
+        let inputs = $(".inputs");
+        for (let y = 1; y <= NUM_DIR; y++) {
+            let row = $("<div>").addClass("hstack").appendTo(inputs);
+            for (let x = 1; x <= NUM_DIR; x++) {
+                $("<input>").addClass(`readinp x${x} y${y}`).change(function() {
+                    let e = $(this);
+                    let n = parseInt(e.val());
+                    e.val(n >= 0 ? Math.min(n, CARD_MAX) : '');
+                    $(`.square.x${x}.y${y} text`).html(e.val());
+                }).appendTo(row);
+            }
+        }
+        $("button.clear-read").click(function() {
+            $(".inputs input").val('');
+            $(`.square text`).html('');
+        });
+
+        function removeSizeClass(elem) {
+            let classes = elem[0].classList;
+            let cl = Array.from(classes).find(c => c.startsWith('size')) ?? '';
+            elem.removeClass(cl);
+        }
+
+        function updateSize(increase = false) {
+            offsets[0] = mazeSize;
+            offsets[2] = -mazeSize;
+            sizeNumber.text(mazeSize);
+            maze.attr('viewBox', viewboxSize[mazeSize]);
+            removeSizeClass(maze);
+            removeSizeClass(body);
+            maze.addClass(`size${mazeSize}`);
+            body.addClass(`size${mazeSize}`);
+            shownMazeWalls = Array(mazeSize * mazeSize).fill('');
+            for (let x = 0; x <= mazeSize; x++) {
+                if (x < mazeSize) {
+                    $(`path.wall.v${letter(-1)}${letter(0)}${x+1}`).addClass("solid");
+                    $(`path.wall.v${letter(mazeSize-1)}${letter(mazeSize)}${x+1}`).addClass("solid");
+                    $(`path.wall.h${0}${1}${letter(x)}`).addClass("solid");
+                    $(`path.wall.h${mazeSize}${mazeSize+1}${letter(x)}`).addClass("solid");
+                }
+                $(`path.wall.v${letter(x-1)}${letter(x)}${mazeSize+1}`).removeClass("solid");
+                $(`path.wall.h${x}${x+1}${letter(mazeSize)}`).removeClass("solid");
+                if (increase) {
+                    $(`path.wall.v${letter(mazeSize-2)}${letter(mazeSize-1)}${x+1}`).removeClass("solid");
+                    $(`path.wall.h${mazeSize-1}${mazeSize}${letter(x)}`).removeClass("solid");
+                }
+            }
+        }
+
+        function sizeDec() {
+            mazeSize = Math.max(MIN_SIZE, mazeSize - 1);
+            updateSize();
+        }
+        function sizeInc() {
+            mazeSize = Math.min(MAX_SIZE, mazeSize + 1);
+            updateSize(true);
+        }
+        $(".sizetext.minus").click(function() {
+            sizeDec();
+        });
+        $(".sizetext.plus").click(function() {
+            sizeInc();
+        });
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play")) {
+                if ($("button.read-solve").hasClass("solve"))
+                    return MODE_PLAY;
+                else
+                    return MODE_EXPERT;
+            }
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+        function movement() {
+            if ($("button.movement").hasClass("free"))
+                return MOV_FREE;
+            else
+                return MOV_ENFORCE;
+        }
+
+        let primesHolder = $("div.primes");
+        primes.forEach((item, i) => {
+            $("<div>").addClass(`prime-box p${item}`).text(item).click(function() {
+                if ($(this).hasClass("highlighted") || $(".prime-box.highlighted").length < NUM_DIR) {
+                    $(this).toggleClass("highlighted");
+                }
+            }).appendTo(primesHolder);
+        });
+
+        function letter(i) {
+            return i < 0 ? String.fromCharCode(123 + i) : String.fromCharCode(65 + i);
+        }
+        function toNum(x) {
+            let code = x.toUpperCase().charCodeAt(0)
+            if (code > 64 && code < 91)
+                return code - 64;
+            return 0;
+        }
+
+        for (let x = 0; x <= MAX_SIZE; x++) {
+            if (x > 0) {
+                let header1 = MakeSvgElem("text", {
+                    x:15, y:(x*100 + 10), "text-anchor":"middle", "font-size":40, stroke:"transparent", class:"grid-header"
+                }, x);
+                let header2 = MakeSvgElem("text", {
+                    x:(x*100 - 2), y:30, "text-anchor":"middle", "font-size":40, stroke:"transparent", class:"grid-header"
+                }, letter(x-1));
+                maze.append(header1);
+                maze.append(header2);
+            }
+            for (let y = 0; y <= MAX_SIZE; y++) {
+                if (x <= MAX_SIZE && y < MAX_SIZE) {
+                    let vwall = MakeSvgElem("path", {
+                        d:`M${x*100 + 45} ${y*100 + 45}v100`, fill:"none", class:`wall v${letter(x-1)}${letter(x)}${y+1}`, stroke:"#FF0000BB"
+                    });
+                    maze.append(vwall);
+                }
+                if (y <= MAX_SIZE && x < MAX_SIZE) {
+                    let hwall = MakeSvgElem("path", {
+                        d:`M${x*100 + 45} ${y*100 + 45}h100`, fill:"none", class:`wall h${y}${y+1}${letter(x)}`, stroke:"#FF0000BB"
+                    });
+                    maze.append(hwall);
+                }
+                if (x == 0 || y == 0) continue;
+
+                let square = MakeSvgElem("g", { class: `square x${x} y${y}` });
+                let text = MakeSvgElem("text", {
+                    x:(x*100 - 5), y:(y*100 + 6), "font-size":34, fill:"#DDD", "text-anchor":"middle"
+                });
+                let netsquare = MakeSvgElem("rect", {
+                    x:(x*100 - 50), y:(y*100 - 50), width:SQUARE_WIDTH, height:SQUARE_WIDTH, class:"netsquare black", stroke:"none"
+                });
+                square.appendChild(netsquare);
+                square.appendChild(text);
+                maze.append(square);
+                $(square).click(function(event) {
+                    down = false;
+                    let txt = $(this).find("text");
+                    let pos = (y-1) * mazeSize + x-1;
+                    if ([MODE_PLAY,MODE_SOLVE].includes(mode()) && movement() == MOV_ENFORCE && !attemptMove(pos)) {
+                        pressing = false;
+                        return false;
+                    }
+                    if (selectedTool == "goal") {
+                        $(".square.goal").removeClass("goal");
+                        $(this).addClass("goal");
+                        return true;
+                    } else if (selectedTool == "start") {
+                        $(".square.start").removeClass("start");
+                        $(this).addClass("start");
+                        startPos = pos;
+                        return true;
+                    }
+
+                    if ([MODE_PLAY,MODE_SOLVE].includes(mode())) {
+                        $(this).addClass("visited");
+                        let dist = Math.abs(x-1 - currX) + Math.abs(y-1 - currY);
+                        if (movement() == MOV_ENFORCE && dist == 1) {
+                            let cur = currY * mazeSize + currX;
+                            let offset = cur - pos;
+                            if (getAdjacents(cur).includes(pos)) {
+                                movementList.push(dirLetter[offsets.indexOf(offset)]);
+                                $(".path .str").text(movementList.join(" "));
+                            }
+                        }
+                        if ($(this).hasClass("goal")) {
+                            if ($("button.sound").hasClass("play"))
+                                audioSolve[0].play();
+                            $(".solved-text").removeClass("invis");
+                        }
+                        else {
+                            if ($("button.sound").hasClass("play")) {
+                                let aud = audioStep[0].cloneNode();
+                                aud.volume = 0.3;
+                                aud.play();
+                            }
+                            $(".solved-text").addClass("invis");
+                        }
+                    }
+
+                    selected = $(this);
+                    updateSelection();
+                    currX = x-1;
+                    currY = y-1;
+                    pressing = false;
+                });
+                if (x == 1 && y == 1) {
+                    selected = $(square);
+                    $(square).addClass("selected");
+                }
+            }
+        }
+        updateSize();
+
+        $(".arrows button").click(function(event) {
+            let q = this.className.split("-")[1];
+            let direction = directions[q];
+            let type = walldir[q];
+            let fdir = fulldir[q];
+            let dirIdx = dirIndex[q];
+            arrowPressed(direction, type, fdir, dirIdx);
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        let othertools = $(".othertools");
+        $("<div>").addClass("tool starttool").text("Start").appendTo(othertools).click(function(event) {
+            $(".tool").removeClass("selected");
+            $(this).addClass("selected");
+            selectedTool = "start";
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $("<div>").addClass("tool goaltool").text("Goal").appendTo(othertools).click(function(event) {
+            $(".tool").removeClass("selected");
+            $(this).addClass("selected");
+            selectedTool = "goal";
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $("<div>").addClass("tool reset-grid").text("↻").appendTo(othertools).click(function(event) {
+            resetPos();
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        let tools = $(".tools");
+        let audioStep = $("<audio>")
+            .attr("src", "audio/Pathfinder/footstep.mp3")
+            .appendTo(tools);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(tools);
+
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").prependTo(tools);
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+
+            if ([MODE_PLAY,MODE_SOLVE].includes(mode())) {
+                resetPos();
+            }
+            // console.log(shownMazeWalls);
+        });
+        $("<button>").addClass("movement").appendTo(tools).click(function() {
+            $(this).toggleClass("free");
+            $("body").toggleClass("free", $(this).hasClass("free"));
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if ([MODE_PLAY,MODE_EXPERT].includes(mode())) {
+                modeWasSolve = $(".read-solve").hasClass("solve");
+                generate();
+            }
+
+            resetPos();
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $(".square").removeClass("goal start");
+            $(".prime-box").removeClass("highlighted");
+            $("path.wall").removeClass("solid");
+            $(".solved-text").addClass("invis");
+            $("button.movement").removeClass("free");
+            $("body").removeClass("free solution-shown solve play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            shownMazeWalls = Array(mazeSize * mazeSize).fill('');
+            startPos = 0;
+            resetPos();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            mazeSize = 4;
+            updateSize();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".prime-box, .square, path.wall, .solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveText = Array.from($(".square text")).map(x => $(x)).map(x => x.html() || "");
+            let saveVal = Array.from($(".inputs input")).map(x => $(x)).map(x => x.val() || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_offsets = [];
+            let s_mazeWalls = [];
+            let s_shownMazeWalls = [];
+            Object.assign(s_offsets, offsets);
+            Object.assign(s_mazeWalls, mazeWalls);
+            Object.assign(s_shownMazeWalls, shownMazeWalls);
+            let s_answerList = [];
+            let s_movementList = [];
+            Object.assign(s_movementList, movementList);
+            Object.assign(s_answerList, answerList);
+            let s_selected = selected;
+            let s_selectedTool = selectedTool;
+            let s_size = mazeSize;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_pressing = pressing;
+            let s_startPos = startPos;
+            let s_modeWasSolve = modeWasSolve;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                mazeSize = s_size;
+                updateSize();
+
+                $(".prime-box, .square, path.wall, .solved-text, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                $(".square text").each((i, x) => $(x).html(saveText[i]));
+                $(".inputs input").each((i, x) => $(x).val(saveVal[i]));
+                mazeWalls = Array(s_mazeWalls.length);
+                shownMazeWalls = Array(s_shownMazeWalls.length);
+                Object.assign(mazeWalls, s_mazeWalls);
+                Object.assign(shownMazeWalls, s_shownMazeWalls);
+                Object.assign(offsets, s_offsets);
+                movementList = Array(s_movementList.length);
+                answerList = Array(s_answerList.length);
+                Object.assign(movementList, s_movementList);
+                Object.assign(answerList, s_answerList);
+                $(".path .str").text(movementList.join(" "));
+                $(".solution .str").text(answerList.join(" "));
+
+                currentState = stateNumber;
+                selected = s_selected;
+                selectedTool = s_selectedTool;
+                currX = s_currX;
+                currY = s_currY;
+                startPos = s_startPos;
+                pressing = s_pressing;
+                modeWasSolve = s_modeWasSolve;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        body {
+            --square-width: 55px;
+            --square-fs: 35px;
+            --square-head-fs: 30px;
+            --square-lineh: 65px;
+        }
+        h4 { margin: 0; }
+        .aligncenter {
+            text-align: center;
+        }
+        .note {
+            text-align: center;
+            font-size: x-small;
+            font-style: italic;
+        }
+        th img {
+            height: auto;
+            width: 80%;
+        }
+        table {
+            margin: 1em auto;
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        
+        .othertools {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toolset { gap: 10px; }
+        .toolset1 { margin: 5px; }
+        .tool {
+            width: 55px;
+            height: 50px;
+            float: left;
+            font-size: 18px;
+            user-select: none;
+            text-align: center;
+            border: black 1px solid;
+            padding-top: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .goaltool, .starttool { height: 35px; }
+        .starttool.selected { border: #CA1 2px dashed; }
+        .goaltool.selected { border: blue 2px dashed; }
+        .reset-grid {
+            font-size: 45px;
+            padding-top: 10px;
+        }
+
+        .dark .tool:not(.selected) { border-color: #DDD; }
+        .tools {
+            width: 115px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        .primes { gap: 5px; }
+        .prime-box {
+            border: 1px solid;
+            width: 45px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 5px;
+            user-select: none;
+            cursor: pointer;
+        }
+        .prime-box.highlighted { background-color: #FF000066; }
+
+        svg.themaze path.wall {
+            stroke: transparent;
+            stroke-linecap: round;
+            stroke-width: 9;
+        }
+        svg.themaze path.wall.solid {
+            stroke: #F44;
+        }
+        svg .square text {
+            font-family: 'Arial';
+        }
+        svg.themaze text { user-select: none; }
+        .dark svg .grid-header { fill: #DDD; }
+
+        .solution, .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+        }
+        body.free.solution-shown .path span.str { color: #F00; }
+
+        .themaze.size3 { width: 270px; }
+        .themaze.size4 { width: 320px; }
+        .themaze.size5 { width: 370px; }
+        .themaze.size6 { width: 420px; }
+        .themaze.size7 { width: 470px; }
+        .themaze.size8 { width: 520px; }
+        .themaze.size9 { width: 520px; }
+        .themaze.size10 { width: 520px; }
+        .square {
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+        .square text {
+            pointer-events: none;
+        }
+
+        body:is(.solve, .play) .square.visited .netsquare { fill: #484; }
+        .square.selected .netsquare { fill: #AAA !important; }
+        .dark .square.start text { fill: #FF0; }
+        .square.start text { fill: #F00; }
+        .square.selected text, .dark .square.selected text { fill: #000; }
+        .square.goal .netsquare { fill: #0000FF88 !important; }
+        .square.start .netsquare { fill: #CCAA11AA !important; }
+        .dark .square.goal.selected text { fill: #C77; }
+
+        .sizetext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .sizeNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 60px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sizeHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        .invis {
+            color: transparent;
+            background-color: transparent;
+            border-color: transparent;
+            user-select: none;
+            pointer-events: none;
+        }
+        .square-row.invis, .square.invis, .letters .square.invis {
+            width: 0; height: 0;
+            font-size: 0;
+            border: 0;
+        }
+
+        .inputs input {
+            width: 70px;
+            margin: 3px;
+            text-align: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        body:is(.size7, .size8, .size9, .size10) .toolset1 {
+            display: none;
+        }
+        body:not(.size7, .size8, .size9, .size10) .toolset2 {
+            display: none;
+        }
+        .button-spc { height: 29px; }
+        .arrows button {
+            height: 35px;
+            width: 35px;
+            font-size: 30px;
+            padding: 0;
+            line-height: 1.3;
+            margin: 0;
+        }
+        button.btn-a {
+            margin-right: -2.5%;
+            transform: rotateZ(90deg);
+        }
+        button.btn-d {
+            margin-left: -2.5%;
+            transform: rotateZ(-90deg);
+        }
+        button.btn-w {
+            transform: rotateZ(180deg);
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.movement, button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        button.movement.free::before,
+        body:not(.solve) button.movement::before {
+            content: 'Free Movement';
+        }
+        button.movement:not(.free)::before,
+        body.play button.movement::before {
+            content: 'Enforced Movement';
+        }
+
+        body.play button.movement,
+        body:is(.solve, .play) .goaltool,
+        body:is(.solve, .play) .starttool,
+        body:is(.solve, .play) .inputs input,
+        body:is(.solve, .play) button.clear-read,
+        body:not(.solve) button.movement {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        body:is(.solve, .play) .goaltool {
+            background-color: #0000FF88;
+            color: #DDD;
+        }
+        body:is(.solve, .play) .starttool {
+            background-color: #CCAA11AA;
+            color: #000;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        .page {
+            background-position: top;
+        }
+        .number-footer {
+            font-size: 13px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Factoring Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Factoring Maze.svg" class="diagram">
+                <h2>On the Subject of Factoring Maze</h2>
+                <p class="flavour-text">Who said module names needed to be original?</p>
+
+                <p>This module will contain a 4×4 grid of numbers. One of the squares will be white, this is your starting position. Pressing an adjacent square will move yourself in the direction of that square.</p>
+                <p>To solve the module, navigate to <i>n</i>th square in reading order, where n equals the product of the nonzero digits in the serial number*, subtracting 16 until the product is less than 17. <span class="number-footer">*If all digits in the serial number are zeroes, use the top-left square as your goal position.</span></p>
+
+                <p>The module chooses 4 unique primes from 2 to 29 (select them on the next page).</p>
+                <ul>
+                    <li>The smallest of these numbers will represent a wall above the cell.</li>
+                    <li>The 2nd smallest of these numbers will represent a wall left of the cell.</li>
+                    <li>The 3rd smallest of these numbers will represent a wall beneath the cell.</li>
+                    <li>The largest of these numbers will represent a wall right of the cell.</li>
+                </ul>
+
+                <p>To find the walls surrounding a cell, separate its number into its prime factors. If the prime corresponding to a wall is a factor of the number, the wall is present. Otherwise it is absent.</p>
+                <p>Attempting to walk through a wall in the maze will incur a strike.</p>
+
+                <h3 class="centered">Read</h3>
+                <div class="inputs"></div>
+                <p class="centered"><button class="clear-read">Clear</button></p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Factoring Maze</span>
+            </div>
+            <div class="page-content">
+                <h4 class="centered">U L D R</h4>
+                <div class="primes hstack"></div>
+                <div class="hstack wrap">
+                    <div class="vstack tools">
+                        <div class="vstack toolset toolset2">
+                            <div class="hstack arrows">
+                                <button class="btn-a">▼</button>
+                                <div class="vstack">
+                                    <button class="btn-w">▼</button>
+                                    <div class="button-spc"></div>
+                                    <button class="btn-s">▼</button>
+                                </div>
+                                <button class="btn-d">▼</button>
+                            </div>
+                            <div class="othertools"></div>
+                        </div>
+                    </div>
+                    <svg class="themaze size4" viewbox="0 0 450 450" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <div class="vstack toolset toolset1">
+                        <div class="hstack arrows">
+                            <button class="btn-a">▼</button>
+                            <div class="vstack">
+                                <button class="btn-w">▼</button>
+                                <div class="button-spc"></div>
+                                <button class="btn-s">▼</button>
+                            </div>
+                            <button class="btn-d">▼</button>
+                        </div>
+                        <div class="othertools"></div>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                    <div style="width: 8mm"></div>
+                    <div class="sizeHolder hstack">
+                        <div class="sizetext label">Size:</div>
+                        <div class="sizetext sizeNumber">4</div>
+
+                        <button class="sizetext minus">-</button>
+                        <button class="sizetext plus">+</button>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack just-left path"><span>Path:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack just-left solution"><span>Solution:</span><span class="str"></span></div>
+                <h3>Interactive Controls</h3>
+                <p>Use the above interactive graphic to input the read and try out different paths.</p>
+                <ul>
+                    <li>
+                        In <b>Read</b> mode:
+                        <ul>
+                            <li><b>Type in</b> the puzzle grid on <b>page 1</b> and <em>select the 4 primes</em>.</li>
+                            <li>Use the <b>arrow buttons</b>, or <b>WASD</b>, or <b>arrow keys</b> on your keyboard to toggle the walls of the selected <b>cell</b></li>
+                            <li>Use the <b>Goal</b> or <b>Start</b> tool to mark the <b>goal</b> or <b>start</b> position</li>
+                        </ul></li>
+                    <li>In <b>Solve</b> mode, the grid behaves like the module with options for <em>free</em> movement or <em>enforced</em> movement as the module demands.</li>
+                    <li>Use the <b>arrow buttons</b>, or <b>WASD</b>, or <b>arrow keys</b> on your keyboard to navigate the maze.</li>
+                    <li>Your <b>Path</b> may be invalid if you turn off enforced movement in <b>Solve</b> mode</li>
+                    <li>The <b>↻</b> button resets the puzzle back to the starting state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Press the <b>Manual</b> button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles of size 3 – 8.</li>
+                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the size of the generated puzzle.</li>
+                    <li>The solution you came up with in <b>Solve</b> mode as well as the solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.<br></li>
+                    <li>Using the other buttons, you can save the current state of the grid, delete the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
