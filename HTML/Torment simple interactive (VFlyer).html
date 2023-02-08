@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Torment Simpler Interactive — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+    $(function() {
+        // Constants for switching between different modes
+        const MODE_LOOK = 0;
+        const MODE_FALL = 1;
+        const MODE_STOP = 2;
+        const SIZE = 16;
+        // All of the interactive necessities
+        let curCellIdx = -1;
+        let curFallCellIdx = -1;
+        let startGridValue = 0;
+        let currentMode = MODE_LOOK;
+        let fallLayouts = Array(SIZE).fill().map(()=>Array(SIZE).fill(0));
+        let expectedGrid = Array(SIZE).fill(0);
+        let movesMade = [];
+        let interactiveTable = $(".interactiveTable");
+        function UpdateGoalAndSumGrid()
+        {
+            // Updating the goal row.
+            let goalRow = $(".goalRow");
+            let gRowChildren = goalRow.children();
+            for (let p = 0; p < gRowChildren.length; p++)
+            {
+                gRowChildren[p].innerText = expectedGrid[p].toString();
+                if (gRowChildren[p].className.includes("selected") && (curCellIdx != p || curFallCellIdx != -1))
+                    gRowChildren[p].className = "";
+                else if (!gRowChildren[p].className.includes("selected") && (curCellIdx == p && curFallCellIdx == -1))
+                    gRowChildren[p].className = "selected";
+            }
+            // Updating the sum row, and using the offsets.
+            let sumRow = $(".sumRow");
+            let sRowChildren = sumRow.children();
+            for (let p = 0; p < SIZE; p++) // The last element is a dropdown, which should not be changed.
+            {
+                let sum = startGridValue;
+                for (let x = 0; x < SIZE; x++)
+                {
+                    if (movesMade.includes(x))
+                        sum += fallLayouts[x][p];
+                }
+                sRowChildren[p].innerText = (sum) % 3;
+            }
+        }
+        
+        function UpdateFunctionalGrid()
+        {
+            let offsetRows = $(".offsetVal");
+            for (let p = 0; p < offsetRows.length; p++)
+            {
+                let oRowChildren = offsetRows[p].children;
+                for (let c = 0; c < SIZE; c++)
+                {
+                    oRowChildren[c].innerText = fallLayouts[p][c];
+                    if (oRowChildren[c].className.includes("selected") && (curCellIdx != c || curFallCellIdx != p))
+                        oRowChildren[c].className = "";
+                    else if (!oRowChildren[c].className.includes("selected") && (curCellIdx == c && curFallCellIdx == p))
+                        oRowChildren[c].className = "selected";
+                }
+                
+            }
+        }
+        
+        function ChangeStartingValue()
+        {
+            let DD = document.getElementById("startVal");
+            //console.log(DD.val("value"));
+            startGridValue = DD.value;
+        }
+        function ChangeCurrentCellValue(nextVal)
+        {
+            if (curCellIdx == -1) return;
+            if (curFallCellIdx == -1)
+                expectedGrid[curCellIdx] = nextVal;
+            else
+                fallLayouts[curFallCellIdx][curCellIdx] = nextVal;
+
+            if (curCellIdx < SIZE - 1)
+                curCellIdx++;
+            else
+            {
+                curCellIdx = 0;
+                if (curFallCellIdx < SIZE - 1)
+                    curFallCellIdx++;
+                else
+                    curFallCellIdx = -1;
+            }
+
+            UpdateGoalAndSumGrid();
+            UpdateFunctionalGrid();
+        }
+        
+        function ChangeUsingRows()
+        {
+            let checkBoxes = $(".useRow");
+            movesMade = movesMade.splice();
+            //console.log(checkBoxes);
+            for (let p = 0; p < checkBoxes.length; p++)
+            {
+                if (checkBoxes[p].checked)
+                    movesMade.push(p);
+            }
+        }
+        function SelectCell(newFallIdx, newCellIdx)
+        {
+            if (newFallIdx == curFallCellIdx && newCellIdx == curCellIdx)
+            {
+                curCellIdx = -1;
+                curFallCellIdx = -1;
+            }
+            else
+            {
+                curCellIdx = newCellIdx;
+                curFallCellIdx = newFallIdx;
+            }
+            UpdateGoalAndSumGrid();
+            UpdateFunctionalGrid();
+        }
+        
+        // Set up a bunch of rows in the given table.
+        // First up is the goal row, which should have a method of adjusting the starting value.
+        let curRowGoal = $("<tr>").addClass("goalRow");
+        for (let a = 0; a < SIZE; a++)
+        {
+            let curCell = $("<td>");
+            curCell.on("click", function() {
+                SelectCell(-1, a);
+            });
+            curCell.appendTo(curRowGoal);
+        }
+        curRowGoal.appendTo(interactiveTable);
+        // Next is the summing row, which corresponds to the sum of the rows that are checked.
+        let curRowSum = $("<tr>").addClass("sumRow exempt");
+        for (let a = 0; a < SIZE; a++)
+        {
+            let curCell = $("<td>");
+            curCell.appendTo(curRowSum);
+        }
+        curRowSum.appendTo(interactiveTable);
+        let curEnableRowCell = $("<td>");
+        let dropdown = $("<select>").attr("id", "startVal");
+        for (let p = 0; p < 3; p++)
+        {
+            let newOption = $("<option>").attr("value", p.toString());
+            newOption.append(p.toString());
+            newOption.appendTo(dropdown);
+        }
+        // Add a method on changing the starting value when using the dropdown.
+        dropdown.on("change", function()
+        {
+            ChangeStartingValue();
+            UpdateGoalAndSumGrid();
+        });
+        dropdown.appendTo(curEnableRowCell);
+        curEnableRowCell.appendTo(curRowSum);
+        // Finally, the offset rows.
+        for (let x = 0; x < SIZE; x++)
+        {
+            let curIntRow = $("<tr>").addClass("offsetVal");
+            for (let a = 0; a < SIZE; a++)
+            {
+                let curIntCell = $("<td>");
+                curIntCell.on("click", function() {
+                    SelectCell(x, a);
+                });
+                curIntCell.appendTo(curIntRow);
+            }
+            let curEnableRowCell = $("<td>").addClass("exempt");
+            let checkbox = $("<input>").attr("type", "checkbox").addClass("useRow");
+            checkbox.appendTo(curEnableRowCell);
+            checkbox.on("change", function()
+            {
+                ChangeUsingRows();
+                UpdateGoalAndSumGrid();
+            });
+            
+            curEnableRowCell.appendTo(curIntRow);
+            curIntRow.appendTo(interactiveTable);
+        }
+        // Keyboard support here.
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            var possibleVal = parseInt(k);
+            if (possibleVal >= 0 && possibleVal < 3)
+            {
+                ChangeCurrentCellValue(possibleVal);
+            }
+            
+            //console.log(k);
+            down = false;
+        });
+        
+        UpdateGoalAndSumGrid();
+        UpdateFunctionalGrid();
+    });
+    </script>
+    <style>
+        .dark table, table { border: none; }
+        .selected { background-color: #00FA; }
+        .dark tr:not(.exempt) td:hover:not(.exempt) { background-color: gray; }
+        tr:not(.exempt) td:hover:not(.exempt) { background-color: darkgrey; }
+        .sumRow { background-color: #8888; }
+        .goalRow td:nth-child(2n):not(.selected), .offsetVal td:nth-child(2n):not(.selected) { background-color: #0008; }
+        .goalRow td:nth-child(2n + 1):not(.selected), .offsetVal td:nth-child(-2n+15):not(.selected) { background-color: #F008; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Torment</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Torment.svg" class="diagram">
+                <h2>On the Subject of Torment</h2>
+                <p class="flavour-text">I will never forgive you for what you did.</p>
+
+                <p>The module consists of a 4 × 4 chessboard with numbers on each of the tiles. The white tiles normally seen on a chess board have been replaced with red.</p>
+                <p>There is also a button at the top of the module that displays a four-letter word.</p>
+                <p>The function of the module will change based on its <b><u>phase</u></b>. The module will cycle between the 3 <b><u>phases</u></b> by pressing on the top button.</p>
+                <ul>
+                    <li><b>LOOK: </b>During this phase, the chessboard will show an arrangement of numbers on each tile that ranges from 0-2. You can not interact with any of the chessboard tiles during this phase.</li>
+                    <li>
+                        <b>FALL: </b>During this phase, the numbers on the chessboard will disappear. Pressing a tile on the board will show 7-9 numbers at different coordinates.
+                        The numbers that are shown on each tile can be either 1 or 2. Each of those coordinates will change color to white when this happens.
+                        During the <b><u>STOP</u></b> phase, the numbers that will be added at each given coordinate are based on what numbers were shown when pressing a certain tile.
+                    </li>
+                    <li>
+                        <b>STOP: </b>During this phase, the chessboard will display the same number from 0 to 2 on each of the tiles.
+                        Based on the conditions shown during the <b><u>FALL</u></b> phase, press 3 <u>unique tile coordinates</u> on the chessboard so that after the 3 presses,
+                        the resulting number arrangement on the chessboard will be equal to what was shown during the <b><u>LOOK</u></b> phase.
+                        During each tile press, if a coordinate ever goes past 2 when a number is added to it, the number will be modulo by 3.
+                        The tile coordinate you have pressed will become uninteractable as well. After pressing 3 unique tiles, the chessboard will be uninteractable.
+                        If the module is not solved at any point during this phase, you can leave by pressing the top button.
+                        This will send you back to the <b><u>LOOK</u></b> phase where everything will be completely reset.
+                    </li>
+                </ul>
+                <p>When the <b><u>LOOK</u></b> phase begins, there is a 10 second timer that will countdown. When you reach the <b><u>STOP</u></b> phase, the built-in timer must reach 0 before you can cycle back to the <b><u>LOOK</u></b> phase.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Torment</span>
+            </div>
+            <div class="page-content">
+                <h4>The (Simpler) Interactive</h4>
+                <table class="interactiveTable centered">
+                </table>
+                <p>Select the red/black cell and use <strong>[0] - [2]</strong> to input the value at that position.</p>
+                <p>Enable the row to be added up on the gray row by selecting the checkmark on the right of the provided rows.</p>
+                <p>Offset the sums provided on the gray rows with the dropdown.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
