@@ -1151,10 +1151,10 @@ function Bomb(seed) {
         if (this.Anchors != null && this.ModuleOrder != null) {
             const viewBox = [0, 0, 0, 0];
 
-            const faceParent = $("<div>").css("position", "relative");
+            const faceParent = $("<div>").css({position: "relative", "transform-style": "preserve-3d" });
             caseHTML.replaceWith(faceParent);
 
-            const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s", "will-change": "transform" };
+            const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s" };
             let svg = $SVG("<svg>")
                 .css(faceStyle)
                 .appendTo(faceParent);
