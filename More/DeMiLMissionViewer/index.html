@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>DeMiL Mission Viewer</title>
+    <link rel="stylesheet" type="text/css" href="../../HTML/css/normalize.css">
+    <script>
+
+      async function loadMod(steamID) {
+        await (await fetch(`http://localhost:8095/loadMission?steamID=${steamID}`)).json();
+      }
+
+      window.addEventListener("load", async () => {
+        let missions;
+        try {
+          missions = await (await fetch("http://localhost:8095/missions")).json();
+        } catch {
+          document.getElementById("table").innerText = "Error getting mission info: Is DeMiL Service active?";
+        }
+
+        
+        const $trs = missions.map(mission => {
+          const $tr = document.createElement("tr");
+          const $load = document.createElement("button");
+          $load.addEventListener("click", () => loadMod(mission.SteamID));
+          $load.innerText = "Load Mod";
+          const $link = document.createElement("a");
+          $link.innerText = "Detail";
+          $link.setAttribute("href", `./missionDetail.html?steamID=${mission.SteamID}`);
+          for(let $el of [mission.Title, $load, $link]) {
+            const $td = document.createElement("td");
+            $td.append($el);
+            $tr.append($td);
+          }
+          return $tr;
+        });
+        document.getElementById("saveAndDisable").addEventListener("click", async () => {
+          await (await fetch("http://localhost:8095/saveAndDisable")).json();
+        })
+        document.getElementById("table").getElementsByTagName("tbody")[0].append(...$trs);
+      });
+    </script>
+    <style>
+      #table td, #table th {
+        border-right: 1px black solid;
+      }
+      #table tbody tr:nth-child(2n-1) {
+        background-color: lightgray;
+      }
+      #table {
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px black solid;
+      }
+      .contents {
+        max-width: 1080px;
+        margin: 16px auto;
+      }
+    </style>
+</head>
+<body>
+  <div class="contents">
+    <table id="table">
+      <thead>
+        <tr><th>Mission Pack Name</th><th></th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="saveAndDisable">Save and disable all mods</button>(Disabling only happens after rebooting the game.)
+
+  </div>
+    
+</body>
+</html>

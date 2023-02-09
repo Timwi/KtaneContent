@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>DeMiL Mission Viewer</title>
+    <link rel="stylesheet" type="text/css" href="../../HTML/css/normalize.css">
+    <script>
+
+      async function startMission(steamID, missionID) {
+        await (await fetch(`http://localhost:8095/startMission?steamID=${steamID}&missionID=${missionID}`)).json();
+      }
+
+      window.addEventListener("load", async () => {
+        const params = new URLSearchParams(window.location.search);
+        const steamID = params.get("steamID");
+
+        let missionDetails;
+        try {
+          missionDetails = await (await fetch(`http://localhost:8095/missionDetail?steamID=${steamID}`)).json();
+        } catch {
+          document.getElementById("table").innerText = "Error getting mission info: Is DeMiL Service active?";
+        }
+        
+        const $trs = missionDetails.Missions.map(mission => {
+          const $tr = document.createElement("tr");
+          const $start = document.createElement("button");
+          $start.addEventListener("click", () => startMission(steamID, mission.MissionID));
+          $start.innerText = "Start";
+          for(let $el of [mission.Title, mission.Description, $start]) {
+            const $td = document.createElement("td");
+            $td.append($el);
+            $tr.append($td);
+          }
+          return $tr;
+        });
+        document.getElementById("table").getElementsByTagName("tbody")[0].append(...$trs);
+        document.getElementsByTagName("h2")[0].innerHTML = missionDetails.Title;
+      })
+    </script>
+    <style>
+      #table td, #table th {
+        border-right: 1px black solid;
+      }
+      #table tbody tr:nth-child(2n-1) {
+        background-color: lightgray;
+      }
+      #table {
+        max-width: 1080px;
+        margin: 0 auto;
+        border: 1px black solid;
+      }
+    </style>
+</head>
+<body>
+  <h2></h2>
+  <table id="table">
+    <thead>
+      <tr><th>Mission Name</th><th>Description</th><th></th></tr>
+    </thead>
+    <tbody></tbody>
+  </tabe>
+    
+</body>
+</html>
