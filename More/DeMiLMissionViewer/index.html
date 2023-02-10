@@ -1,75 +1,189 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1" />
     <title>DeMiL Mission Viewer</title>
-    <link rel="stylesheet" type="text/css" href="../../HTML/css/normalize.css">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../../HTML/css/normalize.css"
+    />
     <script>
+      var fullData = [];
+
+      function setData() {
+        const filter = document.getElementById("searchInput").value ?? "";
+        const $tbody = document
+          .getElementById("table")
+          .getElementsByTagName("tbody")[0];
+        $tbody.innerText = "";
+        const $trs = fullData
+          .filter((mission) =>
+            mission.Title.toLocaleLowerCase().includes(
+              filter.toLocaleLowerCase()
+            )
+          )
+          .map((mission) => {
+            const $tr = document.createElement("tr");
+            const $load = document.createElement("button");
+            $load.addEventListener("click", () => loadMod(mission.SteamID));
+            $load.innerText = "Load Mod";
+            const $link = document.createElement("a");
+            $link.innerText = "Detail";
+            $link.setAttribute(
+              "href",
+              `./missionDetail.html?steamID=${mission.SteamID}`
+            );
+            for (let $el of [mission.Title, $load, $link]) {
+              const $td = document.createElement("td");
+              $td.append($el);
+              $tr.append($td);
+            }
+            return $tr;
+          });
+        $tbody.append(...$trs);
+      }
 
       async function loadMod(steamID) {
-        await (await fetch(`http://localhost:8095/loadMission?steamID=${steamID}`)).json();
+        const $el = document.getElementById("loadingSuccess");
+        try {
+          const res = await (
+            await fetch(`http://localhost:8095/loadMission?steamID=${steamID}`)
+          ).json();
+          if (res["Loaded mission"]) {
+            $el.innerText = `Loaded mod ${res["Loaded mission"]}`;
+            $el.classList.remove("failed", "none");
+            $el.classList.add("success");
+          } else {
+            throw new Error();
+          }
+        } catch (e) {
+          console.error(e);
+          $el.innerText = `Failed to load mod ${steamID}`;
+          $el.classList.remove("success", "none");
+          $el.classList.add("failed");
+        }
       }
 
       window.addEventListener("load", async () => {
-        let missions;
         try {
-          missions = await (await fetch("http://localhost:8095/missions")).json();
+          fullData = await (
+            await fetch("http://localhost:8095/missions")
+          ).json();
         } catch {
-          document.getElementById("table").innerText = "Error getting mission info: Is DeMiL Service active?";
+          document.getElementsByClassName("contents")[0].innerText =
+            "Error getting mission info: Is DeMiL Service active?";
         }
 
-        
-        const $trs = missions.map(mission => {
-          const $tr = document.createElement("tr");
-          const $load = document.createElement("button");
-          $load.addEventListener("click", () => loadMod(mission.SteamID));
-          $load.innerText = "Load Mod";
-          const $link = document.createElement("a");
-          $link.innerText = "Detail";
-          $link.setAttribute("href", `./missionDetail.html?steamID=${mission.SteamID}`);
-          for(let $el of [mission.Title, $load, $link]) {
-            const $td = document.createElement("td");
-            $td.append($el);
-            $tr.append($td);
-          }
-          return $tr;
+        setData();
+
+        document
+          .getElementById("saveAndDisable")
+          .addEventListener("click", async () => {
+            const $el = document.getElementById("loadingSuccess");
+            try {
+              const res = await (
+                await fetch("http://localhost:8095/saveAndDisable")
+              ).json();
+              console.log(res["Saved missions"]);
+              if (!res["Saved missions"]) {
+                throw new Error();
+              }
+              $el.innerText = `Saved and disabled ${
+                res["Saved missions"].length
+              } mod${res["Saved missions"].length > 1 ? "s" : ""}`;
+              $el.classList.remove("failed", "none");
+              $el.classList.add("success");
+            } catch {
+              $el.innerText = `Failed to save missions`;
+              $el.classList.remove("success", "none");
+              $el.classList.add("failed");
+            }
+          });
+
+        document.getElementById("searchInput").addEventListener("input", () => {
+          setData();
         });
-        document.getElementById("saveAndDisable").addEventListener("click", async () => {
-          await (await fetch("http://localhost:8095/saveAndDisable")).json();
-        })
-        document.getElementById("table").getElementsByTagName("tbody")[0].append(...$trs);
+
+        document
+          .getElementById("tryLoading")
+          .addEventListener("click", async () => {
+            const id = document.getElementById("steamIDInput").value;
+            await loadMod(id);
+          });
       });
     </script>
     <style>
-      #table td, #table th {
+      #table td,
+      #table th {
         border-right: 1px black solid;
+        padding: 0.1em 8px;
       }
       #table tbody tr:nth-child(2n-1) {
         background-color: lightgray;
       }
       #table {
         max-width: 100%;
+        min-width: 640px;
         margin: 0 auto;
         border: 1px black solid;
       }
       .contents {
-        max-width: 1080px;
+        max-width: 1440px;
         margin: 16px auto;
       }
-    </style>
-</head>
-<body>
-  <div class="contents">
-    <table id="table">
-      <thead>
-        <tr><th>Mission Pack Name</th><th></th><th></th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button id="saveAndDisable">Save and disable all mods</button>(Disabling only happens after rebooting the game.)
 
-  </div>
-    
-</body>
+      #loadingSuccess {
+        width: fit-content;
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        border-radius: 4px;
+        padding: 8px;
+        box-shadow: 4px 4px 8px grey;
+      }
+      #loadingSuccess.success {
+        background-color: lightgreen;
+      }
+      #loadingSuccess.failed {
+        background-color: lightcoral;
+      }
+      #loadingSuccess.none {
+        visibility: hidden;
+      }
+      body {
+        position: relative;
+      }
+      input {
+        margin: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loadingSuccess" class="none"></div>
+    <div class="contents">
+      Search: <input type="text" id="searchInput" />
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Mission Pack Name</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div>
+        <button id="saveAndDisable">Save and disable all mods</button>(Disabling
+        only happens after rebooting the game.)
+      </div>
+      <div>
+        Try loading mod with steamID:
+        <input type="text" id="steamIDInput" /><button id="tryLoading">
+          Try
+        </button>
+      </div>
+    </div>
+  </body>
 </html>
