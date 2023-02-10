@@ -1,65 +1,296 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1" />
     <title>DeMiL Mission Viewer</title>
-    <link rel="stylesheet" type="text/css" href="../../HTML/css/normalize.css">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../../HTML/css/normalize.css"
+    />
     <script>
-
+      var missionDetails;
+      var moduleInfo;
       async function startMission(steamID, missionID) {
-        await (await fetch(`http://localhost:8095/startMission?steamID=${steamID}&missionID=${missionID}`)).json();
+        const $el = document.getElementById("loadingSuccess");
+        try {
+          const res = await (
+            await fetch(
+              `http://localhost:8095/startMission?steamID=${steamID}&missionID=${missionID}`
+            )
+          ).json();
+          if (res.Seed) {
+            $el.innerText = `Started mission: ${res.MissionID}(Mission seed: ${res.Seed})`;
+            $el.classList.remove("failed", "none");
+            $el.classList.add("success");
+          } else {
+            throw new Error(JSON.stringify(res, null, 2));
+          }
+        } catch (e) {
+          console.error(e);
+          $el.innerText = e;
+          $el.classList.remove("success", "none");
+          $el.classList.add("failed");
+        }
       }
 
-      window.addEventListener("load", async () => {
-        const params = new URLSearchParams(window.location.search);
-        const steamID = params.get("steamID");
-
-        let missionDetails;
-        try {
-          missionDetails = await (await fetch(`http://localhost:8095/missionDetail?steamID=${steamID}`)).json();
-        } catch {
-          document.getElementById("table").innerText = "Error getting mission info: Is DeMiL Service active?";
+      function showDetail(mission) {
+        const $modal = document.getElementById("modal");
+        const $modalContent = document.getElementById("modalContent");
+        $modalContent.innerText = "";
+        for (let bomb of mission.BombData) {
+          $modalContent.appendChild(createBombView(bomb));
         }
-        
-        const $trs = missionDetails.Missions.map(mission => {
+        $modal.classList.remove("close");
+        $modal.classList.add("open");
+      }
+
+      function createBombView(bomb) {
+        const $el = document.createElement("div");
+        $el.innerText = `Bomb Time:${getTimeString(bomb.TimeLimit)} Strikes:${
+          bomb.NumStrikes
+        } Widgets:${bomb.OptionalWidgetCount}`;
+        const $container = document.createElement("div");
+        $container.classList.add("poolContainer");
+
+        for (let pool of bomb.ComponentPools) {
+          const $pool = document.createElement("div");
+          $pool.innerHTML = pool.map((mod) => getModuleName(mod) ?? mod).join(", ");
+          $container.appendChild($pool);
+        }
+        $el.appendChild($container);
+
+        return $el;
+      }
+
+      function getTimeString(time) {
+        return [
+          time > 3600 ? Math.floor(time / 3600) : null,
+          ("00" + (Math.floor(time / 60) % 60)).slice(-2),
+          ("00" + (Math.floor(time) % 60)).slice(-2),
+        ]
+          .filter((v) => v)
+          .join(":");
+      }
+
+      function setData(steamID) {
+        const filter = document.getElementById("searchInput").value ?? "";
+        const $tbody = document
+          .getElementById("table")
+          .getElementsByTagName("tbody")[0];
+        $tbody.innerText = "";
+
+        const $trs = missionDetails.Missions.filter((mission) =>
+          mission.Title.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
+        ).map((mission) => {
           const $tr = document.createElement("tr");
+          const $detail = document.createElement("button");
+          $detail.addEventListener("click", () => showDetail(mission));
+          $detail.innerText = "Detail";
           const $start = document.createElement("button");
-          $start.addEventListener("click", () => startMission(steamID, mission.MissionID));
+          $start.addEventListener("click", () =>
+            startMission(steamID, mission.MissionID)
+          );
           $start.innerText = "Start";
-          for(let $el of [mission.Title, mission.Description, $start]) {
+
+          const time = mission.BombData.map((bomb) => bomb.TimeLimit).reduce(
+            (a, b) => a + b,
+            0
+          );
+          const rows = [
+            mission.Title,
+            mission.Description,
+            mission.BombCount,
+            getTimeString(time),
+            mission.BombData.map((bomb) => bomb.NumStrikes).reduce(
+              (a, b) => a + b,
+              0
+            ),
+            mission.BombCount > 1
+              ? ""
+              : mission.BombData[0].OptionalWidgetCount,
+            $detail,
+            $start,
+          ];
+
+          for (let $el of rows) {
             const $td = document.createElement("td");
             $td.append($el);
             $tr.append($td);
           }
           return $tr;
         });
-        document.getElementById("table").getElementsByTagName("tbody")[0].append(...$trs);
-        document.getElementsByTagName("h2")[0].innerHTML = missionDetails.Title;
-      })
+        document
+          .getElementById("table")
+          .getElementsByTagName("tbody")[0]
+          .append(...$trs);
+      }
+
+      async function getRepo() {
+        const data = await (
+          await fetch("https://ktane.timwi.de/json/raw")
+        ).json();
+        moduleInfo = new Map(
+          data.KtaneModules.map((mod) => [mod.ModuleID, mod.DisplayName ?? mod.Name])
+        );
+        console.log(moduleInfo)
+      }
+
+      function getModuleName(moduleID) {
+        return moduleInfo.get(moduleID);
+      }
+
+      window.addEventListener("load", async () => {
+        const params = new URLSearchParams(window.location.search);
+        const steamID = params.get("steamID");
+        await Promise.all([
+          getRepo(),
+          (async () => {
+            try {
+              missionDetails = await (
+                await fetch(
+                  `http://localhost:8095/missionDetail?steamID=${steamID}`
+                )
+              ).json();
+            } catch {
+              document.getElementById("table").innerText =
+                "Error getting mission info: Is DeMiL Service active?";
+            }
+
+            setData(steamID);
+            document.getElementsByTagName("h2")[0].innerHTML =
+              missionDetails.Title;
+
+            const $modal = document.getElementById("modal");
+            $modal
+              .getElementsByClassName("close")[0]
+              .addEventListener("click", () => {
+                $modal.classList.remove("open");
+                $modal.classList.add("close");
+              });
+
+            document
+              .getElementById("searchInput")
+              .addEventListener("input", () => {
+                setData(steamID);
+              });
+          })(),
+        ]);
+      });
     </script>
     <style>
-      #table td, #table th {
+      #table td,
+      #table th {
         border-right: 1px black solid;
       }
       #table tbody tr:nth-child(2n-1) {
         background-color: lightgray;
       }
       #table {
-        max-width: 1080px;
+        max-width: 100%;
+        min-width: 640px;
         margin: 0 auto;
         border: 1px black solid;
       }
+      .contents {
+        max-width: 1080px;
+        margin: 16px auto;
+      }
+      #modal {
+        position: fixed;
+        background-color: white;
+        width: 60vw;
+        height: 80vh;
+        top: 10vh;
+        left: 20vw;
+        z-index: 10000;
+        box-shadow: 8px 4px 4px gray;
+        border-radius: 8px;
+        border: 1px solid darkgray;
+        padding: 16px;
+        text-align: right;
+      }
+
+      #modal.open {
+        display: block;
+      }
+      #modal.close {
+        display: none;
+      }
+      #modal div.close {
+        display: inline-block;
+        font-size: 24px;
+        padding: 8px;
+        cursor: pointer;
+      }
+
+      #modalContent {
+        position: relative;
+        height: 90%;
+        overflow-y: scroll;
+        text-align: left;
+      }
+
+      .poolContainer {
+        padding: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+
+      .poolContainer > div {
+        padding: 4px 8px;
+        margin: 4px;
+        border: 1px solid black;
+      }
+      #loadingSuccess {
+        width: fit-content;
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        border-radius: 4px;
+        padding: 8px;
+        box-shadow: 4px 4px 8px grey;
+      }
+      #loadingSuccess.success {
+        background-color: lightgreen;
+      }
+      #loadingSuccess.failed {
+        background-color: lightcoral;
+      }
+      #loadingSuccess.none {
+        visibility: hidden;
+      }
+      input {
+        margin: 8px;
+      }
     </style>
-</head>
-<body>
-  <h2></h2>
-  <table id="table">
-    <thead>
-      <tr><th>Mission Name</th><th>Description</th><th></th></tr>
-    </thead>
-    <tbody></tbody>
-  </tabe>
-    
-</body>
+  </head>
+  <body>
+    <div id="loadingSuccess" class="none"></div>
+    <div class="contents">
+      <h2></h2>
+      Search: <input type="text" id="searchInput" />
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Mission Name</th>
+            <th>Description</th>
+            <th>Bomb Count</th>
+            <th>Bomb Time</th>
+            <th>Strikes</th>
+            <th>Widgets</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="modal" class="close">
+        <div class="close">X</div>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+  </body>
 </html>
