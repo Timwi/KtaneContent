@@ -12,8 +12,21 @@
     <script>
       var missionDetails;
       var moduleInfo;
-      async function startMission(steamID, missionID) {
+
+      function showMessage(str, error=false) {
         const $el = document.getElementById("loadingSuccess");
+        $el.innerText = str;
+        if(error) {
+          $el.classList.remove("success", "none");
+          $el.classList.add("failed");
+
+        } else {
+          $el.classList.remove("failed", "none");
+          $el.classList.add("success");
+        }
+      }
+
+      async function startMission(steamID, missionID) {
         try {
           const res = await (
             await fetch(
@@ -21,17 +34,15 @@
             )
           ).json();
           if (res.Seed) {
-            $el.innerText = `Started mission: ${res.MissionID}(Mission seed: ${res.Seed})`;
-            $el.classList.remove("failed", "none");
-            $el.classList.add("success");
-          } else {
-            throw new Error(JSON.stringify(res, null, 2));
+            showMessage(`Started mission: ${res.MissionID}(Mission seed: ${res.Seed})`);
+          } else if(res["Missing modules"]) {
+            const modules = res["Missing modules"].map(m => getModuleName(m));
+            showMessage(`Missing modules: \n${modules.join("\n")}`, true);
           }
         } catch (e) {
           console.error(e);
-          $el.innerText = e;
-          $el.classList.remove("success", "none");
-          $el.classList.add("failed");
+
+          showMessage(e, true);
         }
       }
 
@@ -39,6 +50,9 @@
         const $modal = document.getElementById("modal");
         const $modalContent = document.getElementById("modalContent");
         $modalContent.innerText = "";
+        const $title = document.createElement("h3");
+        $title.innerText = mission.Title;
+        $modalContent.appendChild($title);
         for (let bomb of mission.BombData) {
           $modalContent.appendChild(createBombView(bomb));
         }
@@ -48,7 +62,7 @@
 
       function createBombView(bomb) {
         const $el = document.createElement("div");
-        $el.innerText = `Bomb Time:${getTimeString(bomb.TimeLimit)} Strikes:${
+        $el.innerText = `Bomb Time:${getTimeString(bomb.TimeLimit)} Modules:${bomb.ComponentPools.length} Strikes:${
           bomb.NumStrikes
         } Widgets:${bomb.OptionalWidgetCount}`;
         const $container = document.createElement("div");
@@ -74,6 +88,7 @@
           .join(":");
       }
 
+      const urlString = new DOMParser().parseFromString("Copy&nbsp;URL", "text/html").body.innerText;
       function setData(steamID) {
         const filter = document.getElementById("searchInput").value ?? "";
         const $tbody = document
@@ -93,7 +108,13 @@
             startMission(steamID, mission.MissionID)
           );
           $start.innerText = "Start";
-
+          const $url = document.createElement("button");
+          $url.addEventListener("click", () => {
+            navigator.clipboard.writeText(mission.StartURL);
+            showMessage("URL copied!")
+          });
+          $url.textContent = urlString;
+          
           const time = mission.BombData.map((bomb) => bomb.TimeLimit).reduce(
             (a, b) => a + b,
             0
@@ -102,6 +123,10 @@
             mission.Title,
             mission.Description,
             mission.BombCount,
+            mission.BombData.map((bomb) => bomb.ComponentPools.length).reduce(
+              (a, b) => a + b,
+              0
+            ),
             getTimeString(time),
             mission.BombData.map((bomb) => bomb.NumStrikes).reduce(
               (a, b) => a + b,
@@ -112,6 +137,7 @@
               : mission.BombData[0].OptionalWidgetCount,
             $detail,
             $start,
+            $url
           ];
 
           for (let $el of rows) {
@@ -134,7 +160,6 @@
         moduleInfo = new Map(
           data.KtaneModules.map((mod) => [mod.ModuleID, mod.DisplayName ?? mod.Name])
         );
-        console.log(moduleInfo)
       }
 
       function getModuleName(moduleID) {
@@ -252,6 +277,8 @@
         border-radius: 4px;
         padding: 8px;
         box-shadow: 4px 4px 8px grey;
+        max-height: 90vh;
+        overflow-y: auto;
       }
       #loadingSuccess.success {
         background-color: lightgreen;
@@ -278,9 +305,11 @@
             <th>Mission Name</th>
             <th>Description</th>
             <th>Bomb Count</th>
+            <th>Module Count</th>
             <th>Bomb Time</th>
             <th>Strikes</th>
             <th>Widgets</th>
+            <th></th>
             <th></th>
             <th></th>
           </tr>
