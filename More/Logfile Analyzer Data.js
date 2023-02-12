@@ -13519,7 +13519,7 @@ let parseData = [
 				handler: function (matches, module) {
 					let svg = "<svg class='valves' viewbox='0 0 30 10'> <rect width='30' height='10' ry='5' fill='#7F7F7F'/>";
 					for (let i = 0; i < 3; i++)
-						svg += `<circle cx='${5 + 10 * i}' cy='5' r='3.25' fill='${matches[2][i + 1] == 0 ? "#DDD" : "#222"}'/>`;
+						svg += `<circle cx='${5 + 10 * i}' cy='5' r='3.25' fill='${matches[2][i] == 0 ? "#DDD" : "#222"}'/>`;
 					module.push({ label:matches[1], obj:svg + '</svg>'});
 					return true;
 				}
