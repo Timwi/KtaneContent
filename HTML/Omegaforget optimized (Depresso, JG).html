@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -50,6 +50,26 @@
         .dark .page-bg-07 {
             background-image: url("img/OmegaForget/page-bg-noise-07-dark.png");
         }
+        .baseddiv {
+            text-align: center;
+        }
+        .baseinput {
+            border-radius: 3px;
+            border: 5px;
+            width: 32px;
+            margin: auto;
+            margin-right: 20px;
+            background-color: rgb(198, 198, 198);
+            border: 2px solid black;
+
+            height: 25px;
+            font-size: 24px;
+        }
+        .baseoutput {
+            width: 60px;
+            margin-right: 5px;
+            background-color: rgb(198, 198, 198);
+        }
     </style>
 </head>
 <body>
@@ -78,8 +98,17 @@
                     <li>When the stage is a multiple of 5, the stored values reset.</li>
                     <li>% is a symbol for the Modulo operation.</li>
                     <li>The E value is calculated via the LEDs on the second page. <strong>(PLEASE ONLY CALCULATE E IF YOUR EQUATION <i>NEEDS</i> IT)</strong></li>
-                    <li>I would recommend <a href="https://convertxy.com/index.php/numberbases/">this</a> base converter.</li>
                 </ul>
+                <div class="baseddiv">
+                <!-- The reason its Doutput and Eoutput is because i forgort waht the E value was. It's supposed to be I & D.-->
+                <p>Input the displayed characters from the module in the text field to convert them to the D & E values. <strong>Case does *NOT* matter</strong></p>
+                <input type="text" id="input" class="baseinput" maxlength="2" placeholder="XX" spellcheck="false">
+                <label for="Doutput" >I:</label>
+                <input type="text" id="Doutput" class="baseoutput" maxlength="2" placeholder="D value" spellcheck="false" readonly>
+                <label for="Eoutput" >D:</label>
+                <input type="text" id="Eoutput" class="baseoutput" maxlength="2" placeholder="E value" spellcheck="false" readonly>
+                </div>
+                <br>
                 <table>
                     <tr>
                         <th class="cornercell">ඞ</th>
@@ -91,7 +120,7 @@
                     </tr>
                     <tr>
                         <td><b>XY</b></td>
-                        <td>I+2E</td>
+                        <td>I+2*E</td>
                         <td>J+D-I</td>
                         <td>I+J+K</td>
                         <td>L-K-J+I</td>
@@ -99,15 +128,15 @@
                     </tr>
                     <tr>
                         <td><b>XZ</b></td>
-                        <td>2I+E</td>
+                        <td>2*I+E</td>
                         <td>I-J+D</td>
                         <td>I-K</td>
-                        <td>3I-4D</td>
-                        <td>999-4I+M</td>
+                        <td>3*I-4*D</td>
+                        <td>999-4*I+M</td>
                     </tr>
                     <tr>
                         <td><b>YZ</b></td>
-                        <td>999-2I</td>
+                        <td>999-2*I</td>
                         <td>J-I</td>
                         <td>J+K-I</td>
                         <td>I+E-D</td>
@@ -117,8 +146,8 @@
                         <td><b>YX</b></td>
                         <td>I-(99-E)</td>
                         <td>E+D+I-J</td>
-                        <td>I(J%6+1)</td>
-                        <td>L-I(I%4+1)</td>
+                        <td>I*(J%6+1)</td>
+                        <td>L-I*(I%4+1)</td>
                         <td>J+15-(I-I%2)/2</td>
                     </tr>
                     <tr>
@@ -132,10 +161,10 @@
                     <tr>
                         <td><b>ZY</b></td>
                         <td>(I-I%2)/2+D</td>
-                        <td>2D-I+J</td>
-                        <td>3D-K+I</td>
+                        <td>2*D-I+J</td>
+                        <td>3*D-K+I</td>
                         <td>-L-I+D</td>
-                        <td>5I-L+3D-E</td>
+                        <td>5*I-L+3*D-E</td>
                     </tr>
                 </table>
                 <br>
@@ -360,10 +389,9 @@
                 <span class="page-header-section-title">OmegaForget</span>
             </div>
             <div class="page-content">
-
-                    <h3>Section ?: Display Identification Reference</h3>
-                    <br>
-                    <img id="disp-ref" src="img/OmegaForget/DisplayCharReference.svg">
+                <h3>Section ?: Display Identification Reference</h3>
+                <br>
+                <img id="disp-ref" src="img/OmegaForget/DisplayCharReference.svg">
             </div>
             <div class="page-footer relative-footer">Page 4 of 4</div>
         </div>
@@ -460,4 +488,102 @@
         </div>
     </div>
 </body>
+<script>
+    function convertBase(str, fromBase, toBase) {
+        // Credits to Zamicol / Slavik Meltser //
+        let DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
+
+        if(fromBase == 64) {
+            DIGITS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        }
+        const add = (x, y, base) => {
+            let z = [];
+            const n = Math.max(x.length, y.length);
+            let carry = 0;
+            let i = 0;
+            while (i < n || carry) {
+                const xi = i < x.length ? x[i] : 0;
+                const yi = i < y.length ? y[i] : 0;
+                const zi = carry + xi + yi;
+                z.push(zi % base);
+                carry = Math.floor(zi / base);
+                i++;
+            }
+            return z;
+        }
+
+        const multiplyByNumber = (num, x, base) => {
+            if (num < 0) return null;
+            if (num == 0) return [];
+
+            let result = [];
+            let power = x;
+            while (true) {
+                num & 1 && (result = add(result, power, base));
+                num = num >> 1;
+                if (num === 0) break;
+                power = add(power, power, base);
+            }
+
+            return result;
+        }
+
+        const parseToDigitsArray = (str, base) => {
+            const digits = str.split('');
+            let arr = [];
+            for (let i = digits.length - 1; i >= 0; i--) {
+                const n = DIGITS.indexOf(digits[i])
+                if (n == -1) return null;
+                arr.push(n);
+            }
+            return arr;
+        }
+
+        const digits = parseToDigitsArray(str, fromBase);
+        if (digits === null) return null;
+
+        DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
+
+        let outArray = [];
+        let power = [1];
+        for (let i = 0; i < digits.length; i++) {
+            digits[i] && (outArray = add(outArray, multiplyByNumber(digits[i], power, toBase), toBase));
+            power = multiplyByNumber(fromBase, power, toBase);
+        }
+
+        let out = '';
+        for (let i = outArray.length - 1; i >= 0; i--)
+            out += DIGITS[outArray[i]];
+
+        return out;
+    }
+
+//Maths portion (Credits to emik for giving me grounds for where to start making this)
+// BTW the reason its D & E is because i forgort what the E value was so its supposed to be I & D :)
+
+    let inElement = null;
+    let outDElement = null;
+    let outEElement = null;
+    let D = null;
+    let E = null;
+
+    function setup() {
+        inElement = document.getElementById("input");
+        DoutElement = document.getElementById("Doutput");
+        EoutElement = document.getElementById("Eoutput");
+        
+        function update() {
+            //I spaghetti coded my way through a way of the converter converting correctly no matter what case it has
+            Dval = "".concat(inElement.value).toLowerCase();
+            D = convertBase(Dval, 36, 8);
+            DoutElement.value = D % 1000;
+
+            Eval = "".concat(inElement.value).toUpperCase();
+            E = convertBase(Eval, 64, 10);
+            EoutElement.value = E % 1000;
+        }
+        setInterval(update, 100);
+    }
+    setup();
+</script>
 </html>
