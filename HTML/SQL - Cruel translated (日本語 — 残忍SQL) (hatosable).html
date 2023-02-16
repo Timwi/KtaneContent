@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>残忍SQL — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .arrow { width: 50px; }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-around;
+        }
+        .hstack.center { align-content: center; }
+        td.hstack { text-align: center; }
+
+        .line {
+          margin-top: 7px;
+          width: 35px;
+          background: darkgray;
+          height: 5px;
+          float: left;
+        }
+
+        .point {
+          width: 0;
+          height: 0;
+          border-top: 10px solid transparent;
+          border-bottom: 10px solid transparent;
+          border-left: 15px solid darkgray;
+          float: right;
+        }
+
+        .dark .bb, .bb { border-bottom: 3px solid; }
+        .dark .tb, .tb { border-top: 3px solid; }
+        .dark .lb, .lb { border-left: 3px solid; }
+        .dark .rb, .rb { border-right: 3px solid; }
+        .hcell { background-color: #eaeaea; }
+        .dark .hcell { background-color: #555; }
+        .scell { background-color: #cacaca; }
+        .dark .scell { background-color: #777; }
+    </style>
+    <script src="js/ktane-utils.js"></script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/SQL - Cruel.svg" class="diagram">
+                <h2>モジュール詳細：残忍SQL</h2>
+                <p class="flavour-text">大きな数字の表を使いこなして類似点を探すのはなんと楽しいことだろう……。</p>
+
+                <p>このモジュールは、SQL文シミュレータである。解除するには、与えられた結果を出力するSQLクエリ(命令)を作成する。入力データはこのマニュアル内にあり、それを使って与えられた結果を表現する。このドキュメントを使用して、入力データから希望通りの結果を表現するSQLクエリを作る。</p>
+
+                <h2>ゴールボタン</h2>
+                <p><strong>Goal</strong>ボタンを押すと、モジュールが求めている結果を見ることができる。求められるのは、1~3段、3列の数字の表である。以下はその例である。</p>
+
+                <div class="hstack">
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                        <tr><td>4</td><td>2</td><td>1</td></tr>
+                        <tr><td>7</td><td>1</td><td>4</td></tr>
+                    </table>
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                        <tr><td>4</td><td>2</td><td>1</td></tr>
+                    </table>
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                    </table>
+                </div>
+
+                <h2 style="margin-top: 2cm">チェックボタン</h2>
+
+                <p><strong>Check</strong>ボタンを押すと、モジュールはSQLクエリを組み立て入力データに対してそれを実行する。結果がゴールの表と比較される。それが一致した場合モジュールは解除され、そうでない場合、ミスが記録される。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/7</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h2>モジュールの解除</h2>
+
+                <p>モジュールを解除するには、入力データから、ゴール表のどのようなオプションが使用されたかを示せる数字を見つける。段は常に上から下に並んでいるが、列は並べ替えが可能である。例を以下に示す。</p>
+
+                <div class="hstack">
+                    <div>
+                        <p><strong>ゴール表</strong></p>
+                        <table style="align-self: flex-start;">
+                            <tr><td>9</td><td>0</td><td class="tb lb rb hcell">1</td></tr>
+                            <tr><td>1</td><td>1</td><td class="lb rb hcell">4</td></tr>
+                            <tr><td>1</td><td>0</td><td class="bb lb rb hcell">7</td></tr>
+                        </table>
+                    </div>
+                    <div style="align-self: center; flex-basis: 33%;">
+                        <p>ゴール表の3列目がF列目と一致していそうだ！</p>
+                        <p><strong>これはF列を使用して値をグループ化したことを意味するのかもしれない！</strong></p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p><strong>入力データの例</strong></p>
+                        <table>
+                            <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+                            <tr><td>9</td><td>3</td><td>8</td><td>6</td><td>9</td><td class="tb lb rb hcell">1</td></tr>
+                            <tr><td>9</td><td>3</td><td>0</td><td>4</td><td>3</td><td class="lb rb hcell">1</td></tr>
+                            <tr><td>1</td><td>2</td><td>1</td><td>6</td><td>2</td><td class="lb rb hcell">4</td></tr>
+                            <tr><td>1</td><td>7</td><td>0</td><td>4</td><td>3</td><td class="bb lb rb hcell">7</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 2cm">入力データ</h2>
+                <p>モジュールの解除に使用される入力データを以下に示す。この表の中のゴール表から値を見つけ、同じ出力を生成するSQLクエリを作成する。</p>
+
+                <div  class="hstack center">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>5</td><td>0</td><td>2</td><td>1</td><td>0</td><td>3</td></tr>
+                        <tr><td>7</td><td>8</td><td>3</td><td>1</td><td>0</td><td>6</td><td>4</td></tr>
+                        <tr><td>7</td><td>5</td><td>7</td><td>4</td><td>6</td><td>5</td><td>3</td></tr>
+                        <tr><td>9</td><td>8</td><td>0</td><td>4</td><td>1</td><td>0</td><td>4</td></tr>
+                        <tr><td>1</td><td>2</td><td>7</td><td>2</td><td>6</td><td>6</td><td>3</td></tr>
+                        <tr><td>1</td><td>8</td><td>3</td><td>1</td><td>6</td><td>0</td><td>5</td></tr>
+                        <tr><td>9</td><td>2</td><td>7</td><td>2</td><td>1</td><td>5</td><td>5</td></tr>
+                        <tr><td>1</td><td>5</td><td>7</td><td>2</td><td>6</td><td>6</td><td>4</td></tr>
+                        <tr><td>7</td><td>8</td><td>0</td><td>4</td><td>0</td><td>0</td><td>4</td></tr>
+                        <tr><td>9</td><td>2</td><td>0</td><td>1</td><td>1</td><td>5</td><td>5</td></tr>
+                    </table>
+
+                    <blockquote style="flex-basis: 50%;">
+                     <p><strong>補足</strong></p>
+                     <p>SQL結果は必ずしも読み順ではない。<strong>段</strong>は上から下へだが、<strong>列</strong>はクエリ内のSELECT句で任意に並べ替えられる。</p>
+                    </blockquote>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/7</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+            </div>
+            <div class="page-content">
+
+             <h2>モジュール詳細：SQL</h2>
+             <p>SQLは、データソースを操作して結果を生成する方法を示す問い合わせ言語である。多様なキーワードが含まれているが、このモジュールではそのうちの小さなサブセットのみが使用される。</p>
+
+             <h3>SQLの処理方法</h3>
+             <p>SQLは以下のように処理される。</p>
+             <ol>
+                 <li style="margin-bottom: 1em">各段はまず<strong>WHERE</strong>句と比較される(後述)。WHERE句に合致する段がある場合、その段は以降の処理のために保持される。</li>
+
+                    <li style="margin-bottom: 1em">その後、すべての段は<strong>GROUP BY</strong>句(後述)に基づいてグループ化される。<strong>必ず</strong>1つのグループ表現を与えなければならない。</li>
+
+                    <li style="margin-bottom: 1em">各グループの段は<strong>SELECT</strong>句と設定された集計関数(後述)の処理が行われる。<strong>GROUP BY</strong>句を使用<strong>している</strong>1つの表現を除き、<strong>必ず</strong>すべてに集約関数を使用しなければならない。</li>
+
+                    <li style="margin-bottom: 1em">最後に、<strong>LIMIT</strong>句(後述)で結果から最初のX段をスキップして、その次のY段を取ることで、特定の数の段を破棄することができる。</li>
+                </ol>
+
+                <h3>SELECT X, Y, Z</h3>
+                <p><strong>SELECT</strong>句はどの段が(どの順に)返されるべきかを選択する。モジュールは、単一の列参照を最大3つまで提供している。各列をクリックすると、AからG、「-」を循環させることができ、「-」はその選択を無効にする。この例を以下に示す。</p>
+
+                <div class="hstack">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>3</td><td>0</td><td>2</td><td>0</td><td>4</td><td>6</td></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>4</td><td>7</td><td>1</td><td>5</td><td>3</td><td>0</td><td>9</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                        <tr><td>1</td><td>9</td><td>3</td><td>7</td><td>6</td><td>5</td><td>4</td></tr>
+                        <tr><td>8</td><td>5</td><td>4</td><td>3</td><td>1</td><td>8</td><td>2</td></tr>
+                    </table>
+                    <div style="align-self: center; flex-basis: 40%;">
+                        <p><strong>SQL：</strong> SELECT D, A</p>
+                        <p>3番目の参照列は無いことに注意。「-」を使用している。</p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <table>
+                        <tr><th>D</th><th>A</th></tr>
+                        <tr><td>2</td><td>9</td></tr>
+                        <tr><td>1</td><td>7</td></tr>
+                        <tr><td>4</td><td>2</td></tr>
+                        <tr><td>5</td><td>4</td></tr>
+                        <tr><td>9</td><td>6</td></tr>
+                        <tr><td>7</td><td>1</td></tr>
+                        <tr><td>3</td><td>8</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>WHERE X 演算子 Y</h3>
+                <p><strong>WHERE</strong>は「フィルタ」の役割を果たしている。段は条件と比較される。フィルタ条件に一致した段のみが出力として保持される。このシンプルなSQLシミュレータでは、列と一定の値のみの比較が可能である(例：A&nbsp;&lt;&nbsp;2、C&nbsp;=&nbsp;3、F&nbsp;&gt;=&nbsp;5)。有効な演算子は、以下の単純かつ身近な算術演算子である。</p>
+                <ul>
+                    <li>=：同値(イコール)</li>
+                    <li>&lt;&gt;：同値ではない(ノットイコール)</li>
+                    <li>&lt;：未満</li>
+                    <li>&lt;=：以下</li>
+                    <li>&gt;：より大きい</li>
+                    <li>&gt;=：以上</li>
+                </ul>
+                <p>単純なフィルタの基本例を以下に示す。</p>
+
+                <div class="hstack">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>3</td><td>0</td><td>2</td><td>0</td><td>4</td><td>6</td></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>4</td><td>7</td><td>1</td><td>5</td><td>3</td><td>0</td><td>9</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                        <tr><td>1</td><td>9</td><td>3</td><td>7</td><td>6</td><td>5</td><td>4</td></tr>
+                        <tr><td>8</td><td>5</td><td>4</td><td>3</td><td>1</td><td>8</td><td>2</td></tr>
+                    </table>
+                    <div style="align-self: center">
+                        <p><strong>SQL：</strong> WHERE C &gt;= 5</p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <table style="align-self: flex-start;">
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                    </table>
+                </div>
+                <p>&nbsp;</p>
+
+                <blockquote><p><strong>注意：</strong>条件は<strong>SELECT</strong>された列だけではなく、どの列にも適用される。</p></blockquote>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/7</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>GROUP BY X</h3>
+                <p><strong>GROUP BY</strong>句はどの列を使用して段のグループを作るか選択する。ある列をグループ化する場合、その列にあるすべての値が上からチェックされ、それらの値によってグループが作られ、生成された順に並べられる。さらに、その段のグループに集計関数 = Aggregators(後述)を適用する。例を以下に示す。</p>
+
+                <div class="hstack">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>5</td><td>0</td><td>2</td><td>1</td><td>0</td><td>3</td></tr>
+                        <tr><td>7</td><td>8</td><td>3</td><td>1</td><td>0</td><td>6</td><td>4</td></tr>
+                        <tr><td>7</td><td>5</td><td>7</td><td>4</td><td>6</td><td>5</td><td>3</td></tr>
+                        <tr><td>9</td><td>8</td><td>0</td><td>4</td><td>1</td><td>0</td><td>4</td></tr>
+                        <tr><td>1</td><td>2</td><td>7</td><td>2</td><td>6</td><td>6</td><td>3</td></tr>
+                        <tr><td>1</td><td>8</td><td>3</td><td>1</td><td>6</td><td>0</td><td>5</td></tr>
+                        <tr><td>9</td><td>2</td><td>7</td><td>2</td><td>1</td><td>5</td><td>5</td></tr>
+                    </table>
+                    <div style="align-self: center; flex-basis: 33%;">
+                        <p><strong>SQL：</strong> GROUP BY C</p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <table>
+                        <tr><th>A</th><th>B</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td colspan="6" class="tb bb lb rb hcell">C = 0</td></tr>
+                        <tr><td>9</td><td>5</td><td>2</td><td>1</td><td>0</td><td>3</td></tr>
+                        <tr><td>9</td><td>8</td><td>4</td><td>1</td><td>0</td><td>4</td></tr>
+                        <tr><td colspan="6" class="tb bb lb rb hcell">C = 3</td></tr>
+                        <tr><td>7</td><td>8</td><td>1</td><td>0</td><td>6</td><td>4</td></tr>
+                        <tr><td>1</td><td>8</td><td>1</td><td>6</td><td>0</td><td>5</td></tr>
+                        <tr><td colspan="6" class="tb bb lb rb hcell">C = 7</td></tr>
+                        <tr><td>7</td><td>5</td><td>4</td><td>6</td><td>5</td><td>3</td></tr>
+                        <tr><td>1</td><td>2</td><td>2</td><td>6</td><td>6</td><td>3</td></tr>
+                        <tr><td>9</td><td>2</td><td>2</td><td>1</td><td>5</td><td>5</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 5/7</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>SELECT Aggregators</h3>
+
+                <p>このモジュールはSELECTに対する集計関数が使用可能である。集計関数は、複数の段のグループを一つの値にまとめるグループ関数である。集計関数を使用する際には、 <strong>GROUP BY</strong>句の表現も<strong>必ず</strong>使用しなければならない。集計関数が段のグループにどのように影響を与えるかについて、いくつかの例を示す。</p>
+
+                <table style="width: 100%">
+                    <tr>
+                        <th>例のデータ</th>
+                        <th>条件</th>
+                        <th>結果</th>
+                    </tr>
+                    <tr>
+                        <td class="hstack nohighlight">
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 0</td></tr>
+                                <tr><td>9</td><td>5</td></tr>
+                                <tr><td>9</td><td>8</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 3</td></tr>
+                                <tr><td>7</td><td>8</td></tr>
+                                <tr><td>1</td><td>8</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 7</td></tr>
+                                <tr><td>7</td><td>5</td></tr>
+                                <tr><td>1</td><td>2</td></tr>
+                                <tr><td>9</td><td>2</td></tr>
+                            </table>
+                        </td>
+                        <td style="text-align: center">SELECT MIN(A), MAX(B), C</td>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><td>9</td><td>8</td><td class="tb rb lb hcell">0</td></tr>
+                                <tr><td>1</td><td>8</td><td class="rb lb hcell">3</td></tr>
+                                <tr><td>1</td><td>5</td><td class="bb rb lb hcell">7</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="hstack nohighlight">
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 0</td></tr>
+                                <tr><td>9</td><td>5</td></tr>
+                                <tr><td>9</td><td>8</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 3</td></tr>
+                                <tr><td>7</td><td>8</td></tr>
+                                <tr><td>1</td><td>8</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th><th>B</th></tr>
+                                <tr><td colspan="2" class="tb bb lb rb hcell">C = 7</td></tr>
+                                <tr><td>7</td><td>5</td></tr>
+                                <tr><td>1</td><td>2</td></tr>
+                                <tr><td>9</td><td>2</td></tr>
+                            </table>
+                        </td>
+                        <td style="text-align: center">SELECT COUNT(A), AVG(B), C</td>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><td>2</td><td>6</td><td class="tb rb lb hcell">0</td></tr>
+                                <tr><td>2</td><td>8</td><td class="rb lb hcell">3</td></tr>
+                                <tr><td>3</td><td>3</td><td class="bb rb lb hcell">7</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="hstack nohighlight">
+                            <table>
+                                <tr><th>A</th></tr>
+                                <tr><td colspan="1" class="tb bb lb rb hcell">C = 0</td></tr>
+                                <tr><td>9</td></tr>
+                                <tr><td>9</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th></tr>
+                                <tr><td colspan="1" class="tb bb lb rb hcell">C = 3</td></tr>
+                                <tr><td>7</td></tr>
+                                <tr><td>1</td></tr>
+                            </table>
+                            <table>
+                                <tr><th>A</th></tr>
+                                <tr><td colspan="1" class="tb bb lb rb hcell">C = 7</td></tr>
+                                <tr><td>7</td></tr>
+                                <tr><td>1</td></tr>
+                                <tr><td>9</td></tr>
+                            </table>
+                        </td>
+                        <td style="text-align: center">SELECT SUM(A), C</td>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><td>18</td><td class="tb rb lb hcell">0</td></tr>
+                                <tr><td>8</td><td class="rb lb hcell">3</td></tr>
+                                <tr><td>17</td><td class="bb rb lb hcell">7</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <blockquote>
+                    <p><strong>注意：</strong>AVG集計関数では、小数は整数に変換されるため、自動的に小数点以下が切り捨てされる。このため、処理において小数は削除される。このモジュールでは小数を扱うことはない。</p>
+                </blockquote>
+            </div>
+            <div class="page-footer relative-footer">ページ 6/7</div>
+        </div>
+    </div>
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">残忍SQL</span>
+        </div>
+        <div class="page-content">
+
+         <h3>LIMIT X, Y</h3>
+         <p><strong>LIMIT</strong>の後には、次の二つの値が続く。</p>
+         <ul>
+             <li style="margin-bottom: 1em">一つ目の値：条件適用後に保持する段の個数の最大値。「All」を選択した場合、どの段も除外されない。</li>
+             <li style="margin-bottom: 1em">二つ目の値：条件適用後にスキップする段の個数の最大値。「None」を選択した場合、どの段も除外されない。</li>
+         </ul>
+         <p>二つ目の値(スキップ)が最初に適用され、結果の最上段からその段数だけスキップされることに注意する。その後、最初の値が適用され、その中から最大個数の段を返す。</p>
+
+            <p>例：</p>
+
+            <table>
+                <tr><th>例のデータ</th><th>条件</th><th>結果</th></tr>
+                <tr>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>9</td><td>3</td><td>0</td></tr>
+                            <tr><td>7</td><td>8</td><td>6</td></tr>
+                            <tr><td>2</td><td>0</td><td>5</td></tr>
+                            <tr><td>4</td><td>7</td><td>1</td></tr>
+                        </table>
+                    </td>
+                    <td>LIMIT 2, 0<br />(制限2、スキップなし)</td>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>9</td><td>3</td><td>0</td></tr>
+                            <tr><td>7</td><td>8</td><td>6</td></tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>9</td><td>3</td><td>0</td></tr>
+                            <tr><td>7</td><td>8</td><td>6</td></tr>
+                            <tr><td>2</td><td>0</td><td>5</td></tr>
+                            <tr><td>4</td><td>7</td><td>1</td></tr>
+                        </table>
+                    </td>
+                    <td>LIMIT 999, 1<br />(制限999(なし); 1段スキップ)</td>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>7</td><td>8</td><td>6</td></tr>
+                            <tr><td>2</td><td>0</td><td>5</td></tr>
+                            <tr><td>4</td><td>7</td><td>1</td></tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>9</td><td>3</td><td>0</td></tr>
+                            <tr><td>7</td><td>8</td><td>6</td></tr>
+                            <tr><td>2</td><td>0</td><td>5</td></tr>
+                            <tr><td>4</td><td>7</td><td>1</td></tr>
+                        </table>
+                    </td>
+                    <td>LIMIT 1, 2<br />(制限1; 2段スキップ)</td>
+                    <td class="nohighlight">
+                        <table>
+                            <tr><td>2</td><td>0</td><td>5</td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">ページ 7/7</div>
+    </div>
+</body>
+</html>
