@@ -8963,7 +8963,7 @@ let parseData = [
 						if (m = str.match(/\[(\d),(\d)\]/)) {
 							return { x: m[1] - '0', y: m[2] - '0' };
 						} else if (m = str.match(/([A-Z])(\d)/)) {
-							return { x: 'ABCEFGHI'.indexOf(m[1]), y: m[2] - '1' };
+							return { x: 'ABCDEFGHI'.indexOf(m[1]), y: m[2] - '1' };
 						} else if (m = str.match(/<(\d), (\d)>/)) {
 							return { x: m[2] - '0', y: m[1] - '0' };
 						} else if (m = str.match(/^(\d), (\d)/)) {
