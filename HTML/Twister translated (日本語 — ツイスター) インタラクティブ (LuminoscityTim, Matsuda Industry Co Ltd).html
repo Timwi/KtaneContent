@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+        <title>ツイスター — Keep Talking and Nobody Explodes Mod</title>
+        <link rel='stylesheet' type='text/css' href='css/font.css'>
+        <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <script src="js/jquery.3.1.1.min.js"></script>
+        <script src="js/Utilities/svg-utils.js"></script>
+        <style>
+            .hstack {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            .vstack {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .wrap {
+                flex-wrap: wrap;
+            }
+            .hstack.just-left {
+                justify-content: left;
+            }
+            .vstack.just-left {
+                align-items: start;
+            }
+            .twister-diagram {
+                float: right;
+                clear: right;
+                width: 5cm;
+                margin-bottom: .5cm;
+                margin-left: .5cm;
+            }
+            div.cell {
+                height: 80px;
+                width: 80px;
+                text-align: center;
+                /* border: 1px solid white; */
+                position: relative;
+            }
+            div.cell svg {
+                z-index: 0;
+            }
+            div.cell:not(.nopointer) { cursor: pointer; }
+            div.cell:not(.move) {
+                font-size: 40px;
+            }
+            div.mat {
+                height: 560px;
+                width: 400px;
+            }
+            div.matcell {
+                position: absolute;
+                margin: auto;
+                top: 0; bottom: 0;
+                left: 0; right: 0;
+                display: inline-block;
+                vertical-align: bottom;
+                z-index: 2;
+                /* width: 1.17cm;
+                height: 1.17cm; */
+                /* border: none; */
+            }
+            .circle-row {
+                position: relative;
+                height: 80px;
+                margin: auto;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            .cell.numbers, .letters .cell {
+                border-width: 0;
+                width: 80px;
+                height: 80px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            .cell.numbers { padding-top: 2mm; }
+            .player {
+                margin: 4px;
+            }
+            .player div {
+                box-sizing: border-box;
+                position: absolute;
+                /* width: 70px;
+                height: 70px;
+                top: 5px;
+                left: 5px; */
+                width: 80px;
+                height: 80px;
+                top: -1px;
+                left: -1px;
+            }
+            .player.present div {
+                margin: 1px;
+                border: 3px solid #777;
+            }
+            .move, .stagetext {
+                font-size: 20px;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                flex-direction: column;
+            }
+            .stagetext {
+                padding-top: 8px;
+            }
+            .stagenumber {
+                font-size: 35px;
+                height: 30px;
+                width: 42px;
+                position: relative;
+                top: 2px;
+                margin-left: 10px;
+                margin-right: 10px;
+                text-align: center;
+            }
+            .stagenumber.selected {
+                background-color: rgba(0, 0, 255, 0.4);
+            }
+            .stagetext.label {
+                padding-left: 130px;
+            }
+            .move {
+                margin: 3px;
+                border: 1px solid;
+            }
+            .player.selected {
+                margin: 2px;
+                border: red 2px dashed;
+            }
+            .saves button.selected {
+                background-color: #EE0;
+            }
+
+            .green { fill: #00c850; }
+            .yellow { fill: #ffb400; }
+            .blue { fill: #0096ff; }
+            .red { fill: #ff3200; }
+
+            .lhand1 { background-image: url("img/Twister/LeftHand1.svg"); }
+            .rhand1 { background-image: url("img/Twister/RightHand1.svg"); }
+            .lfoot1 { background-image: url("img/Twister/LeftFoot1.svg"); }
+            .rfoot1 { background-image: url("img/Twister/RightFoot1.svg"); }
+            .lhand2 { background-image: url("img/Twister/LeftHand2.svg"); }
+            .rhand2 { background-image: url("img/Twister/RightHand2.svg"); }
+            .lfoot2 { background-image: url("img/Twister/LeftFoot2.svg"); }
+            .rfoot2 { background-image: url("img/Twister/RightFoot2.svg"); }
+            .lhand1, .rhand1, .lfoot1, .rfoot1, .lhand2, .rhand2, .lfoot2, .rfoot2 {
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 65%;
+            }
+
+            button {
+                font-family: Special Elite;
+                background-color: white;
+                color: black;
+                border-radius: 5px;
+                border: black 3px solid;
+                padding: 5px 10px;
+                transition: color 1s, background-color 1s;
+                margin: 2.5px;
+            }
+            button:not([disabled]):hover {
+                background-color: black;
+                color: white;
+            }
+            button.flash {
+                color: white;
+                background-color: blue;
+            }
+            button.save {
+                padding: 3px;
+            }
+            button[disabled] {
+                user-select: none;
+                background-color: #555;
+            }
+
+            .stageholder {
+                height: 32px;
+                display: flex;
+                flex-direction: row;
+            }
+            .stageholder button {
+                height: 32px;
+            }
+            .page {
+                background-repeat: repeat-y;
+                background-position: top;
+            }
+        </style>
+        <script>
+        $(function() {
+            var selected = "";
+            let mat = $("#the-mat");
+            var start;
+            let saveStates = [];
+            let currentState = 0;
+            let stageNumber = $(".stagenumber");
+            var currentStage = 0;
+            let rows = 6;
+            let cols = 4;
+
+            $(document).click(function() {
+                // $(".stagenumber").removeClass("selected");
+                start = null;
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                // console.log(k);
+                if (k == "-")
+                    stageDec();
+                else if (k == "=" || k == "+")
+                    stageInc();
+            });
+            const players = ["lhand1", "rhand1", "lfoot1", "rfoot1", "lhand2", "rhand2", "lfoot2", "rfoot2"];
+
+            function stageDec() {
+                currentStage = Math.max(0, currentStage - 1);
+                stageNumber.text(currentStage);
+            }
+            function stageInc() {
+                currentStage += 1;
+                stageNumber.text(currentStage);
+            }
+            $(".stagetext.minus").click(function() {
+                stageDec();
+            });
+            $(".stagetext.plus").click(function() {
+                stageInc();
+            });
+
+            var row = $("<div>").addClass("circle-row letters").appendTo(mat);
+            $("<div>").addClass("cell").css("width", "75px").appendTo(row);
+            for (var i = 0; i < cols; i++) {
+                $("<div>").addClass("cell").text(String.fromCharCode(65 + i)).appendTo(row);
+            }
+            const circleColors = ["green", "yellow", "blue", "red"];
+            for (let y = 1; y <= rows; y++) {
+                row = $("<div>").addClass("circle-row").appendTo(mat);
+                $("<div>").addClass("cell numbers").text(y).appendTo(row);
+                for (let x = 1; x <= cols; x++) {
+                    let circleHolder = $("<div>").addClass("cell").appendTo(row).each(function(_, b) {
+                        let box = $(b);
+                        let svg = MakeSvgTag(100, 100, 0, 0, {class:"circle"})
+                            .appendTo(box);
+                        let circle = MakeSvgElem("circle", {
+                            class: circleColors[x-1], cx:50, cy:50, r:40, stroke: "#000", "stroke-width": 2
+                        });
+                        svg.append(circle);
+                    });
+                    let cell = $("<div>").addClass("matcell cell").appendTo(circleHolder).each(function(_, e) {
+                        var element = $(e);
+
+                        element.mousedown(function(event) {
+                            start = [x, y];
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+
+                        element.mouseup(function(event) {
+                            if (start) { // Just in case.
+                                var changed = [];
+                                var a, b, i;
+                                changed.push([x, y]);
+                                if (selected == "moving" && (start[0] != x || start[1] != y)) {
+                                    changed.push([start[0], start[1]]);
+                                }
+
+                                if (changed.length > 0) {
+                                    var from = mat.children().eq(start[1]).children().eq(start[0]).children().eq(1);
+                                    let toMove = hasWhichPlayerClass(from);
+                                    changed.forEach(function(pos) {
+                                        var elm = mat.children().eq(pos[1]).children().eq(pos[0]).children().eq(1);
+                                        if (selected == "moving") {
+                                            if (changed.length > 1) {
+                                                if (pos[0] == start[0] && pos[1] == start[1]) {
+                                                    removePlayerClass(elm);
+                                                } else {
+                                                    removePlayerClass(elm);
+                                                    elm.addClass(players[toMove]);
+                                                }
+                                            }
+                                        } else if (changed.length == 1) {
+                                            var whichPlayer = hasWhichPlayerClass(elm);
+                                            if (whichPlayer >= 0) {
+                                                elm.removeClass(players[whichPlayer]);
+                                                if (players[whichPlayer] != selected) {
+                                                    elm.addClass(selected);
+                                                }
+                                            } else {
+                                                elm.addClass(selected);
+                                            }
+                                        }
+                                    });
+                                }
+                                updatePresent();
+                                start = null;
+                            }
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+                    });
+                }
+            }
+
+            function removePlayerClass(elem) {
+                players.forEach(function(val) {
+                    elem.removeClass(val);
+                });
+            }
+
+            function hasWhichPlayerClass(elem) {
+                for (let i = 0; i < players.length; i++) {
+                    if (elem.hasClass(players[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            function updatePresent() {
+                $(".player.present").removeClass("present");
+                $(".matcell").each(function(i) {
+                    let elem = $(this);
+                    let sym = hasWhichPlayerClass(elem);
+                    if (sym >= 0) {
+                        $(`.player.${players[sym]}`).addClass("present");
+                    }
+                });
+            }
+
+            var tools1 = $(".tools.c1");
+            var tools2 = $(".tools.c2");
+            for (let i = 0; i < players.length; i++) {
+                let player = $("<div>").addClass("player cell").appendTo(i < 4 ? tools1 : tools2).click(function() {
+                    $(".player").removeClass("selected");
+                    $(this).addClass("selected");
+                    selected = players[i];
+                }).addClass(players[i]).append($("<div>"));
+            }
+            $(".lhand1").click();
+            $("<div>").addClass("player cell nopointer").appendTo(tools1);
+            $("<div>").addClass("player cell move").text("移動").appendTo(tools2).click(function() {
+                $(".player").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "moving";
+            });
+
+            $(".reset-mat").click(function() {
+                $(".matcell").each(function(_, e) {
+                    removePlayerClass($(e));
+                });
+                $(".player").removeClass("present");
+            });
+
+            $(".reset-saves").click(function() {
+                if(!confirm("保存したものをすべてリセットしてもよろしいですか？")) return;
+                $(".replace-save").prop('disabled', true);
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $(".reset-future-saves").click(function() {
+                removeFutureSaves();
+            });
+
+            $(".reset-all").click(function() {
+                if(!confirm("全てリセットしてもよろしいですか？")) return;
+                $(".matcell").each(function(_, e) {
+                    removePlayerClass($(e));
+                });
+                $(".player").removeClass("present");
+                $(".replace-save").prop('disabled', true);
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+                currentStage = 0;
+                stageNumber.text(currentStage);
+            });
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            let buttonID = 0;
+            let replaceID = "save0";
+
+            $("button.new-save").click(function() {
+                let saveState = Array.from($(".cell")).map(x => $(x)).map(x => x.attr("class") || "");
+                //console.log(saveStates);
+                let stateNumber = saveStates.length;
+                let s = currentStage;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber).click(function() {
+                    $(".cell").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                    currentStage = s;
+                    stageNumber.text(s);
+                    replaceID = this.id;
+                    $(".replace-save").prop('disabled', false);
+                    $(".saves button").removeClass("selected");
+                    $(this).addClass("selected");
+                }).addClass("flash").appendTo(".saves");
+                button.attr('id', `save-${buttonID}`);
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                $(".saves button").removeClass("selected");
+                $(".replace-save").prop('disabled', true);
+                saveStates.push(button);
+                currentStage += 1;
+                stageNumber.text(currentStage);
+                buttonID += 1;
+            });
+
+            $("button.replace-save").click(function() {
+                let saveState = Array.from($(".cell")).map(x => $(x)).map(x => x.attr("class") || "");
+                //console.log(saveStates);
+                let stateNumber = currentState;
+                let s = currentStage;
+
+                let button = $("<button>").text(stateNumber).click(function() {
+                    $(".cell").each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                    currentStage = s;
+                    stageNumber.text(s);
+                    replaceID = this.id;
+                    $(".replace-save").prop('disabled', false);
+                    $(".saves button").removeClass("selected");
+                    $(this).addClass("selected");
+                }).addClass("flash");
+                button.attr('id', `save-${buttonID}`);
+                setTimeout(() => {
+                    button.removeClass("flash");
+                    button.addClass("selected");
+                }, 100);
+
+                if (saveStates.length > currentState) {
+                    saveStates.splice(currentState, 1, button);
+                    let oldButton = document.getElementById(replaceID);
+                    oldButton.parentNode.replaceChild(button[0], oldButton);
+                    replaceID = `save-${buttonID}`;
+                }
+                else {
+                    button.appendTo(".saves");
+                    saveStates.push(button);
+                }
+
+                buttonID += 1;
+            });
+
+            window.onbeforeunload = function() {
+                return true;
+            };
+        });
+        </script>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-07">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ツイスター</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Twister.svg" class="diagram">
+                <h2>モジュール詳細：ツイスター</h2>
+                    <p class="flavour-text">定番の子供向け床ゲームに爆発的なツイストを加えたよ。</p>
+                    <img src="img/Twister/TwisterDiagram.svg" class="twister-diagram">
+                    <p>2人のプレイヤーが古典的なゲーム「ツイスター」をプレイしている。その2人のプレイヤーは交互に手と足をマット（右図）上の様々な色の○印の上に置く。</p>
+                    <p>スピナーは、爆弾にある<a href="../More/Ignore%20Table.html#mod=TwisterModule">無視されるモジュール</a>以外の解除可能なモジュール1つごとに、1回スピンさせなければならない。モジュールが解除されるたびに、キューに1スピンが追加され、上部に二進数で緑のライトで表示される。</p>
+                    <p>スピナーは、キューに残っているスピンがなくなるまで、いつでも回すことができる。キューは、次の解除の前に空にする必要はない。</p>
+                    <p>左側の手または足を指すスピンは、左手または左足を意味する。右側の手または足を指すスピンは、右手または右足を意味する。</p>
+                    <p>偶数ステージ(スピナーの初期表示も含む)の場合、先攻プレイヤーが手または足を○印の上に置かなければならない。奇数ステージの場合、後攻プレイヤーが手または足を○印の上に置かなければならない。</p>
+                    <p>最初のプレイヤーの手番でスピンした後は、毎回一番上にある同じ色の空いている○印を取得し、そこからシリアルナンバーの3番目の文字と同じ数だけ下に移動し、その○印に置く。使用されている○印は無視し、必要に応じて一番上へループする。</p>
+                    <p>後攻プレイヤーの手番でスピンした後は、毎回一番上にある同じ色の空いている○印を取り、そこからシリアルナンバーの6番目の文字と同じ数だけ下へ移動し、その○印に置く。使用されている○印を無視し、必要に応じて一番上へループする。</p>
+                    <p>スピナーがすでにマットの上にある手や足を指した場合、まずその手や足を取り除いてから、新しい位置を計算する。</p>
+                    <p>すべてのスピンが終了すると、マットが現れる。すべての手と足をマットの上の正しい位置に置く。先攻はピンク色、後攻は紫色で表示される。小さなスピナーを押して送信する。</p>
+                    <p>手と足の位置を間違えて送信した場合、小さなスピナーを2秒以上押し続けるとステージリカバリーモードに入ることができる。このとき、スピナーに戻り過去のステージをすべて見ることができる。マットに配置する状態でまだミスが記録されていない場合、ステージリカバリーモードに入ることはできない。マットに戻るには、小さなマットのアイコンを押す。</p>
+                </div>
+                <div class="page-footer relative-footer">ページ 1/2</div>
+            </div>
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ツイスター</span>
+                </div>
+                <div class="page-content">
+                    <div class="vstack just-left">
+                        <div class="stageholder hstack">
+                            <div class="stagetext label">ステージ:</div>
+                            <div class="stagetext stagenumber">0</div>
+
+                            <button class="stagetext minus">-</button>
+                            <button class="stagetext plus">+</button>
+                        </div>
+                        <div class="hstack">
+                            <div id="the-mat" class="mat"></div>
+                            <div style="width: 4mm"></div>
+                            <div class="hstack">
+                                <div class="vstack tools c1"></div>
+                                <div class="vstack tools c2"></div>
+                            </div>
+                        </div>
+                        <div class="saves hstack wrap just-left">
+                            <button class="save replace-save gray" disabled>置換<br>保存</button>
+                            <button class="save new-save">新規<br>保存</button>
+                        </div>
+                        <div style="margin-top: 5mm">
+                            <button class="reset-mat">マット上の配置をリセット</button>
+                            <button class="reset-saves">保存をリセット</button>
+                            <button class="reset-future-saves">選択後の保存をリセット</button>
+                            <button class="reset-all">全てリセット</button>
+                        </div>
+                    </div>
+                    <h3>マットの操作方法</h3>
+                    <p>上記のインタラクティブなグラフィックをツイスターマットとして使用する。</p>
+                    <p>マットの右側にあるツールを選択し、マットをクリックするとそのツールを使用できる。
+                    <br>
+                    手／足ツールの1つを使用して、手／足を配置／削除する。ツールがマット上に1つでも存在する場合、そのツールにはグレーの枠線が表示される。
+                    <br>
+                    <b>移動</b>ツールを使用して、手や足をある○印から別の○印へドラッグする。
+                    <br>
+                    <b>-</b>と<b>+</b>ボタンを押すか、キーボードの<b>[-]</b>と<b>[+]</b>を押してステージ番号を増やす。
+                    <br>
+                    他のボタンを使用して、マットの現在の状態の保存、選択した保存の置き換え、マット上の配置のリセット、保存の削除、選択した後の保存の削除、またはすべてのリセットを行うことができる。</p>
+                </div>
+                <div class="page-footer relative-footer">ページ 2/2</div>
+            </div>
+        </div>
+    </body>
+</html>

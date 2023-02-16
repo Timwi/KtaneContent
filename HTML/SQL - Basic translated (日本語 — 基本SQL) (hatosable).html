@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>基本SQL — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .arrow { width: 50px; }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-content: flex-start;
+            justify-content: space-around;
+        }
+        .hstack.center { align-content: center; }
+
+        .line {
+          margin-top: 7px;
+          width: 35px;
+          background: darkgray;
+          height: 5px;
+          float: left;
+        }
+
+        .point {
+          width: 0;
+          height: 0;
+          border-top: 10px solid transparent;
+          border-bottom: 10px solid transparent;
+          border-left: 15px solid darkgray;
+          float: right;
+        }
+
+        .dark .bb, .bb { border-bottom: 3px solid; }
+        .dark .tb, .tb { border-top: 3px solid; }
+        .dark .lb, .lb { border-left: 3px solid; }
+        .dark .rb, .rb { border-right: 3px solid; }
+        .hcell { background-color: #eaeaea; }
+        .dark .hcell { background-color: #555; }
+        .scell { background-color: #cacaca; }
+        .dark .scell { background-color: #777; }
+
+        td { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+                <img src="img/component/SQL - Basic.svg" class="diagram">
+                <h2>モジュール詳細：基本SQL</h2>
+                <p class="flavour-text">大きな数字の表を使いこなして類似点を探すのはなんと楽しいことだろう……。</p>
+
+                <p>このモジュールは、SQL文シミュレータである。解除するには、与えられた結果を出力するSQLクエリ(命令)を作成する。入力データはこのマニュアル内にあり、それを使って与えられた結果を表現する。このドキュメントを使用して、入力データから希望通りの結果を表現するSQLクエリを作る。</p>
+
+                <h2>ゴールボタン</h2>
+                <p><strong>Goal</strong>ボタンを押すと、モジュールが求めている結果を見ることができる。求められるのは、1~4段、2~3列の数字の表である。以下はその例である。</p>
+
+                <div class="hstack">
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                        <tr><td>4</td><td>2</td><td>1</td></tr>
+                        <tr><td>7</td><td>1</td><td>4</td></tr>
+                        <tr><td>3</td><td>8</td><td>2</td></tr>
+                    </table>
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                        <tr><td>4</td><td>2</td><td>1</td></tr>
+                    </table>
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td></tr>
+                        <tr><td>4</td><td>2</td></tr>
+                        <tr><td>7</td><td>1</td></tr>
+                    </table>
+                    <table style="align-self: flex-start;">
+                        <tr><td>2</td><td>9</td><td>6</td></tr>
+                    </table>
+                </div>
+
+                <h2 style="margin-top: 2cm">チェックボタン</h2>
+
+                <p><strong>Check</strong>ボタンを押すと、モジュールはSQLクエリを組み立て入力データに対してそれを実行する。結果がゴールの表と比較される。それが一致した場合モジュールは解除され、そうでない場合、ミスが記録される。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h2>モジュールの解除</h2>
+
+                <p>モジュールを解除するには、入力データからゴール表の数字を見つける。段は常に上から下に並んでいるが、列は並べ替えが可能である。例を以下に示す。</p>
+
+                <div class="hstack">
+                    <div>
+                        <p><strong>ゴール表</strong></p>
+                        <table style="align-self: flex-start;">
+                            <tr><td>2</td><td>9</td><td>6</td></tr>
+                            <tr><td>4</td><td>2</td><td>1</td></tr>
+                        </table>
+                    </div>
+                    <div style="align-self: center">
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p><strong>入力データの例</strong></p>
+                        <table>
+                            <tr>
+                                <th class="hcell tb lb rb">A</th>
+                                <th>B</th>
+                                <th class="hcell tb lb rb">C</th>
+                                <th>D</th>
+                                <th>E</th>
+                                <th class="hcell tb lb rb">F</th>
+                            </tr>
+                            <tr>
+                                <td class="hcell lb rb">9</td>
+                                <td>0</td>
+                                <td class="hcell lb rb">1</td>
+                                <td>6</td>
+                                <td>7</td>
+                                <td class="hcell lb rb">3</td>
+                            </tr>
+                            <tr>
+                                <td class="scell rb lb tb bb">6</td>
+                                <td class="hcell tb bb">8</td>
+                                <td class="scell rb lb tb bb">2</td>
+                                <td class="hcell tb bb">4</td>
+                                <td class="hcell tb bb">5</td>
+                                <td class="scell rb lb tb bb">9</td>
+                            </tr>
+                            <tr>
+                                <td class="hcell lb rb">2</td>
+                                <td>7</td>
+                                <td class="hcell lb rb">5</td>
+                                <td>3</td>
+                                <td>6</td>
+                                <td class="hcell lb rb">1</td>
+                            </tr>
+                            <tr>
+                                <td class="scell rb lb tb bb">1</td>
+                                <td class="hcell tb bb">3</td>
+                                <td class="scell rb lb tb bb">4</td>
+                                <td class="hcell tb bb">9</td>
+                                <td class="hcell tb bb">5</td>
+                                <td class="scell rb lb tb bb">2</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 2cm">入力データ</h2>
+                <p>モジュールの解除に使用される入力データを以下に示す。この表の中のゴール表から値を見つけ、同じ出力を生成するSQLクエリを作成する。</p>
+
+                <div  class="hstack center">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>3</td><td>0</td><td>2</td><td>0</td><td>4</td><td>6</td></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>4</td><td>7</td><td>1</td><td>5</td><td>3</td><td>0</td><td>9</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                        <tr><td>1</td><td>9</td><td>3</td><td>7</td><td>6</td><td>5</td><td>4</td></tr>
+                        <tr><td>8</td><td>5</td><td>4</td><td>3</td><td>1</td><td>8</td><td>2</td></tr>
+                    </table>
+
+                    <blockquote style="flex-basis: 50%;">
+                        <p><strong>補足</strong></p>
+                        <p>SQL結果は必ずしも読み順ではない。<strong>段</strong>は上から下へだが、<strong>列</strong>はクエリ内のSELECT句で任意に並べ替えられる。</p>
+                    </blockquote>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h2>モジュール詳細：SQL</h2>
+                <p>SQLは、データソースを操作して結果を生成する方法を示す問い合わせ言語である。多様なキーワードが含まれているが、このモジュールではそのうちの小さなサブセットのみが使用される。</p>
+
+                <h3>SQLの処理方法</h3>
+                <p>SQLは以下のように処理される。</p>
+                <ol>
+                    <li style="margin-bottom: 1em">各段はまず<strong>WHERE</strong>句と比較される(後述)。WHERE句に合致する段がある場合、その段は以降の処理のために保持される。</li>
+
+                    <li style="margin-bottom: 1em">WHERE句を通過した各段は、次に<strong>SELECT</strong>句(後述)の処理が行われる。</li>
+
+                    <li style="margin-bottom: 1em">最後に、<strong>LIMIT</strong>句(後述)で結果から最初のX段をスキップして、その次のY段を取ることで、特定の数の段を破棄することができる。</li>
+                </ol>
+
+                <h3>SELECT X, Y, Z</h3>
+                <p><strong>SELECT</strong>句はどの段が(どの順に)返されるべきかを選択する。モジュールは、単一の列参照を最大3つまで提供している。各列をクリックすると、AからG、「-」を循環させることができ、「-」はその選択を無効にする。この例を以下に示す。</p>
+
+                <div class="hstack">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>3</td><td>0</td><td>2</td><td>0</td><td>4</td><td>6</td></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>4</td><td>7</td><td>1</td><td>5</td><td>3</td><td>0</td><td>9</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                        <tr><td>1</td><td>9</td><td>3</td><td>7</td><td>6</td><td>5</td><td>4</td></tr>
+                        <tr><td>8</td><td>5</td><td>4</td><td>3</td><td>1</td><td>8</td><td>2</td></tr>
+                    </table>
+                    <div style="align-self: center; flex-basis: 40%;">
+                        <p><strong>SQL：</strong> SELECT D, A</p>
+                        <p>3番目の参照列は無いことに注意。「-」を使用している。</p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <table>
+                        <tr><th>D</th><th>A</th></tr>
+                        <tr><td>2</td><td>9</td></tr>
+                        <tr><td>1</td><td>7</td></tr>
+                        <tr><td>4</td><td>2</td></tr>
+                        <tr><td>5</td><td>4</td></tr>
+                        <tr><td>9</td><td>6</td></tr>
+                        <tr><td>7</td><td>1</td></tr>
+                        <tr><td>3</td><td>8</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>WHERE X 演算子 Y</h3>
+                <p><strong>WHERE</strong>は「フィルタ」の役割を果たしている。段は条件と比較される。フィルタ条件に一致した段のみが出力として保持される。このシンプルなSQLシミュレータでは、列と一定の値のみの比較が可能である(例：A&nbsp;&lt;&nbsp;2、C&nbsp;=&nbsp;3、F&nbsp;&gt;=&nbsp;5)。有効な演算子は、以下の単純かつ身近な算術演算子である。</p>
+                <ul>
+                    <li>=：同値(イコール)</li>
+                    <li>&lt;&gt;：同値ではない(ノットイコール)</li>
+                    <li>&lt;：未満</li>
+                    <li>&lt;=：以下</li>
+                    <li>&gt;：より大きい</li>
+                    <li>&gt;=：以上</li>
+                </ul>
+                <p>単純なフィルタの基本例を以下に示す。</p>
+
+                <div class="hstack">
+                    <table>
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>9</td><td>3</td><td>0</td><td>2</td><td>0</td><td>4</td><td>6</td></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>4</td><td>7</td><td>1</td><td>5</td><td>3</td><td>0</td><td>9</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                        <tr><td>1</td><td>9</td><td>3</td><td>7</td><td>6</td><td>5</td><td>4</td></tr>
+                        <tr><td>8</td><td>5</td><td>4</td><td>3</td><td>1</td><td>8</td><td>2</td></tr>
+                    </table>
+                    <div style="align-self: center">
+                        <p><strong>SQL：</strong> WHERE C &gt;= 5</p>
+                        <div class="arrow">
+                            <div class="line"></div>
+                            <div class="point"></div>
+                        </div>
+                    </div>
+                    <table style="align-self: flex-start;">
+                        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+                        <tr><td>7</td><td>8</td><td>6</td><td>1</td><td>2</td><td>9</td><td>8</td></tr>
+                        <tr><td>2</td><td>0</td><td>5</td><td>4</td><td>7</td><td>3</td><td>1</td></tr>
+                        <tr><td>6</td><td>2</td><td>7</td><td>9</td><td>8</td><td>6</td><td>5</td></tr>
+                    </table>
+                </div>
+                <p>&nbsp;</p>
+
+                <blockquote><p><strong>注意：</strong>条件は<strong>SELECT</strong>された列だけではなく、どの列にも適用される。</p></blockquote>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>WHERE X AND/OR Y</h3>
+
+                <p>二つの条件が結果を得るために必要な場合、<strong>WHERE</strong>と書かれたボタンの下にあるボタンをクリックすると2つ目のフィルタを追加する。二つのフィルタは<strong>AND</strong>(両方の条件に一致した段を保持)もしくは<strong>OR</strong>(少なくとも一つの条件に一致した段を保持)を使用して連結される。例を以下に示す。</p>
+
+                <table style="width: 100%; text-align: center">
+                    <tr>
+                        <th>例のデータ</th>
+                        <th>条件</th>
+                        <th>結果</th>
+                    </tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><th>A</th><th>B</th><th>C</th></tr>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                        <td>WHERE A &lt; 7 AND B &gt;= 3</td>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><th>A</th><th>B</th><th>C</th></tr>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td class="bb tb lb rb hcell">8</td><td>6</td></tr>
+                                <tr><td class="tb bb lb rb hcell">2</td><td>0</td><td>5</td></tr>
+                                <tr><td class="tb bb lb scell">4</td><td class="bb tb rb scell">7</td><td>1</td></tr>
+                            </table>
+                            <div style="position: relative; top: -7.5em; border-top: 3px solid darkgray; height: 3px"></div>
+                            <div style="position: relative; top: -5.75em; border-top: 3px solid darkgray; height: 3px"></div>
+                            <div style="position: relative; top: -4em; border-top: 3px solid darkgray; height: 3px"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><th>A</th><th>B</th><th>C</th></tr>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                        <td>WHERE B &lt;&gt; 8 OR C &lt;= 2</td>
+                        <td class="nohighlight">
+                            <table style="margin: auto">
+                                <tr><th>A</th><th>B</th><th>C</th></tr>
+                                <tr><td>9</td><td class="bb tb lb scell">3</td><td class="bb tb rb scell">0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td class="tb lb rb scell">0</td><td>5</td></tr>
+                                <tr><td>4</td><td class="bb lb scell">7</td><td class="bb tb rb scell">1</td></tr>
+                            </table>
+                            <div style="position: relative; top: -5.5em; border-top: 3px solid darkgray; height: 3px"></div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 5/6</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">基本SQL</span>
+            </div>
+            <div class="page-content">
+
+                <h3>LIMIT X, Y</h3>
+                <p><strong>LIMIT</strong>の後には、次の二つの値が続く。</p>
+                <ul>
+                    <li style="margin-bottom: 1em">一つ目の値：条件適用後に保持する段の個数の最大値。「All」を選択した場合、どの段も除外されない。</li>
+                    <li style="margin-bottom: 1em">二つ目の値：条件適用後にスキップする段の個数の最大値。「None」を選択した場合、どの段も除外されない。</li>
+                </ul>
+                <p>二つ目の値(スキップ)が最初に適用され、結果の最上段からその段数だけスキップされることに注意する。その後、最初の値が適用され、その中から最大個数の段を返す。</p>
+
+                <p>例：</p>
+
+                <table>
+                    <tr><th>例のデータ</th><th>条件</th><th>結果</th></tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                        <td>LIMIT 2, 0<br />(制限2、スキップなし)</td>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                        <td>LIMIT 999, 1<br />(制限999(なし); 1段スキップ)</td>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>9</td><td>3</td><td>0</td></tr>
+                                <tr><td>7</td><td>8</td><td>6</td></tr>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                                <tr><td>4</td><td>7</td><td>1</td></tr>
+                            </table>
+                        </td>
+                        <td>LIMIT 1, 2<br />(制限1; 2段スキップ)</td>
+                        <td class="nohighlight">
+                            <table>
+                                <tr><td>2</td><td>0</td><td>5</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 6/6</div>
+        </div>
+    </div>
+</body>
+</html>
