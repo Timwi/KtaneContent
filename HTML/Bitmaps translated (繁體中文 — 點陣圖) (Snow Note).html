@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>點陣圖 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+
+            var edgeworkVariables = [
+                '指示燈', '亮起指示燈', '熄滅指示燈', '包含母音文字的指示燈', '不包含母音文字的指示燈',
+                '埠口', '埠口板', '不是空的埠口板', '埠口的種類數', '剛好只有 1 種埠口', '重複的埠口種類',
+                '電池', '電池插座', 'AA電池', 'D電池',
+                '序號的英文字', '序號的子音字母', '序號的母音字母',
+                '序號內的數字字數', '序號內的奇數', '序號內的偶數',
+                '所有模組(包括特殊模組)', '所有模組(不包括特殊模組)',
+                '已拆除的模組', '未拆除的模組(不包括特殊模組)',
+
+                // Note: variables that start with “the” are handled specially by later code to ensure grammatical sentences
+                '序號最初的數字', '序號逆算第2位數字',
+                '序號最後的數字', '序號各數字的合計',
+                '剩餘秒數的個位',
+                '剩餘秒數的十位',
+                '剩餘分數的個位',
+                '剩餘分數的十位'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['全都是白或全都是黑', '全都是白', '全都是黑'][rnd.next(0, 3)];
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: '剛好 1 行/列全都是白/黑的' },
+                { extra: 'R', name: '剛好 1 行全都是白/黑的' },
+                { extra: 'C', name: '剛好 1 列全都是白/黑的' },
+                { extra: 'S', name: '像素全都是白/黑的3×3存在' },
+                { extra: 'T', name: `${type2x2}的2×2正方形存在` },
+                { extra: '', name: `白像素較多的區域與${edgeworkVariables[edgeworkVariableIx++]}的數量相等` },
+                { extra: '', name: `白像素較多的區域比${edgeworkVariables[edgeworkVariableIx++]}的數量多` },
+                { extra: '', name: `白像素較多的區域比${edgeworkVariables[edgeworkVariableIx++]}的數量少` },
+                { extra: '', name: `黑像素較多的區域與${edgeworkVariables[edgeworkVariableIx++]}的數量相等` },
+                { extra: '', name: `黑像素較多的區域比${edgeworkVariables[edgeworkVariableIx++]}的數量多` },
+                { extra: '', name: `黑像素較多的區域比${edgeworkVariables[edgeworkVariableIx++]}的數量少` }
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1}以下` : `${16 - pixelCount1}以上`;
+            var blackWhite = rnd.next(0, 2) === 0 ? '白' : '黑';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? '白' : '黑';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `沒有${blackWhite}像素點數${moreOrLess}的區域` },
+                    { extra: 'Q', name: `剛好有 1 個${blackWhite}像素點數${moreOrLess}的區域` },
+                    { extra: '', name: `多於 1 個${blackWhite}像素點數${moreOrLess}的區域` },
+                ],
+                [
+                    { name: '白像素較多的區域的數量比黑像素較多的區域的數量少', extra: '' },
+                    { name: '白像素較多的區域的數量比黑像素較多的區域的數量多', extra: '' },
+                    { name: '白像素較多的區域的數量與黑像素較多的區域的數量相等', extra: '' },
+                ],
+                [
+                    { name: `所有的${blackWhite2}像素的總和是${64 - pixelCount2}以上`, extra: '' },
+                    { name: `所有的${blackWhite2}像素的總和是${64 - pixelCount2}以下`, extra: '' },
+                    { name: `所有的${blackWhite2}像素的總和是${pixelCount2 + 1}至${63 - pixelCount2}之間`, extra: '' },
+                ],
+                [
+                    { name: '不存在白像素與黑像素各有 8 個的區域', extra: '' },
+                    { name: '剛好有 1 個白像素與黑像素各有 8 個的區域', extra: 'Q' },
+                    { name: '多於有 1 個白像素與黑像素各有 8 個的區域', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = `${startRule}`;
+
+            var solutions = [
+                '黑像素較多的區域',
+                '白像素較多的區域',
+                '白像素與黑像素各有 8 個的區域',
+                '白像素的總和',
+                '黑像素的總和',
+                '黑像素最少的區域的黑像素',
+                '黑像素最多的區域的黑像素',
+                '白像素最少的區域的白像素',
+                '白像素最多的區域的白像素',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    '其他 3 個區域的白像素',
+                    '其他 3 個區域的黑像素',
+                    '對角線上的區域的白像素',
+                    '對角線上的區域的黑像素',
+                    '橫向相隣的區域的白像素',
+                    '橫向相隣的區域的黑像素',
+                    '垂直相隣的區域的白像素',
+                    '垂直相隣的區域的黑像素'
+                ],
+                'R': [
+                    '該 y 座標 (以最上行作為第 1 行)',
+                    '該 y 座標 (以最下行作為第 1 行)'
+                ],
+                'C': [
+                    '該 x 座標 (以最左列作為第 1 列)',
+                    '該 x 座標 (以最右列作為第 1 列)'
+                ],
+                'L': [
+                    '該 x/y 座標 (以最上/左列作為第 1 個)',
+                    '該 x/y 座標 (以最下/右列作為第 1 個)'
+                ],
+                'S': [
+                    '文字讀順*中最初的正方形的中央的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的中央的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的中央的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的中央的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的左上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的左上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的y坐標 (以最下行作為第 1 個)',
+                ],
+                'T': [
+                    '文字讀順*中最初的正方形的左上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最後的正方形的左上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最後的正方形的左上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最後的正方形的右上的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最後的正方形的右上的像素的y坐標 (以最上行作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的左下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最後的正方形的左下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最後的正方形的左下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最初的正方形的右下的像素的y坐標 (以最下行作為第 1 個)',
+                    '文字讀順*中最後的正方形的右下的像素的x坐標 (以最左列作為第 1 個)',
+                    '文字讀順*中最後的正方形的右下的像素的y坐標 (以最上行作為第 1 個)',
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `如${conditions[i].name}，數值為${solution.startsWith("the ") ? solution : `${solution}`}的數目。`;
+            }
+        }
+    </script>
+    <style>
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">點陣圖</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Bitmaps.svg" class="diagram">
+                <h2>關於【點陣圖】模組</h2>
+                <p class="flavour-text">雖然有超過1800京種組合，作為問題的只不過是一部分的組合而已。</p>
+                <ul>
+                    <li>這個模組顯示了被分成 4 個區域的 64 點像素，每一點像素有光(即使帶有顏色也當成「白」處理)，或暗(當成「黑」處理)的二種其一。</li>
+                    <li>而點陣圖的下方有帶有標示1、2、3、4的按鈕。</li>
+                    <li>從下表的<span id='start-rule'>序號的最後一位數字</span><span id='start-rule-modulo'> (重複加算/減算 10 直到 0-9 的範圍)</span>的規則開始。</li>
+                    <li>一直向下前進直至找到符合的規則。如到達最低的規則，循環至最頂。</li>
+                    <li>計算第一個符合的規則的數值。然後把數值重複加算或減算 4 直到數值為 1-4 範圍。按下該數值的按鈕即可拆除模組。</li>
+                </ul>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>#</th>
+                            <th>規則</th>
+                        </tr>
+                        <tr>
+                            <th>0</th><td class="rule">如剛好有 1 個區域的白像素為 5 以下，數值為其他 3 個區域的白像素的總和。</td>
+                        </tr>
+                        <tr>
+                            <th>1</th><td class="rule">如白像素較多的區域的數量與亮起的指示燈的數量相等，數值為電池的數量。</td>
+                        </tr>
+                        <tr>
+                            <th>2</th><td class="rule">如剛好1行或列全都是黑或全都是白，數值為該x/y座標。(以最上/最左的行列作為第 1 個)</td>
+                        </tr>
+                        <tr>
+                            <th>3</th><td class="rule">如白像素較多的區域的數量比黑像素較多的區域的數量少，數值為黑色像素較多的區域的數量。</td>
+                        </tr>
+                        <tr>
+                            <th>4</th><td class="rule">如白像素合共 36 個以上，數值為白色像素的數量。</td>
+                        </tr>
+                        <tr>
+                            <th>5</th><td class="rule">如白像素較多的區域的數量比黑像素較多的區域的數量多，數值為黑像素最少的區域的黑像素的數量。</td>
+                        </tr>
+                        <tr>
+                            <th>6</th><td class="rule">如剛好 1 個區域的黑像素為 5 以下，數值為其他 3 個區域的黑像素的總和。</td>
+                        </tr>
+                        <tr>
+                            <th>7</th><td class="rule">如黑像素較多的區域的數量與熄滅的指示燈的數量相等，數值為埠口的數量。</td>
+                        </tr>
+                        <tr>
+                            <th>8</th><td class="rule">如全部白或全部黑的3x3正方形存在，數值為文字讀順*中最初的正方形的x坐標。(最左側的列為第 1 列)</td>
+                        </tr>
+                        <tr>
+                            <th>9</th><td class="rule">如白像素較多的區域的數量與黑像素較多的區域的數量相等，數值為序號最初的數字。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="footnote">* 由左上開始向右、到右邊邊界後移至下一行最左邊。如同英文文章的方向順序。</p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+
+</html>
