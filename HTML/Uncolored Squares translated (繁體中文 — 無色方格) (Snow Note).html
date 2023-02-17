@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>無色方格 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        svg.pattern {
+            width: 2cm;
+        }
+        table {
+            width: 100%;
+        }
+        td, th {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .dark svg.pattern path { stroke: #DDD; }
+    </style>
+    <script>
+        var alwaysShapes = [
+            // Dominoes
+            { viewbox: '-.6 -1.1 3.2 3.2', pathd: 'M0 0h2v1h-2zM1 0v1' },                   // 2h
+            { viewbox: '-1.1 -.6 3.2 3.2', pathd: 'M0 0h1v2h-1zM0 1h1' },                   // 2v
+        ];
+        var sometimesShapes = [
+
+            { viewbox: '-.6 -.6 3.2 3.2', pathd: 'M0 0h1v1h1v1h-2zM0 1h1v1' },              // sL, BL
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 0h3v1h-1v1h-1v-1h-1zM1 0v1h1v-1' },    // T, D
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M1 0h2v1h-1v1h-2v-1h1zM1 2v-1h1v-1' },    // S
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M1 0h1v3h-1v-1h-1v-1h1zM2 1h-1v1h1' },    // T, L
+            { viewbox: '-.1 -1.1 3.2 3.2', pathd: 'M0 0h3v1h-3zM1 0v1M 2 0v1' },            // 3h
+            { viewbox: '-1.1 -.1 3.2 3.2', pathd: 'M0 0h1v3h-1zM0 1h1M0 2h1' },             // 3v
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M1 0h1v2h-1v1h-1v-2h1zM0 2h1v-1h1' },     // Zr
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M0 0h2v1h-1v2h-1zM1 0v1h-1M0 2h1' },      // J, TL
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 1h2v-1h1v2h-3zM1 1v1M2 2v-1h1' },      // bL, BR
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M0 0h1v1h1v1h-1v1h-1zM0 1h1v1h-1' },      // T, R
+            { viewbox: '-.6 -.6 3.2 3.2', pathd: 'M1 0h1v2h-2v-1h1zM1 2v-1h1' },            // sL, BR
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M1 0h1v3h-2v-1h1zM1 3v-1h1M1 1h1' },      // J, BR
+            { viewbox: '-.6 -.6 3.2 3.2', pathd: 'M0 0h2v2h-2zM1 0v2M0 1h2' },              // []
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 0h3v2h-1v-1h-2zM1 0v1M2 0v1h1' },      // J, TR
+            { viewbox: '-.6 -.6 3.2 3.2', pathd: 'M0 0h2v2h-1v-1h-1zM1 0v1h1' },            // sL, TR
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M1 0h1v1h1v1h-3v-1h1zM1 2v-1h1v1' },      // T, U
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 0h2v1h1v1h-2v-1h-1zM1 0v1h1v1' },      // Z
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 0h1v1h2v1h-3zM0 1h1v1M2 1v1' },        // J, BL
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M0 0h1v2h1v1h-2zM0 1h1M0 2h1v1' },        // bL, BL
+            { viewbox: '-.6 -.6 3.2 3.2', pathd: 'M0 0h2v1h-1v1h-1zM1 0v1h-1' },            // sL, TL
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M0 0h2v3h-1v-2h-1zM1 0v1h1M1 2h1' },      // bL, TR
+            { viewbox: '-.1 -.6 3.2 3.2', pathd: 'M0 0h3v1h-2v1h-1zM1 0v1h-1M2 0v1' },      // bL, TL
+            { viewbox: '-.6 -.1 3.2 3.2', pathd: 'M0 0h1v1h1v2h-1v-1h-1zM0 1h1v1h1' },      // Sr
+        ];
+
+        function setRules(rnd)
+        {
+            var shapes = [];
+            var extraShapes = rnd.shuffleFisherYates(sometimesShapes.slice(0));
+            for (var i = 0; i < 18; i++)
+                shapes.push(extraShapes[i]);
+
+            // Sneaky! Put the two “alwaysShapes” in the right place to recreate original rules under Seed #1
+            shapes.splice(8, 0, alwaysShapes[1], alwaysShapes[0]);
+            rnd.shuffleFisherYates(shapes);
+
+            var list = document.getElementsByClassName('pattern');
+            for (var i = 0; i < list.length; i++)
+            {
+                list[i].setAttribute('viewBox', shapes[i].viewbox);
+                list[i].firstChild.setAttribute('d', shapes[i].pathd);
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">無色方格</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Uncolored Squares (Japanese).svg">
+                <h2>關於【無色方格】模組</h2>
+                <p class="flavour-text">法則並不是部分法則的整合。 找出部分以揭示全體的法則。</p>
+                <p class="appendix-reference" id="appendix-reference">請參照<span class="link"><a href="Colored%20Squares%20translated%20(繁體中文%20—%20顏色方格)%20(Snow%20Note).html">顏色方格</a></span>的附錄以識別各種顏色方格系列的模組.</p>
+                <ul>
+                    <li>按照一定的法則按下正方形，使模組進行。</li>
+                    <li>在各關卡找出比其他顏色少的 2 種顏色，如果初期狀態沒有 2 種相同顏色，則你看錯手冊了。</li>
+                    <li>利用那 2 種顏色判斷應該按下的正方形。在非黑色的正方形中按出參照的圖形。</li>
+                    <li>完成後、圖形上的正方形會熄滅、並進入一個階段。重複以上過程直至模組被拆除。</li>
+                </ul>
+
+                <table>
+                    <tr><th rowspan='2'>另一方　<br>的顏色 ↓</th>
+                        <th colspan='5'>文字讀順中*的第一個顏色</th></tr>
+                    <tr><th>紅</th><th>綠</th><th>藍</th><th>黃</th><th>洋紅</th></tr>
+                    <tr>
+                        <th>紅</th>
+                        <td></td>
+                        <td><svg class='pattern' viewBox='-.6 -.6 3.2 3.2'><path d='M0 0h2v1h-1v1h-1zM1 0v1h-1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.6 3.2 3.2'><path d='M1 0h1v2h-2v-1h1zM1 2v-1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M0 0h1v1h1v1h-1v1h-1zM0 1h1v1h-1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.6 3.2 3.2'><path d='M0 0h2v2h-1v-1h-1zM1 0v1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                    </tr>
+                    <tr>
+                        <th>綠</th>
+                        <td><svg class='pattern' viewBox='-1.1 -.6 3.2 3.2'><path d='M0 0h1v2h-1zM0 1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td></td>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M0 0h1v2h1v1h-2zM0 1h1M0 2h1v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.6 3.2 3.2'><path d='M0 0h2v2h-2zM1 0v2M0 1h2' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M1 0h2v1h-1v1h-2v-1h1zM1 2v-1h1v-1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                    </tr>
+                    <tr>
+                        <th>藍</th>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M0 0h1v1h1v2h-1v-1h-1zM0 1h1v1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.6 3.2 3.2'><path d='M0 0h1v1h1v1h-2zM0 1h1v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td></td>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M0 0h3v1h-1v1h-1v-1h-1zM1 0v1h1v-1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M1 0h1v1h1v1h-3v-1h1zM1 2v-1h1v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                    </tr>
+                    <tr>
+                        <th>黃</th>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M1 0h1v2h-1v1h-1v-2h1zM0 2h1v-1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M0 0h2v1h-1v2h-1zM1 0v1h-1M0 2h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M1 0h1v3h-2v-1h1zM1 3v-1h1M1 1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td></td>
+                        <td><svg class='pattern' viewBox='-.6 -.1 3.2 3.2'><path d='M1 0h1v3h-1v-1h-1v-1h1zM2 1h-1v1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                    </tr>
+                    <tr>
+                        <th>洋紅</th>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M0 0h2v1h1v1h-2v-1h-1zM1 0v1h1v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M0 0h3v2h-1v-1h-2zM1 0v1M2 0v1h1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.6 -1.1 3.2 3.2'><path d='M0 0h2v1h-2zM1 0v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td><svg class='pattern' viewBox='-.1 -.6 3.2 3.2'><path d='M0 0h3v1h-2v1h-1zM1 0v1h-1M2 0v1' fill='none' stroke='black' stroke-width='.04' /></svg></td>
+                        <td></td>
+                    </tr>
+                </table>
+                <p>* 由左上開始向右、到右邊邊界後移至下一行最左邊。如同英文文章的方向順序。</p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>跟隨領導 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.repeaters-table th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #footnote {
+            font-size: 10pt;
+            margin-top: .7cm;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let ports = ["Parallel埠口", "Serial埠口", "RJ-45埠口", "PS/2埠口", "DVI-D埠口", "RCA 音效埠口"];
+            document.getElementById('rule-port').innerText = ports[rnd.next(0, ports.length)];
+
+            let startingPlugConditions = [
+                "炸彈上指示燈的數目",
+                "炸彈上亮起指示燈的數目",
+                "炸彈上熄滅指示燈的數目",
+                "炸彈上電池的數目",
+                "炸彈上電池插座的數目",
+                "炸彈上AA電池的數目",
+                "炸彈上D電池的數目",
+                "炸彈上埠口的數目",
+                "炸彈上埠口板的數目",
+                "炸彈上埠口的種類數",
+                "炸彈上模組的的數目",
+                "炸彈上非特殊模組的數目",
+                "序號第一個英文字在英文字母順序中的位置",
+                "序號第二個英文字在英文字母順序中的位置",
+                "序號最後的英文字在英文字母順序中的位置",
+                "序號從最後開始數第二個英文字在英文字母順序中的位置",
+                "序號最後的數字",
+                "序號第二個數字",
+                "序號最初的數字"
+            ];
+
+            let startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            let startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            let startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `插座 ${startPlug}`;
+
+            let indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            let indicator = indicators[rnd.next(0, indicators.length)];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            let endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `插座 ${endPlug}`;
+
+            let litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? '亮起' : '熄滅';
+
+            let startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `從插座${startAt}開始順時針第一個` : '編號順序中第一條';
+
+            let startingRuleConditions = [
+                ["任何指示燈中按字母順序排列的最初的字母", "如沒有指示燈"],
+                ["任何指示燈中按字母順序排列的最後的字母", "如沒有指示燈"],
+                ["序號第 2 個英文字母", "如序號沒有英文字母"],
+                ["序號逆向數算第 2 個英文字母", "如序號沒有英文字母"],
+                ["序號最後的英文字母", "如序號沒有英文字母"],
+                ["序號最初的英文字母", "如序號沒有英文字母"],
+            ];
+            let startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            let colors = ["紅", "綠", "藍", "白", "黑", "黃"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}、${colors[1]}或${colors[2]}`;
+            let tableRules = [
+                "剪斷這條線路。",
+                "不要剪斷這條線路。",
+                "上一條線的連接目的地是偶數編號的插座。",
+                "上一條線的連接目的地是奇數編號的插座。",
+                "上一條線的連接目的地是質數編號的插座。",
+                "上一條線的連接目的地不是質數編號的插座。",
+                "上一條線應該被剪斷。",
+                "上一條線不應該被剪斷。",
+                "上 2 條線同色。",
+                "上 2 條線不同色。",
+                "上 3 條線當中至少 2 條同色。",
+                "上 3 條線全部不同色。",
+                "上 3 條線全部同色。",
+                "上一條線與這條線同色。",
+                "上一條線與這條線不同色。",
+                "上 2 條線兩者皆與這條線不同色。",
+                "上 2 條線當中剛好1條與這條線同色。",
+                "上 2 條線兩者皆與這條線同色。",
+                "上 2 條線當中剛好 1 條與這條線同色，或兩者皆與這條線不同色。",
+                "上 2 條線當中剛好 1 條與這條線同色，或兩者皆與這條線同色。",
+                "上 2 條線兩者皆與這條線不同色，或兩者皆與這條線同色。",
+                "上一條線跳過插座。",
+                "上一條線沒有跳過插座。",
+                "上 2 條線兩者都沒有跳過插座。",
+                "上 2 條線當中剛好1條跳過插座。",
+                "上 2 條線兩者都跳過插座",
+                "上 2 條線當中剛好 1 條跳過插座，或兩者都沒有跳過插座",
+                "上 2 條線當中剛好 1 條與這條線同色，或兩者皆與這條線不同色。",
+                ['n12', n => `上一條線的連接目的地是${n}以下的編號的插座。`],
+                ['n12', n => `上一條線的連接目的地不是${n}以下的編號的插座。`],
+                ['n12', n => `上一條線的連接目的地是${n}以上的編號的插座。`],
+                ['n12', n => `上一條線的連接目的地不是${n}以上的編號的插座。`],
+                ['n6', n => `這個模組的線的總數是${n}以上。`],
+                ['n6', n => `這個模組的線的總數是${n}以下。`],
+                ['c', c => `上一條線是${c[0]}或${c[1]}或${c[2]}。`],
+                ['c', c => `上一條線不是${c[0]}或${c[1]}或${c[2]}。`],
+                ['c', c => `上第 2 條線是${c[0]}或${c[1]}或${c[2]}。`],
+                ['c', c => `上第 2 條線是${c[0]}或${c[1]}或${c[2]}。`],
+                ['c', c => `上 2 條線兩者皆不是${c[0]}或${c[1]}。`],
+                ['c', c => `上 2 條線當中剛好一條是${c[0]}或${c[1]}。`],
+                ['c', c => `上 2 條線兩者皆是${c[0]}或${c[1]}。`],
+                ['c', c => `上 2 條線當中剛好一條是${c[0]}或${c[1]}，或兩者皆不是${c[0]}或${c[1]}。`],
+                ['c', c => `上 2 條線當中剛好一條是${c[0]}或${c[1]} ，或兩者皆是${c[0]}或${c[1]}。`],
+                ['c', c => `上 2 條線兩者皆不是${c[0]}或${c[1]}，或兩者皆是${c[0]}或${c[1]}。`],
+                ['c', c => `從開始的線至上一條線全部的${c[0]}線都是應該被剪斷。\u00a0*`, true],
+                ['c', c => `從開始的線至上一條線全部的${c[0]}線都是不應該被剪斷。\u00a0*`, true],
+                "從開始的線至上一條線當中，過半數都是應該被剪斷。",
+                "從開始的線至上一條線當中，過半數都是不應該被剪斷。",
+                "從開始的線的下一條線至上一條線當中，過半數都是應該被剪斷。",
+                "從開始的線的下一條線至上一條線當中，過半數都是不應該被剪斷。",
+                "上一條線與開始的線同色。",
+                "上一條線與開始的線不同色。",
+            ];
+            let list = document.getElementsByClassName('table-rule');
+            let footnote = false;
+            if (rnd.seed === 1)
+            {
+                list[0].innerText = tableRules[35][1](['黃', '藍', '綠']);
+                list[1].innerText = tableRules[2];
+                list[2].innerText = tableRules[6];
+                list[3].innerText = tableRules[34][1](['紅', '藍', '黑']);
+                list[4].innerText = tableRules[10];
+                list[5].innerText = tableRules[16];
+                list[6].innerText = tableRules[34][1](['黃', '白', '綠']);
+                list[7].innerText = tableRules[7];
+                list[8].innerText = tableRules[21];
+                list[9].innerText = tableRules[35][1](['白', '黑', '紅']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['白', '黑']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (let i = 0; i < 13; i++)
+                {
+                    let str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[2])
+                            footnote = true;
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+            document.getElementById('footnote').style.display = footnote ? '' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">跟隨領導</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Follow the Leader.svg">
+                <h2>關於【跟隨領導】模組</h2>
+
+                <p class="flavour-text">小孩的玩意，跟隨領導所說的就好，只不過如沒有跟隨的懲罰遊戲改為了數份的爆炸而已。
+                <p>這個模組，由環狀組成 8-12 條線路連接到帶有數字標籤的插座所組成。每一條線路由某個插座順時針接連下個插座。在這個模組的線路按照前面插座的標籤來分配編號。例如插座 1 接連插座 2 的線路為「線路 1 」，連接源為插座 1 ,連接目的地為插座 2 。插座 12 接連插座 1 的線路為「線路 12」，連接源為插座 12 ,連接目的地為插座 1 。</p>
+                <p> 一開始先剪「開始的線」，然後順序剪合乎條件的線。各線參照先前的線來決定是否剪下。必須按照順序剪下。</p>
+
+                <h3>開始的線的識別法</h3>
+                <p>使用第一個符合條件的規則：</p>
+
+                <ol>
+                    <li>如有<span class='rule' id='rule-port'>RJ-45埠口</span>，且由<span class='rule' id='rule-plug-start'>插座4</span> <em>直接</em>連接至<span class='rule' id='rule-plug-end'>插座5</span>的線存在，以該線路開始。</li>
+                    <li>否則，如有連接源與<span class='rule' id='rule-start-2'>電池數目</span>相等的線路，以該線路開始。</li>
+                    <li>否則，如有連接源與<span class='rule' id='rule-start-3'>序號第一個數字</span>相同的線路，以該線路開始。</li>
+                    <li>否則，如有<span class="rule" id="rule-indicator-lit">亮起的</span><span class='rule' id='rule-indicator'>CLR</span>指示燈，無視之後所有規則並以降序剪下所有線路。</li>
+                    <li>如上述情況全不符合，以<span class="rule" id="rule-else">編號最小的</span>線路開始。</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">跟隨領導</span>
+            </div>
+            <div class="page-content">
+                <h3>關於要剪斷的線路</h3>
+                <ul>
+                    <li>開始的線<u>必須</u>剪下，然後移動至下一條。</li>
+                    <li>從這位置開始，按照下表的規則決定應否剪下線路。由<span class='rule' id='rule-starting-step'>序號最初的英文字母</span>開始。<span class="rule" id="rule-starting-step-fallback">如序號沒有英文字母</span>，從步驟<span class='rule' id='rule-starting-step-fallback-step'>A</span>開始。</li>
+                    <li>當移動至下一條時，按照英文字母順序在表的下一行移動並決定應否剪下線路。</li>
+                    <li>「前一條線」「前○條線」有機會指出比開始的線更前的線。</li>
+
+                    <li>如果開始的線是<span class='rule' id='rule-reverse-colors'>紅，綠或白</span>，取而代之按照英文字母順序的逆順參照規則。</li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th>步驟
+                        <th>如果符合以下條件就剪斷：
+                    </tr>
+                    <tr>
+                        <th>A或N</th>
+                        <td class='table-rule'>上一條線不是黃，藍或綠。</td>
+                    </tr>
+                    <tr>
+                        <th>B或O</th>
+                        <td class='table-rule'>上一條線的連接目的地是偶數。</td>
+                    </tr>
+                    <tr>
+                        <th>C或P</th>
+                        <td class='table-rule'>上一條線應該被剪斷。</td>
+                    </tr>
+                    <tr>
+                        <th>D或Q</th>
+                        <td class='table-rule'>上一條線是紅，藍或黑。</td>
+                    </tr>
+                    <tr>
+                        <th>E或R</th>
+                        <td class='table-rule'>上3條線當中有2條線同色。</td>
+                    </tr>
+                    <tr>
+                        <th>F或S</th>
+                        <td class='table-rule'>上2條線當中剛好1條與這條線同色。</td>
+                    </tr>
+                    <tr>
+                        <th>G或T</th>
+                        <td class='table-rule'>上一條線是黃，白或綠</td>
+                    </tr>
+                    <tr>
+                        <th>H或U</th>
+                        <td class='table-rule'>上一條線不應該被剪斷。</td>
+                    </tr>
+                    <tr>
+                        <th>I或V</th>
+                        <td class='table-rule'>上一條線跳過了插座。</td>
+                    </tr>
+                    <tr>
+                        <th>J或W</th>
+                        <td class='table-rule'>上一條線不是白，黑或紅。</td>
+                    </tr>
+                    <tr>
+                        <th>K或X</th>
+                        <td class='table-rule'>上2條線不同顏色。</td>
+                    </tr>
+                    <tr>
+                        <th>L或Y</th>
+                        <td class='table-rule'>上一條線的連接目的地不是標籤為6以下的插座。</td>
+                    </tr>
+                    <tr>
+                        <th>M或Z</th>
+                        <td class='table-rule'>上2條線當中剛好1條或0條為白或黑。</td>
+                    </tr>
+                </table>
+                <div id='footnote' style='display:none'>*&nbsp;小心<a href='https://en.wikipedia.org/wiki/Vacuous_truth'>空的真</a>。即時說，如果前提的線不存在，規則會化為真。</div>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+    </div>
+</body>
+</html>

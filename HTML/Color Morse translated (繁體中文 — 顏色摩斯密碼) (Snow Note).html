@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>顏色摩斯密碼 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                '如數值為奇數、乘以 2 。否則、除以 2 。',
+                '如數值為 3 的倍數、除以3。否則、加上閃爍的原色*的燈數',
+                '把數值自乘。',
+                '如括號括下了第 2 和第 3 個燈、視作括下了第 1 和第 2 個燈。如括號括下了第 1 和第 2 個燈、當作括下了第 2 和第 3 個燈。',
+                '把數值乘以3、然後計算該數值的數根**',
+                '從10減去數值。'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `如數值為${m}的倍數，除以${m}。否則，乘以${m}。`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "紅", "橙", "黃", "綠", "藍", "紫", "白" ];
+                    return `如數值為${m}的倍數，除以${m}。否則，加上${colorNames[colors[0]]}、${colorNames[colors[1]]}、${colorNames[colors[2]]}中任何一種閃爍的顏色的燈數。`;
+                },
+                rnd => `把數值自乘。`,
+                rnd => `如括號括下了第 2 和第 3 個燈、視作括下了第 1 和第 2 個燈。如括號括下了第 1 和第 2 個燈、當作括下了第 2 和第 3 個燈。`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `${which === 1
+                        ? '把「+」與「−」符號交替，「×」與「/」符號交替。'
+                        : '把「+」與「×」符號交替，「-」與「/」符號交替。'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `把數值乘以${m}，然後計算該數的數根**。`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `從${m}減去數字。`;
+                },
+                rnd => `乘以<var>n<${''}/var> + 1。<var>n<${''}/var>是相等於包含這個字元的埠口數`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `求數值除以${m}的餘數，然後計算該數值的階乘。`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `改為包含的這個文字的${['亮起', '熄滅', ''][indMode]}指示燈的數量`;
+                },
+                rnd => `乘以<var>n <${''}/var>。<var>n <${''}/var>為序號內沒有重複的文字數。`,
+                rnd => `改為這個數值在 2 進制表記時，1 的個數。`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `改為這個數值在 3 進制表記時，${[' 1 ', ' 2 ', ' 1 或 2 '][whichDigits]}的個數。`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${['埠口板', '埠口的種類', '電池插座'][whichEdgework]}的數量作為${[`<var>n<${''}/var>、乘以<var>n<${''}/var> + 1`, '加上'][op]}。`;
+                },
+                rnd => `改為文字在<a href='https://ktane.timwi.de/HTML/Braille.html'>點字(Braille)<${''}/a> 形式表示時的點的數量。(1~9 = A~H, 0 = J)`,
+                rnd => `改為文字在<a href='Maritime%20Flags%20translated%20(繁體中文%20—%20海事旗幟)%20(Snow%20Note).html'>海事旗幟<${''}/a>中帶有顏色的區域數。`,
+                rnd => `改為文字在<a href="Zoni%20translated%20(繁體中文%20—%20佐尼文字)%20(Snow%20Note).html">佐尼文字<${''}/a>形式中表示時圖形的數量。`,
+                rnd => `把文字改為<var>d<${''}/var> + 3×<var>s<${''}/var>。<var>d<${''}/var>是該文字的摩斯密碼中的點的數量、<var>s<${''}/var>為劃的數量。`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `把文字改為在<a href='https://ktane.timwi.de/HTML/14.html'>14段顯示器<${''}/a>中${['熄滅的', '亮起的'][useOn]}發光二極體的數目。`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `這個數值的${['前方', '後方'][append]}與序號的${['第 6 個', '第 3 個'][snValue]}文字連結成 2 位數字。`;
+                },
+                rnd => `加上全部顯示的顏色的字數的總和`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `如果序號有該文字，除以<var>n<${''}/var> + 1。<var>n<${''}/var>是序號中該文字的出現次數。否則，乘以${m}。`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `如符號反轉後的摩斯密碼為數字 0-9 或英文字母 A-Z 。把該文字取用36進數的值。否則，利用該數字加上${['埠口', '埠口板', '電池', '電池插座', '指示燈', '亮起指示燈', '熄滅指示燈'][which]}的數量後的數。`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `如文字為數字，加上${['埠口', '埠口板', '電池', '電池插座', '指示燈', '亮起指示燈', '熄滅指示燈'][which]}的數量。否則，改為 <var>d<${''}/var> + 3×<var>s<${''}/var>。<var>d <${''}/var>是該文字的<a href='https://ktane.timwi.de/HTML/Pigpen%20Rotations.html'>Pigpen Rotations</a>中的點的數目、<var>s <${''}/var>為線的數目。`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `乘以序號的${['數字', '英文字'][letters]}數量。`;
+                },
+                rnd => `加上規則種子碼最後一位數字。`,
+                rnd => `把數字改為(所有LED的顏色的名稱所包含的字數+1)。`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `加上炸彈啟動時的${['日', '月', '年'][which]}數。`;
+                },
+                rnd => `把數字改為文章「0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9」中最初出現該文字的位置。(無視空白)`,
+                rnd => `如該文字是英文字、把英文字改為<a href='http://ktane.timwi.de/HTML/Scrabble%20Scramble.html'>English Scrabble<${''}/a>的分數。`,
+                rnd => `以文字的<a href='https://ktane.timwi.de/HTML/%C3%9Cbermodule.html'>extended tap code<${''}/a>取代數字、視作 2 位數。`,
+                rnd => `把文字置換為模組名稱中包含該文字的模組的數目。`,   
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = shuffledRules[i];
+        }
+    </script>
+    <style>
+        .small-font {
+            font-size: 11pt;
+        }
+        .dark .ondark { filter: invert(85%); }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">顏色摩斯密碼</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Color Morse.svg" class="diagram">
+                <h2>關於【顏色摩斯密碼】模組</h2>
+                <p class="flavour-text">... .- -. ... ..- ..- .... .- - .- -. --- ... .. ..!</p>
+                <ul>
+                    <li>這個模組包含3個會閃爍的不同顏色的燈、運算符和把運算符包圍的括號。</li>
+                    <li>各燈透過摩斯密碼表示 1 位數字或 1 文字的英文字。如它表示的是英文字，視作該文字的英文字母的位置+9的數字。(A=10、B=11 等等)</li>
+                    <li>按照顏色對各數字進行在下表的操作。如果燈的顏色是白色，則不需要對該數進行任何操作</li>
+                    <li>
+                        在數式中代入最新取得的數字，然後計算。
+                        <ul>
+
+                            <li>如結果不是整數，只考慮整數部分。</li>
+                            <li>如結果為負數，必須在其他數字前加上連字符 ( -0 改為 0 )</li>
+                            <li>如結果數字大於 999 ，只考慮最後 3 位數。</li>
+                            <li>如合乎以上多個規則，從上開始適用。無視最先頭的 0 。</li>
+                        </ul>
+                    </li>
+                    <li>利用按鈕把結果以摩斯密碼方式輸入。空白的按鈕用作分開每個文字。</li>
+                    <li>一旦觸發失誤，先前的輸入會被重置。</li>
+                </ul>
+                <p id='rule-seeded-explanation'>如果有參照<em>數字</em>的規則、參照三十六進數的數字 (A=10, ..., Z=35) 。
+                如果有參照<em>英文字</em>的規則、參照摩斯密碼所表示的英文字或數字。</p>
+                <table class="color-morse">
+                 <thead><tr>
+                     <td><b>顏色</b></td>
+                     <td><b>操作</b></td>
+                 </tr></thead>
+                 <tbody><tr>
+                     <td>紅<br>(red)</td>
+                     <td class="color-morse-rules">如數字為奇數、乘以 2 。否則、除以 2 。</td>
+                 </tr>
+                 <tr>
+                     <td>橙<br>(orange)</td>
+                     <td class="color-morse-rules">如數字為3的倍數、除以3。否則、加上閃原色*的燈數</td>
+                 </tr>
+                 <tr>
+                     <td>黃<br>(yellow)</td>
+                     <td class="color-morse-rules">把數字自乘。</td>
+                 </tr>
+                 <tr>
+                     <td>綠<br>(green)</td>
+                     <td class="color-morse-rules">如括號括下了第 2 和第 3 個燈、視作括下了第 1 和第 2 個燈。如括號括下了第 1 和第 2 個燈、當作括下了第 2 和第 3 個燈。</td>
+                 </tr>
+                 <tr>
+                     <td>藍<br>(blue)</td>
+                     <td class="color-morse-rules">把數字乘以 3 、計算該數的數根**。</td>
+                 </tr>
+                 <tr>
+                     <td>紫<br>(purple)</td>
+                     <td class="color-morse-rules">從 10 減去數字。</td>
+                 </tr>
+             </tbody></table>
+                <p>
+                    * 原色為紅、藍、黃。
+                </p>
+                <p>
+                    ** 數根是各數位經過不斷相加後，最終得出的一位數。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">顏色摩斯密碼</span>
+            </div>
+            <div class="page-content">
+                <h3>摩斯密碼列表</h3>
+                <img class="centered-img ondark" src="img/Color Morse/Morse Reference.svg">
+            </div>
+            <div class="page-footer relative-footer">第 2 / 2 頁</div>
+        </div>
+    </div>
+</body>
+
+</html>

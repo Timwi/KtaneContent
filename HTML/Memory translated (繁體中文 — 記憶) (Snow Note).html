@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>記憶 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    var highlightable = document.createElement('span');
+                    highlightable.classList.add("highlightable");
+                    highlightable.appendChild(document.createTextNode(`如果顯示的是 ${j} ，${rule}。`));
+                    tag.appendChild(highlightable);
+                    if (j != 4)
+                        tag.appendChild(document.createElement('br'));
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "按下第一個位置的按鈕";
+                case 1: return "按下第二個位置的按鈕";
+                case 2: return "按下第三個位置的按鈕";
+                case 3: return "按下第四個位置的按鈕";
+                case 4: return `按下數字為【${targetDigit}】的按鈕`;
+                case 5: return `按下和階段 ${targetStage} 中你所按下的按鈕位置相同的按鈕`;
+                case 6: return `按下和階段 ${targetStage} 中你所按下的按鈕數字相同的按鈕`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">記憶</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory.svg" class="diagram" />
+                <h2>關於【記憶】模組</h2>
+                <p class="flavour-text">記憶是稍縱即逝的，然而炸彈週遭的一切也是。所以小心一些吧！</p>
+                <ul>
+                    <li>按下正確的按鈕以進入下一階段，完成所有階段以解除模組。</li>
+                    <li>按下錯誤的按鈕將重設模組至第一階段。</li>
+                    <li>按鈕位置的順序為從左到右。</li>
+                </ul>
+                <div class="memory-rules">
+                    <h4>階段 1：</h4>
+                    <p id="memory-stage-1">如果顯示的是 1 ，按下第二個位置的按鈕。<br />如果顯示的是 2 ，按下第二個位置的按鈕。<br />如果顯示的是 3 ，按下第三個位置的按鈕。<br />如果顯示的是 4 ，按下第四個位置的按鈕。<br /></p>
+                    <h4>階段 2：</h4>
+                    <p id="memory-stage-2">如果顯示的是 1 ，按下數字為【4】的按鈕。<br />如果顯示的是 2 ，按下和階段 1 中你所按下的按鈕位置相同的按鈕。<br />如果顯示的是 3 ，按下第一個位置的按鈕。<br />如果顯示的是 4 ，按下和階段 1 中你所按下的按鈕位置相同的按鈕。<br /></p>
+                    <h4>階段 3：</h4>
+                    <p id="memory-stage-3">如果顯示的是 1 ，按下和階段 2 中你所按下的按鈕數字相同的按鈕。<br />如果顯示的是 2 ，按下和階段 1 中你所按下的按鈕數字相同的按鈕。<br />如果顯示的是 3 ，按下第三個位置的按鈕。<br />如果顯示的是 4 ，按下數字為【4】的按鈕。<br /></p>
+                    <h4>階段 4：</h4>
+                    <p id="memory-stage-4">如果顯示的是 1 ，按下和階段 1 中你所按下的按鈕位置相同的按鈕。<br />如果顯示的是 2 ，按下第一個位置的按鈕。<br />如果顯示的是 3 ，按下和階段 2 中你所按下的按鈕位置相同的按鈕。<br />如果顯示的是 4 ，按下和階段 2 中你所按下的按鈕位置相同的按鈕。<br /></p>
+                    <h4>階段 5：</h4>
+                    <p id="memory-stage-5">如果顯示的是 1 ，按下和階段 1 中你所按下的按鈕數字相同的按鈕。<br />如果顯示的是 2 ，按下和階段 2 中你所按下的按鈕數字相同的按鈕。<br />如果顯示的是 3 ，按下和階段 4 中你所按下的按鈕數字相同的按鈕。<br />如果顯示的是 4 ，按下和階段 3 中你所按下的按鈕數字相同的按鈕。<br /></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+</html>
