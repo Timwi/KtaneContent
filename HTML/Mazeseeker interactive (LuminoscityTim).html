@@ -3,15 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Factoring Maze — Keep Talking and Nobody Explodes Module</title>
+    <title>Mazeseeker — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
     <script src="js/Utilities/ui-utils.js"></script>
-    <script src="js/Utilities/array-utils.js"></script>
     <script>
     $(function() {
         var selected;
@@ -21,7 +21,7 @@
         let sizeNumber = $(".sizeNumber");
         let currX = 0;
         let currY = 0;
-        let mazeSize = 4;
+        let mazeSize = 6;
         let startPos = 0;
         let pressing = false;
         let movementList = [];
@@ -43,8 +43,8 @@
         const MOV_FREE = 0;
         const MOV_ENFORCE = 1;
         const NUM_DIR = 4;
-        const CARD_MAX = 13000;
-        const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+        let gameGrid = Array(MAX_SIZE).fill().map(()=>Array(MAX_SIZE).fill(-1));
+        let origGameGrid = Array(MAX_SIZE).fill().map(()=>Array(MAX_SIZE).fill(-1));
 
         const fulldir = {
             Up: [0, -1],
@@ -106,7 +106,8 @@
             0: "U",
             1: "L",
             2: "D",
-            3: "R"
+            3: "R",
+            4: ['U','L','D','R']
         }
 
         const viewboxSize = {
@@ -137,11 +138,9 @@
         } 
 
         function resetPos() {
-            $(".square.visited").removeClass("visited");
             $(".solved-text").addClass("invis");
             [currX, currY] = getXY(startPos);
             selected = $(`.square.x${currX+1}.y${currY+1}`);
-            selected.addClass("visited");
             updateSelection();
             movementList = [];
             $(".path .str").text("");
@@ -158,7 +157,6 @@
             let visitOrder = [];
             let visited = Array(mazeSize * mazeSize).fill(false);
             mazeWalls = Array(mazeSize * mazeSize).fill('');
-            let shufPrimes = ShuffleFisherYates(ShuffleFisherYates([...primes])).slice(0, NUM_DIR).sort((a,b) => a-b);
             let done = false;
             do
             {
@@ -180,6 +178,7 @@
             } while (currentNode != startingNode);
 
             let endPos = Math.floor(Math.random() * mazeSize * mazeSize);
+            let cornerPos = Math.floor(Math.random() * mazeSize * mazeSize);
             let sol;
             let min = Math.pow(mazeSize / 2, 2);
             do {
@@ -191,28 +190,27 @@
             [currX, currY] = getXY(startPos);
             selected = $(`.square.x${currX+1}.y${currY+1}`);
             updateSelection();
-            $(".square").removeClass("goal start");
+            $(".square").removeClass("goal start first");
             let [gx,gy] = getXY(endPos);
+            let [cx,cy] = getXY(cornerPos);
             $(`.square.x${gx+1}.y${gy+1}`).addClass("goal");
             selected.addClass("start");
-            $(".square.visited").removeClass("visited");
 
             for (let y = 0; y < mazeSize; y++)
-                for (let x = 0; x < mazeSize; x++) {
-                    let pos = y * mazeSize + x;
-                    let n = 1;
-                    for (let i = 0; i < NUM_DIR; i++)
-                        if (!mazeWalls[pos].includes(dirLetter[i]))
-                            n *= shufPrimes[i];
-                    $(`.square.x${x+1}.y${y+1} text`).html(n);
-                    $(`.readinp.x${x+1}.y${y+1}`).val(n);
-                }
+            for (let x = 0; x < mazeSize; x++) {
+                let pos = y * mazeSize + x;
+                gameGrid[x][y] = 4 - mazeWalls[pos].length;
+            }
+            updateGrid();
+            shiftMaze(cx, cy);
+            $(`.square.x${cx+1}.y${cy+1}`).addClass("first");
+            selected = $('.square.selected');
+            console.log(mazeWalls.map(w => dirLetter[4].filter(l => !w.includes(l)).join('')));
             
-            $(".prime-box").removeClass("highlighted");
             $("path.wall").removeClass("solid");
             updateSize();
-            // console.log(shufPrimes);
 
+            $(".path .str").html("");
             $(".solution .str").html(answerList.join(" "));
             $(".solved-text").addClass("invis");
             generating = false;
@@ -288,8 +286,34 @@
             return false;
         }
 
+        const saved_classes = 'selected start first goal';
+        function shiftMaze(shiftX, shiftY) {
+            let saved = Array(mazeSize).fill().map(()=>Array(mazeSize).fill(0));
+            let savedClass = Array(mazeSize).fill().map(()=>Array(mazeSize).fill(""));
+            for (let y = 0; y < mazeSize; y++)
+                for (let x = 0; x < mazeSize; x++) {
+                    saved[x][y] = gameGrid[x][y];
+                    savedClass[x][y] = $(`.square.x${x+1}.y${y+1}`).attr("class")
+                        .split(" ").filter(s => saved_classes.includes(s)).join(" ");
+                }
+
+            for (let y = 0; y < mazeSize; y++)
+                for (let x = 0; x < mazeSize; x++) {
+                    gameGrid[x][y] = saved[UMod(x-shiftX, mazeSize)][UMod(y-shiftY, mazeSize)];
+                    let elem = $(`.square.x${x+1}.y${y+1}`);
+                    elem.removeClass(saved_classes);
+                    elem.addClass(savedClass[UMod(x-shiftX, mazeSize)][UMod(y-shiftY, mazeSize)]);
+                }
+            selected = $(".square.selected");
+            updateGrid();
+        }
+
         function arrowPressed(direction, type, fdir, dirIdx) {
             if ([MODE_READ,MODE_EXPERT].includes(mode())) {
+                if (shift()) {
+                    shiftMaze(fdir[0], fdir[1]);
+                    return;
+                }
                 let x = currX + direction[0];
                 let y = currY + direction[1];
                 let p = currY * mazeSize + currX;
@@ -356,25 +380,29 @@
                 sizeDec();
             else if (k == "=" || k == "+")
                 sizeInc();
+            else if (NoSpecialKeys(event)) {
+                let n = parseInt(event.key);
+                if (k == " " || k == "enter" || (n >= 0 && n <= 3 && !event.altKey)) {
+                    if (k == " " || k == "enter") {
+                        n = -1;
+                        event.preventDefault();
+                    }
+                    if (selected && selected.hasClass("square")) {
+                        if (mode() == MODE_READ) {
+                            gameGrid[currX][currY] = n;
+                            playZeroOneSound(n);
+                            updateGrid();
+                        }
+                        if (currX == mazeSize - 1)
+                            currY = (currY + 1) % mazeSize;
+                        currX = (currX + 1) % mazeSize;
+                        selected = $(`.square.x${currX+1}.y${currY+1}`);
+                        updateSelection();
+                    }
+                }
+            }
  
             down = false;
-        });
-
-        let inputs = $(".inputs");
-        for (let y = 1; y <= NUM_DIR; y++) {
-            let row = $("<div>").addClass("hstack").appendTo(inputs);
-            for (let x = 1; x <= NUM_DIR; x++) {
-                $("<input>").addClass(`readinp x${x} y${y}`).change(function() {
-                    let e = $(this);
-                    let n = parseInt(e.val());
-                    e.val(n >= 0 ? Math.min(n, CARD_MAX) : '');
-                    $(`.square.x${x}.y${y} text`).html(e.val());
-                }).appendTo(row);
-            }
-        }
-        $("button.clear-read").click(function() {
-            $(".inputs input").val('');
-            $(`.square text`).html('');
         });
 
         function removeSizeClass(elem) {
@@ -424,6 +452,16 @@
             sizeInc();
         });
 
+        function updateGrid() {
+            for (let y = 0; y < mazeSize; y++) {
+                for (let x = 0; x < mazeSize; x++) {
+                    let n = gameGrid[x][y];
+                    let elem = $(`.square.x${x+1}.y${y+1} text`);
+                    elem.html(n < 0 ? "" : n);
+                }
+            }
+        }
+
         function mode() {
             if ($("button.expert-play").hasClass("play")) {
                 if ($("button.read-solve").hasClass("solve"))
@@ -442,15 +480,9 @@
             else
                 return MOV_ENFORCE;
         }
-
-        let primesHolder = $("div.primes");
-        primes.forEach((item, i) => {
-            $("<div>").addClass(`prime-box p${item}`).text(item).click(function() {
-                if ($(this).hasClass("highlighted") || $(".prime-box.highlighted").length < NUM_DIR) {
-                    $(this).toggleClass("highlighted");
-                }
-            }).appendTo(primesHolder);
-        });
+        function shift() {
+            return document.querySelector("#shift-maze").checked;
+        }
 
         function letter(i) {
             return i < 0 ? String.fromCharCode(123 + i) : String.fromCharCode(65 + i);
@@ -515,10 +547,18 @@
                         $(this).addClass("start");
                         startPos = pos;
                         return true;
+                    } else if (selectedTool == "first") {
+                        $(".square.first").removeClass("first");
+                        $(this).addClass("first");
+                        return true;
+                    } else if ([MODE_READ].includes(mode()) && shift()) {
+                        gameGrid[x-1][y-1] = ((gameGrid[x-1][y-1] + 2) % 5) - 1;
+                        origGameGrid[x-1][y-1] = gameGrid[x-1][y-1];
+                        playZeroOneSound(gameGrid[x-1][y-1]);
+                        updateGrid();
                     }
 
                     if ([MODE_PLAY,MODE_SOLVE].includes(mode())) {
-                        $(this).addClass("visited");
                         let dist = Math.abs(x-1 - currX) + Math.abs(y-1 - currY);
                         if (movement() == MOV_ENFORCE && dist == 1) {
                             let cur = currY * mazeSize + currX;
@@ -582,6 +622,13 @@
             event.preventDefault();
             event.stopPropagation();
         });
+        $("<div>").addClass("tool firsttool").text("Corner").appendTo(othertools).click(function(event) {
+            $(".tool").removeClass("selected");
+            $(this).addClass("selected");
+            selectedTool = "first";
+            event.preventDefault();
+            event.stopPropagation();
+        });
         $("<div>").addClass("tool reset-grid").text("↻").appendTo(othertools).click(function(event) {
             resetPos();
             event.preventDefault();
@@ -589,6 +636,12 @@
         });
 
         let tools = $(".tools");
+        let audio0 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/TapCode.wav")
+            .appendTo(tools);
+        let audio1 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
+            .appendTo(tools);
         let audioStep = $("<audio>")
             .attr("src", "audio/Pathfinder/footstep.mp3")
             .appendTo(tools);
@@ -596,6 +649,13 @@
             .attr("src", "audio/Module Listening/Creation - Solve.wav")
             .prop("volume", 0.4)
             .appendTo(tools);
+        function playZeroOneSound(n) {
+            if ($("button.sound").hasClass("play") && n > -1) {
+                let aud = UMod(n, 2) == 0 ? audio0[0].cloneNode() : audio1[0].cloneNode();
+                aud.volume = 0.3;
+                aud.play();
+            }
+        }
 
         $("<h3>").addClass("solved-text invis centered").text("Solved!").prependTo(tools);
 
@@ -623,21 +683,63 @@
             if ([MODE_PLAY,MODE_EXPERT].includes(mode())) {
                 generate();
             }
-
-            resetPos();
+            else resetPos();
         });
         $("<button>").addClass("show-sol").appendTo(tools).click(function() {
             $(this).toggleClass("show");
             $("body").toggleClass("solution-shown", $(this).hasClass("show"));
         });
 
+        function wallToggle(x, y, type, state) {
+            let wallv = `v${letter(x-1)}${letter(x)}${y+1}`;
+            let wallh = `h${y}${y+1}${letter(x)}`;
+            if (type == "v" && x >= 0 && x <= mazeSize && y >= 0 && y <= mazeSize) {
+                $(`svg .wall.${wallv}`).toggleClass("solid", state);
+            }
+            else if (type == "h" && x >= 0 && x <= mazeSize && y >= 0 && y <= mazeSize) {
+                $(`svg .wall.${wallh}`).toggleClass("solid", state);
+            }
+        }
+        $(".radar").click(function() {
+            if ([MODE_READ,MODE_SOLVE].includes(mode())) return false;
+            if (selected && selected.hasClass("square")) {
+                for (let i = 0; i < NUM_DIR; i++) {
+                    wallToggle(currX + directions[i][0], currY + directions[i][1], i % 2 == 0 ? "h":"v", false);
+                    let pos = currY * mazeSize + currX;
+                    shownMazeWalls[pos] = shownMazeWalls[pos].replaceAll(dirLetter[i], '');
+                    let ox = currX + fulldir[i][0];
+                    let oy = currY + fulldir[i][1];
+                    if (ox >= 0 && ox < mazeSize && oy >= 0 && oy < mazeSize) {
+                        let p = oy * mazeSize + ox;
+                        let idx = (i + 2) % NUM_DIR;
+                        shownMazeWalls[p] = shownMazeWalls[p].replaceAll(dirLetter[idx], '');
+                    }
+
+                    if (!mazeWalls[pos].includes(dirLetter[i])) {
+                        wallToggle(currX + directions[i][0], currY + directions[i][1], i % 2 == 0 ? "h":"v", true);
+                        if (!shownMazeWalls[pos].includes(dirLetter[i])) shownMazeWalls[pos] += dirLetter[i];
+                        ox = currX + fulldir[i][0];
+                        oy = currY + fulldir[i][1];
+                        if (ox >= 0 && ox < mazeSize && oy >= 0 && oy < mazeSize) {
+                            let p = oy * mazeSize + ox;
+                            let idx = (i + 2) % NUM_DIR;
+                            if (!shownMazeWalls[p].includes(dirLetter[idx])) shownMazeWalls[p] += dirLetter[idx];
+                        }
+                    }
+                }
+            }
+        });
+        $(".reset-walls").click(function() {
+            $("path.wall").removeClass("solid");
+            updateSize();
+        });
         $(".reset-saves").click(function() {
             saveStates.forEach(x => x.remove());
             saveStates = [];
             currentState = 0;
         });
         $(".reset-all").click(function() {
-            $(".square").removeClass("goal start");
+            $(".square").removeClass("goal start first");
             $(".prime-box").removeClass("highlighted");
             $("path.wall").removeClass("solid");
             $(".solved-text").addClass("invis");
@@ -647,14 +749,14 @@
             $("button.expert-play").removeClass("play");
             $("button.show-sol").removeClass("show");
             $("button.read-solve").removeClass("solve");
-            shownMazeWalls = Array(mazeSize * mazeSize).fill('');
             startPos = 0;
             resetPos();
 
             saveStates.forEach(x => x.remove());
             saveStates = [];
             currentState = 0;
-            mazeSize = 4;
+            mazeSize = 6;
+            shownMazeWalls = Array(mazeSize * mazeSize).fill('');
             updateSize();
         });
 
@@ -672,8 +774,6 @@
 
             let saveStateClass = Array.from($(".prime-box, .square, path.wall, .solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
             let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
-            let saveText = Array.from($(".square text")).map(x => $(x)).map(x => x.html() || "");
-            let saveVal = Array.from($(".inputs input")).map(x => $(x)).map(x => x.val() || "");
             console.log(saveStates);
             let stateNumber = saveStates.length;
             currentState = stateNumber;
@@ -688,6 +788,13 @@
             let s_movementList = [];
             Object.assign(s_movementList, movementList);
             Object.assign(s_answerList, answerList);
+            let s_gameGrid = Array(MAX_SIZE).fill().map(()=>Array(MAX_SIZE).fill(-1));
+            let s_origGameGrid = Array(MAX_SIZE).fill().map(()=>Array(MAX_SIZE).fill(-1));
+            for (let y = 0; y < mazeSize; y++)
+                for (let x = 0; x < mazeSize; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                }
             let s_selected = selected;
             let s_selectedTool = selectedTool;
             let s_size = mazeSize;
@@ -702,8 +809,6 @@
 
                 $(".prime-box, .square, path.wall, .solved-text, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
                 $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
-                $(".square text").each((i, x) => $(x).html(saveText[i]));
-                $(".inputs input").each((i, x) => $(x).val(saveVal[i]));
                 mazeWalls = Array(s_mazeWalls.length);
                 shownMazeWalls = Array(s_shownMazeWalls.length);
                 Object.assign(mazeWalls, s_mazeWalls);
@@ -715,6 +820,13 @@
                 Object.assign(answerList, s_answerList);
                 $(".path .str").text(movementList.join(" "));
                 $(".solution .str").text(answerList.join(" "));
+                for (let y = 0; y < mazeSize; y++) {
+                    for (let x = 0; x < mazeSize; x++) {
+                        gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                    }
+                }
+                updateGrid();
 
                 currentState = stateNumber;
                 selected = s_selected;
@@ -733,34 +845,35 @@
     });
     </script>
     <style>
-        body {
-            --square-width: 55px;
-            --square-fs: 35px;
-            --square-head-fs: 30px;
-            --square-lineh: 65px;
+        table.mazediagram {
+            width: 12em;
+            height: 12em;
+            position: relative;
+            font-size: 13px;
+            z-index: 1;
+            border-collapse: collapse;
+            margin-bottom: 1em;
         }
-        h4 { margin: 0; }
-        .aligncenter {
-            text-align: center;
+        .mazediagram :is(td,th) { padding: .2em .6em 0; }
+        p {
+            font-size: 14px;
         }
-        .note {
-            text-align: center;
-            font-size: x-small;
-            font-style: italic;
-        }
-        th img {
-            height: auto;
-            width: 80%;
-        }
+        .dark th, th { border: none; }
+        th.right { border-right: solid; }
+        th.left { border-left: solid; }
+        th.up { border-top: solid; }
+        th.down { border-bottom: solid; }
         table {
             margin: 1em auto;
         }
+
         .hstack {
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: center;
         }
+        .hstack.gap { gap: 10px; }
         .vstack {
             display: flex;
             flex-direction: column;
@@ -785,7 +898,7 @@
         .toolset { gap: 10px; }
         .toolset1 { margin: 5px; }
         .tool {
-            width: 55px;
+            width: 70px;
             height: 50px;
             float: left;
             font-size: 18px;
@@ -799,9 +912,11 @@
             cursor: pointer;
             box-sizing: border-box;
         }
-        .goaltool, .starttool { height: 35px; }
-        .starttool.selected { border: #CA1 2px dashed; }
-        .goaltool.selected { border: blue 2px dashed; }
+        .goaltool, .starttool, .firsttool { height: 35px; }
+        .starttool.selected { border: red 2px dashed; }
+        .goaltool.selected { border: #0F0 2px dashed; }
+        .firsttool.selected { border: #33F 2px dashed; }
+        .reset-grid { font-size: 35px; }
 
         .dark .tool:not(.selected) { border-color: #DDD; }
         .tools {
@@ -817,20 +932,6 @@
         }
         .invis { color: transparent; }
 
-        .primes { gap: 5px; }
-        .prime-box {
-            border: 1px solid;
-            width: 45px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-top: 5px;
-            user-select: none;
-            cursor: pointer;
-        }
-        .prime-box.highlighted { background-color: #FF000066; }
-
         svg.themaze path.wall {
             stroke: transparent;
             stroke-linecap: round;
@@ -840,7 +941,7 @@
             stroke: #F44;
         }
         svg .square text {
-            font-family: 'Arial';
+            font-family: 'Roboto Mono';
         }
         svg.themaze text { user-select: none; }
         .dark svg .grid-header { fill: #DDD; }
@@ -865,9 +966,7 @@
         .themaze.size5 { width: 370px; }
         .themaze.size6 { width: 420px; }
         .themaze.size7 { width: 470px; }
-        .themaze.size8 { width: 520px; }
-        .themaze.size9 { width: 520px; }
-        .themaze.size10 { width: 520px; }
+        .themaze:is(.size8,.size9,.size10){ width: 520px; }
         .square {
             cursor: pointer;
             user-select: none;
@@ -877,14 +976,17 @@
             pointer-events: none;
         }
 
-        body:is(.solve, .play) .square.visited .netsquare { fill: #484; }
-        .square.selected .netsquare { fill: #AAA !important; }
-        .dark .square.start text { fill: #FF0; }
-        .square.start text { fill: #F00; }
-        .square.selected text, .dark .square.selected text { fill: #000; }
-        .square.goal .netsquare { fill: #0000FF88 !important; }
-        .square.start .netsquare { fill: #CCAA11AA !important; }
-        .dark .square.goal.selected text { fill: #C77; }
+        .square.selected .netsquare {
+            stroke-width: 7.5px;
+            stroke-dasharray: 10,5;
+            stroke: #D80;
+        }
+        .square:is(.first,.start,.goal) text { fill: #000; }
+        .square.goal .netsquare { fill: #00FF00AA; }
+        .square.start .netsquare { fill: #FF0000AA; }
+        .square.first .netsquare { fill: #3333FFAA; }
+        .square.first.start .netsquare { fill: #FF00FFAA; }
+        .square.first.goal .netsquare { fill: #00FFFFAA; }
 
         .sizetext {
             font-size: 20px;
@@ -992,19 +1094,25 @@
         body.play button.movement,
         body:is(.solve, .play) .goaltool,
         body:is(.solve, .play) .starttool,
+        body:is(.solve, .play) .firsttool,
         body:is(.solve, .play) .inputs input,
         body:is(.solve, .play) button.clear-read,
+        body:not(.play) button.radar,
         body:not(.solve) button.movement {
             user-select: none;
             pointer-events: none;
             background-color: #555;
         }
         body:is(.solve, .play) .goaltool {
-            background-color: #0000FF88;
-            color: #DDD;
+            background-color: #00FF00AA;
+            color: #000;
         }
         body:is(.solve, .play) .starttool {
-            background-color: #CCAA11AA;
+            background-color: #FF0000AA;
+            color: #000;
+        }
+        body:is(.solve, .play) .firsttool {
+            background-color: #3333FFAA;
             color: #000;
         }
         button.expert-play.play::before {
@@ -1025,56 +1133,133 @@
         button.show-sol:not(.show)::before {
             content: 'Solution Hidden';
         }
+
         .page {
             background-position: top;
-        }
-        .number-footer {
-            font-size: 13px;
-            font-style: italic;
+            background-repeat: repeat-y;
         }
     </style>
 </head>
 <body>
     <div class="section">
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Factoring Maze</span>
-            </div>
-            <div class="page-content">
-                <img src="img/Component/Factoring Maze.svg" class="diagram">
-                <h2>On the Subject of Factoring Maze</h2>
-                <p class="flavour-text">Who said module names needed to be original?</p>
-
-                <p>This module will contain a 4×4 grid of numbers. One of the squares will be white, this is your starting position. Pressing an adjacent square will move yourself in the direction of that square.</p>
-                <p>To solve the module, navigate to <i>n</i>th square in reading order, where n equals the product of the nonzero digits in the serial number*, subtracting 16 until the product is less than 17. <span class="number-footer">*If all digits in the serial number are zeroes, use the top-left square as your goal position.</span></p>
-
-                <p>The module chooses 4 unique primes from 2 to 29 (select them on the next page).</p>
-                <ul>
-                    <li>The smallest of these numbers will represent a wall above the cell.</li>
-                    <li>The 2nd smallest of these numbers will represent a wall left of the cell.</li>
-                    <li>The 3rd smallest of these numbers will represent a wall beneath the cell.</li>
-                    <li>The largest of these numbers will represent a wall right of the cell.</li>
-                </ul>
-
-                <p>To find the walls surrounding a cell, separate its number into its prime factors. If the prime corresponding to a wall is a factor of the number, the wall is present. Otherwise it is absent.</p>
-                <p>Attempting to walk through a wall in the maze will incur a strike.</p>
-
-                <h3 class="centered">Read</h3>
-                <div class="inputs"></div>
-                <p class="centered"><button class="clear-read">Clear</button></p>
-            </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
-        </div>
-
         <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Factoring Maze</span>
+                <span class="page-header-section-title">Mazeseeker</span>
             </div>
             <div class="page-content">
-                <h4 class="centered">U L D R</h4>
-                <div class="primes hstack"></div>
+                <img src="img/Component/Mazeseeker.svg" class="diagram">
+                <h2>On the Subject of Mazeseeker</h2>
+                <p class="flavour-text">Everything you need is right in front of you, probably stolen off of a restaurant placemat.</p>
+
+                <p>This module initially presents a central display with a digit on it, four arrow keys, a selectable LED and a smaller display at the bottom right, with a number on it.
+                   You are on a random tile of a maze, whose walls you cannot see. The module is currently in <strong>“discovery”</strong> mode, meaning that walking through its walls bears no consequence.
+                   Pressing the display changes the mode to <strong>“submission”</strong> mode.</p>
+                <p>To solve this module, you must get from one location of the maze, the <strong>“start”</strong>, to another, the <strong>“goal”</strong>, while the module is in submission mode.
+                   Once on the goal, pressing the display again will solve the module. Walking into any walls in submission mode or pressing the display again while on a non-goal tile will cause a strike and reset the module back to discovery mode.</p>
+
+                <h3>Finding the Layout of the Maze</h3>
+
+                <p>Each tile has a digit associated with it. This digit represents the number of walls surrounding the tile, like Minesweeper.
+                   The maze is six tiles long by six tiles tall and is surrounded by walls. Here is an example:</p>
+
+                <table class="mazediagram">
+                <tr>
+                    <th class="up left">2</th>
+                    <th class="down up">2</th>
+                    <th class="right down up">3</th>
+                    <th class="up left">2</th>
+                    <th class="down up">2</th>
+                    <th class="right down up">3</th>
+                </tr>
+
+                <tr>
+                    <th class="left">1</th>
+                    <th class="down up">2</th>
+                    <th class="right up">2</th>
+                    <th class="right left">2</th>
+                    <th class="up left">2</th>
+                    <th class="right up">2</th>
+                </tr>
+
+                <tr>
+                    <th class="down left">2</th>
+                    <th class="right up">2</th>
+                    <th class="down left">2</th>
+                    <th class="right down">2</th>
+                    <th class="right down left">3</th>
+                    <th class="right left">2</th>
+                </tr>
+
+                <tr>
+                    <th class="right up left">3</th>
+                    <th class="right left">2</th>
+                    <th class="up left">2</th>
+                    <th class="down up">2</th>
+                    <th class="right up">2</th>
+                    <th class="right left">2</th>
+                </tr>
+
+                <tr>
+                    <th class="right left">2</th>
+                    <th class="down left">2</th>
+                    <th class="right down">2</th>
+                    <th class="right up left">3</th>
+                    <th class="right left">2</th>
+                    <th class="right left">2</th>
+                </tr>
+
+                <tr>
+                    <th class="down left">2</th>
+                    <th class="down up">2</th>
+                    <th class="down up">2</th>
+                    <th class="down">1</th>
+                    <th class="down">1</th>
+                    <th class="right down">2</th>
+                </tr>
+
+                </table>
+
+                <h3>The LED</h3>
+
+                <p>In discovery mode, the LED changes colour depending on what tile you are on. The tile is not special if it causes the LED to turn/remain off.
+                   Red denotes the start, green signifies the goal and blue locates the top-left cell of the maze.
+                   If the start is at the top-left of the maze, it will be magenta. If the goal is at the top-left, it will be cyan.</p>
+                <p>While working out the layout of the maze, you may get stuck. In that case, you can “radar” (reveal the walls surrounding) a tile while in discovery mode.
+                   To radar a tile, move to the tile that you would like to radar, then press the LED. Some arrows may get brighter, denoting a wall in their directions.
+                   This radar has a cooldown, starting at 30 seconds for the first radar, then 60 seconds for the second, then 90 seconds for all others.
+                   This cooldown is shown on the bottom-right display. Moving from and returning to a previously radared tile will show the radar again, thus you cannot radar a tile twice.</p>
+
+                   <h3>Some Things to Note</h3>
+
+                   <p>Moving while in submission mode will impact where you end up in discovery mode after a strike. For example, if you move right from the start in submission mode then strike, moving left will put you on the start again.</p>
+   
+                   <p>Movement in discovery mode wraps around (eg. moving left from tile A1 will bring you to tile F1).</p>
+   
+                   <h3>Keyboard Support</h3>
+   
+                   <p>This module has keyboard support, meaning that you can use your keyboard to move, radar and submit. You can move using WASD or the arrow keys, radar with E, and press the display with the return key.</p>
+
+                </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Mazeseeker</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack gap">
+                    <span>Shift the maze before inputting the walls.</span>
+                    <div>
+                        <input type="radio" id="shift-maze" name="rotate" value="left" checked>
+                        <label for="shift-maze">Shift</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="input-walls" name="rotate" value="right">
+                        <label for="input-walls">Input Walls</label>
+                    </div>
+                </div>
                 <div class="hstack wrap">
                     <div class="vstack tools">
                         <div class="vstack toolset toolset2">
@@ -1090,7 +1275,7 @@
                             <div class="othertools"></div>
                         </div>
                     </div>
-                    <svg class="themaze size4" viewbox="0 0 450 450" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <svg class="themaze size6" viewbox="0 0 650 650" xmlns="http://www.w3.org/2000/svg"></svg>
                     <div class="vstack toolset toolset1">
                         <div class="hstack arrows">
                             <button class="btn-a">▼</button>
@@ -1109,6 +1294,8 @@
                     <button class="save">Save</button>
                 </div>
                 <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="radar">Radar Cell</button>
+                    <button class="reset-walls">Reset Walls</button>
                     <button class="reset-saves">Reset Saves</button>
                     <button class="reset-all">Reset All</button>
                     <div style="width: 8mm"></div>
@@ -1124,23 +1311,30 @@
                 <div class="hstack just-left path"><span>Path:</span><span class="str"></span></div>
                 <div style="height: 1mm"></div>
                 <div class="hstack just-left solution"><span>Solution:</span><span class="str"></span></div>
+
                 <h3>Interactive Controls</h3>
                 <p>Use the above interactive graphic to input the read and try out different paths.</p>
                 <ul>
                     <li>
                         In <b>Read</b> mode:
                         <ul>
-                            <li><b>Type in</b> the puzzle grid on <b>page 1</b> and <em>select the 4 primes</em>.</li>
-                            <li>Use the <b>arrow buttons</b>, or <b>WASD</b>, or <b>arrow keys</b> on your keyboard to toggle the walls of the selected <b>cell</b></li>
-                            <li>Use the <b>Goal</b> or <b>Start</b> tool to mark the <b>goal</b> or <b>start</b> position</li>
+                            <li>Select a <b>cell</b> and type <b>[0]-[4]</b> on your keyboard to input the puzzle grid. <b>Space</b>/<b>Enter</b> to clear.</li>
+                            <li>Use the <b>Goal</b>, <b>Start</b>, and <b>Corner</b> tool to mark the <b>goal</b>, <b>start</b>, and <b>top-left corner</b> position</li>
+                            <li><u>First</u> use the <b>arrow buttons</b>, or <b>WASD</b>, or <b>arrow keys</b> on your keyboard to <b>shift the maze</b> so the corner cell is in the top-left corner.</li>
+                            <li><u>Then</u> select <b>Input Walls</b> and use the <b>arrow keys</b> to input the walls of a selected <b>cell</b></li>
                         </ul></li>
                     <li>In <b>Solve</b> mode, the grid behaves like the module with options for <em>free</em> movement or <em>enforced</em> movement as the module demands.</li>
                     <li>Use the <b>arrow buttons</b>, or <b>WASD</b>, or <b>arrow keys</b> on your keyboard to navigate the maze.</li>
                     <li>Your <b>Path</b> may be invalid if you turn off enforced movement in <b>Solve</b> mode</li>
-                    <li>The <b>↻</b> button resets the puzzle back to the starting state.</li>
+                    <li>The <b>↻</b> button resets the position back to the start.</li>
                     <li>The sound effects can be muted.</li>
-                    <li>Press the <b>Manual</b> button to switch into <b>Generated</b> mode where you can have fun solving generated puzzles of size 3 – 8.</li>
-                    <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the size of the generated puzzle.</li>
+                    <li>
+                        Press the <b>Manual</b> button to switch into <b>Generated</b> mode:
+                        <ul>
+                            <li>Have fun solving generated puzzles of size 3 – 10.</li>
+                            <li>Use the <b>Radar</b> button to see the correct walls of a cell in a generated puzzle, just like the real module.</li>
+                            <li>Use the <b>-</b> and <b>+</b> buttons or press <b>[-]</b> and <b>[+]</b> on your keyboard to increment the size of the generated puzzle.</li>
+                        </ul></li> 
                     <li>The solution you came up with in <b>Solve</b> mode as well as the solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.<br></li>
                     <li>Using the other buttons, you can save the current state of the grid, delete the saves, or reset everything.</li>
                 </ul>
