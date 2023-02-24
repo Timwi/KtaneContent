@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>恐怖記憶 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var defaultRules = null;
+
+        function getDefaultRules()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = {};
+            for (var stage = 1; stage <= 5; stage++)
+                for (var disp = 1; disp <= 6; disp++)
+                    defaultRules[`rule-${stage}-${disp}`] = document.getElementById(`rule-${stage}-${disp}`).innerText;
+        }
+
+        function setDefaultRules()
+        {
+            getDefaultRules();
+            for (var stage = 1; stage <= 5; stage++)
+                for (var disp = 1; disp <= 6; disp++)
+                    document.getElementById(`rule-${stage}-${disp}`).innerText = defaultRules[`rule-${stage}-${disp}`];
+        }
+
+        // Rule types:
+        //  0 = SimpleLabel                 // “press label 6”
+        //  1 = SimpleColor                 // “press the blue button”
+        //  2 = SimplePosition              // “press the 4th button”
+        //  3 = EarlierPressedLabel         // “press the button with the same label as the one you pressed in Stage 1”
+        //  4 = EarlierPressedColour        // “press the button with the same colour as the one you pressed in Stage 1”
+        //  5 = EarlierPressedPosition      // “press the button in the same position as the one you pressed in Stage 1”
+        //  6 = EarlierLabelByColour        // “press the button with the same label as the one that was blue in Stage 1”
+        //  7 = EarlierLabelByPosition      // “press the button with the same label as the one that was in position 2 in Stage 1”
+        //  8 = EarlierColourByLabel        // “press the button with the same colour as the one that had the label 3 in Stage 1”
+        //  9 = EarlierColourByPosition     // “press the button with the same colour as the one that was in position 2 in Stage 1”
+        // 10 = EarlierPositionByColour     // “press the button in the same position as the one that was blue in Stage 1”
+        // 11 = EarlierPositionByLabel      // “press the button with the same label as the one that was in position 2 in Stage 1”
+
+        function setRules(rnd)
+        {
+            getDefaultRules();
+
+            var ordinals = ['第 1 個', '第 2 個', '第 3 個', '第 4 個', '第 5 個', '第 6 個'];
+            var colourNames = "藍,綠,橙,粉紅,紫,紅".split(',');
+
+            for (var stage = 0; stage < 5; stage++)
+            {
+                for (var displayNumber = 0; displayNumber < 6; displayNumber++)
+                {
+                    var span = document.getElementById(`rule-${stage+1}-${displayNumber+1}`);
+                    var rule = stage == 0
+                        ? { type: rnd.nextMax(3), parameter: rnd.nextMax(6) }
+                        : { type: rnd.nextMax(12), parameter: rnd.nextMax(6), earlierStage: rnd.nextMax(stage) };
+
+                    switch (rule.type)
+                    {
+                        case  0: span.innerText = `按下數字為【${rule.parameter + 1}】的按鈕。`; break;
+                        case  1: span.innerText = `按下${colourNames[rule.parameter]}色按鈕。`; break;
+                        case  2: span.innerText = `按下${ordinals[rule.parameter]}按鈕。`; break;
+
+                        case  3: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中你所按下的按鈕數字相同的按鈕。`; break;
+                        case  4: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中你所按下的按鈕顏色相同的按鈕。`; break;
+                        case  5: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中你所按下的按鈕位置相同的按鈕。`; break;
+
+                        case  6: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中${colourNames[rule.parameter]}色按鈕的數字相同的按鈕。`; break;
+                        case  7: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中${ordinals[rule.parameter]}按鈕的數字相同的按鈕。`; break;
+                        case  8: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中數字為【${rule.parameter + 1}】 的顏色相同的按鈕。`; break;
+                        case  9: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中${ordinals[rule.parameter]}按鈕的顏色相同的按鈕。`; break;
+                        case 10: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中${colourNames[rule.parameter]}色按鈕的位置相同的按鈕。`; break;
+                        case 11: span.innerText = `按下和階段 ${rule.earlierStage + 1} 中數字為【${rule.parameter + 1}】的位置相同的按鈕。`; break;
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">恐怖記憶</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Horrible Memory.svg" class="diagram">
+                <h2>關於【恐怖記憶】模組</h2>
+                <p class="flavour-text">記憶模組不是最多 4 個關卡嗎？唉，最近什麼都想不起來…</p>
+
+                <ul>
+                    <li>按下正確的按鈕以進入下一階段。要拆除模組，你必須通過模組所有階段。</li>
+                    <li>按下錯誤的按鈕會令模組重置至第一階段並記錄一次失誤。</li>
+                    <li>按鈕的位置由左至右排列。</li>
+                </ul>
+                <h3>階段 1 ：</h3>
+                <span class="highlightable">如果顯示為 1、<span class='rule' id='rule-1-1'>按下數字為【6】的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 2、<span class='rule' id='rule-1-2'>按下第 1 個按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 3、<span class='rule' id='rule-1-3'>按下綠色按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 4、<span class='rule' id='rule-1-4'>按下第 3 個按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 5、<span class='rule' id='rule-1-5'>按下數字為【2】的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 6、<span class='rule' id='rule-1-6'>按下橙色按鈕。</span></span>
+                <h3>階段 2 ：</h3>
+                <span class="highlightable">如果顯示為 1、<span class='rule' id='rule-2-1'>按下和階段 1 中你所按下的按鈕位置相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 2、<span class='rule' id='rule-2-2'>按下紫色按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 3、<span class='rule' id='rule-2-3'>按下數字為【1】的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 4、<span class='rule' id='rule-2-4'>按下和階段 1 中你所按下的按鈕數字相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 5、<span class='rule' id='rule-2-5'>按下第 6 個按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 6、<span class='rule' id='rule-2-6'>按下和階段 1 中你所按下的按鈕顏色相同的按鈕。</span></span>
+                <h3>階段 3 ：</h3>
+                <span class="highlightable">如果顯示為 1、<span class='rule' id='rule-3-1'>按下和階段 1 中第 4 個按鈕的數字相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 2、<span class='rule' id='rule-3-2'>按下和階段 2 中綠色按鈕的位置相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 3、<span class='rule' id='rule-3-3'>按下和階段 2 中數字為【5】的顏色相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 4、<span class='rule' id='rule-3-4'>按下和階段 1 中第 1 個按鈕的數字相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 5、<span class='rule' id='rule-3-5'>按下和階段 2 中你所按下的按鈕位置相同的按鈕。</span></span><br>
+                <span class="highlightable">如果顯示為 6、<span class='rule' id='rule-3-6'>按下和階段 1 中第 3 個按鈕的顏色相同的按鈕。</span></span>
+            </div>
+            <div class="page-footer relative-footer">第 1 / ２ 頁</div>
+        </div>
+        <div class="page horribleMemory-page-2 page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">恐怖記憶</span>
+            </div>
+            <div class="page-content">
+
+              <h3>階段 4 ：</h3>
+              <span class="highlightable">如果顯示為 1、<span class='rule' id='rule-4-1'>按下和階段 1 中數字為【2】的位置相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 2、<span class='rule' id='rule-4-2'>按下和階段 3 中第 2 個按鈕的數字相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 3、<span class='rule' id='rule-4-3'>按下和階段 2 中所按下的顏色相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 4、<span class='rule' id='rule-4-4'>按下和階段 3 中你所按下的按鈕位置相同的按鈕。。</span></span><br>
+              <span class="highlightable">如果顯示為 5、<span class='rule' id='rule-4-5'>按下和階段 1 中數字為【4】的顏色相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 6、<span class='rule' id='rule-4-6'>按下和階段 3 中第 2 個按鈕的數字相同的按鈕。</span></span>
+              <h3>階段 5 ：</h3>
+              <span class="highlightable">如果顯示為 1、<span class='rule' id='rule-5-1'>按下和階段 4 中第 3 個按鈕的顏色相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 2、<span class='rule' id='rule-5-2'>按下和階段 3 中數字為【6】的按鈕位置相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 3、<span class='rule' id='rule-5-3'>按下和階段 4 中你所按下的顏色相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 4、<span class='rule' id='rule-5-4'>按下和階段 1 中紅色按鈕的數字相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 5、<span class='rule' id='rule-5-5'>按下和階段 3 中所按下的顏色相同的按鈕。</span></span><br>
+              <span class="highlightable">如果顯示為 6、<span class='rule' id='rule-5-6'>按下和階段 2 中紅色按鈕的位置相同的按鈕。</span></span>
+            </div>
+            <div class="page-footer relative-footer">第 2 / 2 頁</div>
+        </div>
+    </div>
+</body>
+</html>

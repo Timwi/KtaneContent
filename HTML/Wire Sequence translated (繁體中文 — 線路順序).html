@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>線路順序 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_PAGES = 4;
+        var NUM_PER_PAGE = 3;
+        var NUM_COLOURS = 3;
+        var BLANK_PAGE_COUNT = 1;
+
+        var NumWiresPerColour = NUM_PER_PAGE * (NUM_PAGES - BLANK_PAGE_COUNT);
+
+        function setDefaultRules()
+        {
+            var array = this.PopulateEmptySolution();
+            var array2 = this.PopulateEmptySolution();
+            var array3 = this.PopulateEmptySolution();
+            array[0].push(2);
+            array[1].push(1);
+            array[2].push(0);
+            array[3].push(0);
+            array[3].push(2);
+            array[4].push(1);
+            array[5].push(0);
+            array[5].push(2);
+            array[6].push(0);
+            array[6].push(1);
+            array[6].push(2);
+            array[7].push(0);
+            array[7].push(1);
+            array[8].push(1);
+            array2[0].push(1);
+            array2[1].push(0);
+            array2[1].push(2);
+            array2[2].push(1);
+            array2[3].push(0);
+            array2[4].push(1);
+            array2[5].push(1);
+            array2[5].push(2);
+            array2[6].push(2);
+            array2[7].push(0);
+            array2[7].push(2);
+            array2[8].push(0);
+            array3[0].push(0);
+            array3[0].push(1);
+            array3[0].push(2);
+            array3[1].push(0);
+            array3[1].push(2);
+            array3[2].push(1);
+            array3[3].push(0);
+            array3[3].push(2);
+            array3[4].push(1);
+            array3[5].push(1);
+            array3[5].push(2);
+            array3[6].push(0);
+            array3[6].push(1);
+            array3[7].push(2);
+            array3[8].push(2);
+            setWireSequenceRules(array, array2, array3);
+        }
+
+        function setRules(rnd)
+        {
+            var array = PopulateSolution(rnd);
+            var array2 = PopulateSolution(rnd);
+            var array3 = PopulateSolution(rnd);
+            setWireSequenceRules(array, array2, array3);
+        }
+
+        function setWireSequenceRules(a, a2, a3)
+        {
+            var tables = [["red-table", a], ["blue-table", a2], ["black-table", a3]];
+            var names = ["A", "B", "C"];
+            for (var i = 0; i < tables.length; i++)
+            {
+                var tds = document.querySelectorAll(`table.${tables[i][0]} td.second-col`);
+                for (var j = 0; j < tds.length; j++)
+                    tds[j].innerText = tables[i][1][j].length === 0 ? '不要剪' : tables[i][1][j].map(ix => names[ix]).map((n, ix) => ix === 0 ? n : ix === tables[i][1][j].length - 1 ? ' 或 ' + n : ', ' + n).join('');
+            }
+        }
+
+        function PopulateSolution(rnd)
+        {
+            var result = [];
+            for (var i = 0; i < NumWiresPerColour; i++)
+            {
+                var thisList = [];
+                for (var j = 0; j < NUM_COLOURS; j++)
+                {
+                    if (rnd.nextDouble() > 0.55)
+                        thisList.push(j);
+                }
+                result.push(thisList);
+            }
+            return result;
+        }
+
+        function PopulateEmptySolution()
+        {
+            var result = [];
+            for (var i = 0; i < NumWiresPerColour; i++)
+                result.push([]);
+            return result;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page wire-sequence page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">線路順序</span>
+            </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <img src="img/Component/Wire Sequence.svg" class="diagram" />
+                <h2>關於【線路順序】模組</h2>
+                <p class="flavour-text">很難說這個設備到底是怎麼運作的。這工藝真是令人印象深刻，但一定有更簡單的方法來管理這九條線。</p>
+                <ul>
+                    <li>這種模組中會有多個包含線路的面板，但每次只有一個面板可見。按下鍵切換到下一個面板，上鍵切換回之前的面板。</li>
+                    <li>在當前面板的線路都正確剪斷前，不要切換到下一個面板。</li>
+                    <li>依照下表引導剪斷線路。同一模組中不同面板線路出現次數順序累加。</li>
+                </ul>
+                <table class="red-table">
+                    <tr><th colspan="2" class="header">紅線出現次數</th></tr>
+                    <tr><th class="first-col">出現次序</th><th class="second-col">如果與以下相連接則剪斷：</th></tr>
+                    <tr><td class="first-col">第一條紅線</td><td class="second-col">C</td></tr>
+                    <tr><td class="first-col">第二條紅線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第三條紅線</td><td class="second-col">A</td></tr>
+                    <tr><td class="first-col">第四條紅線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第五條紅線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第六條紅線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第七條紅線</td><td class="second-col">A, B 或C</td></tr>
+                    <tr><td class="first-col">第八條紅線</td><td class="second-col">A 或 B</td></tr>
+                    <tr><td class="first-col">第九條紅線</td><td class="second-col">B</td></tr>
+                </table>
+                <table class="blue-table">
+                    <tr><th colspan="2" class="header">藍線出現次數</th></tr>
+                    <tr><th class="first-col">出現次序</th><th class="second-col">如果與以下相連接則剪斷：</th></tr>
+                    <tr><td class="first-col">第一條藍線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第二條藍線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第三條藍線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第四條藍線</td><td class="second-col">A</td></tr>
+                    <tr><td class="first-col">第五條藍線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第六條藍線</td><td class="second-col">B 或 C</td></tr>
+                    <tr><td class="first-col">第七條藍線</td><td class="second-col">C</td></tr>
+                    <tr><td class="first-col">第八條藍線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第九條藍線</td><td class="second-col">A</td></tr>
+                </table>
+                <table class="black-table">
+                    <tr><th colspan="2" class="header">黑線出現次數</th></tr>
+                    <tr><th class="first-col">出現次序</th><th class="second-col">如果與以下相連接則剪斷：</th></tr>
+                    <tr><td class="first-col">第一條黑線</td><td class="second-col">A, B 或C</td></tr>
+                    <tr><td class="first-col">第二條黑線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第三條黑線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第四條黑線</td><td class="second-col">A 或 C</td></tr>
+                    <tr><td class="first-col">第五條黑線</td><td class="second-col">B</td></tr>
+                    <tr><td class="first-col">第六條黑線</td><td class="second-col">B 或 C</td></tr>
+                    <tr><td class="first-col">第七條黑線</td><td class="second-col">A 或 B</td></tr>
+                    <tr><td class="first-col">第八條黑線</td><td class="second-col">C</td></tr>
+                    <tr><td class="first-col">第九條黑線</td><td class="second-col">C</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+</html>
