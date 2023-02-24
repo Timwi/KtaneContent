@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>背景 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        p.note {
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        .footnotes {
+            font-style: italic;
+            font-size: 10pt;
+        }
+        .a-table {
+            width: 90%;
+            text-align: center;
+            border: none;
+            margin: 0 auto;
+        }
+        .a-table tr:first-child td:first-child {
+            border: none;
+        }
+
+        .b-table {
+            width: 90%;
+            text-align: center;
+            border: none;
+            margin: 0 auto;
+            table-layout: fixed
+        }
+
+        .b-table th:first-child {
+            width: 50%;
+        }
+    </style>
+    <script>
+        var options1;
+        var options2;
+        var options3;
+        var possibilities;
+        var ports =
+            [
+                "DVI-D", "並列(Parallel)", "PS/2", "RJ-45", "序列(Serial)", "RCA音效", "分量視頻",
+                "複合視頻", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+            ];
+        var indicators =
+            [
+                "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"
+            ];
+        var indicatorColors =
+            [
+                "藍", "灰", "綠", "洋紅", "橙", "紫", "紅", "黃"
+            ];
+        var coordX =
+            [
+                "A", "D", "C", "D", "B", "F", "E", "B", "C", "E"
+            ];
+        var coordXCopy;
+        var coordY =
+            [
+                "C", "B", "E", "D", "F", "E", "B", "C", "D", "A"
+            ];
+        var coordYCopy;
+        var ManualTable =
+            [
+                3, 2, 9, 1, 7, 4,
+                7, 9, 8, 8, 2, 3,
+                5, 1, 7, 4, 4, 6,
+                6, 4, 2, 6, 8, 5,
+                5, 1, 5, 3, 9, 9,
+                1, 2, 3, 6, 7, 8
+            ];
+        var ManualTableCopy;
+        function setRules(rnd)
+        {
+            //Make clones of the lists to avoid randomization issues when changing seeds
+            coordXCopy = coordX.slice();
+            coordYCopy = coordY.slice();
+            ManualTableCopy = ManualTable.slice();
+            if (rnd.seed != 1)
+            {
+                rnd.shuffleFisherYates(coordXCopy);
+                rnd.shuffleFisherYates(coordYCopy);
+                rnd.shuffleFisherYates(ManualTableCopy);
+            }
+            for (var j = 0; j < coordXCopy.length; j++)
+                document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
+            for (var j = 0; j < coordYCopy.length; j++)
+                document.getElementById('background-r-' + j).innerHTML = coordYCopy[j];
+            for (var j = 0; j < ManualTableCopy.length; j++)
+                document.getElementById('background-tbl-' + j).innerHTML = ManualTableCopy[j];
+            //Primaries randomization
+            var i = rnd.next(0, 2);
+            //Initialize lists for current randomization
+            options1 = [];
+            options2 = [];
+            options3 = [];
+            possibilities = [];
+            chosen = [];
+            //Create possible options for Possibilities
+            AddToOptions(i, rnd.seed == 1);
+            //Generate all possible rules
+            Possibilities();
+            //Variable for holding the chosen Possibilty indicies
+            var RuleIndicies = []
+            //Function for generating the original manual for rule seed 1
+            Swap();
+            //Choose the rules for the manual
+            for (var j = 0; j < 9; j++)
+            {  
+                var value = rnd.next(0, possibilities.length);
+                while (RuleIndicies.includes(value))
+                    value = rnd.next(0, possibilities.length);
+                RuleIndicies.push(value);
+                chosen.push(possibilities[RuleIndicies[j]]);
+            }
+            //Apply the chosen rules
+            for (var j = 0; j < chosen.length; j++)
+            {
+                var hold = "";
+                //Add if to all of the rules
+                chosen[j] = "如果" + chosen[j];
+                //Set the first letter to uppercase
+                if (j == 0) hold = chosen[0].substr(0, 1).toUpperCase() + chosen[0].substr(1);
+                else hold = "否則，" + chosen[j];
+                document.getElementById('background-rule-' + j).innerHTML = hold;
+            }
+            console.log(options1);
+            console.log(options2);
+            console.log(options3);
+            console.log(possibilities);
+            console.log(chosen);
+        }
+        function Swap()
+        {
+            var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+            var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+            for (var i = 0; i < values.length; i++)
+            {
+                var hold = possibilities[values[i]];
+                possibilities[values[i]] = possibilities[newValues[i]];
+                possibilities[newValues[i]] = hold;
+            }
+        }
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+        function AddToOptions(i, r)
+        {
+            options1.push("背景");
+            options1.push("按鈕");
+            options1.push("【SUBMIT】按鈕");
+            options1.push("顯示屏");
+            DetermineColors(i, r);
+            for (var j = 0; j < ports.length; j++)
+                options3.push(ports[j]);
+            for (var j = 0; j < indicators.length; j++)
+                options3.push(indicators[j]);
+            var listSize = 1;
+            while (listSize < 4)
+            {
+                var coloredArray = ["紅", i == 0 ? "橙" : "青", "黃", "綠", "藍",
+                    i == 0 ? "紫" : "洋紅", "白", "灰", "黑"];
+                var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+                var intList = [[]];
+                var current = -1;
+                for (var j = 0; j < orderedArray.length; j++)
+                {
+                    if (current != -1)
+                        intList.push([]);
+                    current++;
+                    intList[current].push(coloredArray[j]);
+                    if (listSize > 1)
+                    {
+                        var list = orderedArray.slice(j + 1);
+                        for (var k = 0; k < list.length; k++)
+                        {
+                            intList[current].push(coloredArray[list[k]]);
+                            if (listSize > 2)
+                            {
+                                intList[current].pop();
+                                intList[current].push(coloredArray[list[k]]);
+                                var list2 = orderedArray.slice(list[k] + 1);
+                                for (var l = 0; l < list2.length; l++)
+                                {
+                                    intList[current].push(coloredArray[list2[l]]);
+                                    current++;
+                                    intList.push([]);
+                                    intList[current].push(coloredArray[j]);
+                                    intList[current].push(coloredArray[list[k]]);
+                                }
+                                intList.pop();
+                                current--;
+                            }
+                            current++;
+                            intList.push([]);
+                            intList[current].push(coloredArray[j]);
+                        }
+                        intList.pop();
+                        current--;
+                    }
+                }
+                for (var j = 0; j < intList.length; j++)
+                {
+                    //Check if options already has the sequences created
+                    var check = [false, false, false];
+                    var check2 = [false, false, false];
+                    for (var k = 0; k < options2[0].length; k++)
+                    {
+                        check[k] = options2[0][k] == intList[j][k];
+                        check2[k] = options2[1][k] == intList[j][k];
+                    }
+                    if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                    options2.push(intList[j]);
+                }
+                listSize++;
+            }
+        }
+        //Checking the primary colors chosen
+        function DetermineColors(i, r) {
+            if (i == 0)
+            {
+                options2.push(["紅", "黃", "藍"]);
+                options2.push(["橙", "綠", "紫"]);
+                options2.push("如果與紅色混合");
+                options2.push("如果與黃色混合");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("綠", "黃");
+                foot1.innerHTML = foot1.innerHTML.replace("青、黃、洋紅", "橙、綠、紫");
+                if (r){
+                    document.getElementById('background-foot-2').innerHTML = "****: 紅色與黃色混合成橙色、藍色與黃色混合成綠色、紅色與藍色混合成紫色。藍色與白色混合不會成藍色。";
+                    }
+                else
+                    document.getElementById('background-foot-2').innerHTML = "****: 紅色與黃色混合成橙色、藍色與黃色混合成綠色、紅色與藍色混合成紫色。某種色與白色混合也不會成原來的顏色。";
+            }
+            else
+            {
+                options2.push(["紅", "綠", "藍"]);
+                options2.push(["青", "黃", "洋紅"]);
+                options2.push("如果與紅色混合");
+                options2.push("如果與綠色混合");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("黃", "綠");
+                foot1.innerHTML = foot1.innerHTML.replace("橙、綠、紫", "青、黃、洋紅");
+                document.getElementById('background-foot-2').innerHTML = "****: 紅色與綠色混合成黃色、藍色與綠色混合成青色、紅色與藍色混合成洋紅。某種色與白色混合也不會成原來的顏色。"
+            }
+            options2.push("與藍色混合，");
+        }
+        function Possibilities() {
+            var check = false;
+
+            possibilities.push(options1[0] + "的顏色與" + options1[1] + "的顏色一致");
+            possibilities.push(options1[0] + "的顏色與" + options1[1] + "的顏色不一致");
+            possibilities.push("提交按鈕包含數字");
+            possibilities.push("提交按鈕不包含數字");
+            for (var i = 0; i < options2.length; i++) {
+                    options2[i] = ("" + options2[i]).replaceAll(",", "、");
+                if (i < 2) {
+                    var word = i == 0 ? "原色**" : "二次色***";
+                    possibilities.push("按鈕和背景兩方為" + word );
+                    possibilities.push("只有按鈕的顏色為" + word );
+                    possibilities.push("只有背景的顏色為" + word );
+                    possibilities.push("按鈕或背景只有一方為" + word);
+                    var word2 = i == 0 ? "原色**" : "二次色***";
+                    possibilities.push("按鈕與背景兩方為" + word2 );
+                    possibilities.push("按鈕與背景兩方不是" + word2 );
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + "的顏色為" + word );
+                        possibilities.push(options1[j] + "的顏色不是" + word );
+                    }
+                }
+                else if (i < 5) {
+                    for (var j = 0; j < 2; j++)
+                        possibilities.push(options1[j] + "的顏色" + options2[i] + "會化為" + (j == 0 ? "按鈕" : "背景") + "的顏色****");
+                }
+                else {
+                    var word = i < 16 ? "色" : "任一";
+                    var word2 = "";
+                    possibilities.push("按鈕或背景任意一方為" + options2[i]);
+                    possibilities.push("只有按鈕的顏色為" + options2[i]+ word);
+                    possibilities.push("只有背景的顏色為" + options2[i] + word);
+                    possibilities.push("按鈕或背景只有一方為" + options2[i]);
+                    possibilities.push("按鈕和背景兩方為" + options2[i]);
+                    possibilities.push("按鈕和背景兩方不是" + options2[i] );
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + "的顏色是" + options2[i]);
+                        possibilities.push(options1[j] + "的顏色不是" + options2[i]);
+                    }
+                }
+            }
+            possibilities.push("炸彈沒有埠口");
+            possibilities.push("炸彈有空的埠口板");
+            possibilities.push("炸彈有一個埠口");
+            possibilities.push("炸彈有超過兩個埠口");
+            possibilities.push("炸彈有超過一個埠口板");
+            possibilities.push("炸彈沒有電池");
+            possibilities.push("炸彈有奇數個電池");
+            possibilities.push("炸彈有偶數個電池");
+            possibilities.push("炸彈沒有D電池*");
+            possibilities.push("炸彈有一個D電池*");
+            possibilities.push("炸彈D電池多於一個*");
+            possibilities.push("炸彈沒有AA電池");
+            possibilities.push("炸彈有 2 個AA電池*");
+            possibilities.push("炸彈有 3 個AA電池");
+            possibilities.push("炸彈有 4 個AA電池");
+            possibilities.push("炸彈有多於 4 個AA電池");
+            possibilities.push("炸彈沒有電池插座");
+            possibilities.push("炸彈剛好有一個電池插座");
+            possibilities.push("炸彈有多於一個電池插座");
+            possibilities.push("炸彈有沒有電池的電池插座");
+            possibilities.push("炸彈有帶有 2 個電池的電池插座");
+            possibilities.push("炸彈有帶有 3 個電池的電池插座");
+            possibilities.push("炸彈有複數個帶有奇數個電池的電池插座");
+            possibilities.push("炸彈有 4 個帶有電池的電池插座");
+            possibilities.push("炸彈有複數個帶有偶數個電池的電池插座");
+            possibilities.push("炸彈沒有指示燈");
+            possibilities.push("炸彈有剛好一個指示燈");
+            possibilities.push("炸彈有多於一個電池插座");
+            possibilities.push("炸彈沒有亮起指示燈");
+            possibilities.push("炸彈有剛好一個亮起指示燈");
+            possibilities.push("炸彈有多於一個亮起指示燈");
+            possibilities.push("炸彈沒有熄滅指示燈");
+            possibilities.push("炸彈有剛好一個熄滅指示燈");
+            possibilities.push("炸彈有多於一個熄滅指示燈");
+            for (var i = 0; i < options3.length; i++) {
+                if (i < 13) {
+                    possibilities.push("炸彈有"+ options3[i] + "埠口");
+                    possibilities.push("炸彈有多於一個" + options3[i] + "埠口");
+                    possibilities.push("炸彈有剛好一個" + options3[i] + "埠口");
+                    possibilities.push("炸彈沒有" + options3[i] + "埠口");
+                    continue;
+                }
+                else {
+                    possibilities.push("炸彈有" + options3[i] + "指示燈");
+                    possibilities.push("炸彈沒有" + options3[i] + "指示燈");
+                    possibilities.push("炸彈有亮起" + options3[i] + "指示燈");
+                    possibilities.push("炸彈沒有亮起" + options3[i] + "指示燈");
+                    possibilities.push("炸彈有熄滅" + options3[i] + "指示燈");
+                    possibilities.push("炸彈沒有熄滅" + options3[i] + "指示燈");
+                    for (var j = 0; j < indicatorColors.length; j++) {
+                        if (!check)
+                            possibilities.push("有" + indicatorColors[j] + "指示燈");
+                        possibilities.push("有" + indicatorColors[j] + "的" + options3[i] + "指示燈");
+                    }
+                    check = true;
+                }
+            }
+            possibilities.push("炸彈沒有2FA(two factor)");
+            possibilities.push("炸彈有剛好一個2FA(two factor)");
+            possibilities.push("炸彈有多於一個2FA(two factor)");
+            possibilities.push("炸彈沒有製造年月日(Date of Manufacture)部件");
+            possibilities.push("炸彈有製造年月日(Date of Manufacture)部件");
+            possibilities.push("炸彈沒有日時(Date of Manufacture)部件");
+            possibilities.push("炸彈有日時(Date of Manufacture)部件");
+            possibilities.push("炸彈有日時(Date of Manufacture)部件和製造年月日(Date of Manufacture)部件");
+            possibilities.push("炸彈沒有隨機時間(Random Time)部件");
+            possibilities.push("炸彈有未滿 2 個隨機時間(Random Time)部件");
+            possibilities.push("炸彈有剛好 2 個隨機時間(Random Time)部件");
+            possibilities.push("炸彈有多於 2 個隨機時間(Random Time)部件");
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">背景</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Backgrounds.svg">
+                <h2>關於【背景】模組 </h2>
+                <p class="flavour-text">今次只注意眼前的事物是不夠的。注意幕後發生的事情。爆炸後情況大家都知道。</p>
+                <p>這個模組包含了帶有顏色的【PUSH ME】按鈕和計數器、還有提交【Submit】按鈕。不過、背景可能是特定的顏色。參照背景顏色和和按鈕顏色，按下按鈕直至正確的數字後按提交【Submit】。</p>
+                <h3>步驟 1 ：</h3>
+                <p>利用表B的規則，決定文字的對子。找出達成條件的最初 2 個規則，最初的規則的文字為第一個、下個規則的文字為第二個。</p>
+                <h3>步驟 2 ：</h3>
+                <p>在表A中，第一個文字為橫行、第二個文字為直列。按下按鈕該數字的次數後，按【Submit】按鈕。</p>
+
+                <table class="a-table">
+                    <caption>表A:</caption>
+                    <tbody>
+                     <tr>
+                         <td></td>
+                         <th>A</th>
+                         <th>B</th>
+                         <th>C</th>
+                         <th>D</th>
+                         <th>E</th>
+                         <th>F</th>
+                     </tr>
+                     <tr>
+                         <th>A</th>
+                         <td><div id="background-tbl-0"></div></td>
+                         <td><div id="background-tbl-1"></div></td>
+                         <td><div id="background-tbl-2"></div></td>
+                         <td><div id="background-tbl-3"></div></td>
+                         <td><div id="background-tbl-4"></div></td>
+                         <td><div id="background-tbl-5"></div></td>
+                     </tr>
+                     <tr>
+                         <th>B</th>
+                         <td><div id="background-tbl-6"></div></td>
+                         <td><div id="background-tbl-7"></div></td>
+                         <td><div id="background-tbl-8"></div></td>
+                         <td><div id="background-tbl-9"></div></td>
+                         <td><div id="background-tbl-10"></div></td>
+                         <td><div id="background-tbl-11"></div></td>
+                     </tr>
+                     <tr>
+                         <th>C</th>
+                         <td><div id="background-tbl-12"></div></td>
+                         <td><div id="background-tbl-13"></div></td>
+                         <td><div id="background-tbl-14"></div></td>
+                         <td><div id="background-tbl-15"></div></td>
+                         <td><div id="background-tbl-16"></div></td>
+                         <td><div id="background-tbl-17"></div></td>
+                     </tr>
+                     <tr>
+                         <th>D</th>
+                         <td><div id="background-tbl-18"></div></td>
+                         <td><div id="background-tbl-19"></div></td>
+                         <td><div id="background-tbl-20"></div></td>
+                         <td><div id="background-tbl-21"></div></td>
+                         <td><div id="background-tbl-22"></div></td>
+                         <td><div id="background-tbl-23"></div></td>
+                     </tr>
+                     <tr>
+                         <th>E</th>
+                         <td><div id="background-tbl-24"></div></td>
+                         <td><div id="background-tbl-25"></div></td>
+                         <td><div id="background-tbl-26"></div></td>
+                         <td><div id="background-tbl-27"></div></td>
+                         <td><div id="background-tbl-28"></div></td>
+                         <td><div id="background-tbl-29"></div></td>
+                     </tr>
+                     <tr>
+                         <th>F</th>
+                         <td><div id="background-tbl-30"></div></td>
+                         <td><div id="background-tbl-31"></div></td>
+                         <td><div id="background-tbl-32"></div></td>
+                         <td><div id="background-tbl-33"></div></td>
+                         <td><div id="background-tbl-34"></div></td>
+                         <td><div id="background-tbl-35"></div></td>
+                     </tr>
+                    </tbody>
+                </table>
+                <p class="note">(注意: 計數器為 9 按下按鈕會使計數器重置為 0 。)</p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">背景</span>
+            </div>
+            <div class="page-content">
+                <table class="b-table">
+                    <caption>表B：規則</caption>
+                    <tbody>
+                        <tr>
+                            <th>ルール</th>
+                            <th>第一個字</th>
+                            <th>第二個字</th>
+                        </tr>
+                        <tr>
+                         <td id="background-rule-0">按鈕顏色與背景色一致</td>
+                         <td><div id="background-l-0"></div></td>
+                         <td><div id="background-r-0"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-1">否則、按鈕或背景只有一方為白或黑</td>
+                         <td><div id="background-l-1"></div></td>
+                         <td><div id="background-r-1"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-2">否則、炸彈沒有D電池*</td>
+                         <td><div id="background-l-2"></div></td>
+                         <td><div id="background-r-2"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-3">否則、炸彈沒有AA電池</td>
+                         <td><div id="background-l-3"></div></td>
+                         <td><div id="background-r-3"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-4">否則、按鈕和背景兩者皆是原色**</td>
+                         <td><div id="background-l-4"></div></td>
+                         <td><div id="background-r-4"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-5">否則、按鈕是二次色***</td>
+                         <td><div id="background-l-5"></div></td>
+                         <td><div id="background-r-5"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-6">否則、有熄滅SND指示燈</td>
+                         <td><div id="background-l-6"></div></td>
+                         <td><div id="background-r-6"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-7">否則、有序列(Serial)埠</td>
+                         <td><div id="background-l-7"></div></td>
+                         <td><div id="background-r-7"></div></td>
+                     </tr>
+                     <tr>
+                         <td id="background-rule-8">否則、背景色+藍=按鈕顏色****	
+                         </td>
+                         <td><div id="background-l-8"></div></td>
+                         <td><div id="background-r-8"></div></td>
+                     </tr>
+                     <tr>
+                         <td>否則、使用這個規則(這個規則可以使用兩次)</td>
+                         <td><div id="background-l-9"></div></td>
+                         <td><div id="background-r-9"></div></td>
+                     </tr>
+                    </tbody>
+                </table>
+                <p>
+                    <div id="background-foot-3" class="footnotes">*: D電池指每個只帶有1個電池的電池插座。</div>
+                    <div id="background-foot-0" class="footnotes">**: 原色為紅、黃、藍。</div>
+                    <div id="background-foot-1" class="footnotes">***: 二次色為橙、綠、紫。</div>
+                    <div id="background-foot-2" class="footnotes">****: 紅+黃=橙、藍+黃=綠、紅+藍=紫。藍+白=/=藍。</div>
+            </div>
+            <div class="page-footer relative-footer">第 2 / 2 頁</div>
+        </div>
+    </div>
+</body>
+</html>
