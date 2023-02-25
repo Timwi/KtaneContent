@@ -944,7 +944,6 @@ function Bomb(seed) {
         });
 
         var caseHTML = $("<span>").text(" Unknown");
-        var rendererHTML = $("<span>").text(" Unknown");
 
         var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").text("Edgework").appendTo(edgeworkInfo);
@@ -958,7 +957,6 @@ function Bomb(seed) {
             "Widgets: " + (this.Batteries.length + indicators.length + this.PortPlates.length + this.ModdedWidgets),
             this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
             { label: "Case:", obj: caseHTML },
-            { label: "Approximate case render:", obj: rendererHTML },
         ], $("<ul>").appendTo(edgeworkInfo));
 
         $("<button class='module'>")
@@ -1218,42 +1216,6 @@ function Bomb(seed) {
                 backFace.css("transform", `rotateY(${180 - degrees}deg)`);
             }).after("(Click to flip)");
 
-
-            //4.5 / number
-            //3.16205534 / number
-            //Renderer representation (TheDarkSid3r Bomb Renderer)
-
-            if (window.BombRenderer) {
-                const rendererParent = $("<div>").addClass("BombRenderer").css("position", "relative");
-                rendererHTML.replaceWith(rendererParent);
-
-                var rendererEdgework = [
-                    {type: "serial", number: this.Serial}
-                ];
-                this.PortPlates.forEach((p) => rendererEdgework.push({type: "port", ports: p}));
-                this.Indicators.forEach((i) => rendererEdgework.push({type: "indicator", lit: i[0] == "lit", label: i[1]}));
-                this.Batteries.slice(0, this.BatteryWidgets).forEach((b) => rendererEdgework.push({type: "battery", battery: b}));
-
-                const renderer = new BombRenderer(rendererParent);
-
-                renderer.loadMainAssetsAsync().then(() => {
-                    for (let moduleIndex = 0; moduleIndex < this.ModuleOrder.length; moduleIndex++) {
-                        const isRear = moduleIndex >= this.ModuleOrder.length / 2;
-
-                        if (this.ModuleOrder[moduleIndex] == null)
-                            continue;
-
-                        const moduleSplit = this.ModuleOrder[moduleIndex].split(" ");
-                        const ID = moduleSplit.splice(moduleSplit.length - 1);
-                        const moduleID = moduleSplit.join(" ");
-
-                        const matchingModules = mods.filter(mod => (ID == "-" || mod.counter == `#${ID}`) && mod.moduleData.moduleID == moduleID);
-                        renderer.createModuleBox(matchingModules.length >= 1 ? {type: "module", id: matchingModules[0].moduleData.moduleID, data: matchingModules[0].moduleData, parsed: matchingModules[0]} : moduleID == "Timer" ? {type: "timer", time: this.TimeLeft, strikes: this.Strikes} : {type: "empty"}, this.Anchors[moduleIndex], isRear);
-                    }
-
-                    renderer.addEdgework(rendererEdgework);
-                });
-            }
         }
 
         return info;
