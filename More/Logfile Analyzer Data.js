@@ -629,15 +629,15 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Unable to get the real module for (.+?) \((.+?)\). IDs found: (.*?). This/,
+				regex: /Unable to (?:get|load) the (?:real |)module for (.+?) \((.+?)\). IDs found: (.*?). (?:Please|This)/,
 				handler: matches => {
 					const modId = matches[1];
 					const steamId = matches[2];
 					const ids = matches[3].split(", ").map(e => e.replace(/^\"|\"$/g, "").trim()).filter(e => e);
-					console.warn(`Unable to get the real module for ${modId} (${steamId}); found: ${ids.length ? ids.join(", ") : "[none]"}`);
+					console.warn(`Unable to load the module for ${modId} (${steamId}); found: ${ids.length ? ids.join(", ") : "[none]"}`);
 
 					const data = parseData.find(e => e.moduleID == modId);
-					if (data) data.error = `<strong>Demand-Based Mod Loading:</strong> Unable to get the real module for <code>${modId}</code> (<code>${steamId}</code>). ${ids.length ? `IDs found:<ul>${ids.map(e => `<li><code>${e}</code></li>`).join("")}</ul>` : "No IDs found."}`;
+					if (data) data.error = `<strong>Demand-Based Mod Loading:</strong> Unable to load the module for <code>${modId}</code> (<code>${steamId}</code>). ${ids.length ? `IDs found:<ul>${ids.map(e => `<li><code>${e}</code></li>`).join("")}</ul>` : "No IDs found."}`;
 				}
 			}
 		]
