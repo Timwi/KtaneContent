@@ -629,7 +629,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Unable to (?:get|load) the (?:real |)module for (.+?) \((.+?)\). IDs found: (.*?). (?:Please|This)/,
+				regex: /Unable .+ module for (.+?) \((.+?)\). IDs found: (.*?)\./,
 				handler: matches => {
 					const modId = matches[1];
 					const steamId = matches[2];
