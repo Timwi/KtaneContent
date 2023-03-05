@@ -6766,6 +6766,52 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSMazeEm",
+		loggingTag: "Maze 'em",
+		matches: [
+			{
+				regex: /The maze is as follows:/,
+				handler: function (match, module) {
+					const maze = readLines(9).map(l => l.split(''));
+					module.maze = [ ];
+					for (let row = 0; row < 4; row++) {
+						module.maze.push([ ]);
+						for (let col = 0; col < 4; col++) {
+							const top = maze[2 * row][2 * col + 1] == '█';
+							const left = maze[2 * row + 1][2 * col] == '█';
+							module.maze[row].push({ wallAbove:top, wallLeft:left });
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The grid of numbers is as follows:/,
+				handler: function (match, module) {
+					const numbers = readLines(4).map(l => l.split(' '));
+					let svg = "<svg class='maze-em' viewbox='-1 -1 42 42'>"
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							let group = `<g transform='translate(${10 * col} ${10 * row})'>`;
+							if (module.maze[row][col].wallAbove)
+								group += "<line x1='-.5' x2='10.5'/>";
+							if (module.maze[row][col].wallLeft)
+								group += "<line y1='-.5' y2='10.5'/>";
+							group += `<text x='5' y='5'>${numbers[row][col]}</text>`;
+							svg += group + "</g>";
+						}
+					}
+					svg += "<line x1='40' y1='-.5' x2='40' y2='40.5'/> <line x1='-.5' y1='40' x2='40.5' y2='40'/>";
+					module.push({ label:"The maze is as follows:", obj:svg }); 
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'LionsShareModule',
 		loggingTag: 'Lion’s Share',
 		displayName: 'Lion’s Share',
