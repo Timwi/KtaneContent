@@ -6837,6 +6837,35 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSMazeIdentification",
+		loggingTag: "Maze Identification",
+		matches: [
+			{
+				regex: /The maze:/,
+				handler: function(_, module) {
+					let maze = readLines(9).map(l => l.split(''));
+					let svg = "<svg class='maze-ident' viewbox='-2 -2 84 84'>";
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							let group = `<g transform='translate(${20 * col} ${20 * row})'>`;
+							if (maze[2 * row][2 * col + 1] == '-')
+								group += "<line x1='-1' x2='21'/>";
+							if (maze[2 * row + 1][2 * col] == '|')
+								group += "<line y1='-1' y2='21'/>";
+							svg += group + '</g>';
+						}
+					}
+					svg += "<line x1='81' y1='-1' x2='81' y2='82'/> <line x1='-1' y1='81' x2='82' y2='81'/>";
+					module.push({ label:"The Maze:", obj:svg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'LionsShareModule',
 		loggingTag: 'Lion’s Share',
 		displayName: 'Lion’s Share',
