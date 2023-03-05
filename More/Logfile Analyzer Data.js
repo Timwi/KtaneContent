@@ -9809,8 +9809,14 @@ let parseData = [
 				handler: function (matches, module) {
 					const matrix = readTaggedLines(6);
 					matrix.splice(5, 1);
-
-					module.push({ label: "Matrix:", obj: pre(matrix.join("\n")) });
+					let table = "<table class='playfair-cipher'>";
+					for (let row = 0; row < 5; row++) {
+						table += "<tr>";
+						for (let col = 0; col < 5; col++) 
+							table += `<td>${matrix[row][col]}</td>`;
+						table += "</tr>";
+					}
+					module.push({ label:"Matrix:", obj:table });
 					return true;
 				}
 			},
@@ -13377,6 +13383,41 @@ let parseData = [
 					}
 					module.rules.push(match[0]);
 				}
+			}
+		]
+	},
+	{
+		moduleID: "unfairCipher",
+		loggingTag: "Unfair Cipher",
+		matches: [
+			{
+				regex: /which is equal to [A-Z]|which equal to|is (not )?a prime number/,
+				handler: function(match, module) {
+					module.push(match.input + ' ' + readLine());
+					return true;
+				}
+			},
+			{
+				regex: /Key [AC]: ([A-Z]+)/,
+				handler: function (matches, module) {
+					let grid = '';
+					let keyword = matches[1] + 'ABCDEFGHIKLMNOPQRSTUVWXYZ';
+					for (let ch of keyword) 
+						if (!grid.includes(ch))
+							grid += ch;
+					let table = "<table class='playfair-cipher'>";
+					for (let row = 0; row < 5; row++) {
+						table += "<tr>";
+						for (let col = 0; col < 5; col++) 
+							table += `<td>${grid[5 * row + col]}</td>`;
+						table += "</tr>";
+					}
+					module.push({ label:matches.input, obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
