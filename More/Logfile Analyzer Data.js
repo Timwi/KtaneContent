@@ -8767,6 +8767,32 @@ let parseData = [
 		loggingTag: "Mouse in the Maze"
 	},
 	{
+		moduleID: "mSeq",
+		loggingTag: "M-Seq",
+		matches: [
+			{
+				regex: /The constructed triangles are as follows:/,
+				handler: function(match, module) {
+					module.push(match.input);
+					const positions = [ { x:0, y:0 }, { x:30, y:0 }, { x:60, y:0 }, { x:15, y:26 }, { x:45, y:26 }, { x:30, y:52 } ];
+					let allNums = readTaggedLines(12).join(' ').split(/\s+/g);
+					for (let triIx = 0; triIx < 3; triIx++) {
+						let svg = "<svg class='m-seq' viewbox='-17 -17 93 85'>";
+						for (let i = 0; i < 6; i++) {
+							const p = positions[i];
+							svg += `<circle r='15' cx='${p.x}' cy='${p.y}'/>`;
+							svg += `<text x='${p.x}' y='${p.y}'>${allNums[6 * triIx + i]}</text>`;
+						}
+						module.push({ obj:svg, nobullet: true });
+					}
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "murder",
 		loggingTag: "Murder",
 		matches: [
