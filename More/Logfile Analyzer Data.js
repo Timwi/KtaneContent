@@ -4659,8 +4659,8 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: "MemoryV2",
-		loggingTag: "Forget Me Not",
+		moduleID: ["MemoryV2", "forgetItNot"],
+		loggingTag: ["Forget Me Not", "Forget It Not"],
 		matches: [
 			{
 				regex: /(Display|Solution): ([\d\s]+)/,
