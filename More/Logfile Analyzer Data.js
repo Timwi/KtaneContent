@@ -5401,6 +5401,32 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'hiddenInPlainSightModule',
+		loggingTag: 'Hidden In Plain Sight',
+		matches: [
+		{
+			regex: /After placing in \d the grid is now:/,
+			handler: function (match, module) {
+				let grid = readTaggedLines(10).map(l => l.split('').map(ch => ch == '1'));
+				let table = "<table class='hidden-in-plain-sight'>";
+				for (let row = 0; row < 10; row++) {
+					table += "<tr>";
+					for (let col = 0; col < 10; col++) {
+						const color = grid[row][col] ? 'black' : 'white';
+						table += `<td class='${color}'></td>`;
+					}
+					table += "</tr>";
+				}
+				module.push({ label:match.input, obj:table });	
+				return true;
+			}
+		},
+		{
+			regex: /.+/
+		}
+		]
+	},
+	{
 		displayName: "HTTP Response",
 		moduleID: "http",
 		loggingTag: "NeedyHTTP",
