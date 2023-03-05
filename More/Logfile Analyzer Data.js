@@ -10503,6 +10503,37 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "RailwayCargoLoading",
+		loggingTag: "Railway Cargo Loading",
+		matches: [
+			{
+				regex: /The (second )?note now says:/,
+				handler: function (match, module) {
+					if (!module.pastTheFirstOne){
+						module.pastTheFirstOne = true;
+						return true;
+					}
+					
+					let note = [ ];
+					let currentMatch;
+					while (currentMatch = readLine().match(/\[Railway Cargo Loading #\d+\] (.*)/) ) {
+						if (currentMatch[1] == '"')
+							break;
+						console.log(currentMatch[1]);
+						if (currentMatch[1].trim())
+							note.push(currentMatch[1]);
+					}
+					
+					console.log(note);
+					module.push({ label:match[0], obj:pre(note.join('\n')) });
+				}
+			},
+			{
+				regex: /Coupled|Car \d+:/
+			}
+		]
+	},
+	{
 		displayName: "Rainbow Arrows",
 		moduleID: "ksmRainbowArrows",
 		loggingTag: "Rainbow Arrows",
