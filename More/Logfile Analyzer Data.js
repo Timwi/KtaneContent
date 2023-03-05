@@ -6444,6 +6444,31 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "markscript",
+		loggingTag: "Markscript",
+		matches: [
+			{
+				regex: /Program: (.+)/,
+				handler: function(matches, module) {
+					let brokenText = matches[1].replace(/;/g, '\n');
+					module.push({ label: 'Program:', obj:pre(brokenText) });
+					return true;
+				}
+			},
+			{
+				regex: /Events: (.+)/,
+				handler: function(matches, module) {
+					let events = matches[1].split(';').filter(l => l);
+					module.push([ 'Events:', events ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "matchem",
 		loggingTag: "Match 'em",
 		matches: [
