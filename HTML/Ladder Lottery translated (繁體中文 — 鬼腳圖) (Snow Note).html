@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>鬼腳圖 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+    function setDefaultRules(rnd) { setRules(rnd); }
+
+    function setRules(rnd)
+    {
+        var rules = rnd.shuffleFisherYates([
+            '序號的\n首個英文字',
+            '並列埠和序列埠*\n在同一個埠口板',
+            '序號的\n數字的總和 > 8',
+            '0 或 1 次失誤',
+            '有空白的埠口板',
+            'D電池的\n數量為偶數',
+            '相比熄滅，\n亮起的指示燈較多',
+            '亮起的 FRK\nIND 或 MSA',
+            '至少 3 個電池',
+            '已拆除的模組數比\n未拆除的多',
+            '熄滅的 FRQ\nSND 或 NSA',
+            '炸彈的時間\n剩餘不足一半'
+        ]);
+
+        var active = rnd.shuffleFisherYates([2,3,1,3,3,1,1,2,1,2,3,2]);
+        document.getElementById('ladder').innerHTML = getSvg(active, rules);
+    }
+
+    function getSvg(active, rules)
+    {
+        var svg = '';
+        var dx = 30;
+        var dy = 8;
+        var relX = 0;
+        var relY = 0;
+        var fill = "#5b8";
+        var ruleCount = 0;
+        for (var i = 0; i < 12; ++i)
+        {
+            for (var j = 0; j < 3; ++j)
+            {
+                if (active[i] !== j + 1)
+                    continue;
+                var x = j * (dx + 2);
+                var y = i * (dy + 1);
+                var isn = rules[ruleCount].includes('\n');
+                svg += `<g transform='translate(${x} ${y})'>
+                    <rect fill='${fill}' width='${dx}' height='${dy}' x='${relX}' y='${relY}'/>
+                    <text x='15' y='4.5'>
+                        ${rules[ruleCount].includes('\n') ?
+                            `<tspan y='3.2'>${rules[ruleCount].split('\n', 1)[0]}</tspan>
+                            <tspan x='15' dy='3.5'>${rules[ruleCount].split('\n')[1]}</tspan>`
+                        : `<tspan>${rules[ruleCount]}</tspan>` }
+                    </text>
+                </g>`
+                ruleCount++;
+            }
+        }
+        for (var i = 0; i < 4; ++i)
+        {
+            svg += `<rect class='legs' width='2.1' height='110' x='${i *(dx+2) - 2}' y='-1'/>`;
+        }
+        return `${svg}`;
+    }
+    </script>
+    <style>
+        svg rect.legs { fill: black; }
+        .dark svg rect.legs { fill: #CCC; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">鬼腳圖</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Ladder Lottery.svg" class="diagram">
+                <h2>關於【鬼腳圖】模組</h2>
+                <p class="flavour-text">如果幸運的話，這個相比起我拆除帶有Ouija板的時間更快吧。</p>
+
+                <p>模組包含一個「鬼腳圖」，上下各有 4 條路線，中央部分被覆蓋。選擇連接於上方亮起路線的下方路線以拆除模組。如果選擇錯誤的路線會觸發一次失誤。</p>
+
+                <p>以下顯示模組的內部結構。要找出連接都那一個，從亮起的路線開始向下前進，如果遇到條件為真的水平線則經該水平線移動，然後繼續向下前進。</p>
+
+                <svg xmlns="http://www.w3.org/2000/svg" style="margin:auto; display:block" width="89%" viewBox="-3 -3 100 115" font-size='2.6' text-anchor='middle'>
+                    <g id='ladder'></g>
+                </svg>
+                <p>* 並列埠(Parallel), 序列埠(Serial)</p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+</html>
