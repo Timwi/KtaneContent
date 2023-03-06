@@ -8972,7 +8972,7 @@ let parseData = [
 					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
 					const tdStyle = 'padding: 0; width: 1.5cm; border: 0;';
 
-					let table = `<table style='margin: 0.25cm 0.5cm'> <tr> <td style='width: 1cm; text-align: center'>from→<br>to↓</td>`;
+					let table = `<table style='margin: 0.25cm 0.5cm'> <tr> <td style='width: 1cm; text-align: center'>to→<br>from↓</td>`;
 
 					for (let ix = 0; ix < 6; ix++) {
 						table += `<td style='padding: 0; width: 1cm'><img src='../HTML/img/Nomai/${module.planets[ix]}.png' style='${imgStyle}'/></td>`;
