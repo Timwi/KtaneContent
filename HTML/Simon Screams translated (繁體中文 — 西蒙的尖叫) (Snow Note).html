@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>西蒙的尖叫 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.simon-screams, table.simon-screams table {
+            border: none;
+            
+        }
+
+            table.simon-screams td.corner, table.simon-screams th.corner {
+                border: none;
+                font-size: 100%;
+            }
+
+            table.simon-screams td {
+                text-align: center;
+            }
+
+            table.simon-screams th {
+                text-align: right;
+            }
+
+                table.simon-screams th.little {
+                    text-align: left;
+                }
+
+            table.simon-screams tr.top > th {
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+                table.simon-screams tr.top > th > p {
+                    margin: .25em;
+                }
+
+            table.simon-screams tr.rotated > th {
+                position: relative;
+                text-align: left;
+                height: 4em;
+            }
+
+                table.simon-screams tr.rotated > th > span.text {
+                    top: 50%;
+                    left: 50%;
+                    position: absolute;
+                    transform: translate(-50%, -50%) rotate(-0deg);
+                    transform-origin: center center;
+                    text-align: center;
+                    line-height: 1.25;
+                }
+
+        table.simon-screams-small td, table.simon-screams-small th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .column-rule {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+     var _rules = [
+         { prob:  50, name: "全部顏色至少閃爍 1 次" },
+         { prob: 120, name: "有分離 2 格的 3 種顏色以順時針閃爍" },
+         { prob: 220, name: "某種顏色閃爍，然後相隣的顏色閃爍、接著最初的顏色再次閃爍" },
+         { prob: 121, name: "有相隣的 3 種顏色以逆時針閃爍" },
+         { prob: 122, name: "有相隣的 3 種顏色以順時針閃爍" },
+         { prob: 123, name: "某種顏色閃爍、然後對角的顏色閃爍、接著最初的顏色再次閃爍" },
+         { prob: 100, name: "沒有相隣的 3 種顏色閃爍" },
+         { prob: 170, name: "最初閃爍的顏色與最後閃爍的顏色相同" },
+         { prob: 124, name: "分離 2 格的 3 種顏色以逆時針閃爍" },
+         { prob: 230, name: "某種顏色閃爍，然後分離 2 格的顏色閃爍，接著最初的顏色再次閃爍" },
+         { prob: 260, name: "某種顏色閃爍，然後相隣的顏色閃爍，接著該顏色的對角顏色閃爍" },
+         { prob: 261, name: "某種顏色閃爍，然後相隣的顏色閃爍，接著最初的顏色的對角顏色閃爍" },
+         { prob: 262, name: "某種顏色閃爍，然後分離 2 格的顏色閃爍，接著該顏色的對角顏色閃爍" },
+         { prob: 263, name: "某種顏色閃爍，然後分離 2 格的顏色閃爍，接著最初的顏色的對角顏色閃爍" },
+         { prob: 231, name: c => `${c[0]}，${c[1]}，${c[2]}當中至多 1 種顏色閃爍` },
+         { prob: 264, name: "某種顏色閃爍，然後對角的顏色閃爍，接著與最初的顏色相隣的顏色閃爍" },
+         { prob: 221, name: "沒有閃爍多於 1 次的顏色" },
+         { prob: 265, name: "某種顏色閃爍，然後對角的顏色閃爍，接著與該顏色相隣的顏色閃爍" },
+         { prob: 240, name: "剛好有 2 種顏色閃爍剛好 2 次" },
+         { prob: 420, name: "有 2 種沒有閃爍的顏色相隣" },
+         { prob: 270, name: "剛好有1種顏色沒有閃爍" },
+         { prob: 280, name: "沒有剛好閃爍 2 次的顏色" },
+         { prob: 290, name: "至少 3 種顏色沒有閃爍" },
+         { prob: 300, name: "剛好有 2 種顏色閃爍多於 1 次" },
+         { prob: 330, name: "最初閃爍的顏色與最後閃爍的顏色相隣" },
+         { prob: 380, name: "剛好有 1 種顏色閃爍多於 1 次" },
+         { prob: 440, name: "有分離 2 格的 2 種沒有閃爍的顏色" },
+         { prob: 266, name: "對角位置上有 2 種沒有閃爍的顏色" },
+         { prob: 400, name: "剛好有 2 種沒有閃爍的顏色" },
+         { prob: 410, name: "剛好有 1 種顏色閃爍剛好 2 次" },
+         { prob: 480, name: "閃爍的顏色種類數為偶數" },
+         { prob: 390, name: "有相隣的 2 種顏色，以順時針沒有閃爍" },
+         { prob: 391, name: "沒有相隣的 2 種顏色，以逆時針閃爍" },
+         { prob: 610, name: "有相隣的 2 種顏色，以順時針閃爍" },
+         { prob: 392, name: "沒有分離 2 格的 2 種顏色，以順時針閃爍" },
+         { prob: 500, name: "最初閃爍的顏色與最後閃爍的顏色不同，且沒有相隣" },
+         { prob: 520, name: "某種顏色閃爍，然後另一種顏色閃爍，最初的顏色再次閃爍" },
+         { prob: 393, name: "沒有分離 2 格的 2 種顏色，以順時針閃爍" },
+         { prob: 611, name: "有相隣的 2 種顏色，以順時針閃爍" },
+         { prob: 612, name: "有分離 2 格的 2 種顏色，以順時針閃爍" },
+         { prob: 613, name: "有分離 2 格的 2 種顏色，以順時針閃爍" },
+         { prob: 521, name: "閃爍的顏色種類數為奇數" },
+         { prob: 770, name: c => `${c[0]}、${c[1]}、${c[2]}當中至少 2 種顏色閃爍` }];
+
+     function setDefaultRules(rnd) { setRules(rnd); }
+
+     function setRules(rnd)
+     {
+         var steps = rnd.next(0, 25);
+         for (var i = 0; i < steps; i++)
+             rnd.nextDouble();
+
+         var rules = _rules.slice(0);
+         rnd.shuffleFisherYates(rules);
+         var ths = document.getElementsByClassName('row-rule');
+         rules = rules.slice(0, ths.length);
+         rules.sort((a, b) => a.prob < b.prob ? -1 : a.prob > b.prob ? 1 : 0);
+         for (var i = 0; i < ths.length; i++)
+         {
+             var name = rules[i].name;
+             if (typeof rules[i].name === 'function')
+             {
+                 var colors = '橙,黄,赤,緑,青,紫'.split(',');
+                 rnd.shuffleFisherYates(colors);
+                 name = rules[i].name(colors);
+             }
+             ths[i].innerText = name;
+         }
+
+         var gt = rnd.next(0, 2);
+
+         var condThs = document.getElementsByClassName('little');
+         var conds = ['埠口', '指示燈', '電池', '#的數字', '#的英文字', '電池插槽'];
+         rnd.shuffleFisherYates(conds);
+         for (var i = 0; i < 6; i++)
+             condThs[i].innerText = `${conds[i]} ${gt ? '≥' : '≤'} 3`;
+
+         var sts = [0, 1, 2];
+         var grid = [
+             "FFC,CEH,HAF,ECD,DDE,AHA".split(','),
+             "AHF,DFC,ECH,CDE,FEA,HAD".split(','),
+             "DED,ECF,FHE,HAA,AFH,CDC".split(','),
+             "HCE,ADA,CFD,DHH,EAC,FEF".split(','),
+             "CAH,FHD,DDA,AEC,HCF,EFE".split(','),
+             "EDA,HAE,AEC,FFF,CHD,DCH".split(',')];
+         var smallGrid = [
+             "黃橙綠紅藍紫",
+             "紫黃紅藍橙綠",
+             "橙綠藍紫紅黃",
+             "綠藍橙黃紫紅",
+             "紅紫黃橙綠藍",
+             "藍紅紫綠黃橙"];
+
+         if (rnd.seed != 1)
+         {
+             sts[0] = rnd.next(0, 3);
+             sts[1] = rnd.next(sts[0] + 1, 4);
+             sts[2] = rnd.next(sts[1] + 1, 5);
+
+             var numbers = [];
+             for (var i = 0; i < 6; i++)
+                 numbers.push(i);
+
+             var columnShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle3 = rnd.shuffleFisherYates(numbers.slice(0));
+             var columnShuffle = [columnShuffle1, columnShuffle2, columnShuffle3];
+
+             var rowShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+             var rowShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+             var rowShuffle3 = rnd.shuffleFisherYates(numbers);
+             var rowShuffle = [rowShuffle1, rowShuffle2, rowShuffle3];
+
+             var newGrid = grid.map(arr => arr.slice(0));
+             for (var r = 0; r < 6; r++)
+                 for (var c = 0; c < 6; c++)
+                     newGrid[r][c] = [0, 1, 2].map(ix => grid[rowShuffle[ix][r]][columnShuffle[ix][c]].substr(ix, 1)).join('');
+             grid = newGrid;
+
+             rnd.shuffleFisherYates(columnShuffle1);
+             rnd.shuffleFisherYates(rowShuffle1);
+
+             var newSmallGrid = [];
+             for (var r = 0; r < 6; r++)
+                 newSmallGrid.push([0, 1, 2, 3, 4, 5].map(c => smallGrid[rowShuffle1[r]].substr(columnShuffle1[c], 1)).join(''));
+             smallGrid = newSmallGrid;
+         }
+
+         var ords = ["第 1 個", "第 2 個", "第 3 個", "第 4 個", "第 5 個"];
+         var colSpans = document.getElementsByClassName('column-rule');
+         for (var i = 0; i < 3; i++)
+             colSpans[i].innerText = ords[sts[i]];
+
+         var cellRules = document.getElementsByClassName('cell-rule');
+         for (var r = 0; r < 6; r++)
+             for (var c = 0; c < 6; c++)
+                 cellRules[r * 6 + c].innerText = grid[r][c];
+
+         var smallRules = document.getElementsByClassName('small-rule');
+         for (var r = 0; r < 6; r++)
+             for (var c = 0; c < 6; c++)
+                 smallRules[r * 6 + c].innerText = smallGrid[r].substr(c, 1);
+     }
+ </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+<span class="page-header-section-title">西蒙的尖叫</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Screams.svg" class="diagram">
+ <h2>關於【西蒙的尖叫】模組</h2>
+               <p class="flavour-text">
+                他生氣了！ 他很生氣！ 他怒了！ 他受夠了！
+                </p>
+                <ul>
+                    <li>
+                        這個模組有 6 種顏色的閃燈，分別有紅、橙、黃、綠、藍、紫。這些燈在每個關卡都會閃爍，且閃爍的序順按照關卡數愈來愈長。總共 3 個關卡。
+                    </li>
+                    <li>
+                        在各關卡以整體閃爍的燈光作判斷。在大的表格找出首個合乎條件的橫行和正確的直列。從該格子中取對應目前關卡數的一位字元，然後把字元代入小的表格的直列。
+                    </li>
+                    <li>
+                        從上以下查看，按下所有乎合條件的顏色。「#」代表「序號」。
+                    </li>
+                    <li>
+                        當序順再次閃爍的同時會重置目前關卡的輸入。
+                    </li>
+                </ul>
+
+                <table class='simon-screams'>
+                    <tr class='top'>
+                        <td class='corner' rowspan='2'>
+                            <table class='simon-screams-small'>
+                                <tr>
+                                    <td class='corner'></td>
+                                    <th>A</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th>E</th>
+                                    <th>F</th>
+                                    <th>H</th>
+                                </tr>
+                                <tr>
+                                    <th class='little'>指示燈≥　3</th>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>埠口≥　3</th>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>#的數字≥ 3</th>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>Y</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>#的英文字≥　3 </th>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>電池≥ 3</th>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>電池插槽≥ 3 </th>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <th colspan='6' class='corner'>
+                            <p>關卡 1：<span class='column-rule'>第 1 個</span>閃爍的顏色</p>
+                            <p>關卡 2：<span class='column-rule'>第 2 個</span>閃爍的顏色</p>
+                            <p>關卡 3：<span class='column-rule'>第 3 個</span>閃爍的顏色</p>
+                        </th>
+                    </tr>
+                    <tr class='rotated'>
+                        <th><span class='text'>紅</span></th>
+                        <th><span class='text'>橙</span></th>
+                        <th><span class='text'>黃</span></th>
+                        <th><span class='text'>綠</span></th>
+                        <th><span class='text'>藍</span></th>
+                        <th><span class='text'>紫</span></th>
+                    </tr>
+                    <tr>
+                        <th>如果<span class='row-rule'>有相隣的 3 種顏色，以順時針閃爍</span></th>
+                        <td class='cell-rule'>FFC</td>
+                        <td class='cell-rule'>CEH</td>
+                        <td class='cell-rule'>HAF</td>
+                        <td class='cell-rule'>ECD</td>
+                        <td class='cell-rule'>DDE</td>
+                        <td class='cell-rule'>AHA</td>
+                    </tr>
+                    <tr>
+                        <th>否則，如果<span class='row-rule'>某種顏色閃爍，然後與該顏色相隣的顏色閃爍，接著最初的顏色再次閃爍</span></th>
+                        <td class='cell-rule'>AHF</td>
+                        <td class='cell-rule'>DFC</td>
+                        <td class='cell-rule'>ECH</td>
+                        <td class='cell-rule'>CDE</td>
+                        <td class='cell-rule'>FEA</td>
+                        <td class='cell-rule'>HAD</td>
+                    </tr>
+                    <tr>
+                        <th>否則，如果<span class='row-rule'>赤、黄、青當中至多 1 種顏色閃爍</span></th>
+                        <td class='cell-rule'>DED</td>
+                        <td class='cell-rule'>ECF</td>
+                        <td class='cell-rule'>FHE</td>
+                        <td class='cell-rule'>HAA</td>
+                        <td class='cell-rule'>AFH</td>
+                        <td class='cell-rule'>CDC</td>
+                    </tr>
+                    <tr>
+                        <th>否則，如果<span class='row-rule'>對角位置上沒有 2 種沒有閃爍的顏色</span></th>
+                        <td class='cell-rule'>HCE</td>
+                        <td class='cell-rule'>ADA</td>
+                        <td class='cell-rule'>CFD</td>
+                        <td class='cell-rule'>DHH</td>
+                        <td class='cell-rule'>EAC</td>
+                        <td class='cell-rule'>FEF</td>
+                    </tr>
+                    <tr>
+                        <th>否則，如果<span class='row-rule'>有相隣的 2 種顏色，以順時針閃爍</span></th>
+                        <td class='cell-rule'>CAH</td>
+                        <td class='cell-rule'>FHD</td>
+                        <td class='cell-rule'>DDA</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>HCF</td>
+                        <td class='cell-rule'>EFE</td>
+                    </tr>
+                    <tr>
+                        <th>否則</th>
+                        <td class='cell-rule'>EDA</td>
+                        <td class='cell-rule'>HAE</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>FFF</td>
+                        <td class='cell-rule'>CHD</td>
+                        <td class='cell-rule'>DCH</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 1 頁</div>
+        </div>
+    </div>
+</body>
+</html>
