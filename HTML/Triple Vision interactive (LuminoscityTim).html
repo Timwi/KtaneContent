@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Triple Vision — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script>
+    $(function() {
+        let interactive = [$("table.interactive.i1"), $("table.interactive.i2")];
+        let result = $(".result");
+        let saveStates = [];
+        let currentState = 0;
+        var squares = [];
+        var selectedSquare = 0;
+        var selected = null;
+        let squareColors = ["red", "green", "blue", "cyan", "magenta", "yellow", "white", "black"];
+        const colorKeyI = { r: 0, g: 1, b: 2, c: 3, m: 4, y: 5, w: 6, k: 7 };
+        const rows = 12;
+        const cols = 8;
+        const sqCols = 64;
+        const NUM_XOR = 3;
+        let h = 66.3;
+        let w = 66.3;
+        let svg = $(".img-holder svg");
+        let hlImages = [];
+        const data = [
+            ["KKKKKKKK", "KRRKRRKK", "RRRRRRRK", "RRRRRRRK", "RRRRRRRK", "KRRRRRKK", "KKRRRKKK", "KKKRKKKK"],
+            ["KKKKKKKK", "KKKYYKKK", "KKYYYYKK", "KKYYYYKK", "KKYYYYKK", "KYYYYYYK", "KKKWWKKK", "KKKKKKKK"],
+            ["KKKKKKKK", "KKKYYKKK", "KKYKKYKK", "KKYKKYKK", "KKKYYKKK", "KKKYKKKK", "KKKYYKKK", "KKKKKKKK"],
+            ["KWWWWWKK", "WWWWWWWK", "WRWWWRWK", "WRRWRRWK", "WWWWWWWK", "KWWWWWKK", "KWKWKWKK", "KKKKKKKK"],
+            ["KKWKKWKK", "KKKWWKKK", "KKKWWKKK", "KKKWWKKK", "KKWGGWKK", "KWGGGGWK", "WGGGGGGW", "WWWWWWWW"],
+            ["KKKKKKKK", "KKRRRRKK", "KRRRWRRK", "RRWRRRRR", "RRRRRWRR", "KRRRRRRK", "KKKWWKKK", "KKKWWKKK"],
+            ["KKKKBKKK", "KKKBWBKK", "KKKKBKKK", "KRKKKKKK", "RWRKKKKK", "KRKKKYKK", "KKKKYWYK", "KKKKKYKK"],
+            ["KKKMMMKK", "KKKMMMKK", "KMMYYYMM", "KMMYYYMM", "KMMYYYMM", "KKWMMMKK", "KWKMMMKK", "KWKKKKKK"],
+            ["KKKKKGKK", "KKKKKGKK", "KKKKMMMK", "KKKKMMMK", "KKMMMMMK", "KMMMMMMK", "KMMMMMKK", "KKMMMKKK"],
+            ["KKKKKKKK", "KKKGGKKK", "KGKGGKKK", "KGGGGKGK", "KKKGGGGK", "KKKGGKKK", "KKKGGKKK", "KKGGGGKK"],
+            ["KKKKKKKK", "KKKKKKKK", "YKKYKKKY", "YYKYYKYY", "YYYYYYYY", "YYBYYBYY", "YYYYYYYY", "YYYYYYYY"],
+            ["KKKKKKKK", "KGGGGGGK", "GGGGWWGG", "GGGGGWGG", "KGGGGGGK", "KKGGGGKK", "KKKGGKKK", "KKKKKKKK"],
+            ["KKKYKKKY", "KKKYYYYY", "YKKYKYKY", "YYYYYYYY", "YYYYYYYK", "YYYYYYYK", "YKYKYKYK", "YKYKYKYK"],
+            ["KKBBBBKK", "KBBBBBBK", "BBBBBBBB", "BBBBBBBB", "KKKKYKKK", "KKKKYKKK", "KKYKYKKK", "KKKYKKKK"],
+            ["KWRWRWKK", "KWWRRWKK", "KWRRRWKK", "KWRRRWKK", "KKWWWKKK", "KKKWKKKK", "KKKWKKKK", "KKWWWKKK"],
+            ["KKBKKKKK", "KBKKKKKK", "BBBBKBBK", "BWBBBBKK", "BBBBBBKK", "BBBBKBBK", "KKKKKKKK", "KKKKKKKK"],
+            ["CCCCCCKK", "CCWCCCKK", "CWCCCCKK", "CCCCWCKK", "CCCWCCKK", "CCCCCCKK", "KKKKKKKK", "KKKKKKKK"],
+            ["KCKCKCKK", "CCCCCCKK", "KCMMMCCK", "CCMMMCKK", "KCMMMCCK", "CCMMMCKK", "KCCCCCCK", "KCKCKCKK"],
+            ["KKKKKKWK", "KKKKWWYK", "KKWWYYYK", "KWYYYYYK", "WWWWWWWK", "YYYYYYYK", "YYYYYYYK", "YYYYYYYK"],
+            ["KKKKKKKK", "KKKKKWBK", "KKKKWBBK", "KKKKBBKK", "KKKBBKKK", "KKBKKKKK", "KBKKKKKK", "CKKKKKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "GGGGGGGG", "GGGGGGGG", "KGGGGGGK", "KGGGGGGK", "KGGGGGGK", "KGGGGGGK"],
+            ["KKKWKWKK", "KKKWYWKK", "KKKKYKKK", "KKKWYWKK", "KKKWKWKK", "KKKWYWKK", "KKKKYKKK", "KKKWYWKK"],
+            ["KKMMMMKK", "KMWWWWMK", "MWWKWWWM", "MWWKWWWM", "MWWKKKWM", "MWWWWWWM", "KMWWWWMK", "KKMMMMKK"],
+            ["KYBBWWRR", "KYBBWWRR", "KYBBWWRR", "KYBBWWRR", "KYKKKKKK", "KYKKKKKK", "KYKKKKKK", "KYKKKKKK"],
+            ["KKKKKKKK", "KKKCCCCK", "KKCCCCCC", "KCCCCCCC", "CCKCCCCC", "KKKKCCCK", "KKKKKKKK", "KKKKKKKK"],
+            ["KKMMMMKK", "KMMMMMMK", "KMMMMMMK", "KYYYYYYK", "KKYYYYKK", "KKYYYYKK", "KKKYYKKK", "KKKYYKKK"],
+            ["KKKKKKWK", "YYKKKWKK", "WGGGGGWK", "KWGGGWKK", "KKWGWKKK", "KKKWKKKK", "KKKWKKKK", "KKWWWKKK"],
+            ["KKGGGGKK", "KWGGGGWK", "GGWGGWGG", "GGWGGWGG", "GWGGGGWG", "GWGGGGWG", "KGWWWWGK", "KKGGGGKK"],
+            ["KKKCCKKK", "KKKCCKKK", "KKKCCKKK", "KKCCCCKK", "KKRRRRKK", "KKRRRRKK", "KKCCCCKK", "KKCCCCKK"],
+            ["KKKKKKKK", "KKKKKKKK", "YKKKRKKY", "KYKRRKYK", "KKYYYYKK", "KKYYYYKK", "KKYYYYKK", "KKYYYYKK"],
+            ["KKYYYYKK", "KYKKKKYK", "KYKKKKYK", "KRRRRRRK", "KKRRRRKK", "KKRRRRKK", "KKRRRRKK", "KKRRRRKK"],
+            ["KKKKKKKK", "KBYKKKKK", "KYYYKKKK", "KKYYYKKK", "KKKYYYKK", "KKKKYYYK", "KKKKKYMM", "KKKKKKMM"],
+            ["KKKKKKKK", "KKKYYKKK", "KKYKKYKK", "KKYKKYKK", "KYYYYYYK", "KYYYYYYK", "KYYYYYYK", "KYYYYYYK"],
+            ["KKKKKKYY", "KKYYYYYY", "KYYYYYYY", "KYKRRKYY", "KKKRRKKK", "KKKRRKKK", "KKKRRKKK", "KKKRRKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "BKKBKKBK", "BBBBBBBB", "BBBBBBBB", "BBBBBBBB", "BBBBBBBB"],
+            ["KKKKKKKK", "KKRRRRKK", "KRYYYYRK", "RYGGGGYR", "YGCCCCGY", "GCBBBBCG", "CBMMMMBC", "BMKKKKMB"],
+            ["KKKKKKKK", "KKKKKMMK", "KKKKMMKK", "KKKMMKKK", "KKKKMMKK", "KMKKKMMK", "KMMMMMKK", "KKMMMKKK"],
+            ["KKKKKKKK", "BBBKKBBB", "BBBBBBBB", "KBBBBBBK", "KBCCCCBK", "KBBBBBBK", "KBBBBBBK", "KBBBBBBK"],
+            ["KKKKKKKK", "KKYWKKKK", "KKYWWWKK", "KKYKKKKK", "KKYKKKKK", "RRRRRRRR", "KRRRRRRK", "KKRRRRKK"],
+            ["KKKKKKKK", "YYYYYYYK", "YCCYCCYK", "YCCYCCYK", "YYYYYYYK", "YCCYCCYK", "YCCYCCYK", "YYYYYYYK"],
+            ["KKKKKKKK", "KKKBKKKK", "KKBBBKKK", "KKBWBKKK", "KYBBBKBK", "KKBBBBBK", "KKKBBBKK", "KKKYKYKK"],
+            ["KKKWWKKK", "KKWWWWKK", "KKWWWWKK", "KKWWWWKK", "KWWWWWWK", "KWWWWWWK", "KWWWWWWK", "KKWWWWKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKMMKKKK", "BBBBBBYB", "BBCCCBBB", "BBCCCBBB", "BBCCCBBB", "BBBBBBBB"],
+            ["KKKKGKKK", "KKBBGGKK", "KBBBGGKK", "KKWWRRRK", "KKWWRRKK", "KKKWYKKK", "KKKKYKKK", "KKKKYKKK"],
+            ["KRRRKKKK", "RRRRRKKK", "RRRRRKKK", "RRRRRKKK", "KRRRKKKK", "KKRKKKWW", "KKWKKWKK", "KKKWWKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "RRRKKKKK", "RRRKKKKK", "RRRRRRKK", "RRRRRRRK", "RRRRRRRK"],
+            ["KKKMKKKK", "KKMKMKKK", "KKMKMKKK", "KKKMKMMK", "KCCCMKKM", "CKKCKMMK", "KKKCKKKK", "KKCKKKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKKKKBBK", "KKCKBBBB", "CCCCCBKK", "KCCCBKKK", "KCCCKKKK", "CKKKCKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "YKKKKKKK", "YYYYYYKK", "YYYYYYYY", "YKYYYKKK", "KKYKKYKK", "KKKYYKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKBBBBKK", "KKBBBBKK", "KKBBBBKK", "KKBBBBKK", "KKCCCCKK", "KBBBBBBK"],
+            ["KKGGGGGK", "KGGGGGGG", "GGGGGGGG", "GGGGGGGG", "KKGGGGKK", "KKKWWKKK", "KKKWWKKK", "KKWWWWKK"],
+            ["KKYYYYKK", "KYYYYYYK", "KYYYYYYK", "KYYYYYYK", "KKYYYYKK", "KKYYYYKK", "KKYYYYKK", "KKKWWKKK"],
+            ["KKKKKMKK", "KKKKKMMK", "KKKKKMMM", "KKKKKMMM", "KMMMMMKM", "MMMMMMKM", "MMMMMMKK", "KMMMMKKK"],
+            ["KKKKCKKK", "KKKCCCKK", "KKCBCBCK", "KCWCCCWC", "KCCWCWCB", "KCBCWCBC", "KKCCWBCK", "KKKCWCKK"],
+            ["KKKKWKKK", "KKKWKKKK", "KKWKWKKK", "KKWKWKKK", "KRRKRRKK", "RRRRRRRK", "RRRRRRRK", "KRRKRRKK"],
+            ["KWWWKKKK", "KWWWWWKK", "WWWWWWWW", "WWWWWWWW", "WWWWWWWW", "BKWWWWWK", "KBKBKBKB", "BKBKBKBK"],
+            ["KKWWKKKK", "KKWWKKKK", "WWWKKKKK", "WWKWKKKK", "KKKKWKWW", "KKKKKWWW", "KKKKWWKK", "KKKKWWKK"],
+            ["KKKRRKKK", "KKRRRRKK", "KRRRRRRK", "RRRRRRRR", "KKBBBBKK", "KKBYYBKK", "KKBYYBKK", "KKBYYBKK"],
+            ["KKKKKWKK", "KKKKWKKK", "KRRWRRKK", "RRRRRRRK", "RRRRRRRK", "RRRRRRRK", "KRRRRRKK", "KKRRRKKK"],
+            ["KKKKKKKK", "KKKWWWKK", "KKKWWWWK", "WWKWWWWW", "WWKWWWWW", "WWWWWWWW", "KWWWWWWK", "KKWWWWKK"],
+            ["KYYYYYKK", "KYCCCYKK", "KYCCCYKK", "KYCCCYKK", "KYYYYYKK", "KYYYYRKK", "KYYYYYKK", "KYYYYYKK"],
+            ["KKKKKKKK", "KKKWWKKK", "KKWWWWKK", "KKWWWWKK", "KKKWWKKK", "KKKWWKKK", "KKWWWWKK", "KGGGGGGK"],
+            ["KKKWKWKK", "KKKWKWKK", "KKKWWWKK", "KKKWYWKK", "KKWWWWKK", "KWWWWWKK", "KWWWWWKK", "KKWMWMKK"],
+            ["KKKKKWKK", "KKKKWCKK", "KKKWCCKK", "KKWCCCKK", "KKCCCCKK", "KKCCCCKK", "KKKBBKKK", "KKKBBKKK"],
+            ["WWWWWWWW", "RWRRRWRR", "WWWWWWWW", "RRRWRRRW", "WWWWWWWW", "RWRRRWRR", "WWWWWWWW", "RRRWRRRW"],
+            ["YWYYYYYK", "YYYYWYYK", "YYWYYYWK", "YYYYYYYK", "WYYYWWYK", "YYWYWWYK", "YYYYYYYK", "KKKKKKKK"],
+            ["KKKKKKKK", "KKWWKKKK", "KMMMMKKK", "KMMMMMKK", "KMMMMKMK", "KMMMMMKK", "KMMMMKKK", "KKKKKKKK"],
+            ["KKKKWWWW", "KKKKRRRR", "KKKKWWWW", "KKKKRRRR", "KWWWWWWW", "WWWWWWWW", "WWWWWWWK", "KWWWWWKK"],
+            ["KKKKKKKK", "KKKKKKKK", "BBBBBBBK", "BBBBBBBK", "KKKCKBBK", "KKKKCBBK", "KKKKKBBK", "KKKKKKKK"],
+            ["KKKWWKKK", "KKWWWWKK", "KWWKWWWK", "KKKKKWWW", "KKKKKWWW", "KWWKWWWK", "KKWWWWKK", "KKKWWKKK"],
+            ["KWKKRRKK", "KKWKRRRK", "KKKKKRRR", "KWWKKKRR", "KKKKKKRR", "KKWKKRRR", "KWKKRRRK", "KKKKRRKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "KGKGKGKG", "KGKGKGKG", "GGGGGGGG", "GGGGGGGG"],
+            ["YKKYYKKY", "KYKKKKYK", "KKKYYKKK", "YKYYYYKY", "YKYYYYKY", "KKKYYKKK", "KYKKKKYK", "YKKYYKKY"],
+            ["KKMKKMKK", "KKMMMMKK", "KKMRRMKK", "KKMRRMKK", "KKMRRMKK", "KKMRRMKK", "KKMMMMKK", "KKMKKMKK"],
+            ["KKWKWKWK", "KRRRRRRR", "KKWKWKWK", "KKKWWWKK", "KKKKWKKK", "KKKKWKKK", "KKKKWKKK", "KKKKWKKK"],
+            ["KKKKKKRK", "KKKKRRWK", "KKKRWWWK", "KWWWWWWW", "WWCWCWCW", "KWWWWWWW", "KKRRRRKK", "KKKKKKKK"],
+            ["KKKGWGKK", "KKKGWGKK", "KKGGWGGK", "KKWGWGWK", "KGGWWWGG", "KGGGWGGG", "KKKGWGKK", "KKKKWKKK"],
+            ["KKKKKKKK", "KKKKKKKK", "KWWWWWWK", "KWWWWWWK", "KKKYYKKK", "KKKYYKKK", "KKKYYKKK", "KKKKYKKK"],
+            ["KKKKKKKK", "KKKKRRWK", "KKKRRWRK", "KKRRWRRK", "KKRWRRKK", "KKWRRKKK", "KWKKKKKK", "WKKKKKKK"],
+            ["KKKWWKKK", "KKWKKWKK", "KKWKKWKK", "KKKWWKKK", "KKKKWKKK", "KKKWWWKK", "KKKKWKKK", "KKKWKWKK"],
+            ["KKCKKKKK", "KKCCKKKK", "KKCCCKKK", "KKCCCCKK", "KKCCCCCK", "KKCCCKKK", "KKCKCCKK", "KKKKKCKK"],
+            ["KKKKKKWK", "KKKKKKWK", "KKKKKKWK", "KKMMKKWK", "MMWKMKWK", "KKWKKKWK", "KKKWWWKK", "KKKKKKKK"],
+            ["KKKKKKKK", "KKKRRKKK", "KKKRRKKK", "KKRRRRKK", "YYYYYYYY", "KYKKKKYK", "KYKKKKYK", "KYKKKKYK"],
+            ["KKKKKKKK", "KKKKKKKK", "KKKRRRKK", "KKRKKKRK", "KRKKKKKW", "WKKKKKKK", "KKKKKKKK", "KKKKKKKK"],
+            ["BBBBBBBK", "WWWBWWWK", "RWRBCCCK", "WWWBWWWK", "RWRBCCCK", "WRWBWWWK", "BBBBBBBK", "KKKKKKKK"],
+            ["KKWWKKKK", "KKYYKKKK", "KYKKYKKK", "YKKKKYKK", "YKKKKYKK", "KYKKYKKK", "KKYYKKKK", "KKKKKKKK"],
+            ["KKKWKKKK", "KKWWWKKK", "KKKWKKKK", "KBYBYKKK", "YBYBYYKK", "YBYBYYKK", "KBYBYKKK", "KKKKKKKK"],
+            ["KKRRRKKK", "KRKRKRKK", "RKKRKKRK", "RRRRRRRK", "RKKKKKRK", "KRKKKRKK", "KKRRRKKK", "KKKKKKKK"],
+            ["CCCCCCCG", "CCCBCCCC", "CCBBBCCC", "CRCBCYCC", "RRRCYYYC", "CRCGCYCC", "CCGGGCCC", "CCCGCCCC"],
+            ["KYYYKKKK", "KKYYYKKK", "KKKYYYKK", "KKKYYYKK", "KKKYYYKK", "KKKYYYKK", "KKYYYKKK", "KYYYKKKK"],
+            ["CYYYYYYC", "CYYYYYYC", "CYRYYRYC", "CYYYYYYC", "CYYYYYYC", "KKKYYKKK", "YYYKKYYY", "CCYYYYCC"],
+            ["WMMMMMMW", "MMMMMMMM", "MMKKMMKK", "MMMKMMKM", "MMMMMMMM", "MMMMKKKM", "MMMMMMMM", "MMMMMMMW"]
+        ];
+
+        const RGB = {
+            0x4: "red",
+            0x2: "green",
+            0x1: "blue",
+            0x3: "cyan",
+            0x5: "magenta",
+            0x6: "yellow",
+            0x7: "white",
+            0x0: "black",
+            R: [1,0,0],
+            G: [0,1,0],
+            B: [0,0,1],
+            C: [0,1,1],
+            M: [1,0,1],
+            Y: [1,1,0],
+            W: [1,1,1],
+            K: [0,0,0]
+        };
+
+        const imgD = data.map(d => d.map(y => y.split('').map(x => RGB[x])));
+        // console.log(imgD);
+
+        function updateXOR() {
+            $(".selected-img").html(hlImages.map(im => im + 1).join(', '));
+            for (let y = 0; y < cols; y++)
+                for (let x = 0; x < cols; x++) {
+                    for (let i = 0; i < NUM_XOR; i++) {
+                        let col = 0;
+                        if (i < hlImages.length)
+                            col = 4*imgD[ hlImages[i] ][y][x][0] + 2*imgD[ hlImages[i] ][y][x][1] + imgD[ hlImages[i] ][y][x][2];
+                        let elem = $(`.result td.multicolor.g${i}.x${x}.y${y}`);
+                        removeColorClass(elem);
+                        elem.addClass(RGB[col]);
+                    }
+                }
+        }
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                if (y == rows - 1 && x > 3) break;
+                let idx = y * cols + x;
+                let cell = MakeSvgElem("rect", {
+                    class:"square", x:(x*w + 4), y:(y*h + (y > 7 ? 26 : 4)),
+                    width:w, height:h, fill:"transparent"
+                })
+                svg.append(cell);
+                $(cell).click(function() {
+                    if ($(this).hasClass("highlighted") || $(".square.highlighted").length < NUM_XOR) {
+                        $(this).toggleClass("highlighted");
+                        if ($(this).hasClass("highlighted")) {
+                            hlImages.push(idx);
+                            hlImages.sort();
+                        }
+                        else hlImages.splice(hlImages.indexOf(idx), 1);
+
+                        updateXOR();
+                    }
+                });
+            }
+        }
+
+        $(".colorblind").click(function() {
+            $("body").toggleClass("cblind");
+        });
+
+        $(document).click(function() {
+            selected = null;
+            updateSelection();
+        }).keydown(function(event) {
+            let k = event.key.toLowerCase();
+            let space = event.key == " ";
+            if (
+                NoSpecialKeys(event) && (space || k == "c" || k == "m" || k == "y" || k == "b" ||
+                k == "g" || k == "r" || k == "k" || k == "w")
+            ) {
+                pressColorKey(space ? colorKeyI["k"] : colorKeyI[k]);
+                if (space) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            }
+        });
+
+        function pressColorKey(k) {
+            if (selected) {
+                removeColorClass(selected);
+                selected.addClass(squareColors[k]);
+                selectedSquare = (selectedSquare + 1) % (sqCols * 2);
+                selected = squares[selectedSquare];
+                updateSelection();
+            }
+        }
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        let cButtons = $(".hstack.colors");
+        let colorLetters = ["R", "G", "B", "C", "M", "Y", "W", "K"];
+        for (let h = 0; h < colorLetters.length; h++) {
+            $("<button>").text(colorLetters[h]).click(function(event) {
+                pressColorKey(h);
+                event.preventDefault();
+                event.stopPropagation();
+            }).addClass(squareColors[h]).appendTo(cButtons);
+        }
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(squareColors[(c + 1) % squareColors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("white black cyan magenta yellow red blue green");
+        }
+
+        for (let g = 0; g < 3; g++) {
+            let table = $("<table>").appendTo(result);
+            for (let y = 0; y <= cols; y++) {
+                const row = $("<tr>").appendTo(table);
+                for (let x = 0; x <= cols; x++) {
+                    if (x == 0 && y == 0) {
+                        $("<th>").appendTo(row);
+                    } else if (y == 0 && x > 0) {
+                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                    } else if (y > 0 && x == 0) {
+                        $("<th>").text(y).appendTo(row);
+                    } else {
+                        $("<td>").addClass(`multicolor black g${g} x${x-1} y${y-1}`).append('<div class="box"></div>').appendTo(row);
+                    }
+                }
+            }
+        }
+
+        for (let g = 0; g < 2; g++) {
+            for (let y = 0; y <= cols; y++) {
+                const row = $("<tr>").appendTo(interactive[g]);
+                for (let x = 0; x <= cols; x++) {
+                    if (x == 0 && y == 0) {
+                        $("<th>").appendTo(row);
+                    } else if (y == 0 && x > 0) {
+                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                    } else if (y > 0 && x == 0) {
+                        $("<th>").text(y).appendTo(row);
+                    } else {
+                        $("<td>").click(function(event) {
+                            selected = $(this);
+                            selectedSquare = (y-1)*cols + x - 1 + g*sqCols;
+                            updateSelection()
+
+                            return false;
+                        }).contextmenu(function(event) {
+                            nextColor($(this));
+                            selected = null;
+                            updateSelection();
+                            return false;
+                        }).addClass(`multicolor black x${x-1} y${y-1 + g*cols}`).append('<div class="box"></div>').appendTo(row);
+                    }
+                }
+            }
+        }
+        $(".interactive td.multicolor").each(function() {
+            squares.push($(this));
+        });
+
+        $("button.generate").click(function() {
+            let numbers = Array.from(Array(92).keys());
+            ShuffleFisherYates(numbers);
+            ShuffleFisherYates(numbers);
+            // console.log(numbers.slice(0,3));
+            for (let y = 0; y < cols; y++)
+                for (let x = 0; x < cols; x++) {
+                    let col = 0;
+                    for (let i = 0; i < 3; i++) {
+                        col ^= 4*imgD[ numbers[i] ][y][x][0] + 2*imgD[ numbers[i] ][y][x][1] + imgD[ numbers[i] ][y][x][2];
+                    }
+                    let elem = $(`.interactive.i1 td.multicolor.x${x}.y${y}`);
+                    setTimeout(() => {
+                        removeColorClass(elem);
+                        elem.addClass(RGB[col]);
+                    }, 4*(y*cols + x));
+                }
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-grid").click(function() {
+            removeColorClass($(".interactive td.multicolor"));
+            $(".interactive td.multicolor").addClass("black");
+        });
+        $(".reset-all").click(function() {
+            removeColorClass($(".interactive td.multicolor"));
+            $(".interactive td.multicolor").addClass("black");
+            $(".square").removeClass("highlighted");
+            hlImages = [];
+            updateXOR();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            selected = null;
+            updateSelection();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".square, .interactive td.multicolor")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_hlImages= Array(hlImages.length);
+            Object.assign(s_hlImages, hlImages);
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".square, .interactive td.multicolor").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                hlImages= Array(s_hlImages.length);
+                Object.assign(hlImages, s_hlImages);
+                updateXOR();
+
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            right: 15mm;
+        }
+        .hstack.left { 
+            justify-content: left;
+        }
+        .colorref {
+            width: 20px;
+            position: relative;
+            left: -38mm;
+        }
+
+        .colorref svg {
+            width: 250px;
+        }
+        .lmarg { margin-left: 10px; }
+
+        .square.highlighted {
+            stroke: #AAA;
+            stroke-width: 5px;
+        }
+
+        svg text.black { fill: #000; }
+        .dark svg text.black { fill: #DDD; }
+        .centered-img { width: 80%; }
+        .img-holder {
+            position: relative;
+            width: 50%;
+            min-width: 350px;
+            height: 730px;
+        }
+        @media screen and (min-width:899px) {
+            .page-bg-02 { width: 11.5in; }
+        }
+        .img-holder img, .img-holder svg {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%;
+        }
+
+        .interactive-container {
+            width: 134mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        :is(table.interactive, .result table), :is(table.interactive, .result) :is(tr, th, td:nth-child(1)) {
+            border: none;
+            background: none;
+        }
+        .result { gap: 10px; }
+        td.multicolor { border-color: #888; }
+
+        table.interactive td {
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .result td {
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            font-size: 10pt;
+        }
+        .result th {
+            padding: .2em 0 0;
+            font-size: 10pt;
+            line-height: 1;
+        }
+
+        td.multicolor>.box {
+            background: white;
+            transition: background 0.2s;
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+
+        .result td.multicolor>.box {
+            width: 16px;
+            height: 16px;
+        }
+
+        td.multicolor.black>.box, button.black { background: black; }
+        td.multicolor.white>.box, button.white { background: white; }
+        td.multicolor.cyan>.box, button.cyan { background: cyan; }
+        td.multicolor.magenta>.box, button.magenta { background: magenta; }
+        td.multicolor.yellow>.box, button.yellow { background: yellow; }
+        td.multicolor.blue>.box, button.blue { background: blue; }
+        td.multicolor.green>.box, button.green { background: green; }
+        td.multicolor.red>.box, button.red { background: red; }
+        body.cblind td.multicolor.black .box::after, button.black { color: white; content: "K"; }
+        body.cblind td.multicolor.white .box::after { color:#000; content: "W"; }
+        body.cblind td.multicolor.cyan .box::after { color:#000; content: "C"; }
+        body.cblind td.multicolor.magenta .box::after { color:#000; content: "M"; }
+        body.cblind td.multicolor.yellow .box::after { color:#000; content: "Y"; }
+        body.cblind td.multicolor.blue .box::after, button.blue { color: white; content: "B"; }
+        body.cblind td.multicolor.green .box::after { color:#000; content: "G"; }
+        body.cblind td.multicolor.red .box::after { color:#000; content: "R"; }
+
+        td.multicolor.selected>.box {
+            background: gray;
+        }
+
+        td.multicolor>.box::after {
+            position: absolute;
+            line-height: 1;
+            top: 8px;
+            left: 10px;
+        }
+
+        .result td.multicolor>.box::after {
+            top: 3px;
+            left: 4px;
+        }
+
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+            font-family: "Special Elite";
+            padding-top: 3px;
+        }
+        button.reset-board, button.reset-all, button.reset-saves, button.save {
+            padding-left: 2px;
+            padding-bottom: 0px;
+            padding-right: 2px;
+        }
+        .hstack.colors {
+            gap: 2px;
+            margin-left: 24px;
+        }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 30px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        h4 {
+            margin-top: 3mm;
+            padding-left: 6mm;
+        }
+
+        .buttons {
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Triple Vision</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Triple Vision.svg" class="diagram">
+                <h2>On the Subject of Triple Vision</h2>
+                <p class="flavour-text">I went to my optometrist and he told me I have 20/20/20 vision. Is this that third eye I keep hearing about?</p>
+
+                <p>On the module is an 8×8 grid of RGBCMYWK color panels. This “image” is actually an XOR of three of the images below. To solve the module, correctly identify all three images.</p>
+                <p>To XOR two images, simply XOR the color channel values of each pixel on the first image with the pixel at the same position on the second image.</p>
+                <p>Ex: A1 on image 1 is red; A1 on image 2 is magenta; 100 ⊻ 101 = 001; the resulting image is blue on A1. </p>
+                <p>To XOR three images, simply XOR any two of the images, then XOR the result with the remaining image.</p>
+                <p>Once all three images have been identified, take each image’s position in reading order in the chart below, add them together, and count that many cells on the module in reading order, wrapping around if necessary.</p>
+
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Click a cell in the <u><b>Read</b></u> grid and press <b>R/B/G/C/M/Y/W/K/Space</b> or click the color buttons to input the read.</li>
+                    <li>Select up to 3 images to see the XOR result. Fun fact, there are <u><b>125,580</b></u> possible combinations.</li>
+                    <li>Use the other buttons to save the state, reset the saves, reset the Read grid, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Triple Vision</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack left">
+                    <button class="generate">Generate</button>
+                    <button class="colorblind">Toggle Colorblind</button>
+                    <span class="lmarg">Selected:</span>
+                    <span class="lmarg selected-img"></span>
+                </div>
+                <div class="hstack left">
+                    <div class="img-holder">
+                        <img src="img/Triple Vision/tripleVisionGrid8.png" />
+                        <svg viewbox="0 0 538 826" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="interactive-container grid">
+                        <h4>Read</h4>
+                        <div class="hstack colors"></div>
+                        <table class="interactive i1"></table><br>
+                        <div class="result hstack"></div>
+                        <table class="interactive i2"></table>
+                        <div style="height:1mm"></div>
+                        <div class="hstack colors"></div>
+                        <div class="saves buttons hstack left">
+                            <button class="save">Save</button>
+                        </div>
+                        <br>
+                        <div class="buttons hstack left">
+                            <button class="reset-saves">Reset<br>Saves</button>
+                            <button class="reset-grid">Reset<br>Grid</button>
+                            <button class="reset-all">Reset<br>All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
