@@ -831,6 +831,40 @@ const everything = {
                 ]
             ]
         },
+		'IKEA': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'RandomizeLeft': true,
+			'Groups': ['Swedish', 'English' ],
+			'Items': [
+				[
+					[ 'SÄNG', 'Bed' ],
+					[ 'KÄNGA', 'Boot' ],
+					[ 'SKÅL', 'Bowl' ],
+					[ 'SKÅP', 'Cabinet' ],
+					[ 'GODIS', 'Candy' ],
+					[ 'STOL', 'Chair' ],
+					[ 'OST', 'Cheese' ],
+					[ 'FÄRG', 'Color' ],
+					[ 'GARDINER', 'Curtains' ],
+					[ 'SKRIVBORD', 'Desk' ],
+					[ 'DRAKE', 'Dragon' ],
+					[ 'FLÄKT', 'Fan' ],
+					[ 'HÖRLURAR', 'Headphones' ],
+					[ 'KÖTTBULLE', 'Meatball' ],
+					[ 'ÅTTAHÖRNING', 'Octagon' ],
+					[ 'MÅLA', 'Paint' ],
+					[ 'VALP', 'Puppy' ],
+					[ 'TÄCKE', 'Quilt' ],
+					[ 'TVÄTTBJÖRN', 'Raccoon' ],
+					[ 'SKJORTA', 'Shirt' ],
+					[ 'SKO', 'Shoe' ],
+					[ 'HANDDUK', 'Towel' ],
+					[ 'ENHÖRNING', 'Unicorn' ],
+					[ 'TROLLKARL', 'Wizard' ]	
+				]
+			]
+		},
         'Laundry': {
             'CSS': 'laundry',
             'RandomizeRight': true,
