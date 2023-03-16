@@ -997,26 +997,16 @@ function Bomb(seed) {
         }
 
         mods.sort(function(modA, modB) {
-            let sortKeyA = modA.moduleData.displayName.toLowerCase();
-            if (modA.counter) {
-                sortKeyA += modA.counter;
-            }
+            sortKeyA = modA.moduleData.displayName.toLowerCase().replace(/^the /i, "");
+            sortKeyB = modB.moduleData.displayName.toLowerCase().replace(/^the /i, "");
 
-            let sortKeyB = modB.moduleData.displayName.toLowerCase();
-            if (modB.counter) {
-                sortKeyB += modB.counter;
-            }
-
-            sortKeyA = sortKeyA.replace(/^the /i, "");
-            sortKeyB = sortKeyB.replace(/^the /i, "");
-
-            if (sortKeyA < sortKeyB) {
+            if (sortKeyA < sortKeyB)
                 return -1;
-            } else if (sortKeyA > sortKeyB) {
+            if (sortKeyA > sortKeyB)
                 return 1;
-            }
 
-            return 0;
+            // This assumes that .counter is a string consisting of '#' plus a number
+            return modA.counter.substr(1) - modB.counter.substr(1);
         });
 
         const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
