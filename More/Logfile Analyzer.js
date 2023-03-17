@@ -228,7 +228,7 @@ class BombGroup {
             fragment += `;#url=${opt.url}`;
         else if (opt.file)
             fragment += `;#file=${opt.file}`;
-        $("#download-logfile").html("<a href='https://ktane.timwi.de/Logfiles/" + (opt.file ?? '') + ".txt'>Download Logfile</a>");
+        $("#download-logfile").html("<a class='button' href='https://ktane.timwi.de/Logfiles/" + (opt.file ?? '') + ".txt'>Download Logfile</a>");
         var bombHTML = $("<a href='" + fragment + "' class='bomb' data-serial='" + serial + "'>")
             .appendTo($("#bombs"))
             .click(function() { selectBomb(serial); return false; })
