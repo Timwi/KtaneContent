@@ -11,8 +11,9 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
 
+
     <script>
-        var cells = [];
+var cells = [];
         var cardinal = [ "N", "E", "W", "S" ];
         var locations = [ [ -1, 0, 0, 1 ], [ 0, 1, -1, 0 ] ];
 
@@ -20,6 +21,7 @@
         var colorNames = [ "赤", "緑", "青", "灰", "黄" ];
         var indicatorNames = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
         var rulesCount = [ "赤いボタン", "バッテリー", "黄色いボタン", "赤いボタン", "他の異なる「迷路ベース」のモジュール", "ポートの種類", "緑色のボタン", "青いボタン", "灰色のボタン", "単3バッテリー", "単1バッテリー", "バッテリーホルダー", "ポート", "ポートプレート", "インジケーター", "点灯したインジケーター", "点灯していないインジケーター" ];
+        
         var rulesCountCopy;
         var conditionCount = [ 2, 5, 1, 1, 1 ];
         var conditionCountCopy;
@@ -38,7 +40,7 @@
         //Cell class
         function Cell() {
             this.visited = false;
-            this.directions = { N: true, E: true, W: true, S: true };
+            this.directions = { N:true, E:true, W:true, S:true };
         }
 
         //Initializing maze cells
@@ -166,8 +168,8 @@
                 if (i < 5) conditionCountCopy[i] = rng.next(1, 5);
 
                 mazeRotationCopy[i] = rng.next(1, 4);
-                clockwiseCopy[i] = (rng.nextMax(2) == 1) ? true : false;
-                calculateCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+                clockwiseCopy[i] = (rng.nextMax(2) == 1) ? true :false;
+                calculateCopy[i] = (rng.nextMax(2) == 1) ? true :false;
             }
 
             handleRules(rng.seed == 1);
@@ -215,19 +217,20 @@
                 "それ以外の場合、迷路はこのままの状態にする。"];
 
             for (var i = 0; i < rules.length; i++) {
+             
                 var ruleText = ruleTemplates[i];
                 if (i != 2) {
                     if (conditionCount[countCondition] == 1) {
                         if (countCondition != 2) {
-                            ruleText = ruleText.replace("there are", "there is");
+                             ruleText = ruleText.replace("there are", "there is");
                             rulesCountCopy[countRule] = makeSingular(rulesCountCopy[countRule]);
                         } else {
                             rulesCountCopy[countRule + 1] = makeSingular(rulesCountCopy[countRule + 1]);
                         }
                     } else {
-                        ruleText = ruleText.replace("there is", "there are");
+                         ruleText = ruleText.replace("there is", "there are");
                     }
-
+                    
                     if (i == 3) ruleText = ruleText.replace("{r1}", rulesCountCopy[countRule++]).replace("{c}", conditionCountCopy[countCondition++]).replace("{r2}", rulesCountCopy[countRule++]);
                     else ruleText = ruleText.replace("{c}", conditionCountCopy[countCondition++]).replace("{r}", rulesCountCopy[countRule++]);
                 } else {
@@ -245,158 +248,159 @@
         function makeSingular(text) {
             if (text.includes("batteries")) text = text.replace("batteries", "battery");
             else if (text.includes("modules")) text = text.replace("modules", "module");
-            else text = text.substring(0, text.length - 1);
+            // else text = text.substring(0, text.length - 1);
             return text;
         }
 
-        const mazeGroups = [];
-        function generateSVG() {
 
-            var svg = document.getElementsByClassName("mazes")[0].getElementsByTagName("svg")[0];
-            if (!generated)
-            {
-                var mazes = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                svg.appendChild(mazes);
-            }
-            generated = true;
-            mazes = svg.firstChild;
-            mazes.innerHTML = '';
+     const mazeGroups = [];
+     function generateSVG() {
 
-            for (let i = 0; i < 10; i++) {
-                var text = document.createTextNode(i.toString());
-                var textElement = setElement(document.createElementNS("http://www.w3.org/2000/svg", "text"),
-                [ "x",                     "y" ],
-                [ `${59 + 145 * (i % 5)}`, `${15 + 150 * Math.floor(i / 5)}` ]);
-                textElement.appendChild(text);
-                mazes.appendChild(textElement);
+         var svg = document.getElementsByClassName("mazes")[0].getElementsByTagName("svg")[0];
+         if (!generated)
+         {
+             var mazes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+             svg.appendChild(mazes);
+         }
+         generated = true;
+         mazes = svg.firstChild;
+         mazes.innerHTML = '';
 
-                var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-                [ "class",         "x",                     "y",                                "width", "height", "fill" ],
-                [ "highlightable", `${-9 + 145 * (i % 5)}`, `${1.5 + 150 * Math.floor(i / 5)}`, "145",   "18",     "transparent" ]);
-                mazes.appendChild(highlight);
+         for (let i = 0; i < 10; i++) {
+             var text = document.createTextNode(i.toString());
+             var textElement = setElement(document.createElementNS("http://www.w3.org/2000/svg", "text"),
+             [ "x",                     "y" ],
+             [ `${59 + 145 * (i % 5)}`, `${15 + 150 * Math.floor(i / 5)}` ]);
+             textElement.appendChild(text);
+             mazes.appendChild(textElement);
 
-                const maze = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                maze.addEventListener("click", () => clickMaze(event, i));
-                maze.classList.add("maze");
-                maze.style.transformOrigin = `${2 + 145 * (i % 5) + 62.5}px ${21 + 150 * Math.floor(i / 5) + 62.5}px`
-                mazes.appendChild(maze);
-                mazeGroups[i] = maze;
-                mazeRotations[i] = 0;
+             var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+             [ "class",         "x",                     "y",                                "width", "height", "fill" ],
+             [ "highlightable", `${-9 + 145 * (i % 5)}`, `${1.5 + 150 * Math.floor(i / 5)}`, "145",   "18",     "transparent" ]);
+             mazes.appendChild(highlight);
 
-                var square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-                [ "x",                    "y",                               "width", "height", "fill",        "class" ],
-                [ `${2 + 145 * (i % 5)}`, `${21 + 150 * Math.floor(i / 5)}`, "125",   "125",    "transparent", "wall" ]);
-                maze.appendChild(square);
+             const maze = document.createElementNS("http://www.w3.org/2000/svg", "g");
+             maze.addEventListener("click", () => clickMaze(event, i));
+             maze.classList.add("maze");
+             maze.style.transformOrigin = `${2 + 145 * (i % 5) + 62.5}px ${21 + 150 * Math.floor(i / 5) + 62.5}px`
+             mazes.appendChild(maze);
+             mazeGroups[i] = maze;
+             mazeRotations[i] = 0;
 
-                var exit = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-                [ "x",                     "y",                               "width", "height", "class" ],
-                [ `${52 + 145 * (i % 5)}`, `${18 + 150 * Math.floor(i / 5)}`, "25",    "6",      "exit" ]);
-                maze.appendChild(exit);
-            }
+             var square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+             [ "x",                    "y",                               "width", "height", "fill",        "class" ],
+             [ `${2 + 145 * (i % 5)}`, `${21 + 150 * Math.floor(i / 5)}`, "125",   "125",    "transparent", "wall" ]);
+             maze.appendChild(square);
 
-            for (var i = 0; i < 10; i++) {
-                const maze = mazeGroups[i];
-                for (var j = 0; j < 5; j++) {
-                    for (var k = 0; k < 5; k++) {
-                        var x = 2 + 25 * k + 145 * (i % 5);
-                        var y = 21 + 25 * j + 150 * Math.floor(i / 5);
-                        var small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-                        [ "x",          "y",          "width", "height", "class" ],
-                        [ `${x + 9.5}`, `${y + 9.5}`, "5",     "5",      "dots" ]);
-                        maze.appendChild(small);
+             var exit = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+             [ "x",                     "y",                               "width", "height", "class" ],
+             [ `${52 + 145 * (i % 5)}`, `${18 + 150 * Math.floor(i / 5)}`, "25",    "6",      "exit" ]);
+             maze.appendChild(exit);
+         }
 
-                        if (k < 4 && !cells[i][j][k].directions.E) {
-                            var e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
-                            [ "x1",        "y1",   "x2",        "y2",        "class" ],
-                            [ `${x + 25}`, `${y}`, `${x + 25}`, `${y + 25}`, "wall" ]);
-                            maze.appendChild(e);
-                        }
+         for (var i = 0; i < 10; i++) {
+             const maze = mazeGroups[i];
+             for (var j = 0; j < 5; j++) {
+                 for (var k = 0; k < 5; k++) {
+                     var x = 2 + 25 * k + 145 * (i % 5);
+                     var y = 21 + 25 * j + 150 * Math.floor(i / 5);
+                     var small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                     [ "x",          "y",          "width", "height", "class" ],
+                     [ `${x + 9.5}`, `${y + 9.5}`, "5",     "5",      "dots" ]);
+                     maze.appendChild(small);
 
-                        if (j < 4 && !cells[i][j][k].directions.S) {
-                            var s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
-                            [ "x1",   "y1",        "x2",        "y2",        "class" ],
-                            [ `${x}`, `${y + 25}`, `${x + 25}`, `${y + 25}`, "wall" ]);
-                            maze.appendChild(s);
-                        }
-                        var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
-                        [ "class",         "x",        "y",    "width", "height", "fill" ],
-                        [ "highlightable", `${x - 1}`, `${y}`, "25",    "25",     "transparent" ]);
-                        maze.appendChild(highlight);
-                    }
-                }
-            }
-        }
+                     if (k < 4 && !cells[i][j][k].directions.E) {
+                         var e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                         [ "x1",        "y1",   "x2",        "y2",        "class" ],
+                         [ `${x + 25}`, `${y}`, `${x + 25}`, `${y + 25}`, "wall" ]);
+                         maze.appendChild(e);
+                     }
 
-        function setElement(element, names, values) {
-            if (names.length <= 0 || values.length <= 0) return null;
+                     if (j < 4 && !cells[i][j][k].directions.S) {
+                         var s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                         [ "x1",   "y1",        "x2",        "y2",        "class" ],
+                         [ `${x}`, `${y + 25}`, `${x + 25}`, `${y + 25}`, "wall" ]);
+                         maze.appendChild(s);
+                     }
+                     var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                     [ "class",         "x",        "y",    "width", "height", "fill" ],
+                     [ "highlightable", `${x - 1}`, `${y}`, "25",    "25",     "transparent" ]);
+                     maze.appendChild(highlight);
+                 }
+             }
+         }
+     }
 
-            for (var i = 0; i < names.length; i++)
-                element.setAttribute(names[i], values[i]);
+     function setElement(element, names, values) {
+         if (names.length <= 0 || values.length <= 0) return null;
 
-            return element;
-        }
+         for (var i = 0; i < names.length; i++)
+             element.setAttribute(names[i], values[i]);
 
-        const mazeRotations = {};
-        function clickMaze(event, index) {
-            if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
-                return;
-            if (document.querySelector("#rotate-left").checked) {
-                mazeRotations[index]--;
-            } else {
-                mazeRotations[index]++;
-            }
+         return element;
+     }
 
-            const maze = mazeGroups[index];
-            maze.style.transform = `rotate(${mazeRotations[index] * 90}deg)`;
-            console.log(maze.style.transform, mazeRotations[index]);
-        }
-    </script>
+     const mazeRotations = {};
+     function clickMaze(event, index) {
+         if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+             return;
+         if (document.querySelector("#rotate-left").checked) {
+             mazeRotations[index]--;
+         } else {
+             mazeRotations[index]++;
+         }
 
-    <style>
-        .dark table, table {
-            border: none;
-            text-align: center;
-        }
-        svg rect.exit { fill: white; }
-        .dark svg rect.exit { fill: #222; }
-        .dark svg line { stroke: #DDD; }
-        svg rect.wall, svg line.wall { stroke-width: 2; }
-        svg rect.wall, svg line.wall { stroke: black; }
-        .dark svg rect.wall, .dark svg line.wall { stroke: #DDD; }
-        svg rect.dots { fill: black; }
-        .dark svg rect.dots, .dark svg text { fill: #DDD; }
+         const maze = mazeGroups[index];
+         maze.style.transform = `rotate(${mazeRotations[index] * 90}deg)`;
+         console.log(maze.style.transform, mazeRotations[index]);
+     }
+ </script>
 
-        div.mazes {
-            text-align: center;
-        }
-            div.mazes > img {
-                width:90%;
-            }
+ <style>
+   .dark table, table {
+       border: none;
+       text-align: center;
+   }
+   svg rect.exit { fill: white; }
+   .dark svg rect.exit { fill: #222; }
+   .dark svg line { stroke: #DDD; }
+   svg rect.wall, svg line.wall { stroke-width: 2; }
+   svg rect.wall, svg line.wall { stroke: black; }
+   .dark svg rect.wall, .dark svg line.wall { stroke: #DDD; }
+   svg rect.dots { fill: black; }
+   .dark svg rect.dots, .dark svg text { fill: #DDD; }
 
-        div.footnotes {
-            position: relative;
-            left: 0;
-            bottom: 0;
-            font-size: smaller;
-            margin: 0 0 1em;
-        }
+   div.mazes {
+       text-align: center;
+   }
+       div.mazes > img {
+           width:90%;
+       }
 
-            div.footnotes p {
-                margin: .3em 0;
-            }
-        @media screen and (max-width: 900px) {
-            div.footnotes {
-                position: relative;
-            }
-                div.footnotes p {
-                    margin: .3em 0;
-                }
-        }
+   div.footnotes {
+       position: relative;
+       left: 0;
+       bottom: 0;
+       font-size: smaller;
+       margin: 0 0 1em;
+   }
 
-        g.maze {
-            transition: transform 0.5s;
-        }
-    </style>
+       div.footnotes p {
+           margin: .3em 0;
+       }
+   @media screen and (max-width: 900px) {
+       div.footnotes {
+           position: relative;
+       }
+           div.footnotes p {
+               margin: .3em 0;
+           }
+   }
+
+   g.maze {
+       transition: transform 0.5s;
+   }
+</style>
 </head>
 <body>
     <div class="section">
@@ -512,7 +516,7 @@
                 </table>
                 <br>
                 <div class="footnotes">
-                    <p>「迷路ベース」のモジュールは、3D迷路(3D Maze)、アメイジングボタン(A-maze-ing Buttons)、論理迷路(Boolean Maze)、色付き迷路(Colored Maze)、The Crystal Maze、Factory Maze、Faulty RGB Maze、六角迷路(Hexamaze)、英語版バニラ迷路(Mazes)、Mazematics、迷路スクランブラー(Maze Scrambler)、迷路³(Maze³)、Module Maze、モールス迷路(Morse-A-Maze)、迷路のネズミ(Mouse In The Maze)、多面体迷路(Polyhedral Maze)、RGB迷路(RGB Maze)、USA迷路(USA Maze)のみを指す。</p>
+                    <p>「迷路ベース」のモジュールは、3D迷路(3D Maze)、アメイジングボタン(A-maze-ing Buttons)、論理迷路(Boolean Maze)、色付き迷路(Colored Maze)、ザ・クリスタルメイズ(The Crystal Maze)、Factory Maze、Faulty RGB Maze、六角迷路(Hexamaze)、英語版バニラ迷路(Mazes)、Mazematics、迷路スクランブラー(Maze Scrambler)、迷路³(Maze³)、Module Maze、モールス迷路(Morse-A-Maze)、迷路のネズミ(Mouse In The Maze)、多面体迷路(Polyhedral Maze)、RGB迷路(RGB Maze)、USA迷路(USA Maze)のみを指す。</p>
                 </div>
             </div>
             <div class="page-footer relative-footer">ページ 2/2</div>
