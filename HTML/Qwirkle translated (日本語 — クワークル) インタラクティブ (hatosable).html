@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>クワークル — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        body{
+            -webkit-print-color-adjust:exact;
+
+        }
+
+        .black {
+            background-color: #000;
+            color: #FFF;
+            padding: 2px;
+            font-family: 'NotoSans';
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        div>table {
+            float: left;
+        }
+
+        div.grid>table{
+            display: inline-block;
+        }
+
+        div:not(.grid)>table {
+            margin-bottom: 1em;
+        }
+
+        .grid::after { /* clearfix */
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        #interactive-table {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border: 2px solid;
+            border-radius: 5px;
+            align-items: center;
+            user-select: none;
+            width: 50%;
+
+
+        }
+
+        #interactive-table div {
+            aspect-ratio: 1;
+            border: 1px solid;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #interactive-table div>img {
+            width: 90%;
+            user-select: none;
+        }
+    </style>
+    <script>
+     var click=0;
+     var reverseX=0;
+     var reverseY=0;
+     var nowdeg= 'rotate(0deg) rotateX(0deg) rotateY(0deg)';
+     window.addEventListener("DOMContentLoaded", () => {
+         const table = document.querySelector("#interactive-table");
+         for (let i = 0; i < 49; i++) {
+             const cell = document.createElement("div");
+             cell.classList.add("cell");              
+             cell.addEventListener("click", e=>toggleSymbol(e.currentTarget,"left",event));
+             cell.addEventListener("contextmenu", e=>{toggleSymbol(e.currentTarget,"false",event);e.preventDefault()});
+             table.appendChild(cell);
+         }
+
+         function toggleSymbol(cell,click,e) {
+          if(e.shiftKey&&click=="left"){
+           DeleteSymbol(cell);
+          }else{
+                 const img = document.createElement("img");
+                 const patternlist = ["square","diamond","cross","circle","8star","4star","none"];
+                 const colorlist = ["red","blue","green","yellow","orange","purple","none"];
+                 var src = cell.firstElementChild;
+                 if(src!=null){
+                  src=src.getAttribute('src');
+                  src=src.replace("img/Qwirkle/", "");
+                  src=src.replace("png","");
+                  var nowcolor="";
+                  var nowpattern="";
+                  for(var i=0; src.charAt( i )!="_"; i++) {
+                      nowcolor += src.charAt( i );
+                      }
+                     
+                  for(var j=i+1; src.charAt( j )!="."; j++) {
+                     nowpattern += src.charAt( j );
+                    }
+                    cell.removeChild(cell.firstChild);
+                    if(nowcolor!="none"){
+                    if(click=="left"){
+                     img.src = "img/Qwirkle/"+colorlist[(colorlist.indexOf(nowcolor)+1)%6]+"_"+patternlist[(patternlist.indexOf(nowpattern))%6]+".png";
+                    }else{
+                     img.src = "img/Qwirkle/"+colorlist[(colorlist.indexOf(nowcolor))%6]+"_"+patternlist[(patternlist.indexOf(nowpattern)+1)%6]+".png";
+                    }
+
+                    }
+                 }else{
+                  img.src = "img/Qwirkle/red_square.png";   
+                 }
+                 cell.appendChild(img);
+               }
+              }
+              
+     });
+     function DeleteSymbol(cell){
+      if(cell.firstChild!=null){
+      cell.removeChild(cell.firstChild);
+      }
+     }
+     function Rotate() {
+         if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+             return;
+         if(event.target.id=="rotate-do"){//cw,ccw
+         if (document.querySelector("#rotate-cw").checked) {//clockwise
+          click++;    
+         }
+         else{//c-clockwise
+          click--;
+         }
+        }
+        if(event.target.id=="rotate-X"){//up-side
+         if(Math.abs(click)==3||Math.abs(click)==1){//if inverted
+          reverseY++;
+         reverseY = reverseY%2;
+         }else{
+         reverseX++;
+         reverseX = reverseX%2;
+         }
+        }
+        if(event.target.id=="rotate-Y"){//left-side
+         if(Math.abs(click)==3||Math.abs(click)==1){//if inverted
+          reverseX++;
+         reverseX = reverseX%2;
+         }else{
+         reverseY++;
+         reverseY = reverseY%2;
+         }
+        }
+        if(event.target.id=="reset"){
+         reverseX=0;
+         reverseY=0;
+         click=0;
+        }
+        Animate();
+        if(Math.abs(click)==4){click = 0};
+        nowdeg = 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)';
+        document.querySelector(`#interactive-table`).style.transform = 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)';
+       }
+
+       function Animate() {
+
+        document.querySelector(`#interactive-table`).animate(
+            [
+            { transform: nowdeg },
+            { transform: 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)' }
+           ],
+           {
+            duration: 500,
+            fill: "forwards",
+            easing: 'ease',
+           }
+          );
+         }
+
+       function Reset() {
+        var celllist=document.getElementsByClassName('cell');
+        for(i=0;i<celllist.length;i++){
+        celllist[i].style.backgroundColor = "white";
+        if(celllist[i].childElementCount!=0){
+        celllist[i].removeChild(celllist[i].firstChild);
+        }
+      }
+        }
+
+ </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">クワークル</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Qwirkle.svg" class="diagram">
+                <h2>モジュール詳細：クワークル</h2>
+                <p class="flavour-text">これらのシンボルによって、あなたは星を見ることができるのです！おっと、もう見てましたか。</p>
+                <div src="img/Qwirkle/circle.png"></div>
+                <p>このモジュールは、ボードゲーム「Qwirkle(クワークル)」の有効な状態と、配置可能なタイルを表示する。矢印ボタンで使用するタイルを変更する。モジュールを解除するには、状態が有効なままとなるように、4つのタイルを配置する。最初のタイルを置くと、ボードは見えなくなる。タイルが1つ配置されるごとに、ボードはある法則に従って並べ替えられるが、その様子も見えない。</p>
+
+                <p>連続するタイルの直線内において、すべてのシンボルが同じ形で異なる色であるか、同じ色で異なる形である場合、その状態は有効である。ラインの長さは6タイルを超えることはできない。タイルは他のタイルに直交して隣接する空のセルにのみ配置することができる。</p>
+
+                <p>以下の表を参照し、それぞれの配置後に状態がどのように変化するか確認する。</p>
+
+                <table>
+                    <tbody><tr>
+                        <th>…の後</th>
+                        <th>もし…</th>
+                        <th>その場合</th>
+                        <th>そうでない場合</th>
+                    </tr>
+                    <tr>
+                        <td>1回目の配置</td>
+                        <td>初期状態に6枚タイルの直線が存在する</td>
+                        <td>180° 回転</td>
+                        <td>変化なし</td>
+                    </tr>
+                    <tr>
+                        <td>2回目の配置</td>
+                        <td>前回配置したタイルが正方形、ひし形、円形ではない</td>
+                        <td>上下反転</td>
+                        <td>左右反転</td>
+                    </tr>
+                    <tr>
+                        <td>3回目の配置</td>
+                        <td>前に配置された3枚のタイルのうち、<br>ちょうど2枚が同じ色</td>
+                        <td>時計回りに 90° 回転</td>
+                        <td>反時計回りに 90° 回転</td>
+                    </tr>
+                </tbody></table>
+                <div style="display: inline-block;">
+                 <input type="radio" id="rotate-ccw" name="rotate" value="left" checked>
+                 <label for="rotate-left">反時計90°</label>
+                 <input type="radio" id="rotate-cw" name="rotate" value="right">
+                 <label for="rotate-right">時計90°</label>
+             </div>
+             <div style="display: inline-block;">
+              <input type="button" id="rotate-do" value="回転" onclick=Rotate()>
+              <input type="button" id="rotate-Y" value="上下反転" onclick=Rotate()>
+              <input type="button" id="rotate-X" value="左右反転" onclick=Rotate()>
+              <input style="right: 50px;" type="button" id="reset" value="回転をリセット" onclick=Rotate()>
+              <input style="right: 50px;" type="button" id="reset" value="全てリセット" onclick=Reset()>
+          </div>
+          <p>左クリック：セルの背景色を変更する<br>右クリック:セルのシンボルを変更する<br>Shift+クリック:セルのシンボルを削除する</p>
+                <div id="interactive-table"></div>
+            </div>
+           <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
