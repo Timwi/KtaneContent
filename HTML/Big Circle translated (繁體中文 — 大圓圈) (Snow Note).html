@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>大圓圈 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .split1, .split2 {
+            display: grid;
+            column-gap: 8px;
+            margin-top: 8px;
+        }
+        .split1 {
+            grid-template-columns: 75% 1fr;
+        }
+        .split2 {
+            grid-template-columns: 40% 1fr;
+        }
+
+        @media screen and (max-width: 900px)  {
+            .split1, .split2 {
+                grid-template-columns: 100%;
+            }
+        }
+    </style>
+    <script>
+        
+        var possibleColorSets = [
+        ["綠", "橙", "白"],
+        ["紅", "橙", "綠"],
+        ["紅", "橙", "藍"],
+        ["紅", "橙", "洋紅"],
+        ["紅", "橙", "白"],
+        ["紅", "橙", "黑"],
+        ["紅", "黃", "橙"],
+        ["紅", "黃", "綠"],
+        ["紅", "白", "藍"],
+        ["紅", "黃", "洋紅"],
+        ["紅", "黃", "白"],
+        ["紅", "黃", "黑"],
+        ["紅", "綠", "橙"],
+        ["紅", "綠", "黃"],
+        ["紅", "綠", "藍"],
+        ["紅", "綠", "洋紅"],
+        ["紅", "綠", "白"],
+        ["紅", "綠", "黑"],
+        ["紅", "藍", "橙"],
+        ["紅", "藍", "黃"],
+        ["紅", "藍", "綠"],
+        ["紅", "藍", "洋紅"],
+        ["紅", "藍", "白"],
+        ["紅", "藍", "黑"],
+        ["紅", "洋紅", "橙"],
+        ["紅", "洋紅", "黃"],
+        ["紅", "洋紅", "綠"],
+        ["紅", "洋紅", "藍"],
+        ["紅", "洋紅", "白"],
+        ["紅", "洋紅", "黑"],
+        ["紅", "白", "橙"],
+        ["紅", "白", "黃"],
+        ["紅", "白", "綠"],
+        ["紅", "黃", "藍"],
+        ["紅", "白", "洋紅"],
+        ["紅", "白", "黑"],
+        ["紅", "黑", "橙"],
+        ["紅", "黑", "黃"],
+        ["紅", "黑", "綠"],
+        ["紅", "黑", "藍"],
+        ["紅", "黑", "洋紅"],
+        ["紅", "黑", "白"],
+        ["橙", "紅", "黃"],
+        ["橙", "紅", "綠"],
+        ["橙", "紅", "藍"],
+        ["橙", "紅", "洋紅"],
+        ["橙", "紅", "白"],
+        ["橙", "紅", "黑"],
+        ["橙", "黃", "紅"],
+        ["橙", "黃", "綠"],
+        ["橙", "黃", "藍"],
+        ["橙", "黃", "洋紅"],
+        ["橙", "黃", "白"],
+        ["橙", "黃", "黑"],
+        ["橙", "綠", "紅"],
+        ["橙", "綠", "黃"],
+        ["橙", "綠", "藍"],
+        ["洋紅", "紅", "白"],
+        ["橙", "綠", "白"],
+        ["橙", "綠", "黑"],
+        ["橙", "藍", "紅"],
+        ["橙", "藍", "黃"],
+        ["橙", "藍", "綠"],
+        ["橙", "藍", "洋紅"],
+        ["橙", "藍", "白"],
+        ["藍", "橙", "洋紅"],
+        ["橙", "洋紅", "紅"],
+        ["橙", "洋紅", "黃"],
+        ["橙", "洋紅", "綠"],
+        ["橙", "洋紅", "藍"],
+        ["橙", "洋紅", "白"],
+        ["橙", "洋紅", "黑"],
+        ["橙", "白", "紅"],
+        ["橙", "白", "黃"],
+        ["綠", "紅", "白"],
+        ["橙", "白", "藍"],
+        ["橙", "白", "洋紅"],
+        ["橙", "白", "黑"],
+        ["橙", "黑", "紅"],
+        ["橙", "黑", "黃"],
+        ["藍", "黑", "紅"],
+        ["橙", "黑", "藍"],
+        ["橙", "黑", "洋紅"],
+        ["橙", "黑", "白"],
+        ["黃", "紅", "橙"],
+        ["黃", "紅", "綠"],
+        ["黃", "紅", "藍"],
+        ["黃", "紅", "洋紅"],
+        ["黃", "紅", "白"],
+        ["黃", "紅", "黑"],
+        ["黃", "橙", "紅"],
+        ["黃", "橙", "綠"],
+        ["黃", "橙", "藍"],
+        ["黃", "橙", "洋紅"],
+        ["黃", "橙", "白"],
+        ["黃", "橙", "黑"],
+        ["黃", "綠", "紅"],
+        ["黃", "綠", "橙"],
+        ["白", "藍", "綠"],
+        ["黃", "綠", "洋紅"],
+        ["黃", "綠", "白"],
+        ["黃", "綠", "黑"],
+        ["黃", "藍", "紅"],
+        ["黃", "藍", "橙"],
+        ["黃", "藍", "綠"],
+        ["黃", "藍", "洋紅"],
+        ["黃", "藍", "白"],
+        ["黃", "藍", "黑"],
+        ["黃", "洋紅", "紅"],
+        ["黃", "洋紅", "橙"],
+        ["黃", "洋紅", "綠"],
+        ["黃", "洋紅", "藍"],
+        ["黃", "洋紅", "白"],
+        ["黃", "洋紅", "黑"],
+        ["黃", "白", "紅"],
+        ["黃", "白", "橙"],
+        ["黑", "白", "綠"],
+        ["黃", "白", "藍"],
+        ["黃", "白", "洋紅"],
+        ["黃", "白", "黑"],
+        ["黃", "黑", "紅"],
+        ["黃", "黑", "橙"],
+        ["黃", "黑", "綠"],
+        ["黃", "黑", "藍"],
+        ["黃", "黑", "洋紅"],
+        ["黃", "黑", "白"],
+        ["綠", "紅", "橙"],
+        ["綠", "紅", "黃"],
+        ["綠", "紅", "藍"],
+        ["綠", "紅", "洋紅"],
+        ["橙", "白", "綠"],
+        ["綠", "紅", "黑"],
+        ["綠", "橙", "紅"],
+        ["綠", "橙", "黃"],
+        ["洋紅", "白", "橙"],
+        ["綠", "橙", "洋紅"],
+        ["紅", "橙", "黃"],
+        ["綠", "橙", "黑"],
+        ["綠", "黃", "紅"],
+        ["綠", "黃", "橙"],
+        ["綠", "黃", "藍"],
+        ["綠", "黃", "洋紅"],
+        ["綠", "黃", "白"],
+        ["綠", "黃", "黑"],
+        ["綠", "藍", "紅"],
+        ["綠", "藍", "橙"],
+        ["綠", "藍", "黃"],
+        ["綠", "藍", "洋紅"],
+        ["綠", "藍", "白"],
+        ["綠", "藍", "黑"],
+        ["綠", "洋紅", "紅"],
+        ["綠", "洋紅", "橙"],
+        ["綠", "洋紅", "黃"],
+        ["綠", "洋紅", "藍"],
+        ["綠", "洋紅", "白"],
+        ["綠", "洋紅", "黑"],
+        ["綠", "白", "紅"],
+        ["綠", "白", "橙"],
+        ["綠", "白", "黃"],
+        ["綠", "白", "藍"],
+        ["綠", "白", "洋紅"],
+        ["綠", "白", "黑"],
+        ["綠", "黑", "紅"],
+        ["綠", "黑", "橙"],
+        ["綠", "黑", "黃"],
+        ["綠", "黑", "藍"],
+        ["綠", "黑", "洋紅"],
+        ["綠", "黑", "白"],
+        ["藍", "紅", "橙"],
+        ["藍", "紅", "黃"],
+        ["藍", "紅", "綠"],
+        ["藍", "紅", "洋紅"],
+        ["藍", "紅", "白"],
+        ["藍", "紅", "黑"],
+        ["藍", "橙", "紅"],
+        ["藍", "橙", "黃"],
+        ["藍", "橙", "綠"],
+        ["橙", "藍", "黑"],
+        ["藍", "橙", "白"],
+        ["藍", "橙", "黑"],
+        ["藍", "黃", "紅"],
+        ["藍", "黃", "橙"],
+        ["藍", "黃", "綠"],
+        ["藍", "黃", "洋紅"],
+        ["藍", "黃", "白"],
+        ["藍", "黃", "黑"],
+        ["白", "黃", "藍"],
+        ["藍", "綠", "橙"],
+        ["藍", "綠", "黃"],
+        ["藍", "綠", "洋紅"],
+        ["藍", "綠", "白"],
+        ["藍", "綠", "黑"],
+        ["黑", "黃", "藍"],
+        ["藍", "洋紅", "橙"],
+        ["藍", "洋紅", "黃"],
+        ["藍", "洋紅", "綠"],
+        ["藍", "洋紅", "白"],
+        ["藍", "洋紅", "黑"],
+        ["藍", "白", "紅"],
+        ["藍", "白", "橙"],
+        ["藍", "白", "黃"],
+        ["藍", "白", "綠"],
+        ["藍", "白", "洋紅"],
+        ["藍", "白", "黑"],
+        ["橙", "黑", "綠"],
+        ["藍", "黑", "橙"],
+        ["藍", "黑", "黃"],
+        ["洋紅", "黃", "黑"],
+        ["藍", "黑", "洋紅"],
+        ["藍", "黑", "白"],
+        ["洋紅", "紅", "橙"],
+        ["洋紅", "紅", "黃"],
+        ["洋紅", "紅", "綠"],
+        ["洋紅", "紅", "藍"],
+        ["橙", "綠", "洋紅"],
+        ["洋紅", "紅", "黑"],
+        ["洋紅", "橙", "紅"],
+        ["洋紅", "橙", "黃"],
+        ["洋紅", "橙", "綠"],
+        ["洋紅", "橙", "藍"],
+        ["洋紅", "橙", "白"],
+        ["洋紅", "橙", "黑"],
+        ["洋紅", "黃", "紅"],
+        ["洋紅", "黃", "橙"],
+        ["洋紅", "黃", "綠"],
+        ["洋紅", "黃", "藍"],
+        ["洋紅", "黃", "白"],
+        ["藍", "黑", "綠"],
+        ["洋紅", "綠", "紅"],
+        ["洋紅", "綠", "橙"],
+        ["洋紅", "綠", "黃"],
+        ["洋紅", "綠", "藍"],
+        ["洋紅", "綠", "白"],
+        ["洋紅", "綠", "黑"],
+        ["洋紅", "藍", "紅"],
+        ["洋紅", "藍", "橙"],
+        ["洋紅", "藍", "黃"],
+        ["洋紅", "藍", "綠"],
+        ["洋紅", "藍", "白"],
+        ["洋紅", "藍", "黑"],
+        ["洋紅", "白", "紅"],
+        ["綠", "橙", "藍"],
+        ["洋紅", "白", "黃"],
+        ["洋紅", "白", "綠"],
+        ["洋紅", "白", "藍"],
+        ["洋紅", "白", "黑"],
+        ["洋紅", "黑", "紅"],
+        ["洋紅", "黑", "橙"],
+        ["洋紅", "黑", "黃"],
+        ["洋紅", "黑", "綠"],
+        ["洋紅", "黑", "藍"],
+        ["洋紅", "黑", "白"],
+        ["白", "紅", "橙"],
+        ["白", "紅", "黃"],
+        ["白", "紅", "綠"],
+        ["白", "紅", "藍"],
+        ["白", "紅", "洋紅"],
+        ["白", "紅", "黑"],
+        ["白", "橙", "紅"],
+        ["白", "橙", "黃"],
+        ["白", "橙", "綠"],
+        ["白", "橙", "藍"],
+        ["白", "橙", "洋紅"],
+        ["白", "橙", "黑"],
+        ["白", "黃", "紅"],
+        ["白", "黃", "橙"],
+        ["白", "黃", "綠"],
+        ["藍", "綠", "紅"],
+        ["白", "黃", "洋紅"],
+        ["白", "黃", "黑"],
+        ["白", "綠", "紅"],
+        ["白", "綠", "橙"],
+        ["白", "綠", "黃"],
+        ["白", "綠", "藍"],
+        ["白", "綠", "洋紅"],
+        ["白", "綠", "黑"],
+        ["白", "藍", "紅"],
+        ["白", "藍", "橙"],
+        ["白", "藍", "黃"],
+        ["黃", "綠", "藍"],
+        ["白", "藍", "洋紅"],
+        ["白", "藍", "黑"],
+        ["白", "洋紅", "紅"],
+        ["白", "洋紅", "橙"],
+        ["白", "洋紅", "黃"],
+        ["白", "洋紅", "綠"],
+        ["白", "洋紅", "藍"],
+        ["白", "洋紅", "黑"],
+        ["白", "黑", "紅"],
+        ["白", "黑", "橙"],
+        ["白", "黑", "黃"],
+        ["白", "黑", "綠"],
+        ["白", "黑", "藍"],
+        ["白", "黑", "洋紅"],
+        ["黑", "紅", "橙"],
+        ["黑", "紅", "黃"],
+        ["黑", "紅", "綠"],
+        ["黑", "紅", "藍"],
+        ["黑", "紅", "洋紅"],
+        ["黑", "紅", "白"],
+        ["黑", "橙", "紅"],
+        ["黑", "橙", "黃"],
+        ["黑", "橙", "綠"],
+        ["黑", "橙", "藍"],
+        ["黑", "橙", "洋紅"],
+        ["黑", "橙", "白"],
+        ["黑", "黃", "紅"],
+        ["黑", "黃", "橙"],
+        ["黑", "黃", "綠"],
+        ["藍", "洋紅", "紅"],
+        ["黑", "黃", "洋紅"],
+        ["黑", "黃", "白"],
+        ["黑", "綠", "紅"],
+        ["黑", "綠", "橙"],
+        ["黑", "綠", "黃"],
+        ["黑", "綠", "藍"],
+        ["黑", "綠", "洋紅"],
+        ["黑", "綠", "白"],
+        ["黑", "藍", "紅"],
+        ["黑", "藍", "橙"],
+        ["黑", "藍", "黃"],
+        ["黑", "藍", "綠"],
+        ["黑", "藍", "洋紅"],
+        ["黑", "藍", "白"],
+        ["黑", "洋紅", "紅"],
+        ["黑", "洋紅", "橙"],
+        ["黑", "洋紅", "黃"],
+        ["黑", "洋紅", "綠"],
+        ["黑", "洋紅", "藍"],
+        ["黑", "洋紅", "白"],
+        ["黑", "白", "紅"],
+        ["黑", "白", "橙"],
+        ["黑", "白", "黃"],
+        ["黃", "白", "綠"],
+        ["黑", "白", "藍"],
+        ["黑", "白", "洋紅"],
+        ];
+        
+        var rule4Rules = [
+        "電池插槽的數目:",
+        "埠口板的數目:",
+        "不同埠口的種類數:",
+        "電池的數目:",
+        "埠口的數目:",
+        "序號的首位數字:",
+        "序號的末位數字:",
+        ];
+        
+        var twofactorOperation = [ "減去", "加上" ];
+        
+        var twofactorRules = [
+        "各首位數字",
+        "各末位數字"
+        ];
+        
+        var clockwiserule = [
+        "* 如果圓形以逆時針方向旋轉、以相反的次序按下按鈕。",
+        "* 如果圓形以順時針方向旋轉、以相反的次序按下按鈕。",
+        ];
+        
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+        
+        function setRules(rnd)
+        {
+            var colors = ["紅","橙","黃","綠","藍","洋紅","白","黑"];
+            
+            var rules = rnd.shuffleArray(possibleColorSets).slice(0, 12);
+            var indicators = rnd.shuffleArray(["SIG", "BOB", "TRN", "CAR", "CLR", "NSA", "MSA", "SND", "IND", "FRQ", "FRK"]);
+            var indicatorscores = [rnd.next(0, 2) == 1 ? "亮起則+1、熄滅則-1" : "亮起則-1、熄滅則+1",
+            rnd.next(0, 2) == 1 ? "亮起則+2、熄滅則-2" : "亮起則-2、熄滅則+2",
+            rnd.next(0, 2) == 1 ? "亮起則+3、熄滅則-3" : "亮起則-3、熄滅則+3"];
+            
+            document.getElementById('indicator1').innerHTML = indicators[0] + "、" + indicators[1] + "、" + indicators[2] + "的指示燈每個:";
+            document.getElementById('indicatorscore1').innerHTML = indicatorscores[0];
+            
+            document.getElementById('indicator2').innerHTML = indicators[3] + "、" + indicators[4] + "、" + indicators[6] + "、" + indicators[7] + "的指示燈每個:";
+            document.getElementById('indicatorscore2').innerHTML = indicatorscores[1];
+            
+            document.getElementById('indicator3').innerHTML = indicators[8] + "、" + indicators[9] + "、" + indicators[10] + "的指示燈每個:";
+            document.getElementById('indicatorscore3').innerHTML = indicatorscores[2];
+            
+            var modulescore = rnd.next(0, 2) == 1 ? "每個+3" : "每個-3";
+            document.getElementById('modulescore').innerHTML = modulescore;
+            
+            var PortRules1 = rnd.shuffleArray(["並列(Parallel)埠", "序列(Serial)埠"]);
+            document.getElementById('portplate1').innerHTML = "帶有" + PortRules1[0] + "的埠口板存在:";
+            document.getElementById('portplatescore1').innerHTML = rnd.next(0, 2) == 1 ? `每個+5、與${PortRules1[1]}共用同一埠口板則取而代之-4` : `每個-5、與${PortRules1[1]}共用同一埠口板則取而代之+4`
+            
+            var PortRules2 = rnd.shuffleArray(["DVI-D埠口", "RCA音效埠口", "PS/2埠口", "RJ-45埠口"]);
+            document.getElementById('portplate2').innerHTML = "帶有" + PortRules2[0] + "的埠口板存在:";
+            document.getElementById('portplatescore2').innerHTML = rnd.next(0, 2) == 1 ? `每個+5、與${PortRules2[1]}同一埠口板則取而代之-4` : `每個-5、與${PortRules2[1]}共用同一埠口板則取而代之+4`
+            
+            document.getElementById('rule4').innerHTML = rule4Rules[rnd.next(0, 7)];
+            document.getElementById('rule4score').innerHTML = rnd.next(0, 2) == 1 ? "奇數則-4、偶數則+4" : "奇數則+4、偶數則-4";
+            
+            document.getElementById('specialindicatorscore').innerHTML = rnd.next(0, 2) == 1 ? "每個+6" : "每個-6";
+            document.getElementById('specialportscore').innerHTML = rnd.next(0, 2) == 1 ? "每個+6" : "每個-6";
+            
+            var twofactordigit = twofactorRules[rnd.next(0, 2)];
+            document.getElementById('twofactor').innerHTML = twofactorOperation[rnd.next(0, 2)] + twofactordigit;
+            
+            document.getElementById('circleclockwiserule').innerHTML = clockwiserule[rnd.next(0, 2)];
+            
+            var serialnumberletters = rnd.shuffleArray(["M","C","X","P","O","D","N","Y","J","7","W","G","1","9","8","4","F","2","Q","R","V","3","B","L","E","A","5","6","K","T","U","I","Z","-0-","H","S"]);
+            
+            var list = document.getElementById('ruleset').getElementsByClassName('color-group');
+            for (var i = 0; i < list.length; i++)
+            list[i].innerText = rules[i].join(', ');
+            
+            list = document.getElementById('ruleset').getElementsByClassName('serial-group');
+            for (var i = 0; i < list.length; i++)
+            list[i].innerText = [serialnumberletters[(i * 3) + 0],serialnumberletters[(i * 3) + 1],serialnumberletters[(i * 3) + 2]].join(', ');
+        }
+    </script>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">大圓圈</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Big Circle.svg" class="diagram">
+                <h2>關於【大圓圈】模組</h2>
+                <p class="flavour-text">誰說圓圈沒有意義?</p>
+                <p>這個模組包含在大圓形中旋轉的按鈕。根據下表，決定應該按下圓圈的那個部份。如果你按下了圓圈錯誤的部份或以錯誤的次序按下圓圈的部份，會觸發失誤。</p>
+                <ul>
+                    <li>由表格 1 開始。套用所有合乎條件的規則以決定數字。如果數字為負數，乘以-1。</li>
+                    <li>數算序號的文字直到達該數字的位置為止。如果到達序號末位文字。以反彈的方式向後繼續數算。然而如果到達序號首位文字。以反彈的方式向前繼續數算。序號首位文字視作第 0 個數字。</li>
+                    <li>決定序號中的位置後，利用該位置的文字參照表格 2 ，決定按下按鈕的次序。</li>
+                    <li><em>不過</em>，如果有 5 個電池和 3 個電池插座、1 個以上的BOB指示燈，則可以參照序號任意文字。在表格 2 中使用任意文字決定次序。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">大圓圈</span>
+            </div>
+            <div class="page-content">
+                <h3>表格 1</h3>
+                <div class="split1">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td id="indicator1">「BOB」「CAR」「CLR」的指示燈每個:</td>
+                                <td id="indicatorscore1">亮起則+1、熄滅則-1</td>
+                            </tr>
+                            <tr>
+                                <td id="indicator2">「FRK」「FRQ」「MSA」「NSA」的指示燈每個:</td>
+                                <td id="indicatorscore2">亮起則+2、熄滅則-2</td>
+                            </tr>
+                            <tr>
+                                <td id="indicator3">「SIG」「SND」「TRN」的指示燈每個:</td><td id="indicatorscore3">亮起則+3、熄滅則-3</td>
+                            </tr>
+                            <tr><td>已拆除的模組:</td><td id="modulescore">每個+3</td></tr>
+                            <tr><td id="rule4">電池:</td><td id="rule4score">奇數則+4、偶數則-4</td></tr>
+                            <tr><td id="portplate1">與並列(Parallel)埠口共用同一埠口板:</td><td id="portplatescore1">每個+5、與序列(Serial)埠口共用同一埠口板則取而代之-4</td></tr>
+                            <tr><td id="portplate2">帶有DVI-D的埠口板存在:</td><td id="portplatescore2">每個-5、與RCA音效埠口共用同一埠口板則取而代之+4</td></tr>
+                            <tr><td>特殊的*指示燈:</td><td id="specialindicatorscore">每個+6</td></tr>
+                            <tr><td>特殊的*埠口:</td><td id="specialportscore">每個-6</td></tr>
+                            <tr><td>2FA:</td><td id="twofactor">最下位的數目を足す</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="extra-info">* 所謂特殊的指示燈或埠口、即是USB埠口等MOD所追加的東西、NLL指示燈等等。</p>
+                </div>
+                
+                <h3>表格 2 *</h3>
+                <div class="split2">
+                    <table id="ruleset">
+                        <tbody>
+                            <tr><td class="serial-group">-0-, 1, 2</td><td class="color-group">紅, 黃, 藍</td></tr>
+                            <tr><td class="serial-group">3, 4, 5</td><td class="color-group">橙, 綠, 洋紅</td></tr>
+                            <tr><td class="serial-group">6, 7, 8</td><td class="color-group">藍, 黑, 紅</td></tr>
+                            <tr><td class="serial-group">9, A, B</td><td class="color-group">洋紅, 白, 橙</td></tr>
+                            <tr><td class="serial-group">C, D, E</td><td class="color-group">橙, 藍, 黑</td></tr>
+                            <tr><td class="serial-group">F, G, H</td><td class="color-group">綠, 紅, 白</td></tr>
+                            <tr><td class="serial-group">I, J, K</td><td class="color-group">洋紅, 黃, 黑</td></tr>
+                            <tr><td class="serial-group">L, M, N</td><td class="color-group">紅, 橙, 黃</td></tr>
+                            <tr><td class="serial-group">O, P, Q</td><td class="color-group">黃, 綠, 藍</td></tr>
+                            <tr><td class="serial-group">R, S, T</td><td class="color-group">藍, 洋紅, 紅</td></tr>
+                            <tr><td class="serial-group">U, V, W</td><td class="color-group">黑, 白, 綠</td></tr>
+                            <tr><td class="serial-group">X, Y, Z</td><td class="color-group">白, 黃, 藍</td></tr>
+                        </tbody>
+                    </table>
+                    <div>
+                        <p class="extra-info" id="circleclockwiserule">* 如果圓形以逆時針方向旋轉、以相反的次序按下按鈕。</p>
+                        <p class="extra-info">零以-0-形式表示。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">第 2 / 2 頁</div>
+        </div>
+    </div>
+</body>
+
+</html>

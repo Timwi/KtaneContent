@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang='zh-TW'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>井字遊戲 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-chinese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setRules(rnd)
+        {
+            // This increases randomness
+            for (var i = rnd.next(0, 10); i > 0; i--)
+                rnd.nextDouble();
+
+            var conditionTypes = rnd.shuffleFisherYates(['s', 'p', 'i', 'b']);
+
+            var conditions = {
+                's': [
+                    "如果序號末位數字為偶數",
+                    "如果序號第三個數字為偶數",
+                    "如果序號第一個文字為英文字",
+                    "如果序號第二個文字為英文字",
+                    "如果序號包含母音字母",
+                    "如果序號包含偶數數字",
+                    "如果序號包含重複文字",
+                    "如果序號包含三個英文字和三個數字"
+                ],
+                'p': [
+                    "如果炸彈有並列(Parallel)埠",
+                    "如果炸彈有序列(Serial)埠",
+                    "如果炸彈有PS/2埠口",
+                    "如果炸彈有RCA音效埠口",
+                    "如果炸彈有RJ-45埠口",
+                    "如果炸彈有DVI-D埠口",
+                    "如果炸彈有多個同種類的埠口",
+                    "如果炸彈有空白的埠口板",
+                    "如果炸彈的埠口數目為偶數",
+                    "如果炸彈的埠口數目為奇數",
+                    "如果炸彈的埠口板數目為偶數",
+                    "如果炸彈的埠口板數目為奇數",
+                    "如果炸彈的埠口的種類數為偶數",
+                    "如果炸彈的埠口的種類數為奇數"
+                ],
+                'i': [
+                    "如果炸彈有亮起指示燈",
+                    "如果炸彈有亮起指示燈",
+                    "如果炸彈有包含母音字母的指示燈",
+                    "如果炸彈的指示燈數目為偶數",
+                    "如果炸彈的指示燈數目為奇數",
+                    "如果炸彈的亮起指示燈數目為偶數",
+                    "如果炸彈的亮起指示燈數目為奇數",
+                    "如果炸彈的亮起指示燈數目為偶數",
+                    "如果炸彈的亮起指示燈數目為奇數",
+                ],
+                'b': [
+                    "如果炸彈有AA電池",
+                    "如果炸彈有D電池",
+                    "如果炸彈的電池數目為偶數",
+                    "如果炸彈的電池數目為奇數",
+                    "如果炸彈的電池插槽數目為偶數",
+                    "如果炸彈的電池插槽數目為奇數"
+                ]
+            };
+            var comparisons = {
+                's': [
+                    ["如果序號包含的英字比數字多", "如果序號包含的數字比英字多", "如果序號包含三個英字和三個數字"],
+                    ["如果序號最初的數字比第二個的大", "如果序號最初的數字比第二個數字小", "如果序號首位數字與第二個相同"],
+                    ["如果序號最初的數字比末位數字大", "如果序號最初的數字比末位數字小", "如果序號首位數字與末位數字相同"],
+                    ["如果序號包含的母音比子音多", "如果序號包含的子音比母音多", "如果序號子音與母音數目相同"],
+                    ["如果相比序號第二個文字，最初的文字在英文字母順序中較前", "如果相比序號第二個文字，最初的文字在英文字母順序中較後", "如果序號最初的文字與第二個的文字相同"],
+                    ["如果相比序號最後的文字，最初的文字在英文字母順序中較前", "如果序號最後的文字，最初的文字在英文字母順序中較後", "如果序號最初的文字與最後的文字相同"],
+                    ["如果序號第五個文字，第四個文字在英文字母順序較前", "如果序號第五個文字，第四個文字在英文字母順序較後", "如果序號第四個文字與第五個文字相同"],
+                    {
+                        'p': [
+                            ["如果序號首位數字比埠口數目大", "如果序號首位數字比埠口數目小", "如果序號首位數字與埠口數目同數"],
+                            ["如果序號首位數字比埠口板數目多", "如果序號首位數字比埠口板數目少", "如果序號首位數字與埠口板數目同數"],
+                            ["如果序號末位數字比埠口數目大", "如果序號末位數字比埠口數目小", "如果序號末位數字與埠口數目同數"],
+                            ["如果序號末位數字比埠口板數目多", "如果序號末位數字比埠口板數目少", "如果序號末位數字與埠口板數目同數"],
+                        ],
+                        'i': [
+                            ["如果序號首位數字比指示燈數目多", "如果序號首位數字比指示燈數目少", "如果序號首位數字與指示燈數目同數"],
+                            ["如果序號首位數字比亮起指示燈數目多", "如果序號首位數字比亮起指示燈數目少", "如果序號首位數字與亮起指示燈數目同數"],
+                            ["如果序號首位數字比熄滅指示燈數目多", "如果序號首位數字比熄滅指示燈數目少", "如果序號首位數字與熄滅指示燈數目同數"],
+                            ["如果序號末位數字比指示燈數目多", "如果序號末位數字比指示燈數目少", "如果序號末位數字與指示燈數目同數"],
+                            ["如果序號末位數字比亮起指示燈數目多", "如果序號末位數字比亮起指示燈數目少", "如果序號末位數字與亮起指示燈數目同數"],
+                            ["如果序號末位數字比熄滅指示燈數目多", "如果序號末位數字比熄滅指示燈數目少", "如果序號末位數字與熄滅指示燈數目同數"],
+                        ],
+                        'b': [
+                            ["如果序號首位數字比電池數目多", "如果序號首位數字比電池數目少", "如果序號首位數字與電池數目同數"],
+                            ["如果序號首位數字比AA電池數目多", "如果序號首位數字比AA電池數目少", "如果序號首位數字與AA電池數目同數"],
+                            ["如果序號首位數字比D電池數目多", "如果序號首位數字比D電池數目少", "如果序號首位數字與D電池數目同數"],
+                            ["如果序號首位數字比電池插槽數目多", "如果序號首位數字比電池插槽數目少", "如果序號首位數字與電池插槽數目同數"],
+                            ["如果序號末位數字比電池數目大", "如果序號末位數字比電池數目小", "如果序號末位數字與電池數目同數"],
+                            ["如果序號末位數字比AA電池數目多", "如果序號末位數字比AA電池數目少", "如果序號末位數字與AA電池數目同數"],
+                            ["如果序號末位數字比D電池數目多", "如果序號末位數字比D電池數目少", "如果序號末位數字與D電池數目同數"],
+                            ["如果序號末位數字比電池插槽數目多", "如果序號末位數字比電池插槽數目少", "如果序號末位數字與電池插槽數目同數"],
+                        ],
+                    }
+                ],
+                'p': [
+                    {
+                        'i': [
+                            ["如果炸彈的埠口數目比指示燈數目多", "如果炸彈的指示燈數目比埠口數目多", "如果炸彈的埠口數目與指示燈數目同數"],
+                            ["如果炸彈的埠口板數目比指示燈數目多", "如果炸彈的指示燈數目比埠口板數目多", "如果炸彈的埠口板數目與指示燈數目同數"],
+                            ["如果炸彈的埠口數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比埠口數目多", "如果炸彈的埠口數目與亮起指示燈數目同數"],
+                            ["如果炸彈的埠口板數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比埠口板數目多", "如果炸彈的埠口板數目與亮起指示燈數目同數"],
+                            ["如果炸彈的埠口數目比熄滅指示燈數目多", "如果炸彈的熄滅指示燈數目比埠口數目多", "如果炸彈的埠口數目與熄滅指示燈數目同數"],
+                            ["如果炸彈的埠口板數目比熄滅指示燈數目多", "如果炸彈的熄滅指示燈數目比埠口板數目多", "如果炸彈的埠口板數目與熄滅指示燈數目同數"],
+                        ],
+                        'b': [
+                            ["如果炸彈的埠口數目比電池數目多", "如果炸彈的電池數目比埠口數目多", "如果炸彈的埠口數目與電池數目同數"],
+                            ["如果炸彈的埠口數目比AA電池數目多", "如果炸彈的AA電池數目比埠口數目多", "如果炸彈的埠口數目與AA電池數目同數"],
+                            ["如果炸彈的埠口數目比D電池數目多", "如果炸彈的D電池數目比埠口數目多", "如果炸彈的埠口數目與D電池數目同數"],
+                            ["如果炸彈的埠口數目比電池插槽數目多", "如果炸彈的電池插槽數目比埠口數目多", "如果炸彈的埠口數目與電池插槽數目同數"],
+
+                            ["如果炸彈的埠口板數目比電池數目多", "如果炸彈的電池數目比埠口板數目多", "如果炸彈的埠口板數目與電池數目同數"],
+                            ["如果炸彈的埠口板數目比AA電池數目多", "如果炸彈的AA電池數目比埠口板數目多", "如果炸彈的埠口板數目與AA電池數目同數"],
+                            ["如果炸彈的埠口板數目比D電池數目多", "如果炸彈的D電池數目比埠口板數目多", "如果炸彈的埠口板數目與D電池數目同數"],
+                            ["如果炸彈的埠口板數目比電池插槽數目多", "如果炸彈的電池插槽數目比埠口板數目多", "如果炸彈的埠口板數目與電池插槽數目同數"],
+
+                            ["如果炸彈的埠口的種類數比電池數目多", "如果炸彈的電池數目比埠口的種類數多", "如果炸彈的埠口的種類數與電池數目同數"],
+                            ["如果炸彈的埠口的種類數比AA電池數目多", "如果炸彈的AA電池數目比埠口的種類數多", "如果炸彈的埠口的種類數與AA電池數目同數"],
+                            ["如果炸彈的埠口的種類數比D電池數目多", "如果炸彈的D電池數目比埠口的種類數多", "如果炸彈的埠口的種類數與D電池數目同數"],
+                            ["如果炸彈的埠口的種類數比電池插槽數目多", "如果炸彈的電池插槽數目比埠口的種類數多", "如果炸彈的埠口的種類數與電池插槽數目同數"],
+                        ]
+                    }
+                ],
+                'i': [
+                    ["如果熄滅指示燈比亮起指示燈多", "如果亮起指示燈比熄滅指示燈多", "如果亮起指示燈與熄滅指示燈數目同數"],
+                    ["如果包含母音字母指示燈比不包含的多", "如果不包含母音字母指示燈比包含的多", "如果包含母音字母指示燈與不包含的數目同數"],
+                    {
+                        'b': [
+                            ["如果炸彈的電池數目比指示燈數目多", "如果炸彈的指示燈數目比電池數目多", "如果炸彈的電池數目與指示燈數目同數"],
+                            ["如果炸彈的電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比電池數目多", "如果炸彈的電池數目與亮起指示燈數目同數"],
+                            ["如果炸彈的電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比電池數目多", "如果炸彈的電池數目與亮起指示燈數目同數"],
+                            ["如果炸彈的電池插槽數目比指示燈數目多", "如果炸彈的指示燈數目比電池插槽數目多", "如果炸彈的電池插槽數目與指示燈數目同數"],
+                            ["如果炸彈的電池插槽數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比電池插槽數目多", "如果炸彈的電池插槽數目與亮起指示燈數目同數"],
+                            ["如果炸彈的電池插槽數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比電池插槽數目多", "如果炸彈的電池插槽數目與亮起指示燈數目同數"],
+                            ["如果炸彈的AA電池數目比指示燈數目多", "如果炸彈的指示燈數目比AA電池數目多", "如果炸彈的AA電池數目與指示燈數目同數"],
+                            ["如果炸彈的AA電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比AA電池數目多", "如果炸彈的AA電池數目與亮起指示燈數目同數"],
+                            ["如果炸彈的AA電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比AA電池數目多", "如果炸彈的AA電池數目與亮起指示燈數目同數"],
+                            ["如果炸彈的D電池數目比指示燈數目多", "如果炸彈的指示燈數目比D電池數目多", "如果炸彈的D電池數目與指示燈數目同數"],
+                            ["如果炸彈的D電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比D電池數目多", "如果炸彈的D電池數目與亮起指示燈數目同數"],
+                            ["如果炸彈的D電池數目比亮起指示燈數目多", "如果炸彈的亮起指示燈數目比D電池數目多", "如果炸彈的D電池數目與亮起指示燈數目同數"],
+                        ]
+                    }
+                ],
+                'b': [
+                    ["如果炸彈的D電池數目比AA電池數目多", "如果炸彈的AA電池數目比D電池數目多", "如果炸彈的AA電池數目與D電池數目同數"],
+                ],
+            };
+            var ports = ["並列(Parallel)", "序列(Serial)", "PS/2", "DVI-D", "RCA音效", "RJ-45"];
+            for (var i = 0; i < ports.length; i++)
+            {
+                for (var j = 0; j < comparisons['s'].length; j++)
+                    if ('p' in comparisons['s'][j])
+                    {
+                        comparisons['s'][j]['p'].push([`如果序號首位數字比炸彈的${ports[i]}埠口數目大`, `如果序號首位數字比炸彈的${ports[i]}埠口數目小`, `如果序號首位數字與炸彈的${ports[i]}埠口數目相等`]);
+                        comparisons['s'][j]['p'].push([`如果序號末位數字比炸彈的${ports[i]}埠口數目大`, `如果序號末位數字比炸彈的${ports[i]}埠口數目小`, `如果序號末位數字與炸彈的${ports[i]}埠口數目相等`]);
+                    }
+                for (var j = i + 1; j < ports.length; j++)
+                    comparisons['p'].push([`如果相比炸彈的${ports[j]}埠口，${ports[i]}埠口較多`, `如果相比炸彈的${ports[i]}埠口，${ports[j]}埠口較多`, `如果炸彈的${ports[i]}埠口與${ports[j]}埠口同數`]);
+            }
+
+            document.getElementById('condition-1').innerText = pickRandom(rnd, conditions[conditionTypes[0]]);
+            document.getElementById('condition-2').innerText = pickRandom(rnd, conditions[conditionTypes[1]]);
+
+            var c1 = conditionTypes[2];
+            var c2 = conditionTypes[3];
+            var list = [];
+            for (var i = 0; i < comparisons[c1].length; i++)
+                if (Array.isArray(comparisons[c1][i]))
+                    list.push(comparisons[c1][i]);
+                else if (c2 in comparisons[c1][i])
+                    for (var j = 0; j < comparisons[c1][i][c2].length; j++)
+                        list.push(comparisons[c1][i][c2][j]);
+            for (var i = 0; i < comparisons[c2].length; i++)
+                if (Array.isArray(comparisons[c2][i]))
+                    list.push(comparisons[c2][i]);
+                else if (c1 in comparisons[c2][i])
+                    for (var j = 0; j < comparisons[c2][i][c1].length; j++)
+                        list.push(comparisons[c2][i][c1][j]);
+            var comparison = pickRandom(rnd, list);
+            document.getElementById('condition-3a').innerText = comparison[0];
+            document.getElementById('condition-3b').innerText = comparison[1];
+            document.getElementById('condition-3c').innerText = comparison[2];
+
+            var cells = Array.from(document.getElementsByClassName('number-row')).map(tr => Array.from(tr.getElementsByClassName('number')));
+            var digits = rnd.shuffleFisherYates('123456789'.split(''));
+            for (var column = 0; column < 6; column++)
+            {
+                for (var i = 0; i < cells.length; i++)
+                    cells[i][column].innerText = digits[i];
+                rnd.shuffleFisherYates(digits);
+            }
+        }
+
+        function pickRandom(rnd, list)
+        {
+            return list[rnd.next(0, list.length)];
+        }
+
+        function setDefaultRules()
+        {
+            document.getElementById("condition-1").innerText = "如果序號末位數字為偶數";
+            document.getElementById("condition-2").innerText = "如果有至少一個並列(Parallel)埠";
+            document.getElementById("condition-3a").innerText = "如果相比亮起指示燈，熄滅指示燈較多";
+            document.getElementById("condition-3b").innerText = "如果相比熄滅指示燈，亮起指示燈較多";
+            document.getElementById("condition-3c").innerText = "亮起指示燈與熄滅指示燈數目同數";
+            var digits = "933981566712782158457896141673875244618439229525394367";
+            var tds = document.getElementsByClassName('number');
+            for (var i = 0; i < tds.length; i++)
+                tds[i].innerText = digits.substr(i, 1);
+        }
+    </script>
+    <style>
+        .ttt-table {
+            width: 100%;
+        }
+        .ttt-table td {
+            text-align: center;
+        }
+        .ruleseed-active .condition {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .dark table, table {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">井字遊戲</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Tic Tac Toe.svg" class="diagram">
+                <h2>關於【井字遊戲】模組</h2>
+                <p class="flavour-text">多年來在井字遊戲中的和局或許終於得到回報。</p>
+
+                <p>要拆除模組，必須在 9 個按鈕放滿「○」或「×」。</p>
+                <p>與「Up Next:」相隣的顯示屏會顯示「○」或「×」。鍵盤上有１～９個數字和已經放置的「○」和「×」。放置符號後，按鍵上顯示屏會熄滅。</p>
+                <p>下頁的圖表表示符號應該放置的位置的數字。</p>
+                <p>利用以下規則，找出開始行：</p>
+                <ol>
+                    <li><span class='condition' id="condition-1">如果序號最後的數字為偶數</span>，開始行為５、６、７、８、９中其中之一。否則，開始行為１、２、３、４中其中之一。</li>
+                    <li><span class='condition' id="condition-2">如果有至少一個並列(Parallel)埠</span>，開始行為偶數。否則，開始行為奇數。</li>
+                    <li><span class='condition' id="condition-3a">如果熄滅指示燈比亮起指示燈多</span>，開始行為合乎規則１和２中最小的數字。</li>
+                    <li><span class='condition' id="condition-3b">如果亮起指示燈比熄滅指示燈多</span>，開始行為合乎規則１和２中最大的數字。</li>
+                    <li><span class='condition' id="condition-3c">如果亮起指示燈與熄滅指示燈同數</span>，開始行為合乎規則１和２的所有數字的平均數。</li>
+                </ol>
+
+                <p>
+                    利用棋盤上所有「○」和「×」的相對數目決定參照列。從開始行開始，不斷向下移動直至未有放置符號的數字的一行。第９行的下一行為第一行。
+                </p>
+
+                <p>
+                    如果在該位置放置符號會引致符號連成一線，則按「PASS」並且在<u>同一行</u>繼續。否則按下該數字放置符號並且在<u>下一行</u>繼續。
+                </p>
+
+                <p>
+                    如果連續按下２次「PASS」，未放置符號的位置會被放置一個符號(顯示在按鍵上)。雖然連續跳過有機會導致符號連成一線的情況，但不會記錄失誤。如果出現這種情況則在<u>下一行</u>繼續。
+                </p>
+
+                <p>
+                    如果被記錄失誤，行數會被重置至開始行，鍵盤會顯示已放置的符號和剩餘的數字。在模組拆除以前放置的符號會留下。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">第 1 / 2 頁</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">井字遊戲</span>
+            </div>
+            <div class="page-content">
+                <p><strong>表１</strong></p>
+                <table class='ttt-table'>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>×較多</td>
+                        <td colspan=2>×與○同數</td>
+                        <td colspan=2>○較多</td>
+                    </tr>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>Up Next:</td>
+                        <td colspan=2>Up Next:</td>
+                        <td colspan=2>Up Next:</td>
+                    </tr>
+                    <tr>
+                        <th>行</th>
+                        <th>X</th>
+                        <th>O</th>
+                        <th>X</th>
+                        <th>O</th>
+                        <th>X</th>
+                        <th>O</th>
+                    </tr>
+                    <tr class='number-row'><th>1</th><td class='number'>9</td><td class='number'>3</td><td class='number'>3</td><td class='number'>9</td><td class='number'>8</td><td class='number'>1</td></tr>
+                    <tr class='number-row'><th>2</th><td class='number'>5</td><td class='number'>6</td><td class='number'>6</td><td class='number'>7</td><td class='number'>1</td><td class='number'>2</td></tr>
+                    <tr class='number-row'><th>3</th><td class='number'>7</td><td class='number'>8</td><td class='number'>2</td><td class='number'>1</td><td class='number'>5</td><td class='number'>8</td></tr>
+                    <tr class='number-row'><th>4</th><td class='number'>4</td><td class='number'>5</td><td class='number'>7</td><td class='number'>8</td><td class='number'>9</td><td class='number'>6</td></tr>
+                    <tr class='number-row'><th>5</th><td class='number'>1</td><td class='number'>4</td><td class='number'>1</td><td class='number'>6</td><td class='number'>7</td><td class='number'>3</td></tr>
+                    <tr class='number-row'><th>6</th><td class='number'>8</td><td class='number'>7</td><td class='number'>5</td><td class='number'>2</td><td class='number'>4</td><td class='number'>4</td></tr>
+                    <tr class='number-row'><th>7</th><td class='number'>6</td><td class='number'>1</td><td class='number'>8</td><td class='number'>4</td><td class='number'>3</td><td class='number'>9</td></tr>
+                    <tr class='number-row'><th>8</th><td class='number'>2</td><td class='number'>2</td><td class='number'>9</td><td class='number'>5</td><td class='number'>2</td><td class='number'>5</td></tr>
+                    <tr class='number-row'><th>9</th><td class='number'>3</td><td class='number'>9</td><td class='number'>4</td><td class='number'>3</td><td class='number'>6</td><td class='number'>7</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">第 2 / 2 頁</div>
+        </div>
+    </div>
+</body>
+</html>
