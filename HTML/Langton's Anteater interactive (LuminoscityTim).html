@@ -111,10 +111,18 @@
                 nextColor($(`.netsq.x${aet[0]}.y${aet[1]}`)); aet = ae;
                 setAnt($(`.netsq.x${ant[0]}.y${ant[1]}`), ant[2]);
                 setAnteater($(`.netsq.x${aet[0]}.y${aet[1]}`), aet[2]);
+                updateMove();
                 if (ant[0] != aet[0] || ant[1] != aet[1]) {
                     drawNext();
                 }
-            }, 500);
+            }, 600);
+        }
+
+        let moves = 0;
+        function updateMove(inc = true) {
+            if (inc) moves += 1;
+            answerList = [answerList[0], `Move: ${moves}`];
+            $(".solution .str").text(answerList.join(', '));
         }
         function animate() {
             for (let y = 0; y < rows; y++) {
@@ -124,6 +132,8 @@
                     elem.addClass(squareColors[ origGameGrid[x][y] ]);
                 }
             }
+            moves = -1;
+            updateMove();
             setAnt($($(`.netsq.x${cen}.y${cen}`)));
             setAnteater($(".netsq.x00.y00"));
             ant = nextPosition([cen,cen,0]);
@@ -132,8 +142,9 @@
                 aet = [cen,cen,0];
                 setAnt($(`.netsq.x${ant[0]}.y${ant[1]}`), ant[2]);
                 setAnteater($(`.netsq.x${cen}.y${cen}`));
+                updateMove();
                 drawNext();
-            }, 500);
+            }, 600);
         }
 
         function tryGenerate() {
@@ -264,25 +275,31 @@
                 let d = event.key.substring(5);
                 arrowPressed(directions[d], dirIndex[d]);
                 event.preventDefault();
-            } else if (NoSpecialKeys(event) && (k == "w" || k == "b" || k == "k")) {
-                if (k == "b" || k == "k") {
-                    removeColorClass(selected);
-                    selected.addClass("black");
-                    if (mode() == MODE_READ) origGameGrid[currX][currY] = 1;
-                    gameGrid[currX][currY] = 1;
-                }
-                else {
-                    removeColorClass(selected);
-                    selected.addClass("white");origGameGrid
-                    if (mode() == MODE_READ) origGameGrid[currX][currY] = 0;
-                    gameGrid[currX][currY] = 0;
-                }
-                if (mode() == MODE_READ) {
-                    if (currX == cols - 1)
-                        currY = (currY + 1) % cols;
-                    currX = (currX + 1) % rows;
-                    selected = $(`.square.x${currX}.y${currY}`);
-                    updateSelection();
+            } else if (NoSpecialKeys(event) && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                arrowPressed(directions[k], dirIndex[k]);
+                event.preventDefault();
+            } else if (NoSpecialKeys(event)) {
+                let n = parseInt(event.key);
+                if (k == " " || k == "enter" || (n >= 0 && n <= 1)) {
+                    if (k == " " || k == "enter" || n == 0) {
+                        removeColorClass(selected);
+                        selected.addClass("white");origGameGrid
+                        if (mode() == MODE_READ) origGameGrid[currX][currY] = 0;
+                        gameGrid[currX][currY] = 0;
+                    }
+                    else {
+                        removeColorClass(selected);
+                        selected.addClass("black");
+                        if (mode() == MODE_READ) origGameGrid[currX][currY] = 1;
+                        gameGrid[currX][currY] = 1;
+                    }
+                    if (mode() == MODE_READ) {
+                        if (currX == cols - 1)
+                            currY = (currY + 1) % cols;
+                        currX = (currX + 1) % rows;
+                        selected = $(`.square.x${currX}.y${currY}`);
+                        updateSelection();
+                    }
                 }
             }
             down = false;
@@ -888,8 +905,8 @@
                 <h3>Interactive Controls</h3>
                 <p>Use the above interactive graphic to input the read and try out different paths.</p>
                 <ul>
-                    <li>In <b>Read</b> mode, you can <b>press W/B/K on your keyboard</b> or click individual squares to input the puzzle grid.</li>
-                    <li>In <b>Solve</b> mode, select a creature on the grid and <b>use the arrow keys</b> on your keyboard or the arrow buttons to <b>move a selected ant or anteater</b> to adjacent cells.</li>
+                    <li>In <b>Read</b> mode, you can <b>press Space/Enter/0/1 on your keyboard</b> or click individual squares to input the puzzle grid.</li>
+                    <li>In <b>Solve</b> mode, select a creature on the grid and <b>use the arrow keys or WASD</b> on your keyboard or the arrow buttons to <b>move a selected ant or anteater</b> to adjacent cells.</li>
                     <li>The <b>↻</b> button resets the puzzle back to the starting state.</li>
                     <li>Use the Rotate tool to rotate an ant or anteater (shift-click for counter-clockwise), you shouldn't need to do this as the creatures orient on each movement via the arrows.</li>
                     <li>The sound effects can be muted.</li>
