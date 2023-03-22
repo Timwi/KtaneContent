@@ -154,6 +154,7 @@ e.onload = function()
                 && event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey
             ) {
                 colorSelect.val(n).change();
+                return;
             }
 
             // Only accept shortcuts with Alt or Ctrl+Shift
