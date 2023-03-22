@@ -29,8 +29,8 @@ e.onload = function()
         }
 
         // Some users can't use Alt+<number> to select highlight colors. Setting this localStorage item (to anything) allows them to use Ctrl instead.
-        // There's no UI equivalent, because of how rarely this change is necessary.
-        // Note: this change _only_ applies to the highlight color selection; other keybinds like Alt-o and Alt-c remain on Alt.
+        // There's no option in the UI to enable this, because of how rarely it's necessary.
+        // Note: this change _only_ applies to the highlight color selection; other keybinds like Alt-O and Alt-C remain on Alt.
         let ctrlSelectsColors = localStorage.getItem('ktane-ctrl-selects-colors') !== null;
 
         // OPTIONS MENU
@@ -147,6 +147,7 @@ e.onload = function()
         $(document).keydown(function(event)
         {
             let n = extractNumberKey(event);
+
             // Special case: Ctrl+# instead of Alt+#
             if(
                 ctrlSelectsColors && n !== null
