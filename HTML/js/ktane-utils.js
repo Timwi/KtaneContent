@@ -28,6 +28,10 @@ e.onload = function()
             alertTimeout = setTimeout(function() { notification.fadeOut(500); }, 2000);
         }
 
+        // Some users can't use Alt+<number> to select highlight colors. Setting this localStorage item (to anything) allows them to use Ctrl instead.
+        // There's no UI equivalent, because of how rarely this change is necessary.
+        // Note: this change _only_ applies to the highlight color selection; other keybinds like Alt-o and Alt-c remain on Alt.
+        let ctrlSelectsColors = localStorage.getItem('ktane-ctrl-selects-colors') !== null;
 
         // OPTIONS MENU
         let options = $(`<div id="optionsMenu">
@@ -35,7 +39,7 @@ e.onload = function()
             <div class='option-group'>
                 <h3>Highlighter</h3>
                 <div><input type='checkbox' id='highlighter-enabled'>&nbsp;<label for='highlighter-enabled' accesskey='h'>Enabled</label> (Alt-H)</div>
-                <div>Color: <select id='highlighter-color'></select> (Alt-<span id='highlighter-color-index'>1</span>)</div>
+                <div>Color: <select id='highlighter-color'></select> (${ctrlSelectsColors ? 'Ctrl' : 'Alt'}-<span id='highlighter-color-index'>1</span>)</div>
                 <div>Highlights: <button id='clear-highlights' accesskey='c'>Clear</button> (Alt-C)</div>
             </div>
             <div class='option-group'>
@@ -128,8 +132,29 @@ e.onload = function()
             }).removeClass("svgIsHighlighted");
         })
 
+        // Takes a keypress event; returns a number 0-9 if a number key was pressed (ignoring modifiers), else null.
+        function extractNumberKey(event) {
+            let n = parseInt(event.key);
+            if (n >= 0 && n <= 9) {
+                return n;
+            }
+            else if (event.keyCode >= 48 && event.keyCode <= 57) {
+                return event.keyCode - 48;
+            }
+            return null;
+        }
+
         $(document).keydown(function(event)
         {
+            let n = extractNumberKey(event);
+            // Special case: Ctrl+# instead of Alt+#
+            if(
+                ctrlSelectsColors && n !== null
+                && event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey
+            ) {
+                colorSelect.val(n).change();
+            }
+
             // Only accept shortcuts with Alt or Ctrl+Shift
             if (!event.altKey && !(event.shiftKey && (event.ctrlKey || event.metaKey)))
                 return;
@@ -150,14 +175,9 @@ e.onload = function()
             {
                 $('#dark-mode-enabled').click();
             }
-            else {
-                let n = parseInt(event.key);
-                if (n >= 0 && n <= 9) {
-                    colorSelect.val(n).change();
-                }
-                else if (event.keyCode >= 48 && event.keyCode <= 57) {
-                    colorSelect.val(event.keyCode - 48).change();
-                }
+            // Alt-#: Select highlight color
+            else if (!ctrlSelectsColors && n !== null) {
+                colorSelect.val(n).change();
             }
         });
 
