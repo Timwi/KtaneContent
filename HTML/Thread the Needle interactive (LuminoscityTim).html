@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Thread the Needle — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <style>
+        table {
+            margin: 0 auto; 
+            text-align: center;
+        }
+        .dark canvas { filter: invert(90%); }
+        svg.interactive { width: 100%; }
+        svg.cell { width: 98%; }
+        svg circle {
+            stroke: #33F;
+            stroke-width: 8px;
+            fill: none;
+        }
+        svg circle.ring { stroke: #000; }
+        svg circle.full {
+            stroke: none;
+            fill: #000;
+        }
+        svg polygon {
+            stroke: #F00;
+            stroke-width: 8px;
+            fill: none;
+        }
+        svg.cell :is(circle, polygon) { stroke: #000; }
+        svg text, svg g {
+            transition: transform 1s;
+        }
+        .dark svg :is(text, circle.full) { fill: #DDD; }
+        .dark svg circle.ring { stroke: #DDD; }
+        .dark svg.cell :is(circle, polygon) { stroke: #DDD; }
+
+        #codeWheels { width: 100%; }
+        .bonus-wheels { width: 84%; }
+        .bonus-wheels th { white-space: nowrap; }
+        #codeWheels td, .bonus-wheels td {
+            position: relative;
+        }
+        :is(#codeWheels td, .bonus-wheels td) span {
+            position: absolute;
+            top: 2px; left: 4px;
+        }
+        #codeWheels td.highlighted, .bonus-wheels td.highlighted {
+            background-color: #FF000077;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .hstack {
+            display: flex;
+            justify-content: center;
+        }
+        .hstack.rotations {
+            justify-content: space-between;
+        }
+        .hstack.rotations button {
+            padding-top: 7px;
+            height: 32px;
+        }
+        .hstack:is(.sel-wheels, .sel-bonus) { gap: 5px; }
+
+        .rot-group {
+            width: 112px;
+            white-space: nowrap;
+            border: .5px solid #888;
+        }
+        div.wheelsymbol {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        span.wheelsymbol {
+            font-size: 40px;
+            font-weight: bold;
+        }
+        span.wheelsymbol.small {
+            font-size: 25px;
+            color: #888;
+        }
+        span.rotation {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <!-- Start the pages! -->
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Thread the Needle.svg" class="diagram">
+                <h2>On the Subject of Threading the Needle</h2>
+                <p class="flavour-text">It’s wheely sew much fun!</p>
+
+                <ul>
+                    <li>The five code wheels on the module can each be set to one of 8 positions. Each symbol on
+                        the code wheels has a slot for a hole under it. These holes are hidden inside the module so
+                        the defuser can’t see them.</li>
+                    <li>A hole may be solid, circular, or triangular.</li>
+                    <li>Fortunately, each possible code wheel has a unique pattern of symbols on it. Use this to
+                        identify which code wheels are on the module.</li>
+                    <li>Rotate the code wheels so there is at least one continuous row of circular holes without any
+                        continuous rows of triangular holes, and press the submit button.</li>
+                    <li>In addition, there is one wheel that cannot be manually turned hidden inside the module (the
+                        "bonus wheel"). It otherwise acts like the normal wheels, and you must align the rest of the
+                        wheels to agree with it.</li>
+                </ul>
+
+                <h3>Possible Code Wheels</h3>
+                <br>
+                <!-- This table gets filled by JS! -->
+                <div class="hstack sel-wheels"><span>Selected:</span></div>
+                <table id="codeWheels"></table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining the Bonus Wheel</h3>
+                <ul>
+                    <li>Let <strong>U</strong> be equal to the number of odd digits in the serial number plus double
+                        the number of vowels in the serial number.</li>
+                    <li>Let <strong>W</strong> be equal to the number of batteries on the bomb, minus the number of
+                        lit indicators.</li>
+                </ul>
+                <div class="hstack sel-bonus"><span>Selected:</span></div>
+                <table class="borderless bonus-wheels">
+                    <tr>
+                        <th class="corner"></th>
+                        <th>U = 1, 3</th>
+                        <th>U = 2, 4, 5</th>
+                        <th>U ≥ 6 or 0</th>
+                    </tr>
+                    <tr>
+                        <th>W ≤ 0</th>
+                        <td id="bonus-1-1"></td>
+                        <td id="bonus-1-2"></td>
+                        <td id="bonus-1-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W = 1, 2</th>
+                        <td id="bonus-2-1"></td>
+                        <td id="bonus-2-2"></td>
+                        <td id="bonus-2-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W = 3</th>
+                        <td id="bonus-3-1"></td>
+                        <td id="bonus-3-2"></td>
+                        <td id="bonus-3-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W ≥ 4</th>
+                        <td id="bonus-4-1"></td>
+                        <td id="bonus-4-2"></td>
+                        <td id="bonus-4-3"></td>
+                    </tr>
+                </table>
+
+                <ul><li>The bonus wheel will turn counter-clockwise one position after each strike and clockwise one
+                    position each time a module is solved. It starts in the position printed above with the top facing the front of the module.</li></ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <div class="grid"><div class="hstack rotations"></div></div>
+                <br>
+                <b>Tips:</b><br>
+                <ul>
+                    <li>Count how many circles are overlapping (or triangles) by clicking plus and minus and watching for a shape emerging from the overlapping region.</li>
+                    <li>Symbols on each wheel are not unique, be careful to set the module wheels to the right positions based on the adjacent symbols.</li>
+                    <li>Clockwise rotation is equivalent to down on the module.</li>
+                    <li>Rotations are reset when you change the selected code wheels.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+    <script>
+        const table = $("#codeWheels");
+
+        const ROW_WIDTH = 4;
+
+        const CANVAS_UPSCALE = 8.0; // Make it 8x as sharp
+        const CIRCLE_RADIUS = 0.75;
+        const LABEL_RADIUS = 0.9;
+        const HOLE_RADIUS = 0.6;
+        const SPINDLE_RADIUS = 0.1;
+        const RING_RADIUS = 0.15;
+        const NUM_WHEELS = 12;
+        const NUM_CODEW = 5;
+        const NUM_BONUSW = 1;
+        const NUM_W = NUM_CODEW + NUM_BONUSW;
+
+        const PI = Math.PI;
+        const TAU = 2 * Math.PI;
+        const SVG_SIZE = 1200;
+        const MAX_ROT = 30;
+
+        const wheels = [
+            ["+-]!<0#<", "O.^^^.OO"],
+            ["$)2=*/>!", "^.^.O^O."],
+            ["78/?(-7~", "O.O..^.^"],
+            ["96394?#!", "O^..^^OO"],
+
+            ["+!2#!@*@", "^^O..OO."],
+            ["%*&50$52", "^..O^O.."],
+            ["%*!%~*+$", "O^.^O.^^"],
+            ["[%?/1{]}", "^.^..O^^"],
+
+            ["1@3!2312", "O^..^^.O"],
+            ["%^O<#>^(", ".^.^OOO."],
+            ["->-~>@<%", ".O...^.^"],
+            ["{]}[%?/$", ".^..OOO."]
+        ];
+
+        const bonus_wheels = [
+            ["..O..^^O", "..^O..^^", "..^^.^.O"],
+            ["^^.O.^^^", "....OOOO", "..^OO..."],
+            ["^...OOOO", ".^^O..^^", "...^O^^."],
+            [".^O^O^.O", ".O^.^.O^", "..^^.OOO"]
+        ];
+
+        const plMnTitle = [ "Wheel", "Wheel", "Wheel", "Wheel", "Wheel", "Bonus" ];
+
+        let rotations = Array(NUM_W).fill(0);
+        let selectedW = Array(NUM_W).fill(0);
+        const NUM_ROT = wheels[0][0].length;
+        selectedW[NUM_CODEW] = NUM_WHEELS;
+
+        function removeVal(arr, val) {
+            let idx = arr.indexOf(val);
+            if (val >= 0) arr.splice(idx, 1);
+        }
+
+        /**
+        * this is to make VS code know what type it is
+        * @param {CanvasRenderingContext2D} ctx the drawing context
+        * @param {Number} size the size of the enclosing square in pixels
+        * @param {Array<String>} wheel the wheel data. [0] is the labels, [1] is the holes.
+        */
+        function doWheel(svgl, wheel, w, g = null, bonus = false) {
+            // Draw the circle
+            let size = SVG_SIZE;
+            if (g) {
+                let circle = MakeSvgElem("circle", {
+                    r:(SVG_SIZE / 2 * CIRCLE_RADIUS), cx:(SVG_SIZE / 2), cy:(SVG_SIZE / 2), class:"ring"
+                });
+                let node = circle.cloneNode();
+                svgl.append(node);
+                g.append(circle);
+            }
+
+            // Spindle
+            if (g) {
+                let circle1 = MakeSvgElem("circle", {
+                    r:(SVG_SIZE / 2 * SPINDLE_RADIUS), cx:(SVG_SIZE / 2), cy:(SVG_SIZE / 2), class:"full"
+                });
+                let circle2 = MakeSvgElem("circle", {
+                    r:(SVG_SIZE / 2 * RING_RADIUS), cx:(SVG_SIZE / 2), cy:(SVG_SIZE / 2), class:"ring"
+                });
+                g.append(circle1);
+                g.append(circle2);
+                let node1 = circle1.cloneNode();
+                svgl.append(node1);
+                let node2 = circle2.cloneNode();
+                svgl.append(node2);
+            }
+
+            // Draw the text & holes
+            const triSide = 12;
+            const circradius = 6;
+
+            const length = wheel[0].length;
+            const th = (w / NUM_WHEELS) * TAU - TAU / 4;
+            for (let i = 0; i < length; i++) {
+                const theta = (i / length) * TAU - TAU / 4;
+
+                const label = wheel[0][i];
+                const hole = wheel[1][i];
+
+                const vX = Math.cos(theta);
+                const vY = Math.sin(theta);
+
+                // Draw the outer label
+                const textX = vX * size * LABEL_RADIUS / 2 + size / 2;
+                const textY = vY * size * LABEL_RADIUS / 2 + size / 1.85;
+                const stextTX = vX * SVG_SIZE * LABEL_RADIUS / 1.96 + SVG_SIZE / 2;
+                const stextTY = vY * SVG_SIZE * LABEL_RADIUS / 1.96 + SVG_SIZE / 1.96;
+                const stextX = stextTX + 75*Math.cos(th);
+                const stextY = stextTY + 75*Math.sin(th);
+                if (g && !bonus) {
+                    let text = MakeSvgElem("text", {
+                        x:stextX, y:stextY, "font-size":36, "text-anchor":"middle", "transform-origin":`${stextTX} ${stextTY-11}`
+                    }, label);
+                    g.append(text);
+                }
+                let textl = MakeSvgElem("text", {
+                    x:textX, y:(textY + (bonus ? 20 : 0)), "font-size":(bonus ? 180 : 130), "text-anchor":"middle", "font-weight":"bold"
+                }, label);
+                svgl.append(textl);
+
+                // Draw the inner holes
+                const holeX = vX * size * HOLE_RADIUS / 2 + size / 2;
+                const holeY = vY * size * HOLE_RADIUS / 2 + size / 2;
+                const shX = vX * SVG_SIZE * HOLE_RADIUS / 2 + SVG_SIZE / 2;
+                const shY = vY * SVG_SIZE * HOLE_RADIUS / 2 + SVG_SIZE / 2;
+                if (hole == 'O') {
+                    if (g) {
+                        let circle = MakeSvgElem("circle", {
+                            r:(circradius * 9), cx:shX, cy:shY
+                        });
+                        g.append(circle);
+                        let node = circle.cloneNode();
+                        svgl.append(node);
+                    }
+                }
+                else if (hole == '^') {
+                    if (g) {
+                        let tri = RegularPolygon(triSide * 6, shX, shY);
+                        g.append(tri);
+                        let node = tri.cloneNode();
+                        svgl.append(node);
+                    }
+                }
+            }
+            svg.append(g);
+            if (!bonus) {
+                for (let i = 1; !bonus && i < NUM_CODEW; i++) {
+                    let gcopy = $(g.cloneNode(true)).addClass(`copy${i}`);
+                    svg.append(gcopy);
+                }
+                $(g).addClass("copy0");
+            }
+        }
+
+        // Main!
+        let row;
+        let grid = $(".grid");
+        let rotControls = $(".hstack.rotations");
+        let svg = MakeSvgTag(SVG_SIZE+100, SVG_SIZE+100, -50, -50, { class:"interactive centered-img" }).appendTo(grid);
+
+        function setRotation(rot, i) {
+            let l = selectedW.length;
+            if (l < i) return;
+            let wheel = getWheel(selectedW[i], i);
+            let text = getWText(selectedW[i], i);
+            let angle = 360 / NUM_ROT;
+            wheel.css("transform", `rotate(${rot*angle}deg)`);
+            text.css("transform", `rotate(${-rot*angle}deg)`);
+            $(`span.rotation.r${i}`).html(rot);
+            if (i < NUM_CODEW) {
+                $(`.wheelsymbol.left.w${i}`).html(wheels[ selectedW[i] ][0][ UMod(-rotations[i] - 1, NUM_ROT) ]);
+                $(`.wheelsymbol.middle.w${i}`).html(wheels[ selectedW[i] ][0][ UMod(-rotations[i], NUM_ROT) ]);
+                $(`.wheelsymbol.right.w${i}`).html(wheels[ selectedW[i] ][0][ UMod(-rotations[i] + 1, NUM_ROT) ]);
+            }
+        }
+
+        function updateRotations() {
+            $(".wheeltitle").html("");
+            $("span.rotation").html("");
+            $("g.wgroup, g.wgroup text").css("transform", 'rotate(0deg)');
+            for (let c = 0; c < NUM_CODEW; c++) rotations[c] = 0;
+            selectedW.forEach((val,idx) => {
+                if (val >= NUM_WHEELS) {
+                    $(".wheeltitle.w5").html(val - NUM_WHEELS + 1);
+                    setRotation(rotations[NUM_CODEW], NUM_CODEW);
+                }
+                else {
+                    $(`.wheeltitle.w${idx}`).html(val + 1);
+                    setRotation(0, idx);
+                }
+            });
+        }
+
+        plMnTitle.forEach((title, i) => {
+            let gr = $("<div>").addClass("rot-group").appendTo(rotControls);
+            $(`<b><u>${title} <span class="wheeltitle w${i}"></span></u>:</b><span class="rotation r${i}"></span><br>`).appendTo(gr);
+            $(`<button class="rotinc r${i} minus">-</button>`).click(function() {
+                if (rotations[i] <= -MAX_ROT) return false;
+                rotations[i] -= 1;
+                setRotation(rotations[i], i);
+                console.log("Rot: " + rotations);
+            }).appendTo(gr);
+            $(`<button class="rotinc r${i} plus">+</button>`).click(function() {
+                if (rotations[i] >= MAX_ROT) return false;
+                rotations[i] += 1;
+                setRotation(rotations[i], i);
+                console.log("Rot: " + rotations);
+            }).appendTo(gr);
+            if (i < NUM_CODEW) {
+                let groupDiv = $("<div>").addClass("wheelsymbol").appendTo(gr);
+                $(`<span class="wheelsymbol small left w${i}"></span>`).appendTo(groupDiv);
+                $(`<span class="wheelsymbol middle w${i}"></span>`).appendTo(groupDiv);
+                $(`<span class="wheelsymbol small right w${i}"></span>`).appendTo(groupDiv);
+            }
+        });
+
+        let selWheels = $(".sel-wheels");
+        function makeWheelOptions(select, bonus) {
+            let title = bonus ? "Bonus" : "Wheel";
+            for (let w = 1; w <= NUM_WHEELS; w++) {
+                $("<option>").val(w-1 + (bonus ? NUM_WHEELS : 0)).html(`${title} ${w}`).appendTo(select);
+            }
+        }
+        $(".sel-bonus").each((i, el) => {
+            let select = $("<select>").change(function() {
+                selectedW[NUM_CODEW] = parseInt(this.value);
+                updateSelectedWheels();
+            }).appendTo(el);
+            makeWheelOptions(select, true);
+        });
+        for (let c = 0; c < NUM_CODEW; c++) {
+            let select = $("<select>").change(function() {
+                selectedW[c] = parseInt(this.value);
+                updateSelectedWheels();
+            }).appendTo(selWheels);
+            makeWheelOptions(select, false);
+        }
+        $(".bonus-wheels td").each((i, el) => {
+            $(el).addClass(`codewheel w${i + NUM_WHEELS}`);
+        });
+
+        function getWheel(num, selectedIdx) {
+            return num >= NUM_WHEELS ? $(`g.wgroup.w${num}`) : $(`g.wgroup.w${num}.copy${selectedIdx}`);
+        }
+        function getWText(num, selectedIdx) {
+            return $(`g.wgroup.w${num}.copy${selectedIdx} text`);
+        }
+
+        function updateSelectedWheels() {
+            $(".codewheel").removeClass("highlighted");
+            $("g.wgroup").addClass("invisible");
+            selectedW.forEach((val,idx) => {
+                $(`.codewheel.w${val}`).addClass("highlighted");
+                getWheel(val, idx).removeClass("invisible");
+            });
+            updateRotations();
+            console.log("Selected: " + selectedW);
+        }
+
+        for (let c = 0; c < wheels.length; c++) {
+            if (c % ROW_WIDTH == 0) {
+                row = $("<tr>");
+                table.append(row);
+            }
+            let wheel = wheels[c];
+
+            const cell = $("<td>").addClass(`codewheel w${c}`);
+            row.append(cell);
+
+            $("<span>").html(c+1).appendTo(cell);
+            const svgl = MakeSvgTag(SVG_SIZE+20, SVG_SIZE+20, -10, -10, { class:"cell centered-img" }).appendTo(cell);
+            let g = MakeSvgElem("g", {
+                "transform-origin":`${SVG_SIZE / 2} ${SVG_SIZE / 2}`, class:`wheel wgroup w${c} invisible`
+            });
+            doWheel(svgl, wheel, c, g, false);
+        }
+
+        // Bonus wheels!
+        for (let u = 0; u < 3; u++) {
+            for (let w = 0; w < 4; w++) {
+                const cell = $(`#bonus-${w + 1}-${u + 1}`);
+                let i = w * 3 + u;
+                $("<span>").html(i+1).appendTo(cell);
+                const svgl = MakeSvgTag(SVG_SIZE, SVG_SIZE, 0, 0, { class:"cell centered-img" }).appendTo(cell);
+                let g = MakeSvgElem("g", {
+                    "transform-origin":`${SVG_SIZE / 2} ${SVG_SIZE / 2}`, class:`bonus wgroup w${i + NUM_WHEELS} invisible`
+                });
+                doWheel(svgl, ["·".repeat(8), bonus_wheels[w][u]], i, g, true);
+            }
+        }
+        updateSelectedWheels();
+    </script>
+</body>
+</html>
