@@ -9220,6 +9220,33 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'notNumberPad',
+		loggingTag: 'Not Number Pad',
+		matches: [
+			{
+				regex: /The button colors are:/,
+				handler: function(match, module) {
+					const colorLookup = { 'R':'red', 'G':'green', 'B':'blue', 'Y':'yellow'};
+					const labels = [ '7', '8', '9', '4', '5', '6', '1', '2', '3', 'CLR', '0', 'ENT' ];
+					let colors = readTaggedLines(4).map(l => l.split('').map(ch => colorLookup[ch])).flat();
+					let svg = "<svg class='number-pad' viewbox='-0.1 -0.1 3 4'>";
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 3; col++) {
+							let ix = 3 * row + col;
+							svg += `<rect width='.8' height='.8' x='${col}' y='${row}' class='key ${colors[ix]}'></rect>`;
+							svg += `<text x='${0.4 + col}' y='${0.4 + row}'>${labels[ix]}</text>`
+						}
+					}
+					module.push({ label:match.input, obj:svg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'NotPokerModule',
 		loggingTag: 'Not Poker',
 		matches: [
@@ -9250,8 +9277,7 @@ let parseData = [
 				handler: function (matches, module) {
 					var colors = matches[1].split(', ');
 					if (colors.length === 10) {
-						var buttonToIndex = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
-						var buttonToLabel = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+						var buttonToIndex = [10, 6, 7, 8, 3, 4, 5, 0, 1, 2];
 						var colorMapping = {
 							white: "rgb(255, 255, 255)",
 							green: "rgb(76, 255, 76)",
@@ -9260,17 +9286,22 @@ let parseData = [
 							red: "rgb(255, 76, 76)"
 						};
 
-						var svg = $('<svg viewBox="-0.1 -0.1 3 4" height="30%" style="display: block;"><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" y="3" fill="rgb(0, 255, 0)"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="0.4" y="3.4">ENT</text><rect width="0.8" height="0.8" stroke="black" stroke-width="0.1" x="2" y="3" fill="red"></rect><text font-size="0.4" text-anchor="middle" dominant-baseline="middle" x="2.4" y="3.4">CLR</text></svg>');
+						var svg = $(`<svg class='number-pad' viewbox="-0.1 -0.1 3 4">
+									  <rect class='key' width=".8" height=".8" y="3" fill="#F00"/>
+									  <text x=".4" y="3.4">CLR</text>
+									  <rect class='key' width=".8" height=".8" x="2" y="3" fill="#0F0"/>
+									  <text x="2.4" y="3.4">ENT</text>
+									</svg>`);
 						for (var i = 0; i < 10; i++) {
 							var color = colors[i];
 							var index = buttonToIndex[i];
 							var x = index % 3;
 							var y = Math.floor(index / 3);
-							$SVG('<rect width="0.8" height="0.8" stroke="black" stroke-width="0.1"></rect>').attr("x", x).attr("y", y).attr("fill", colorMapping[color]).appendTo(svg);
-							$SVG('<text font-size="0.4" text-anchor="middle" dominant-baseline="middle"></text>').attr("x", x + 0.4).attr("y", y + 0.4).text(buttonToLabel[i]).appendTo(svg);
+							$SVG('<rect>').addClass('key').attr('width', 0.8).attr('height', 0.8).attr("x", x).attr("y", y).addClass(`${color}`).appendTo(svg);
+							$SVG('<text>').attr("x", x + 0.4).attr("y", y + 0.4).text(i).appendTo(svg);
 						}
 
-						module.push({ label: "Button Colors:", obj: svg.css('width', '50%') });
+						module.push({ label: "Button Colors:", obj: svg });
 
 						return true;
 					}
