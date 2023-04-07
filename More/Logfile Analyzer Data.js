@@ -12111,6 +12111,78 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "simonstacks",
+		loggingTag: "Simon Stacks",
+		matches: [
+			{
+				regex: /Generating \d+ Stages/,
+				handler: function (match, module) {
+					module.generateSVG = function(pattern, color) {
+						const hexPath = 'M 12.6 5.22 L 9.54 10.44 H 3.51 L 0.45 5.22 L 3.51 0 H 9.54 Z';
+						const columns = [ 'A', 'B', 'C', 'D', 'E' ];
+						const columnOffsets = [ 12.65, 6.33, 0, 6.33, 12.65 ];
+						const columnLimits = [ 3, 4, 5, 4, 3 ];
+						const xOffset = 11;
+						const yOffset = 12.65;
+						
+						let coords = pattern.split(', ').map(c => ({ x:columns.indexOf(c[0]), y:parseInt(c[1]) - 1 }) );
+						let svg = $('<svg>').addClass('simon-stacks').attr('viewbox', '0 -2 58 65');
+						
+						let getTranslation = function(coord) {
+							return { x: xOffset * coord.x,
+									  y: yOffset * coord.y + columnOffsets[coord.x] };
+						}
+						for (let coord of coords) {
+							let trans = getTranslation(coord);
+							$('<path>').attr('d', hexPath)
+										.attr('transform', `translate(${trans.x}, ${trans.y})`)
+										.attr('fill', color)
+										.appendTo(svg);
+						}
+						for (let col = 0; col < 5; col++) {
+							for (let row = 0; row < columnLimits[col]; row++) {
+								let trans = getTranslation( { x:col, y:row } );
+								$('<path>').addClass('outline-hex')
+											.attr('d', hexPath)
+											.attr('transform', `translate(${trans.x}, ${trans.y})`)
+											.appendTo(svg);
+							}
+						}
+						return svg.prop('outerHTML'); //If this line isn't called, the svg won't render. No clue why.
+					}
+					module.stages ??= [ ];
+					module.addToCurrentStage = function(str, ob) {
+						module.stages[module.currentStage][1].push({ label:str, obj:ob });
+					}
+					
+					module.push(match.input);
+				}
+			},
+			{
+				regex: /Stage (\d+) - Flashing \((.+)\) as (\w+), Solution is \((.+)\)/,
+				handler: function (matches, module) {
+					const colors = { 'Red':'#921E21', 'Green':'#228D23', 'Blue':'#232091', 'Yellow':'#998E24' };
+					
+					module.currentStage = parseInt(matches[1]);
+					if (!module.stages[module.currentStage]) {
+						module.stages[module.currentStage] = [ 'Stage ' + matches[1], [] ];
+						module.push(module.stages[module.currentStage]);							
+					}
+					
+					let flashFill = colors[matches[3]];
+					module.addToCurrentStage(`Flashing in ${matches[3]}:`, module.generateSVG(matches[2], flashFill) );
+					module.addToCurrentStage('Solution is:', module.generateSVG(matches[4], 'gray') );
+				}
+			},
+			{
+				regex: /You Submitted \((.+)\)(, Which is right)?/,
+				handler: function (matches, module) {
+					module.addToCurrentStage(`You ${matches[2] ? '' : 'in'}correctly submitted:`, module.generateSVG(matches[1], 'gray') );
+				}
+			}
+		]
+	},
+	{
 		moduleID: "simonStores",
 		loggingTag: "Simon Stores",
 		matches: [
