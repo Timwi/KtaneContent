@@ -3425,7 +3425,6 @@ let parseData = [
 					let svg = `<svg class='diffusion result' viewbox="130 130 550 550">`;
 					for(let i = 0; i < 16; i++) {
 						let redComponent = info[i].match(/A\d/);
-						console.log(redComponent);
 						redComponent = parseInt(redComponent[0].replace("A", ""));
 						let blueComponent = info[i].match(/B\d/);
 						blueComponent = parseInt(blueComponent[0].replace("B", ""));
@@ -12470,6 +12469,55 @@ let parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "spillingPaint",
+		loggingTag: "Spilling Paint",
+		matches: [
+			{
+				regex: /Spilled (\w+) at position (\d+)/,
+				handler: function(matches, module) {
+					const colors = [ 'white', 'red', 'orange', 'yellow', 'green', 'blue', 'purple' ];
+					const hexCodes = [ '#FFFFFF', '#CD3532', '#EA8104', '#DCD232', '#50D347', '#3A65D8', '#CA51DC' ];
+					module.spills ??= [ ];
+					let pos = parseInt(matches[2]) - 1;
+					module.spills.push( { colorIx: colors.indexOf(matches[1]), x: pos % 6, y: Math.floor(pos / 6) } );
+					module.push(matches.input);
+					
+					function exists(coord) {
+						return coord.x >= 0 && coord.x < 6 && coord.y >= 0 && coord.y < 6;
+					}
+					
+					if (module.spills.length == 7) {
+						let grid = [ ];
+						for (let row = 0; row < 6; row++) {
+							grid.push([ ]);
+							for (let col = 0; col < 6; col++) {
+								grid[row].push(0);
+							}
+						}
+						for (let spill of module.spills) {
+							for (let xMod = -1; xMod < 2; xMod++) {
+								for (let yMod = -1; yMod < 2; yMod++) {
+									let cell = { x: spill.x + xMod, y: spill.y + yMod };
+									if (exists(cell)) {
+										grid[cell.y][cell.x] += spill.colorIx;
+										grid[cell.y][cell.x] %= 7;
+									}
+								}
+							}
+						}
+						let table = $('<table>').addClass('spilling-paint');
+						for (let row = 0; row < 6; row++) {
+							let tr = $('<tr>').appendTo(table);
+							for (let col = 0; col < 6; col++) 
+								tr.append($('<td>').css('background-color', hexCodes[grid[row][col]]));
+						}
+						module.push({ label:'Generated Puzzle:', obj:table });
+					}
+				}
 			}
 		]
 	},
