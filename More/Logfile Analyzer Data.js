@@ -12168,9 +12168,9 @@ let parseData = [
 		loggingTag: "Simons Squawks"
 	},
 	{
-		displayName: "Simon’s Stages",
-		moduleID: "simonsStages",
-		loggingTag: "Simon's Stages",
+		displayName: [ "Simon’s Stages", "Simon Stages" ],
+		moduleID: [ "simonsStages", "simonStages" ],
+		loggingTag: [ "Simon's Stages", "Simon Stages" ],
 		matches: [
 			{
 				regex: /The arrangement of colors is: (.+)/,
@@ -12186,12 +12186,18 @@ let parseData = [
 				}
 			},
 			{
-				regex: /STAGE #(.+):/,
+				regex: /STAGE #(.+):/, //For the boss stages
 				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1], []];
 					module.push(module.Stage);
-
 					return true;
+				}
+			},
+			{
+				regex: /Stage #(.+):(.+)/, //For the non-boss stages
+				handler: function (matches, module) {
+					module.Stage = ["Sequence #" + matches[1], []];
+					module.push(module.Stage);
 				}
 			},
 			{
@@ -12199,7 +12205,6 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Stage = ["Stage #" + matches[1] + " Response", []];
 					module.push(module.Stage);
-
 					return true;
 				}
 			},
