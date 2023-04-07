@@ -7357,12 +7357,12 @@ let parseData = [
 		]
 	},
 	{
-		displayName: "Masyu",
-		moduleID: "masyuModule",
-		loggingTag: "Masyu",
+		displayName: [ "Masyu", "UraMasyu" ],
+		moduleID: [ "masyuModule", "uraMasyuModule" ],
+		loggingTag: [ "Masyu", "UraMasyu" ],
 		matches: [
 			{
-				regex: /The dots\/circles are in the following pattern, where 0=blank,1=white,2=black.../,
+				regex: /The dots\/circles are in the following pattern, where 0=blank,1=(\w+),2=(\w+).../,
 				handler: function (matches, module) {
 					var board = readTaggedLines(8).join('\n');
 					var row = board.replace(/\r/g, '').split('\n');
@@ -7379,13 +7379,10 @@ let parseData = [
 						for (let j = 0; j < row[i].length; j++) {
 							const xPosition = j * 118 + 61.5;
 							const yPosition = i * 118 + 103.5;
-							switch (row[i][j]) {
-								case '1':
+							if (row[i][j] != '0') {
+								if ((row[i][j] == '1') ^ (matches[1] == 'black'))
 									$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
-									break;
-								case '2':
-									$SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
-									break;
+								else $SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
 							}
 						}
 					}
@@ -7401,7 +7398,8 @@ let parseData = [
 			{
 				regex: /^(\d{40}|\d{42})$/,
 				handler: function (matches, module) {
-					var svg = module.MasyuSvg[1].obj;
+					var svg = module.MasyuSvg[1].obj;	
+					console.log(module.MasyuSvg);
 					switch (matches[1].length) {
 						case 40: //Drawing horizontal lines
 							for (let i = 0; i < matches[1].length; i++) {
@@ -7426,6 +7424,9 @@ let parseData = [
 					}
 					return true;
 				}
+			},
+			{
+				regex: /Masyu is chosen/
 			}
 		]
 	},
