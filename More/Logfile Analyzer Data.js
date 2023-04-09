@@ -9739,6 +9739,94 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "perspectiveStackingModule",
+		loggingTag: "Perspective Stacking",
+		matches: [
+			{
+				regex: /<Stage (\d+)> (.+)/,
+				handler: function (matches, module) {
+					if (!module.stages)
+						module.stages = [ ];
+					let s = parseInt(matches[1]);
+					if (!module.stages[s]) {
+						module.stages[s] = [ 'Stage ' + s, [] ] ;
+						module.push(module.stages[s]);
+					}
+					module.currentStage = s;
+					
+					module.pushStage ??= function (item) { 
+						module.stages[module.currentStage][1].push(item);
+					}
+					
+					module.pushStage(matches[2]);
+				}
+			},
+			{
+				regex: /The internal cube|submission grid/,
+				handler: function (matches, module) {
+					
+					let grid = [];
+					for (let x = 0; x < 5; x++) {
+						grid.push([ ]);
+						for (let y = 0; y < 5; y++) {
+							grid[x].push([ ]);
+							for (let z = 0; z < 5; z++) {
+								grid[x][y].push('x');
+							}
+						}
+					}
+					readLine();
+					let lines = readLines(29).map(l => l.replace(/\[Perspective Stacking #\d+\] ?/, '')).filter(x => x).map(l => l.split(' '));
+					
+					for (let y = 0; y < 5; y++) 
+						for (let z = 0; z < 5; z++) 
+							for (let x = 0; x < 5; x++) 
+								grid[x][y][z] = lines[5 * y + z][x];
+					
+					function makePanel(cube, z) {
+						
+						const frontPath = "M0 0l2 1v2l-2-1z";
+						const sidePath = "M2 1l2-1v2l-2 1z";
+						const topPath = "M0 0l2-1 2 1-2 1z";
+						
+						const frontColors = { 'x':'none', 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0' };
+						const sideColors = { 'x':'none', 'R':'#D00', 'G':'#0D0', 'B':'#00D', 'C':'#0DD', 'M':'#D0D', 'Y':'#DD0' };
+						const topColors = { 'x':'none', 'R':'#E00', 'G':'#0E0', 'B':'#00E', 'C':'#0EE', 'M':'#E0E', 'Y':'#EE0' };
+						
+						
+						let svg = $('<svg>').addClass('panel').attr('viewbox', '-.5 -1.5 13 17');
+						for (let x = 0; x < 5; x++) {
+							for (let y = 4; y >= 0; y--) {
+								
+								let val = cube[x][y][z];
+								let trans = `translate(${2 * x}, ${2 * y + x})`;
+								
+								svg.append([
+									$('<path>').attr({ d:frontPath, fill:frontColors[val], transform:trans }),
+									$('<path>').attr({ d:sidePath, fill:sideColors[val], transform:trans }),
+									$('<path>').attr({ d:topPath, fill:topColors[val], transform:trans })								
+								]);
+							}
+						}
+						return svg.prop('outerHTML');
+					}
+					
+					let div = $('<div>').addClass('perspective-stacking');
+					for (let z = 0; z < 5; z++)
+						div.append(makePanel(grid, z));
+					
+					let item = { obj:div, nobullet: true };
+					if (matches[0] == 'The internal cube')
+						module.pushStage(item);
+					else module.push(item);
+				}
+			},
+			{
+				regex: /The displayed numbers|orrect submission|forcefully solved/
+			}
+		]
+	},
+	{
 		moduleID: ["PianoKeys", "CruelPianoKeys", "FestivePianoKeys"],
 		loggingTag: ["Piano Keys", "Cruel Piano Keys", "Festive Piano Keys"],
 		matches: [
