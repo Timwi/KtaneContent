@@ -1181,6 +1181,40 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Actual 4x4x4 Sudoku",
+		moduleID: "actual4x4x4SudokuModule",
+		loggingTag: "Actual 4x4x4 Sudoku",
+		matches: [
+			{
+				regex: /grid/,
+				handler: function(match, module) {
+					let lines = readTaggedLines(4).map(l => l.split(/[, ]/));
+					const paths = {
+						'1':'M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30M0 10 0-30 34.6 30 0 10 34.6 30-34.6 30 0 10 0-30-34.6 30',
+						'2':'M0-2.2 37.6-21 0-39.8-37.6-21 0-2.2 0 39.8 37.6 21 37.6-21M-37.6-21-37.6 21 0 39.8 0-2.2 0-2.2',
+						'3':'M0 40 40 0 0-40-40 0zV-40M-40 0h80',
+						'4':'M0-26.7 25.3-8.3 15.7 21.6-15.7 21.6-25.3-8.3ZM15.7 21.6 23.5 32.4 38 12.4 37.3-12 25.3-8.3ZM-15.7 21.6-23.5 32.4 0 40 23.5 32.4 15.7 21.6M-23.5 32.4-38 12.4-37.3-12-25.3-8.3-15.7 21.6M0-26.7 0-40-23.5-32.4-37.3-12-25.3-8.3M0-40 23.5-32.4 37.3-12 25.3-8.3 0-26.7'
+					};
+					const fills = { '1':'red', '2':'yellow', '3':'green', '4':'mediumslateblue' };
+					let div = $('<div>').addClass('actual-4x4x4-sudoku');
+					for (let y = 0; y < 4; y++) {
+						let svg = $('<svg>').addClass('y-plane').attr('viewbox', '-5 -5 410 410').appendTo(div);
+						for (let x = 0; x < 4; x++) {
+							for (let z = 0; z < 4; z++) {
+								let val = lines[y][4 * z + x];
+								$('<rect>').addClass('frame').attr({ width:100, height:100, x: 100*x, y: 100*z }).appendTo(svg); 
+								if (val != '-')
+									$('<path>').addClass('shape').attr({ d:paths[val], fill:fills[val], transform:`translate(${100*x+50}, ${100*z+50})` }).appendTo(svg);
+							}
+						}
+					}
+					let label = match.input + " (Frontal view; different grids are y-layers, bottom to top.)";
+					module.push({ label:label, obj:div.prop('outerHTML') });
+				}
+			}
+		]
+	},
+	{
 		moduleID: "algebra",
 		loggingTag: "Algebra",
 		matches: [
