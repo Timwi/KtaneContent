@@ -759,7 +759,7 @@ let parseData = [
 						module.SetCss();
 						module.JSONs.push(module.Stage);
 						module.Stage = [];
-						console.log(JSON.stringify(module.JSONs));
+						//console.log(JSON.stringify(module.JSONs));
 						module[1] = { label: `<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>` };
 					}
 					return true;
@@ -13166,6 +13166,63 @@ let parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		displayName: "Tetrahedron",
+		moduleID: "tetrahedron",
+		loggingTag: "Tetrahedron",
+		matches: [
+			{
+				regex: /Stage #(\d+):/,
+				handler: function(matches, module) {
+					module.currentStage = matches[1];
+					module.stages ??= [ ];
+					module.stages[module.currentStage] = [ matches.input, [ ] ];
+					module.push(module.stages[module.currentStage]);
+					module.pushStage ??= function (item) {
+						module.stages[module.currentStage][1].push(item);
+					}
+					module.currentNode ??= 'D';
+					
+					const codes = { 'red':'#F00', 'green':'#0F0', 'blue':'#00F', 'cyan':'#0FF', 'magenta':'#F0F', 'yellow':'#FF0', 'white':'#FFF', 'black':'#000' };
+					const nodePositions = [ { x:10, y:0 }, { x:0, y:17 }, { x:20, y:17 }, { x:10, y:11.2 } ]; 
+					const nodeNames = "ABCD";
+					const nodeOrder = [ [0,1], [1,2], [2,0], [3,0], [3,1], [3,2] ];
+					
+					let edgeColors = readTaggedLines(6).map(l => codes[/is (.+)/.exec(l)[1]] );
+					let svg = $('<svg>').addClass('tetrahedron').attr('viewbox', '-3 -4 26 25');
+					for (let edgeIx = 0; edgeIx < 6; edgeIx++) {
+						let coords = nodeOrder[edgeIx].map(n => nodePositions[n]);
+						$('<line>').addClass('edge').attr({ stroke:edgeColors[edgeIx],
+															x1:coords[0].x, y1:coords[0].y, x2:coords[1].x, y2:coords[1].y })
+															.appendTo(svg);
+					}
+					for (let nodeIx = 0; nodeIx < 4; nodeIx++) {
+						let pos = nodePositions[nodeIx];
+						let node = $('<circle>').addClass('node').attr({ r:2, cx:pos.x, cy:pos.y }).appendTo(svg);
+						if (nodeNames[nodeIx] == module.currentNode)
+							node.addClass('current');
+					}
+					module.pushStage({ obj:svg.prop('outerHTML'), nobullet:true });
+					
+					return true;
+				}
+			},
+			{
+				regex: /Submitted path: .+(.)$/,
+				handler: function (matches, module) {
+					module.currentNode = matches[1];
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (module.currentStage)
+						module.pushStage(match.input);
+					else module.push(match.input);;
+				}
 			}
 		]
 	},
