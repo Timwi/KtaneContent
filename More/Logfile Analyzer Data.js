@@ -3709,6 +3709,26 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Dr. Doctor",
+		moduleID: "DrDoctorModule",
+		loggingTag: "Dr. Doctor",
+		matches: [
+			{
+				regex: /Solution (before|after) half of the bomb time has passed:/,
+				handler: function (matches, module) {
+					let lines = readTaggedLines(3);	
+					let doses = /solved modules: (.+)/.exec(lines[2])[1].split(', ');
+					lines[2] = [ "Dosis per number of solved modules:", doses ];
+					module.push([ matches.input, lines ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Dreamcipher",
 		moduleID: "ksmDreamcipher",
 		loggingTag: "Dreamcipher",
