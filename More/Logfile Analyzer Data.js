@@ -5460,6 +5460,44 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Holographic Memory",
+		moduleID: "holographicMemory",
+		loggingTag: "Holographic Memory",
+		matches: [
+			{
+				regex: /The (light|dark) sides of the tiles display the images:/,
+				handler: function (matches, module) {
+					let grid = readTaggedLines(4).map(l => l.split(', '));
+					let table = $('<table>').addClass([ 'holographic-memory', matches[1] ]);
+					for (let row = 0; row < 4; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 4; col++) {
+							let td = $('<td>').appendTo(tr);
+							$('<img>').addClass('in-grid').attr('src', `img/Holographic Memory/${grid[row][col]}.png`).appendTo(td);
+						}
+					}
+					module.push({ label:matches.input, obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					const names = [ "Apple", "Aries", "Atom", "Boat", "Bolt", "Bowling Ball", "Bucket", "Chessboard", "Clock", "Close", "Crosshair", "Crosslet", "Dollar", "Duality", "Fire", "Fleur-de-lis", "Gear", "Hash", "Heart", "Knight", "Leaf", "Link", "Lock", "Mercury", "Meteor", "Moon", "Ozone", "Peace", "Planet", "Plane", "Plus", "Puzzle Piece", "Question Mark", "Radioactive", "Recycling", "Rook", "Smile", "Spade", "Spiral", "Star", "Sun", "Target", "Taurus", "Tractor", "Tree", "Triforce", "Uranus", "Yinyang" ];
+					let str = match.input;
+					for (let name of names) {
+						let img = $('<img>').addClass('holographic-memory-inline-image').attr('src', `img/Holographic Memory/${name}.png`).prop('outerHTML');
+						if (str.includes(name)) {
+							module.push({ obj:`<span>${str.replace(name, img)}</span>` });
+							return true;
+						}
+					}
+					module.push(str);
+				}
+			}
+		]
+	},
+	{
 		displayName: "HTTP Response",
 		moduleID: "http",
 		loggingTag: "NeedyHTTP",
