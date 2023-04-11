@@ -4437,6 +4437,47 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Follow Me",
+		moduleID: "FollowMe",
+		loggingTag: "Follow Me",
+		matches: [
+			{
+				regex: /Starting at position (..), the path goes: ([URDL]+)/,
+				handler: function(matches, module) {
+					const baseMazePath = 'm0 0h16v16h-16zM0 2h2m10 0h-8v4h4v2m-2-4v-2h2v2h4m2 0h2m-2-4v2m2 4h-4m-2 0v2h4v4m2 0h-4v2h-2m4 0v2m-6 0v-4h2v-2h2m-4 0h-2m0 2v-4h-4v-4m-2 6h2v2m0 4v-2h2v-4';
+					
+					let startX = 2 * "ABCDEFGH".indexOf(matches[1][0]) + 1;
+					let startY = 2 * (parseInt(matches[1][1]) - 1) + 1;
+					
+					let arrowPath = `M ${startX} ${startY} `;
+					for (let ch of matches[2]) {
+						switch (ch) {
+							case 'U': arrowPath += "v-2"; break;
+							case 'R': arrowPath += "h2"; break;
+							case 'D': arrowPath += "v2"; break;
+							case 'L': arrowPath += "h-2"; break;
+						}
+					}
+					switch (matches[2][matches[2].length - 1]) {
+						case 'U': arrowPath += "l -.5 .5 .5 -.5 .5 .5"; break;
+						case 'R': arrowPath += "l -.5 -.5 .5 .5 -.5 .5"; break;
+						case 'D': arrowPath += "l -.5 -.5 .5 .5 .5 -.5"; break;
+						case 'L': arrowPath += "l .5 -.5 -.5 .5 .5 .5"; break;
+					}
+					
+					let svg = $('<svg>').addClass('follow-me').attr('viewbox', '-.25 -.25 16.5 16.5');
+					$('<path>').addClass('grid').attr('d', baseMazePath).appendTo(svg);
+					$('<path>').addClass('followed').attr('d', arrowPath).appendTo(svg);
+					module.push({ label: matches.input, obj:svg.prop('outerHTML') });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Follow the Leader",
 		moduleID: "FollowTheLeaderModule",
 		loggingTag: "Follow the Leader",
@@ -10874,12 +10915,9 @@ let parseData = [
 					while (currentMatch = readLine().match(/\[Railway Cargo Loading #\d+\] (.*)/) ) {
 						if (currentMatch[1] == '"')
 							break;
-						console.log(currentMatch[1]);
 						if (currentMatch[1].trim())
 							note.push(currentMatch[1]);
 					}
-					
-					console.log(note);
 					module.push({ label:match[0], obj:pre(note.join('\n')) });
 				}
 			},
