@@ -10864,6 +10864,27 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Regular Sudoku",
+		moduleID: "RegularSudoku",
+		loggingTag: "Regular Sudoku",
+		matches: [
+			{
+				regex: /Initial board|Answer/,
+				handler: function(match, module) {
+					let board = readTaggedLines(9).map(l => l.replace(/\*/g, ' ').split(''));
+					let table = $('<table>').addClass('regular-sudoku');
+					for (let row = 0; row < 9; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 9; col++) {
+							$('<td>').html(board[row][col]).appendTo(tr);
+						}
+					}
+					module.push({ label:match.input, obj:table });
+				}
+			}
+		]
+	},
+	{
 		displayName: "Remote Math",
 		moduleID: "remotemath",
 		loggingTag: "Remote Math",
