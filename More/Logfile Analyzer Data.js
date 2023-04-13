@@ -4444,7 +4444,7 @@ let parseData = [
 			{
 				regex: /Starting at position (..), the path goes: ([URDL]+)/,
 				handler: function(matches, module) {
-					const baseMazePath = 'm0 0h16v16h-16zM0 2h2m10 0h-8v4h4v2m-2-4v-2h2v2h4m2 0h2m-2-4v2m2 4h-4m-2 0v2h4v4m2 0h-4v2h-2m4 0v2m-6 0v-4h2v-2h2m-4 0h-2m0 2v-4h-4v-4m-2 6h2v2m0 4v-2h2v-4';
+					const baseMazePath = 'm0 0h16v16h-16zM0 2h2m10 0h-8v4h4v2m-2-4v-2h2v2h4m2 0h2m-2-4v2m2 4h-4m-2 0v2h4v4m2 0h-4v2h-2m4 0v2m-6 0v-4h2v-2h2m-4 0h-2m0 2v-4h-4v-4m-2 6h2v2m0 4v-2h2v-4M6 14v2';
 					
 					let startX = 2 * "ABCDEFGH".indexOf(matches[1][0]) + 1;
 					let startY = 2 * (parseInt(matches[1][1]) - 1) + 1;
