@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         li {
             margin-bottom: 3%;
@@ -26,7 +27,145 @@
         .number-table {
             font-size: 24px;
         }
+
+        .ruleseeded {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .ruleseeded-table {
+            background-color: rgba(199, 140, 140, 0.1);
+        }
     </style>
+    <script>
+        const default_rules = {
+            "#addend": "1",
+            "#sn-direction": "left-to-right",
+            "#modded-widget-pos": "a <a href='https://ktane.timwi.de/HTML/Voltage%20Meter.html'>Voltage Meter</a> widget exists",
+            "#modded-widget-neg": "a <a href='https://ktane.timwi.de/HTML/Voltage%20Meter.html'>Voltage Meter</a> widget does not exist",
+            "#modded-1": "the voltage's decimal is 5",
+            "#modded-2": "the voltage is greater than 5",
+            "#vanilla-1": "the number of lit indicators",
+            "#vanilla-2": "the number of unlit indicators",
+            "#asterisk": "",
+            tables: [
+                [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [7, 8, 9, 4, 5, 6, 1, 2, 3],
+                [3, 2, 1, 6, 5, 4, 9, 8, 7],
+                [9, 8, 7, 6, 5, 4, 3, 2, 1],
+                [1, 4, 7, 2, 5, 8, 3, 6, 9],
+                [7, 4, 1, 8, 5, 2, 9, 6, 3],
+                [3, 6, 9, 2, 5, 8, 1, 4, 7],
+                [9, 6, 3, 8, 5, 2, 7, 4, 1]
+            ]
+        };
+        const possible_rules = {
+            "#sn-direction": ["left-to-right", "right-to-left"],
+            modded_widget: [
+                {
+                    "#modded-widget-pos": "a <a href='https://ktane.timwi.de/HTML/Voltage%20Meter.html'>Voltage Meter</a> widget exists",
+                    "#modded-widget-neg": "a <a href='https://ktane.timwi.de/HTML/Voltage%20Meter.html'>Voltage Meter</a> widget does not exist",
+                    "#asterisk": "",
+                    query: [
+                        "the voltage's decimal is 0",
+                        "the voltage's decimal is 5",
+                        "the voltage is greater than 5",
+                        "the voltage is less than 6",
+                        "the whole part of the voltage is even",
+                        "the whole part of the voltage is odd"
+                    ]
+                },
+                {
+                    "#modded-widget-pos": "there is at least one <a href='https://ktane.timwi.de/HTML/Modded%20Ports.html'>Modded Port</a>",
+                    "#modded-widget-neg": "there is not at least one <a href='https://ktane.timwi.de/HTML/Modded%20Ports.html'>Modded Port</a>",
+                    "#asterisk": "",
+                    query: [
+                        "there is at least one AC port",
+                        "there is at least one Component Video port",
+                        "there is at least one HDMI port",
+                        "there is at least one Composite Video port",
+                        "there is at least one VGA port",
+                        "there is at least one USB port",
+                        "there is at least one PCMCIA port"
+                    ]
+                },
+                {
+                    "#modded-widget-pos": "a <a href='https://ktane.timwi.de/HTML/Two%20Factor.html'>Two Factor</a> widget exists",
+                    "#modded-widget-neg": "a <a href='https://ktane.timwi.de/HTML/Two%20Factor.html'>Two Factor</a> widget does not exist",
+                    "#asterisk": "*Measured at the time of input",
+                    query: [
+                        "any Two Factor code ends in an odd digit*",
+                        "any Two Factor code ends in an even digit*",
+                        "any Two Factor code begins with an odd digit*",
+                        "any Two Factor code begins with an even digit*"
+                    ]
+                }
+            ],
+            vanilla_widget: [
+                "the number of lit indicators",
+                "the number of unlit indicators",
+                "the number of batteries",
+                "the number of battery holders",
+                "the number of ports",
+                "the number of port plates",
+                "the number of modules on the bomb divided by ten (rounded down)",
+                "the number of modules on the bomb divided by ten (rounded up)"
+            ]
+        };
+        const simple_rules = [
+            "#addend",
+            "#sn-direction",
+            "#modded-widget-pos",
+            "#modded-widget-neg",
+            "#modded-1",
+            "#modded-2",
+            "#vanilla-1",
+            "#vanilla-2",
+            "#asterisk"
+        ];
+        function setDefaultRules() {
+            for (const e of document.querySelectorAll(".number-table"))
+                if (e.classList.contains("ruleseeded-table"))
+                    e.classList.remove("ruleseeded-table");
+            setAllRules(default_rules);
+        }
+        function setRules(seed) {
+            let rules = {};
+
+            rules["#addend"] = seed.nextMax(10);
+            rules["#sn-direction"] = possible_rules["#sn-direction"][seed.nextMax(2)];
+            let modded = possible_rules.modded_widget[seed.nextMax(possible_rules.modded_widget.length)];
+            rules["#modded-widget-pos"] = modded["#modded-widget-pos"];
+            rules["#modded-widget-neg"] = modded["#modded-widget-neg"];
+            rules["#asterisk"] = modded["#asterisk"];
+            let queries = seed.shuffleArray(modded.query);
+            rules["#modded-1"] = queries[0];
+            rules["#modded-2"] = queries[1];
+            queries = seed.shuffleArray(possible_rules.vanilla_widget);
+            rules["#vanilla-1"] = queries[0];
+            rules["#vanilla-2"] = queries[1];
+            rules.tables = seed.shuffleArray(default_rules.tables);
+
+            for (const key of simple_rules)
+                rules[key] = `<span class="ruleseeded">${rules[key]}</span>`;
+            for (const e of document.querySelectorAll(".number-table"))
+                if (!e.classList.contains("ruleseeded-table"))
+                    e.classList.add("ruleseeded-table");
+            setAllRules(rules);
+        }
+        function setAllRules(rules) {
+            for (const key of simple_rules) {
+                for (const e of document.querySelectorAll(key)) {
+                    e.innerHTML = rules[key];
+                }
+            }
+            for (const i of [0, 1, 2, 3]) {
+                document.querySelector(`#number-table-${i}`).innerHTML = [0, 1, 2]
+                    .map(r => `<tr>${[0, 1, 2].map(c => `<td>${rules.tables[i][3 * r + c]}</td>`).join("")
+                        }</tr>`).join("");
+            }
+        }
+    </script>
 </head>
 
 <body>
@@ -54,8 +193,10 @@
                 <ul>
                     <li>Create a sequence of numbers.
                         <ol>
-                            <li>The first number is the amount of other solved Netherites + 1.</li>
-                            <li>All other numbers are the serial number digits from left-to-right.</li>
+                            <li>The first number is the amount of other solved Netherites + <span id="addend">1</span>.
+                            </li>
+                            <li>All other numbers are the serial number digits from <span
+                                    id="sn-direction">left-to-right</span>.</li>
                         </ol>
                     </li>
                     <li>Repeat the sequence over and over, and cut it off after 11 digits.</li>
@@ -65,26 +206,32 @@
                 <ul>
                     <li>The block is a 3×3 grid. Pressing a cell in that grid submits a number.</li>
                     <li>The number is based on whether 2 different rules are true or false.</li>
-                    <li>Use these 2 rules if a <a href="https://ktane.timwi.de/HTML/Voltage%20Meter.html">Voltage
-                            Meter</a> widget exists:
+                    <li>Use these 2 rules if <span id="modded-widget-pos">a <a
+                                href="https://ktane.timwi.de/HTML/Voltage%20Meter.html">Voltage
+                                Meter</a> widget exists</span>:
                         <ol>
-                            <li>If the voltage's decimal is 5, the first rule is true.</li>
-                            <li>If the voltage is greater than 5, the second rule is true.</li>
+                            <li>If <span id="modded-1">the voltage's decimal is 5</span>, the first rule is true.</li>
+                            <li>If <span id="modded-2">the voltage is greater than 5</span>, the second rule is true.
+                            </li>
                         </ol>
                     </li>
                     <li>
-                        Use these 2 rules if a <a href="https://ktane.timwi.de/HTML/Voltage%20Meter.html">Voltage
-                            Meter</a> widget does not exist:
+                        Use these 2 rules if <span id="modded-widget-neg">a <a
+                                href="https://ktane.timwi.de/HTML/Voltage%20Meter.html">Voltage
+                                Meter</a> widget does not exist</span>:
                         <ol>
                             <li>If the serial number, <strong>OR</strong> the sum of the serial digits contains a digit
-                                matching the number of lit indicators, the first rule is true.</li>
-                            <li>If the serial number, <strong>OR</strong> the sum of the serial digits contains a digit
-                                matching the number of unlit indicators, the second rule is true.</li>
+                                matching <span id="vanilla-1">the number of lit indicators</span>, the first rule is
+                                true.</li>
+                            <li>If the serial number, <strong>OR</strong> the sum of the serial
+                                digits contains a digit matching <span id="vanilla-2">the number of unlit
+                                    indicators</span>, the second rule is true.</li>
                         </ol>
                     </li>
                     <li>Use the table on the next page which aligns with both rules to know which areas of the block
                         correspond to numbers being submitted.</li>
                 </ul>
+                <div id="asterisk"></div>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -103,7 +250,7 @@
                     <tr>
                         <th>FALSE</th>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-0">
                                 <tr>
                                     <td>1</td>
                                     <td>2</td>
@@ -122,7 +269,7 @@
                             </table>
                         </td>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-1">
                                 <tr>
                                     <td>7</td>
                                     <td>8</td>
@@ -144,7 +291,7 @@
                     <tr>
                         <th>TRUE</th>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-2">
                                 <tr>
                                     <td>3</td>
                                     <td>2</td>
@@ -163,7 +310,7 @@
                             </table>
                         </td>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-3">
                                 <tr>
                                     <td>9</td>
                                     <td>8</td>
