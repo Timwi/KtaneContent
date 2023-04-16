@@ -1202,7 +1202,7 @@ let parseData = [
 						for (let x = 0; x < 4; x++) {
 							for (let z = 0; z < 4; z++) {
 								let val = lines[y][4 * z + x];
-								$('<rect>').addClass('frame').attr({ width:100, height:100, x: 100*x, y: 100*z }).appendTo(svg); 
+								$('<rect>').addClass('frame').attr({ width:100, height:100, x: 100*x, y: 100*z }).appendTo(svg);
 								if (val != '-')
 									$('<path>').addClass('shape').attr({ d:paths[val], fill:fills[val], transform:`translate(${100*x+50}, ${100*z+50})` }).appendTo(svg);
 							}
@@ -3716,7 +3716,7 @@ let parseData = [
 			{
 				regex: /Solution (before|after) half of the bomb time has passed:/,
 				handler: function (matches, module) {
-					let lines = readTaggedLines(3);	
+					let lines = readTaggedLines(3);
 					let doses = /solved modules: (.+)/.exec(lines[2])[1].split(', ');
 					lines[2] = [ "Dosis per number of solved modules:", doses ];
 					module.push([ matches.input, lines ]);
@@ -4445,10 +4445,10 @@ let parseData = [
 				regex: /Starting at position (..), the path goes: ([URDL]+)/,
 				handler: function(matches, module) {
 					const baseMazePath = 'm0 0h16v16h-16zM0 2h2m10 0h-8v4h4v2m-2-4v-2h2v2h4m2 0h2m-2-4v2m2 4h-4m-2 0v2h4v4m2 0h-4v2h-2m4 0v2m-6 0v-4h2v-2h2m-4 0h-2m0 2v-4h-4v-4m-2 6h2v2m0 4v-2h2v-4M6 14v2';
-					
+
 					let startX = 2 * "ABCDEFGH".indexOf(matches[1][0]) + 1;
 					let startY = 2 * (parseInt(matches[1][1]) - 1) + 1;
-					
+
 					let arrowPath = `M ${startX} ${startY} `;
 					for (let ch of matches[2]) {
 						switch (ch) {
@@ -4464,7 +4464,7 @@ let parseData = [
 						case 'D': arrowPath += "l -.5 -.5 .5 .5 .5 -.5"; break;
 						case 'L': arrowPath += "l .5 -.5 -.5 .5 .5 .5"; break;
 					}
-					
+
 					let svg = $('<svg>').addClass('follow-me').attr('viewbox', '-.25 -.25 16.5 16.5');
 					$('<path>').addClass('grid').attr('d', baseMazePath).appendTo(svg);
 					$('<path>').addClass('followed').attr('d', arrowPath).appendTo(svg);
@@ -5511,7 +5511,7 @@ let parseData = [
 					}
 					table += "</tr>";
 				}
-				module.push({ label:match.input, obj:table });	
+				module.push({ label:match.input, obj:table });
 				return true;
 			}
 		},
@@ -6985,7 +6985,7 @@ let parseData = [
 						}
 					}
 					svg += "<line x1='40' y1='-.5' x2='40' y2='40.5'/> <line x1='-.5' y1='40' x2='40.5' y2='40'/>";
-					module.push({ label:"The maze is as follows:", obj:svg }); 
+					module.push({ label:"The maze is as follows:", obj:svg });
 					return true;
 				}
 			},
@@ -7531,7 +7531,7 @@ let parseData = [
 			{
 				regex: /^(\d{40}|\d{42})$/,
 				handler: function (matches, module) {
-					var svg = module.MasyuSvg[1].obj;	
+					var svg = module.MasyuSvg[1].obj;
 					console.log(module.MasyuSvg);
 					switch (matches[1].length) {
 						case 40: //Drawing horizontal lines
@@ -9886,18 +9886,18 @@ let parseData = [
 						module.push(module.stages[s]);
 					}
 					module.currentStage = s;
-					
-					module.pushStage ??= function (item) { 
+
+					module.pushStage ??= function (item) {
 						module.stages[module.currentStage][1].push(item);
 					}
-					
+
 					module.pushStage(matches[2]);
 				}
 			},
 			{
 				regex: /The internal cube|submission grid/,
 				handler: function (matches, module) {
-					
+
 					let grid = [];
 					for (let x = 0; x < 5; x++) {
 						grid.push([ ]);
@@ -9910,44 +9910,44 @@ let parseData = [
 					}
 					readLine();
 					let lines = readLines(29).map(l => l.replace(/\[Perspective Stacking #\d+\] ?/, '')).filter(x => x).map(l => l.split(' '));
-					
-					for (let y = 0; y < 5; y++) 
-						for (let z = 0; z < 5; z++) 
-							for (let x = 0; x < 5; x++) 
+
+					for (let y = 0; y < 5; y++)
+						for (let z = 0; z < 5; z++)
+							for (let x = 0; x < 5; x++)
 								grid[x][y][z] = lines[5 * y + z][x];
-					
+
 					function makePanel(cube, z) {
-						
+
 						const frontPath = "M0 0l2 1v2l-2-1z";
 						const sidePath = "M2 1l2-1v2l-2 1z";
 						const topPath = "M0 0l2-1 2 1-2 1z";
-						
+
 						const frontColors = { 'x':'none', 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0' };
 						const sideColors = { 'x':'none', 'R':'#D00', 'G':'#0D0', 'B':'#00D', 'C':'#0DD', 'M':'#D0D', 'Y':'#DD0' };
 						const topColors = { 'x':'none', 'R':'#E00', 'G':'#0E0', 'B':'#00E', 'C':'#0EE', 'M':'#E0E', 'Y':'#EE0' };
-						
-						
+
+
 						let svg = $('<svg>').addClass('panel').attr('viewbox', '-.5 -1.5 13 17');
 						for (let x = 0; x < 5; x++) {
 							for (let y = 4; y >= 0; y--) {
-								
+
 								let val = cube[x][y][z];
 								let trans = `translate(${2 * x}, ${2 * y + x})`;
-								
+
 								svg.append([
 									$('<path>').attr({ d:frontPath, fill:frontColors[val], transform:trans }),
 									$('<path>').attr({ d:sidePath, fill:sideColors[val], transform:trans }),
-									$('<path>').attr({ d:topPath, fill:topColors[val], transform:trans })								
+									$('<path>').attr({ d:topPath, fill:topColors[val], transform:trans })
 								]);
 							}
 						}
 						return svg.prop('outerHTML');
 					}
-					
+
 					let div = $('<div>').addClass('perspective-stacking');
 					for (let z = 0; z < 5; z++)
 						div.append(makePanel(grid, z));
-					
+
 					let item = { obj:div, nobullet: true };
 					if (matches[0] == 'The internal cube')
 						module.pushStage(item);
@@ -10145,7 +10145,7 @@ let parseData = [
 					let table = "<table class='playfair-cipher'>";
 					for (let row = 0; row < 5; row++) {
 						table += "<tr>";
-						for (let col = 0; col < 5; col++) 
+						for (let col = 0; col < 5; col++)
 							table += `<td>${matrix[row][col]}</td>`;
 						table += "</tr>";
 					}
@@ -10595,11 +10595,11 @@ let parseData = [
 	{
 		moduleID: 'quantumPasswords',
 		loggingTag: 'Quantum Passwords',
-		matches: [ 
+		matches: [
 			{
 				regex: /After shifting the words: (\w+), (\w+)/,
 				handler: function(matches, module) {
-					const patterns = { 
+					const patterns = {
 						'A':[0,1,1,1,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,0,0,0,1],
 						'B':[1,1,1,1,0,1,0,0,0,1,1,1,1,1,0,1,0,0,0,1,1,1,1,1,0],
 						'C':[0,1,1,1,1,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1],
@@ -10624,10 +10624,10 @@ let parseData = [
 						'W':[1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,1,0,1,0,1,0,1,0],
 						'X':[1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1],
 						'Y':[1,0,0,0,1,1,0,0,0,1,0,1,1,1,0,0,0,1,0,0,0,0,1,0,0],
-						'Z':[1,1,1,1,1,0,0,0,0,1,0,1,1,1,0,1,0,0,0,0,1,1,1,1,1] 
+						'Z':[1,1,1,1,1,0,0,0,0,1,0,1,1,1,0,1,0,0,0,0,1,1,1,1,1]
 					};
 					let words = [ matches[1], matches[2] ];
-					
+
 					let div = $('<div>').addClass('quantum-passwords');
 					for (let letterIx = 0; letterIx < 5; letterIx++) {
 						let table = $('<table>').addClass('letter').appendTo(div);
@@ -10909,7 +10909,7 @@ let parseData = [
 						module.pastTheFirstOne = true;
 						return true;
 					}
-					
+
 					let note = [ ];
 					let currentMatch;
 					while (currentMatch = readLine().match(/\[Railway Cargo Loading #\d+\] (.*)/) ) {
@@ -12364,37 +12364,26 @@ let parseData = [
 						const columnLimits = [ 3, 4, 5, 4, 3 ];
 						const xOffset = 11;
 						const yOffset = 12.65;
-						
+
+						let getTranslation = function(x, y) {
+							return `translate(${xOffset * x}, ${yOffset * y + columnOffsets[x]})`;
+						}
+
 						let coords = pattern.split(', ').map(c => ({ x:columns.indexOf(c[0]), y:parseInt(c[1]) - 1 }) );
-						let svg = $('<svg>').addClass('simon-stacks').attr('viewbox', '0 -2 58 65');
-						
-						let getTranslation = function(coord) {
-							return { x: xOffset * coord.x,
-									  y: yOffset * coord.y + columnOffsets[coord.x] };
-						}
-						for (let coord of coords) {
-							let trans = getTranslation(coord);
-							$('<path>').attr('d', hexPath)
-										.attr('transform', `translate(${trans.x}, ${trans.y})`)
-										.attr('fill', color)
-										.appendTo(svg);
-						}
-						for (let col = 0; col < 5; col++) {
-							for (let row = 0; row < columnLimits[col]; row++) {
-								let trans = getTranslation( { x:col, y:row } );
-								$('<path>').addClass('outline-hex')
-											.attr('d', hexPath)
-											.attr('transform', `translate(${trans.x}, ${trans.y})`)
-											.appendTo(svg);
-							}
-						}
-						return svg.prop('outerHTML'); //If this line isn't called, the svg won't render. No clue why.
+						let svgCode = '';
+
+						for (let coord of coords)
+							svgCode += `<path d='${hexPath}' transform='${getTranslation(coord.x, coord.y)}' fill='${color}' />`;
+						for (let col = 0; col < 5; col++)
+							for (let row = 0; row < columnLimits[col]; row++)
+								svgCode += `<path class='outline-hex' d='${hexPath}' transform='${getTranslation(col, row)}' />`;
+						return $(`<svg class="simon-stacks" viewbox="0 -2 58 65">${svgCode}</svg>`);
 					}
 					module.stages ??= [ ];
 					module.addToCurrentStage = function(str, ob) {
 						module.stages[module.currentStage][1].push({ label:str, obj:ob });
 					}
-					
+
 					module.push(match.input);
 				}
 			},
@@ -12402,13 +12391,13 @@ let parseData = [
 				regex: /Stage (\d+) - Flashing \((.+)\) as (\w+), Solution is \((.+)\)/,
 				handler: function (matches, module) {
 					const colors = { 'Red':'#921E21', 'Green':'#228D23', 'Blue':'#232091', 'Yellow':'#998E24' };
-					
+
 					module.currentStage = parseInt(matches[1]);
 					if (!module.stages[module.currentStage]) {
 						module.stages[module.currentStage] = [ 'Stage ' + matches[1], [] ];
-						module.push(module.stages[module.currentStage]);							
+						module.push(module.stages[module.currentStage]);
 					}
-					
+
 					let flashFill = colors[matches[3]];
 					module.addToCurrentStage(`Flashing in ${matches[3]}:`, module.generateSVG(matches[2], flashFill) );
 					module.addToCurrentStage('Solution is:', module.generateSVG(matches[4], 'gray') );
@@ -12797,11 +12786,11 @@ let parseData = [
 					let pos = parseInt(matches[2]) - 1;
 					module.spills.push( { colorIx: colors.indexOf(matches[1]), x: pos % 6, y: Math.floor(pos / 6) } );
 					module.push(matches.input);
-					
+
 					function exists(coord) {
 						return coord.x >= 0 && coord.x < 6 && coord.y >= 0 && coord.y < 6;
 					}
-					
+
 					if (module.spills.length == 7) {
 						let grid = [ ];
 						for (let row = 0; row < 6; row++) {
@@ -12824,7 +12813,7 @@ let parseData = [
 						let table = $('<table>').addClass('spilling-paint');
 						for (let row = 0; row < 6; row++) {
 							let tr = $('<tr>').appendTo(table);
-							for (let col = 0; col < 6; col++) 
+							for (let col = 0; col < 6; col++)
 								tr.append($('<td>').css('background-color', hexCodes[grid[row][col]]));
 						}
 						module.push({ label:'Generated Puzzle:', obj:table });
@@ -13223,12 +13212,12 @@ let parseData = [
 						module.stages[module.currentStage][1].push(item);
 					}
 					module.currentNode ??= 'D';
-					
+
 					const codes = { 'red':'#F00', 'green':'#0F0', 'blue':'#00F', 'cyan':'#0FF', 'magenta':'#F0F', 'yellow':'#FF0', 'white':'#FFF', 'black':'#000' };
-					const nodePositions = [ { x:10, y:0 }, { x:0, y:17 }, { x:20, y:17 }, { x:10, y:11.2 } ]; 
+					const nodePositions = [ { x:10, y:0 }, { x:0, y:17 }, { x:20, y:17 }, { x:10, y:11.2 } ];
 					const nodeNames = "ABCD";
 					const nodeOrder = [ [0,1], [1,2], [2,0], [3,0], [3,1], [3,2] ];
-					
+
 					let edgeColors = readTaggedLines(6).map(l => codes[/is (.+)/.exec(l)[1]] );
 					let svg = $('<svg>').addClass('tetrahedron').attr('viewbox', '-3 -4 26 25');
 					for (let edgeIx = 0; edgeIx < 6; edgeIx++) {
@@ -13244,7 +13233,7 @@ let parseData = [
 							node.addClass('current');
 					}
 					module.pushStage({ obj:svg.prop('outerHTML'), nobullet:true });
-					
+
 					return true;
 				}
 			},
@@ -13987,13 +13976,13 @@ let parseData = [
 				handler: function (matches, module) {
 					let grid = '';
 					let keyword = matches[1] + 'ABCDEFGHIKLMNOPQRSTUVWXYZ';
-					for (let ch of keyword) 
+					for (let ch of keyword)
 						if (!grid.includes(ch))
 							grid += ch;
 					let table = "<table class='playfair-cipher'>";
 					for (let row = 0; row < 5; row++) {
 						table += "<tr>";
-						for (let col = 0; col < 5; col++) 
+						for (let col = 0; col < 5; col++)
 							table += `<td>${grid[5 * row + col]}</td>`;
 						table += "</tr>";
 					}
