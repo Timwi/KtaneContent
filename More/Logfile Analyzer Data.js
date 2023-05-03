@@ -15001,6 +15001,29 @@ let parseData = [
 					mod.groups.add("Solution: " + readLine());
 				}
 			},
+			{
+				regex: /(.+Exception): (.+)/,
+				handler: function (matches) {
+					const start = linen;
+
+					let stacktrace = [];
+					while (true) {
+						let line = readLine();
+						if (line === "") break;
+
+						stacktrace.push(line);
+					}
+
+					const exception = {
+						type: matches[1],
+						message: matches[2],
+						stacktrace,
+						start,
+						end: linen
+					};
+					exceptions.push(exception);
+				}
+			}
 		]
 	},
 	{
