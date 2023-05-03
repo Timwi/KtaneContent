@@ -1275,6 +1275,7 @@ var bombSerialIndex = 0;
 var parsed = [];
 var ruleseed;
 let websiteParseData;
+let exceptions = [];
 
 function GetBomb() {
     return bombgroup || lastBombGroup || bomb;
@@ -1379,6 +1380,7 @@ function parseLog(opt) {
     bombSerialIndex = 0;
     parsed = [];
     ruleseed = null;
+    exceptions = [];
 
     lines = log.split("\n");
     linen = 0;
@@ -1580,10 +1582,77 @@ function parseLog(opt) {
         selectBomb(bombSerial || parsed[parsed.length - 1].Bombs[0].Serial);
     if (bombSerial && bombModule)
         $(`#bomb-${bombSerial}>.modules>.module.module-${bombModule}`).click();
+
+    setupExceptions();
+
     toastr.success("Log read successfully!");
 
     // Parsing finished successfully, so let's hide the error.
     $(".javascript-error").hide();
+}
+
+function setupExceptions() {
+    if (exceptions.length === 0) return;
+
+    const exceptionDialog = $("dialog#exceptions");
+    const pre = $("dialog#exceptions pre");
+
+    let buffer = "";
+    let starts = exceptions.map(e => e.start);
+    let ends = exceptions.map(e => e.end);
+    let exceptionElements = []
+    for (const [n, line] of lines.entries()) {
+        if (starts.includes(n)) {
+            pre.append(document.createTextNode(buffer));
+            buffer = "";
+        } else if (ends.includes(n)) {
+            const exceptionElement = $("<span>").text(buffer);
+            exceptionElements.push(exceptionElement);
+            pre.append(exceptionElement);
+            buffer = "";
+        }
+
+        buffer += line + "\n";
+    }
+    pre.append(document.createTextNode(buffer));
+
+    toastr.warning("Exceptions found, please report these to their developers!");
+    $(`<button class='button'>View Exceptions</button>`)
+        .click(event => {
+            event.preventDefault();
+
+            exceptionDialog[0].showModal();
+            requestIdleCallback(() => updateIndex(0));
+
+        })
+        .appendTo("#download-logfile");
+
+    // Close when clicking on the background
+    exceptionDialog.click(event => {
+        if (event.target !== exceptionDialog[0]) return;
+
+        exceptionDialog[0].close();
+    });
+
+    let index = 0;
+    function updateIndex(change) {
+        index = Math.min(Math.max(0, index + change), exceptions.length - 1);
+        exceptionElements[index][0].scrollIntoView({ block: "center" });
+        exceptionDialog.find(".current").text(`${index + 1} / ${exceptions.length}`).attr("title", `Exception ${index + 1} of ${exceptions.length}`);
+    }
+
+    exceptionDialog.find("button.previous").click(event => {
+        event.preventDefault();
+        updateIndex(-1);
+    });
+    exceptionDialog.find("button.next").click(event => {
+        event.preventDefault();
+        updateIndex(1);
+    });
+    exceptionDialog.find("button.close").click(event => {
+        event.preventDefault();
+        exceptionDialog[0].close();
+    });
 }
 
 $(function() {
