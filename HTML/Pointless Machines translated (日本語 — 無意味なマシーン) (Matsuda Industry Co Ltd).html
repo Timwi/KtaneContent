@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         table {
             margin: auto;
@@ -26,7 +27,90 @@
             font-size: 24px;
         }
     </style>
+    <script>
+        let default_rules = {
+            major: [
+                "それ以外の場合、現在の色が2回点滅する場合...",
+                "それ以外の場合、現在の色の位置が2回点滅する色と鏡合わせの位置にある場合...",
+                "それ以外の場合、現在の色の位置が後半にある場合...",
+                "それ以外の場合、現在の色の位置が前半にある場合...",
+                "それ以外の場合、現在の色の位置が1番目、3番目、5番目のいずれかにある場合...",
+                "それ以外の場合、現在の色の位置が2番目、4番目、6番目のいずれかにある場合...",
+                "それ以外の場合、現在の色が2回点滅しない場合..."
+            ],
+            minor1: [
+                "=現在の色の左隣の色。",
+                "=シーケンスの3つ先の色。",
+                "=シーケンスの2番目の色。",
+                "=2回点滅する色(2回目に現れた位置を参照する)。",
+                "=現在の色の右隣の色。",
+                "=シーケンスの2つ先の色。",
+                "=シーケンスの2つ前の色。",
+                "=シーケンスの1番目の色。",
+                "=シーケンスの3番目の色。",
+                "=シーケンスの4番目の色。",
+                "=シーケンスの5番目の色。",
+                "=シーケンスの6番目の色。",
+                "=2回点滅する色(1回目に現れた位置を参照する)。",
+                "=現在の色と鏡合わせの位置にある色。",
+                "=シーケンスの3つ先の色と鏡合わせの位置にある色。"
+            ],
+            minor2: [
+                "=現在の色と同じもう一方の色の右隣の色。", // conditional, gets removed
+                "=シーケンスの3つ先の色と鏡合わせの位置にある色。",
+                "=シーケンスの5番目の色。",
+                "=2回点滅する色。",
+                "=現在の色の左隣の色。",
+                "=現在の色の右隣の色。",
+                "=シーケンスの3つ先の色。",
+                "=シーケンスの2つ先の色。",
+                "=シーケンスの2つ前の色。",
+                "=シーケンスの1番目の色。",
+                "=シーケンスの2番目の色。",
+                "=シーケンスの3番目の色。",
+                "=シーケンスの4番目の色。",
+                "=シーケンスの6番目の色。",
+                "=現在の色と鏡合わせの位置にある色。"
+            ],
+            dirs: [
+                "上", "左",
+                "上 + 右", "下 + 右",
+                "上 + 左", "右",
+                "下", "下 + 左"
+            ]
+        };
+        function setDefaultRules() {
+            setAllRules(default_rules);
+            document.querySelector("#title").innerText = "モジュール詳細：無意味なマシーン";
+            document.querySelector("#ftex").innerText = "にょーむ";
+        }
+        function setRules(seed) {
+            let rules = {};
+            rules.major = seed.shuffleArray(default_rules.major);
+            rules.minor1 = seed.shuffleArray(default_rules.minor1);
+            rules.minor2 = seed.shuffleArray(default_rules.minor2.slice(1));
+            rules.dirs = seed.shuffleArray(default_rules.dirs);
+            setAllRules(rules);
+            document.querySelector("#title").innerText = "モジュール詳細：最後の黄金";
+            document.querySelector("#ftex").innerText = "あなたの身体全体に油をぶちまける";
+        }
+        function setAllRules(rules) {
+            document.querySelector("#rule-1").innerText = rules.major[0];
+            document.querySelector("#rule-2").innerText = rules.major[1];
+            document.querySelector("#rule-3").innerText = rules.major[2];
+            document.querySelector("#rule-1-1").innerText = rules.minor1[0];
+            document.querySelector("#rule-2-1").innerText = rules.minor1[1];
+            document.querySelector("#rule-3-1").innerText = rules.minor1[2];
+            document.querySelector("#rule-4-1").innerText = rules.minor1[3];
+            document.querySelector("#rule-1-2").innerText = rules.minor2[0];
+            document.querySelector("#rule-2-2").innerText = rules.minor2[1];
+            document.querySelector("#rule-3-2").innerText = rules.minor2[2];
+            document.querySelector("#rule-4-2").innerText = rules.minor2[3];
+            document.querySelector("#directions").innerHTML = `<th>方向</th>${[0,1,2,3,4].map(i => `<td>${rules.dirs[i]}</td>`).join("")}`;
+        }
+    </script>
 </head>
+
 <body>
     <div class="section">
         <div class="page page-bg-01">
@@ -36,8 +120,8 @@
             </div>
             <div class="page-content">
                 <img src="img/Component/Pointless Machines.svg" class="diagram">
-                <h2>モジュール詳細：無意味なマシーン</h2>
-                <p class="flavour-text">にょーむ</p>
+                <h2 id="title">モジュール詳細：無意味なマシーン</h2>
+                <p class="flavour-text" id="ftex">にょーむ</p>
 
                 <p><strong>このモジュールはミスが記録されない。</strong></p>
 
@@ -49,9 +133,9 @@
                     <li>5つの色すべてに<strong>定数</strong>があり、さらに4つの色には<strong>変数</strong>がある。
                         どちらも5つの色のいずれかである。下の表を使用して、各色に対して両方の値を取得する。
                     </li>
-                    <li>シーケンス中の最初に点滅した色で変数と定数を設定し、その先は変数に一致する色を使用して繰り返す。すべての色が得られたら次のステップに移る。2回点滅する色は、シーケンスに最初に現れる方の色の位置を現在の色の位置として使用する。</li>
+                    <li>シーケンス中の最初に点滅した色で変数と定数を設定し、その先は変数に一致する色を使用して繰り返す。すべての色が得られたら次のステップに移る。2回点滅する色は、特に断りがない限りシーケンスに最初に現れる方の色の位置を現在の色の位置として使用する。</li>
                     <li>シーケンスはループすることに注意する。つまり、シーケンスの端に到達した場合は、シーケンスの反対側の端になる。</li>
-                    <li>変数の場合、現在の色か、以前現在の色だったものを取得した場合は、代わりにこのルールが偽になるまで右隣の色を使用する。</li>
+	  <li>変数の場合、現在の色か、以前現在の色だったものを取得した場合は、代わりにこのルールが偽になるまで右隣の色を使用する。</li>
                 </ul>
 
                 <table>
@@ -67,51 +151,51 @@
                         <td>=現在の色。</td>
                     </tr>
                     <tr>
-                        <th colspan="2">それ以外の場合、現在の色が2回点滅する場合は...</th>
+                        <th colspan="2" id="rule-1">それ以外の場合、現在の色が2回点滅する場合...</th>
                     </tr>
                     <tr>
                         <th>変数</th>
-                        <td>=現在の色の左隣の色。</td>
+                        <td id="rule-1-1">=現在の色の左隣の色。</td>
                     </tr>
                     <tr>
                         <th>定数</th>
-                        <td>=現在の色と同じもう一方の色の右隣の色。</td>
+                        <td id="rule-1-2">=現在の色と同じもう一方の色の右隣の色。</td>
                     </tr>
                     <tr>
-                        <th colspan="2">それ以外の場合、現在の色の位置が2回点滅する色と鏡合わせの位置にある場合...
+                        <th colspan="2" id="rule-2">それ以外の場合、現在の色の位置が2回点滅する色と鏡合わせの位置にある場合...
                         </th>
                     </tr>
                     <tr>
                         <th>変数</th>
-                        <td>=シーケンスの3つ先の色。</td>
+                        <td id="rule-2-1">=シーケンスの3つ先の色。</td>
                     </tr>
                     <tr>
                         <th>定数</th>
-                        <td>=シーケンスの3つ先の色と鏡合わせの位置にある色。</td>
+                        <td id="rule-2-2">=シーケンスの3つ先の色と鏡合わせの位置にある色。</td>
                     </tr>
                     <tr>
-                        <th colspan="2">それ以外の場合、現在の色の位置が後半にある場合...
+                        <th colspan="2" id="rule-3">それ以外の場合、現在の色の位置が後半にある場合...
                         </th>
                     </tr>
                     <tr>
                         <th>変数</th>
-                        <td>=シーケンスの2番目の色。</td>
+                        <td id="rule-3-1">=シーケンスの2番目の色。</td>
                     </tr>
                     <tr>
                         <th>定数</th>
-                        <td>=シーケンスの5番目の色。</td>
+                        <td id="rule-3-2">=シーケンスの5番目の色。</td>
                     </tr>
                     <tr>
-                        <th colspan="2">それ以外…
+                        <th colspan="2">それ以外...
                         </th>
                     </tr>
                     <tr>
                         <th>変数</th>
-                        <td>=2回点滅する色(2回目に現れた位置を参照する)。</td>
+                        <td id="rule-4-1">=2回点滅する色(2回目に現れた位置を参照する)。</td>
                     </tr>
                     <tr>
                         <th>定数</th>
-                        <td>=2回点滅する色。</td>
+                        <td id="rule-4-2">=2回点滅する色。</td>
                     </tr>
                 </table>
             </div>
@@ -138,20 +222,20 @@
                         <td>青</td>
                         <td>黄</td>
                     </tr>
-                    <tr>
+                    <tr id="directions">
                         <th>方向</th>
                         <td>上</td>
                         <td>左</td>
-                        <td>上＋右</td>
-                        <td>下＋右</td>
-                        <td>左＋上</td>
+                        <td>上 + 右</td>
+                        <td>下 + 右</td>
+                        <td>上 + 左</td>
                     </tr>
                 </table>
                 <ul>
                     <li>値が変数なしの色と一致する変数を、その定数の方向値に置き換える。</li>
                     <li>そこから、次の方法を使用して、ステップ1の最後から2番目の色の両方向（変数・定数）を1つの方向に組み合わせる。
                         <ul>
-                            <li>2つの方向を組み合わせるには、変数から定数に移動するために必要な時計回り/反時計回りの動きのうち小さい方の量を計算し、定数の位置からその動きを適用する。到達した方向が2つの方向を組み合わせた方向である。
+                            <li>2つの方向を組み合わせるには、変数から定数に移動するために必要な時計回りあるいは反時計回りの動きを計算し、定数の位置からその動きを適用する。到達した方向が2つの方向を組み合わせた方向である。
                             </li>
                             <li>方向が以前計算した他の色の最終的な方向のいずれかに一致する場合、このルールが偽になるまで時計回りに1つ回転する。</li>
                         </ul>

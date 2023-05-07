@@ -8548,6 +8548,37 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "missingSequence",
+		displayName: "Missing Sequence",
+		loggingTag: "Missing Sequence",
+		matches: [
+		{
+			regex: /(\w+ Sequence)(\:| Pattern is|'s Answer:) (.+)/,
+			handler: function (matches, module) {
+				if (!module[matches[1]]){
+					module[matches[1]] = [ ];
+					module.push([ matches[1], module[matches[1]] ]);
+				}
+				const typeDictionary = { ':':'Sequence', ' Pattern is':'Pattern', "'s Answer:":"Answer"};
+				module[matches[1]].push(`${typeDictionary[matches[2]]}: ${matches[3]}`);
+				return true;
+			}
+		},
+		{
+			regex: /The values are submitted! Let's see.../,
+			handler: function(match, module) {
+				let submissionLines = readTaggedLines(6).map(x => x.substring(2));
+				module.push([ match.input, submissionLines ]);
+				return true;
+			}
+		},
+				
+		{
+			regex: /.+/
+		}
+			]		
+	},
+	{
 		moduleID: "SquaresOfMisery",
 		displayName: "Misery Squares",
 		loggingTag: "SquaresOfMisery"
@@ -15001,6 +15032,29 @@ let parseData = [
 					mod.groups.add("Solution: " + readLine());
 				}
 			},
+			{
+				regex: /(.+Exception): (.+)/,
+				handler: function (matches) {
+					const start = linen;
+
+					let stacktrace = [];
+					while (true) {
+						let line = readLine();
+						if (line === "") break;
+
+						stacktrace.push(line);
+					}
+
+					const exception = {
+						type: matches[1],
+						message: matches[2],
+						stacktrace,
+						start,
+						end: linen
+					};
+					exceptions.push(exception);
+				}
+			}
 		]
 	},
 	{
