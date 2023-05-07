@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Unhinges — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .cell {
+            fill: transparent;
+            stroke: #999;
+            stroke-width: 0.08px;
+        }
+
+        .wall {
+            stroke: #000;
+            stroke-width: 0.1px;
+            stroke-linecap: square;
+        }
+    </style>
+    <script>
+        function range(start, count) {
+            return [...Array(count).keys()].map(i => i + start);
+        }
+
+        function genMaze(rng) {
+            let hwalls = range(0, 169);
+            let vwalls = range(0, 169);
+
+            let renderSVG = () => {
+                svg.innerHTML = `
+                <rect width="13" height="13" x="1" y="1" fill="#ddd" />
+                ${range(0, 169).map((i) => `<rect class="cell highlightable" width="1" height="1" x="${i % 13 + 1}" y="${(i / 13 + 1) | 0}" />`).join("")}
+                ${vwalls.map((i) => `<path class="wall" d="M${i % 13 + 1} ${(i / 13 + 1) | 0}v1"/>`).join("")}
+                ${hwalls.map((i) => `<path class="wall" d="M${i % 13 + 1} ${(i / 13 + 1) | 0}h1"/>`).join("")}
+                <path class="wall" d="M14 1v13" />
+                <path class="wall" d="M1 14h13" />
+                <path d="M1 1v13" stroke="green" stroke-width=".25" stroke-linecap="round"/>
+                <path d="M14 1v13" stroke="blue" stroke-width=".25" stroke-linecap="round"/>
+                <path d="M1 1h13" stroke="red" stroke-width=".25" stroke-linecap="round"/>
+                <path d="M1 14h13" stroke="black" stroke-width=".25" stroke-linecap="round"/>
+                ${range(0,13).map((i) => `<text font-size="1" x="${i + 1.1}" y=".8">${"ABCDEFGHIJKLM"[i]}</text>`)}
+                ${range(0,13).map((i) => `<text font-size="1" x="${i + 1.1}" y="14.9">${"NOPQRSTUVWXYZ"[i]}</text>`)}
+                ${range(0,13).map((i) => `<text font-size="1" x=".1" y="${i + 1.9}">${"ABCDEFGHIJKLM"[i]}</text>`)}
+                ${range(0,13).map((i) => `<text font-size="1" x="14.2" y="${i + 1.9}">${"NOPQRSTUVWXYZ"[i]}</text>`)}
+                
+            `;
+            };
+
+            let svg = document.getElementById("mz"); 
+
+            let active = [];
+            let todo = range(0, 169);
+            let start = rng.next(0, todo.length);
+            active.push(todo[start]);
+            todo.splice(start, 1);
+
+            while (todo.length > 0) {
+                let activeIx = rng.next(0, active.length);
+                let sq = active[activeIx];
+
+                if (sq == null)
+                    break;
+
+                let adjs = [];
+                if ((sq % 13) > 0 && todo.includes(sq - 1))
+                    adjs.push(sq - 1);
+                if ((sq % 13) < 12 && todo.includes(sq + 1))
+                    adjs.push(sq + 1);
+                if ((sq / 13) > 0 && todo.includes(sq - 13))
+                    adjs.push(sq - 13);
+                if ((sq / 13) < 12 && todo.includes(sq + 13))
+                    adjs.push(sq + 13);
+
+                if (adjs.length == 0) {
+                    active.splice(activeIx, 1);
+                    continue;
+                }
+
+                let adj = adjs[rng.next(0, adjs.length)];
+                todo.splice(todo.indexOf(adj), 1);
+                active.push(adj);
+
+                if (adj === sq - 1)
+                    vwalls.splice(vwalls.findIndex(w => w === sq), 1);
+                else if (adj === sq + 1)
+                    vwalls.splice(vwalls.findIndex(w => w === adj), 1);
+                else if (adj === sq - 13)
+                    hwalls.splice(hwalls.findIndex(w => w === sq), 1);
+                else if (adj === sq + 13)
+                    hwalls.splice(hwalls.findIndex(w => w === adj), 1);
+            }
+
+            for (let x = 0; x < 3; x++) {
+                for (let y = 0; y < 3; y++) {
+                    let unvisited = range(4 * y, 5).map(row => range(13 * row + 4 * x, 5)).flat();
+                    let adjs = [];
+                    let potentials = [];
+                    adjs.push(unvisited[rng.next(0, unvisited.length)]);
+
+                    while (unvisited.length > 0) {
+                        if (adjs.length == 0) {
+                            // for (let i = potentials.length - 1; i >= 0; i--)
+                            //     if (!(potentials[i].t == "h" ? hwalls : vwalls).includes(potentials[i].p))
+                            //         potentials.splice(i, 1);
+
+                            if (potentials.length === 0) {
+                                console.log("aaaaaa screaming i don't like this (infloop maybe?)");
+                                break;
+                            }
+                            let selection = potentials[rng.next(0, potentials.length)];
+                            adjs.push(selection.c);
+
+                            if (selection.t == "h")
+                                hwalls.splice(hwalls.findIndex(i => i === selection.p), 1);
+                            else
+                                vwalls.splice(vwalls.findIndex(i => i === selection.p), 1);
+                        }
+
+                        let current = adjs[rng.next(0, adjs.length)];
+
+                        unvisited.splice(unvisited.findIndex(i => i === current), 1);
+                        adjs.splice(adjs.findIndex(i => i === current), 1);
+
+                        for (let i = potentials.length - 1; i >= 0; i--)
+                            if (potentials[i].c === current)
+                                potentials.splice(i, 1);
+
+                        if ((current % 13) > 0 && unvisited.includes(current - 1)) {
+                            if (vwalls.includes(current))
+                                potentials.push({ t: "v", p: current, c: current - 1 });
+                            else if (!adjs.includes(current - 1))
+                                adjs.push(current - 1);
+                        }
+                        if ((current % 13) < 12 && unvisited.includes(current + 1)) {
+                            if (vwalls.includes(current + 1))
+                                potentials.push({ t: "v", p: current + 1, c: current + 1 });
+                            else if (!adjs.includes(current + 1))
+                                adjs.push(current + 1);
+                        }
+                        if (((current / 13) | 0) > 0 && unvisited.includes(current - 13)) {
+                            if (hwalls.includes(current))
+                                potentials.push({ t: "h", p: current, c: current - 13 });
+                            else if (!adjs.includes(current - 13))
+                                adjs.push(current - 13);
+                        }
+                        if (((current / 13) | 0) < 12 && unvisited.includes(current + 13)) {
+                            if (hwalls.includes(current + 13))
+                                potentials.push({ t: "h", p: current + 13, c: current + 13 });
+                            else if (!adjs.includes(current + 13))
+                                adjs.push(current + 13);
+                        }
+                    }
+                }
+            }
+
+            renderSVG();
+        };
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function setRules(rnd) { genMaze(rnd); }
+    </script>
+</head>
+
+<body class="body">
+    <div class="section header">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Unhinges</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Component.svg" class="diagram">
+                <h2>On the Subject of Unhinges</h2>
+                <p class="flavour-text">Zero times one hundred is exactly equal to this module.</p>
+                <p class="appendix-reference">See Appendix BLANK in <a href="Blind%20Alley.html">Blind Alley</a> for
+                    blank modules identification.</p>
+                <p class="appendix-reference">Note: if there are fewer than four other valid modules on the bomb, then
+                    I've made <a href="A%20Mistake.html">A Mistake</a>.</p>
+                <p>The module appears blank.</p>
+                <p>Selecting another module, then immediately selecting this one will be called forcing the module.</p>
+                <p>Forcing the module with four specific modules makes the module show a color briefly. These four
+                    modules will be referred to by the color they make the module flash. If colorblind mode is enabled,
+                    the name of the color will be displayed as well.</p>
+                <p>Use the first letters of the four modules to determine your starting and ending positions in the maze
+                    below.</p>
+                <ul>
+                    <li>The first letter of Red is the starting row in the maze below.</li>
+                    <li>The first letter of Green is the starting column in the maze below.</li>
+                    <li>The first letter of Blue is the ending row in the maze below.</li>
+                    <li>The first letter of Black is the ending column in the maze below.</li>
+                </ul>
+                <p>Forcing the module twice in the following specific patterns will perform specific actions.</p>
+                <ul>
+                    <li>Using Blue then Green does nothing.</li>
+                    <li>Using Black then Red activates the module.</li>
+                    <li>Using Red then Black resets and deactivates the module.</li>
+                    <li>Using Green then Blue when the module is activated submits the current position.</li>
+                </ul>
+                <p>While the module is activated, forcing a color will move in the associated direction. Note that the
+                    most recent move is "delayed", i.e. it will only be performed on the next force and only if the next
+                    force does not cause a special action listed above.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Unhinges</span>
+            </div>
+            <div class="page-content">
+                <svg id="mz" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15"></svg>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+
+</html>
