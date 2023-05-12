@@ -1,5 +1,41 @@
 const everything = {
     'General': {
+		'Alphabet': {
+			'CSS': 'textonly',
+			'RandomizeLeft': true,
+			'RandomizeRight': true,
+			'Groups': ['letters', 'numbers'],
+			'Items': [
+				[
+					['A', '1'],
+					['B', '2'],
+					['C', '3'],
+					['D', '4'],
+					['E', '5'],
+					['F', '6'],
+					['G', '7'],
+					['H', '8'],
+					['I', '9'],
+					['J', '10'],
+					['K', '11'],
+					['L', '12'],
+					['M', '13'],
+					['N', '14'],
+					['O', '15'],
+					['P', '16'],
+					['Q', '17'],
+					['R', '18'],
+					['S', '19'],
+					['T', '20'],
+					['U', '21'],
+					['V', '22'],
+					['W', '23'],
+					['X', '24'],
+					['Y', '25'],
+					['Z', '26']
+				]
+			]
+		},			
         'Braille': {
             'CSS': 'zoo braille',
             'RandomizeRight': true,
@@ -973,12 +1009,47 @@ const everything = {
 				]
 			]
 		},
+		'Logic': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': ['letters', 'conditions'],
+			'Items': [
+				[
+					['A', 'Number of batteries = number of indicators'],
+					['B', 'Serial number has more letters than digits'],
+					['C', 'Has IND indicator'],
+					['D', 'Has FRK indicator'],
+					['E', 'Exactly 1 unlit indicator'],
+					['F', 'More than 1 port type'],
+					['G', '2 batteries or more'],
+					['H', 'Less than 2 batteries'],
+					['I', 'Last digit of serial number is odd'],
+					['J', 'More than 4 batteries'],
+					['K', 'Exactly 1 lit indicator'],
+					['L', 'More than 2 indicators'],
+					['M', 'No duplicate ports'],
+					['N', 'More than 2 battery holders'],
+					['O', 'Has both lit and unlit indicators'],
+					['P', 'Has parallel port'],
+					['Q', 'Exactly 2 ports'],
+					['R', 'Has PS/2 port'],
+					['S', 'Sum of digits in serial number > 10'],
+					['T', 'Has MSA indicator'],
+					['U', 'Exactly 1 battery holder'],
+					['V', 'Serial number contains vowels'],
+					['W', 'No indicators'],
+					['X', 'Exactly 1 indicator'],
+					['Y', 'More than 5 ports'],
+					['Z', 'Less than 2 ports']
+				]
+			]
+		},
 		'Minesweeper':{
 			'CSS': 'textonly',
 			'RandomizeRight': true,
 			'Groups': ['numbers', 'colors'],
 			'Items': [
-			[
+				[
 					['1', 'Green'],
 					['2', 'Orange'],
 					['3', 'Yellow'],
