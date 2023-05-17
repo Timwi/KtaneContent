@@ -1326,13 +1326,6 @@ function readDirectly(line, name, id) {
             label: match[1],
             obj: $(match[2])
         };
-    } else {
-        var match = /^=mu (\d+)$/.exec(line);
-        if (match) {
-            const lines = readMultiple(parseInt(match[1]));
-            parseMarkup(lines);
-            return;
-        }
     }
 
     if (id) {
@@ -1340,20 +1333,6 @@ function readDirectly(line, name, id) {
     } else {
         GetBomb().GetModule(name).push(line);
     }
-}
-
-function parseMarkup(lines) {
-    const bullets = [];
-
-    for (const character of lines) {
-        if (character.trim() == "") { // Whitespace
-
-        } else if (character == "-") { // Subbullet
-
-        }
-    }
-
-    return bullets;
 }
 
 // opt = {
