@@ -15033,7 +15033,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /(.+Exception): (.+)/,
+				regex: /(.+Exception)(?:: (.+))?/,
 				handler: function (matches) {
 					const start = linen;
 
@@ -15047,7 +15047,7 @@ let parseData = [
 
 					const exception = {
 						type: matches[1],
-						message: matches[2],
+						message: matches[2] ?? "",
 						stacktrace,
 						start,
 						end: linen
