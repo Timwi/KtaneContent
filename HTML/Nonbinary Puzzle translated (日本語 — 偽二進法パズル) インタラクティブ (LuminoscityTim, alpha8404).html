@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>偽二進法パズル — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        let sizeNumber = $(".sizeNumber");
+        const SIZE_MIN = 4;
+        const SIZE_MAX = 8;
+        let _sizeW = 6;
+        let _sizeH = 6;
+        const COLOR_COUNT = 4;
+        let gameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+        let origGameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+        let currX = 0;
+        let currY = 0;
+        var start;
+        let resultList = [];
+        let solList = [];
+        let generating = false;
+        let modeWasSolve = true;
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        const directions = {
+            Up: [0, -1],
+            Left: [-1, 0],
+            Down: [0, 1],
+            Right: [1, 0]
+        };
+
+        const colormap = {
+            1: "yellow",
+            2: "white",
+            3: "purple",
+            4: "black",
+            y: "yellow",
+            p: "white",
+            w: "purple",
+            k: "black",
+            b: "black"
+        };
+        const keynumber = {
+            y: 1,
+            w: 2,
+            p: 3,
+            k: 4,
+            b: 4
+        };
+        const numletter = {
+            0: ".",
+            1: "Y",
+            2: "W",
+            3: "P",
+            4: "K"
+        }
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function resetPos() {
+            selected = grid.children().eq(1).children().eq(1);
+            updateSelection();
+            currX = currY = 0;
+            updateResult();
+        }
+
+        function Remove(arr, val) {
+            let i = arr.findIndex(v => v == val);
+            if (i >= 0)
+                arr.splice(i, 1);
+        }
+
+        function* generatePuzzle(board, phase2)
+        {
+            // Check if the whole board is done
+            if (board.every(i => i != null))
+            {
+                yield board;
+            }
+            else {
+                // Find an unfilled square that has the fewest possibilities
+                let bestCell = -1;
+                let fewestPossibilities = COLOR_COUNT + 1;
+                let x;
+                let y;
+                for (let cell = 0; cell < _sizeW * _sizeH; cell++)
+                {
+                    if (board[cell] != null)
+                        continue;
+                    x = cell % _sizeW;
+                    y = Math.floor(cell / _sizeW);
+                    let possibilities = new CtRange(0, COLOR_COUNT).Enumerate().filter(color =>
+                        (x == 0 || board[cell - 1] != color) && (x == _sizeW - 1 || board[cell + 1] != color) && (y == 0 || board[cell - _sizeW] != color) && (y == _sizeH - 1 || board[cell + _sizeW] != color)
+                    ).length;
+                    if (possibilities < fewestPossibilities)
+                    {
+                        bestCell = cell;
+                        if (possibilities == 1)
+                            break;
+                        fewestPossibilities = possibilities;
+                    }
+                }
+
+                x = bestCell % _sizeW;
+                y = Math.floor(bestCell / _sizeW);
+                let parityCounts = new CtRange(0, 2).Enumerate().map(parity => board.filter(cl => cl != null && cl % 2 == parity).length);
+                let offset = Math.floor(Math.random() * COLOR_COUNT);
+                for (let colorIter = 0; colorIter < COLOR_COUNT; colorIter++)
+                {
+                    let color = (colorIter + offset) % COLOR_COUNT;
+
+                    // Make sure not to place the same color next to itself
+                    if (!( (x == 0 || board[bestCell - 1] != color) && (x == _sizeW - 1 || board[bestCell + 1] != color) &&
+                           (y == 0 || board[bestCell - _sizeW] != color) && (y == _sizeH - 1 || board[bestCell + _sizeW] != color)
+                    )) continue;
+                    // Make sure not to place more than 18 of each parity
+                    if (parityCounts[color % 2] >= Math.floor(_sizeW * _sizeH / 2))
+                        continue;
+
+                    board[bestCell] = color;
+
+                    // Make sure that placing this color hasn’t made it impossible to place the rest of the colors in the same ROW
+                    let numMissingColors = new CtRange(0, COLOR_COUNT).Enumerate().filter(clr => !(new CtRange(0, _sizeW).Enumerate().some(xx => board[xx + _sizeW * y] == clr))).length;
+                    if (numMissingColors > (new CtRange(0, _sizeW).Enumerate().filter(xx => board[xx + _sizeW * y] == null).length))
+                        continue;
+
+                    // Make sure that placing this color hasn’t made it impossible to place the rest of the colors in the same COLUMN
+                    numMissingColors = new CtRange(0, COLOR_COUNT).Enumerate().filter(clr => !(new CtRange(0, _sizeH).Enumerate().some(yy => board[x + _sizeW * yy] == clr))).length;
+                    if (numMissingColors > (new CtRange(0, _sizeH).Enumerate().filter(yy => board[x + _sizeW * yy] == null).length))
+                        continue;
+
+                    // All checks passed: try this color
+                    for (const result of generatePuzzle(board, phase2))
+                         yield result;
+                }
+                board[bestCell] = null;
+            }
+        }
+
+        //This function is based on the module source code
+        function generate() {
+            generating = true;
+
+            let initGrid = Array(_sizeW * _sizeH).fill(null);
+            let sol = generatePuzzle(initGrid, false).next();
+            let _solution = sol.value;
+
+            solList = [];
+            for (let y = 0; y < _sizeH; y++) {
+                for (let x = 0; x < _sizeW; x++) {
+                    let ix = y * _sizeW + x;
+                    let n = _solution[ix] + 1;
+                    gameGrid[x][y] = n;
+                    solList.push(numletter[n]);
+                }
+                solList.push(" ");
+            }
+            updateGrid();
+            $(".solution .str").text(solList.join(""));
+
+            let givens = ReduceRequiredSet(ShuffleFisherYates(new CtRange(0, _sizeW * _sizeH).Enumerate()), test =>
+            {
+                let board = Array(_sizeW * _sizeH).fill(null);
+                let s = test.SetToTest;
+                s.forEach((cell, i) => { board[cell] = _solution[cell]; });
+
+                let gen = generatePuzzle(board, true);
+                let res1 = gen.next();
+                let res2 = gen.next();
+                return res2.done;
+            });
+            for (let y = 0; y < _sizeH; y++) {
+                for (let x = 0; x < _sizeW; x++) {
+                    let ix = y * _sizeW + x;
+                    let n = givens.includes(ix) ? (_solution[ix] + 1) : 0;
+                    gameGrid[x][y] = n;
+                    origGameGrid[x][y] = n;
+                }
+            }
+            updateGrid();
+            generating = false;
+        }
+
+        function updateResult() {
+            resultList = [];
+            for (let y = 0; y < _sizeH; y++) {
+                for (let x = 0; x < _sizeW; x++) {
+                    let n = gameGrid[x][y];
+                    resultList.push(numletter[n]);
+                }
+                resultList.push(" ");
+            }
+            $(".result .str").text(resultList.join(""));
+        }
+
+        let down = false;
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == "-")
+                sizeDec();
+            else if (k == "=" || k == "+")
+                sizeInc();
+            else if (event.key.startsWith("Arrow")) {
+                let direction = directions[event.key.substring(5)];
+                let x = currX + direction[0];
+                let y = currY + direction[1];
+                if (x >= 0 && x < _sizeW && y >= 0 && y < _sizeH) {
+                    selected = grid.children().eq(y + 1).children().eq(x + 1);
+                    updateSelection();
+                    currX = x;
+                    currY = y;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            else if (NoSpecialKeys(event) && (k == " " || k == "enter" || k == "y" || k == "p" || k == "w" || k == "k" || k == "b")) {
+                let n = 0;
+                if (k == " " || k == "enter")
+                    event.preventDefault();
+                else
+                    n = keynumber[k];
+                if (selected && selected.hasClass("netsq")) {
+                    if (!selected.hasClass("locked")) {
+                        gameGrid[currX][currY] = n;
+                        if (mode() == MODE_READ)
+                            origGameGrid[currX][currY] = n;
+                        updateGrid();
+                        if (checkSolution()) {
+                            if ($("button.sound").hasClass("play"))
+                                audioSolve[0].play();
+                            $(".solved-text").removeClass("invis");
+                        }
+                        else {
+                            playYPWKSound(n);
+                            $(".solved-text").addClass("invis");
+                        }
+                    }
+                    if (currX == _sizeW - 1)
+                        currY = (currY + 1) % _sizeH;
+                    currX = (currX + 1) % _sizeW;
+                    var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                    selected = elem;
+                    updateSelection();
+                }
+            }
+            down = false;
+        });
+
+        function sizeDec() {
+            _sizeW = _sizeH = Math.max(SIZE_MIN, _sizeH - 2);
+            sizeNumber.text(_sizeH);
+            if (_sizeH == SIZE_MIN) $(".six, .eight").addClass("invisible");
+            else $(".eight").addClass("invisible");
+            updateGrid();
+        }
+        function sizeInc() {
+            _sizeW = _sizeH = Math.min(SIZE_MAX, _sizeH + 2);
+            sizeNumber.text(_sizeH);
+            if (_sizeH == SIZE_MAX) $(".six, .eight").removeClass("invisible");
+            else $(".six").removeClass("invisible");
+            updateGrid();
+        }
+        $(".sizetext.minus").click(function() {
+            sizeDec();
+        });
+        $(".sizetext.plus").click(function() {
+            sizeInc();
+        });
+
+        let ypNumber = $(".yp-number");
+        let wkNumber = $(".wk-number");
+        function updateGrid() {
+            for (let y = 0; y < _sizeH; y++) {
+                for (let x = 0; x < _sizeW; x++) {
+                    let n = gameGrid[x][y];
+                    let elem = grid.children().eq(y+1).children().eq(x+1);
+
+                    elem.removeClass("yellow purple white black");
+                    if (n != 0)
+                        elem.addClass(colormap[n]);
+                }
+            }
+            ypNumber.text(parityCount("py"));
+            wkNumber.text(parityCount("bw"));
+            updateResult();
+        }
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+        function getRow(y) {
+            return new CtRange(0, _sizeW).Enumerate().map(x => gameGrid[x][y])
+        }
+        function getCol(x) {
+            return new CtRange(0, _sizeH).Enumerate().map(y => gameGrid[x][y])
+        }
+        function parityCount(p) {
+            if (p == "py")
+                return $(".netsq.purple:not(.invisible), .netsq.yellow:not(.invisible)").length;
+            else
+                return $(".netsq.white:not(.invisible), .netsq.black:not(.invisible)").length;
+        }
+        function checkSolution() {
+            if (mode() == MODE_PLAY) {
+                if (resultList.every((elem, i) => resultList[i] == solList[i]))
+                    return true;
+                else
+                    return false;
+            }
+            else if (mode() == MODE_SOLVE) {
+                let row = [];
+                let col = [];
+                for (let i = 0; i < _sizeH; i++) { row.push(getRow(i)); }
+                for (let i = 0; i < _sizeW; i++) { col.push(getCol(i)); }
+                for (let i = 0; i < _sizeH; i++) { if (row[i].some(e => e == 0)) return false; }
+                if (parityCount("py") != (_sizeH * _sizeW) >> 1) return false;
+                if (parityCount("bw") != (_sizeH * _sizeW) >> 1) return false;
+                for (let i = 0; i < _sizeH; i++) {
+                    if (row[i].filter(e => e == 1).length < 1) return false;
+                    if (row[i].filter(e => e == 2).length < 1) return false;
+                    if (row[i].filter(e => e == 3).length < 1) return false;
+                    if (row[i].filter(e => e == 4).length < 1) return false;
+                    if (row[i].some((el, j) => j >= 1 && el == row[i][j-1] )) return false;
+                }
+                for (let i = 0; i < _sizeW; i++) {
+                    if (col[i].filter(e => e == 1).length < 1) return false;
+                    if (col[i].filter(e => e == 2).length < 1) return false;
+                    if (col[i].filter(e => e == 3).length < 1) return false;
+                    if (col[i].filter(e => e == 4).length < 1) return false;
+                    if (col[i].some((el, j) => j >= 1 && el == col[i][j-1] )) return false;
+                }
+                return true;
+            }
+            else
+                return false;
+        }
+        function playYPWKSound(n) {
+            if ($("button.sound").hasClass("play") && n > 0) {
+                let aud = n == 1 ? audioY[0].cloneNode() : n == 2 ? audioP[0].cloneNode() : n == 3 ? audioW[0].cloneNode() : audioK[0].cloneNode();
+                aud.volume = 0.3;
+                aud.play();
+            }
+        }
+
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        for (let i = 0; i < SIZE_MAX; i++) {
+            let letter = $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+            if (i >= _sizeW) letter.addClass("eight invisible");
+            else if (i >= SIZE_MIN) letter.addClass("six");
+        }
+        for (let y = 1; y <= SIZE_MAX; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+
+            let number = $("<div>").addClass("square numbers").text(y).appendTo(row);
+            if (y > _sizeH) {
+                row.addClass("eight invisible");
+                number.addClass("eight invisible");
+            }
+            else if (y > SIZE_MIN) {
+                row.addClass("six");
+                number.addClass("six");
+            }
+
+            for (let x = 1; x <= SIZE_MAX; x++) {
+                let square = $("<div>").addClass("netsquare square netsq").text("").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    if (y > _sizeH || x > _sizeW) element.addClass("eight invisible");
+                    else if (y > SIZE_MIN || x > SIZE_MIN) element.addClass("six");
+
+                    element.click(function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        selected = $(this);
+                        updateSelection();
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            gameGrid[x-1][y-1] = (gameGrid[x-1][y-1] + 1) % 5;
+                            origGameGrid[x-1][y-1] = gameGrid[x-1][y-1];
+                            playYPWKSound(gameGrid[x-1][y-1]);
+                            updateGrid();
+                        }
+                        else if (!element.hasClass("locked")) {
+                            gameGrid[x-1][y-1] = (gameGrid[x-1][y-1] + 1) % 5;
+                            updateGrid();
+
+                            if (checkSolution()) {
+                                if ($("button.sound").hasClass("play"))
+                                    audioSolve[0].play();
+                                $(".solved-text").removeClass("invis");
+                            }
+                            else {
+                                playYPWKSound(gameGrid[x-1][y-1]);
+                                $(".solved-text").addClass("invis");
+                            }
+                        }
+                        // updateResult();
+                    });
+                    if (x == 1 && y == 1) {
+                        selected = element;
+                        element.addClass("selected");
+                    }
+                });
+            }
+        }
+
+        let audioY = $("<audio>")
+            .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+            .appendTo(grid);
+        let audioW = $("<audio>")
+            .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+            .appendTo(grid);
+        let audioK = $("<audio>")
+            .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+            .appendTo(grid);
+        let audioP = $("<audio>")
+            .attr("src", "audio/Module Listening/Rhythms.ogg")
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        $("<div>").addClass("netsquare reset-grid square gray").text("↻").appendTo(tools).click(function() {
+            if (mode() != MODE_READ) {
+                for (let y = 0; y < _sizeH; y++) {
+                    for (let x = 0; x < _sizeW; x++) {
+                        let n = origGameGrid[x][y];
+                        gameGrid[x][y] = n;
+                        var elem = grid.children().eq(y+1).children().eq(x+1);
+                    }
+                }
+                updateGrid();
+                $(".solved-text").addClass("invis");
+                $(".netsquare").removeClass("locked");
+                $(".netsquare.yellow, .netsquare.purple, .netsquare.white, .netsquare.black").addClass("locked");
+            }
+            resetPos();
+        });
+
+        $("button.colorbl").click(function() {
+            $(this).toggleClass("active");
+            $("body").toggleClass("colorblind");
+        });
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            if (mode() == MODE_READ)
+                $(".netsquare").removeClass("locked");
+            else {
+                $(".netsquare.yellow, .netsquare.purple, .netsquare.white, .netsquare.black").addClass("locked");
+                resetPos();
+            }
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            if (mode() == MODE_PLAY) {
+                modeWasSolve = $(".read-solve").hasClass("solve");
+                $("body").removeClass("free");
+                $("button.read-solve").prop('disabled', true);
+                $("button.read-solve").addClass("solve");
+                $(".solution").toggleClass("invisible", $(".result").hasClass("invisible"));
+                $(".sizeHolder").removeClass("invisible");
+                generate();
+                updateGrid();
+                $(".netsquare").removeClass("locked");
+                $(".netsquare.yellow, .netsquare.purple, .netsquare.white, .netsquare.black").addClass("locked");
+            }
+            else {
+                $("button.read-solve").prop('disabled', false);
+                if (!modeWasSolve) {
+                    $(".netsquare").removeClass("locked");
+                    $("button.read-solve").removeClass("solve");
+                }
+                $(".sizeHolder").addClass("invisible");
+                $(".solution").addClass("invisible");
+            }
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $(".result").toggleClass("invisible");
+            if (mode() == MODE_PLAY)
+                $(".solution").toggleClass("invisible", $(".result").hasClass("invisible"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").prop('disabled', false);
+            $("body").removeClass("free");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            $(".result").addClass("invisible");
+            $(".solution").addClass("invisible");
+            $(".sizeHolder").addClass("invisible");
+            $(".solved-text").addClass("invis");
+            for (let y = 0; y < SIZE_MAX; y++) {
+                for (let x = 0; x < SIZE_MAX; x++) {
+                    gameGrid[x][y] = 0;
+                    origGameGrid[x][y] = 0;
+                    var elem = grid.children().eq(y+1).children().eq(x+1);
+                    elem.removeClass("locked yellow purple white black");
+                }
+            }
+            updateGrid();
+            resetPos();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            if (_sizeH > 6)
+                sizeDec();
+            else if (_sizeH < 6)
+                sizeInc();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .sizeHolder, .hstack.just-left")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateDisable = Array.from($(".tools button")).map(x => $(x)).map(x => x.prop("disabled") || false);
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_solList = Array(solList.length);
+            Object.assign(s_solList, solList);
+            let s_gameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+            let s_origGameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+            for (let y = 0; y < _sizeH; y++)
+                for (let x = 0; x < _sizeW; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                }
+            let s_selected = selected;
+            let s_sizeW = _sizeW;
+            let s_sizeH = _sizeH;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_modeWasSolve = modeWasSolve;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".netsquare, .solved-text, .tools button, .sizeHolder, .hstack.just-left").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".tools button").each((i, x) => $(x).prop("disabled", saveStateDisable[i]));
+                currentState = stateNumber;
+                for (var i = 0; i < 2; i++)
+                    if (_sizeH > s_sizeH) sizeDec();
+                    else if (_sizeH < s_sizeH) sizeInc();
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                modeWasSolve = s_modeWasSolve;
+                solList = [];
+                solList = Array(s_solList.length);
+                Object.assign(solList, s_solList);
+                for (let y = 0; y < _sizeH; y++) {
+                    for (let x = 0; x < _sizeW; x++) {
+                        let n = gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                    }
+                }
+                $(".solution .str").text(solList.join(""));
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        @font-face {
+            font-family: "Germania";
+            font-weight: bold;
+            src: local('Germania'), url(font/Germania.ttf);
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 80px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        .square-row {
+            height: 56px;
+            margin: 1.7px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .square-row.letters {
+            margin-left: 62px;
+        }
+        .solution, .result {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .solution span, .result span {
+            font-family: "Inconsolata";
+            font-size: 18pt;
+        }
+        .result span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        .invisible {
+            color: transparent;
+            background-color: transparent;
+            border-color: transparent;
+            user-select: none;
+            pointer-events: none;
+        }
+        .square-row.invisible, .square.invisible, .letters .square.invisible {
+            display: none;
+        }
+
+        .square {
+            margin: 2px;
+            width: 56px;
+            height: 56px;
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .dark .square { border-color: #444; }
+        .square.numbers, .letters .square {
+            margin-top: 10px;
+            border-width: 0;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .netsquare {
+            height: 56px;
+            width: 56px;
+            font-size: 38px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .netsquare:not(.counter) { color: #000; }
+        .netsq { background-color: #777; }
+        .dark .netsquare.gray { background-color: #888; }
+        .dark .square.netsquare.selected, .square.netsquare.selected {
+            border: 3px solid #33F;
+        }
+        .square.netsquare.yellow { background-color: #FF8; }
+        .square.netsquare.purple { background-color: #C7F; }
+        .square.netsquare.white { background-color: #FFF; }
+        .square.netsquare.black { background-color: #000; }
+        .colorblind .square.netsquare.yellow::after { content: 'Y'; }
+        .colorblind .square.netsquare.purple::after { content: 'P'; }
+        .colorblind .square.netsquare.white::after { content: 'W'; }
+        .colorblind .square.netsquare.black::after { content: 'K'; color: #DDD; }
+
+        .sizetext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .sizeNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 52px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sizeHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+        .count-label {
+            padding: 10px;
+            font-size: 20px;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:not([disabled]):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+        button.read-solve.solve::before {
+            content: '解除';
+        }
+        button.read-solve:not(.solve)::before {
+            content: '入力';
+        }
+        button.expert-play.play::before {
+            content: '生成';
+        }
+        button.expert-play:not(.play)::before {
+            content: '手動';
+        }
+        button.sound.play::before {
+            content: '効果音';
+        }
+        button.sound:not(.play)::before {
+            content: 'ミュート';
+        }
+        button.show-sol.show::before {
+            content: '回答表示';
+        }
+        button.show-sol:not(.show)::before {
+            content: '回答非表示';
+        }
+        button.colorbl {
+            padding: 4px 2px 2px 2px;
+            font-size: 14px;
+        }
+        button.colorbl.active::before {
+            content: '色覚サポート有り';
+        }
+        button.colorbl:not(.active)::before {
+            content: '色覚サポート無し';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽二進法パズル</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Nonbinary Puzzle.svg" class="diagram">
+                <h2>モジュール詳細：偽二進法パズル</h2>
+                <p class="flavour-text">この爆弾を解除しないと、代名詞がwas/wereになっちゃう。</p>
+                <ul>
+                 <li>グリッドは黄、白、紫、黒、または塗りつぶされていない(灰)セルで構成されている。</li>
+                 <li>灰のセルをクリックして色を切り替えることが出来る。以下のルールにおいては、塗りつぶされていないセルは色がないとみなす。</li>
+                 <li>次のような条件に従ってセルを色付けする必要がある。
+                 <li style="list-style-type: none"><ol>
+                     <li>隣接する2つのセルが同じ色になることはない。</li>
+                     <li>全ての段と列に各色が1つ以上含まれている必要がある。</li>
+                     <li>黄と紫のセルの総数は、白と黒のセルの総数と等しい。</li>
+                 </ol></li>
+                 <li>モジュールの横に2つのディスプレーがある。上のディスプレーは黄と紫のセルの総数、下のディスプレーには白と黒のセルの総数が表示される。</li>
+                </ul>
+
+                <div style="height: 5mm"></div>
+                <h3>インタラクティブの操作方法</h3>
+                <p>以下のインタラクティブを使用することで解除に役立てることが出来る。</p>
+                <div style="height: 2mm"></div>
+                <b>入力</b>モードでは、キーボードのW/K/P/Yまたはスペースキー/エンターキーを押すか、セルをクリックしてパズルに入力することが出来る。
+                <div style="height: 2mm"></div>
+                効果音はミュートすることが出来る。
+                <div style="height: 2mm"></div>
+                手動/生成を押すとモードが切り替わり、生成モードではモジュールと同じように生成されたパズルを楽しむことが出来る。
+                <div style="height: 2mm"></div>
+                <b>-</b>と<b>+</b>キーを押すか<b>[-]</b>と<b>[+]</b>を押して生成モードのグリッドサイズを変更できる。
+                <div style="height: 2mm"></div>
+                解除モードで思い付いた解除方法や生成モードで生成されたパズルの解除法は、表示または非表示にすることが出来る。
+                <div style="height: 2mm"></div>
+                他のボタンを使用して、グリッドの現在の状態を保存、保存の削除、全リセット等が出来る。
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽二進法パズル</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack">
+                    <button class="colorbl"></button>
+                </div>
+                <div class="hstack wrap">
+                    <div class="vstack tools"></div>
+                    <div class="vstack gridholder">
+                        <div class="grid vstack just-left"></div>
+                        <div class="hstack">
+                            <div class="netsquare"></div>
+                            <span class="count-label">Y/P:</span>
+                            <div class="netsquare counter yp-number">0</div>
+                            <span class="count-label">W/K:</span>
+                            <div class="netsquare counter wk-number">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">保存</button>
+                </div>
+                <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="reset-saves">保存リセット</button>
+                    <button class="reset-all">全リセット</button>
+                    <div style="width: 8mm"></div>
+                    <div class="sizeHolder hstack invisible">
+                        <div class="sizetext label">サイズ:</div>
+                        <div class="sizetext sizeNumber">6</div>
+
+                        <button class="sizetext minus">-</button>
+                        <button class="sizetext plus">+</button>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack just-left result invisible"><span>結果:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack just-left solution invisible"><span>回答:</span><span class="str"></span></div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
