@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>MとM — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type='text/css' href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <style>
+        .dark.maintable, .maintable {
+            margin-left: auto;
+            margin-right: auto;
+            border: none !important;
+        }
+        .dark.maintablecell, .maintablecell {
+            border: none !important;
+            width: 150px;
+            height: 150px;
+        }
+        .subtable td {
+            width: 20px;
+            height: 20px;
+        }
+        .black {
+            background-color: black;
+        }
+        td :not(.black) {
+            background-color: white;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function removeAllChildNodes(parent) {
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+
+        function setRules(rnd)
+        {
+            let subtables = document.getElementsByClassName('subtable');
+            let grids = [];
+            for (let gridIx = 0; gridIx < 9; gridIx++)
+            {
+                removeAllChildNodes(subtables[gridIx]);
+                for (let r = 0; r < 5; r++) {
+                    let tr = $("<tr>").appendTo(subtables[gridIx]);
+                    for (let c = 0; c < 5; c++)
+                        $("<td>").appendTo(tr);
+                }
+                let grid = [];
+                function findGrid()
+                {
+                    if (grid.length % 5 == 0)
+                        for (let prevRow = 0; prevRow*5 < grid.length-5; prevRow++)
+                            if (Array.from(Array(5).keys()).every(x => grid[prevRow*5 + x] === grid[grid.length-5 + x]))
+                                return false;
+                    if (grid.length == 25)
+                    {
+                        for (let col = 0; col < 5; col++)
+                            for (let col2 = 0; col2 < col; col2++)
+                                if (Array.from(Array(5).keys()).every(y => grid[y*5 + col] === grid[y*5 + col2]))
+                                    return false;
+
+                        return grids.every(gr => {
+                            for (let j = 0; j < 25; j++)
+                                if (gr[j] !== grid[j])
+                                    return true;
+                            return false;
+                        });
+                    }
+                    let pixel = rnd.next(0, 2) != 0;
+                    grid.push(pixel);
+                    let success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    grid.push(!pixel);
+                    success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    return false;
+                }
+                let gridSuccessful = findGrid();
+                if (!gridSuccessful)
+                {
+                    console.log("Fatal error: no grid!");
+                    return;
+                }
+
+                let tds = subtables[gridIx].getElementsByTagName('td');
+                for (let i = 0; i < 25; i++)
+                    tds[i].className = grid[i] ? 'black' : '';
+
+                for (let rot = 0; rot < 4; rot++)
+                {
+                    grids.push(grid);
+                    grid = grid.map((_, i) => grid[(i%5)*5 + 4-((i/5)|0)]);
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">MとM</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/N&amp;Ms.svg" class="diagram" style='transform: rotate(180deg)'>
+                <h2>モジュール詳細：MとM</h2>
+                <p class="flavour-text">私は黒くなる、私は白くなる…あなたはどうなりたい？</p>
+                <p>ステータスライトが左下にない場合、別のモジュールを見ている。</p>
+                <p>シリアルナンバーに母音が含まれる場合、Mは白に対応しており、Nは黒に対応している。それ以外の場合はその逆になる。</p>
+                <p>各ボタンのテキストは、下の5×5グリッドの1つの段に対応している。グリッドは回転する可能性がある。1段目に対応するボタン、2段目に対応するボタン、というように押していく。</p>
+                <ul>
+                    <li><strong>赤:</strong>変更しない。</li>
+                    <li><strong>緑:</strong>テキストを1つ右にシフトする。</li>
+                    <li><strong>橙:</strong>テキストを2つ右にシフトする。</li>
+                    <li><strong>青:</strong>テキストを3つ右にシフトする。</li>
+                    <li><strong>黄:</strong>テキストを4つ右にシフトする。</li>
+                    <li><strong>茶:</strong>全ての文字を反転する。</li>
+                </ul>
+                <table class='maintable'>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
