@@ -12,7 +12,7 @@
 
 let protocol = location.protocol;
 let e = document.createElement("script");
-e.src = "../HTML/js/jquery.3.1.1.min.js";
+e.src = "../HTML/js/jquery.3.7.0.min.js";
 e.onload = function()
 {
     $(function()
