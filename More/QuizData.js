@@ -2011,6 +2011,46 @@ const everything = {
             ]
         }
     },
+	'Coordinates': {
+		'Grid Sizes': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'RandomizeLeft': true,
+			'Groups': [ 'format', 'interpret' ],
+			'Items': [
+				[
+					[ 'x', 'The number x is a product of two primes. The grid’s width is the larger prime, the height the smaller.'],
+					[ '(x)', 'The number x is a product of two primes. The grid’s height is the larger prime, the width the smaller.'],
+					[ 'x × y ', 'x is the width, y the height of the grid.'],
+					[ 'x by y', 'x is the height, y the width of the grid.'],
+					[ 'x * y', 'x is the total size of the grid, y the height.'],
+					[ 'x : y', 'x is the total size of the grid, y the width.']
+				]
+			]
+		},
+		'Grid Positions': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'RandomizeLeft': true,
+			'Groups': [ 'format', 'interpret' ],
+			'Items': [
+				[
+					[ '[x,y]', 'Column, then row; top-left is  0,0.'],
+					[ 'letter number', 'Column, then row; top-left is A1.'],
+					[ '&ltx,y&gt', 'Row, then column; top-left is 0,0.'],
+					[ 'x,y', 'Row, then column; top-left is 1,1.'],
+					[ '(x,y)', 'Column, then row; bottom-left is  0,0.'],
+					[ 'letter-number', 'Column, then row; bottom-left is A1.'],
+					[ '"x,y"', 'Row, then column; bottom-left is 0,0.'],
+					[ 'x/y', 'Row, then column; bottom-left is 1/1.'],
+					[ '[x]', 'Cell number in scanline order; top-left is 0.'],
+					[ 'xth', 'Cell number in scanline order; top-left is 1st.'],
+					[ '#x', 'Cell number in Cartesian order; bottom-left is #1.'],
+					[ '四十七', 'Cell number in Chinese reading order; top-right is 一']
+				]
+			]
+		}
+	},
     'Skyrim': {
         'Cities': {
             'CSS': 'skyrim',
