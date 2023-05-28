@@ -2150,7 +2150,53 @@ const everything = {
 				]
 			]
 		}
-	},		
+	},
+	'Nonogram': {
+        'Odd': {
+            'CSS': 'textonly',
+            'RandomizeRight': true,
+            'Groups': [ 'clues', 'colors' ],
+            'Items': [
+                [
+                    [ '1', 'Yellow & Orange', 'Yellow & Orange', 'Yellow & Orange'],
+                    [ '2', 'Green & Purple', 'Green & Purple', 'Green & Purple'],
+                    [ '3', 'Blue & Orange', 'Blue & Orange', 'Blue & Orange'],
+                    [ '4', 'Blue & Yellow', 'Blue & Yellow', 'Blue & Yellow'],
+                    [ '5', 'Red & Green', 'Red & Green', 'Red & Green'],
+                    [ '1 1', 'Red & Orange', 'Red & Orange', 'Red & Orange'],
+                    [ '1 2', 'Blue & Green', 'Blue & Green', 'Blue & Green'],
+                    [ '1 3', 'Blue & Purple', 'Blue & Purple', 'Blue & Purple'],
+                    [ '2 1', 'Yellow & Purple', 'Yellow & Purple', 'Yellow & Purple'],
+                    [ '2 2', 'Green & Yellow', 'Green & Yellow', 'Green & Yellow'],
+                    [ '3 1', 'Red & Blue', 'Red & Blue', 'Red & Blue'],
+                    [ '1 1 1', 'Red & Yellow', 'Red & Yellow', 'Red & Yellow'],
+                    [ '—', 'Orange & Purple', 'Green & Orange', 'Red & Purple' ]
+                ]
+            ]
+        },
+        'Even': {
+            'CSS': 'textonly',
+            'RandomizeRight': true,
+            'Groups': [ 'clues', 'colors' ],
+            'Items': [
+                [
+                    [ '1', 'Blue & Orange', 'Blue & Orange', 'Blue & Orange'],
+                    [ '2', 'Red & Blue', 'Red & Blue', 'Red & Blue'],
+                    [ '3', 'Yellow & Orange', 'Yellow & Orange', 'Yellow & Orange'],
+                    [ '4', 'Red & Green', 'Red & Green', 'Red & Green'],
+                    [ '5', 'Green & Yellow', 'Green & Yellow', 'Green & Yellow'],
+                    [ '1 1', 'Orange & Purple', 'Orange & Purple', 'Orange & Purple'],
+                    [ '1 2', 'Green & Orange', 'Green & Orange', 'Green & Orange'],
+                    [ '1 3', 'Green & Purple', 'Green & Purple', 'Green & Purple'],
+                    [ '2 1', 'Yellow & Purple', 'Yellow & Purple', 'Yellow & Purple'],
+                    [ '2 2', 'Blue & Purple', 'Blue & Purple', 'Blue & Purple'],
+                    [ '3 1', 'Red & Orange', 'Red & Orange', 'Red & Orange'],
+                    [ '1 1 1', 'Red & Purple', 'Red & Purple', 'Red & Purple'],
+                    [ '—', 'Blue & Yellow', 'Blue & Green', 'Red & Yellow']
+                ]
+            ]
+        }
+    },
     'Skyrim': {
         'Cities': {
             'CSS': 'skyrim',
