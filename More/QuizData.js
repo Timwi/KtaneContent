@@ -2040,6 +2040,77 @@ const everything = {
             ]
         }
     },
+	'Button Sequence': {
+		'Red': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'occurence', 'conditions' ],
+			'Items': [
+				[ 
+					[ 'First or Sixth', 'Abort Square'],
+					[ 'Second or Seventh', 'Detonate Hexagon'],
+					[ 'Third or Eighth', 'Hold Circle'],
+					[ 'Fourth or Ninth', 'Abort Circle'],
+					[ 'Fifth or Tenth', 'Press Square']
+				]
+			]
+		},
+		'Yellow': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'occurence', 'conditions' ],
+			'Items': [
+				[ 
+					[ 'First or Sixth', 'Detonate Circle'],
+					[ 'Second, Fifth, Seventh, or Tenth', 'Hold Hexagon'],
+					[ 'Third or Eighth', 'Abort Square'],
+					[ 'Fourth or Ninth', 'Press Circle']
+				]
+			]
+		},
+		'Blue': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'occurence', 'conditions' ],
+			'Items': [
+				[ 
+					[ 'First or Sixth', 'Hold Circle'],
+					[ 'Second or Seventh', 'Abort Square'],
+					[ 'Third or Eighth', 'Detonate Hexagon'],
+					[ 'Fourth or Ninth', 'Press Square'],
+					[ 'Fifth or Tenth', 'Press Hexagon']
+				]
+			]
+		},
+		'White': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'occurence', 'conditions' ],
+			'Items': [
+				[ 
+					[ 'First or Sixth', 'Hold Hexagon'],
+					[ 'Second or Seventh', 'Detonate Square'],
+					[ 'Third or Eighth', 'Press Hexagon'],
+					[ 'Fourth or Ninth', 'Abort Circle'],
+					[ 'Fifth or Tenth', 'Detonate Square']
+				]
+			]
+		},
+		'Holds': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'colors', 'digits' ],
+			'Items': [
+				[ 
+					[ 'Blue', '2'],
+					[ 'White', '7'],
+					[ 'Yellow', '3'],
+					[ 'Magenta', '4'],
+					[ 'Cyan', '0']
+				]
+			]
+		}
+	},
 	'Coordinates': {
 		'Grid Sizes': {
 			'CSS': 'textonly',
@@ -2079,7 +2150,7 @@ const everything = {
 				]
 			]
 		}
-	},
+	},		
     'Skyrim': {
         'Cities': {
             'CSS': 'skyrim',
