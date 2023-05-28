@@ -1261,7 +1261,36 @@ const everything = {
 					['99', 'dc'],
 				]
 			]
-		},			
+		},
+		'Validation': {
+			'CSS': 'textonly',
+			'RandomizeRight': true,
+			'Groups': [ 'positions', 'letters' ],
+			'Items': [
+				[
+					['Neither Lit - 1', 'R E B'],
+					['Neither Lit - 2', 'Y M R U D A E F L'],
+					['Neither Lit - 3', 'D L J G I A B N E'],
+					['Neither Lit - 4', 'U A R G H S'],
+					['Neither Lit - 5', 'N M O P I A'],
+					['Left Lit - 1', 'L S A T N M O B'],
+					['Left Lit - 2', 'G A W V E R I N F'],
+					['Left Lit - 3', 'U L Y A R E B F I'],
+					['Left Lit - 4', 'L R G Z I P E T M Y L'],
+					['Left Lit - 5', 'O T L H M B G I'],
+					['Right Lit - 1', 'H Y O A F T E R W'],
+					['Right Lit - 2', 'I A M O N P W'],
+					['Right Lit - 3', 'O A F E R D'],
+					['Right Lit - 4', 'O A F E R D'],
+					['Right Lit - 5', 'I A H N S B T E'],
+					['Both Lit - 1', 'E O P W A R T L D'],
+					['Both Lit - 2', 'L G N R F D I E A'],
+					['Both Lit - 3', 'H Y A E D L'],
+					['Both Lit - 4', 'T N E S R O X B C A'],
+					['Both Lit - 5', 'I R M K E T A O N']
+				]
+			]
+		},
         'Zoo': {
             'CSS': 'zoo',
             'RandomizeRight': true,
