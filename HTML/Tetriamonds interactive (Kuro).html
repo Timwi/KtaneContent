@@ -8,6 +8,73 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const colours = [ "ff7fbf", "ffbf7f", "bfff7f", "7fffbf", "7fbfff", "bf7fff" ];
+        const colourLetters = [ "E", "O", "L", "J", "A", "V" ];
+        let triangles;
+        let triangleTexts;
+        let leftShiftCount = 0;
+        let rotation = 0;
+        let rhombus;
+
+        $(function() {
+            rhombus = document.getElementById("rhombus");
+            triangles = rhombus.getElementsByClassName("inner-shape");
+            triangleTexts = rhombus.getElementsByTagName("text");
+
+            document.getElementById("button-clock").addEventListener('click', () => rotateRhombus(false));
+            document.getElementById("button-counter").addEventListener('click', () => rotateRhombus(true));
+            document.getElementById("button-right").addEventListener('click', function() {
+                leftShiftCount--;
+                updateColours();
+            });
+            document.getElementById("button-left").addEventListener('click', function() {
+                leftShiftCount++;
+                updateColours();
+            });
+
+            updateColours();
+            createArrows();
+        });
+
+        function createArrows() {
+            let buttons = document.getElementsByClassName("interactive-button");
+
+            for (let button of buttons) {
+                let arrowId = `${button.id}-arrow`;
+                let marker = MakeSvgElem("marker", { id: arrowId, class: "interactive-arrow", viewBox: "0 0 12 12", refX: "6", refY: "6", markerWidth: "4", markerHeight: "4", orient: "auto-start-reverse" });
+                marker.append(MakeSvgElem("path", { d:"M 0 1 l 10 5 l -10 5 z" }));
+                button.append(marker);
+                button.getElementsByClassName("button-arrow")[0].setAttribute("marker-end", `url(#${arrowId})`);
+            }
+        }
+
+        function updateColours() {
+            let pointer = (leftShiftCount % 3 + 3) % 3;
+
+            for (let i = 0; i < 6; i++) {
+                let position = (2 * pointer + i) % 6;
+                triangles[i].style.fill = `#${colours[position]}`;
+                triangleTexts[i].innerHTML = colourLetters[position];
+            }
+
+            console.log("Left shift:", leftShiftCount);
+        }
+
+        function rotateRhombus(counter) {
+            if (counter) {
+                rotation--;
+            }
+            else {
+                rotation++;
+            }
+            
+            rhombus.style.transform = `rotate(${30 + rotation * 60}deg)`;
+            console.log(rhombus.style.transform, rotation);
+        }
+    </script>
     <style>
         table { margin: 1em auto; }
         .border-shape {
@@ -24,6 +91,23 @@
             pointer-events: none;
             user-select: none;
         }
+        .interactive-button path{
+            transition: 0.5s;
+            stroke: #000;
+            fill: #BBB;
+            stroke-width: 1px;
+        }
+        .interactive-arrow path { fill: #000; }
+        .interactive-button:hover path {
+            stroke: #CCC;
+            fill: #000;
+        }
+        .interactive-button:hover .interactive-arrow path { fill: #CCC; }
+        #rhombus {
+            transition: 0.5s;
+            transform: rotate(30deg);
+        }
+        #rhombus text { font-size: 16px; }
         #hexagon text { font-size: 40px; }
         .shape-diagram path { stroke: #000; }
         .dark .shape-diagram path { stroke: #CCC; }
@@ -56,8 +140,8 @@
                         <text x="-9" y="94">E</text>
                         <text x="17" y="49">O</text>
                         <text x="17" y="139">V</text>
-                        <text x="71" y="139">A</text>
                         <text x="71" y="49">L</text>
+                        <text x="71" y="139">A</text>
                         <text x="44" y="94">X</text>
                         <text x="98" y="94">J</text>
                     </svg>
@@ -117,27 +201,42 @@
                     </svg>
                 </div>
                 <div style="float:left; width:40%; text-align:left;">
-                    <svg class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="250" height="185" viewBox="0 0 130 60">
+                    <svg id="rhombus" class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="250" height="220" viewBox="0 0 120 60">
                         <marker id="arrow" viewBox="0 0 12 12" refX="6" refY="6" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
                             <path d="M 0 1 l 10 5 l -10 5 z" />
                         </marker>
-                        <path class="inner-shape highlightable" style="fill:#ff7fbf" d="M10 51 h30 l-15 -26z"></path>
-                        <path class="inner-shape highlightable" style="fill:#ffbf7f" d="M25 25 h30 l-15 26z"></path>
-                        <path class="inner-shape highlightable" style="fill:#bfff7f" d="M40 51 h30 l-15 -26z"></path>
-                        <path class="inner-shape highlightable" style="fill:#7fffbf" d="M55 25 h30 l-15 26z"></path>
-                        <path class="inner-shape highlightable" style="fill:#7fbfff" d="M70 51 h30 l-15 -26z"></path>
-                        <path class="inner-shape highlightable" style="fill:#bf7fff" d="M85 25 h30 l-15 26z"></path>
+                        <path class="inner-shape highlightable" d="M10 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M25 25 h30 l-15 26z"></path>
+                        <path class="inner-shape highlightable" d="M40 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M55 25 h30 l-15 26z"></path>
+                        <path class="inner-shape highlightable" d="M70 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M85 25 h30 l-15 26z"></path>
                         <path class="border-shape" d="M25 25 h15 h30 h30 h15" marker-mid="url(#arrow)"></path>   
                         <path class="border-shape" d="M10 51 h15 h30 h30 h15" marker-mid="url(#arrow)"></path>   
                         <path class="border-shape" style="stroke-dasharray: 3;" d="M24.5 25 l-15 26"></path>
                         <path class="border-shape" style="stroke-dasharray: 3;" d="M115.5 25 l-15 26"></path>
-                        <path class="border-shape" d="M108 38 a 57 20 0 1 0 -93 0" marker-end="url(#arrow)"></path>
-                        <text x="20" y="48">E</text>
-                        <text x="50" y="48">L</text>
-                        <text x="80" y="48">A</text>
-                        <text x="35" y="41">O</text>
-                        <text x="65" y="41">J</text>
-                        <text x="95" y="41">V</text>
+                        <text x="20" y="48"></text>
+                        <text x="35" y="41"></text>
+                        <text x="50" y="48"></text>
+                        <text x="65" y="41"></text>
+                        <text x="80" y="48"></text>
+                        <text x="95" y="41"></text>
+                    </svg>
+                    <svg id="button-clock" class="interactive-button" width="25%" style="float:right" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 15 h15 l5 -10 h-15z"></path>
+                        <path class="button-arrow" d="M8 13 A10 15 0 0 1 19 10"></path>
+                    </svg>
+                    <svg id="button-counter" class="interactive-button" width="25%" style="float:left" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 5 h15 l5 10 h-15z"></path>
+                        <path class="button-arrow" d="M22 13 A10 15 1 0 0 11 10"></path>
+                    </svg>
+                    <svg id="button-right" class="interactive-button" width="25%" style="float:right;margin-top:30px" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 15 h15 l5 -10 h-15z"></path>
+                        <path class="button-arrow" d="M10 10 h9"></path>
+                    </svg>
+                    <svg id="button-left" class="interactive-button" width="25%" style="float:left;margin-top:30px" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 5 h15 l5 10 h-15z"></path>
+                        <path class="button-arrow" d="M20 10 h-9"></path>
                     </svg>
                 </div>
                 <div style="float:left; right:40%; width:35%; text-align:center;">
@@ -157,8 +256,9 @@
                         <text x="17" y="26">O</text>
                     </svg>
                 </div>
-                <h4 style="clear:both">Invalid shapes</h4>
-                <p>To make an invalid shape valid, remove the last non-grey colour in order from your shape, and replace it with the first available non-grey colour in order that does make it valid and reconstruct your shape.</p>
+                <h4 style="clear:right">Interactive Instructions</h4>
+                <p>Press the left-most and right-most buttons to rotate the rhomboid diagram in 60 degree increments.</p>
+                <p>Press the inner buttons to shift the colours along the direction of the graph.</p>
             </div>
             <div class="page-footer relative-footer">Page 2 of 3</div>
         </div>
@@ -168,6 +268,8 @@
                 <span class="page-header-section-title">Tetriamonds</span>
             </div>
             <div class="page-content">
+                <h4 style="clear:both">Invalid shapes</h4>
+                <p>To make an invalid shape valid, remove the last non-grey colour in order from your shape, and replace it with the first available non-grey colour in order that does make it valid and reconstruct your shape.</p>
                 <h3>Submitting the tetriamond</h3>
                 <h4>U-shape</h4>
                 <p>Press the triangles according to the shape and order you obtained.</p>
