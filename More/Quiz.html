@@ -71,23 +71,22 @@
                 let first = mode < 2 ? (1 - mode) : ((Math.random() * 2) | 0);
                 if (hasSounds) first = 0;
 
+                //select from possibly multiple correct answers
                 let ansIx = ((Math.random() * (item.length - 1)) | 0) + 1;
-                document.getElementById('challenge').innerHTML = item [ first ? 0 : ansIx ];
+                document.getElementById('challenge').innerHTML = item[ first ? 0 : ansIx ];
 
                 let answers = [];
-                for (let i = 1; i < item.length; ++i) {
+                let maxLength = Math.max(...itemGroups[groupIx].map(it => it.length));
+                for (let i = 1; i < maxLength; ++i) {
                     const a = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ first ? i : 0 ] }));
                     for (let j = 0; j < a.length; ++j)
-                        if (answers)
-                            answers.push(a[j]);
+                        if (a[j].item) answers.push(a[j]);
                 }
+                //remove duplicate answer choices
                 function onlyUnique(value, index, arr) {
                     for (let i = 0; i < arr.length; ++i) {
                         if (arr[i].correct == value.correct && arr[i].item == value.item)
-                            if (i === index)
-                                return true;
-                            else
-                                return false;
+                            return i === index;
                     }
                     return false;
                 }
@@ -124,7 +123,10 @@
                             return false;
                         }
                         if (btn.dataset.correct) {
-                            btn.classList.add('correct');
+                            // btn.classList.add('correct');
+                            document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
+                                item.classList.add('correct');
+                            });
                             timeout = setTimeout(showQuestion, 700);
                         } else {
                             btn.classList.add('wrong');
@@ -314,18 +316,16 @@
         .flags.facerecog #answers img { width: 3cm; }
         .flags.facerecog #challenge img { width: 4cm; }
 
-
-        .hypercube #answers video { width: 9cm; }
-        .hypercube #challenge video { width: 12cm; }
-
         .gadgetron #answers img { width: 20mm; }
         .gadgetron #challenge { font-size: 40pt; }
         .gadgetron #challenge img { width: 30mm; }
 
-        .textonly #answers { font-size: 16pt; }
-        .textonly #challenge {font-size: 50pt;}
-        .textonly.logic #answers { font-size: 25pt; }
-        .textonly.logic #challenge { font-size: 40pt; }
+        .guitar svg { stroke-width: 2px; }
+
+        .hypercube #answers video { width: 9cm; }
+        .hypercube #challenge video { width: 12cm; }
+
+        .ipa #answers button { font-family: "Courier New"; font-weight: bold; }
 
         .laundry #answers { font-size: 15pt; }
         .laundry #answers button { background: #fff; color: #04a; }
@@ -370,6 +370,11 @@
         .lombax #challenge { font-family: 'Lombax'; padding-top: 15px; }
         .lombax #challenge span { font-family: 'Georgia'; padding-top: 0; }
 
+        .textonly #answers { font-size: 16pt; }
+        .textonly #challenge {font-size: 50pt;}
+        .textonly.logic #answers { font-size: 25pt; }
+        .textonly.logic #challenge { font-size: 40pt; }
+
         .zoo.braille #answers button span { font-family: 'Braille'; font-size: 100px; line-height: 60px; }
         .zoo.braille #answers button { font-family: 'Georgia'; font-size: 24px; padding: 8px 14px; }
         .zoo.braille #challenge span { font-family: 'Braille'; font-size: 150px; }
@@ -384,7 +389,8 @@
         .zoo #challenge { font-size: 64pt; }
         .zoo #challenge svg { width: 5cm; margin: .25cm 0; }
 
-        .ipa #answers button { font-family: "Courier New"; font-weight: bold; }
+        .whitesvg svg path { stroke:#FFF; }
+        .whitesvg svg circle { fill:#FFF; }
 
         .play-button { color: #fff; text-decoration: none; }
         a.audio:hover:not(.failed):not(.playing) {
