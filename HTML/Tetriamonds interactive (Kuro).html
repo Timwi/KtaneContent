@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Tetriamonds — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const colours = [ "ff7fbf", "ffbf7f", "bfff7f", "7fffbf", "7fbfff", "bf7fff" ];
+        const colourLetters = [ "E", "O", "L", "J", "A", "V" ];
+        let triangles;
+        let triangleTexts;
+        let leftShiftCount = 0;
+        let rotation = 0;
+        let rhombus;
+
+        $(function() {
+            rhombus = document.getElementById("rhombus");
+            triangles = rhombus.getElementsByClassName("inner-shape");
+            triangleTexts = rhombus.getElementsByTagName("text");
+
+            document.getElementById("button-clock").addEventListener('click', () => rotateRhombus(false));
+            document.getElementById("button-counter").addEventListener('click', () => rotateRhombus(true));
+            document.getElementById("button-right").addEventListener('click', function() {
+                leftShiftCount--;
+                updateColours();
+            });
+            document.getElementById("button-left").addEventListener('click', function() {
+                leftShiftCount++;
+                updateColours();
+            });
+
+            updateColours();
+            createArrows();
+        });
+
+        function createArrows() {
+            let buttons = document.getElementsByClassName("interactive-button");
+
+            for (let button of buttons) {
+                let arrowId = `${button.id}-arrow`;
+                let marker = MakeSvgElem("marker", { id: arrowId, class: "interactive-arrow", viewBox: "0 0 12 12", refX: "6", refY: "6", markerWidth: "4", markerHeight: "4", orient: "auto-start-reverse" });
+                marker.append(MakeSvgElem("path", { d:"M 0 1 l 10 5 l -10 5 z" }));
+                button.append(marker);
+                button.getElementsByClassName("button-arrow")[0].setAttribute("marker-end", `url(#${arrowId})`);
+            }
+        }
+
+        function updateColours() {
+            let pointer = (leftShiftCount % 3 + 3) % 3;
+
+            for (let i = 0; i < 6; i++) {
+                let position = (2 * pointer + i) % 6;
+                triangles[i].style.fill = `#${colours[position]}`;
+                triangleTexts[i].innerHTML = colourLetters[position];
+            }
+
+            console.log("Left shift:", leftShiftCount);
+        }
+
+        function rotateRhombus(counter) {
+            if (counter) {
+                rotation--;
+            }
+            else {
+                rotation++;
+            }
+            
+            rhombus.style.transform = `rotate(${30 + rotation * 60}deg)`;
+            console.log(rhombus.style.transform, rotation);
+        }
+    </script>
+    <style>
+        table { margin: 1em auto; }
+        .border-shape {
+            stroke-width: 1.5px;
+            fill: none;
+            stroke-linecap: round;
+        }
+        .inner-shape {
+            stroke-width: 1px;
+            stroke-linejoin: bevel;
+        }
+        .shape-diagram text {
+            font-size: 18px;
+            pointer-events: none;
+            user-select: none;
+        }
+        .interactive-button path{
+            transition: 0.5s;
+            stroke: #000;
+            fill: #BBB;
+            stroke-width: 1px;
+        }
+        .interactive-arrow path {
+            fill: #000;
+        }
+        .interactive-button:hover path {
+            stroke: #CCC;
+            fill: #000;
+        }
+        .interactive-button:hover .interactive-arrow path {
+            fill: #CCC;
+        }
+        #rhombus {
+            transition: 0.5s;
+            transform: rotate(30deg);
+        }
+        #rhombus text {
+            font-size: 16px;
+        }
+        #hexagon text { font-size: 40px; }
+        .shape-diagram path { stroke: #000; }
+        .dark .shape-diagram path { stroke: #CCC; }
+        .dark #arrow { fill: #CCC; }    
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tetriamonds</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Tetriamonds.svg" class="diagram">
+                <h2>On the Subject of Tetriamonds</h2>
+                <p class="flavour-text">Counting to four! It’s not just one more?</p>
+
+                <p>This module will display six triangles in the shape of a hexagon. The triangles will not flash, but they will move out from the center and return when the sequence finishes. This will be referred to as a pulse. Triangles will also either face left or right. The colours are: rose, orange, lime, jade, azure, violet and grey. In order to determine what triangles to press, follow the following rules.</p>
+                <div style="float:right; width:20%; text-align:right;">
+                    <svg id="hexagon" class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 180 180">
+                        <path class="inner-shape highlightable" style="fill:#ffbf7f" d="M30 5 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bfff7f" d="M82 5 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fffbf" d="M108 50 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fbfff" d="M82 95 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bf7fff" d="M30 95 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#ff7fbf" d="M4 50 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bfbfbf" d="M56 50 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <path class="border-shape" style="stroke-width:3px" d="M30 5 l26 15 l26 -15 l26 15 v30 l26 15 v30 l-26 15 v30 l-26 15 l-26 -15 l-26 15 l-26 -15 v-30 l-26 -15 v-30 l26 -15 v-30z"></path>
+                        <text x="-9" y="94">E</text>
+                        <text x="17" y="49">O</text>
+                        <text x="17" y="139">V</text>
+                        <text x="71" y="49">L</text>
+                        <text x="71" y="139">A</text>
+                        <text x="44" y="94">X</text>
+                        <text x="98" y="94">J</text>
+                    </svg>
+                </div>
+                <h3>Determining colours</h3>
+                <p>Whenever you apply any rule after rule 1, you should continue to the next section. The order will not be determined by this step. The graph refers to the image on the right.</p>
+                <ol>
+                    <li>Select the pulsed colours on their positions on the graph.</li>
+                    <li>If none of your colours were grey, or the non-grey colours are adjacent on the graph, your colours are the unselected four colours on the graph.</li>
+                    <li>If the three colours form a straight line on the graph, your colours are the selected colours plus the first unselected colour clockwise on the module from the first pulsing triangle.</li>
+                    <li>Otherwise, your colours are the selected colours plus the colour opposite on the graph of the first non-grey piece.</li>
+                </ol>
+                <h3>Determining shape</h3>
+                <p>Only one rule applies every time.</p>
+                <ol>
+                    <li>If all three pulsing triangles have the same orientation, construct a triangle.</li>
+                    <li>If the first two pieces match in orientation, construct a rhomboid.</li>
+                    <li>If both rules did not apply, construct a U-shape.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tetriamonds</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining order</h3>
+                <p>Always add colours to the end of your current order. Start with an empty array as the order.</p>
+                  <ol>
+                    <li>Take all pulsing colours and add them to the order.</li>
+                    <li>For each pulsing triangle, add the first colour clockwise from it that is not present in the order to the order.</li>
+                    <li>Add the colour that did not appear on the module.</li>
+                </ol>
+                <h3>Constructing shape</h3>
+                <p>Use the graph based on the shape. For a U-shape look at the hexagonal graph, for a triangle at both the triangular graphs and for the rhomboid at the rhomboidal graph (which wraps around). If the shape is invalid, go to the subsection about invalid shapes.</p>
+                <ol>
+                    <li>Place your colours on the graph where possible. Grey can be placed anywhere and anything can be placed on grey, but grey prefers staying on grey.</li>
+                    <li>If your shape can not be constructed with the given colours, or there are multiple possibilities without any preference, it’s invalid.</li>
+                    <li>If your shape is a rhomboid, rotate the graph so the direction of your graph (indicated by the small arrows) lines up with the direction from the first pulsing triangle to the second.</li>
+                </ol>
+                <div style="float:right; width:25%; text-align:right;">
+                    <svg class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="150" height="200" viewBox="0 0 60 110">
+                        <path class="inner-shape highlightable" style="fill:#bfff7f" d="M55 5 v30 l-26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fbfff" d="M55 35 v30 l-26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#ff7fbf" d="M29 20 v30 l-26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bfbfbf" d="M29 20 v30 l26 -15z"></path>
+                        <path class="border-shape" d="M55 5 v60 l-52 -30z"></path>
+                        <text x="42" y="26">L</text><text x="42" y="56">A</text><text x="16" y="41">E</text><text x="31" y="41">X</text>
+                        <path class="inner-shape highlightable" style="fill:#ffbf7f" d="M2 40 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bf7fff" d="M2 70 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fffbf" d="M28 55 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bfbfbf" d="M28 55 v30 l-26 -15z"></path>
+                        <path class="border-shape" d="M2 40 v60 l52 -30z"></path>
+                        <text x="4" y="61">O</text><text x="4" y="92">V</text><text x="30" y="77">J</text><text x="16" y="77">X</text>
+                    </svg>
+                </div>
+                <div style="float:left; width:40%; text-align:left;">
+                    <svg id="rhombus" class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="250" height="220" viewBox="0 0 120 60">
+                        <marker id="arrow" viewBox="0 0 12 12" refX="6" refY="6" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                            <path d="M 0 1 l 10 5 l -10 5 z" />
+                        </marker>
+                        <path class="inner-shape highlightable" d="M10 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M25 25 h30 l-15 26z"></path>
+                        <path class="inner-shape highlightable" d="M40 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M55 25 h30 l-15 26z"></path>
+                        <path class="inner-shape highlightable" d="M70 51 h30 l-15 -26z"></path>
+                        <path class="inner-shape highlightable" d="M85 25 h30 l-15 26z"></path>
+                        <path class="border-shape" d="M25 25 h15 h30 h30 h15" marker-mid="url(#arrow)"></path>   
+                        <path class="border-shape" d="M10 51 h15 h30 h30 h15" marker-mid="url(#arrow)"></path>   
+                        <path class="border-shape" style="stroke-dasharray: 3;" d="M24.5 25 l-15 26"></path>
+                        <path class="border-shape" style="stroke-dasharray: 3;" d="M115.5 25 l-15 26"></path>
+                        <text x="20" y="48"></text>
+                        <text x="35" y="41"></text>
+                        <text x="50" y="48"></text>
+                        <text x="65" y="41"></text>
+                        <text x="80" y="48"></text>
+                        <text x="95" y="41"></text>
+                    </svg>
+                    <svg id="button-clock" class="interactive-button" width="25%" style="float:right" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 15 h15 l5 -10 h-15z"></path>
+                        <path class="button-arrow" d="M8 13 A10 15 0 0 1 19 10"></path>
+                    </svg>
+                    <svg id="button-counter" class="interactive-button" width="25%" style="float:left" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 5 h15 l5 10 h-15z"></path>
+                        <path class="button-arrow" d="M22 13 A10 15 1 0 0 11 10"></path>
+                    </svg>
+                    <svg id="button-right" class="interactive-button" width="25%" style="float:right;margin-top:30px" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 15 h15 l5 -10 h-15z"></path>
+                        <path class="button-arrow" d="M10 10 h9"></path>
+                    </svg>
+                    <svg id="button-left" class="interactive-button" width="25%" style="float:left;margin-top:30px" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 30 20">
+                        <path d="M5 5 h15 l5 10 h-15z"></path>
+                        <path class="button-arrow" d="M20 10 h-9"></path>
+                    </svg>
+                </div>
+                <div style="float:left; right:40%; width:35%; text-align:center;">
+                    <svg class="shape-diagram" xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 65 75">
+                        <path class="inner-shape highlightable" style="fill:#bfff7f" d="M30 5 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fffbf" d="M56 20 v30 l-26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#7fbfff" d="M30 35 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#bf7fff" d="M30 35 v30 l-26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#ff7fbf" d="M4 20 v30 l26 -15z"></path>
+                        <path class="inner-shape highlightable" style="fill:#ffbf7f" d="M30 5 v30 l-26 -15z"></path>
+                        <path class="border-shape" d="M30 5 l26 15 v30 l-26 15 l-26 -15 v-30z"></path>
+                        <text x="32" y="26">L</text>
+                        <text x="43" y="41">J</text>
+                        <text x="32" y="56">A</text>
+                        <text x="17" y="56">V</text>
+                        <text x="6" y="41">E</text>
+                        <text x="17" y="26">O</text>
+                    </svg>
+                </div>
+                <h4 style="clear:right">Interactive Instructions</h4>
+                <p>Press the left-most and right-most buttons to rotate the rhomboid diagram in 60 degree increments.</p>
+                <p>Press the inner buttons to shift the colours along the direction of the graph.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tetriamonds</span>
+            </div>
+            <div class="page-content">
+                <h4 style="clear:both">Invalid shapes</h4>
+                <p>To make an invalid shape valid, remove the last non-grey colour in order from your shape, and replace it with the first available non-grey colour in order that does make it valid and reconstruct your shape.</p>
+                <h3>Submitting the tetriamond</h3>
+                <h4>U-shape</h4>
+                <p>Press the triangles according to the shape and order you obtained.</p>
+                <h4>Triangle</h4>
+                <p>Map the triangle onto the hexagon. Since a wraparound is required to map all four triangles onto the module, wrap around the last outer triangle. Then press the triangles according to the mapping on the module and the order you obtained earlier.</p>
+                <h4>Rhomboid</h4>
+                <p>Since the rhomboid can’t be mapped onto the module without wrapping around, make it wrap around in the middle cut of the shape. Then press the triangles according to the mapping on the module and the order you obtained earlier.</p>
+                <h3>Terminology</h3>
+                <ul>
+                    <li>Wraparound: the edges connect to the opposite edges to form a seemingly infinite grid.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
