@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>MとM — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type='text/css' href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .dark .maintable, .maintable {
+            margin-left: auto;
+            margin-right: auto;
+            border: none !important;
+        }
+        .dark .maintablecell, .maintablecell {
+            border: none !important;
+            width: 150px;
+            height: 150px;
+        }
+        svg { transition: 0.5s; }
+        rect.black { fill: black; }
+        rect.white { fill: white; }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        const rows = 5;
+        const cols = 5;
+        const gridGroups = [];
+        const gridRotations = [];
+
+        function removeAllChildNodes(parent) {
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+        function setRules(rnd)
+        {
+            let subtables = document.getElementsByClassName('maintablecell');
+            let grids = [];
+            for (let gridIx = 0; gridIx < 9; gridIx++)
+            {
+                removeAllChildNodes(subtables[gridIx]);
+                let table = MakeSvgTag(100,100,0,0, {class:"gridsvg"})
+                .appendTo(subtables[gridIx]).click(function(event) {
+                    if (!(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey))
+                        clickGrid(gridIx);
+                });
+                gridGroups[gridIx] = table;
+                gridRotations[gridIx] = 0;
+
+                let grid = [];
+                function findGrid()
+                {
+                    if (grid.length % cols == 0)
+                        for (let prevRow = 0; prevRow*cols < grid.length-cols; prevRow++)
+                            if (Array.from(Array(cols).keys()).every(x => grid[prevRow*cols + x] === grid[grid.length-cols + x]))
+                                return false;
+                    if (grid.length == cols*rows)
+                    {
+                        for (let col = 0; col < cols; col++)
+                            for (let col2 = 0; col2 < col; col2++)
+                                if (Array.from(Array(cols).keys()).every(y => grid[y*cols + col] === grid[y*cols + col2]))
+                                    return false;
+
+                        return grids.every(gr => {
+                            for (let j = 0; j < cols*rows; j++)
+                                if (gr[j] !== grid[j])
+                                    return true;
+                            return false;
+                        });
+                    }
+                    let pixel = rnd.next(0, 2) != 0;
+                    grid.push(pixel);
+                    let success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    grid.push(!pixel);
+                    success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    return false;
+                }
+                let gridSuccessful = findGrid();
+                if (!gridSuccessful)
+                {
+                    console.log("Fatal error: no grid!");
+                    return;
+                }
+
+                let tds = subtables[gridIx].getElementsByTagName('td');
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        let square = MakeSvgElem("rect", {
+                            fill: "white", x:(20*c), y:(20*r), height:20, width:20, stroke:"black", "stroke-width": 0.5
+                        });
+                        let rect = MakeSvgElem("rect", {
+                            class: (grid[r*cols + c] ? "black" : "white"), x:(20*c + 2), y:(20*r + 2), height:16, width:16, stroke:"none"
+                        });
+                        let highlight = MakeSvgElem("rect", {
+                            class: "highlightable", x:(20*c), y:(20*r), height:20, width:20, fill: "transparent"
+                        });
+                        table.append(square);
+                        table.append(rect);
+                        table.append(highlight);
+                    }
+                }
+
+                for (let rot = 0; rot < 4; rot++)
+                {
+                    grids.push(grid);
+                    grid = grid.map((_, i) => grid[(i%5)*5 + 4-((i/5)|0)]);
+                }
+            }
+
+            $(".reset-rotations").click(function() {
+                gridRotations.forEach((item, i) => {
+                    gridRotations[i] = 0;
+                    const grid = gridGroups[i];
+                    grid.css("transform", "rotate(0deg)");
+                });
+            });
+        }
+
+        function clickGrid(index) {
+            if (document.querySelector("#rotate-left").checked) {
+                gridRotations[index]--;
+            } else {
+                gridRotations[index]++;
+            }
+
+            const grid = gridGroups[index];
+            grid.css("transform", `rotate(${gridRotations[index] * 90}deg)`);
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">MとM</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/N&amp;Ms.svg" class="diagram" style='transform: rotate(180deg)'>
+                <h2>モジュール詳細：MとM</h2>
+                <p class="flavour-text">私は黒く、私は白く…あなたは何をしたいの？</p>
+                <p>ステータスライトが左下にない場合、別のモジュールを見ている。</p>
+                <p>シリアルナンバーに母音が含まれる場合、Mは白に対応しており、Nは黒に対応している。それ以外の場合はその逆になる。</p>
+                <p>各ボタンのテキストは、下の5×5グリッドの1つの段に対応している。グリッドは回転する可能性がある。1段目に対応するボタン、2段目に対応するボタン、というように押していく。</p>
+                <ul>
+                    <li><strong>赤:</strong>変更しない。</li>
+                    <li><strong>緑:</strong>テキストを1つ右にシフトする。</li>
+                    <li><strong>橙:</strong>テキストを2つ右にシフトする。</li>
+                    <li><strong>青:</strong>テキストを3つ右にシフトする。</li>
+                    <li><strong>黄:</strong>テキストを4つ右にシフトする。</li>
+                    <li><strong>茶:</strong>全ての文字を反転する。</li>
+                </ul>
+                <div style="position: relative; height: 0; left:85mm; top: 1.5mm">
+                    <button class="reset-rotations">回転をリセット</button>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-left" name="rotate" value="left">
+                    <label for="rotate-left">反時計回りに90°回転</label>
+                </div>
+                <div>
+                    <input type="radio" id="rotate-right" name="rotate" value="right" checked>
+                    <label for="rotate-right">時計回りに90°回転</label>
+                </div>
+                <table class='maintable'>
+                    <tr>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                        <td class='maintablecell nohighlight'></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
