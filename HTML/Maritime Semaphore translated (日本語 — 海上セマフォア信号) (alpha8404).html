@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>海上セマフォア信号 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .all-flags {
+            clear: both;
+        }
+        .flag-box {
+            float: left;
+            margin: .2cm;
+            width: 1.8cm;
+            text-align: center;
+        }
+        .flag-numerical {
+            float: right;
+            margin: 0;
+            width: 11.1cm;
+            text-align: center;
+        }
+        .flag {
+            width: 1.7cm;
+            height: 1.7cm;
+            background-repeat: no-repeat;
+            background-position: 0 0;
+            background-size: 100% 100%;
+        }
+        code {
+            font-family: 'Roboto Mono';
+            background-color: #eee;
+            padding: 0 .1em;
+        }
+        .dark code { background-color: #555; }
+        span.arw { font-family: 'Logic-round'; }
+
+        .digit-table {
+            width: 100%;
+            text-align: center;
+        }
+            .digit-table tr.offset td {
+                font-size: 8pt;
+            }
+            .digit-table tr.header td, .digit-table tr.header th {
+                background: #bbb;
+            }
+            .digit-table .slot, .digit-table tr th.slot {
+                background: #ddd;
+            }
+            .dark .digit-table tr.header td, .dark .digit-table tr.header th {
+                background: #666;
+            }
+            .dark .digit-table .slot, .dark .digit-table tr th.slot {
+                background: #444;
+            }
+
+        .alphabet {
+            width: 100%;
+        }
+            .alphabet td {
+                padding: .3em 0 .2em;
+                text-align: center;
+            }
+
+        @media screen and (max-width: 900px) {
+            .flag-box {
+                float: left;
+                margin: .1cm;
+                width: 1.4cm;
+                text-align: center;
+            }
+            .flag {
+                width: 1.4cm;
+                height: 1.4cm;
+            }
+                .flag.repeater {
+                    height: 1cm;
+                }
+            .flag-numerical {
+                float: none;
+                width: auto;
+                text-align: left;
+            }
+        }
+    </style>
+    <script>
+        var flagDesigns = [
+            { name: c => `plain ${c[0]}`, numColors: 1, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" />` },
+            { name: c => `${c[0]}-${c[1]} vertical`, numColors: 2, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h.5v1h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} vertical`, numColors: 3, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.33 0h.67v1h-.67z" fill="${c[1]}" /><path d="M.67 0h.33v1h-.33z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]}-${c[1]} vertical`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.33v1h-.33zM.67 0h.33v1h-.33z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} vertical uneven`, numColors: 2, reverseAllowed: true, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 0h.6v1h-.6z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} 6 vertical stripes`, numColors: 2, reverseAllowed: false, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.167 0h.167v1h-.167zM.5 0h.167v1h-.167zM.833 0h.167v1h-.167z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} horizontal`, numColors: 2, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[1]}" /><path d="M0 0h1v.5h-1z" fill="${c[0]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} horizontal`, numColors: 3, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .33h1v.67h-1z" fill="${c[1]}" /><path d="M0 .67h1v.33h-1z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]}-${c[1]} horizontal`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} horizontal uneven`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.6h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]}-${c[1]}-${c[0]} horizontal`, numColors: 3, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.6h-1z" fill="${c[1]}" /><path d="M0 .4h1v.2h-1z" fill="${c[2]}" />` },
+            { name: c => `${c[0]}-${c[1]} 6 horizontal stripes`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .167h1v.167h-1zM0 .5h1v.167h-1zM0 .833h1v.167h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} diamond on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0L1 .5 .5 1 0 .5z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} centered circle on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.25 .5a.25 .25 0 0 1 .5 0a.25 .25 0 0 1-.5 0z" fill="${c[1]}" />` },
+            { name: c => `${c[2]} circle on ${c[1]} circle on ${c[0]}`, reverseAllowed: true, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.1 .5a.4 .4 0 0 1 .8 0a.4 .4 0 0 1-.8 0z" fill="${c[1]}" /><path d="M.3 .5a.2 .2 0 0 1 .4 0a.2 .2 0 0 1-.4 0z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]} 2×2 checkerboard`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}-${c[2]} orthogonal quadrants on ${c[0]}`, reverseAllowed: false, numColors: 3, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1l-.5 .5h-.5z" fill="${c[1]}" /><path d="M.5 0h.5v.5h-.5z" fill="${c[2]}" />` },
+            { name: c => `${c[0]}-${c[2]}-${c[1]}-${c[3]} orthogonal quadrants`, reverseAllowed: false, numColors: 4, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h.5v1h-.5z" fill="${c[2]}" /><path d="M.5 .5h.5v.5h-1z" fill="${c[1]}" /><path d="M0 .5h.5v.5h-.5z" fill="${c[3]}" />` },
+            { name: c => `${c[1]}-${c[0]} 4×4 checkerboard`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.25v.25h-.25zM.5 0h.25v.25h-.25zM0 .5h.25v.25h-.25zM.5 .5h.25v.25h-.25zM.25 .25h.25v.25h-.25zM.75 .25h.25v.25h-.25zM.25 .75h.25v.25h-.25zM.75 .75h.25v.25h-.25z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} saltire on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} diagonal`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} centered square on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[1]}" />` },
+            { name: c => `${c[2]} square on ${c[1]} square on ${c[0]}`, reverseAllowed: true, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 .2h.6v.6h-.6z" fill="${c[1]}" /><path d="M.4 .4h.2v.2h-.2z" fill="${c[2]}" />` },
+            { name: c => `${c[2]} square on ${c[0]}-${c[1]} diagonal`, reverseAllowed: false, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1z" fill="${c[1]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[2]}" />` },
+            { name: c => `${c[2]} square on ${c[0]}-${c[1]} horizontal`, reverseAllowed: false, numColors: 3, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .5h1v.5h-1z" fill="${c[1]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[2]}" />` },
+            { name: c => `${c[1]} cross on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} 7 diagonal stripes`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<g transform="scale(.142857,.142857)"><path d="M0 0h7v7h-7z" fill="${c[0]}" /><path d="M2 0h2l-4 4v-2zM6 0h1v1l-6 6h-1v-1zM7 3v2l-2 2h-2z" fill="${c[1]}" /></g>` },
+            { name: c => `${c[0]}-${c[1]} 10 diagonal stripes`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 0h.2l-.4 .4v-.2zM.6 0h.2l-.8 .8v-.2zM1 0v.2l-.8 .8h-.2zM1 .4v.2l-.4 .4h-.2zM1 .8v.2h-.2z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[3]}-${c[1]}-${c[2]} diagonal quadrants`, reverseAllowed: false, numColors: 4, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .5h1v.5h-1z" fill="${c[1]}" /><path d="M0 0l.5 .5l-.5 .5z" fill="${c[2]}" /><path d="M1 0v1l-.5 -.5z" fill="${c[3]}" />` },
+            { name: c => `${c[0]}-${c[1]} horizontal semicircles pattern`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.25 .5a.25 .25 0 0 1 .5 0zM1 .5v.5h-1v-.5h.25a.25 .25 0 0 0 .5 0z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} diagonal semicircles pattern`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1L.6768 .6768A.25 .25 0 0 0 .3232 .3232zM.6768 .6768A.25 .25 0 0 1 .3232 .3232z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} triangle on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2L.75 .5 0 .8z" fill="${c[1]}" />` },
+            { name: c => `2 ${c[1]} triangles on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0l1 .25l-1 .25zM0 .5l1 .25l-1 .25z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} plusses on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<g transform="scale(.06667,.06667)"><path d="M0 0h15v15h-15z" fill="${c[0]}" /><path d="M2 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM2 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM7 6h1v1h1v1h-1v1h-1v-1h-1v-1h1z" fill="${c[1]}" /></g>` },
+            { name: c => `${c[1]} square at edge on ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .3h.5v.4h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} triangle regions`, reverseAllowed: false, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M1 0v1h-1v-.5z" fill="${c[1]}" /><path d="M1 0v1h-.5z" fill="${c[2]}" />` }
+        ];
+        var repeaterDesigns = [
+            { name: c => `${c[1]} triangle on ${c[0]}`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .1 .68 .3125 0 .525z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} vertical`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h1v1h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} horizontal`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.225h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]} square on ${c[0]}`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h.225v.225h-.225z" fill="${c[1]}" />` }
+        ];
+        var colorGroups = [
+            [
+                { name: 'red', code: '#f00' }
+            ],
+            [
+                { name: 'blue', code: '#00f' },
+                { name: 'black', code: '#000' }
+            ],
+            [
+                { name: 'yellow', code: '#ff0' },
+                { name: 'white', code: '#fff' }
+            ]
+        ];
+
+        function arraysEqual(a, b)
+        {
+            if (a === b) return true;
+            if (a === null || b === null) return false;
+            if (a.length != b.length) return false;
+
+            for (var i = 0; i < a.length; ++i)
+                if (a[i] !== b[i])
+                    return false;
+            return true;
+        }
+
+        function arraysEqualReverse(a, b)
+        {
+            if (a === b) return true;
+            if (a === null || b === null) return false;
+            if (a.length != b.length) return false;
+
+            for (var i = 0; i < a.length; ++i)
+                if (a[a.length-i-1] !== b[i])
+                    return false;
+            return true;
+        }
+
+        function generateFlags(count, designs, rnd)
+        {
+            // Each design can be used different numbers of times
+            var designIxsAvailable = [];
+            for (var i = 0; i < designs.length; i++)
+            {
+                var allowed =
+                    designs.length === 4 ? 1 :
+                    designs[i].numColors === 4 ? 1 :
+                    designs[i].numColors === 2 && designs[i].reverseAllowed ? 4 : 3;
+                for (var j = 0; j < allowed; j++)
+                    designIxsAvailable.push(i);
+            }
+
+            // Assign designs at random
+            var flags = [];
+            var colorCombinations = {};
+            var availableColorIxs = [];
+            for (var i = 0; i < colorGroups.length; i++)
+                availableColorIxs.push(i);
+            for (var i = 0; i < count; i++)
+            {
+                var ix = rnd.next(0, designIxsAvailable.length);
+                var designIx = designIxsAvailable[ix];
+                designIxsAvailable.splice(ix, 1);
+
+                var flagColors;
+
+                if (designs[designIx].numColors === 4)
+                {
+                    // 4-color designs are allowed to have blue+black and/or yellow+white, but only in a specific order.
+                    flagColors = [];
+                    rnd.shuffleFisherYates(availableColorIxs);
+                    var ixIx = 0;
+                    while (flagColors.length < 4)
+                    {
+                        for (var j = 0; j < colorGroups[availableColorIxs[ixIx]].length && flagColors.length < 4; j++)
+                        {
+                            flagColors.push(colorGroups[availableColorIxs[ixIx]][j]);
+                            if (flagColors.length % 2 === 0)
+                                break;
+                        }
+                        ixIx++;
+                    }
+                }
+                else
+                {
+                    // Find a random color combination that hasn’t been used yet.
+                    // Use only one color per group so we don’t get black+blue or yellow+white on the same flag.
+                    var colorIxs;
+                    do
+                    {
+                        rnd.shuffleFisherYates(availableColorIxs);
+                        colorIxs = [];
+                        for (var j = 0; j < designs[designIx].numColors; j++)
+                            colorIxs.push(availableColorIxs[j]);
+                    }
+                    while (designIx in colorCombinations && colorCombinations[designIx].filter(cc => arraysEqual(cc, colorIxs) || (!designs[designIx].reverseAllowed && arraysEqualReverse(cc, colorIxs))).length);
+                    if (!(designIx in colorCombinations))
+                        colorCombinations[designIx] = [];
+                    colorCombinations[designIx].push(colorIxs);
+
+                    do
+                    {
+                        flagColors = [];
+                        for (var j = 0; j < colorIxs.length; j++)
+                            flagColors.push(colorGroups[colorIxs[j]][rnd.next(0, colorGroups[colorIxs[j]].length)]);
+                    }
+                    // Special case: don’t allow entirely black-and-white flags
+                    while (designs[designIx].numColors == 2 && ((flagColors[0].name === 'black' && flagColors[1].name === 'white') || (flagColors[0].name === 'white' && flagColors[1].name === 'black')));
+                }
+                flags.push({ design: designs[designIx], colors: flagColors, cutout: designs[designIx].cutoutAllowed && (rnd.next(0, 10) === 0) });
+            }
+            return flags;
+        }
+
+        function setRules(rnd)
+        {
+            if (rnd.seed === 0)
+                setZeroFlags();
+            else
+            {
+                // Flags for letters and digits
+                var flags = generateFlags(36, flagDesigns, rnd);
+
+                // Repeater flags
+                var repFlags = generateFlags(4, repeaterDesigns, rnd);
+
+                showFlags(flags, repFlags);
+            }
+
+            setTable(rnd);
+        }
+
+        function setZeroFlags()
+        {
+            var flagLists = [];
+            for (var k = 0; k < 2; k++)
+            {
+                var flags = [];
+                var designs = k === 0 ? flagDesigns : repeaterDesigns;
+                for (var i = 0; i < designs.length; i++)
+                {
+                    var colors = [];
+                    for (var j = 0; j < designs[i].numColors; j++)
+                    {
+                        var n = Math.round((designs[i].numColors === 1 ? .5 : .8 * j / (designs[i].numColors - 1) + .1) * 255).toString(16);
+                        while (n.length < 2)
+                            n = '0' + n;
+                        colors.push({ code: "#xxx".replace(/x/g, n), name: n });
+                    }
+                    flags.push({ design: designs[i], colors: colors, cutout: designs[i].cutoutAllowed });
+                }
+                flagLists.push(flags);
+            }
+            showFlags(flagLists[0], flagLists[1]);
+        }
+
+        function setDefaultRules(rnd)
+        {
+            var red = colorGroups[0][0];
+            var blue = colorGroups[1][0];
+            var black = colorGroups[1][1];
+            var yellow = colorGroups[2][0];
+            var white = colorGroups[2][1];
+
+            showFlags([
+                { design: flagDesigns[1], colors: [white, blue], cutout: true },
+                { design: flagDesigns[0], colors: [red], cutout: true },
+                { design: flagDesigns[10], colors: [blue, white, red] },
+                { design: flagDesigns[9], colors: [yellow, blue] },
+                { design: flagDesigns[6], colors: [blue, red] },
+                { design: flagDesigns[12], colors: [white, red] },
+                { design: flagDesigns[5], colors: [yellow, blue] },
+                { design: flagDesigns[1], colors: [white, red] },
+                { design: flagDesigns[13], colors: [yellow, black] },
+                { design: flagDesigns[8], colors: [white, blue] },
+                { design: flagDesigns[1], colors: [yellow, blue] },
+                { design: flagDesigns[15], colors: [black, yellow] },
+                { design: flagDesigns[19], colors: [blue, white] },
+                { design: flagDesigns[18], colors: [white, blue] },
+                { design: flagDesigns[20], colors: [yellow, red] },
+                { design: flagDesigns[21], colors: [blue, white] },
+                { design: flagDesigns[0], colors: [yellow] },
+                { design: flagDesigns[25], colors: [red, yellow] },
+                { design: flagDesigns[21], colors: [white, blue] },
+                { design: flagDesigns[2], colors: [red, white, blue] },
+                { design: flagDesigns[15], colors: [white, red] },
+                { design: flagDesigns[19], colors: [white, red] },
+                { design: flagDesigns[22], colors: [blue, white, red] },
+                { design: flagDesigns[25], colors: [white, blue] },
+                { design: flagDesigns[27], colors: [yellow, red] },
+                { design: flagDesigns[28], colors: [yellow, red, black, blue] },
+                { design: flagDesigns[33], colors: [white, blue] },
+                { design: flagDesigns[8], colors: [yellow, red] },
+                { design: flagDesigns[8], colors: [red, yellow] },
+                { design: flagDesigns[8], colors: [red, blue] },
+                { design: flagDesigns[19], colors: [red, white] },
+                { design: flagDesigns[19], colors: [yellow, blue] },
+                { design: flagDesigns[26], colors: [white, blue] },
+                { design: flagDesigns[3], colors: [white, red] },
+                { design: flagDesigns[3], colors: [blue, yellow] },
+                { design: flagDesigns[3], colors: [white, blue] }
+            ], [
+                { design: repeaterDesigns[0], colors: [blue, yellow] },
+                { design: repeaterDesigns[1], colors: [blue, white] },
+                { design: repeaterDesigns[2], colors: [white, black] },
+                { design: repeaterDesigns[3], colors: [red, yellow] }
+            ]);
+
+            setTable(rnd);
+        }
+
+        function setTable(rnd)
+        {
+            let elems = Array.from(document.querySelectorAll('td.dgt'));
+            for (let i = 0; i < 12; i++)
+            {
+                let nums = Array(10).fill(null).map((_, c) => c);
+                rnd.shuffleFisherYates(nums);
+                for (let j = 0; j < 10; j++)
+                    elems [ j + 10*i ].innerText = nums[j];
+            }
+        }
+
+        function showFlags(flags, repFlags)
+        {
+            var flagElems = document.querySelectorAll('.maritime.flag');
+            for (var i = 0; i < 36; i++)
+            {
+                var svg;
+                if (i >= flags.length)
+                {
+                    // Pink square!
+                    svg = `<path fill="#f0f" d="M0 0h1v1h-1z" />`;
+                }
+                else
+                {
+                    console.log(`Flag ${"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[i]} is ${flags[i].design.name(flags[i].colors.map(c => c.name))}${flags[i].cutout ? ' with cutout' : ''}`);
+                    svg = flags[i].design.svg(flags[i].colors.map(c => c.code));
+                    if (flags[i].cutout)
+                    {
+                        var pathD = 'M0 0h1L.75 .5 1 1h-1z';
+                        svg = `<defs><clipPath id="cutout3"><path d="${pathD}" /></clipPath></defs><g clip-path="url(#cutout3)">${svg}</g><path fill="none" stroke="black" stroke-width=".015" d="${pathD}" />`;
+                    }
+                    else
+                        svg += '<path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" />';
+                }
+                flagElems[i].style.backgroundImage = 'none';
+                flagElems[i].innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04">${svg}</svg>`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">海上セマフォア信号</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Maritime Semaphore.svg">
+                <h2>モジュール詳細：海上セマフォア信号</h2>
+                <p class="flavour-text">どの旗を使用するか決めよう。</p>
+
+                <p>左右の旗を押すと、6つの旗の構成を切り替える。1番目(左端)と6番目(右端)はループしない。各構成は2つの海上旗(色付きの旗)とセマフォア信号(旗の方向)で構成されている。セマフォア信号は常に英字として解釈される。</p>
+                <p>1つの構成は「ダミー」であり、(英字ではなく)数字を出力する海上旗が少なくとも1つ含まれている。</p>
+                <p>構成を変更せずに10秒間放置すると、その構成が送信される。モジュールを解除できる構成は1つだけである。それ以外の場合、ダミーの構成は放置しても良い。それ以外の4つの構成はミスが記録される。</p>
+                <p>どの構成が解除構成かを調べるには、次のページの表から10桁を取得する。各段は順番に構成の位置と対応している。ダミー以外の構成に対応する各段で、セマフォア信号と各海上旗の英字のアルファベット上の位置の数字の差を列に使用し数字を取得する。旗の左右は関係なく、アルファベット順で前に来るものを左に、後に来るものを右に使用する。</p>
+                <p>これらの数字を全て合計し、ダミーが使用する海上旗の数値も加算する。結果を1~6の範囲内になるまで6を減算する。その位置にある構成が回答の構成である。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-2 page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">海上セマフォア信号</span>
+            </div>
+            <div class="page-content">
+                <h3>表</h3>
+                <table class='digit-table'>
+                    <tr class='header'><th colspan='10'><span class="arw">←</span>前に来る英字</th><th rowspan='2' class='slot'>位置</th><th colspan='10'>後に来る英字<span class="arw">→</span></th></tr>
+                    <tr class='header offset'><td>−10</td><td>−9</td><td>−8</td><td>−7</td><td>−6</td><td>−5</td><td>−4</td><td>−3</td><td>−2</td><td>−1</td><td>+1</td><td>+2</td><td>+3</td><td>+4</td><td>+5</td><td>+6</td><td>+7</td><td>+8</td><td>+9</td><td>+10</td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>1</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>2</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>3</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>4</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>5</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                    <tr><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='slot'>6</td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td><td class='dgt'></td></tr>
+                </table>
+
+                <h3>アルファベット</h3>
+                <table class='alphabet'><tr><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td></tr></table>
+
+                <h3 style='margin-top: 2cm;'>Twitch Play</h3>
+                <p>Twitch Playにおいては10秒のタイマーは無効化されている。<code>prev</code>と<code>next</code>を使用して、構成を移動する。</p>
+                <p>始めてダミーを見つけたときは<code>dummy</code>コマンドを使用しなければならない。これを無視して他の構成に移動してはならない。</p>
+                <p><code>submit</code>を使用して正しい構成を送信する。解除(ミス)には10秒かかる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-2 page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">海上セマフォア信号</span>
+            </div>
+            <div class="page-content">
+                <h3>英字参照</h3>
+                <div class="all-flags">
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><defs><clipPath id="cutout"><path d="M0 0h1L.75 .5 1 1h-1z" /></clipPath></defs><g clip-path="url(#cutout)"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M.5 0h.5v1h-.5z" fill="#00f" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1L.75 .5 1 1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Alpha.svg" alt="A or 1"><div class="caption">A</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><defs><clipPath id="cutout2"><path d="M0 0h1L.75 .5 1 1h-1z" /></clipPath></defs><g clip-path="url(#cutout2)"><path d="M0 0h1v1h-1z" fill="#f00" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1L.75 .5 1 1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Bravo.svg" alt="B or 2"><div class="caption">B</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M0 .2h1v.6h-1z" fill="#fff" /><path d="M0 .4h1v.2h-1z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Charlie.svg" alt="C or 3"><div class="caption">C</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M0 .2h1v.6h-1z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Delta.svg" alt="D or 4"><div class="caption">D</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M0 0h1v.5h-1z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Echo.svg" alt="E or 5"><div class="caption">E</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M.5 0L1 .5 .5 1 0 .5z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Foxtrot.svg" alt="F or 6"><div class="caption">F</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M.167 0h.167v1h-.167zM.5 0h.167v1h-.167zM.833 0h.167v1h-.167z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Golf.svg" alt="G or 7"><div class="caption">G</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M.5 0h.5v1h-.5z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Hotel.svg" alt="H or 8"><div class="caption">H</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M.25 .5a.25 .25 0 0 1 .5 0a.25 .25 0 0 1-.5 0z" fill="#000" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_India.svg" alt="I or 9"><div class="caption">I</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Juliet.svg" alt="J or Letters"><div class="caption">J</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M.5 0h.5v1h-.5z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Kilo.svg" alt="K or 0"><div class="caption">K</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#000" /><path d="M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z" fill="#ff0" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Lima.svg" alt="L"><div class="caption">L</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="#fff" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Mike.svg" alt="M"><div class="caption">M</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h.25v.25h-.25zM.5 0h.25v.25h-.25zM0 .5h.25v.25h-.25zM.5 .5h.25v.25h-.25zM.25 .25h.25v.25h-.25zM.75 .25h.25v.25h-.25zM.25 .75h.25v.25h-.25zM.75 .75h.25v.25h-.25z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_November.svg" alt="N"><div class="caption">N</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M0 0h1v1z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Oscar.svg" alt="O"><div class="caption">O</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M.33 .33h.34v.34h-.34z" fill="#fff" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Papa.svg" alt="P"><div class="caption">P</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Quebec.svg" alt="Q"><div class="caption">Q</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z" fill="#ff0" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Romeo.svg" alt="R"><div class="caption">R</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M.33 .33h.34v.34h-.34z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Sierra.svg" alt="S"><div class="caption">S</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M.33 0h.67v1h-.67z" fill="#fff" /><path d="M.67 0h.33v1h-.33z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Tango.svg" alt="T"><div class="caption">T</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Uniform.svg" alt="U"><div class="caption">U</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Victor.svg" alt="V"><div class="caption">V</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M.2 .2h.6v.6h-.6z" fill="#fff" /><path d="M.4 .4h.2v.2h-.2z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Whiskey.svg" alt="W"><div class="caption">W</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_X-ray.svg" alt="X"><div class="caption">X</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M.2 0h.2l-.4 .4v-.2zM.6 0h.2l-.8 .8v-.2zM1 0v.2l-.8 .8h-.2zM1 .4v.2l-.4 .4h-.2zM1 .8v.2h-.2z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Yankee.svg" alt="Y"><div class="caption">Y</div></div>
+                    <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M0 .5h1v.5h-1z" fill="#f00" /><path d="M0 0l.5 .5l-.5 .5z" fill="#000" /><path d="M1 0v1l-.5 -.5z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><img class="flag" src="img/Semaphore/Semaphore_Zulu.svg" alt="Z"><div class="caption">Z</div></div>
+
+                    <div class='flag-numerical'>
+                        <h3>数字参照</h3>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><g transform="scale(.06667,.06667)"><path d="M0 0h15v15h-15z" fill="#fff" /><path d="M2 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM2 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM7 6h1v1h1v1h-1v1h-1v-1h-1v-1h1z" fill="#00f" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">0</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">1</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="#ff0" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">2</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">3</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#f00" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="#fff" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">4</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#ff0" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">5</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><g transform="scale(.142857,.142857)"><path d="M0 0h7v7h-7z" fill="#fff" /><path d="M2 0h2l-4 4v-2zM6 0h1v1l-6 6h-1v-1zM7 3v2l-2 2h-2z" fill="#00f" /></g><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">6</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h.33v1h-.33zM.67 0h.33v1h-.33z" fill="#f00" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">7</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#00f" /><path d="M0 0h.33v1h-.33zM.67 0h.33v1h-.33z" fill="#ff0" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">8</div></div>
+                        <div class="flag-box highlightable"><div class="maritime flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04"><path d="M0 0h1v1h-1z" fill="#fff" /><path d="M0 0h.33v1h-.33zM.67 0h.33v1h-.33z" fill="#00f" /><path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" /></svg></div><div class="caption">9</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

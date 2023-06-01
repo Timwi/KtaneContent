@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1" />
+    <title>ホグワーツ — Keep Talking and Nobody Explodes Module</title>
+  <link rel="stylesheet" type="text/css" href="css/font.css" />
+  <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+  <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+  <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <script src="js/ktane-utils.js"></script>
+  <style>
+    div.cheatsheet-container {
+      display: flex;
+      clear: both;
+    }
+    
+    table.cheatsheet {
+      font-size: 0.8em;
+      margin-right: 4px;
+      align-self: flex-start;
+      width: 49%;
+    }
+    table.cheatsheet td,
+    table.cheatsheet th {
+      padding: 0 8px 0 4px;
+      border: none;
+    }
+    
+    table.cheatsheet tr :nth-child(2) {
+      background-color: #dbb1bb; color: black;
+    }
+    table.cheatsheet tr :nth-child(3) {
+      background-color: #ebd091; color: black;
+    }
+    table.cheatsheet tr :nth-child(4) {
+      background-color: #c2cbd3; color: black;
+    }
+    table.cheatsheet tr :nth-child(5) {
+      background-color: #a4c7b9; color: black;
+    }
+  </style>
+  <script>
+    const url = "https://ktane.timwi.de/json/raw";
+    const maxRows = 45;
+    const maxRowsShort = 40;
+    const pageBgRegexp = /page-bg-0\d/;
+    
+    function updatePageNum() {
+      Array.from(document.getElementsByClassName("page")).forEach(
+      ($page, i, $pages) => {
+        const bgIdx = (i % 7) + 1;
+        $page.className = $page.className.replace(pageBgRegexp, "");
+        $page.classList.add(`page-bg-${("0" + bgIdx).slice(-2)}`);
+        $page.getElementsByClassName("page-footer")[0].innerText = `Page ${
+          i + 1
+        } of ${$pages.length}`;
+      }
+      );
+    }
+    
+    function createPage($el) {
+      const $pages = document.getElementsByClassName("page");
+      if ($pages.length === 0)
+      throw new Error("You must create at least one .page element.");
+      const $pageHeader = $pages[0].getElementsByClassName("page-header");
+      if ($pageHeader.length === 0)
+      throw new Error(
+      "First .page element must contain .page-header element."
+      );
+      
+      const $parent = $pages[0].parentElement;
+      
+      const $newPage = $pages[0].cloneNode();
+      const $newPageHeader = $pageHeader[0].cloneNode(true);
+      $newPage.appendChild($newPageHeader);
+      const $newPageContent = document.createElement("div");
+      $newPageContent.classList.add("page-content");
+      $newPageContent.appendChild($el);
+      $newPage.appendChild($newPageContent);
+      const $newPageFooter = document.createElement("div");
+      $newPageFooter.classList.add("page-footer", "relative-footer");
+      $newPage.appendChild($newPageFooter);
+      
+      $parent.appendChild($newPage);
+    }
+    
+    function createPages($els) {
+      for (let $el of $els) {
+        createPage($el, false);
+      }
+      updatePageNum();
+    }
+    
+    const scores = [
+    { C: 1, D: 2, F: 2, G: 2, I: 2, N: 1, O: 2, R: 3, Y: 1 },
+    { A: 1, E: 2, F: 4, G: 1, H: 2, L: 2, P: 1, U: 2 },
+    { A: 3, C: 1, E: 2, L: 1, N: 2, O: 1, R: 2, V: 1, W: 2 },
+    { A: 3, E: 1, H: 1, I: 1, L: 2, N: 1, R: 2, S: 2, T: 1, Y: 1, Z: 1 },
+    ];
+    
+    function getScores(str) {
+      const upper = str.toUpperCase();
+      return scores.map((score) => 
+      Array.from(upper).reduce((a, b) => a + (score[b] ?? 0), 0)
+      );
+    }
+    
+    async function getData() {
+      const data = await fetch(url);
+      const json = await data.json();
+      const ignores = json.KtaneModules.find(
+      (m) => m.Name === "Hogwarts"
+      ).IgnoreProcessed;
+      const moduleNames = json.KtaneModules.filter(
+      (m) => m.Type === "Regular" && !ignores.includes(m.Name)
+      ).map((m) => m.Name);
+      moduleNames.sort((a, b) =>
+      a.toUpperCase().localeCompare(b.toUpperCase())
+      );
+      return moduleNames.map((m) => [m, ...getScores(m)]);
+    }
+    
+    const contentTemplate = `
+    <table class="cheatsheet">
+      <tr>
+        <th>モジュール名</th>
+        <th>Gry</th>
+        <th>Huf</th>
+        <th>Rav</th>
+        <th>Sly</th>
+      </tr>
+    </table>
+    <table class="cheatsheet">
+      <tr>
+        <th>モジュール名</th>
+        <th>Gry</th>
+        <th>Huf</th>
+        <th>Rav</th>
+        <th>Sly</th>
+      </tr>
+    </table>
+    `;
+    
+    window.addEventListener("load", async () => {
+      const data = await getData();
+      const $contents = [];
+      let $tableContainer = document.getElementsByClassName("cheatsheet-container")[0];
+      let $table = $tableContainer.getElementsByClassName("cheatsheet")[0];
+      for(let i = 0; i < maxRowsShort * 2; i++) {
+        const row = data[i];
+        if (i === maxRowsShort) {
+          $table = $tableContainer.getElementsByClassName("cheatsheet")[1];
+        }
+        const $tr = document.createElement("tr");
+        for(let el of row) {
+          const $td = document.createElement("td");
+          $td.innerText = el;
+          $tr.appendChild($td);
+        }
+        $table.appendChild($tr);
+      }
+      
+      for (let i = 0; i < data.length - maxRowsShort * 2; i++) {
+        const row = data[i + maxRowsShort * 2];
+        if (i % (maxRows * 2) === 0) {
+          $tableContainer = document.createElement("div");
+          $tableContainer.classList.add("cheatsheet-container");
+          $tableContainer.innerHTML = contentTemplate;
+          $contents.push($tableContainer);
+          $table = $tableContainer.getElementsByClassName("cheatsheet")[0];
+        } else if (i % maxRows === 0) {
+          $table = $tableContainer.getElementsByClassName("cheatsheet")[1];
+        }
+        const $tr = document.createElement("tr");
+        for(let el of row) {
+          const $td = document.createElement("td");
+          $td.innerText = el;
+          $tr.appendChild($td);
+        }
+        $table.appendChild($tr);
+      }
+      
+      createPages($contents);
+      updatePageNum();
+    });
+  </script>
+</head>
+<body>
+  <div class="section">
+    <div class="page page-bg-01">
+      <div class="page-header">
+        <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ホグワーツ</span>
+      </div>
+      <div class="page-content">
+        <img src="img/Component/Hogwarts.svg" class="diagram" />
+                <h2>モジュール詳細：ホグワーツ</h2>
+        <p class="flavour-text">
+          アロホモラ！…うーん、なんでこれでモジュールが解除されないんだろう？
+        </p>
+        <p class="appendix-reference" id="appendix-reference">
+          解除方法の詳細については<a href='Hogwarts%20translated%20%28%E6%97%A5%E6%9C%AC%E8%AA%9E%20%E2%80%94%20%E3%83%9B%E3%82%AF%E3%82%99%E3%83%AF%E3%83%BC%E3%83%84%29%20%28alpha8404%29.html'>元のマニュアル</a>を参照する。
+        </p>
+        <div class="cheatsheet-container">
+          <table class="cheatsheet">
+            <tr>
+              <th>モジュール名</th>
+              <th>Gry</th>
+              <th>Huf</th>
+              <th>Rav</th>
+              <th>Sly</th>
+            </tr>
+          </table>
+          <table class="cheatsheet">
+            <tr>
+              <th>モジュール名</th>
+              <th>Gry</th>
+              <th>Huf</th>
+              <th>Rav</th>
+              <th>Sly</th>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="page-footer relative-footer">ページ 1/1</div>
+    </div>
+  </div>
+</body>
+</html>
