@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>計算迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        @keyframes rainbow-dark {
+            8%{color:orange}
+            16%{color:yellow}
+            25%{color:chartreuse}
+            33%{color:green}
+            41%{color:springgreen}
+            50%{color:cyan}
+            58%{color:dodgerblue}
+            66%{color:blue}
+            75%{color:purple}
+            83%{color:violet}
+            91%{color:magenta}
+            100%{color:red}
+        }
+        @keyframes glow { 60%{filter: drop-shadow(0px 0px 10px #111)} }
+        @keyframes glowdark { 60%{filter: drop-shadow(0px 0px 10px #DDD)} }
+        * *:not(code) { font-family: "Special Elite", "Noto Serif JP"}
+
+        body {
+            --red: rgba(255,0,0,0.5);
+            --orange: rgba(255,165,0,0.5);
+            --blue: rgba(0,0,255,0.5);
+            --green: rgba(0,255,0,0.5);
+            --gray: rgb(200,200,200);
+            --cyan: rgba(0,255,255,0.5);
+        }
+
+        td { padding: 1vh }
+        td svg {
+            padding: 0;
+            text-align: center;
+            font-size: 3em;
+            user-select: none;
+            fill: transparent;
+            stroke: black;
+            stroke-width: 3.5;
+            margin-top: 5px;
+        }
+        input {
+            width: 25%;
+            text-align: center;
+            font-size: 15px;
+        }
+            input[type=checkbox] {
+                width: fit-content;
+                margin: 0;
+                cursor: pointer;
+                position: absolute;
+                top: 0;
+            }
+            label { position: relative }
+            label:hover { cursor: pointer }
+            label>span { display: inline-block }
+            #right-check { margin-left: 25px }
+            #right-check>span { margin-right: 4px }
+            @-moz-document url-prefix() {
+                #right-check>span { margin-right: 0px }
+            }
+
+        #inputs {
+            display: inline-flex;
+            flex-direction: column;
+            row-gap: 15px;
+            margin-left: -10px;
+            margin-right: -5px;
+            padding-top: 20px;
+        }
+            #inputs>* {
+                display: flex;
+                width: 100%;
+                user-select: none;
+            }
+        button {
+            background-color: #C0C0C0;
+            padding: 10px;
+            padding-bottom: 5px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #reset {
+            border-bottom: 3px black dashed;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            padding-bottom: 2px;
+            margin-right: 100px;
+        }
+        #prev, #next {
+            border: 3px solid transparent;
+            transform: scale(0.9);
+            margin: 0;
+            visibility: hidden;
+        }
+            #prev:hover, #next:hover {
+                background-color: #aaa;
+                border: 3px black dashed;
+            }
+            #prev:active, #next:active {
+                background-color: #999;
+            }
+            #next { border-radius: 10px 20px 20px 10px }
+            #prev { border-radius: 20px 10px 10px 20px }
+
+        #table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        #pages {
+            font-size: 1.17em;
+            font-weight: bold;
+        }
+
+        .red { background-color: var(--red) }
+        .orange { background-color: var(--orange) }
+        .blue { background-color: var(--blue) }
+        .gray-green { background: linear-gradient(to right,var(--gray) 25%,var(--green) 55%) }
+        .cyan { background-color: var(--cyan) }
+
+        .pair {
+            display: inline-flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+            .small {
+                transform: scale(0.4);
+            }
+            .small, .small-diamond {
+                stroke-width: 5px;
+            }
+            .small-heart {
+                stroke-width: 3.5px;
+            }
+            .small-star {
+                transform: scale(0.45);
+                stroke-width: 4px;
+            }
+        .pair>svg {
+            fill: transparent;
+            stroke: black;
+            width: 24px;
+            height: 24px;
+        }
+        svg text {
+            stroke-width: 0;
+            fill: black;
+            text-anchor: middle;
+            transform: translate(30px, 45px);
+        }
+        svg path { stroke-width: 2.5 }
+
+        #arrow-map { position: absolute }
+        .buttons { align-items: baseline }
+
+        code {
+            font-family: monospace;
+            background-color: #DDD;
+            border-radius: 5px;
+            padding: 2px 5px;
+        }
+        pre {
+            margin-left: -1em;
+        }
+        .small-text {
+            font-size: small;
+        }
+
+        .arrow-instance {
+            transform-box: fill-box;
+            transform-origin: center;
+            filter: drop-shadow(0px 0px 2px white);
+        }
+
+        .layout-evenly {
+            display: flex;
+            justify-content: space-evenly;
+        }
+        .legend {
+            margin-top: 5px;
+            align-items: center;
+        }
+        .legend-item {
+            flex: auto;
+            text-align: center;
+            padding: 5px;
+            margin: 0 5px;
+        }
+        #tip {
+            font-size: small;
+            text-align: center;
+            font-style: italic;
+        }
+        #primary-content {
+            position: relative;
+        }
+        #arrow-map {
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .dark svg, .dark svg rect, .dark svg circle { stroke: #DDD }
+        .dark .arrow-instance { filter: drop-shadow(0px 0px 2px #444) }
+        .dark { --gray: #777 }
+        .dark svg text { fill: #DDD }
+        .dark code { background-color: #555 }
+        .dark input { border: none }
+        .dark input {
+            background-color: #444;
+            color: #DDD;
+        }
+        .dark a { animation: rainbow-dark 8s linear 0s infinite; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">計算迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Mazematics.svg" class="diagram">
+                <h2>モジュール詳細：計算迷路</h2>
+                <p class="flavour-text">星の数値はなんだっけ? うげえ。</p>
+                <p style="margin-top:15px">解除手順については <a href="Mazematics%20translated%20(日本語%20—%20計算迷路)%20(MaximumCombo).html">元のマニュアル</a> を参照すること。</p>
+                <div id="inputs">
+                    <div class="buttons layout-evenly">
+                        <span>
+                            <label>
+                                <span>Toggle shapes</span>
+                                <input type="checkbox">
+                            </label>
+                            <label id="right-check">
+                                <span>Hide colors</span>
+                                <input type="checkbox">
+                            </label>
+                        </span>
+                        <button id="reset">リセット</button>
+                        <span>
+                            <button id="prev">Prev</button>
+                            <button id="next">Next</button>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><circle  class="small"         cx="30" cy="28" r="25"/>                                                                             </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><rect    class="small-diamond" x="11" y="11" width="35" height="35" transform="rotate(45,12,12) scale(0.4)"/>                       </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><polygon class="small"         points="30,54 5,10 55,10" transform="rotate(180)"/>                                                  </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><path class="small-heart" d="M0 20 v-20 h20 a10,10 0 0,1 0,20 a10,10 0 0,1 -20,0 z" transform="rotate(225,12,12) translate(5,5) scale(0.6)"/></svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><polygon class="small"         points="30 5,50 17,50 43,30 53,10 43,10 17"/>                                                        </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><rect    class="small"         x="6" y="6" width="48" height="47"/>                                                                 </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><polygon class="small-star"    points="30 5,35 20,50 20,38 30,44 45,30 35,16 45,22 30,10 20,25 20"/>                                </svg><input></div>
+                        <div class="pair"><svg viewBox="0 0 24 24"><polygon class="small"         points="30 6,5 50,55 50"/>                                                                           </svg><input></div>
+                    </div>
+                </div>
+                <div id="table-header">
+                    <h3>迷路</h3>
+                    <span id="pages"></span>
+                </div>
+                <svg id="shapes">
+                    <defs>
+                        <circle  id="circle"   cx="30" cy="28" r="25"/>
+                        <rect    id="diamond"  x="11" y="11" width="35" height="35" transform="rotate(45, 30, 30)"/>
+                        <polygon id="triangle" points="30 6,5 50,55 50" transform="rotate(180, 30, 29)"/>
+                        <path    id="heart"    d="M0 20 v-20 h20 a10,10 0 0,1 0,20 a10,10 0 0,1 -20,0 z" transform="rotate(225,30,30) translate(16,16) scale(1.5)"/>
+                        <polygon id="hexagon"  points="30 5,50 17,50 43,30 53,10 43,10 17"/>
+                        <rect    id="square"   x="6" y="6" width="48" height="47"/>
+                        <polygon id="star"     points="30 5,35 20,50 20,38 30,44 45,30 35,16 45,22 30,10 20,25 20" transform="scale(1.2) translate(-5,-1)" stroke-width="3"/>
+                        <polygon id="mountain" points="30,6 5,50 55,50"/>
+                    </defs>
+                </svg>
+                <div id="primary-content"></div>
+                <div>
+                    <br>
+                    <h3>メモ:</h3>
+                    <div class="layout-evenly">
+                        初期状態の画面 &rArr; 初期値 <strong>::</strong>
+                        0 の時の画面 &rArr; 目標値 <strong>::</strong>
+                        0 以外の時の画面 &rArr; 現在値
+                    </div>
+                    <br>
+                    <pre><strong>   禁止値:</strong>
+<span class="restriction">- 開始地点が四角形もしくはひし形 &rArr; <code>1, 3, 6, 10, 15, 21, 28, 36, 45</code></span>
+<span class="restriction">- 初期値が 3 の倍数 &rArr; <code>7, 14, 21, 28, 35, 42, 49</code></span>
+<span class="restriction">- 開始地点は + 記号 &rArr; <code class="small-text">2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47</code></span>
+<span class="restriction">- 上記以外 &rArr; <code>1, 2, 3, 5, 8, 13, 21, 34</code></span></pre>
+                    <div id="legend-section"> <!-- note to myself: do NOT use <section>-->
+                        <hr>
+                        <div>
+                            <strong>Legend:</strong>
+                        </div>
+                        <div class="layout-evenly legend">
+                            <span class="red legend-item">Strike</span>&gt;
+                            <span class="orange legend-item">Start+End</span>&gt;
+                            <span class="blue legend-item">Start</span>&vert;
+                            <span class="gray-green legend-item">End&nbsp;/&nbsp;Solved</span>&gt;
+                            <span class="cyan legend-item">Step</span>
+                        </div>
+                        <p id="tip">Tip: when in doubt, start with the <span class="orange"><strong>orange</strong></span> arrow; end with the <span class="red"><strong>red</strong></span> one. <span class="gray-green"><em>Arrows are ordered by color</em>.</span></p>
+                    </div>
+                </div>
+            </div>
+        <div class="page-footer relative-footer">ページ 1/1</div>
+    </div>
+</div>
+    <script>
+        function generateArrow(dir, cell, again, edge, progress) {
+            const [x, y] = [true, false] //readability
+                , [row, column] = [cell[0], cell[1]]
+                , arrows = document.querySelector("#arrow-map")
+                , calc = (axis, edge) => {
+                    let [shift, cell, move, line] = axis ? [43.5, 84, -92, column] : [-45, 91, -48, row];
+                    if (dir % 2 ^ axis) { //if (dir is perp. to the axis I’m calcing right now)
+                        move += cell;
+                        if (again !== true) {
+                            const [total, arrowNumber] = again
+                                , modif = cell/total;
+
+                            move += modif*(total-arrowNumber);
+                            move -= modif*(total-1)/2;
+                        }
+                    }
+                    else {
+                        const isGreater = dir > 1;
+                        line += Math.round(Math.sin(isGreater));
+                        if (edge) line = isGreater ? line%8 : line+8;
+                    }
+                    if (dir % 2) move += shift;
+                    return move + cell*line;
+                }
+                , createArrow = edge => {
+                    const newArrow = arrows.children[0].children[0].cloneNode();
+                    newArrow.setAttribute("style", `transform:translate(${calc(x, edge)}px,${calc(y, edge)}px) scale(3) rotate(${-90*dir}deg)`);
+                    newArrow.setAttribute("fill", `hsl(${progress}, 100%, 50%)`);
+                    newArrow.setAttribute("stroke", `hsl(${progress}, 100%, 50%)`);
+                    newArrow.setAttribute("class", "arrow-instance");
+                    arrows.appendChild(newArrow);
+                };
+            createArrow(false);
+            if (edge) createArrow(true);
+        }
+
+        function handleData(moves, strikes, solved) {
+            removeCellsColor();
+            removeArrows();
+            toggleNumbers(false);
+
+            const rows = document.querySelectorAll("tr")
+                , letters = "ABCDEFGH"
+                , toNumber = l => letters.indexOf(l)
+                , toCoords = c => [c[1]-1, toNumber(c[0])] //<a, b>
+                , getCell = c => rows[c[0]].children[c[1]]
+                , treatSubArrays = t => t.map(a => a.sort().toString())
+                , generateDirections = function*() {
+                    for (let i = 1; i < moves.length; i++) {
+                        if (prev === curr) { console.error(`ERROR ${prev}: Two same coordinates in a row\nPlease report this error to MásQuéÉlite#2406`); throw new Error(); };
+                        [prev, curr] = [toCoords(moves[i-1]), toCoords(moves[i])];
+                        let pos = +(curr[0] - prev[0] === 0);                      //(left right) or (up down)?
+                        edge.push(Math.abs(prev[pos] - curr[pos]) !== 1);          //am I wrapping around?
+                        yield edge[i-1] ^ (prev[pos] > curr[pos]) ? 0+pos : 2+pos; //(right down) or (left up)?
+                    }
+                }
+                , countify = arr => {
+                    const countRepetitions = (a, v) => a.filter(i => i === v).length
+                        , notRepeated = arr.filter(e => countRepetitions(arr, e) === 1)
+                        , mapEachCount = a => a.map((e, i) => notRepeated.includes(e) || [countRepetitions(a, e), countRepetitions(a.slice(i), e)])
+                    return mapEachCount(arr);
+                }
+                , generatedDirections = generateDirections()
+                , directions = [], combos = [], edge = [];
+
+            let prev, curr = toCoords(moves[0])
+              , movedCell = getCell(curr)
+              , strikedCells = strikes.map(cell => getCell(toCoords(cell)))
+            const startingCell = movedCell;
+            startingCell.style.backgroundColor = colors.blue;
+
+            for (direction of generatedDirections) {
+                combos.push([prev, curr]);
+                directions.push(direction);
+
+                movedCell = getCell(curr);
+                if (strikedCells.includes(movedCell)) movedCell.style.backgroundColor = colors.red;
+                else if (movedCell !== startingCell)  movedCell.style.backgroundColor = colors.cyan;
+            };
+            if (strikedCells.includes(movedCell)) movedCell.style.backgroundColor = colors.red;
+            else if (movedCell === startingCell)  movedCell.style.backgroundColor = colors.orange;
+            else if (solved)                      movedCell.style.backgroundColor = colors.green;
+            else                                  movedCell.style.backgroundColor = colors.gray;
+
+            const originalCombos = JSON.parse(JSON.stringify(combos))
+                , markedByCountNumber = countify(treatSubArrays(combos));
+
+            for (let i = 0; i < combos.length; i++)
+                generateArrow(directions[i], originalCombos[i][0], markedByCountNumber[i], edge[i], Math.round((i+1)/combos.length*360));
+
+            manageInteractiveElements(true, logCase.max === 1);
+
+            if (checkboxes[0].checked) handleCheckbox(1, 0);
+            if (checkboxes[1].checked) handleCheckbox(1, 1);
+        }
+
+        function updatePageStatus() {
+            const [curr, max] = [logCase.current, logCase.max];
+            pages.textContent = `${curr}/${max}`;
+            prev.setAttribute("style", `animation:glow${document.body.className} 4s linear 0s 2`);
+            next.setAttribute("style", `animation:glow${document.body.className} 4s linear 0s 2`);
+            handleData(logCase.cg[curr-1], logCase.s[curr-1], (logCase.sd && curr === max));
+        }
+
+        function handlePageArrows(dir) {
+            let _ = logCase.current + dir;
+            if (_ < 1 || _ > logCase.max) return;
+            logCase.current = _;
+            updatePageStatus();
+        }
+
+        //PageCase factory
+        function handleHash(hash) {
+            const hashObj = JSON.parse(decodeURI(hash));
+            document.querySelectorAll(".restriction")[hashObj.restricted].style.textTransform = "uppercase";
+            logCase = new PageCase(hashObj.shapeNumbers, hashObj.coordsGroups, hashObj.strikes, hashObj.solved);
+            updatePageStatus();
+        }
+
+        function alterCellContent(data) {
+            if (isFirstInput) {
+                for (let i = 0; i < 8; i++)
+                    document.querySelectorAll('.'+shapeNames[i]).forEach(cell => {
+                        cell.children[0].setAttribute("visibility", "hidden");
+                        cell.children[1].textContent = cell.children[1].textContent[0] + '?';
+                    });
+                isFirstInput = false;
+            }
+
+            document.querySelectorAll('.'+shapeNames[data[0]]).forEach(cell =>
+                cell.children[1].textContent = cell.children[1].textContent[0] + (data[1] ? data[1] : '?'));
+        }
+
+        function buildPrimaryContent() {
+            const ns = "http://www.w3.org/2000/svg"
+                , table = document.createElement("table");
+
+            for (let r = 0; r < 8; r++) { //table construction
+                const tr = document.createElement("tr");
+                for (let i = 0; i < 8; i++) { //cell construction
+                    const td = document.createElement("td")
+                        , div = document.createElement("div")
+                        , svg = document.createElementNS(ns, "svg")
+                        , newShape = document.querySelector('#'+shapeNames[shapes[i+r*8]]).cloneNode()
+                        , text = document.createElementNS(ns, "text");
+
+                    svg.setAttribute("class", newShape.getAttribute("id"));
+                    svg.setAttribute("width","100%");
+                    svg.setAttribute("viewBox","0 0 60 55");
+                    div.setAttribute("width","60");
+                    div.setAttribute("height","55");
+                    newShape.removeAttribute("id");
+                    text.textContent = shapesSign[i+r*8];
+
+                    svg.appendChild(newShape);
+                    svg.appendChild(text);
+                    div.appendChild(svg);
+                    td.appendChild(div);
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+            document.querySelector("#shapes").remove();
+            const svg = document.createElementNS(ns, "svg") //arrow layer construction
+                , defs = document.createElementNS(ns, "defs")
+                , polygon = document.createElementNS(ns, "polygon");
+            svg.id = "arrow-map";
+            svg.setAttribute("viewBox", "-31 -27 672 738");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            polygon.setAttribute("class", "arrow");
+            polygon.setAttribute("points", "21 31,21 18,23 18,20 13,17 18,19 18,19 31");
+
+            defs.appendChild(polygon);
+            svg.appendChild(defs);
+
+            primaryContent.appendChild(svg);
+            primaryContent.appendChild(table);
+
+            const hash = window.location.hash;
+            manageInteractiveElements(hash);
+            if (hash) handleHash(hash.slice(1));
+        }
+
+        //#region MAIN
+
+        //#region Classes
+
+        //encapsulation for page-related variables
+        //refer to: @function handleHash
+        class PageCase {
+            constructor(sn, cg, s, sd) {
+                this.max = cg.length;
+                this.current = 1;
+
+                this.sn = sn;
+                this.cg = cg;
+                this.s  = s;
+                this.sd = sd;
+            }
+        }
+
+        class Colors {
+            #style = getComputedStyle(document.querySelector(".page-content"));
+            constructor() {
+                this.red = this.#style.getPropertyValue("--red");
+                this.orange = this.#style.getPropertyValue("--orange");
+                this.blue = this.#style.getPropertyValue("--blue");
+                this.green = this.#style.getPropertyValue("--green");
+                this.gray = this.#style.getPropertyValue("--gray");
+                this.cyan = this.#style.getPropertyValue("--cyan");
+            }
+        }
+        //#endregion
+
+        //#region Vars
+
+        const inputValues = () => Array.from(inputs, i => i.value).filter(x => x)
+            , getCellsColor = () => Array.from(document.querySelectorAll("td"), c => c.style.backgroundColor)
+            , setCellsColor = () => document.querySelectorAll("td").forEach((cell, i) => cell.style.backgroundColor = cellsColor[i])
+            , removeCellsColor = () =>  document.querySelectorAll("td").forEach(cell => cell.style.backgroundColor = "unset")
+            , removeArrows = () => document.querySelectorAll(".arrow-instance").forEach(a => a.remove())
+            , areAllDifferentNumbers = inputted => !inputValues().some(number => number === inputted)
+            , areAllEmpty = () => inputValues().length === 0
+            , resetNumbers = () => inputs.forEach(input => input.value = "")
+            , permittedKeys = key => [8, 9, 46, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102, 103, 104, 105].find(x => x === key)
+
+            , inputs = document.querySelectorAll("input:not([type])")
+            , checkboxes = document.querySelectorAll("input[type]")
+            , primaryContent = document.querySelector("#primary-content")
+            , legend = document.querySelector("#legend-section")
+            , pages = document.querySelector("#pages")
+            , [prev, next] = [document.querySelector("#prev"), document.querySelector("#next")]
+            , labels = document.querySelectorAll("label")
+            , colors = new Colors()
+            , shapeNames = ["circle", "diamond", "triangle", "heart", "hexagon", "square", "star", "mountain"]
+            , shapes = [
+              4, 6, 2, 5, 0, 1, 7, 3,
+              7, 3, 1, 0, 2, 5, 4, 6,
+              6, 7, 5, 2, 1, 0, 3, 4,
+              3, 4, 0, 1, 6, 2, 5, 7,
+              2, 5, 6, 3, 7, 4, 1, 0,
+              1, 0, 4, 7, 3, 6, 2, 5,
+              0, 1, 3, 4, 5, 7, 6, 2,
+              5, 2, 7, 6, 4, 3, 0, 1 ]
+            , shapesSign = [
+              '+', '+', '-', '-', '+', '+', '-', '-',
+              '-', '+', '-', '-', '+', '+', '-', '+',
+              '+', '-', '+', '+', '-', '-', '+', '-',
+              '+', '-', '-', '+', '-', '+', '+', '-',
+              '-', '+', '+', '-', '+', '-', '-', '+',
+              '-', '+', '-', '+', '-', '-', '+', '+',
+              '+', '-', '+', '+', '-', '+', '-', '-',
+              '-', '-', '+', '-', '+', '-', '+', '+' ];
+
+        let cellsColor = []
+          , isFirstInput = true
+          , logCase;
+        //#endregion
+
+        //#region Listeners
+
+        inputs.forEach((input, i) => {
+            input.addEventListener("keydown", e => {
+                if (!permittedKeys(e.which) || !areAllDifferentNumbers(e.key))
+                    e.preventDefault();
+            });
+            input.addEventListener("input", e => {
+                input.value = e.data;
+                if (areAllEmpty()) resetCells();
+                else alterCellContent([i, input.value]);
+            });
+        });
+        checkboxes.forEach((chk, i) =>chk.addEventListener("input", ()=>handleCheckbox(chk.checked,i)));
+        document.querySelector("#reset").onclick = ()=>resetAll();
+        prev.addEventListener('click', ()=>handlePageArrows(-1));
+        next.addEventListener('click', ()=>handlePageArrows(1));
+        window.addEventListener("DOMContentLoaded", buildPrimaryContent);
+        //#endregion
+        //#endregion
+
+        function handleCheckbox(chkd, id) {
+            if (!id) toggleNumbers(chkd);
+            else
+                if (chkd) {
+                    cellsColor = getCellsColor();
+                    removeCellsColor();
+                }
+                else setCellsColor();
+        }
+
+        function manageInteractiveElements(allowed, onePage) {
+            if (allowed) {
+                if (onePage) pages.textContent = "";
+                else {
+                    prev.style.visibility = "visible";
+                    next.style.visibility = "visible";
+                }
+            }
+            else {
+                legend.style.display = "none";
+                prev.removeAttribute("style");
+                next.removeAttribute("style");
+                labels[0].style.visibility = "hidden";
+                labels[1].style.visibility = "hidden";
+                checkboxes.forEach(chk => chk.checked = false);
+                pages.textContent = "";
+            }
+        }
+
+        function toggleNumbers(erase) {
+            if (erase) {
+                resetCells();
+                resetNumbers();
+            }
+            else {
+                inputs.forEach((input, i) => {
+                    input.value = logCase.sn[i];
+                    alterCellContent([i, input.value]);
+                });
+            }
+        }
+
+        function resetCells() {
+            isFirstInput = true;
+            for (let i = 0; i < 8; i++)
+                document.querySelectorAll('.'+shapeNames[i]).forEach(cell => {
+                    cell.children[0].setAttribute("visibility", "visible");
+                    cell.children[1].textContent = cell.children[1].textContent[0];
+                });
+        }
+
+        function resetAll() {
+            toggleNumbers(true);
+            removeCellsColor();
+            removeArrows();
+            manageInteractiveElements(false);
+            document.querySelectorAll(".restriction").forEach(t => t.style.textTransform = "unset");
+        }
+    </script>
+</body>
+</html>
