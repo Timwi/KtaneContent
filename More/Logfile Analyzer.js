@@ -246,9 +246,9 @@ class BombGroup {
             $("<div class='serial'>").text(bomb.Serial).appendTo(bombHTML);
         });
 
-        $("<div class='module-count'>").text(totalModules).appendTo(bombHTML);
+        $("<div class='module-count'>").text(totalModules).append($("<div class='label'>").text(totalModules === 1 ? "module" : "modules")).appendTo(bombHTML);
         if (totalNeedies > 0) {
-            $("<div class='needy-count'>").text(totalNeedies).appendTo(bombHTML);
+            $("<div class='needy-count'>").text(totalNeedies).append($("<div class='label'>").text(totalNeedies === 1 ? "needy" : "needies")).appendTo(bombHTML);
         }
         if (this.RuleSeed && this.RuleSeed != 1) {
             $("<div class='rule-seed'>").text(this.RuleSeed).appendTo(bombHTML);
