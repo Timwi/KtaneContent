@@ -8,26 +8,441 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function () {
+        let svgs = $(".svg-diagram")
+        let dottedSvgs = $(".diagram-dot");
+
+        svgs.prepend(MakeSvgElem("rect", { class: "svg-outline highlightable", x: 115, y: 115, width: 100, height: 100, rx: 5 }));
+        svgs.prepend(MakeSvgElem("rect", { class: "svg-outline highlightable", x: 15, y: 115, width: 100, height: 100, rx: 5 }));
+        svgs.prepend(MakeSvgElem("rect", { class: "svg-outline highlightable", x: 115, y: 15, width: 100, height: 100, rx: 5 }));
+        svgs.prepend(MakeSvgElem("rect", { class: "svg-outline highlightable", x: 15, y: 15, width: 100, height: 100, rx: 5 }));
+
+        dottedSvgs.append(MakeSvgElem("circle", { class: "circle", r: 10, cx: 15, cy: 15 }));
+
+        $(".square-div").each((i, div) => {
+            let svg = div.querySelector("svg");
+
+            if (svg.id == "square") svg.innerHTML += makeSquareSvg(1, 1, false, true);
+
+            if (svg.classList.contains("square-top-left")) svg.innerHTML += makeSquareSvg(35, 35, false);
+            else if (svg.classList.contains("square-stroke-top-left")) svg.innerHTML += makeSquareSvg(35, 35, true);
+
+            if (svg.classList.contains("square-top-right")) svg.innerHTML += makeSquareSvg(135, 35, false);
+            else if (svg.classList.contains("square-stroke-top-right")) svg.innerHTML += makeSquareSvg(135, 35, true);
+
+            if (svg.classList.contains("square-bottom-left")) svg.innerHTML += makeSquareSvg(35, 135, false);
+            else if (svg.classList.contains("square-stroke-bottom-left")) svg.innerHTML += makeSquareSvg(35, 135, true);
+
+            if (svg.classList.contains("square-bottom-right")) svg.innerHTML += makeSquareSvg(135, 135, false);
+            else if (svg.classList.contains("square-stroke-bottom-right")) svg.innerHTML += makeSquareSvg(135, 135, true);
+        });
+
+        $(".star-div").each((i, div) => {
+            //find the svg(s) needing the star svg
+            let svg = div.querySelector("svg");
+
+            if (svg.id == "star") { svg.innerHTML += makeStarSvg(2.5, 2.5, "black", true); }
+
+            if (svg.classList.contains("star-top-left-blue")) svg.innerHTML += makeStarSvg(67.5, 67.5, "blue");
+            else if (svg.classList.contains("star-top-left-pink")) svg.innerHTML += makeStarSvg(67.5, 67.5, "pink");
+
+            if (svg.classList.contains("star-top-right-blue")) svg.innerHTML += makeStarSvg(164, 67.5, "blue");
+            else if (svg.classList.contains("star-top-right-pink")) svg.innerHTML += makeStarSvg(164, 67.5, "pink");
+
+            if (svg.classList.contains("star-bottom-left-blue")) svg.innerHTML += makeStarSvg(67.5, 164, "blue");
+            else if (svg.classList.contains("star-bottom-left-pink")) svg.innerHTML += makeStarSvg(67.5, 164, "pink");
+
+            if (svg.classList.contains("star-bottom-right-blue")) svg.innerHTML += makeStarSvg(164, 164, "blue");
+            else if (svg.classList.contains("star-bottom-right-pink")) svg.innerHTML += makeStarSvg(164, 164, "pink");
+        });
+
+        $(".l-div").each((i, div) => {
+            let svg = div.querySelector("svg");
+
+            if (svg.id == "l") svg.innerHTML += makeLPieceSvg(16, -5, true);
+
+            if (svg.classList.contains("l-top-left")) svg.innerHTML += makeLPieceSvg(67.5, 67.5);
+            if (svg.classList.contains("l-top-right")) svg.innerHTML += makeLPieceSvg(164, 67.5);
+            if (svg.classList.contains("l-bottom-left")) svg.innerHTML += makeLPieceSvg(67.5, 164);
+            if (svg.classList.contains("l-bottom-right")) svg.innerHTML += makeLPieceSvg(164, 164);
+
+        });
+
+        $(".deleter-div").each((i, div) => {
+            let svg = div.querySelector("svg");
+
+            if (svg.id == "deleter-id") svg.innerHTML += makeDeleterSvg(2.5, 2.5, true);
+
+            else if (svg.classList.contains("deleter-top-left")) svg.innerHTML += makeDeleterSvg(67.5, 67.5);
+            else if (svg.classList.contains("deleter-top-right")) svg.innerHTML += makeDeleterSvg(164, 67.5);
+            else if (svg.classList.contains("deleter-bottom-left")) svg.innerHTML += makeDeleterSvg(67.5, 164);
+            else svg.innerHTML += makeDeleterSvg(164, 164);
+        });
+
+        function makeSquareSvg(xPos, yPos, stroke, id) {
+            const scale = .06;
+            const rxScale = .05;
+
+            let element = `<rect x="${xPos}" y="${yPos}" width="${60 * (id ? scale : 1)}" height="${60 * (id ? scale : 1)}" rx="${10 * (id ? rxScale : 1)}";`
+
+            if (!stroke) element += ` class="square"`;
+            else element += ` class="square-stroke"`;
+
+            element += "/>";
+
+            return element;
+        }
+
+        function makeStarSvg(xCenter, yCenter, color, headerStar) {
+
+            const scale = .06;
+
+            let relativeCoordinates = [
+                { x: 32.00, y: 0.00 }, { x: 22.83, y: 7.42 }, { x: 25.89, y: 18.81 }, { x: 14.11, y: 19.42 }, { x: 9.89, y: 30.43 },
+                { x: -0.00, y: 24.00 }, { x: -9.89, y: 30.43 }, { x: -14.11, y: 19.42 }, { x: -25.89, y: 18.81 }, { x: -22.83, y: 7.42 },
+                { x: -32.00, y: -0.00 }, { x: -22.83, y: -7.42 }, { x: -25.89, y: -18.81 }, { x: -14.11, y: -19.42 }, { x: -9.89, y: -30.43 },
+                { x: 0.00, y: -24.00 }, { x: 9.89, y: -30.43 }, { x: 14.11, y: -19.42 }, { x: 25.89, y: -18.81 }, { x: 22.83, y: -7.42 }
+            ];
+
+            let length = relativeCoordinates.length;
+
+            let path = "";
+            if (color == "blue") path += `<path class="blue" ;`;
+            else if (color == "pink") path += `<path class="pink" `;
+            else { path += `<path `; }
+
+            path += ` d="M ${xCenter} ${yCenter} `;
+
+            if (headerStar) {
+                for (let i = 0; i < length; i++) {
+                    relativeCoordinates[i].x = relativeCoordinates[i].x * scale;
+                    relativeCoordinates[i].y = relativeCoordinates[i].y * scale;
+                }
+            }
+
+            for (let i = 0; i < length; i++) {
+                let coor1 = relativeCoordinates[i];
+                let coor2 = relativeCoordinates[(i + 1) % length];
+                path += `L ${xCenter + coor1.x} ${yCenter + coor1.y}`;
+                path += ` L ${xCenter + coor2.x} ${yCenter + coor2.y} `;
+            }
+
+            path += `" stroke-width=".1" transform ="rotate(10 ${xCenter} ${yCenter})"/>`;
+            return path;
+        }
+
+        function makeLPieceSvg(xCenter, yCenter, id) {
+            let offset = 4;
+            const scale = id ? .05 : 1;
+            const rotate = id ? 1 : 1;
+
+            return `<path class="l-piece" d="M ${xCenter * scale} ${(yCenter + 2) * scale} h ${-30 * scale} v ${30 * scale}  h ${30 * scale} v ${30 * scale} M ${xCenter * scale} ${(yCenter - 2) * scale} h ${-30 * scale} v ${-30 * scale} h ${30 * scale} v ${30 * scale} M ${(xCenter + 4) * scale} ${(yCenter + 2) * scale} h ${30 * scale} v ${30 * scale} h ${-30 * scale} v ${-30 * scale}" transform ="rotate( ${-10 * (rotate)} ${xCenter} ${yCenter})"/>`
+        }
+
+        function makeDeleterSvg(xCenter, yCenter, id) {
+            if (id) {
+                return `
+                <rect x="2.4" y="2" width="2.5" height="13%" transform="rotate(40 2.5 2.5)" class="deleter"/>
+                <rect x="2" y="2" width="2.5" height="13%" transform="rotate(150 2.5 2.5)" class="deleter"/>
+                <rect x="2" y="2.5" width="2.5" height="13%" transform="rotate(270 2.5 2.5)" class="deleter"/>`;
+            }
+
+            return `
+            <rect x="${xCenter - 6}" y="${yCenter}" width="13" height="13%" transform="rotate(60 ${xCenter} ${yCenter})" class="deleter"/>
+            <rect x="${xCenter - 6}" y="${yCenter}" width="13" height="13%" transform="rotate(-60 ${xCenter} ${yCenter})" class="deleter"/>
+            <rect x="${xCenter - 6}" y="${yCenter}" width="13" height="13%" transform="rotate(180 ${xCenter} ${yCenter})" class="deleter"/>`;
+        }
+    });
+    </script>
+    <style>
+        .svg-outline {
+            stroke: gray;
+            stroke-width: 2;
+            fill: transparent;
+        }
+
+        .dark .circle {
+            fill: #DDD;
+            stroke: #DDD;
+        }
+        .circle { stroke: black; }
+
+        .hollow-circle {
+            stroke: black;
+            fill: none;
+            stroke-width: 4;
+        }
+        .dark .hollow-circle { stroke: #DDD }
+
+        .snake {
+            stroke: black;
+            fill: none;
+            stroke-width: 6;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        .dark .snake {
+            stroke: #DDD;
+            fill: none;
+            stroke-width: 6;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .svg-diagram { font-size: 30px; }
+        .dark .svg-diagram { fill: #ddd; }
+
+        .flex-container {
+            display: flex;
+            justify-content: center;
+        }
+        .flex-header {
+            display: flex;
+            align-items: center;
+        }
+
+        .square-stroke {
+            stroke: black;
+            fill: none;
+            stroke-width: 3;
+        }
+        .dark .square-stroke {
+            stroke: #DDD;
+            fill: none;
+        }
+        .svg-header { margin-top: 0.5em; }
+
+        .dark .l-piece, .dark #black-square,
+        .dark .deleter, .dark .square, .dark #star {
+            fill: #DDD;
+        }
+
+        img:is(.yes, .no) {
+            width: 50px;
+            margin-right: 30px;
+        }
+
+        .blue { fill: #0066ff; }
+        .pink { fill: #ff0066; }
+    </style>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-content">
                 <img src="img/Component/The Witness Wordless.svg" class="diagram">
-                <img style='width: 100%' src="img/The Witness/movement.png" />
-                <h4><img src="img/The Witness/badsquare.png" style='width: 5%'></h4>
-                <img src="img/The Witness/bawsquare_tutorial.png" style='width: 100%'>
-                <h4><img src="img/The Witness/sun.png" style='width: 5%'></h4>
-                <img src="img/The Witness/sun_tutorial.png" style='width: 100%'>
+                <div style="height:20mm"></div>
+                <div class="flex-container">
+                    <div><svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot">
+                            <path class="snake" d="M 15 15 h 100 v 100 h 100 v 100 h 9" />
+                        </svg></div>
+                    <div><svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram">
+                            <circle r="10" cx="115" cy="15" class="hollow-circle"></circle>
+                            <circle r="10" cx="115" cy="115" class="hollow-circle"></circle>
+                            <circle r="10" cx="215" cy="115" class="hollow-circle"></circle>
+                            <circle r="10" cx="215" cy="215" class="hollow-circle"></circle>
+                            <text x="85" y="45">1</text>
+                            <text x="85" y="145">2</text>
+                            <text x="230" y="100">3</text>
+                            <text x="230" y="200">4</text>
+                        </svg></div>
+                </div>
+                <br>
+                <div class="flex-header square-div">
+                    <svg viewBox="0 0 5 5" width="5%" height="5%" id="square">
+                    </svg>
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/yes.svg" class="yes">
+
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-top-left square-stroke-bottom-right">
+                            <path class="snake" d="M 15 15 h 100 v 200 h 109" />
+                        </svg>
+                    </div>
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-top-left square-top-right square-stroke-bottom-left square-stroke-bottom-right">
+                            <path class="snake" d="M 15 15 v 100 h 200 v 100 h 9" />
+                        </svg>
+                    </div>
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-stroke-top-left square-bottom-left square-stroke-bottom-right">
+                            <path class="snake" d="M 15 15 v 100 h 100 v 100 h 109" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex-container">
+                    <img src="img/Common/no.svg" class="no">
+
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-stroke-bottom-left square-bottom-right">
+                            <path class="snake" d="M 15 15 v 100 h 200 v 100 h 9" />
+                        </svg>
+                    </div>
+
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-top-left square-stroke-top-right square-stroke-bottom-left">
+                            <path class="snake" d="M 15 15 v 200 h 100 v -100 h100 v100 h 9" />
+                        </svg>
+                    </div>
+
+                    <div class="square-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-bottom-left square-top-right">
+                            <path class="snake" d="M 15 15 h 100 v 100 h 100 v 100 h 9" />
+                        </svg>
+                    </div>
+                </div>
+                <br>
+                <div class="flex-header star-div">
+                    <svg viewBox="0 0 5 5" width="5%" height="5%" id="star">
+                    </svg>
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/yes.svg" class="yes">
+                    <div class="star-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-left-blue star-bottom-right-blue">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+
+                    <div class="star-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-left-blue star-top-right-blue star-bottom-left-pink star-bottom-right-pink">
+                            <path class="snake" d="M 15 15 v 100 h 200 v 100 h 9" />
+                        </svg>
+                    </div>
+
+                    <div class="star-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-left-pink star-top-right-blue star-bottom-left-blue star-bottom-right-pink">
+                            <path class="snake" d="M 15 15 h 200 v 200 h 9" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex-container">
+                    <img src="img/Common/no.svg" class="no">
+                    <div class="star-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-right-pink star star-bottom-left-pink">
+                            <path class="snake" d="M 15 15 v 100 h 100 v 100 h 109" />
+                        </svg>
+                    </div>
+
+                    <div class="star-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-left-blue star-top-right-blue star-bottom-left-blue">
+                            <path class="snake" d="M 15 15 v 200 h 100 v -100 h 100 v 100  h 9" />
+                        </svg>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="page page-bg-02">
             <div class="page-content">
-                <h4><img src="img/The Witness/lpiece.png" style='width: 6%'></h4>
-                <img src="img/The Witness/lpiece_tutorial.png" style='width: 100%'>
-                <h4><img src="img/The Witness/deleter.png" style='width: 6%'></h4>
-                <img src="img/The Witness/deleter_tutorial2.png" style='width: 100%'>
-                <img src="img/The Witness/deleter_tutorial.png" style='width: 100%'>
+                <div class="flex-header l-div">
+                    <svg viewBox="0 0 5 5" width="5%" height="5%" id="l">
+                    </svg>
+                </div>
+
+                <div class="flex-container">
+                    <img src="img/Common/yes.svg" class="yes">
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-top-right">
+                            <path class="snake" d="M 15 15 v 100 h 100 v 100 h 209" />
+                        </svg>
+                    </div>
+
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-bottom-left">
+                            <path class="snake" d="M 15 15 h 200 v 100 h -100 v 100 h 109" />
+                        </svg>
+                    </div>
+
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-bottom-right">
+                            <path class="snake" d="M 15 15 h 100 v 100 h 100 v 100 h 9" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/no.svg" class="no">
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-bottom-left">
+                            <path class="snake" d="M 15 15 v 100 h 200 v 100 h 109" />
+                        </svg>
+                    </div>
+
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-top-right">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+                    <div class="l-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-bottom-right">
+                            <path class="snake" d="M 15 15 v 200 h 100 v -100 h 100 v 100 h 9" />
+                        </svg>
+                    </div>
+                </div>
+                <br>
+                <div class="flex-header star-div deleter-div">
+                    <svg viewBox="0 0 5 5" width="5%" height="5%" id="deleter-id">
+                    </svg>
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/yes.svg" class="yes">
+                    <div class="star-div deleter-top-right deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-top-left-blue star-bottom-left-blue star-bottom-right-blue deleter-top-right">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+                    <div class="square-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-top-left square-stroke-top-right square-bottom-right deleter-bottom-left">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+
+                    <div class="l-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-top-left l-bottom-left deleter-bottom-right">
+                            <path class="snake" d="M 15 15 h 100 v 100 h 100 v 100 h 9" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/yes.svg" class="yes">
+                    <div class="star-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot star-bottom-right-pink deleter-top-right">
+                            <path class="snake" d="M 15 15 h 100 v 200 h 109" />
+                        </svg>
+                    </div>
+                    <div class="square-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot square-top-left square-stroke-bottom-left deleter-top-right">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+
+                    <div class="l-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot l-top-left deleter-bottom-left">
+                            <path class="snake" d="M 15 15 h 100 v 200 h 209" />
+                        </svg>
+                    </div>
+
+                </div>
+                <div class="flex-container">
+                    <img src="img/Common/no.svg" class="no">
+                    <div class="deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram diagram-dot">
+                            <path class="snake" d="M 15 15 v 200 h 209" />
+                        </svg>
+                    </div>
+
+                    <div class="star-div deleter-div">
+                        <svg viewBox="0 0 245 245" width="100" height="105" class="svg-diagram deleter-bottom-left diagram-dot star-top-left-pink star-top-right-pink">
+                            <path class="snake" d="M 15 15 v 200 h 100 v -100 h 100 v 100 h 9" />
+                        </svg>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
