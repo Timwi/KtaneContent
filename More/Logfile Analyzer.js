@@ -1073,7 +1073,6 @@ function Bomb(seed) {
             var modListing = $(`<button class='module module-${parseData.moduleData.moduleID.replace(/[^-_A-Za-z0-9]/g, '-')}'>`)
                 .appendTo(modules)
                 .addCardClick(moduleInfo);
-            parseData.modListing = modListing; // for TDSBombRenderer
 
             var buttonGrid = $("<div>")
                 .text(parseData.moduleData.displayName + (parseData.displayCounter ? " " + parseData.counter : ""))
