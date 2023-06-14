@@ -96,7 +96,7 @@ for (var i = 0; i < 15; i++) {
 	var nowButton = document.createElement("button");
 	nowButton.appendChild(document.createTextNode(""));
 	document.getElementById("letterButtons").appendChild(nowButton);
-	nowButton.outerHTML = `<button onclick = "setLetter(${i})" class = "button-style">${moduleLetters[i]}</button>${(i % 5 == 4) ? "</br>" : ""}`;
+	nowButton.outerHTML = `<button onclick = "setLetter(${i})" class = "button-style">${moduleLetters[i]}</button>${(i % 5 == 4) ? "<br>" : ""}`;
 }
 
 var intLetter = [
