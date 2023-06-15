@@ -1,4 +1,4 @@
-{
+KtaneTheWeakestLinkData = {
   "CharacterNames": [
     "John",
     "William",
@@ -2711,4 +2711,4 @@
       "Category": "History"
     }
   ]
-}
+};
