@@ -11354,6 +11354,51 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Synapse Cipher",
+		moduleID: "synapseCipher",
+		loggingTag: "Synapse Cipher",
+		matches: [
+			{
+				regex: /Alphabetic positions of/,
+				handler: function(match, module) {
+					module.push([ 'Double Square Rotation Cipher', [match.input].concat(readTaggedLines(7))]);
+					return true;
+				}
+			},
+			{
+				regex: /Binary displayed:/,
+				handler: function(match, module) {
+					module.push([ 'Logical Termary Manipulation Cipher', [match.input].concat(readTaggedLines(4))]);
+					return true;
+				}
+			},
+			{
+				regex: /KEY C:/,
+				handler: function(match, module) {
+					module.push([ 'Superposition Cipher', [match.input].concat(readTaggedLines(13))]);
+					return true;
+				}
+			},
+			{
+				regex: /KEY [AB]: (\w{25})/,
+				handler: function(matches, module) {
+					let table = $('<table>').addClass('synapse-cipher-key');
+					for (let row = 0; row < 5; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 5; col++) {
+							$('<td>').html(matches[1][5 * row + col]).appendTo(tr);
+						}
+					}
+					module.push({ label:matches[0], obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Synesthesia",
 		moduleID: "synesthesia",
 		loggingTag: "Synesthesia",
