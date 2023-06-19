@@ -1550,6 +1550,36 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Big Bike Repair",
+		moduleID: "bigBikeRepair",
+		loggingTag: "Big Bike Repair",
+		matches: [
+			{
+				regex: /Chosen bike photos: (.+)/,
+				handler: function(matches, module) {
+					let photos = matches[1].split(', ').map(x => $('<img>').attr('src', `img/Big Bike Repair/${x}.png`));
+					let container = $('<div>').addClass('big-bike-repair-bikes');
+					for (let photo of photos)
+						container.append(photo);
+					module.push({ label:'Chosen bike photos:', obj:container });
+					return true;
+				}
+			},
+			{
+				regex: /(Correct \w+ flask: )(.+)/,
+				handler: function (matches, module) {
+					let outerSpan = $('<span>').html(matches[1]);
+					$('<img>').addClass('big-bike-repair-flask').attr('src', `img/Big Bike Repair/${matches[2]}.png`).appendTo(outerSpan);
+					module.push({ obj:outerSpan });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Binary Cipher",
 		moduleID: "binarycipher",
 		loggingTag: "Binary Cipher",
