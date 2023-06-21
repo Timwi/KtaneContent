@@ -14526,6 +14526,72 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "The Weakest Link",
+		moduleID: "TheWeakestLink",
+		loggingTag: "The Weakest Link",
+		matches: [
+			{
+				regex: /Question Phase/,
+				handler: function(_, module) {
+					module.questionPhase = [ ];
+					module.push([ "Question Phase", module.questionPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Face Off Phase/,
+				handler: function(_, module) {
+					module.faceOffPhase = [ ];
+					module.push([ "Face Off Phase", module.faceOffPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Money Phase/,
+				handler: function(_, module) {
+					module.moneyPhase = [ readTaggedLine() ];
+					module.push([ "Money Phase", module.moneyPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Question: /,
+				handler: function (match, module) {
+					if (module.faceOffPhase) 
+						module.faceOffPhase.push(match.input);
+					else if (module.moneyPhase)
+						module.moneyPhase.push(match.input);
+					else if (module.questionPhase)
+						module.questionPhase.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /Streak is now at|Resetting streak to/,
+				handler: function (match, module) {
+					if (module.moneyPhase)
+						module.moneyPhase.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /Elimination Phase/,
+				handler: function (_, module) {
+					eliminationPhase = [ ];
+					module.push([ "Elimination Phase", eliminationPhase ]);
+					let currentLine;
+					while (!(currentLine = readTaggedLine()).match(/Eliminate them/))
+						eliminationPhase.push(currentLine);
+					linen--;	
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "webDesign",
 		loggingTag: "Web design",
 		matches: [
