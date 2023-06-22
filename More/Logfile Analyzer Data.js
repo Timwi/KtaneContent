@@ -6372,6 +6372,32 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSLangtonsAnteater",
+		loggingTag: "Langton's Anteater",
+		displayName: "Langton's Anteater",
+		matches: [
+			{
+				regex: /Initial board/,
+				handler: function(_, module) {
+					let board = readLines(5).map(l => l.split(' '));
+					let table = $('<table>').addClass('langtons-anteater');
+					for (let row = 0; row < 5; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 5; col++) {
+							let value = board[row][col] == 'W' ? 'white' : 'black';
+							$('<td>').addClass(value).appendTo(tr);
+						}
+					}
+					module.push({ label:'Initial board', obj:table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'latinHypercube',
 		loggingTag: 'Latin Hypercube',
 		matches: [
