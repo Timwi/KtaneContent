@@ -9329,59 +9329,6 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: 'notreDameCipher',
-		loggingTag: 'Notre-Dame Cipher',
-		matches: [
-			{
-				regex: /(Starting|Current|Final) matrix :/i,
-				handler: function(matches, module) {
-					const grid = readTaggedLines(5).map(l => l.split(''));
-					const tdStyle = 'width: 0.75cm; height: 0.75cm; text-align: center; vertical-align: middle; border: 2px solid black';
-					let table = '<table>';
-					for (let row = 0; row < 5; row++) {
-						table += '<tr>';
-						for (let col = 0; col < 5; col++) {
-							table += `<td style='${tdStyle}'>${grid[row][col]}</td>`;
-						}
-						table += '</tr>';
-					}
-					let logMessage = { label:matches[1] + ' Matrix:', obj:table }
-					if (matches[1] == 'Final') {
-						module.push([ module.dropdown.title, module.dropdown.items ]);
-						module.push(logMessage)
-						module.dropdown = null;
-					}
-					else{
-						if (!module.dropdown)
-							module.push(logMessage);
-						else {
-							module.dropdown.items.push(logMessage);
-						}
-					}
-					return true;
-				}
-			},
-			{
-				regex: /(Rosace|Vitrail|Cross) Cipher :/,
-				handler: function(matches, module) {
-					if (module.dropdown) {
-						module.push([ module.dropdown.title, module.dropdown.items ]);
-					}
-					module.dropdown = { title: matches[1] + ' Cipher', items: [ ] };
-					return true;
-				}
-			},
-			{
-				regex: /.+/,
-				handler: function (matches, module) {
-					if (module.dropdown)
-						module.dropdown.items.push(matches[0]);
-					else module.push(matches[0]);
-				}
-			}
-		]
-	},
-	{
 		moduleID: 'notCoordinates',
 		loggingTag: 'Not Coordinates',
 		matches: [
@@ -9502,6 +9449,23 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "notes", 
+		loggingTag: "Notes",
+		displayName: "Notes",
+		matches: [
+			{
+				regex: /Encrypted Message: (.+)/,
+				handler: function(matches, module) {
+					let lines = [ matches[1] ].concat(readLines(8));
+					module.push({ label:'Encrypted Message:', obj:pre(lines.join('\n')) });
+				}
+			},
+			{
+				regex: /Original Message/
+			}
+		]
+	},
+	{
 		moduleID: 'notNumberPad',
 		loggingTag: 'Not Number Pad',
 		matches: [
@@ -9542,6 +9506,59 @@ let parseData = [
 			},
 			{
 				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: 'notreDameCipher',
+		loggingTag: 'Notre-Dame Cipher',
+		matches: [
+			{
+				regex: /(Starting|Current|Final) matrix :/i,
+				handler: function(matches, module) {
+					const grid = readTaggedLines(5).map(l => l.split(''));
+					const tdStyle = 'width: 0.75cm; height: 0.75cm; text-align: center; vertical-align: middle; border: 2px solid black';
+					let table = '<table>';
+					for (let row = 0; row < 5; row++) {
+						table += '<tr>';
+						for (let col = 0; col < 5; col++) {
+							table += `<td style='${tdStyle}'>${grid[row][col]}</td>`;
+						}
+						table += '</tr>';
+					}
+					let logMessage = { label:matches[1] + ' Matrix:', obj:table }
+					if (matches[1] == 'Final') {
+						module.push([ module.dropdown.title, module.dropdown.items ]);
+						module.push(logMessage)
+						module.dropdown = null;
+					}
+					else{
+						if (!module.dropdown)
+							module.push(logMessage);
+						else {
+							module.dropdown.items.push(logMessage);
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /(Rosace|Vitrail|Cross) Cipher :/,
+				handler: function(matches, module) {
+					if (module.dropdown) {
+						module.push([ module.dropdown.title, module.dropdown.items ]);
+					}
+					module.dropdown = { title: matches[1] + ' Cipher', items: [ ] };
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if (module.dropdown)
+						module.dropdown.items.push(matches[0]);
+					else module.push(matches[0]);
+				}
 			}
 		]
 	},
