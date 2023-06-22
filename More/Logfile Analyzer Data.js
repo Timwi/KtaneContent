@@ -11109,6 +11109,77 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "rasterPrime",
+		displayName: "Raster Prime",
+		loggingTag: "Raster Prime",
+		matches: [
+			{
+				regex: /Generated shapes: \[L:(.+), R:(.+)\]/,
+				handler: function (matches, module) {
+					let flex = $('<div>').addClass('raster-prime-gen-shapes');
+					
+					module.generateShape(matches[1]).appendTo($('<div>').addClass('shape-container').appendTo(flex));
+					module.generateShape(matches[2]).appendTo($('<div>').addClass('shape-container').appendTo(flex));
+					module.push({ label:'Generated shapes:', obj:flex.prop('outerHTML') });
+					return true;
+				}
+			},
+			{
+				regex: /Generated puzzle: (.+)\./,
+				handler: function (matches, module) {
+					module.push({ label:'Generated puzzle:', obj: module.generateShape(matches[1]).addClass('large').prop('outerHTML') });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(match, module) {
+					if (!module.generateShape){
+						module.generateShape = function (pattern) {
+							const values = pattern.split('/').map(str => str.split('').map(ch => ch == '#'));
+							
+							let startX = -1, startY = -1, endX, endY;
+							const arrHeight = values.length;
+							const arrWidth = values[0].length;
+							
+							for (let x = 0; x < arrWidth; x++) {
+								for (let y = 0; y < arrHeight; y++) {
+									if (values[y][x]) {
+										if (startX == -1)
+											startX = x;
+										endX = x;
+									}
+								}
+							}
+							for (let y = 0; y < arrHeight; y++) {
+								for (let x = 0; x < arrWidth; x++) {
+									if (values[y][x]) {
+										if (startY == -1)
+											startY = y;
+										endY = y;
+									}
+								}
+							}
+							const height = endY - startY + 1;
+							const width = endX - startX + 1;							
+							
+							let svg = $('<svg>').addClass('raster-prime-shape').attr('viewbox', `${startX} ${startY} ${width} ${height}`);
+							for (let row = 0; row < arrHeight; row++) {
+								for (let col = 0; col < arrWidth; col++) {
+									if (values[row][col]){
+										$('<rect>').attr({ x:col, y:row, width:1, height:1 }).appendTo(svg);
+									}
+								}
+							}
+							return svg;
+						}
+					}
+					module.push(match.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Regular Sudoku",
 		moduleID: "RegularSudoku",
 		loggingTag: "Regular Sudoku",
