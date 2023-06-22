@@ -13088,7 +13088,7 @@ let parseData = [
 						span.append($('<span>').text(data[1]));
 						span.append($('<img>')
 							.attr({ src: 'img/Symbol Cycle/Icon' + data[2] + '.png', width: 20 })
-							.css({ verticalAlign: 'middle', margin: '0 5px', filter: 'invert(100%)' }));
+							.addClass("symbol-cycle-symbol"));
 						txt = data[3];
 					}
 					span.append($('<span>').text(txt));
