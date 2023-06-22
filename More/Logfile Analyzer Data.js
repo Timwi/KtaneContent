@@ -4091,6 +4091,68 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Factoring Grid",
+		moduleID: "factoringGrid",
+		loggingTag: "Factoring Grid",
+		matches: [
+			{
+				regex: /The number grid generated, in reading order, is (.+)/,
+				handler: function (matches, module) {
+					module.grid = matches[1].split(', ').map(x => parseInt(x));
+					return true;
+				}
+			},
+			{
+				regex: /The solution path in terms of positions: (.+)/,
+				handler: function (matches, module) {
+					let svg = $('<svg>').addClass('factoring-grid').attr('viewbox', '-1 -1 122 122');
+					let positions = matches[1].split(', ').map(x => parseInt(x));
+					
+					let path = '';
+					for (let posIx = 0; posIx < 36; posIx++) {
+						let x = 20 * (positions[posIx] % 6) + 10;
+						let y = 20 * Math.floor(positions[posIx] / 6) + 10;
+						path += `${posIx == 0 ? 'M' : 'L'} ${x} ${y} `;
+					}
+					$('<path>').addClass('solution-path').attr('d', path).appendTo(svg);
+					
+					function sharesFactors(x, y) {
+						const primes = [ 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59 ];
+						for (let prime of primes)
+							if (x % prime == 0 && y % prime == 0)
+								return true;
+						return false;
+					}
+					
+					for (let row = 0; row < 6; row++){
+						for (let col = 0; col < 6; col++) {
+							let num = module.grid[6 * row + col];
+							let group = $('<g>').attr('transform', `translate(${20*col}, ${20*row})`).appendTo(svg);
+							$('<text>').attr({ x:10, y:10 }).html(num).appendTo(group);
+							if (col == 0 || !sharesFactors(num, module.grid[6 * row + col - 1]))
+								$('<line>').addClass('edge').attr({ x1:0, y1:-1, x2:0, y2:21 }).appendTo(group);
+							if (row == 0 || !sharesFactors(num, module.grid[6 * (row - 1) + col]))
+								$('<line>').addClass('edge').attr({ x1:-1, y1:0, x2:21, y2:0 }).appendTo(group);
+						}
+					}
+					$('<line>').addClass('edge').attr({ x1:0, y1:120, x2:121, y2:120 }).appendTo(svg);
+					$('<line>').addClass('edge').attr({ x1:120, y1:0, x2:120, y2:121 }).appendTo(svg);
+					
+					
+					module.push({ label:'Generated number grid and solution path:', obj:svg.prop('outerHTML') });
+					return true;
+				}
+			},
+			{
+				regex: /The solution path generated is as follows:/,
+				handler: () => true
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "factoringMaze",
 		loggingTag: "Factoring Maze",
 		matches: [
