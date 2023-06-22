@@ -11184,7 +11184,7 @@ let parseData = [
 							for (let row = 0; row < arrHeight; row++) {
 								for (let col = 0; col < arrWidth; col++) {
 									if (values[row][col]){
-										$('<rect>').attr({ x:col, y:row, width:1, height:1 }).appendTo(svg);
+										$('<rect>').attr({ x:col, y:row, width:1.03, height:1.03 }).appendTo(svg);
 									}
 								}
 							}
