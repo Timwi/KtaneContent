@@ -13850,7 +13850,6 @@ let parseData = [
 						$SVG(`<path d="M5 ${5 + line * 50} h500>"`).addClass("tip-toe-line").appendTo(gridSvg);
 					}
 					$SVG("<path d='M5 5 h500 v500 h-500z'>").addClass("tip-toe-line tip-toe-border").appendTo(gridSvg);
-					console.log(matches[1]);
 					module.push([matches[1], [{ nobullet: true, obj: gridSvg }]]);
 					return true;
 				}
