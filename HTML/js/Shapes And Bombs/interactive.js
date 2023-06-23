@@ -6,7 +6,7 @@ for (var i = 0; i < 8; i++) {
 	for (var j = 0; j < 5; j++) {
 		var newCell = newRow.insertCell(j);
 		var getCell = (5 * i) + j;
-		newCell.outerHTML = `<td width = "50" height = "60" onclick = "onLedClick(${getCell})" bgcolor = "#FFFFFF" id = "led${getCell}"></td>`
+		newCell.outerHTML = `<td width = "50" height = "60" onclick = "onLedClick(${getCell})" class = "led-unselected" id = "led${getCell}"></td>`
 		
 		if (i == 0 && j == 4) {
 			newCell = newRow.insertCell(j + 1);
@@ -18,11 +18,8 @@ for (var i = 0; i < 8; i++) {
 function onLedClick(ledId) {
 	var nowCell = document.getElementById(`led${ledId}`);
 	
-	if (nowCell.style.backgroundColor == "rgb(0, 0, 0)") {
-		nowCell.style.backgroundColor = "#FFFFFF";
-	} else {
-		nowCell.style.backgroundColor = "#000000";
-	}				
+	nowCell.classList.toggle("led-unselected");
+	nowCell.classList.toggle("led-selected");			
 }
 
 var getArrow = new Array(15).fill(0);
@@ -88,7 +85,9 @@ function resetArrows() {
 
 function emptyLeds() {
 	for (var i = 0; i < 40; i++) {
-		document.getElementById(`led${i}`).style.backgroundColor = "#FFFFFF";
+		let cell = document.getElementById(`led${i}`);
+		cell.classList.remove("led-selected");
+		cell.classList.add("led-unselected");
 	}
 }
 
@@ -122,7 +121,9 @@ function setLetter(toSet) {
 	
 	for (var i = 0; i < 40; i++) {
 		if (intLetter[toSet][i] == "O") {
-			document.getElementById(`led${i}`).style.backgroundColor = "#000000";
+			cell = document.getElementById(`led${i}`);
+			cell.classList.add("led-selected");
+			cell.classList.remove("led-unselected");
 		}
 	}
 }
