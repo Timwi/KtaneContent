@@ -4390,13 +4390,13 @@ let parseData = [
 						return `
 							<g transform='translate(${10 * (sq % 3) + 50 * ((sq / 9) | 0)}, ${10 * (((sq / 3) | 0) % 3)})'>
 								<rect fill='${colors[lns[((sq / 3) | 0) % 3][(sq % 3) * 3 + ((sq / 9) | 0) * 12]]}' width='10' height='10'/>
-								<path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
-								<path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
+								<path class='dark-corner' d='M10 0v10h-10l1 -1h8v-8z'/>
+								<path class='light-corner' d='M0 10v-10h10l-1 1h-8v8z'/>
 								${ch === '·' ? '' : ch === '•' ? `<circle cx='5' cy='5' r='1.5' />` : `<path d='${arrowPathD}' transform='translate(5, 5) scale(.7) rotate(${45 * rotations.indexOf(ch)})'/>`}
 							</g>
 						`;
 					}).join('');
-					let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -4.5 81 35' font-size='4' text-anchor='middle'>
+					let svg = $(`<svg class='flipping-squares' viewBox='-.5 -4.5 81 35'>
 						<text x='15' y='-1'>FRONT</text>
 						<text x='65' y='-1'>BACK</text>
 						${svgGroups}</svg>`);
@@ -4413,12 +4413,12 @@ let parseData = [
 					let lnsSvg = lns.map((ln, lnIx) => {
 						let inner = ln.sq.map(sq => sq[0] === sq[1] ?
 							`<g transform='translate(${10 * (sq[0] % 3) + 5}, ${10 * ((sq[0] / 3) | 0) + 5}) rotate(${45 * ln.dir})'>
-								<path d='M0 -1v2' fill='none' stroke='black' stroke-width='1' />
-								<path d='M-1 -1 h2 l-1 -2zM-1 1 h2 l-1 2z' fill='black' stroke='none' />
+								<path class='swap-arrow-line' d='M0 -1v2' />
+								<path class='swap-arrow-head' d='M-1 -1 h2 l-1 -2zM-1 1 h2 l-1 2z' />
 							</g>`: `
-								<path data-dir='${ln.dir}' d='M${10 * (sq[0] % 3) + 5} ${10 * ((sq[0] / 3) | 0) + 5} ${10 * (sq[1] % 3) + 5} ${10 * ((sq[1] / 3) | 0) + 5}' fill='none' stroke='black' stroke-width='1' />
-								<path transform='translate(${10 * (sq[0] % 3) + 5}, ${10 * ((sq[0] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 2z' fill='black' stroke='none' />
-								<path transform='translate(${10 * (sq[1] % 3) + 5}, ${10 * ((sq[1] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 -2z' fill='black' stroke='none' />
+								<path class='swap-arrow-line' data-dir='${ln.dir}' d='M${10 * (sq[0] % 3) + 5} ${10 * ((sq[0] / 3) | 0) + 5} ${10 * (sq[1] % 3) + 5} ${10 * ((sq[1] / 3) | 0) + 5}'  />
+								<path class='swap-arrow-head' transform='translate(${10 * (sq[0] % 3) + 5}, ${10 * ((sq[0] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 2z' />
+								<path class='swap-arrow-head' transform='translate(${10 * (sq[1] % 3) + 5}, ${10 * ((sq[1] / 3) | 0) + 5}) rotate(${ln.dir < 2 ? 180 + 45 * ln.dir : 45 * ln.dir})' d='M-1 0 h2 l-1 -2z' />
 							`).join('');
 						return `
 							<g transform='translate(${35 * (lnIx % 3)}, ${35 * ((lnIx / 3) | 0)})'>
@@ -4426,15 +4426,15 @@ let parseData = [
 								${Array(9).fill(null).map((_, sq) => `
 									<g transform='translate(${10 * (sq % 3)}, ${10 * ((sq / 3) | 0)})'>
 										<rect fill='${ln.sq.some(tup => tup[0] === sq || tup[1] === sq) ? '#bdf' : '#ddd'}' width='10' height='10'/>
-										<path fill='black' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
-										<path fill='white' fill-opacity='.5' d='M0 10v-10h10l-1 1h-8v8z'/>
+										<path class='dark-corner' fill-opacity='.3' d='M10 0v10h-10l1 -1h8v-8z'/>
+										<path class='light-corner' d='M0 10v-10h10l-1 1h-8v8z'/>
 									</g>
 								`).join('')}
 								${inner}
 							</g>
 						`;
 					}).join('');
-					let svg = $(`<svg style='display:block;width:16cm' viewBox='-.5 -5.5 101 106' font-size='4' text-anchor='middle'>${lnsSvg}<${''}/svg>`);
+					let svg = $(`<svg class='flipping-squares' viewBox='-.5 -5.5 101 106'>${lnsSvg}<${''}/svg>`);
 					module.push({ label: "Flips:", obj: svg });
 					return true;
 				}
@@ -4453,32 +4453,18 @@ let parseData = [
 				regex: /^Stage (\d+): (Generated ((?:[RGB] at [ABCDEF][1-6](?:|, )){3}))$/,
 				handler: function (matches, module) {
 					let stageInfo = matches[3].split(", ").map(x => x[0].concat(x.slice(4, 7)).split(' ')).map(x => [x[0]].concat(x[1] = (x[1][1] - 1) * 6 + "ABCDEF".indexOf(x[1][0])));
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('floor-lights');
 					for (let row = 0; row < 6; row++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let col = 0; col < 6; col++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('border-width', '1px')
-								.css('width', '15px')
-								.css('height', '15px')
-								.css('background-color', '#858585')
-								.appendTo(tr);
+							let td = $('<td>').text(' ').appendTo(tr);
 
 							for (let i = 0; i < 3; i++) {
 								if (stageInfo[i][1] == row * 6 + col) {
 									switch (stageInfo[i][0]) {
-										case 'R':
-											td.css('background-color', '#FF0000')
-											break;
-										case 'G':
-											td.css('background-color', '#00FF00')
-											break;
-										case 'B':
-											td.css('background-color', '#0000FF')
-											break
+										case 'R': td.addClass('red'); break;
+										case 'G': td.addClass('green'); break;
+										case 'B': td.addClass('blue'); break
 									}
 								}
 							}
@@ -4492,25 +4478,13 @@ let parseData = [
 				regex: /^(Submitted|Grid:) ([#*]{36})\.?$/,
 				handler: function (matches, module) {
 					let grid = Array.from(new Array(6), (_, i) => matches[2].slice(i * 6, i * 6 + 6))
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('floor-lights');
 					for (let row = 0; row < grid.length; row++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let col = 0; col < grid.length; col++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('border-width', '1px')
-								.css('width', '15px')
-								.css('height', '15px')
-								.appendTo(tr);
-							switch (grid[row][col]) {
-								case '#':
-									td.css('background-color', '#FFFF00')
-									break;
-								case '*':
-									td.css('background-color', '#858585')
-									break;
+							let td = $('<td>').text(' ').appendTo(tr);
+							if (grid[row][col] == '#') {
+								td.addClass('yellow');
 							}
 						}
 					}
@@ -4659,7 +4633,7 @@ let parseData = [
 				regex: /(Stage order:) (\d+(,\d+)*)/,
 				handler: function (matches, module) {
 					var div = $('<div>');
-					div.text(matches[2]).css({ "white-space": "nowrap", "overflow-x": "scroll " });
+					div.text(matches[2]).addClass('forget-everything-stage-order');
 					module.push({ label: matches[1], obj: div });
 					return true;
 				}
@@ -4718,20 +4692,17 @@ let parseData = [
 					};
 					module.push({
 						label: 'Calculations:',
-						obj: $(`<table style='border-collapse: collapse'>
-							<tr><th>#</th><th>Valid?</th><th>LEDs → Color</th><th colspan='2'>Calculation</th><th>Answer</th></tr>
+						obj: $(`<table class='forget-everything-calculations'>
+							<tr><th class='stage-number'>#</th><th>Valid?</th><th>LEDs → Color</th><th colspan='2'>Calculation</th><th>Answer</th></tr>
 							${module.ForgetEverything.map((inf, stage) => `<tr${stage === 0 ? '' : ` title='Stage: ${stage + 1}&#xa;Display: ${inf.Display}&#xa;Nixie tubes: ${inf.Tubes}'`}>
-								<th style='text-align: right'>${stage + 1}</th>
+								<th class='stage-number'>${stage + 1}</th>
 								${inf.Valid === null ? `<td colspan='4'>INITIAL VALUE</td><td>${arr.map(i => `<span class='digit'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-								inf.Valid === true ? `<td>VALID</td><td style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td style='background: ${colours[inf.Color]}'>${inf.Op}</td><td style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " t" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
-									`<td colspan='6' style='color: #888'>(not valid)</td>`
+								inf.Valid === true ? `<td>VALID</td><td class='colored' style='background: ${colours[inf.Color]}'>${inf.Colors} → ${inf.Color}</td><td class='colored' style='background: ${colours[inf.Color]}'>${inf.Op}</td><td class='colored' style='background: ${colours[inf.Color]}'>${inf.Calc}</td><td>${arr.map(i => `<span class='digit${i == (stage % 10) ? " red" : ''}'>${inf.Answer.substr(i, 1)}</span>`).join('')}</td>` :
+									`<td colspan='6' class='not-valid'>(not valid)</td>`
 							}
 							</tr>`).join('')}
 							<tr><th colspan='5'>FINAL ANSWER</th><td>${arr.map(i => `<span class='digit'>${module.ForgetEverythingNumber.substr(i, 1)}</span>`).join('')}</td></tr>
 						</table>`)
-							.find('td, th').css({ border: '1px solid black', padding: '.3em .5em' }).end()
-							.find('.digit').css({ border: '1px solid #888', padding: '0 .3em', background: '#ddd' }).end()
-							.find('.digit.t').css({ background: '#ecc', color: '#f00' }).end()
 					});
 					return false;
 				}
@@ -4757,36 +4728,16 @@ let parseData = [
 					const ROW_COUNT = parseInt(matches[2]);
 
 					let maze = readLines(ROW_COUNT + 1).slice(1, ROW_COUNT + 1);
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('forget-maze-not');
 
 					for (let row = 0; row < ROW_COUNT; row++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let col = 0; col < COL_COUNT; col++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('width', '25px')
-								.css('height', '25px')
-								.appendTo(tr);
+							let td = $('<td>').text(' ').appendTo(tr);
 
 							let current = maze[row].split(' ')[col].split('');
-							current.forEach(element => {
-								switch (element) {
-									case 'N':
-										td.css('border-top', 'none');
-										break;
-									case 'E':
-										td.css('border-right', 'none');
-										break;
-									case 'S':
-										td.css('border-bottom', 'none');
-										break;
-									case 'W':
-										td.css('border-left', 'none');
-										break;
-								}
-							});
+							let dirs = { 'N':'north', 'E':'east', 'S':'south', 'W':'west' }
+							current.forEach(element => td.addClass(dirs[element]) );
 						}
 					}
 
@@ -4802,36 +4753,16 @@ let parseData = [
 					const ROW_COUNT = 5;
 
 					let maze = readLines(ROW_COUNT);
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('forget-maze-not');
 
 					for (let row = 0; row < ROW_COUNT; row++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let col = 0; col < COL_COUNT; col++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('width', '25px')
-								.css('height', '25px')
-								.appendTo(tr);
+							let td = $('<td>').text(' ').appendTo(tr);
 
 							let current = maze[row].split(' ')[col].split('');
-							current.forEach(element => {
-								switch (element) {
-									case 'N':
-										td.css('border-top', 'none');
-										break;
-									case 'E':
-										td.css('border-right', 'none');
-										break;
-									case 'S':
-										td.css('border-bottom', 'none');
-										break;
-									case 'W':
-										td.css('border-left', 'none');
-										break;
-								}
-							});
+							let dirs = { 'N':'north', 'E':'east', 'S':'south', 'W':'west' }
+							current.forEach(element => td.addClass(dirs[element]) );
 						}
 					}
 
@@ -4884,8 +4815,8 @@ let parseData = [
 				handler: function (matches, module) {
 					if (matches[1] == 1) {
 						module.push({ label: "Stages Displayed: " });
-						module.push({ obj: pre("  St |  Face  | Time(min) | Rules | Orders | Shifts | Ans  ").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
-						module.push({ obj: pre(" ————+————————+———————————+———————+————————+————————+————— ").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
+						module.push({ obj: pre("  St |  Face  | Time(min) | Rules | Orders | Shifts | Ans  ").addClass('forget-perspective'), nobullet: true });
+						module.push({ obj: pre(" ————+————————+———————————+———————+————————+————————+————— ").addClass('forget-perspective'), nobullet: true });
 					}
 					var line0 = matches[1];
 					if (line0 < 10) line0 = "  " + matches[1];
@@ -4903,7 +4834,7 @@ let parseData = [
 					var line4 = readTaggedLine().replace(/Order made: /, "").replace(/ /g, "") + readTaggedLine().replace(/Character Shift rule = (\d+), X = (\d+), Y = (\d+)/, ""); //order
 					var line5 = readTaggedLine().replace(/Shifted order: /, "").replace(/ /g, ""); //order after caesar
 					var line6 = readTaggedLine().replace(/Added value: /, ""); //value
-					module.push({ obj: pre(" " + line0 + " | " + line1 + " |    " + line2 + "    | " + line3 + " | " + line4 + " | " + line5 + " |  " + line6 + "   \n").css('display', 'inline').css('margin', '0').css('padding', '0'), nobullet: true });
+					module.push({ obj: pre(" " + line0 + " | " + line1 + " |    " + line2 + "    | " + line3 + " | " + line4 + " | " + line5 + " |  " + line6 + "   \n").addClass('forget-perspective'), nobullet: true });
 					return true;
 				}
 			},
@@ -5079,14 +5010,14 @@ let parseData = [
 				regex: /Initial Board State:|Expected board state after \d+ iterations?:/,
 				handler: function (matches, module) {
 					let grid = readTaggedLines(6);
-					let svg = `<svg style='display: block; width: 2in' viewbox='0 0 38 74'>`;
-					svg += `<rect fill='#89b' x='0' y='0' width='38' height='74'/>`;
+					let svg = `<svg class='game-changer' viewbox='0 0 38 74'>`;
+					svg += `<rect class='background' x='0' y='0' width='38' height='74'/>`;
 					for (let row = 0; row < 6; row++){
 						for (let col = 0; col < 3; col++){
-							let color = grid[row][col] == 'W' ? '#FFF' : '#000';
+							let color = grid[row][col] == 'W' ? 'white' : 'black';
 							let x = 10 * col + 2 * (col + 1);
 							let y = 10 * row + 2 * (row + 1);
-							svg += `<rect fill='${color}' x='${x}' y='${y}' width='10' height='10'/>`;
+							svg += `<rect class='${color}' x='${x}' y='${y}' width='10' height='10'/>`;
 						}
 					}
 					svg += '</svg>';
@@ -5112,19 +5043,11 @@ let parseData = [
 						"cyan": "#00FFFF"
 					}[matches[1]];
 					let grid = readTaggedLines(5);
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('game-of-colors');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let y = 0; y < 5; y++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('border-width', 'thick')
-								.css('width', '25px')
-								.css('height', '25px')
-								.css('background-color', grid[x][y] == '.' ? "#000000" : color)
-								.appendTo(tr);
+							let td = $('<td>').text(' ').addClass(grid[x][y] == '.' ? 'black' : color).appendTo(tr);
 						}
 					}
 					module.push({ label: matches[0], obj: table });
@@ -5134,30 +5057,13 @@ let parseData = [
 			{
 				regex: /^The final answer is:$/,
 				handler: function (matches, module) {
-					const colorCodes = {
-						'R': "#FF0000",
-						'G': "#00FF00",
-						'B': "#0000FF",
-						'M': "#FF00FF",
-						'Y': "#FFFF00",
-						'C': "#00FFFF",
-						'W': "#FFFFFF",
-						'K': "#000000"
-					};
+					const colorNames = { 'R': "red", 'G': "green", 'B': "blue", 'M': "magenta", 'Y': "yellow", 'C': "cyan", 'W': "white", 'K': "black" };
 					let grid = readTaggedLines(5);
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('game-of-colors');
 					for (let x = 0; x < 5; x++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let y = 0; y < 5; y++) {
-							let td = $('<td>')
-								.text(' ')
-								.css('text-align', 'center')
-								.css('border', 'solid')
-								.css('border-width', 'thick')
-								.css('width', '25px')
-								.css('height', '25px')
-								.css('background-color', colorCodes[grid[x][y]])
-								.appendTo(tr);
+							let td = $('<td>').text(' ').addClass(colorNames[grid[x][y]]).appendTo(tr);
 						}
 					}
 					module.push({ label: matches[0], obj: table });
