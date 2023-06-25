@@ -10649,6 +10649,142 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ProceduralMaze",
+		loggingTag: "Procedural Maze",
+		matches: [
+			{
+				regex: /Mazes on this module will start at ([ABCDEF][1-6]) and finish at ([ABCDEF][1-6])\./,
+				handler: function (matches, module) {
+					module.svgCount = 0;
+					module.startPos = ["ABCDEF".indexOf(matches[1].charAt(0)), matches[1].charAt(1) - 1];
+					module.goalPos = ["ABCDEF".indexOf(matches[2].charAt(0)), matches[2].charAt(1) - 1];
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /(re)?generating maze:/i,
+				handler: function (match, module) {
+					let div = $("<div>").addClass("proc-maze");
+					module.mazeSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 610 610'>").appendTo(div);
+					$SVG("<path d='M5 5 h600 v600 h-600z'>").addClass("proc-maze-wall proc-maze-border").appendTo(module.mazeSvg);
+					module.push({ label: "=======================================", nobullet: true });
+					module.push([match[0], [{ nobullet: true, obj: div }]]);
+					module.svgCount += 1;
+					return true;
+				}
+			},
+			{
+				regex: /Rings, in reading order, are: ([01]{36})\./,
+				handler: function (matches, module) {
+					module.cells = [];
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 6; col++) {
+							if (matches[1].charAt(col + 6 * row) == '1') {
+								$SVG(`<circle cx='${55 + col * 100}' cy='${55 + row * 100}' r=35>`).addClass("proc-maze-ring").appendTo(module.mazeSvg);
+							}
+							let cell;
+							if (col == module.goalPos[0] && row == module.goalPos[1]) {
+								cell = $SVG(`<path d='M${55 + col * 100} ${55 + row * 100} v25 l20 -40 h-40 l20 40z' style='transform-origin: ${55 + col * 100}px ${55 + row * 100}px'>`)
+									.addClass("proc-maze-goal")
+									.appendTo(module.mazeSvg);
+							}
+							else {
+								cell = $SVG(`<path d='M${55 + col * 100} ${55 + row * 100} l-15 -15 h30 v30 h-30 v-30z'>`)
+									.addClass("proc-maze-cell")
+									.appendTo(module.mazeSvg);
+								if (col == module.startPos[0] && row == module.startPos[1]) {
+									cell.addClass("proc-maze-current-cell proc-maze-visited-cell");
+									module.currentPos = [col, row];
+									module.currentCell = cell;
+								}
+							}
+							module.cells.push(cell);
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is ([URDL]+)\./,
+				handler: function (matches, module) {
+					module.push({ label: "One possible solution is", obj: pre(matches[1]) });
+					return true;
+				}
+			},
+			{
+				regex: /(Moved (up|right|down|left) to ([ABCDEF][1-6])\.) Generated walls: (Up: (absent|present))?( \| )?(Right: (absent|present))?( \| )?(Down: (absent|present))?( \| )?(Left: (absent|present))?\. The seed is now ([01]{6})\./,
+				handler: function (matches, module) {
+					let pos = ["ABCDEF".indexOf(matches[3].charAt(0)), (matches[3].charAt(1) - 1)]
+					if (matches[5] == "present") {
+						$SVG(`<path d='M${5 + pos[0] * 100} ${5 + pos[1] * 100} h100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[8] == "present") {
+						$SVG(`<path d='M${105 + pos[0] * 100} ${5 + pos[1] * 100} v100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[11] == "present") {
+						$SVG(`<path d='M${5 + pos[0] * 100} ${105 + pos[1] * 100} h100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[14] == "present") {
+						$SVG(`<path d='M${5 + pos[0] * 100} ${5 + pos[1] * 100} v100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
+					}
+
+					let inDropDown = "Revealed walls: \n";
+					for (let i = 0; i < 4; i++) {
+						if (matches[4 + 3 * i]) {
+							inDropDown += matches[4 + 3 * i] + "\n";
+						}
+					}
+					module.MoveCell(matches[3]);
+					module.push([`${matches[1]} New seed: ${matches[15]}.`, [{ nobullet: true, obj: pre(inDropDown) }]]);
+					return true;
+				}
+			},
+			{
+				regex: /Moved (up|right|down|left) to ([ABCDEF][1-6])\./,
+				handler: function (matches, module) {
+					module.MoveCell(matches[2]);
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /✕ Tried to move (up|right|down|left), but there is a wall in that direction! Strike!/,
+				handler: function (matches, module) {
+					if (matches[1] == "up") {
+						$SVG(`<path d='M${5 + module.currentPos[0] * 100} ${5 + module.currentPos[1] * 100} h100'>`).addClass("proc-maze-struck-wall proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[1] == "right") {
+						$SVG(`<path d='M${105 + module.currentPos[0] * 100} ${5 + module.currentPos[1] * 100} v100'>`).addClass("proc-maze-struck-wall proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[1] == "down") {
+						$SVG(`<path d='M${5 + module.currentPos[0] * 100} ${105 + module.currentPos[1] * 100} h100'>`).addClass("proc-maze-struck-wall proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					if (matches[1] == "left") {
+						$SVG(`<path d='M${5 + module.currentPos[0] * 100} ${5 + module.currentPos[1] * 100} v100'>`).addClass("proc-maze-struck-wall proc-maze-wall").appendTo(module.mazeSvg);
+					}
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (!module.MoveCell) {
+						module.MoveCell = function (toCell) {
+							module.currentPos = ["ABCDEF".indexOf(toCell.charAt(0)), toCell.charAt(1) - 1];
+							let newCell = module.cells[module.currentPos[0] + 6 * module.currentPos[1]];
+							newCell.addClass("proc-maze-current-cell proc-maze-visited-cell");
+							module.currentCell.removeClass("proc-maze-current-cell");
+							module.currentCell = newCell;
+						}
+					}
+					module.push(match.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "...?",
 		moduleID: "punctuationMarks",
 		loggingTag: "...?",
