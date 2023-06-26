@@ -14160,7 +14160,7 @@ let parseData = [
 			{
 				regex: /The maze is as follows: \(S = start, x = bone\)/,
 				handler: function (matches, module) {
-					module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\[Updog #\d+\]: /g, '')) });
+					module.push({ label: matches.input, obj: pre(readMultiple(11).replace(/\[Updog #\d+\] /g, '')) });
 					return true;
 				}
 			},
