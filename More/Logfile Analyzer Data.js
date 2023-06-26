@@ -10705,30 +10705,28 @@ let parseData = [
 				}
 			},
 			{
-				regex: /(Moved (up|right|down|left) to ([ABCDEF][1-6])\.) Generated walls: (Up: (absent|present))?( \| )?(Right: (absent|present))?( \| )?(Down: (absent|present))?( \| )?(Left: (absent|present))?\. The seed is now ([01]{6})\./,
+				regex: /(Moved (up|right|down|left) to ([ABCDEF][1-6])\.) Generated walls: (((Up|Right|Down|Left): (absent|present)( \| )?){1,4})\. The seed is now ([01]{6})\./,
 				handler: function (matches, module) {
 					let pos = ["ABCDEF".indexOf(matches[3].charAt(0)), (matches[3].charAt(1) - 1)]
-					if (matches[5] == "present") {
+					if (matches[4].includes("Up: present")) {
 						$SVG(`<path d='M${5 + pos[0] * 100} ${5 + pos[1] * 100} h100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
 					}
-					if (matches[8] == "present") {
+					if (matches[4].includes("Right: present")) {
 						$SVG(`<path d='M${105 + pos[0] * 100} ${5 + pos[1] * 100} v100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
 					}
-					if (matches[11] == "present") {
+					if (matches[4].includes("Down: present")) {
 						$SVG(`<path d='M${5 + pos[0] * 100} ${105 + pos[1] * 100} h100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
 					}
-					if (matches[14] == "present") {
+					if (matches[4].includes("Left: present")) {
 						$SVG(`<path d='M${5 + pos[0] * 100} ${5 + pos[1] * 100} v100'>`).addClass("proc-maze-wall").appendTo(module.mazeSvg);
 					}
 
 					let inDropDown = "Revealed walls: \n";
-					for (let i = 0; i < 4; i++) {
-						if (matches[4 + 3 * i]) {
-							inDropDown += matches[4 + 3 * i] + "\n";
-						}
+					for (let s of matches[4].split(" | ")) {
+						inDropDown += s + "\n";
 					}
 					module.MoveCell(matches[3]);
-					module.push([`${matches[1]} New seed: ${matches[15]}.`, [{ nobullet: true, obj: pre(inDropDown) }]]);
+					module.push([`${matches[1]} New seed: ${matches[9]}.`, [{ nobullet: true, obj: pre(inDropDown) }]]);
 					return true;
 				}
 			},
