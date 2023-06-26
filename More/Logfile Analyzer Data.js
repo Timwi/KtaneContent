@@ -6507,6 +6507,89 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "LempelZivCipherModule",
+		loggingTag: "Lempel-Ziv Cipher",
+		matches: [
+			{
+				regex: /Decoded binary: (([A-Z]=[01]+(; )?)+)/,
+				handler: function (matches, module) {
+					let combinedBinary = "";
+					for (let number of matches[1].split("; ")) {
+						combinedBinary += number.substring(2);
+					}
+					module.push(matches[0]);
+					module.push({ nobullet: true, obj: pre(combinedBinary) });
+					let preText = "";
+					let count = 1;
+					let power = 0;
+					module.splitBinary = [];
+					while (combinedBinary.length > 0) {
+						if (count >= 2 ** (power + 1)) {
+							power += 1;
+							preText += "\n";
+						}
+						preText += combinedBinary.substring(0, power + 1) + " ";
+						module.splitBinary.push(combinedBinary.substring(0, power + 1));
+						combinedBinary = combinedBinary.substring(power + 1);
+						count += 1;
+					}
+					module.maxLength = power + 1;
+					module.push(["Split binary", [{ nobullet: true, obj: pre(preText) }]]);
+					return true;
+				}
+			},
+			{
+				regex: /Generated dictionary: ((\d+(; )?)+)/,
+				handler: function (matches, module) {
+					let preText = "";
+					let dictionary = matches[1].split("; ");
+					let maxDictLength = 0;
+					for (let s of dictionary) {
+						if (s.length > maxDictLength) {
+							maxDictLength = s.length;
+						}
+					}
+					let currentInt;
+					let decodedSequence = "";
+					for (let position in dictionary) {
+						currentInt = parseInt(module.splitBinary[position - 2], 2);
+						if (position < 2) {
+							preText += "".padStart(module.maxLength + 11 + maxDictLength) + `| ${position.padStart(2)}: ${dictionary[position]}\n`;
+						}
+						else {
+							preText += `${module.splitBinary[position - 2].padStart(module.maxLength)} -> ${currentInt.toString().padStart(2)} -> ${dictionary[currentInt].padEnd(maxDictLength)}`;
+							preText += ` | ${position.padStart(2)}: ${dictionary[position]}\n`
+							decodedSequence += dictionary[currentInt];
+						}
+					}
+					currentInt = parseInt(module.splitBinary[dictionary.length - 2], 2);
+					preText += `${module.splitBinary[dictionary.length - 2].padStart(module.maxLength)} -> ${currentInt.toString().padStart(2)} -> ${dictionary[currentInt].padEnd(maxDictLength)} |\n`;
+					decodedSequence += dictionary[currentInt];
+					preText += `\n${decodedSequence}`;
+					module.push({ label: "Dictionary and decoding:", obj: pre(preText) });
+					return true;
+				}
+			},
+			{
+				regex: /(Decoded bitmap \((\d+)×\d+\):) ([01]+)/,
+				handler: function (matches, module) {
+					let rowLength = parseInt(matches[2], 10);
+					let preText = "";
+					let rawText = matches[3].replace(/1/g, "⬜").replace(/0/g, "⬛");
+					while (rawText.length > 0) {
+						preText += rawText.substring(0, rowLength) + "\n";
+						rawText = rawText.substring(rowLength);
+					}
+					module.push({ label: matches[1], obj: pre(preText) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+			}
+		]
+	},
+	{
 		moduleID: "levenshteinDistance",
 		loggingTag: "Levenshtein Distance",
 		matches: [
