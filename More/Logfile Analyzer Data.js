@@ -6507,34 +6507,94 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: "LempelZivCipherModule",
-		loggingTag: "Lempel-Ziv Cipher",
+		moduleID: ["LempelZivCipherModule", "PokemonSpriteCipherModule" ],
+		loggingTag: ["Lempel-Ziv Cipher", "Pokémon Sprite Cipher" ],
 		matches: [
 			{
-				regex: /Decoded binary: (([A-Z]=[01]+(; )?)+)/,
-				handler: function (matches, module) {
-					let combinedBinary = "";
-					for (let number of matches[1].split("; ")) {
+				regex: /Letters on module: [A-Z]+/,
+				handler: function (match, module) {
+					let nextLine = readLine();					
+					let nextMatches = nextLine.match(/Decoded binary: (([A-Z]=[01]+(; )?)+)/);
+					combinedBinary = "";
+					for (let number of nextMatches[1].split("; ")) {
 						combinedBinary += number.substring(2);
 					}
-					module.push(matches[0]);
+					module.push(match.input);
+					module.push(nextMatches[0]);
 					module.push({ nobullet: true, obj: pre(combinedBinary) });
 					let preText = "";
-					let count = 1;
-					let power = 0;
-					module.splitBinary = [];
-					while (combinedBinary.length > 0) {
-						if (count >= 2 ** (power + 1)) {
-							power += 1;
-							preText += "\n";
+					// The binary strings should be split differently depending on the cipher.
+					if (nextLine.includes("Lempel-Ziv Cipher")) {
+						let count = 1;
+						let power = 0;
+						module.splitBinary = [];
+						while (combinedBinary.length > 0) {
+							if (count >= 2 ** (power + 1)) {
+								power += 1;
+								preText += "\n";
+							}
+							preText += combinedBinary.substring(0, power + 1) + " ";
+							module.splitBinary.push(combinedBinary.substring(0, power + 1));
+							combinedBinary = combinedBinary.substring(power + 1);
+							count += 1;
 						}
-						preText += combinedBinary.substring(0, power + 1) + " ";
-						module.splitBinary.push(combinedBinary.substring(0, power + 1));
-						combinedBinary = combinedBinary.substring(power + 1);
-						count += 1;
+						module.maxLength = power + 1;
+						module.push(["Split binary", [{ nobullet: true, obj: pre(preText) }]]);
 					}
-					module.maxLength = power + 1;
-					module.push(["Split binary", [{ nobullet: true, obj: pre(preText) }]]);
+					else if (nextLine.includes("Pokémon Sprite Cipher")) {
+						label = "Run-Length Encoding Decryption"
+						let firstCharacter = combinedBinary.charAt(0);
+						combinedBinary = combinedBinary.substring(1);
+						let inRawMode = firstCharacter == "1";
+						preText = `${firstCharacter} -> ${(inRawMode ? "Raw" : "RLE")} mode:\n`;
+						let position = 0;
+						let decryptedBinary = "";
+						let isEvenStep = false;
+						while (position < combinedBinary.length) {
+							if (inRawMode) {
+								let nextPair = combinedBinary.substring(position, position + 2);
+								while (nextPair != "00") {
+									decryptedBinary += nextPair;
+									preText += nextPair + " ";
+									position += 2;
+									nextPair = combinedBinary.substring(position, position + 2);
+								}
+								preText += "[00] <- remove pair.";
+								position += 2;
+							}
+							else {
+								let subLength = 0;
+								while (combinedBinary.charAt(position + subLength) != "0") {
+									subLength += 1;
+								}
+								subLength += 1;
+								let left = combinedBinary.substring(position, position + subLength);
+								let right = combinedBinary.substring(position + subLength, position + subLength * 2);
+								preText += `${left}|${right} -> `;
+								let leftNumber = parseInt(left, 2);
+								let rightNumber = parseInt(right, 2);
+								let result = 2 * (leftNumber + rightNumber + 1);
+								preText += `2 × (${leftNumber} + ${rightNumber} + 1) = ${result} -> ${"0".repeat(result)}`;
+								decryptedBinary += "0".repeat(result);
+								position += 2 * subLength;
+							}
+							inRawMode = !inRawMode;
+							if (isEvenStep) {
+								preText += "\n";
+							}
+							if (position < combinedBinary.length) {
+								preText += `\n${(inRawMode ? "Raw" : "RLE")} mode:\n`
+								decryptedBinary += " ";
+							}
+							else if (!isEvenStep) {
+								preText += "\n";
+							}
+							isEvenStep = !isEvenStep;
+						}
+						preText += `\n--> ${decryptedBinary}.\n`;
+						module.push(["Run-Length Encoding Decryption", [{ nobullet: true, obj: pre(preText) }]]);
+						module.push({ label: "Final binary:", obj: pre(decryptedBinary.replace(/ /g, "")) });
+					}
 					return true;
 				}
 			},
@@ -6573,12 +6633,17 @@ let parseData = [
 			{
 				regex: /(Decoded bitmap \((\d+)×\d+\):) ([01]+)/,
 				handler: function (matches, module) {
-					let rowLength = parseInt(matches[2], 10);
+					module.bitmapWidth = parseInt(matches[2], 10);
+				}
+			},
+			{
+				regex: /(Decoded bitmap.*) ([01]+)/,
+				handler: function (matches, module) {
 					let preText = "";
-					let rawText = matches[3].replace(/1/g, "⬜").replace(/0/g, "⬛");
-					while (rawText.length > 0) {
-						preText += rawText.substring(0, rowLength) + "\n";
-						rawText = rawText.substring(rowLength);
+					let rawText = matches[2].replace(/1/g, "⬜").replace(/0/g, "⬛");
+					while (rawText.length >= module.bitmapWidth) {
+						preText += rawText.substring(0, module.bitmapWidth) + "\n";
+						rawText = rawText.substring(module.bitmapWidth);
 					}
 					module.push({ label: matches[1], obj: pre(preText) });
 					return true;
