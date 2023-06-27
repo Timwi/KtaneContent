@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Dice Stack Look Up Table — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        let allSums = [];
+        let allowedGroups = [];
+        for (let a = 1; a <= 9; a++)
+            for (let b = a; b <= 9; b++)
+                for (let c = b; c <= 9; c++)
+                    for (let d = c; d <= 9; d++) {
+                        let curGroup = [a, b, c, d];
+                        let sum =  a + b + c + d;
+                        let idxAllSums = allSums.indexOf(sum);
+                        if (idxAllSums == -1) {
+                            allSums.push(sum);
+                            allowedGroups.push([curGroup]);
+                        }
+                        else
+                            allowedGroups[idxAllSums].push(curGroup);
+                    }
+        //console.log(allSums);
+        //console.log(allowedGroups);
+        let body = $("div.section");
+        let curPageNum = 2;
+        let extraPagesToCreate = 3;
+        for (let x = 0; x < extraPagesToCreate; x++) {
+            let page = $("<div>").addClass(`page page-bg-0${curPageNum % 7 + 1}`).appendTo(body);
+            $('<div class="page-header"><span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span><span class="page-header-section-title">Dice Stack</span></div>').appendTo(page);
+            let content = $("<div>").addClass(`page-content page-0${curPageNum - 1}`).appendTo(page);
+            // Add a table corresponding to this.
+            let table = $("<table>").addClass('lookup centered').appendTo(content);
+            let curRow = $("<tr>").appendTo(table);
+            $("<th>").text("Sum").appendTo(curRow);
+            $("<th>").text("Possible Sets").attr("colspan", 8).appendTo(curRow);
+            $("<div>").addClass("page-footer relative-footer").text(curPageNum).appendTo(page);
+            curPageNum++;
+        }
+
+        let maxLengths = [12, 6, 8, 7];
+        let curIdx = 0;
+
+        $(".lookup").each(function(idx, elem) {
+            for (let x = 0; x < maxLengths[idx]; x++) {
+                if (curIdx >= allSums.length) break;
+                let sumHeader = $("<th>").text(allSums[curIdx]).attr("rowspan", Math.ceil(allowedGroups[curIdx].length / 8));
+                let nextRow = $("<tr>").append(sumHeader);
+
+                for (let y = 0; y < allowedGroups[curIdx].length; y++) {
+                    nextRow.append($("<td>").text(allowedGroups[curIdx][y]));
+                    if ((y + 1) % 8 == 0 && y + 1 < allowedGroups[curIdx].length) {
+                        nextRow.appendTo(elem);
+                        nextRow = $("<tr>");
+                    }
+                }
+
+                nextRow.appendTo(elem);
+                curIdx++;
+            }
+        });
+        $(".trickColSpan").attr("colspan", 8);
+    });
+    </script>
+    <style>
+        .page-footer::after { content: " of 4" }
+        .page-footer::before { content: "Page " }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Dice Stack</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Dice Stack.svg" class="diagram">
+                <h2>On the Look Up of Dice Stacks</h2>
+                <p class="flavour-text">Cope, and seeth the pips.</p>
+                <p>Refer to the <a href="Dice%20Stack.html">original manual</a> for the instructions.</p>
+                <table class="lookup centered">
+                    <tr><th>Sum</th><th class="trickColSpan">Possible Sets</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+    </div>
+</body>
+</html>
