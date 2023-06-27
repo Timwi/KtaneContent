@@ -8,6 +8,127 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const topGridLayout = ["___W___WW_W_W____W_W__WWWWW________",
+                               "________WW_WW__W___W_WW_W_WW___W___",
+                               "_______WW_WWW__W___W__WWW_WW_______",
+                               "________W_WWW__W_____WW_W_WW___W___",
+                               "___W____WWW_WW_W______W_WWW______W_",
+                               "_____W__WWW_W__W___W_WW_WWW________",
+                               "_W_W_W__W_W_W_________WWWWW______W_",
+                               "_W___W__W_WWW_________W_W_W__W_W_W_",
+                               "_W___W__W_W_W____W____WWWWW________",
+                               "_W___W__WWW_W________WW_WWWW_______",
+                               "___W____W_W_W__W___W__W_WWW____W___",
+                               "_W___W__W_W_W____W____WWWWW____W___",
+                               "___W_W__WWW_W________WW_W_WW___W___",
+                               "_______W_WWW_W___W____W_W_W__W___W_",
+                               "_W______W_WWW____W____WWWWW__W_____",
+                               "_____W__WWW_W__W___W__W_WWW__W_____"];
+
+        const bottomGridLayout = ["_W_WWW__W_W___",
+                                  "_WWWWW________",
+                                  "_W_WWW__W_____",
+                                  "_W_WWWW_______",
+                                  "_W_W_WW_______",
+                                  "_W_W_W____W___",
+                                  "WW_WWW________",
+                                  "_WWW_WW_W_____",
+                                  "_WWW_W________",
+                                  "_WWW_WW_______",
+                                  "_W_WWW__W___W_"];
+
+        const bottomGridNumbers = [[1], [2], [3, 9], [4, 5], [6, 7], [8, 12, 16], [10], [11], [13], [14], [15]];
+
+        const colourDict = { W: "FFF", _: "000", R: "F00", Y: "FF0", G: "0F0", B: "00F"};
+
+        $(function() {
+            let topMazeGrids = $(".top-maze-grids");
+            for (let rowNum = 0; rowNum < 4; rowNum++) {
+                let row = $("<tr>").appendTo(topMazeGrids);
+                for (let colNum = 0; colNum < 4; colNum++) {
+                    let cell = $("<td style='padding:0.2em'>").appendTo(row);
+                    cell.append(DrawTopSvg(rowNum*4 + colNum));
+                }
+            }
+
+            let bottomMazeGrids = $(".bottom-maze-grids");
+            for (let rowNum = 0; rowNum < 4; rowNum++) {
+                let row = $("<tr>").appendTo(bottomMazeGrids);
+                for (let colNum = 0; colNum < 3; colNum++) {
+                    if (!(rowNum == 3 && colNum == 2)) {
+                        let cell = $("<td style='padding:0.2em'>").appendTo(row);
+                        cell.append(DrawBottomSvg(rowNum*3 + colNum));
+                    }
+                }
+            }
+        });
+
+        function DrawTopSvg(gridNum) {
+            let div = $("<div width='100%'>");
+            let svg = $('<svg viewbox="0 0 1110 610" width="100%" style="display:block" xmlns="http://www.w3.org/2000/svg">').appendTo(div);
+            let topRowColours = "WRWYWGWBW" ;
+            
+            svg.append(MakeSvgElem("rect", { x: 5, y: 210, width: 180, height: 180, stroke: "#000", fill: "#FFF" }))
+            svg.append(MakeSvgElem("text", { x: 95, y: 350 }, gridNum+1));
+
+            for (let col = 0; col < 9; col++) {
+                svg.append(MakeSvgElem("rect", {x: 205+100*col, y: 5, width: 100, height: 100, fill: `#${colourDict[topRowColours[col]]}`}));
+                for (let row = 1; row < 6; row++) {
+                    if (col==0 || col==8) {
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                    } else {
+                        let letter = topGridLayout[gridNum].charAt((row-1)*7 + col-1);
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict[letter]}` }));
+                    }
+                }
+            }
+            return div;
+        }
+
+        function DrawBottomSvg(gridNum) {
+            let div = $("<div width='100%'>");
+            let svg = $('<svg viewbox="0 0 1110 310" width="100%" style="display:block" xmlns="http://www.w3.org/2000/svg">').appendTo(div);
+
+            DrawNumberSquare(svg, bottomGridNumbers[gridNum]);
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (row < 2) {
+                        if (col==0 || col==8) {
+                            svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                        } else {
+                            let letter = bottomGridLayout[gridNum].charAt(row*7 + col-1)
+                            svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict[letter]}` }));
+                        }
+                    } else {
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                    }
+                }
+            }
+
+            return div;
+        }
+
+        function DrawNumberSquare(svg, nums) {
+            if (nums.length == 1) {
+                svg.append(MakeSvgElem("rect", { x: 5, y: 50, width: 180, height: 180, fill: "#FFF" }));
+                svg.append(MakeSvgElem("text", { x: 95, y: 190 }, nums[0]));
+            } else if (nums.length == 2) {
+                for (let i = 0; i < 2; i++) {
+                    svg.append(MakeSvgElem("rect", { x: 40, y: i*160, width: 140, height: 140, fill: "#FFF" }));
+                    svg.append(MakeSvgElem("text", { x: 110, y: 120 + 160*i }, nums[i]));
+                }
+            } else if (nums.length == 3) {
+                for (let i = 0; i < 3; i++) {
+                    svg.append(MakeSvgElem("rect", { x: 95, y: 8 + 100 * i, width: 95, height: 95, fill: "#FFF" }));
+                    svg.append(MakeSvgElem("text", { x: 142.5, y: 80 + 100*i, class: "small-text" }, nums[i]));
+                }
+            }
+        }
+    </script>
     <style>
         .robot-order-chart text {
             user-select: none;
@@ -31,6 +152,19 @@
         .robot-order-chart text.rank-two { font-size: 25px; }
         .robot-order-chart text.rank-three { font-size: 16px; }
         .robot-order-chart text.rank-four { font-size: 14px; }
+
+        .maze-grids text{
+            text-anchor: middle;
+            font-size: 140px;
+        }
+        .maze-grids :not(text) {
+            stroke: #000;
+            stroke-width: 3px;
+            margin: auto;
+        }
+        .maze-grids, .maze-grids table, .maze-grids table td, .dark .maze-grids{ border: none; }
+        .maze-grids table { margin-bottom: 30px; }
+        .maze-grids text.small-text { font-size: 70px }
     </style>
 </head>
 <body>
@@ -94,7 +228,12 @@
             </div>
             <div class="page-content">
                 <p>If a robot is unable to move on the turn that it is picked to move without causing a strike, the module will skip to the next robot until the robot is no longer stuck.</p>
-                <img src= "img/Robot Programming/mazes.png" class="centered-img">
+                <div class="maze-grids centered">
+                    <p>Top Halves:</p>
+                    <table class="top-maze-grids"></table>
+                    <p>Bottom Halves:</p>
+                    <table class="bottom-maze-grids"></table>
+                </div>
             </div>
             <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
