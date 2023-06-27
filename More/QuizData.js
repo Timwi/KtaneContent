@@ -448,6 +448,26 @@ const everything = {
 				]
 			]
 		},
+		'Cube Numbers': {
+			'CSS': 'textonly cube kra-numbers',
+			'DelayShowWrongRight': 2,
+			'RandomizeRight': true,
+			'Groups': ['numbers', 'symbols'],
+			'Items': [
+				[
+					['1', 'A', 'K'],
+					['2', 'B', 'L'],
+					['3', 'C', 'M'],
+					['4', 'D', 'N'],
+					['5', 'E', 'O'],
+					['6', 'F', 'P'],
+					['7', 'G', 'Q'],
+					['8', 'H'],
+					['9', 'I'],
+					['0', 'J']
+				]
+			]
+		},
 		'Dragon Energy': {
 			'CSS': 'flags',
 			'RandomzieRight': true,
