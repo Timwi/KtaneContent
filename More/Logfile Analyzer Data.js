@@ -9665,12 +9665,14 @@ let parseData = [
                 regex: /(.*grid)\D*([\d, ]+)\.( )?(.*)?/,
                 handler: function (matches, module) {
                     let rawGrid = matches[2].split(", ");
-                    let grid = $(`<svg class="numbrix" viewbox="0 0 900 900"></svg>`);
+					let grid = $(`<svg class="numbrix" viewbox="0 0 900 900"></svg>`);
+					let isAlternative = matches[1].includes("alternative");
                     for (let row = 0; row < 9; row++) {
                         for (let col = 0; col < 9; col++) {
-                            gridIndex = 9 * row + col;
+							gridIndex = 9 * row + col;
                             $SVG("<rect>").addClass("key").attr("x", col * 100).attr("y", row * 100).attr("width", 100).attr("height", 100).appendTo(grid);
-                            $SVG("<text>").addClass("key").attr("x", col * 100 + 50).attr("y", row * 100 + 66).text(rawGrid[gridIndex]).appendTo(grid);
+							let textNum = isAlternative ? parseInt(rawGrid[gridIndex]) + 1 : rawGrid[gridIndex];
+                            $SVG("<text>").addClass("key").attr("x", col * 100 + 50).attr("y", row * 100 + 66).text(textNum).appendTo(grid);
                         }
                     }
                     module.push({ label: `${matches[1]}:`, obj: grid });
