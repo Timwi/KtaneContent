@@ -5031,6 +5031,170 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "gameofAnts",
+		loggingTag: "Game of Ants",
+		matches: [
+			{
+				regex: /(The (initial|final) state of the grid is|The (life|ant) phase yields):/,
+				handler: function (matches, module) {
+					if (!module.drawSvg) {
+						module.drawSvg = function (addArrows, pushLabel = null) {
+							let length = addArrows ? 710 : 510;
+							let origin = length / 2 - 250;
+							let type = addArrows ? "wide game-of-ants" : "game-of-ants";
+							let div = $("<div>").addClass(type);
+							let svg = $(`<svg viewBox="0 0 ${length} ${length}">`).appendTo(div);
+							for (let row = 0; row < 5; row++) {
+								for (let col = 0; col < 5; col++) {
+									let color = module.cellStates[row * 5 + col] ? "white" : "black";
+									$SVG(`<rect x="${origin + col * 100}" y="${origin + row * 100}" width="100" height="100">`)
+										.addClass(color)
+										.prependTo(svg);
+								}
+								if (row > 0) {
+									$SVG(`<path d="M${origin + 100 * (row)} ${origin} v500">`).addClass("wall").appendTo(svg);
+									$SVG(`<path d="M${origin} ${origin + 100 * (row)} h500">`).addClass("wall").appendTo(svg);
+								}
+								if (addArrows) {
+									for (let rotation = 0; rotation < 4; rotation++) {
+										$SVG(`<path d="M${155 + row * 100} 5 l-40 40 h20 v50 l20 -20 l20 20 v-50 h20z">`)
+											.css("transform", `rotate(${rotation * 90}deg)`)
+											.addClass("arrow")
+											.appendTo(svg);
+									}
+								}
+							}
+							$SVG(`<rect x="${origin}" y="${origin}" width="500" height="500">`).addClass("border wall").appendTo(svg);
+							if (pushLabel != null) {
+								module.push({ label: pushLabel, obj: div });
+							}
+							return svg;
+						}
+					}
+					if (!module.getCellStates) {
+						module.getCellStates = function () {
+							module.cellStates = [];
+							for (let row = 0; row < 5; row++) {
+								let line = readLine().replace(/\[Game of Ants #\d+\] /, "");
+								for (let col = 0; col < 5; col++) {
+									module.cellStates.push(line.charAt(col) == "□");
+								}
+							}
+						}
+					}
+					if (matches[3] == "ant") {
+						module.pushAntSteps();
+						return true;
+					}
+					module.getCellStates();
+					let svg = module.drawSvg(matches[2] == "final", matches.input);
+					if (matches[3] == "life") {
+						module.gridAfterLife = svg;
+					}
+					if (matches[2] == "final") {
+						for (let ant of module.ants) {
+							module.addAnt(svg, ant, module.numOfSteps - 1, true);
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /([A-E])([1-5]):([UDLR-]+):(OUT [NEWS]|[A-E])[1-5]/,
+				handler: function (matches, module) {
+					if (!module.directionVectors) {
+						module.directionVectors = { U: [0, -1], D: [0, 1], L: [-1, 0],  R: [1, 0] };
+					}
+					if (!module.ants) {
+						module.ants = [];
+					}
+					let x = "ABCDE".indexOf(matches[1]);
+					let y = parseInt(matches[2]) - 1;
+					let lastestRotation = matches[3].charAt(0);
+					let pushToAnt = function () { ant.states.push({ position: [x, y], rotation: "URDL".indexOf(lastestRotation) }); };
+					let ant = { states: [] };
+					pushToAnt()
+					let path = matches[3];
+					x += module.directionVectors[lastestRotation][0];
+					y += module.directionVectors[lastestRotation][1];
+					for (let i = 1; i < path.length; i++) {
+						let nextMove = path.charAt(i);
+						if (nextMove != "-") {
+							lastestRotation = nextMove;
+							pushToAnt();
+						}
+						x += module.directionVectors[lastestRotation][0];
+						y += module.directionVectors[lastestRotation][1];
+					}
+					pushToAnt();
+					module.ants.push(ant);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (!match.input.includes("The ants travel along the following paths:")) {
+						module.push(match.input);
+					}
+					if (!module.addAnt) {
+						module.addAnt = function (svg, ant, stateIndex, hasArrows) {
+							let origin = hasArrows ? 105 : 5;
+							let x = ant.states[stateIndex].position[0];
+							let y = ant.states[stateIndex].position[1];
+							let xCoord = origin + x * 100;
+							let yCoord = origin + y * 100;
+							let transformOriginX = xCoord + 50;
+							let transformOriginY = yCoord + 50;
+							let length = 100;
+							if (x == -1 || x == 5 || y == -1 || y == 5) {
+								xCoord += 25;
+								yCoord += 25;
+								length = 50;
+							}
+							$SVG(`<image x="${xCoord}" y="${yCoord}" width="${length}" height="${length}" href="../HTML/img/Langton%20Ant/ant.svg">`)
+								.css("transform-origin", `${transformOriginX}px ${transformOriginY}px`)
+								.css("transform", `rotate(${90 * ant.states[stateIndex].rotation}deg)`)
+								.appendTo(svg);
+						}
+					}
+					if (!module.pushAntSteps) {
+						module.pushAntSteps = function () {
+							module.numOfSteps = module.ants[0].states.length;
+							let intermediateSteps = ["Each iteration consists of toggling cells, moving, and turning."];
+							for (let i = 0; i < module.numOfSteps; i++) {""
+								let needsArrows = false;
+								let svg;
+								
+								if (i == 0) {
+									svg = module.drawSvg(false, "Ants:");
+								}
+								else if (i == module.numOfSteps - 1) {
+									module.push(["Intermediate steps", intermediateSteps]);
+									needsArrows = true;
+									svg = module.drawSvg(true, "The ant phase yields:");
+									readLines(5);
+								}
+								else {
+									svg = module.drawSvg(false);
+									intermediateSteps.push({ label: `After iteration ${i}:`, obj: svg.parent()});
+								}
+								for (let ant of module.ants) {
+									module.addAnt(svg, ant, i, needsArrows);
+									let x = ant.states[i].position[0];
+									let y = ant.states[i].position[1];
+									module.cellStates[x + 5 * y] = !module.cellStates[x + 5 * y];
+								}
+							}
+
+						};
+					}
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "GameOfColors",
 		loggingTag: "Game of Colors",
 		matches: [
