@@ -14321,6 +14321,12 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "UIN(+L)",
+		moduleID: "UINpL",
+		loggingTag: "UIN(+L)",
+		icon: "UIN(%2BL)"
+	},
+	{
 		displayName: "Updog",
 		moduleID: "Updog",
 		loggingTag: "Updog",
