@@ -10356,7 +10356,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /The internal cube|submission grid/,
+				regex: /The internal cube/,
 				handler: function (matches, module) {
 
 					let grid = [];
@@ -10384,8 +10384,8 @@ let parseData = [
 						const topPath = "M0 0l2-1 2 1-2 1z";
 
 						const frontColors = { 'x':'none', 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0' };
-						const sideColors = { 'x':'none', 'R':'#D00', 'G':'#0D0', 'B':'#00D', 'C':'#0DD', 'M':'#D0D', 'Y':'#DD0' };
-						const topColors = { 'x':'none', 'R':'#E00', 'G':'#0E0', 'B':'#00E', 'C':'#0EE', 'M':'#E0E', 'Y':'#EE0' };
+						const sideColors = { 'x':'none', 'R':'#B00', 'G':'#0B0', 'B':'#00B', 'C':'#0BB', 'M':'#B0B', 'Y':'#BB0' };
+						const topColors = { 'x':'none', 'R':'#D00', 'G':'#0D0', 'B':'#00D', 'C':'#0DD', 'M':'#D0D', 'Y':'#DD0' };
 
 
 						let svg = $('<svg>').addClass('panel').attr('viewbox', '-.5 -1.5 13 17');
@@ -10405,14 +10405,25 @@ let parseData = [
 						return svg.prop('outerHTML');
 					}
 
-					let div = $('<div>').addClass('perspective-stacking');
+					let div = $('<div>').addClass('perspective-stacking-panels');
 					for (let z = 0; z < 5; z++)
 						div.append(makePanel(grid, z));
-
-					let item = { obj:div, nobullet: true };
-					if (matches[0] == 'The internal cube')
-						module.pushStage(item);
-					else module.push(item);
+					module.pushStage({ obj:div, nobullet: true });
+				}
+			},
+			{
+				regex: /submission grid/,
+				handler: function (match, module) {
+					const colorCodes = { 'x':'none', 'R':'#F00', 'G':'#0F0', 'B':'#00F', 'C':'#0FF', 'M':'#F0F', 'Y':'#FF0' };
+					readLine();
+					let grid = readLines(5).map(l => l.split(''));
+					let table = $('<table>').addClass('perspective-stacking-submission');
+					for (let row = 0; row < 5; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 5; col++)
+							$('<td>').css('background-color', colorCodes[grid[row][col]]).appendTo(tr);
+					}
+					module.push({ label:match.input, obj:table });
 				}
 			},
 			{
