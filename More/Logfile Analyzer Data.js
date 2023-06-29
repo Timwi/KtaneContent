@@ -15327,6 +15327,128 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Walking Cube",
+		moduleID: "WalkingCubeModule",
+		loggingTag: "Walking Cube",
+		matches: [
+			{
+				regex: /Cube starting position: ([A-D][1-4])/,
+				handler: function(matches, module) {
+					module.startingCell = matches[1];
+					readLine();
+					return true;
+				}
+			},
+			{
+				regex: /Cube rotations: ([A-Z, ]+)/,
+				handler: function (matches, module) {
+					const movementLines = { "UP": " v-100", "RIGHT": " h100", "LEFT": " h-100", "DOWN": " v100" };
+					let cubePath = matches[1].split(", ");
+					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="0 0 400 400">`);
+					
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							$SVG("<rect>").addClass("path-square")
+							.attr("x", col * 100 + 15).attr("y", row * 100 + 15)
+							.attr("width", 70).attr("height", 70).appendTo(cubePathSvg);
+						}
+					}
+					let xStart = "ABCD".indexOf(module.startingCell[0]) * 100 + 50;
+					let yStart = "1234".indexOf(module.startingCell[1]) * 100 + 50;
+					let path = `M ${xStart} ${yStart}`;
+					for (let direction of cubePath) {
+						path += movementLines[direction];
+					}
+					$SVG(`<path class="path-line" d="${path}">`)
+					.appendTo(cubePathSvg);
+
+					module.push({ label: "The path in question:", obj: cubePathSvg });
+					return true;
+				}
+			},
+			{
+				regex: /Chosen net/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /[░█]+/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /(Net position in manual:) ([A-E][1-5])/,
+				handler: function (matches, module) {
+					module.netPosition = matches[2];
+					module.net = [];
+					return true;
+				}
+			},
+			{
+				regex: /([RMWBCYOG\.]{2,5})/,
+				handler: function (matches, module) {
+					module.net.push(matches[1]);
+					return true;
+				}
+			},
+			{
+				regex: /Net symbols:/,
+				handler: function (matches, module) {
+					let netPosition = module.netPosition;
+					let net = module.net;
+					readLines(net.length);
+					const colors = { 
+						R: "#F99",
+						M: "#F9F",
+						W: "#FFF",
+						B: "#9BF",
+						C: "#9FF",
+						Y: "#FF9",
+						O: "#FC9",
+						G: "#9F9",
+						A: "#BBB"
+					 };
+					let cubeNetSvg = $(`<svg class="walking-cube-net-diagram" viewbox="-10 -10 520 520">`);
+					let netColors = [
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A']
+					];
+					let startingRow = "12345".indexOf(netPosition[1]);
+					let startingCol = "ABCDE".indexOf(netPosition[0]);
+					for (let row = 0; row < net.length; row++) {
+						for (let col = 0; col < net[0].length; col++) {
+							netColors[row + startingRow][col + startingCol] = (net[row][col] == '.' ? 'A' : net[row][col]);
+						}
+						
+					}
+
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+
+							$SVG("<rect>").addClass("net-square").attr("fill", colors[netColors[row][col]])
+							.attr("x", 100 * col).attr("y", 100 * row)
+							.attr("width", 100).attr("height", 100).appendTo(cubeNetSvg);
+
+							$SVG("<text>").addClass("net-text")
+							.attr("x", 100 * col + 50).attr("y", 100 * row + 68)
+							.text(netColors[row][col] == 'A' ? '' : [netColors[row][col]]).appendTo(cubeNetSvg);
+						}
+					}
+					module.push({ label: "The net in question:", obj: cubeNetSvg })
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Wavetapping",
 		moduleID: "Wavetapping",
 		loggingTag: "Wavetapping",
