@@ -8477,36 +8477,44 @@ let parseData = [
 		loggingTag: "Metapuzzle",
 		matches: [
 			{
+				regex: /Attempting to generate a meta/,
+				handler: function() { return true; }
+			},
+			{
+				regex:/The answers that feed into the meta are:/,
+				handler: function(match, module) {
+					module.push([ match.input, readTaggedLines(7) ]);
+					return true;
+				}
+			},
+			{
+				regex: /--- (.+) ---/,
+				handler: function (match, module) {
+					module[match[1]] = [ ];
+					module.push([ match[1], module[match[1]] ]);
+					module.currentSubgame = match[1];
+					return true;
+				}
+			},
+			{
+				regex: /You submitted.+for the final answer/,
+				handler: function (match, module) {
+					module.push(match.input);
+					return true;
+				}
+			},
+			{
 				regex: /.+/,
-				handler: function (matches, module) {
-					const header = /--- ([\w\s]+) ---/;
-					let line = '';
-					module.stuff = [ ];
-
-					if (module.done)
-						module.push(matches[0]);
+				handler: function(match, module) {
+					const rx = /(ENCODING QUIZ|HANGMAN|MENTAL MATH|NONOGRAM|SORTING|SPELLING BEE|SPOT THE DIFFERENCE)/i;
+					if (!module.currentSubgame)
+						module.push(match.input);
 					else {
-						while ((line = readLine()).startsWith('[Metapuzzle #')){
-							line = line.replace(/^\[Metapuzzle #\d+\] /, '');
-							let match = line.match(header);
-							if (match) {
-								if (module.header)
-									module.push( [ module.header, module.stuff ] );
-								module.header = match[1];
-								module.stuff = [ ];
-							}
-							else {
-								if (module.header)
-									module.stuff.push(line);
-								else
-									module.push(line);
-							}
-						}
-						module.push( [ module.header, module.stuff ] );
-						module.done = true;
-						linen--;
+						let m = match.input.match(rx);
+						if (m)
+							module.currentSubgame = m[1].toUpperCase();
+						module[module.currentSubgame].push(match.input);
 					}
-
 				}
 			}
 		]
