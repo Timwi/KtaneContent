@@ -6165,7 +6165,7 @@ let parseData = [
 				regex: /^(Solution|Codings|New codings):$/,
 				handler: function (matches, module) {
 					var lines = readLines(4).map(l => l.split(' '));
-					module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
+					module.push({ label: matches.input, obj: $(`<table class='kudosudoku'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`) });
 					return true;
 				}
 			},
@@ -6180,10 +6180,10 @@ let parseData = [
 		loggingTag: "Kyudoku",
 		matches: [
 			{
-				regex: /^(Solution|Codings|New codings):$/,
+				regex: /^(Puzzle|Solution):$/,
 				handler: function (matches, module) {
 					var lines = readTaggedLines(6).map(l => l.trim().replace(/\]\[/g, "] [").replace(/  +/g, ' ').split(' '));
-					module.push({ label: matches.input, obj: $(`<table style='border-collapse: collapse; text-align: center;'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`).find('td').css({ border: '1px solid black', padding: '.1em .5em' }).end() });
+					module.push({ label: matches.input, obj: $(`<table class='kyudoku'>${lines.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</table>`) });
 					return true;
 				}
 			},
@@ -6192,7 +6192,7 @@ let parseData = [
 			}
 		]
 	},
-	{
+	{ //DOES NOT WORK WITH THE CURRENT VERSION OF KUGELBLITZ
 		moduleID: "kugelblitz",
 		displayName: "Kugelblitz",
 		loggingTag: "Kugelblitz",
@@ -6409,13 +6409,13 @@ let parseData = [
 				handler: function (matches, module) {
 					var tiles = matches[1].split("/");
 
-					const span = $('<span style="display: flex; flex-direction: column">')
+					const span = $('<span>').addClass('langtons-ant')
 						.append($('<span>').text("Expected solution:"));
 
 					for (var i = 0; i < 5; i++) {
-						var row = $('<span style="height: 20px;">');
+						var row = $('<span>').addClass('row');
 						for (var j = 0; j < 5; j++) {
-							row.append($("<img src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png' width='20' />"));
+							row.append($("<img class='tile' src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png'/>"));
 						}
 						span.append(row);
 					}
@@ -6476,8 +6476,8 @@ let parseData = [
 					const fills = { 'T':'#FF0000', 'H':'#FF5800', 'O':'#FF9E00', 'D':'#FFFF00' };
 					const arrowHead = 'M-30 30 0 0 30 30 0 0';
 
-					let svg = "<svg viewbox='-225 -225 2100 2100' style='display: block; width: 6.5in; margin: 0.25cm auto'>";
-					svg += "<rect x='-50' y='-50' width='1925' height='1925' fill='#222' rx='50' ry='50'/>";
+					let svg = "<svg class='latin-hypercube' viewbox='-225 -225 2100 2100'>";
+					svg += "<rect x='-50' y='-50' class='background' width='1925' height='1925' rx='50' ry='50'/>";
 
 					let grid = readTaggedLines(19).map(l => l.replace(/ /g, '').split('')
 												 ).filter(l => l.length > 0);
@@ -6487,30 +6487,29 @@ let parseData = [
 								for (let x = 0; x < 4; x++) {
 									let xPosition = 475 * y + 100 * x;
 									let yPosition = 475 * w + 100 * z;
-									svg += `<rect x='${xPosition}' y='${yPosition}' width='100' height='100' fill='none' stroke='#47E9D4' stroke-width='15'/>`;
+									svg += `<rect class='frame' x='${xPosition}' y='${yPosition}' width='100' height='100'/>`;
 									let shape = grid[4 * w + z][4 * y + x];
 									if (shape != '#')
-										svg += `<path transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}'
-													fill='${fills[shape]}' stroke='#FFF' stroke-width='5' stroke-linejoin='round'/>`;
+										svg += `<path class='shape' transform='translate(${xPosition + 50}, ${yPosition + 50}) scale(0.8)' d='${paths[shape]}' fill='${fills[shape]}'/>`;
 								}
 							}
 						}
 					}
-					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
-							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+					svg += `<line class='arrow' x1='35' x2='400' y1='-100' y2='-100'/>
+							<path class='arrowhead' d='${arrowHead}' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100'>X</text>
 
-							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
-							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							<line class='arrow' x1='45' x2='1825' y1='-175' y2='-175'/>
+							<path class='arrowhead' d='${arrowHead}' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175'>Y</text>
 
-							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
-							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							<line class='arrow' x1='-100' x2='-100' y1='45' y2='400'/>
+							<path class='arrowhead' d='${arrowHead}' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0'>Z</text>
 
-							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
-							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+							<line class='arrow' x1='-175' x2='-175' y1='45' y2='1825'/>
+							<path class='arrowhead' d='${arrowHead}' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0'>W</text>`;
 					module.push({ label:matches[0], obj:svg + '</svg>' });
 				}
 			},
@@ -6572,9 +6571,9 @@ let parseData = [
 						yellow: ["#FFF200", 'black'],
 					};
 					var colors = matches[1].split(', ');
-					var table = `<table style='border-spacing: 1cm; border: 3px solid black;'>${[0, 1, 2].map(row =>
+					var table = `<table class='led-grid'>${[0, 1, 2].map(row =>
 						`<tr>${[0, 1, 2].map(col =>
-							`<td><div style='background-color: ${colorCodes[colors[3 * row + col]][0]}; color: ${colorCodes[colors[3 * row + col]][1]}; border: 2px solid black; border-radius: 50%; width: 2cm; height: 2cm; position: relative'><span style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${colors[3 * row + col]}</span></div></td>`
+							`<td><div class='circle' style='background-color: ${colorCodes[colors[3 * row + col]][0]}; color: ${colorCodes[colors[3 * row + col]][1]};'><span class='color-label'>${colors[3 * row + col]}</span></div></td>`
 						).join('')}</tr>`
 					).join('')}</table>`;
 					module.push({ label: 'LED colors:', obj: $(table) });
@@ -6607,7 +6606,7 @@ let parseData = [
 			{
 				regex: /(Manual Page (\d+)) w\/(o)?|(Solution:|Submitting:)/,
 				handler: function (matches, module) {
-					const svg = $(`<svg viewBox="0 0 8 8" width="30%" style="border: 1px solid black">`);
+					const svg = $(`<svg class='legos' viewBox="0 0 8 8" >`);
 					const board = readLines(8);
 					const colors = {
 						R: "red",
@@ -6624,11 +6623,11 @@ let parseData = [
 
 
 					for (let y = 1; y < 8; y++) {
-						$SVG(`<line x1=0 y1=${y} x2=8 y2=${y} stroke-width="0.05" stroke="black">`).appendTo(svg);
+						$SVG(`<line class='grid-line' x1=0 y1=${y} x2=8 y2=${y}>`).appendTo(svg);
 					}
 
 					for (let x = 1; x < 8; x++) {
-						$SVG(`<line x1=${x} y1=0 x2=${x} y2=8 stroke-width="0.05" stroke="black">`).appendTo(svg);
+						$SVG(`<line class='grid-line' x1=${x} y1=0 x2=${x} y2=8>`).appendTo(svg);
 					}
 
 					for (let y = 0; y < 8; y++) {
@@ -6899,7 +6898,7 @@ let parseData = [
 			{
 				regex: /SN ([A-Z0-9]{2}), swap ([A-Z0-9]\/[A-Z0-9]), sequence now: ([A-Z]{6})/,
 				handler: function (matches, module) {
-					module.push($("<span>").css({ "font-family": "monospace", "font-size": "16px" }).text("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]));
+					module.push($("<span>").addClass('light-cycle-sequence').text("Swap " + matches[2] + " (" + matches[1] + "). New Seq: " + matches[3]));
 				}
 			},
 			{
@@ -6976,8 +6975,8 @@ let parseData = [
 					}
 
 					module.makeSvg = function (grid) {
-						let svg = `<svg style='display: block; width: 3in' viewbox='-5 -5 130 180'>
-						<rect x='-5' y='-5' width='130' height='180' fill='#4C4' rx='5' ry='5'/>`;
+						let svg = `<svg class='match-em' viewbox='-5 -5 130 180'>
+						<rect x='-5' y='-5' class='background' width='130' height='180' rx='5' ry='5'/>`;
 
 						for (let row = 0; row < 5; row++) {
 							for (let col = 0; col < 5; col++) {
@@ -6986,9 +6985,9 @@ let parseData = [
 								let group = `<g transform='translate(${25 * col} ${35 * row	})'>`;
 								const fill = module.cardBacks[cell.color];
 								const inner = module.textColors[cell.color];
-								group += `<rect width='20' height='30' fill='${fill}' stroke='#000' stroke-width='1.5'/>
-										<text x='10' y='12' style='font-size: 24px' fill='${inner}' stroke='#000' stroke-width='0.5' text-anchor='middle' dominant-baseline='central'>${cell.suit}</text>
-										<text x='5' y='25' style='font-size: 9px' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}' text-anchor='middle' dominant-baseline='central'>${cell.color}</text>`;
+								group += `<rect class='card' width='20' height='30' fill='${fill}'/>
+										<text x='10' y='12' class='suit' fill='${inner}'>${cell.suit}</text>
+										<text x='5' y='25' fill='${module.invert.includes(cell.color) ? '#FFF' : '#000'}'>${cell.color}</text>`;
 								svg += group + '</g>';
 							}
 						}
@@ -7391,13 +7390,7 @@ let parseData = [
 					}
 					module.push({
 						label: matches[0],
-						obj: $(`<table style='border: 2px solid black; border-collapse: collapse'><tr class='top-row'><th><span>Lion</span></th><th><span>Base<br>entitlement</span></th><th><span>Indicator<br>bonus</span></th><th><span>Serial#<br>bonus</span></th><th><span>Unborn<br>cubs</span></th><th><span>Entitlement</span></th><th><span>Portion</span></th><th><span>Lead<br>huntress</span></th><th><span>Final<br>portion</span></th></tr>${rows.join('')}</table>`)
-							.find('.top-row th:not(:first-child)').css({ width: '3em', height: '7em' }).end()
-							.find('td,th').css({ border: '1px solid #ccc', position: 'relative', padding: '.3em .5em' }).end()
-							.find('td:last-child,th:last-child').css({ background: '#fed' }).end()
-							.find('span').css({ position: 'absolute', left: '50%', top: '100%', transform: 'translate(0, -.5em) translate(0, -50%) rotate(-90deg)', transformOrigin: '0 50%' }).end()
-							.find('td').css({ textAlign: 'right' }).end()
-							.find('div.extra').css({ fontSize: '8pt' }).end()
+						obj: $(`<table><tr class='top-row'><th><span>Lion</span></th><th><span>Base<br>entitlement</span></th><th><span>Indicator<br>bonus</span></th><th><span>Serial#<br>bonus</span></th><th><span>Unborn<br>cubs</span></th><th><span>Entitlement</span></th><th><span>Portion</span></th><th><span>Lead<br>huntress</span></th><th><span>Final<br>portion</span></th></tr>${rows.join('')}</table>`).addClass('lions-share')
 					});
 					return true;
 				}
@@ -7524,7 +7517,7 @@ let parseData = [
 					const tiles = matches[2].trim().split(' ');
 					let div = $('<div>');
 					tiles.forEach(tile => {
-						div.append(`<img src='../HTML/img/Mahjong/${fileNames[tile]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+						div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tile]}.png' />`);
 					});
 					module.push({ label: matches[1], obj: div });
 				}
@@ -7544,19 +7537,19 @@ let parseData = [
 						"1s": "Bamboo 1", "2s": "Bamboo 2", "3s": "Bamboo 3", "4s": "Bamboo 4", "5s": "Bamboo 5", "6s": "Bamboo 6", "7s": "Bamboo 7", "8s": "Bamboo 8", "9s": "Bamboo 9",
 						"1z": "East", "2z": "South", "3z": "West", "4z": "North", "5z": "White Dragon", "6z": "Green Dragon", "7z": "Red Dragon"
 					}
-					let div = $(`<div style='display: flex;'>`);
+					let div = $(`<div class='mahjong-quiz-set'>`);
 					const tileStrings = matches[2].replace(/\s/g, "").split("|").filter(x => x != "");
 					for (var i = 0; i < tileStrings.length; i++) {
 						const tiles = tileStrings[i].match(/.{2}/g);
 						if (i == 0) {
-							div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
-							div.append(`<span style='padding-top: 4px;'>-><span>`);
+							div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png'/>`);
+							div.append(`<span class='arrow'>-><span>`);
 						} else {
 							for (var j = 0; j < tiles.length; j++) {
 								if (j == tiles.length - 1) {
-									div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%; margin-right: 15px;' />`);
+									div.append(`<img class='mahjong-quiz-tile break' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'/>`);
 								} else {
-									div.append(`<img src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png' height='30' style='border: 1px solid; border-radius: 15%;' />`);
+									div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'/>`);
 								}
 							}
 						}
@@ -7577,25 +7570,25 @@ let parseData = [
 					module.obj = $('<div>').append($(`<button class='autopress'>Show</button>`).click(function () {
 						var data = $(this).data('data'), div = $(this).parent(), i, sel;
 
-						var imgDiv = $(`<div style='position: relative; width: 420px; height: 420px'>`).appendTo(div);
+						var imgDiv = $(`<div>`).addClass('marble-tumble-wheels-diagram').appendTo(div);
 						var imgs = [];
 						for (i = 0; i < 5; i++)
-							imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' style='position: absolute; left: 0; top: 0; right: 0; bottom: 0' />`).appendTo(imgDiv));
+							imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' />`).addClass('cylinder').appendTo(imgDiv));
 						function setRotations(rot) {
 							for (var i = 0; i < 5; i++)
 								imgs[i].css('transform', `rotate(${rot[i] * 36 - 90}deg)`);
 						}
 
-						var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`)
+						var marbleOuter = $(`<div style='position: absolute; left: 0; top: 0; right: 0; bottom: 0'>`).addClass('marble-container')
 							.appendTo(imgDiv);
-						var marbleInner = $(`<div style='position: absolute; width: 20px; height: 20px; border: 2px solid black; border-radius: 100%; background: #def; left: 210px; transform: translate(-50%, -50%)'>`)
+						var marbleInner = $(`<div style='transform: translate(-50%, -50%)'>`).addClass('marble')
 							.appendTo(marbleOuter);
 						function setMarble(rot, marble) {
 							marbleInner.css('top', marble === 0 ? '217px' : `${210 - ((marble + .5) * 420 / 12) - 10}px`);
 							marbleOuter.css('transform', marble === 0 || marble === 5 ? 'rotate(0deg)' : `rotate(${rot[marble] * 36}deg)`);
 						}
 
-						var controlsDiv = $(`<div style='margin-top: 30px'>`).appendTo(div);
+						var controlsDiv = $(`<div>`).addClass('marble-tumble-controls').appendTo(div);
 						var bgNoHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23fff" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
 						var bgOnHover = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23bef" stroke-width="2" stroke="%23000" d="M 0,30 50,30 50,5 100,50 50,90 50,70 0,70 z"/></svg>')`;
 
@@ -7615,8 +7608,8 @@ let parseData = [
 
 							if ('clicked' in data.states[i]) {
 								$(`
-									<div style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; margin: .5em 0'>
-										<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)'>${data.states[i].clicked}</div>
+									<div class='arrow'>
+										<div class='number'>${data.states[i].clicked}</div>
 									</div>
 								`)
 									.appendTo(controlsDiv)
@@ -7652,7 +7645,7 @@ let parseData = [
 
 							data.states[i].marble = curMarble;
 
-							var nextDiv = $(`<div class='nx' style='display: inline-block; vertical-align: bottom; width: 50px; height: 50px; position: relative; border: 1px solid black; margin: .5em .25em'></div>`)
+							var nextDiv = $(`<div class='next-btn'></div>`)
 								.appendTo(controlsDiv)
 								.mouseover(function (ix) { return function () { $(this).css('background', sel === ix ? '#fef' : '#bef'); }; }(i))
 								.mouseout(function (ix) { return function () { $(this).css('background', sel === ix ? '#feb' : '#fff'); }; }(i))
@@ -7668,9 +7661,9 @@ let parseData = [
 								}(i, data.states[i].rotations, curMarble));
 							nextDivs.push(nextDiv);
 							if (data.states[i].solved || 'trap' in data.states[i])
-								nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #${data.states[i].solved ? '080' : '800'}; font-size: 24pt; font-weight: bold'>${data.states[i].solved ? '✓' : '✗'}</div>`));
+								nextDiv.append($(`<div class='solve-or-strike' style='color: #${data.states[i].solved ? '080' : '800'}'>${data.states[i].solved ? '✓' : '✗'}</div>`));
 							else if ('gap' in data.states[i])
-								nextDiv.append($(`<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #48f; font-size: 24pt'>⮋</div>`));
+								nextDiv.append($(`<div class='fall-event'>⮋</div>`));
 							if (data.states[i].solved)
 								break;
 						}
@@ -7678,12 +7671,12 @@ let parseData = [
 						$(this).remove();
 						nextDivs[0].click();
 						$(`<p>Click on the boxes and arrows to see the states and transitions.</p>`).appendTo(div);
-						$(`<ul>
+						$(`<ul class='marble-tumble-legend'>
 							<li>A numbered arrow indicates the last digit on the timer when the module was clicked.</li>
-							<li><span style='color: #48f; font-size: 24pt'>⮋</span> means the marble rolled into a lower level.</li>
-							<li><span style='color: #800; font-size: 24pt; font-weight: bold'>✗</span> in a box means the marble fell into a trap and there was a strike.</li>
-							<li><span style='color: #000; font-size: 14pt'>✗</span> in an arrow means that the outer cylinder’s rotation was adjusted after a strike.</li>
-							<li><span style='color: #080; font-size: 24pt; font-weight: bold'>✓</span> in a box means the module was solved at this point.</li>
+							<li><span class='fall-event'>⮋</span> means the marble rolled into a lower level.</li>
+							<li><span class='strike'>✗</span> in a box means the marble fell into a trap and there was a strike.</li>
+							<li><span class='reset'>✗</span> in an arrow means that the outer cylinder’s rotation was adjusted after a strike.</li>
+							<li><span class='solve'>✓</span> in a box means the module was solved at this point.</li>
 						</ul>`).appendTo(div);
 						return false;
 					}));
@@ -7773,9 +7766,8 @@ let parseData = [
 					if (module.LastInput == matches.input) return true;
 					module.LastInput = matches.input;
 
-					module.push({ label: matches.input, obj: module.Table = $("<table>").css("border-collapse", "collapse"), expandable: true });
+					module.push({ label: matches.input, obj: module.Table = $("<table>").addClass("mastermind-cruel"), expandable: true });
 					const row = $("<tr><th>#<th>Color<th>#<th>Color<th>A<th>B<th>C</tr>");
-					row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
 					row.appendTo(module.Table);
 					return true;
 				}
@@ -7805,10 +7797,6 @@ let parseData = [
 					for (let i = 1; i <= 3; i++) {
 						$("<td>").text(module.LastResult[i]).appendTo(row);
 					}
-
-					row.children().css({ border: "1px solid black", "text-align": "center", padding: "3px 6px" });
-					row.children().eq(0).css("text-align", "right");
-					row.children().eq(2).css("text-align", "right");
 					return true;
 				}
 			},
@@ -7827,14 +7815,14 @@ let parseData = [
 				handler: function (matches, module) {
 					var board = readTaggedLines(8).join('\n');
 					var row = board.replace(/\r/g, '').split('\n');
-					var svg = $('<svg viewBox="0 0 713 949" width="30%"></svg>');
+					var svg = $('<svg viewBox="0 0 713 949">').addClass('masyu');
 					for (let i = 0; i < 7; i++) {
 						const xPosition = i * 118;
-						$SVG(`<path style="fill:#000000" d="M ${xPosition}, 0 h 5 v 949 h -5" z/>`).appendTo(svg);
+						$SVG(`<path class='grid-line' d="M ${xPosition}, 0 h 5 v 949 h -5" z/>`).appendTo(svg);
 					}
 					for (let i = 0; i < 9; i++) {
 						const yPosition = i * 118;
-						$SVG(`<path style="fill:#000000" d="M 0, ${yPosition} v 5 h 713 v -5" z/>`).appendTo(svg);
+						$SVG(`<path class='grid-line' d="M 0, ${yPosition} v 5 h 713 v -5" z/>`).appendTo(svg);
 					}
 					for (let i = 0; i < row.length; i++) {
 						for (let j = 0; j < row[i].length; j++) {
@@ -7842,8 +7830,8 @@ let parseData = [
 							const yPosition = i * 118 + 103.5;
 							if (row[i][j] != '0') {
 								if ((row[i][j] == '1') ^ (matches[1] == 'black'))
-									$SVG(`<path style="fill:none;stroke:#000000;stroke-width:6.9000001" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
-								else $SVG(`<path style="fill:#000000" d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+									$SVG(`<path class='unfilled' d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
+								else $SVG(`<path class='filled' d="M ${xPosition},${yPosition} c -23.5,0 -42.5,-19 -42.5,-42.5 0,-23.5 19,-42.5 42.5,-42.5 23.5,0 42.5,19 42.5,42.5 0,23.5 -19,42.5 -42.5,42.5 z"/>`).appendTo(svg);
 							}
 						}
 					}
@@ -7867,7 +7855,7 @@ let parseData = [
 								const xPosition = (i % 5) * 118 + 61.5;
 								const yPosition = Math.floor(i / 5) * 118 + 64;
 								if (matches[1][i] == '1')
-									$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} v -5 h 118 v 5 z"/>`).appendTo(svg);
+									$SVG(`<path class='solution-line' d="M ${xPosition},${yPosition} v -5 h 118 v 5 z"/>`).appendTo(svg);
 							}
 							module.MasyuSvg[1].obj = svg;
 							break;
@@ -7876,7 +7864,7 @@ let parseData = [
 								const xPosition = Math.floor(i / 7) * 118 + 59;
 								const yPosition = (i % 7) * 118 + 61.5;
 								if (matches[1][i] == '1')
-									$SVG(`<path style="fill:#000000;stroke:#000000;stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
+									$SVG(`<path class='solution-line' d="M ${xPosition},${yPosition} h 5 v 118 h -5 z"/>`).appendTo(svg);
 							}
 							var div = $('<div>').append(svg);
 							module.MasyuSvg[1] = { label: "Solution:", obj: div, expanded: true };
@@ -7930,12 +7918,12 @@ let parseData = [
 						}
 					}
 
-                    let svg = `<svg width="630" height="320" viewbox="-30 135 600 100">`;
+                    let svg = `<svg class='matrix-mapping-displayed' width="630" height="320" viewbox="-30 135 600 100">`;
 
 					for(let i = 0; i < puzzleData.length; i++) {
 						for(let j = 0; j < puzzleData[i].length; j++) {
 							for(let k = 0; k < puzzleData[i][j].length; k++) {
-								svg += `<rect transform="rotate(45)" x="${300 * i + 95 * (1 - i) + 30 * k + 37}" y="${30 * j + 37 - 285 * i - 80 * (1 - i)}" width="30" height="30" style="fill:${module.convertedModuleColours[i][parseInt(puzzleData[i][j][k]) - 1]};stroke:#202020;stroke-width:6" />`
+								svg += `<rect transform="rotate(45)" x="${300 * i + 95 * (1 - i) + 30 * k + 37}" y="${30 * j + 37 - 285 * i - 80 * (1 - i)}" width="30" height="30" style="fill:${module.convertedModuleColours[i][parseInt(puzzleData[i][j][k]) - 1]}" />`
 							}
 						}
 					}
@@ -7949,13 +7937,13 @@ let parseData = [
 					let solutionData = matches[1].split("/");
 					let solutionColours = ["rgb(191, 191, 191)", "rgb(63, 63, 63)", "rgb(176, 11, 30)"];
 
-					let svg = `<svg width="600" height="300" viewbox="0 0 200 200">`;
+					let svg = `<svg class='matrix-mapping-solution' viewbox="0 0 200 200">`;
 
 					for(let i = 0; i < solutionData.length + 1; i++) {
 						if(i == 0) {
-							let rect = `<rect x="30" y="30" width="27" height="27" style="fill:#222;stroke:#202020;stroke-width:4"/>`;
+							let rect = `<rect class='tile' x="30" y="30" width="27" height="27"/>`;
 							for(let j = 0; j < solutionData.length; j++) {
-								rect += `<rect x="${60 + 30 * j}" y="30" width="27" height="27" style="fill:${module.convertedModuleColours[1][j]};stroke:#202020;stroke-width:4" />`
+								rect += `<rect class='tile' x="${60 + 30 * j}" y="30" width="27" height="27" style="fill:${module.convertedModuleColours[1][j]}" />`
 							}
 							svg += rect
 						} else {
@@ -7963,12 +7951,12 @@ let parseData = [
 							for(let j = 0; j < solutionData.length; j++) {
 								for(let k = 0; k < solutionData.length + 1; k++) {
 									if(k == 0) {
-										rect += `<rect x="30" y="${60 + 30 * j}" width="27" height="27" style="fill:${module.convertedModuleColours[0][j]};stroke:#222;stroke-width:4" />`;
+										rect += `<rect class='tile' x="30" y="${60 + 30 * j}" width="27" height="27" style="fill:${module.convertedModuleColours[0][j]}" />`;
 									} else {
-										rect += `<rect x="${30 + 30 * k}" y="${30 + 30 * (j + 1)}" width="27" height="27" style="fill:${solutionColours["10-".indexOf(solutionData[j][k - 1])]};stroke:#202020;stroke-width:4" />`
+										rect += `<rect class='tile' x="${30 + 30 * k}" y="${30 + 30 * (j + 1)}" width="27" height="27" style="fill:${solutionColours["10-".indexOf(solutionData[j][k - 1])]}" />`
 									}
 									if(solutionData[j][k - 1] == "-") {
-										rect += `<path fill="none" stroke="#222" stroke-width="4" d="M ${30 + 30 * k},${30 + 30 * (j + 1)} ${30 + 30 * k + 27},${30 + 30 * (j + 1) + 27} M ${30 + 30 * k + 27},${30 + 30 * (j + 1)} ${30 + 30 * k},${30 + 30 * (j + 1) + 27}" />`
+										rect += `<path class='tile empty' d="M ${30 + 30 * k},${30 + 30 * (j + 1)} ${30 + 30 * k + 27},${30 + 30 * (j + 1) + 27} M ${30 + 30 * k + 27},${30 + 30 * (j + 1)} ${30 + 30 * k},${30 + 30 * (j + 1) + 27}" />`
 									}
 								}
 							}
@@ -7995,7 +7983,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: "Node mapping:",
-						obj: $("<img src='img/Maze³/mazeLog.png' width='200' style='margin: 1em; display: block;'/>")
+						obj: $("<img class='maze-3-diagram' src='img/Maze³/mazeLog.png'/>")
 					});
 					return true;
 				}
@@ -8078,8 +8066,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Solved = true;
 					module.JSON["solved"] = module.Solved;
-					const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-					module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
+					module[0] = { label: `<a class='mazematics-interactive-link' href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
 					module.push(matches.input);
 					return true;
 				}
@@ -8166,8 +8153,7 @@ let parseData = [
 							solved: module.Solved,
 							restricted: module.Restricted
 						}
-						const style = "font-size:large;font-style:italic;border:3px dashed gold;padding:5px;margin:100px;border-radius:10px";
-						module[0] = { label: `<a style="${style}" href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
+						module[0] = { label: `<a class='mazematics-interactive-link' href='../HTML/Mazematics interactive (MásQuéÉlite).html#${JSON.stringify(module.JSON)}'>View the solution interactively</a>`, nobullet: true };
 						module[module.length - 1][1] = module.Section;
 					} else {
 						if (!module.Restricted && matched.input.includes("Restricted"))
@@ -8189,7 +8175,7 @@ let parseData = [
 			{
 				regex: /Current sequence is:/,
 				handler: function (matches, module) {
-					var table = $("<table>").addClass("standard");
+					var table = $("<table>").addClass("maze-scrambler");
 					var row = $("<tr>");
 					for (const header of ["Selected", "New Pos", "Red", "Blue", "Yellow", "Green"]) {
 						$("<th>").text(header).appendTo(row);
@@ -8275,14 +8261,13 @@ let parseData = [
 				handler: function(_, module){
 					let grid = readTaggedLines(18).map(l => l.split(' '));
 
-					let svg = `<svg viewbox='-5 -5 670 670' style='display: block; width: 4in'>`;
+					let svg = `<svg class='mazeswapper' viewbox='-5 -5 670 670'>`;
 
 					for (let row = 0; row < 6; row++){
 						for (let col = 0; col < 6; col++) {
 							const cell = 6 * row + col;
-							const fill = module.source == cell ? '#507ADC' : '#FFF';
 							let group = `<g transform='translate(${110 * col}, ${110 * row})'>`;
-							group += `<rect x='0' y='0' width='100' height='100' fill='${fill}' stroke='#000' stroke-width='3'/>`;
+							group += `<rect class='tile ${module.source == cell ? "source" : ""}' x='0' y='0' width='100' height='100' fill='${fill}' stroke='#000' stroke-width='3'/>`;
 
 							let shape = null;
 							if (module.sphere == cell)
@@ -8298,34 +8283,34 @@ let parseData = [
 							let corners = [ false, false, false, false ];
 
 							if (grid[3 * row + 0] [3 * col + 1] == '■') {
-								group += `<rect x='10' y='10' width='80' height='15'/>`; //up;
+								group += `<rect class='wall' x='10' y='10' width='80' height='15'/>`; //up;
 								corners[0] = true;
 								corners[1] = true;
 							}
 							if (grid[3 * row + 1][3 * col] == '■') {
-								group += `<rect x='10' y='10' width='15' height='80'/>`; //Right
+								group += `<rect class='wall' x='10' y='10' width='15' height='80'/>`; //Right
 								corners[1] = true;
 								corners[3] = true;
 							}
 							if (grid[3 * row + 1][3 * col + 2] == '■') {
-								group += `<rect x='75' y='10' width='15' height='80'/>`; //Left
+								group += `<rect class='wall' x='75' y='10' width='15' height='80'/>`; //Left
 								corners[0] = true;
 								corners[2] = true;
 							}
 							if (grid[3 * row + 2][3 * col + 1] == '■') {
-								group += `<rect x='10' y='75' width='80' height='15'/>`; //Down
+								group += `<rect class='wall' x='10' y='75' width='80' height='15'/>`; //Down
 								corners[2] = true;
 								corners[3] = true;
 							}
 
 							if (!corners[0])
-								group += `<rect x='75' y='10' width='15' height='15' fill='#000'/>`;
+								group += `<rect class='wall' x='75' y='10' width='15' height='15'/>`;
 							if (!corners[1])
-								group += `<rect x='10' y='10' width='15' height='15' fill='#000'/>`;
+								group += `<rect class='wall' x='10' y='10' width='15' height='15'/>`;
 							if (!corners[2])
-								group += `<rect x='75' y='75' width='15' height='15' fill='#000'/>`;
+								group += `<rect class='wall' x='75' y='75' width='15' height='15'/>`;
 							if (!corners[3])
-								group += `<rect x='10' y='75' width='15' height='15' fill='#000'/>`;
+								group += `<rect class='wall' x='10' y='75' width='15' height='15'/>`;
 							group += '</g>';
 							svg += group;
 						}
@@ -8379,7 +8364,7 @@ let parseData = [
 				handler: function (matches, module) {
 					var span = $('<span>');
 					var text = matches.input.substring(1);
-					var str1 = "<span style=\"font-family: 'kra'; font-size: 28pt\">";
+					var str1 = "<span class='memorable-buttons-font'>";
 					var letter = matches.input[0];
 					var letters = "ABCDEFGJKLPQ".split("");
 					for (let i = 1; i <= matches.length; i++) {
@@ -8409,19 +8394,18 @@ let parseData = [
 				regex: /The (suit|rank) table used is:/,
 				handler: function (matches, module) {
 					const grid = readTaggedLines(4).map(l => l.split(' '));
-					const tdStyle = 'width: 0.9cm; height: 0.9cm; text-align: center; vertical-align: middle; border: 2px solid black; padding: 0;';
 
-					let table = '<table>';
+					let table = '<table class="memory-poker-suit-rank">';
 					for (let row = 0; row < 4; row++) {
 						table += '<tr>';
 						for (let col = 0; col < 4; col++) {
 							let cell = grid[row][col];
 							if (matches[1] == 'suit') {
 								if (cell == '♦' || cell == '♥')
-									table += `<td style='${tdStyle} font-size: 		24px'><span style='color: red'>${cell}</span></td>`;
-								else table += `<td style='${tdStyle} font-size: 	24px'>${cell}</td>`;
+									table += `<td class='suit red'>${cell}</td>`;
+								else table += `<td class='suit'>${cell}</td>`;
 							}
-							else table += `<td style='${tdStyle}'>${cell}</td>`;
+							else table += `<td>${cell}</td>`;
 						}
 						table += '</tr>';
 					}
@@ -8433,21 +8417,21 @@ let parseData = [
 				regex: /The face-up cards are:|The starting grid is:/,
 				handler: function (match, module) {
 					const grid = readTaggedLines(4).map(l => l.split(' '));
-					let svg = `<svg viewbox='-5 -5 101 101' style='width: 2.5in; display: block;'>
-							   <rect x='-5' y='-5' width='101' height='101' rx='5' ry='5' fill='#084'/>`;
+					let svg = `<svg class='memory-poker-cards' viewbox='-5 -5 101 101'>
+							   <rect class='background' x='-5' y='-5' width='101' height='101' rx='5' ry='5'/>`;
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
 							let g = `<g transform='translate(${24 * col}, ${24 * row})'>`;
-							g += '<rect width=20 height=20 fill=#FFF rx=3 ry=3/>';
+							g += '<rect class="card-face" width=20 height=20 rx="3" ry="3"/>';
 
 							const cell = grid[row][col];
 							if (cell == '..'){
-								g += '<rect x=1 y=1 width=18 height=18 fill=#CCC rx=2 ry=2/>'
+								g += '<rect class="card-back" x=1 y=1 width=18 height=18 rx="2" ry="2"/>'
 							}
 							else {
-								const color = cell[1] == '♥' || cell[1] == '♦' ? '#F00' : '#000';
-								g += `<text style='font-size: 12px' x='5' y='5' text-anchor='middle' dominant-baseline='central'>${cell[0]}</text>
-									  <text style='font-size: 16px' x='14' y='13' text-anchor='middle' dominant-baseline='central' fill='${color}'>${cell[1]}</text>`;
+								const isRed = cell[1] == '♥' || cell[1] == '♦';
+								g += `<text class='rank' x='5' y='5'>${cell[0]}</text>
+									  <text class='suit ${isRed ? 'red' : ''}' x='14' y='13'>${cell[1]}</text>`;
 							}
 							svg += g + '</g>';
 						}
@@ -8459,7 +8443,7 @@ let parseData = [
 			{
 				regex: /.+/,
 				handler: function (match, module) {
-					module.push({ obj:match[0].replace(/([♦♥])/, "<span style='color: red'>$1</span>") });
+					module.push({ obj:match[0].replace(/([♦♥])/, "<span class='memory-poker-red-suit'>$1</span>") });
 				}
 			}
 		]
@@ -8530,11 +8514,11 @@ let parseData = [
 						module.prev = { type: "gather", material: matches[2], count: module.prev.count + cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "gather") {
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "gather", material: matches[2], count: cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "craft") {
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "gather", material: matches[2], count: cparseInt(matches[1]) };
 					}
 
@@ -8558,11 +8542,11 @@ let parseData = [
 						module.prev = { type: "craft", material: matches[2], count: module.prev.count + cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "craft") {
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "gather") {
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
 					}
 					return true;
@@ -8583,15 +8567,15 @@ let parseData = [
 					}
 					else if (module.prev.type === "fight") {
 						console.error("Minecraft Survival: fight started before it ended!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
 						module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
 					}
 					else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
 					}
 					else if (module.prev.type === "gather") {
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = { type: "fight", enemy: matches[1], health: cparseInt(matches[2]), damage: cparseInt(matches[3]) };
 					}
 
@@ -8610,21 +8594,21 @@ let parseData = [
 
 					if (module.prev == null) {
 						console.error("Minecraft Survival: fight continued before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
 					}
 					else if (module.prev.type === "fight") {
 						//Continue
 					}
 					else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
 						console.error("Minecraft Survival: fight continued before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 					else if (module.prev.type === "gather") {
 						console.error("Minecraft Survival: fight continued before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 
@@ -8643,22 +8627,22 @@ let parseData = [
 
 					if (module.prev == null) {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
 					}
 					else if (module.prev.type === "fight") {
-						module.push($(`<span style="background-color: #ffcccc">Combat: ${module.prev.enemy}: ${cparseInt(matches[1])}</span>`));
+						module.push($(`<span class='mc-survival combat'>Combat: ${module.prev.enemy}: ${cparseInt(matches[1])}</span>`));
 						module.prev = null;
 					}
 					else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival errpr'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 					else if (module.prev.type === "gather") {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 
@@ -8668,7 +8652,7 @@ let parseData = [
 			{
 				regex: /Dragon defeated. Go click on the egg!$/,
 				handler: function (matches, module) {
-					module.push($(`<span style="background-color: #ffcccc">Combat: Dragon: 1</span>`));
+					module.push($(`<span class='mc-survival combat'>Combat: Dragon: 1</span>`));
 					module.prev = null;
 
 					return true;
@@ -8679,22 +8663,22 @@ let parseData = [
 				handler: function (matches, module) {
 					if (module.prev == null) {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
 					}
 					else if (module.prev.type === "fight") {
-						module.push($(`<span style="background-color: #ffcccc">Combat: ${module.prev.enemy}: Death</span>`));
+						module.push($(`<span class='mc-survival combat'>Combat: ${module.prev.enemy}: Death</span>`));
 						module.prev = null;
 					}
 					else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 					else if (module.prev.type === "gather") {
 						console.error("Minecraft Survival: fight ended before it started!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 						module.prev = null;
 					}
 				}
@@ -8712,32 +8696,32 @@ let parseData = [
 						// Do nothing
 					}
 					else if (module.prev.type === "gather") {
-						module.push($(`<span style="background-color: #ccffcc">Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
 					}
 					else if (module.prev.type === "craft") {
-						module.push($(`<span style="background-color: #ccccff">Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
+						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
 					} else if (module.prev.type === "fight") {
 						console.error("Minecraft Survival: fight never ended!");
-						module.push($(`<span style="background-color:#ff0000">Error in LFA!</span>`));
+						module.push($(`<span class='mc-survival error'>Error in LFA!</span>`));
 					}
 					module.prev = null;
 
-					let color = "#ffffff";
+					let msgType = "";
 
 					if (/[Ss]trike/.test(matches[0])) {
-						color = "#993333";
+						msgType = 'strike';
 					}
 					else if (/[Uu]nlocked/.test(matches[0])) {
-						color = "#eedd66";
+						msgType = 'unlock';
 					}
 					else if (/Module solved/.test(matches[0])) {
-						color = "#ffdd11";
+						msgType = 'solve';
 					}
 					else if (/Error in LFA!/.test(matches[0])) {
-						color = "#ff0000";
+						msgType = 'error';
 					}
 
-					module.push($(`<span style="background-color: ${color}">${matches[0]}</span>`));
+					module.push($(`<span class="mc-survival ${msgType}">${matches[0]}</span>`));
 					return true;
 				}
 			}
@@ -8752,7 +8736,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Desired Bomb is "))
-						.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
+						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'/>`).addClass('mineseeker-bomb'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -8763,7 +8747,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Bomb shown is "))
-						.append($("<img src='../HTML/img/Mineseeker/" + matches[1] + ".png' width='40' />").css({ "vertical-align": "baseline;" }))
+						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'/>`).addClass('mineseeker-bomb'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -8802,24 +8786,24 @@ let parseData = [
 					const mines = lines.map(row => row.map(cell => cell[0] == '*'));
 					const minePath = 'm49.55 5a4.95 4.95 90 00-4.8 4.95l0 10.05a30 30 90 00-12.6 5.1l-7.05-7.05a4.95 4.95 90 00-7.05 7.05l7.05 7.2a30 30 90 00-5.1 12.45l-10.05 0a4.95 4.95 90 000 10.05l10.05 0a30 30 90 005.1 12.45l-7.05 7.05a4.95 4.95 90 007.05 7.05l7.2-7.05a30 30 90 0012.45 5.25l0 9.9a4.95 4.95 90 0010.05 0l0-9.9a30 30 90 0012.45-5.25l7.05 7.05a4.95 4.95 90 007.05-7.05l-7.05-7.05a30 30 90 005.25-12.45l9.9 0a4.95 4.95 90 000-10.05l-9.9 0a30 30 90 00-5.25-12.45l7.05-7.2a4.95 4.95 90 00-7.05-7.05l-7.05 7.05a30 30 90 00-12.45-5.1l0-10.05a4.95 4.95 90 00-5.25-4.95z';
 					const arrowPath = 'M35 0H0L50 40 100 0h-35l-15 12z';
-					let svg = `<svg viewbox='-5 -100 770 770' style='display: block; width: 5in'>`;
+					let svg = `<svg class='mineswapper' viewbox='-5 -100 770 770'>`;
 					for (let y = 0; y < 6; y++) {
 						for (let x = 0; x < 6; x++) {
 							let group = `<g transform='translate(${110 * x}, ${110 * y})'>`;
-							group += `<rect x='0' y='0' width='100' height='100' fill='#FFF' stroke='#000' stroke-width='3'/>`;
+							group += `<rect class='tile' x='0' y='0' width='100' height='100'/>`;
 							if (mines[y][x])
-								group += `<path d='${minePath}' fill='#AAA'/>`;
-							group += `<text style='font-size: 50' x='50' y='50' text-anchor='middle' dominant-baseline='central'>${nums[y][x]}</text>`;
+								group += `<path class='mine' d='${minePath}'/>`;
+							group += `<text x='50' y='50'>${nums[y][x]}</text>`;
 							svg += group + '</g>';
 						}
 
 						let colGroup = `<g transform='translate(${110 * y}, -50)'>
-										<path d='${arrowPath}' fill='#555'/>
-										<text style='font-size: 50' x='50' y='-20' text-anchor='middle' dominant-baseline='central'>${module.cols[y]}</text>
+										<path class='arrow' d='${arrowPath}'/>
+										<text class='edge-number' x='50' y='-20'>${module.cols[y]}</text>
 										</g>`;
 						let rowGroup = `<g transform='translate(700, ${110 * y})'>
-										<path d='${arrowPath}' fill='#555' transform='rotate(90)'/>
-										<text style='font-size: 50' x='20' y='50'  text-anchor='middle' dominant-baseline='central'>${module.rows[y]}</text>
+										<path class='arrow' d='${arrowPath}' transform='rotate(90)'/>
+										<text class='edge-number' x='20' y='50'>${module.rows[y]}</text>
 										</g>`
 
 						svg += colGroup + rowGroup;
@@ -8957,7 +8941,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Shown icon is "))
-						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").css({ "vertical-align": "baseline;" }))
+						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					if (!module.FirstPass) {
 						module.FirstPass = true;
@@ -8988,7 +8972,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Expected icon is "))
-						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").css({ "vertical-align": "baseline;" }))
+						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -8999,7 +8983,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Wall detected to the " + matches[1] + " from "))
-						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").css({ "vertical-align": "baseline;" }))
+						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					module.Info.push(span);
 					module.Moves = false;
@@ -9011,9 +8995,9 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Moved " + matches[1] + " from icon "))
-						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").css({ "vertical-align": "baseline;" }))
+						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").addClass('module-maze-icon'))
 						.append($('<span>').text(" to "))
-						.append($("<img src='../Icons/" + matches[3] + ".png' alt='" + matches[3] + "' title='" + matches[3] + "' />").css({ "vertical-align": "baseline;" }))
+						.append($("<img src='../Icons/" + matches[3] + ".png' alt='" + matches[3] + "' title='" + matches[3] + "' />").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 
 					if (!module.Moves) {
@@ -9206,14 +9190,9 @@ let parseData = [
 						module.push(module.Group = [matches[1], module.GroupLines = []]);
 					}
 
-					var container = $("<div>").css("position", "relative");
-					$("<img>").css({ width: "210px", height: "210px" }).attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
-					var marker = $("<div>").css({
-						width: "10px",
-						height: "10px",
-						position: "absolute",
-						"border-radius": "50%"
-					});
+					var container = $("<div>").addClass('morse-a-maze');
+					$("<img>").addClass('maze').attr("src", "../HTML/img/Morse-A-Maze/maze" + matches[5] + ".svg").appendTo(container);
+					var marker = $("<div>").addClass('marker');
 
 					marker
 						.clone()
@@ -9354,7 +9333,7 @@ let parseData = [
 			{
 				regex: /Generated Maze is/,
 				handler: function (matches, module) {
-					var table = $('<table>').css({ 'border-collapse': "collapse", "width": "10cm", "display":"block" });
+					var table = $('<table>').addClass('mystic-maze');
 					var maze = readLines(17);
 					for (var i = 0; i < 8; i++) {
 						var row = $('<tr>').appendTo(table);
@@ -9364,11 +9343,11 @@ let parseData = [
 							width += maze[2 * i + 1][2 * j + 2] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 2][2 * j + 1] !== "■" ? " 0px" : " 5px";
 							width += maze[2 * i + 1][2 * j] !== "■" ? " 0px" : " 5px";
-							var cell = $('<td>').css({ "border": "solid black", "border-width": width, "width": "1.25cm", "padding-bottom": "12.5%" }).appendTo(row);
+							var cell = $('<td>').css({ "border-width": width }).appendTo(row);
 							var cellValue = /[IKYE]/.exec(maze[2 * i + 1][2 * j + 1]);
 							if (cellValue !== null) {
 								cell.css("padding-bottom", "0%");
-								$('<div>').text(cellValue.input).css({ "margin": "auto", "overflow": "hidden", "text-align": "center", "font-size": "18pt", "height": "12.5%" }).appendTo(cell);
+								$('<div>').addClass('text').text(cellValue.input).appendTo(cell);
 							}
 						}
 					}
