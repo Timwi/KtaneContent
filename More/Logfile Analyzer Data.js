@@ -834,8 +834,27 @@ let parseData = [
 			{
 				regex: /Light states generated are:/,
 				handler: function (matches, module) {
-					var board = readMultiple(4);
-					module.push({ label: matches.input, obj: pre(board) });
+					const colourDict = { 0: "blue", 1: "yellow", " ": "black" };
+					let board = readMultiple(4).split("\n");
+					let boardSvg = $("<svg class='fifteen-mystic-lights' viewbox='0 0 400 400'></svg>");
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							$SVG("<rect>").addClass(colourDict[board[row][col]])
+							.attr("x", col * 100).attr("y", row * 100)
+							.attr("width", 101.5).attr("height", 101.5)
+							.appendTo(boardSvg);
+						}
+					}		
+					module.push({ label: matches.input, obj: boardSvg });
+					return true;
+				}
+			},
+			{
+				regex: /The following moves used on the given board were ((?: ?[A-D][1-4])+)/,
+				handler: function(matches, module) {
+					preText = matches[1].replaceAll(/\s/, " > ");
+					module.push({ label: "The following moves were used on the board:", obj: pre(preText) });
+					module.push({ nobullet: true, obj: $("</br>") });
 					return true;
 				}
 			},
