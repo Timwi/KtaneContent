@@ -15020,6 +15020,54 @@ let parseData = [
 		loggingTag: "NeedyVentComponent",
 	},
 	{
+		displayName: "Visual Impairment",
+		moduleID: "visual_impairment",
+		loggingTag: "Visual Impairment",
+		matches: [
+			{
+				regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
+				handler: function (matches, module) {
+					module.push({
+						obj: $(`<table>
+							<tr><th>Original</th><th>On the module</th></tr>
+							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
+								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
+						</table>`)
+					});
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},	
+	{
+		displayName: 'Voltorb Flip',
+		moduleID: 'VoltorbFlip',
+		loggingTag: 'Voltorb Flip',
+		matches: [
+			{
+				regex: /The grid on the module is as follows:/,
+				handler: function (matches, module) {
+					let linesRx = readLines(5).map(l => l.match(/([1-3*]) ([1-3*]) ([1-3*]) ([1-3*]) ([1-3*])/));
+					let table = `<table>`;
+					for (let row = 0; row < 5; row++){
+						table += `<tr>`;
+						for (let col = 0; col < 5; col++){
+							let cell = linesRx[row][col + 1];
+							if (cell == '*')
+								cell = 'voltorb';
+							table += `<td style="padding: 0"><img style="width: 1.5cm" src='img/Voltorb Flip/${cell}.png'></td>`;
+						}
+						table += `</td>`;
+					}
+					table += `</table>`;
+					module.push({label:matches.input, obj:table});
+				}
+			}
+		]
+	},
+	{
 		moduleID: 'VoronoiMazeModule',
 		loggingTag: 'Voronoi Maze',
 		matches: [
@@ -15133,6 +15181,171 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Walking Cube",
+		moduleID: "WalkingCubeModule",
+		loggingTag: "Walking Cube",
+		matches: [
+			{
+				regex: /Cube starting position: ([A-D][1-4])/,
+				handler: function(matches, module) {
+					module.startingCell = matches[1];
+					return true;
+				}
+			},
+			{
+				regex: /Cube path \(including starting position\): ([A-D1-4, ]+)/,
+				handler: function(matches, module) {
+					module.visitedCells = matches[1].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /Cube rotations: ([A-Z, ]+)/,
+				handler: function (matches, module) {
+					const movementLines = { "UP": " v-100", "RIGHT": " h100", "LEFT": " h-100", "DOWN": " v100" };
+					let cubePath = matches[1].split(", ");
+					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="-10 -10 420 420">`);
+
+					$SVG("<rect>").attr("fill", "none").attr("stroke-width", "20px").attr("stroke", "#333864")
+					.attr("x", -5).attr("y", -5) 
+					.attr("width", 410).attr("height", 410)
+					.appendTo(cubePathSvg);
+
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							$SVG("<rect>").addClass(module.visitedCells.includes(`${"ABCD"[col]}${"1234"[row]}`) ? "path-square visited" : "path-square")
+							.attr("x", col * 100 + 15).attr("y", row * 100 + 15)
+							.attr("width", 70).attr("height", 70).appendTo(cubePathSvg);
+						}
+					}
+					let xStart = "ABCD".indexOf(module.startingCell[0]) * 100 + 50;
+					let yStart = "1234".indexOf(module.startingCell[1]) * 100 + 50;
+					let path = `M ${xStart} ${yStart}`;
+					for (let direction of cubePath) {
+						path += movementLines[direction];
+					}
+					$SVG(`<path class="path-line" d="${path}">`)
+					.appendTo(cubePathSvg);
+
+					module.push({ label: `The path taken by the cube (starting at ${module.startingCell}):`, obj: cubePathSvg });
+					return true;
+				}
+			},
+			{
+				regex: /Chosen net/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /[░█]+/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /(Net position in manual:) ([A-E][1-5])/,
+				handler: function (matches, module) {
+					module.netPosition = matches[2];
+					module.net = [];
+					module.solution = ["Solution:",[]];
+					return true;
+				}
+			},
+			{
+				regex: /Net colors:/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /(Initial orientation of cube)(: UP=[A-Z]+, DOWN=[A-Z]+, BACK=[A-Z]+, RIGHT=[A-Z]+, FRONT=[A-Z]+, LEFT=[A-Z]+)/,
+				handler: function(matches, module) {
+					module.push(`${matches[1]} (at ${module.startingCell})${matches[2]}`);
+				}
+			},
+			{
+				regex: /([RMWBCYOG\.]{2,5})/,
+				handler: function (matches, module) {
+					module.net.push(matches[1]);
+					return true;
+				}
+			},
+			{
+				regex: /Net symbols:/,
+				handler: function (_, module) {
+					let netPosition = module.netPosition;
+					let net = module.net;
+					readLines(net.length);
+					const colors = { 
+						R: "#F99",
+						M: "#F9F",
+						W: "#FFF",
+						B: "#9BF",
+						C: "#9FF",
+						Y: "#FF9",
+						O: "#FC9",
+						G: "#9F9",
+						A: "#BBB"
+					 };
+					let cubeNetSvg = $(`<svg class="walking-cube-net-diagram" viewbox="-10 -10 520 520">`);
+					let netColors = [
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A'],
+						['A', 'A', 'A', 'A', 'A']
+					];
+					let startingRow = "12345".indexOf(netPosition[1]);
+					let startingCol = "ABCDE".indexOf(netPosition[0]);
+					for (let row = 0; row < net.length; row++) {
+						for (let col = 0; col < net[0].length; col++) {
+							netColors[row + startingRow][col + startingCol] = (net[row][col] == '.' ? 'A' : net[row][col]);
+						}
+						
+					}
+
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+
+							$SVG("<rect>").addClass("net-square").attr("fill", colors[netColors[row][col]])
+							.attr("x", 100 * col).attr("y", 100 * row)
+							.attr("width", 100).attr("height", 100).appendTo(cubeNetSvg);
+
+							$SVG("<text>").addClass("net-text")
+							.attr("x", 100 * col + 50).attr("y", 100 * row + 68)
+							.text(netColors[row][col] == 'A' ? '' : [netColors[row][col]]).appendTo(cubeNetSvg);
+						}
+					}
+					module.push({ label: "The net as seen in the manual:", obj: cubeNetSvg });
+					return true;
+				}
+			},
+			
+			{
+				regex: /Solution (\d)\/(\d): ([A-D][1-4] is symbol [A-E][1-5]) with orientation ([NWSE])/,
+				handler: function (matches, module) {
+					const cardinalToRotation = {
+						N: "as is",
+						W: "rotated 90 degrees counter-clockwise",
+						S: "rotated 180 degrees",
+						E: "rotated 90 degrees clockwise"
+					};
+					module.solution[1].push(`${matches[3]} ${cardinalToRotation[matches[4]]}`);
+					if (matches[1] == matches[2]) {
+						module.push(module.solution);
+					}
+					return true;
+				}
+			},
+			
+			{
+				regex: /.+/
+			}
+		]
+	},
+	
+	{
 		displayName: "Wander",
 		moduleID: "WanderModule",
 		loggingTag: "Wander",
@@ -15179,267 +15392,6 @@ let parseData = [
 					module.push(matches[0]);
 					if (module.beforeMaze)
 						module.push({ label:'Maze walls, before transformation:', obj:module.genSVG(module.beforeMaze) });
-					return true;
-				}
-			},
-			{
-				regex: /.+/
-			}
-		]
-	},
-	{
-		displayName: "The Weakest Link",
-		moduleID: "TheWeakestLink",
-		loggingTag: "The Weakest Link",
-		matches: [
-			{
-				regex: /Question Phase/,
-				handler: function(_, module) {
-					module.questionPhase = [ ];
-					module.push([ "Question Phase", module.questionPhase ]);
-					return true;
-				}
-			},
-			{
-				regex: /Face Off Phase/,
-				handler: function(_, module) {
-					module.faceOffPhase = [ ];
-					module.push([ "Face Off Phase", module.faceOffPhase ]);
-					return true;
-				}
-			},
-			{
-				regex: /Money Phase/,
-				handler: function(_, module) {
-					module.moneyPhase = [ readTaggedLine() ];
-					module.push([ "Money Phase", module.moneyPhase ]);
-					return true;
-				}
-			},
-			{
-				regex: /Question: /,
-				handler: function (match, module) {
-					if (module.faceOffPhase) 
-						module.faceOffPhase.push(match.input);
-					else if (module.moneyPhase)
-						module.moneyPhase.push(match.input);
-					else if (module.questionPhase)
-						module.questionPhase.push(match.input);
-					return true;
-				}
-			},
-			{
-				regex: /Streak is now at|Resetting streak to/,
-				handler: function (match, module) {
-					if (module.moneyPhase)
-						module.moneyPhase.push(match.input);
-					return true;
-				}
-			},
-			{
-				regex: /Elimination Phase/,
-				handler: function (_, module) {
-					eliminationPhase = [ ];
-					module.push([ "Elimination Phase", eliminationPhase ]);
-					let currentLine;
-					while (!(currentLine = readTaggedLine()).match(/Eliminate them/))
-						eliminationPhase.push(currentLine);
-					linen--;	
-					return true;
-				}
-			},
-			{
-				regex: /.+/
-			}
-		]
-	},
-	{
-		moduleID: "webDesign",
-		loggingTag: "Web design",
-		matches: [
-			{
-				regex: /For reference purpose/,
-				handler: function (matches, module) {
-					var lines = "";
-					var line = readLine();
-					while (!line.match("}") && line) {
-						lines += line + "\n";
-						line = readLine();
-					}
-					lines += "}";
-
-					module.push({ label: matches.input, obj: pre(lines) });
-
-					return true;
-				}
-			},
-			{
-				regex: /.+/
-			}
-		]
-	},
-	{
-		displayName: "Visual Impairment",
-		moduleID: "visual_impairment",
-		loggingTag: "Visual Impairment",
-		matches: [
-			{
-				regex: /^Picture (\d+) was chosen at rotation (\d+)( and flipped)?\./,
-				handler: function (matches, module) {
-					module.push({
-						obj: $(`<table>
-							<tr><th>Original</th><th>On the module</th></tr>
-							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
-								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
-						</table>`)
-					});
-				}
-			},
-			{
-				regex: /.+/
-			}
-		]
-	},
-		{
-		displayName: 'Voltorb Flip',
-		moduleID: 'VoltorbFlip',
-		loggingTag: 'Voltorb Flip',
-		matches: [
-			{
-				regex: /The grid on the module is as follows:/,
-				handler: function (matches, module) {
-					let linesRx = readLines(5).map(l => l.match(/([1-3*]) ([1-3*]) ([1-3*]) ([1-3*]) ([1-3*])/));
-					let table = `<table>`;
-					for (let row = 0; row < 5; row++){
-						table += `<tr>`;
-						for (let col = 0; col < 5; col++){
-							let cell = linesRx[row][col + 1];
-							if (cell == '*')
-								cell = 'voltorb';
-							table += `<td style="padding: 0"><img style="width: 1.5cm" src='img/Voltorb Flip/${cell}.png'></td>`;
-						}
-						table += `</td>`;
-					}
-					table += `</table>`;
-					module.push({label:matches.input, obj:table});
-				}
-			}
-		]
-	},
-	{
-		displayName: "Walking Cube",
-		moduleID: "WalkingCubeModule",
-		loggingTag: "Walking Cube",
-		matches: [
-			{
-				regex: /Cube starting position: ([A-D][1-4])/,
-				handler: function(matches, module) {
-					module.startingCell = matches[1];
-					readLine();
-					return true;
-				}
-			},
-			{
-				regex: /Cube rotations: ([A-Z, ]+)/,
-				handler: function (matches, module) {
-					const movementLines = { "UP": " v-100", "RIGHT": " h100", "LEFT": " h-100", "DOWN": " v100" };
-					let cubePath = matches[1].split(", ");
-					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="0 0 400 400">`);
-					
-					for (let row = 0; row < 4; row++) {
-						for (let col = 0; col < 4; col++) {
-							$SVG("<rect>").addClass("path-square")
-							.attr("x", col * 100 + 15).attr("y", row * 100 + 15)
-							.attr("width", 70).attr("height", 70).appendTo(cubePathSvg);
-						}
-					}
-					let xStart = "ABCD".indexOf(module.startingCell[0]) * 100 + 50;
-					let yStart = "1234".indexOf(module.startingCell[1]) * 100 + 50;
-					let path = `M ${xStart} ${yStart}`;
-					for (let direction of cubePath) {
-						path += movementLines[direction];
-					}
-					$SVG(`<path class="path-line" d="${path}">`)
-					.appendTo(cubePathSvg);
-
-					module.push({ label: "The path in question:", obj: cubePathSvg });
-					return true;
-				}
-			},
-			{
-				regex: /Chosen net/,
-				handler: function() {
-					return true;
-				}
-			},
-			{
-				regex: /[░█]+/,
-				handler: function() {
-					return true;
-				}
-			},
-			{
-				regex: /(Net position in manual:) ([A-E][1-5])/,
-				handler: function (matches, module) {
-					module.netPosition = matches[2];
-					module.net = [];
-					return true;
-				}
-			},
-			{
-				regex: /([RMWBCYOG\.]{2,5})/,
-				handler: function (matches, module) {
-					module.net.push(matches[1]);
-					return true;
-				}
-			},
-			{
-				regex: /Net symbols:/,
-				handler: function (matches, module) {
-					let netPosition = module.netPosition;
-					let net = module.net;
-					readLines(net.length);
-					const colors = { 
-						R: "#F99",
-						M: "#F9F",
-						W: "#FFF",
-						B: "#9BF",
-						C: "#9FF",
-						Y: "#FF9",
-						O: "#FC9",
-						G: "#9F9",
-						A: "#BBB"
-					 };
-					let cubeNetSvg = $(`<svg class="walking-cube-net-diagram" viewbox="-10 -10 520 520">`);
-					let netColors = [
-						['A', 'A', 'A', 'A', 'A'],
-						['A', 'A', 'A', 'A', 'A'],
-						['A', 'A', 'A', 'A', 'A'],
-						['A', 'A', 'A', 'A', 'A'],
-						['A', 'A', 'A', 'A', 'A']
-					];
-					let startingRow = "12345".indexOf(netPosition[1]);
-					let startingCol = "ABCDE".indexOf(netPosition[0]);
-					for (let row = 0; row < net.length; row++) {
-						for (let col = 0; col < net[0].length; col++) {
-							netColors[row + startingRow][col + startingCol] = (net[row][col] == '.' ? 'A' : net[row][col]);
-						}
-						
-					}
-
-					for (let row = 0; row < 5; row++) {
-						for (let col = 0; col < 5; col++) {
-
-							$SVG("<rect>").addClass("net-square").attr("fill", colors[netColors[row][col]])
-							.attr("x", 100 * col).attr("y", 100 * row)
-							.attr("width", 100).attr("height", 100).appendTo(cubeNetSvg);
-
-							$SVG("<text>").addClass("net-text")
-							.attr("x", 100 * col + 50).attr("y", 100 * row + 68)
-							.text(netColors[row][col] == 'A' ? '' : [netColors[row][col]]).appendTo(cubeNetSvg);
-						}
-					}
-					module.push({ label: "The net in question:", obj: cubeNetSvg })
 					return true;
 				}
 			},
@@ -15548,6 +15500,98 @@ let parseData = [
 			}
 		]
 	},
+	{
+		displayName: "The Weakest Link",
+		moduleID: "TheWeakestLink",
+		loggingTag: "The Weakest Link",
+		matches: [
+			{
+				regex: /Question Phase/,
+				handler: function(_, module) {
+					module.questionPhase = [ ];
+					module.push([ "Question Phase", module.questionPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Face Off Phase/,
+				handler: function(_, module) {
+					module.faceOffPhase = [ ];
+					module.push([ "Face Off Phase", module.faceOffPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Money Phase/,
+				handler: function(_, module) {
+					module.moneyPhase = [ readTaggedLine() ];
+					module.push([ "Money Phase", module.moneyPhase ]);
+					return true;
+				}
+			},
+			{
+				regex: /Question: /,
+				handler: function (match, module) {
+					if (module.faceOffPhase) 
+						module.faceOffPhase.push(match.input);
+					else if (module.moneyPhase)
+						module.moneyPhase.push(match.input);
+					else if (module.questionPhase)
+						module.questionPhase.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /Streak is now at|Resetting streak to/,
+				handler: function (match, module) {
+					if (module.moneyPhase)
+						module.moneyPhase.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /Elimination Phase/,
+				handler: function (_, module) {
+					eliminationPhase = [ ];
+					module.push([ "Elimination Phase", eliminationPhase ]);
+					let currentLine;
+					while (!(currentLine = readTaggedLine()).match(/Eliminate them/))
+						eliminationPhase.push(currentLine);
+					linen--;	
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "webDesign",
+		loggingTag: "Web design",
+		matches: [
+			{
+				regex: /For reference purpose/,
+				handler: function (matches, module) {
+					var lines = "";
+					var line = readLine();
+					while (!line.match("}") && line) {
+						lines += line + "\n";
+						line = readLine();
+					}
+					lines += "}";
+
+					module.push({ label: matches.input, obj: pre(lines) });
+
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	
 	{
 		displayName: "Who’s on First",
 		moduleID: "WhosOnFirst",
