@@ -15204,22 +15204,22 @@ let parseData = [
 				handler: function (matches, module) {
 					const movementLines = { "UP": " v-100", "RIGHT": " h100", "LEFT": " h-100", "DOWN": " v100" };
 					let cubePath = matches[1].split(", ");
-					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="-10 -10 420 420">`);
+					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="0 0 420 420">`);
 
 					$SVG("<rect>").attr("fill", "none").attr("stroke-width", "20px").attr("stroke", "#333864")
-					.attr("x", -5).attr("y", -5) 
+					.attr("x", 5).attr("y", 5) 
 					.attr("width", 410).attr("height", 410)
 					.appendTo(cubePathSvg);
 
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
 							$SVG("<rect>").addClass(module.visitedCells.includes(`${"ABCD"[col]}${"1234"[row]}`) ? "path-square visited" : "path-square")
-							.attr("x", col * 100 + 15).attr("y", row * 100 + 15)
+							.attr("x", col * 100 + 25).attr("y", row * 100 + 25)
 							.attr("width", 70).attr("height", 70).appendTo(cubePathSvg);
 						}
 					}
-					let xStart = "ABCD".indexOf(module.startingCell[0]) * 100 + 50;
-					let yStart = "1234".indexOf(module.startingCell[1]) * 100 + 50;
+					let xStart = "ABCD".indexOf(module.startingCell[0]) * 100 + 60;
+					let yStart = "1234".indexOf(module.startingCell[1]) * 100 + 60;
 					let path = `M ${xStart} ${yStart}`;
 					for (let direction of cubePath) {
 						path += movementLines[direction];
@@ -15249,6 +15249,7 @@ let parseData = [
 					module.netPosition = matches[2];
 					module.net = [];
 					module.solution = ["Solution:",[]];
+					
 					return true;
 				}
 			},
@@ -15259,9 +15260,47 @@ let parseData = [
 				}
 			},
 			{
-				regex: /(Initial orientation of cube)(: UP=[A-Z]+, DOWN=[A-Z]+, BACK=[A-Z]+, RIGHT=[A-Z]+, FRONT=[A-Z]+, LEFT=[A-Z]+)/,
+				regex: /(Initial orientation of cube): UP=([A-Z]+), DOWN=([A-Z]+), BACK=([A-Z]+), RIGHT=([A-Z]+), FRONT=([A-Z]+), LEFT=([A-Z]+)/,
 				handler: function(matches, module) {
-					module.push(`${matches[1]} (at ${module.startingCell})${matches[2]}`);
+					const colors = {
+						RED: "#F99",
+						MAGENTA: "#F9F",
+						WHITE: "#FFF",
+						BLUE: "#9BF",
+						CYAN: "#9FF",
+						YELLOW: "#FF9",
+						ORANGE: "#FC9",
+						GREEN: "#9F9"
+					};
+
+					const rectCoords = [
+						[ 105, 5, "Back" ],
+						[ 5, 105, "Left" ],
+						[ 105, 105, "Up" ],
+						[ 205, 105, "Right" ],
+						[ 105, 205, "Front" ],
+						[ 105, 305, "Down" ]
+					];
+
+					let orientationNet = [ matches[6], matches[7], matches[2], matches[5], matches[4], matches[3] ];
+					let orientationNetSvg = $(`<svg class="walking-cube-orientation-diagram" viewbox="0 0 310 410">`);
+					for (let cell = 0; cell < 6; cell++) {
+
+						$SVG("<rect>").addClass("net").attr("fill", colors[orientationNet[cell]])
+						.attr("x", rectCoords[cell][0]).attr("y", rectCoords[cell][1])
+						.attr("width", 100).attr("height", 100)
+						.appendTo(orientationNetSvg);
+
+						$SVG("<text>").addClass("net").text(rectCoords[cell][2])
+						.attr("x", rectCoords[cell][0] + 50).attr("y", rectCoords[cell][1] + 60)
+						.appendTo(orientationNetSvg);
+
+					}
+
+					module.push({ label: `${matches[1]} (at ${module.startingCell}):`, obj: orientationNetSvg });
+					module.push({ label: `✲note that 'Down' is the face that is in contact with the module`, nobullet: true });
+					
+					return true;
 				}
 			},
 			{
@@ -15308,12 +15347,12 @@ let parseData = [
 					for (let row = 0; row < 5; row++) {
 						for (let col = 0; col < 5; col++) {
 
-							$SVG("<rect>").addClass("net-square").attr("fill", colors[netColors[row][col]])
+							$SVG("<rect>").addClass("net").attr("fill", colors[netColors[row][col]])
 							.attr("x", 100 * col).attr("y", 100 * row)
 							.attr("width", 100).attr("height", 100).appendTo(cubeNetSvg);
 
-							$SVG("<text>").addClass("net-text")
-							.attr("x", 100 * col + 50).attr("y", 100 * row + 68)
+							$SVG("<text>").addClass("net")
+							.attr("x", 100 * col + 50).attr("y", 100 * row + 60)
 							.text(netColors[row][col] == 'A' ? '' : [netColors[row][col]]).appendTo(cubeNetSvg);
 						}
 					}
