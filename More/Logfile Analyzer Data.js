@@ -9841,7 +9841,7 @@ let parseData = [
                         for (let col = 0; col < 9; col++) {
 							gridIndex = 9 * row + col;
                             $SVG("<rect>").addClass("key").attr("x", col * 100).attr("y", row * 100).attr("width", 100).attr("height", 100).appendTo(grid);
-							let textNum = isAlternative ? parseInt(rawGrid[gridIndex]) + 1 : rawGrid[gridIndex];
+							let textNum = isAlternative ? parseInt(rawGrid[gridIndex]) : rawGrid[gridIndex];
                             $SVG("<text>").addClass("key").attr("x", col * 100 + 50).attr("y", row * 100 + 66).text(textNum).appendTo(grid);
                         }
                     }
