@@ -2681,6 +2681,51 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "connectFourModule",
+		loggingTag: "Connect Four",
+		matches: [
+			{
+				regex: /((Initial|Final) Board:)/,
+				handler (matches, module) {
+					const tokenCols = {
+						"O": "#a9b2cb",
+						"R": "#bd4343",
+						"B": "#111111"
+					};
+					let board = readTaggedLines(6);
+					let boardSvg = $("<svg class='connect-four' viewbox='0 0 710 610'>");
+					$SVG("<rect>").addClass("board-frame")
+						.attr("x", 5).attr("y", 5)
+						.attr("width", 700).attr("height", 600)
+						.appendTo(boardSvg);
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 7; col++) {
+							$SVG("<circle>").attr("fill", tokenCols[board[row][2*col]])
+								.attr("cx", 100 * col + 55).attr("cy", 100 * row + 55).attr("r", 35)
+								.appendTo(boardSvg);
+						}
+					}
+					module.push({ label: matches[1], obj: boardSvg });
+					if (matches[2] === "Final") {
+						module.moves = [];
+						module.push([ "The solution", module.moves ]);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /^(You|The enemy).+(\d)$/,
+				handler: function(matches, module) {
+					module.moves.push(`${matches[1]}: column ${matches[2]}`);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "ConnectedMonitorsModule",
 		loggingTag: "Connected Monitors",
 		matches: [
@@ -15220,7 +15265,7 @@ let parseData = [
 					const movementLines = { "UP": " v-100", "RIGHT": " h100", "LEFT": " h-100", "DOWN": " v100" };
 					let cubePath = matches[1].split(", ");
 					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="0 0 420 420">`);
-					$SVG("<rect>").attr("fill", "none").attr("stroke-width", "20px").attr("stroke", "#333864")
+					$SVG("<rect>").addClass("mod-bg")
 						.attr("x", 5).attr("y", 5) 
 						.attr("width", 410).attr("height", 410)
 						.appendTo(cubePathSvg);
@@ -15252,45 +15297,9 @@ let parseData = [
 					return true;
 				}
 			},
+			
 			{
-				regex: /(Initial orientation of cube): UP=([A-Z]+), DOWN=([A-Z]+), BACK=([A-Z]+), RIGHT=([A-Z]+), FRONT=([A-Z]+), LEFT=([A-Z]+)/,
-				handler: function(matches, module) {
-					const colors = {
-						RED: "#F99",
-						MAGENTA: "#F9F",
-						WHITE: "#FFF",
-						BLUE: "#9BF",
-						CYAN: "#9FF",
-						YELLOW: "#FF9",
-						ORANGE: "#FC9",
-						GREEN: "#9F9"
-					};
-					const rectCoords = [
-						[ 105, 5, "Back" ],
-						[ 5, 105, "Left" ],
-						[ 105, 105, "Up" ],
-						[ 205, 105, "Right" ],
-						[ 105, 205, "Front" ],
-						[ 105, 305, "Down" ]
-					];
-					let orientationNet = [ matches[6], matches[7], matches[2], matches[5], matches[4], matches[3] ];
-					let orientationNetSvg = $(`<svg class="walking-cube-orientation-diagram" viewbox="0 0 310 410">`);
-					for (let cell = 0; cell < 6; cell++) {
-						$SVG("<rect>").addClass("net").attr("fill", colors[orientationNet[cell]])
-							.attr("x", rectCoords[cell][0]).attr("y", rectCoords[cell][1])
-							.attr("width", 100).attr("height", 100)
-							.appendTo(orientationNetSvg);
-						$SVG("<text>").addClass("net").text(rectCoords[cell][2])
-							.attr("x", rectCoords[cell][0] + 50).attr("y", rectCoords[cell][1] + 60)
-							.appendTo(orientationNetSvg);
-					}
-					module.push({ label: `${matches[1]} (at ${module.startingCell}):`, obj: orientationNetSvg });
-					module.push({ label: `✲note that 'Down' is the face that is in contact with the module`, nobullet: true });
-					return true;
-				}
-			},
-			{
-				regex: /([RMWBCYOG\.]{2,5})/,
+				regex: /([RMWBCYOG\.]{2,5})$/,
 				handler: function (matches, module) {
 					module.net.push(matches[1]);
 					return true;
@@ -15340,6 +15349,43 @@ let parseData = [
 						}
 					}
 					module.push({ label: "The net as seen in the manual:", obj: cubeNetSvg });
+					return true;
+				}
+			},
+			{
+				regex: /(Initial orientation of cube): UP=([A-Z]+), DOWN=([A-Z]+), BACK=([A-Z]+), RIGHT=([A-Z]+), FRONT=([A-Z]+), LEFT=([A-Z]+)/,
+				handler: function(matches, module) {
+					const colors = {
+						RED: "#F99",
+						MAGENTA: "#F9F",
+						WHITE: "#FFF",
+						BLUE: "#9BF",
+						CYAN: "#9FF",
+						YELLOW: "#FF9",
+						ORANGE: "#FC9",
+						GREEN: "#9F9"
+					};
+					const rectCoords = [
+						[ 105, 5, "Back" ],
+						[ 5, 105, "Left" ],
+						[ 105, 105, "Up" ],
+						[ 205, 105, "Right" ],
+						[ 105, 205, "Front" ],
+						[ 105, 305, "Down" ]
+					];
+					let orientationNet = [ matches[6], matches[7], matches[2], matches[5], matches[4], matches[3] ];
+					let orientationNetSvg = $(`<svg class="walking-cube-orientation-diagram" viewbox="0 0 310 410">`);
+					for (let cell = 0; cell < 6; cell++) {
+						$SVG("<rect>").addClass("net").attr("fill", colors[orientationNet[cell]])
+							.attr("x", rectCoords[cell][0]).attr("y", rectCoords[cell][1])
+							.attr("width", 100).attr("height", 100)
+							.appendTo(orientationNetSvg);
+						$SVG("<text>").addClass("net").text(rectCoords[cell][2])
+							.attr("x", rectCoords[cell][0] + 50).attr("y", rectCoords[cell][1] + 60)
+							.appendTo(orientationNetSvg);
+					}
+					module.push({ label: `${matches[1]} (at ${module.startingCell}):`, obj: orientationNetSvg });
+					module.push({ label: `✲note that 'Down' is the face that is in contact with the module`, nobullet: true });
 					return true;
 				}
 			},
