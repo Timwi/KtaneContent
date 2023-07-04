@@ -13335,7 +13335,7 @@ let parseData = [
 						}
 					}
 
-					module.push({ label:`${matches[1]} grid: ${matches[1] == 'Generated' ? '(Dot markes the coordinate (0,0))' : '(Differences between cells marked in red)'}`, obj:svg });
+					module.push({ label:`${matches[1]} grid: ${matches[1] == 'Generated' ? '(Dot marks the coordinate (0,0))' : '(Differences between cells marked in red)'}`, obj:svg });
 				}
 			},
 			{
