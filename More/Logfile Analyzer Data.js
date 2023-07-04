@@ -4043,6 +4043,74 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "EncryptedTimezones",
+		loggingTag: "Encrypted Timezones",
+		matches: [
+			{
+				regex: /----(.+)----/,
+				handler: function (matches, module) {
+					module.push({ obj: $("<hr>"), nobullet: true });
+					module.push({ obj: matches[1], nobullet: true });
+					module.push({ obj: $("<hr>"), nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /(.+(?:submit|encryption|decryption|colors)) are (.+)\./,
+				handler: function (matches, module) {
+
+					const coordinates = [
+						[400, 126.8],
+						[473.2, 200],
+						[500, 300],
+						[473.2, 400],
+						[400, 473.2],
+						[300, 500],
+						[200, 473.2],
+						[126.8, 400],
+						[100, 300],
+						[126.8, 200],
+						[200, 126,8],
+						[300, 100]
+					];
+
+					let moduleColours = matches[2].split(", ");
+
+					const colourDict = {
+						White: "#FFFE",
+						Red: "#E33",
+						Green: "#3E3",
+						Blue: "#35E",
+						Cyan: "#3EE",
+						Magenta: "#E3E",
+						Yellow: "#EE3",
+						Black: "#000"
+					};
+
+					svg = $("<svg class='encrypted-timezones-diagram' viewbox='0 0 600 600'>");
+
+					for (let i = 0; i < 12; i++) {
+						$SVG("<circle>").addClass("light").attr("fill", colourDict[moduleColours[i]]).attr("stroke", "#000")
+						.attr("cx", coordinates[i][0]).attr("cy", coordinates[i][1]).attr("r", 30).appendTo(svg);
+
+						if (moduleColours[i] != "Black" && moduleColours[i] != "White") {
+							$SVG("<text>").attr("stroke", "#000")
+							.attr("x", coordinates[i][0]).attr("y", coordinates[i][1]).text(moduleColours[i][0]).appendTo(svg);							
+						}
+								
+					}
+					module.push({ label: `${matches[1]}:`, obj: svg, nobullet: true });
+					return true;
+				}
+
+					
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "EncryptedValuesModule",
 		loggingTag: "Encrypted Values",
 		matches: [
