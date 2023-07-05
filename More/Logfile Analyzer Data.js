@@ -6516,7 +6516,7 @@ let parseData = [
 						module.push(`Indigo quirk present; switch direction of rotation on iteration ${switches[0]}!`);
 					}
 					else {
-						let logLine = "Indigo quirk present; switch direction of rotation on interations ";
+						let logLine = "Indigo quirk present; switch direction of rotation on iterations ";
 						for (let i = 0; i < count - 2; i++) {
 							logLine += `${switches[i]}, `;
 						}
