@@ -6324,205 +6324,338 @@ let parseData = [
 			}
 		]
 	},
-	{ //DOES NOT WORK WITH THE CURRENT VERSION OF KUGELBLITZ
+	{
 		moduleID: "kugelblitz",
-		displayName: "Kugelblitz",
 		loggingTag: "Kugelblitz",
 		matches: [
 			{
-				regex: /^Found \d+ solvable modules?\.$/,
+				regex: /^Using (module )?preset: \d-\d:([?+-]{7})\.$/,
+				handler: function (matches, module) {
+					module.currentIteration = 0;
+					const colours = ["Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"];
+					const options = { "+": "Forced if possible", "-": "Never", "?": "May" };
+					let label = `Preset (${(matches[2] == "???????" ? "default" : matches[1] ? "mission" : "modsettings")})`;
+					let preText = "Quirk generation per group is set as follows:\nRegular : Always\n";
+					for (let i in colours) {
+						preText += `${colours[i].padStart(7)} : ${options[matches[2].charAt(i)]}\n`;
+					}
+					module.push([label, [{ obj: pre(preText), nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Participating modules: ((?:\[Kugelblitz #\d+\](?:,\s)?)+)\.$/,
+				handler: function (matches, module) {
+					const modulesInGroup = matches[1].split(", ");
+					if (modulesInGroup.length == 1) {
+						module.push("This is the only module in this group.");
+						return true;
+					}
+					let preText = "";
+					modulesInGroup.forEach(el => {
+						preText += `${el.replace(/[\[\]]/g, "")}\n`;
+					});
+					module.push(["Modules in this group", [{ obj: pre(preText), nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Generated \d+ stages: ((?:Regular)|(?:Red|Orange|Yellow|Green|Blue|Indigo|Violet))(?: quirk|)?: \[((?:\[\d{7}\](?:,\s)?)+)\]\.$/,
+				handler: function (matches, module) {
+					// The fact that I can just invent indexes in js like this is extremely strange but also quite convenient *shrug* -Kuro
+					let quirk = matches[1];
+					module[quirk] = matches[2].split(", ").map(el => el.replace(/[\[\]]/g, ""));
+					let modValue;
+					if (["Regular", "Orange", "Yellow", "Indigo", "Violet"].includes(quirk)) {
+						modValue = 2;
+					}
+					else if (["Red", "Green"].includes(quirk)) {
+						modValue = 7;
+					}
+					else if (quirk == "Blue") {
+						modValue = 3;
+					}
+					let digits = [0, 0, 0, 0, 0, 0, 0];
+					for (let binary of module[quirk]) {
+						for (let i = 0; i < 7; i++) {
+							digits[i] += parseInt(binary.charAt(i));
+							digits[i] %= modValue;
+						}
+					}
+					let collapsedIndex = `${quirk} Collapsed`;
+					let finalIndex = `${quirk} Final`;
+					module[collapsedIndex] = digits.join("");
+					// Final modifications for each quirk.
+					if (quirk == "Green") {
+						module[finalIndex] = module[collapsedIndex].replace(/0/g, "7");
+					}
+					else if (["Blue", "Indigo", "Violet"].includes(quirk)) {
+						let removeIndex;
+						let modVal;
+						if (quirk == "Blue") {
+							removeIndex = 4
+							modVal = 3;
+						}
+						else {
+							removeIndex = quirk == "Indigo" ? 5 : 6;
+							modVal = 2;
+						}
+						removeDigit = parseInt(module[collapsedIndex].charAt(removeIndex));
+						module[finalIndex] = "";
+						for (let i = 0; i < 7; i++) {
+							if (i != removeIndex) {
+								module[finalIndex] += ((parseInt(module[collapsedIndex].charAt(i)) + removeDigit) % modVal).toString();
+							}
+						}
+						if (quirk == "Blue") {
+							module[finalIndex] = module[finalIndex].replace(/0/g, "3");
+						}
+					}
+					else {
+						module[finalIndex] = module[collapsedIndex];
+					}
+					return true;
+				}
+			},
+			{
+				regex: /^Final values: \[\(X, Y\)=\((\d), (\d)\); R=(\d)\], with initial direction of (\d).$/,
+				handler: function (matches, module) {
+					const possibleQuirks = ["  Red  ", "Orange ", "Yellow ", " Green ", " Blue  ", "Indigo ", "Violet "];
+					let preText = "    Stage | Regular";
+					let stageBinaries = [module["Regular"]];
+					let binaries = {};
+					binaries["Collapsed"] = [module["Regular Collapsed"]];
+					binaries["Final"] = [module["Regular Final"]];
+					for (let quirk of possibleQuirks) {
+						let trimmedQuirk = quirk.trim();
+						if (module[trimmedQuirk]) {
+							stageBinaries.push(module[trimmedQuirk]);
+							binaries["Collapsed"].push(module[`${trimmedQuirk} Collapsed`]);
+							binaries["Final"].push(module[`${trimmedQuirk} Final`]);
+							preText += ` | ${quirk}`;
+						}
+					}
+					let separator = "\n --------";
+					for (let i in stageBinaries) {
+						separator += ` + -------`;
+					}
+					preText += separator;
+					for (let i in module["Regular"]) {
+						preText += `\n${(parseInt(i) + 1).toString().padStart(9)}`;
+						for (let binaryList of stageBinaries) {
+							preText += ` | ${binaryList[i]}`;
+						}
+					}
+					preText += separator;
+					for (let state of ["Collapsed", "Final"]) {
+						preText += `\n${state.padStart(9)}`;
+						for (let binary of binaries[state]) {
+							preText += ` | ${binary.padEnd(7)}`;
+						}
+					}
+					module.push({ label: `Generated ${module["Regular"].length} stages:`, obj: pre(preText) });
+					const directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+					module.push(`Start at (${matches[1]}, ${matches[2]}), with R=${matches[3]} (turning ${(matches[3] == 0 ? "clockwise" : "counterclockwise")}), facing ${directions[matches[4]]}.`);
+					return true;
+				}
+			},
+			{
+				regex: /^Final values for the violet quirk: \[H-wrap=\(([+-])([+-])(\\)?\); V-wrap=\(([+-])([+-])(?:\\)?\)\]\.$/,
+				handler: function (matches, module) {
+					let preText = "";
+					for (let dirIndexPair of [["horizontally", 1], ["vertically", 4]]) {
+						preText += `\nWrapping around ${dirIndexPair[0]} `;
+						if (matches[1] == "-" && matches[2] == "-") {
+							preText += "flips the grid both horizontally and vertically.";
+						}
+						else if (matches[1] == "-") {
+							preText += "flips the grid horizontally only.";
+						}
+						else if (matches[2] == "-") {							
+							preText += "flips the grid vertically only.";
+						}
+						else {
+							preText += "does not flip the grid at all.";
+						}
+					}
+					if (matches[3]) {
+						preText += "\nAdditionally, wrapping around either way flips the grid across the NW-SE diagonal.";
+					}
+					module.push(["Violet quirk present; overriding wrapping rules!", [{ nobullet: true, obj: pre(preText) }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Final values for the green quirk: \[Lengths: ((?:\d-){6}\d)\]\.$/,
+				handler: function (match, module) {
+					const digits = match[1].split("-");
+					let preText = "";
+					for (let i in digits) {
+						preText += `Iteration ${parseInt(i) + 1}: ${(digits[i] == 1 ? "1 step" : `${digits[i]} steps`)}\n`;
+					}
+					module.push(["Green quirk present; overriding the number of steps per iteration!", [{ nobullet: true, obj: pre(preText) }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Final values for the indigo quirk: \[Flips: ([.!]{6})\]\.$/,
+				handler: function (match, module) {
+					let preText = "";
+					let count = 0;
+					let switches = [];
+					for (let i in match[1]) {
+						if (match[1][i] == "!") {
+							count += 1;
+							switches.push(parseInt(i) + 1);
+						}
+					}
+					if (count == 0) {
+						module.push("Indigo quirk present, but final value was 000000, so no changes are made.");
+					}
+					else if (count == 1) {
+						module.push(`Indigo quirk present; switch direction of rotation on iteration ${switches[0]}!`);
+					}
+					else {
+						let logLine = "Indigo quirk present; switch direction of rotation on interations ";
+						for (let i = 0; i < count - 2; i++) {
+							logLine += `${switches[i]}, `;
+						}
+						logLine += `${switches[count - 2]}, and ${switches[count - 1]}!`;
+						module.push(logLine);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /^Final values for the blue quirk: \[Turns: ([1-3]{6})\]\.$/,
+				handler: function (match, module) {
+					let preText = "";
+					for (let i in match[1]) {
+						preText += `Iteration ${parseInt(i) + 1}: ${45 * parseInt(match[1][i])} degrees\n`;
+					}
+					module.push(["Blue quirk present; overriding how much to turn per iteration!", [{ nobullet: true, obj: pre(preText) }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Read from the following coordinates in order: ((?:\(\d,\d\)(?:,\s)?)+)\.$/,
+				handler: function (match, module) {
+					if (!module.table) {
+						module.table = [
+							[5, 1, 3, 6, 4, 0, 2],
+							[1, 2, 6, 4, 0, 5, 3],
+							[4, 0, 5, 1, 3, 2, 6],
+							[3, 5, 2, 0, 1, 6, 4],
+							[0, 3, 4, 2, 6, 1, 5],
+							[6, 4, 0, 5, 2, 3, 1],
+							[2, 6, 1, 3, 5, 4, 0]
+						];
+					}
+					if (!module.iterations) {
+						module.iterations = [];
+						module.finalTotals = "";
+						module.push(["Iterations", module.iterations]);
+					}
+					module.currentIteration += 1;
+					const colours = ["yellow", "orange", "red"];
+					let coordinates = match[1].split(", ");
+					let counts = {};
+					for (let coord of coordinates) {
+						if (!counts[coord]) {
+							counts[coord] = 1;
+						}
+						else {
+							counts[coord] += 1;
+						}
+					}
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 710 710'>").addClass("kugel-grid");
+					let total = 0;
+					for (let row = 0; row < 7; row++) {
+						for (let col = 0; col < 7; col++) {
+							let cell = $SVG(`<rect x="${5 + col * 100}" y="${5 + row * 100}" width="100" height="100">`)
+								.addClass("cell")
+								.appendTo(svg);
+							$SVG(`<text x="${55 + col * 100}" y="${75 + row * 100}">`)
+								.addClass("label")
+								.text(module.table[row][col])
+								.appendTo(svg);
+							if (counts[`(${col},${row})`]) {
+								cell.addClass(colours[counts[`(${col},${row})`] - 1]);
+								total += module.table[row][col] * counts[`(${col},${row})`];
+							}
+						}
+					}
+					total %= 7;
+					module.finalTotals += total.toString();
+					$SVG('<rect x="5" y="5" width="700" height="700">')
+						.addClass("border")
+						.appendTo(svg);
+					
+					module.iterations.push([`Iteration ${module.currentIteration}: ${match[1].replace(/[()]/g, "").replace(/,\s/g, " → ")} ➤ ${total}`, [{ nobullet: true, obj: svg }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Resulting digits after potential modifications are (\d{7})\.$/,
+				handler: function (match, module) {
+					let digits = match[1];
+					module.push(`The digits after iterations: ${module.finalTotals}.`);
+					if (module["Red"]) {
+						module.push(`After red quirk: ${digits}.`);
+					}
+					let splitBinary = digits.split("").map(el => parseInt(el).toString(2).padStart(3, "0"));
+					module.push(`Binary: ${splitBinary.join(" ")}.`);
+					if (module["Yellow"]) {
+						for (let i = 0; i < 7; i++) {
+							splitBinary[i] = `${module["Yellow Final"].charAt(i)}${splitBinary[i]}`;
+						}
+						module.push(`After yellow quirk: ${splitBinary.join(" ")}.`);
+					}
+					if (module["Orange"]) {
+						for (i = 0; i < 7; i++) {
+							if (module["Orange Final"].charAt(i) == 1) {
+								splitBinary[i] = splitBinary[i].split("").map(el => (1 - parseInt(el)).toString()).join("");
+							}
+						}
+						module.push(`After orange quirk: ${splitBinary.join(" ")}.`);
+					}
+					module.push(`Final binary sequence: 1${splitBinary.join("")}.`);
+					return true;
+				}
+			},
+			{
+				regex: /^Expecting a final input of [\[\.\]]+$/,
+				handler: function (match, module) {
+					module.push(`${match.input}, where "[" means hold, "]" means release, and "." means to wait a pulse.`);
+					return true;
+				}
+			},
+			{
+				regex: /^I received [\[\.\]]+, but I expected [\[\.\]]+$/,
+				handler: function (match, module) {
+					module.push(`✕ ${match.input}`);
+					return true;
+				}
+			},
+			{
+				regex: /^Successfully solved \d+ stages of Kugelblitz\. Well done!$/,
+				handler: function (match, module) {
+					module.push("Successfully solved this Kugelblitz group. Well done!");
+					return true;
+				}
+			},
+			{
+				regex: /^Logging can be found at \[Kugelblitz #\d+\]$/,
+				handler: function (match, module) {
+					module.push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
 				handler: function () {
 					return true;
 				}
-			},
-			{
-				regex: /^Generated binary numbers are (([01]{7}[,.] )+)This will result in ([01]{7}).$/,
-				handler: function (matches, module) {
-					let rows = `<tr id="kugel-title"><th style="text-align: center;">#</th><th style="outline: black solid 2px;">Black:</th></tr>${matches[1]}`;
-					let i = 1;
-					while (/([01]{7})[,.] /g.test(rows)) {
-						rows = rows.replace(/([01]{7})[,.] /, `<tr id="kugel-row-${i}"><td style="text-align: center;">${i}</td><td style="outline: black solid 2px;">$1</td></tr>`);
-						i++;
-					}
-					rows += `<tr id="kugel-final"><th /><th style="outline: black solid 2px;"><strong>Final:</strong></th></tr><tr id="kugel-final-number"><td /><td style="outline: black solid 2px;">${matches[3]}</td><tr>`;
-					let table = $(`<table style="border-collapse: collapse; background-color: #aaa; outline: black solid 2px; text-align: center;">${rows}<table>`);
-					module.table = table;
-					return true;
-				}
-			},
-			{
-				regex: /^Generated binary numbers for extra Kugelblitz \((red|orange|yellow|green|blue|indigo)\) are (([01]{7}[,.] )+)This will result in ([0-7]{6,7}).$/,
-				handler: function (matches, module) {
-					let cs = function (string) {
-						switch (string) {
-							case "red":
-								return "#f00";
-							case "orange":
-								return "#f80";
-							case "yellow":
-								return "#ff0";
-							case "green":
-								return "#0f0";
-							case "blue":
-								return "#0cf";
-							case "indigo":
-								return "#40f";
-						}
-						return string;
-					}
-					let table = module.table;
-					table.find("#kugel-title").append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;"><strong>${matches[1].charAt(0).toUpperCase() + matches[1].slice(1)}:</strong></td>`);
-					let stages = matches[2].split(/[,.] /);
-					for (let i = 1; i < stages.length; i++) {
-						table.find(`#kugel-row-${i}`).append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;">${stages[i - 1]}</td>`);
-					}
-					table.find("#kugel-final").append(`<th style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th>`);
-					table.find("#kugel-final-number").append(`<td style="background-color: ${cs(matches[1])}; outline: black solid 2px; text-align: center;">${matches[4]}</td>`);
-					return true;
-				}
-			},
-			{
-				regex: /^Generated binary numbers for extra Kugelblitz \((violet)\) are (([01]{7}[,.] )+)This will result in horzontally placed modifier ([0-7]{7}) and vertically placed modifier ([0-7]{7})\.$/,
-				handler: function (matches, module) {
-					let table = module.table;
-					table.find("#kugel-title").append($.parseHTML(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Violet: (Horiz)</strong></td><td style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Violet: (Vert)</strong></td>`));
-					let stages = matches[2].split(/[,.] /);
-					for (let i = 1; i < stages.length; i++) {
-						if (i % 2 === 0) {
-							table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;" />`);
-						}
-						table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${stages[i - 1]}</td>`);
-						if (i % 2 === 1) {
-							table.find(`#kugel-row-${i}`).append(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;" />`);
-						}
-					}
-					table.find("#kugel-final").append($.parseHTML(`<th style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th><th style="background-color: #c0f; outline: black solid 2px; text-align: center;"><strong>Final:</strong></th>`));
-					table.find("#kugel-final-number").append($.parseHTML(`<td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${matches[4]}</td><td style="background-color: #c0f; outline: black solid 2px; text-align: center;">${matches[5]}</td>`));
-
-					const tbl = [
-						[5, 1, 4, 3, 0, 6, 2],
-						[1, 2, 0, 5, 3, 4, 6],
-						[3, 6, 5, 2, 4, 0, 1],
-						[6, 4, 1, 0, 2, 5, 3],
-						[4, 0, 3, 1, 6, 2, 5],
-						[0, 5, 2, 6, 1, 3, 4],
-						[2, 3, 6, 4, 5, 1, 0]
-					];
-
-					let cols = [matches[5][0], matches[5][1], matches[5][2], matches[5][3], matches[5][4], matches[5][5], matches[5][6]].map(c => parseInt(c));
-					let rows = [matches[4][0], matches[4][1], matches[4][2], matches[4][3], matches[4][4], matches[4][5], matches[4][6]].map(c => parseInt(c));
-					let vm = [];
-
-					for (let i = 0; i < 7; i++) {
-						vm.push(rows.map((j, ix) => (j + cols[i] + tbl[ix][i]) % 7));
-					}
-
-					module.violetMod = vm;
-					return true;
-				}
-			},
-			{
-				regex: /^Starting at \(\d, \d\) in direction .+\.$/,
-				handler: function (_, module) {
-					module.table.find("td, th").css("padding", "6px");
-					module.push({ obj: module.table, nobullet: true });
-					if (module.violetMod) {
-						module.push("Modified table (violet):");
-						module.push({
-							obj: $(`<table>${module.violetMod.map(a => `<tr>${a.map(i => `<td style="border: black solid 2px; padding: 2px 6px 2px 6px;">${i}</td>`).join("")}</tr>`).join("")}</table>`),
-							nobullet: true
-						});
-					}
-					return false;
-				}
-			},
-			{
-				regex: /The calculated sequence is [ip]+, which translates to ([\[\]∙]+)\./,
-				handler: function (matches, module) {
-					module.push(matches[0]);
-					let dotssvg = `<circle cx='0' cy='0' r='.25' fill='black' stroke='none' />`;
-					let linessvg = "";
-					let line = "";
-					let pos = 0.5;
-					let working = matches[1];
-					const eps = 0.0001
-					while (working.length > 0) {
-						switch (working[0]) {
-							case "[":
-								line += `M${pos} .25v.5`
-								break;
-							case "∙":
-								dotssvg += `<circle cx='${pos + 0.5}' cy='0' r='.25' fill='black' stroke='none' />`;
-								pos += 1;
-								break;
-							case "]":
-								linessvg += `<path d='${line}H${pos + eps}v-.5' fill='none' stroke='black' stroke-width='0.15' stroke-linecap="square" />`
-								line = "";
-								if (working[1] !== "∙")
-									pos += 0.25
-								break;
-						}
-						working = working.substring(1);
-					}
-					dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='black' stroke='none' />`;
-
-					module.push({
-						nobullet: true,
-						obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">${dotssvg}${linessvg}</svg>`)
-					});
-					return true;
-				}
-			},
-			{
-				regex: /You submitted ([\[\]∙]+), but I expected [\[\]∙]+\./,
-				handler: function (matches, module) {
-					module.push(matches[0]);
-					let dotssvg = `<circle cx='0' cy='0' r='.25' fill='#800' stroke='none' />`;
-					let linessvg = "";
-					let line = "";
-					let pos = 0.5;
-					let working = matches[1];
-					const eps = 0.0001
-					while (working.length > 0) {
-						switch (working[0]) {
-							case "[":
-								line += `M${pos} .25v.5`
-								break;
-							case "∙":
-								dotssvg += `<circle cx='${pos + 0.5}' cy='0' r='.25' fill='#800' stroke='none' />`;
-								pos += 1;
-								break;
-							case "]":
-								linessvg += `<path d='${line}H${pos + eps}v-.5' fill='none' stroke='#800' stroke-width='0.15' stroke-linecap="square" />`
-								line = "";
-								if (working[1] !== "∙")
-									pos += 0.25
-								break;
-						}
-						working = working.substring(1);
-					}
-					dotssvg += `<circle cx='${pos + .25}' cy='0' r='.25' fill='#800' stroke='none' />`;
-
-					module.push({
-						nobullet: true,
-						obj: $SVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${pos + 2} 2">${dotssvg}${linessvg}</svg>`)
-					});
-					return true;
-				}
-			},
-			{
-				regex: /Logging can be found at 'Kugelblitz #(\d+)'./,
-				handler: function (matches, module) {
-					let callback = () => {
-						$("div").filter((_, d) => d.innerText == `Kugelblitz #${matches[1]}`).parent().click();
-						return false;
-					};
-					module.push({ obj: $(`<p>Logging can be found at <a href=''>Kugelblitz #${matches[1]}</a>.</p>`).find("a").click(callback).end() });
-					return true;
-				}
-			},
-			{
-				regex: /.+/
 			}
 		]
 	},
