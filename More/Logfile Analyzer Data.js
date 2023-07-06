@@ -836,7 +836,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const colourDict = { 0: "blue", 1: "yellow", " ": "black" };
 					let board = readMultiple(4).split("\n");
-					let boardSvg = $("<svg>").addClass('fifteen-mystic-lights').attr('viewbox', '0 0 400 400');
+					let boardSvg = $("<svg viewBox='0 0 400 400'>").addClass('fifteen-mystic-lights');
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
 							$SVG("<rect>").addClass(colourDict[board[row][col]])
