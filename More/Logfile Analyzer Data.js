@@ -13082,8 +13082,7 @@ let parseData = [
 			},
 			{
 				regex: /Board:/,
-				handler: function (matches, module) {
-
+				handler: function (_, module) {
 					if(!module.pieceDictionary || !module.numberDictionary){
 						module.pieceDictionary = {
 							"BR": "♜",
@@ -13099,7 +13098,6 @@ let parseData = [
 							"WK": "♔",
 							"WP": "♙",
 						};
-
 						module.numberDictionary = {
 							"#": "",
 							"1": "₁",
@@ -13107,33 +13105,29 @@ let parseData = [
 							"3": "₃",
 							"4": "₄",
 							"5": "₅",
-							"6":  "₆",
+							"6": "₆",
 							"7": "₇",
 							"8": "₈",
-						}
-
+						};
 					}
 					let boardData = readMultiple(8);
 
 					let svgBoard = $(`<svg viewbox="0 0 810 810">`).addClass("shoddy-board");
 
-					 let temp = boardData.split('\n');
+					let temp = boardData.split('\n');
 
-					 console.log(temp);
+					let boardDataArr = [];
 
-					 let boardDataArr = [];
-
-					 for(let i of temp)
-					 {
+					for (let i of temp) {
 						boardDataArr.push(i.split(" "));
-					 }
+					}
 
 					const dimension = 100;
 					const padding = 5;
 					const downwardsPadding = 10;
-					for(let i = 0; i < 8; i++)
+					for (let i = 0; i < 8; i++)
 					{
-						for(let j = 0; j < 8; j++)
+						for (let j = 0; j < 8; j++)
 						{
 							let startingX = padding + j * dimension;
 							let startingY = padding + i * dimension;
@@ -13155,11 +13149,11 @@ let parseData = [
 										  .text(piece)
 										  .addClass("shoddy-text");
 
-							if(piece.length == 2) {
+							if (piece.length == 2) {
 								pieceElement.addClass("shoddy-small-text");
 							}
 
-							else if(piece.length == 1){
+							else if (piece.length == 1) {
 								pieceElement.addClass("shoddy-big-text");
 							}
 
