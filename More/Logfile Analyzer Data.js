@@ -2940,6 +2940,128 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "cruello",
+		loggingTag: "Cruello",
+		matches: [
+			{
+				regex: /^The grid of (magenta|yellow|cyan) digits is:/,
+				handler: function(matches, module) {
+					if (matches[1] === "magenta") module.mGrid = readTaggedLines(6);
+					if (matches[1] === "yellow") module.yGrid = readTaggedLines(6);
+					if (matches[1] === "cyan") module.cGrid = readTaggedLines(6);
+
+					return true;
+				}
+			},
+			{
+				regex: /The required (column|row) sums are: ([\d, ]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colSums = matches[2].split(", ");
+					if (matches[1] === "row") module.rowSums = matches[2].split(", ");
+
+					return true;
+				}
+			},
+			{
+				regex: /The (column|row) colours are: ([, WMCY]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colColours = matches[2].split(", ");
+					if (matches[1] === "row") module.rowColours = matches[2].split(", ");
+
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is:/,
+				handler: function(matches, module) {
+
+					module.gGrid = readTaggedLines(6);
+					for (let r = 0; r < 6; r++) {
+						module.gGrid[r] = module.gGrid[r].trim();
+					}
+
+					module.toPush = [];
+
+					const colourDict = {
+						M: "magenta",
+						Y: "yellow",
+						C: "cyan",
+						W: "white"
+					};
+
+					
+					let grids = [ module.mGrid, module.yGrid, module.cGrid, module.gGrid ];
+					let sums = [ module.colSums, module.rowSums ];
+					let colours = [ module.colColours, module.rowColours ];
+					let svgs = [];
+
+					let gridColours = [ "magenta", "yellow", "cyan", "generated" ];
+					for (let gridColour of gridColours) {
+						svgs.push($("<svg viewbox='0 0 710 710'>").addClass("cruello").addClass(`${gridColour}-grid`));
+					}
+					
+					for (let i = 0; i < 4; i++) {
+						let isGenGrid = i === 3;
+						let svg = svgs[i];
+						let grid = grids[i];
+
+						for (let row = 0; row < 7; row++) {
+							if (row === 0) {
+								for (let j = 0; j < 6; j++) {
+									$SVG("<rect>").attr("width", 90).attr("height", 90)
+										.attr("x", 100 * j + 10).attr("y", 10)
+										.appendTo(svg);
+									
+									$SVG("<text>").addClass(colourDict[colours[0][j]]).text(sums[0][j])
+										.attr("x", 100 * j + 55).attr("y", 58)
+										.appendTo(svg);
+								}
+							}
+							else {
+								for (let col = 0; col < 7; col++) {
+									if (col === 6) {
+										$SVG("<rect>").attr("width", 90).attr("height", 90)
+											.attr("x", 610).attr("y", 100 * row + 10)
+											.appendTo(svg);
+
+										$SVG("<text>").addClass(colourDict[colours[1][row-1]]).text(sums[1][row-1])
+											.attr("x", 655).attr("y", 100 * row + 58)
+											.appendTo(svg);
+									}
+									else {
+										let cellCol = isGenGrid ? colourDict[grid[row-1][col*2]] : gridColours[i]
+										let cellText = isGenGrid ? grids[gridColours.indexOf(cellCol)][row-1][col*2] : grid[row-1][col*2];
+
+										$SVG("<circle>").addClass(cellCol).attr("r", 37.5)
+											.attr("cx", 100 * col + 55 ).attr("cy", 100 * row + 55)
+											.appendTo(svg);
+
+										$SVG("<text>").addClass("cell").addClass(`dark-${cellCol}`)
+											.attr("x", 100 * col + 55).attr("y", 100 * row + 62)
+											.text(cellText)
+											.appendTo(svg);
+									}
+								}
+							}
+						}
+						if (isGenGrid) {
+							module.genSol = ({ label: matches[0], obj: svg });
+						}
+						else {
+							module.toPush.push({ label: `The ${gridColours[i]} grid:`, obj: svg });
+						}
+					}
+					module.push([ `The generated puzzle:`, module.toPush ]);
+					module.push(module.genSol);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "CrittersModule",
 		loggingTag: "Critters",
 		matches: [
