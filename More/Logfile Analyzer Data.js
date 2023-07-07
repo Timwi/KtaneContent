@@ -13067,7 +13067,6 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Stage = ["Stage " + matches[1], []];
 					module.push(module.Stage);
-
 					return true;
 				}
 			},
@@ -13076,14 +13075,78 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Stage = ["Submitted answer", []];
 					module.push(module.Stage);
-
 					return true;
 				}
 			},
 			{
 				regex: /Board:/,
-				handler: function (matches, module) {
-					module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true });
+				handler: function (_, module) {
+					if(!module.pieceDictionary || !module.numberDictionary){
+						module.pieceDictionary = {
+							"BR": "♜",
+							"BN": "♞",
+							"BB": "♝",
+							"BQ": "♛",
+							"BK": "♚",
+							"BP": "♟",
+							"WR": "♖",
+							"WN": "♘",
+							"WB": "♗",
+							"WQ": "♕",
+							"WK": "♔",
+							"WP": "♙",
+						};
+						module.numberDictionary = {
+							"#": "",
+							"1": "₁",
+							"2": "₂",
+							"3": "₃",
+							"4": "₄",
+							"5": "₅",
+							"6": "₆",
+							"7": "₇",
+							"8": "₈",
+						};
+					}
+					let boardData = readMultiple(8);
+					let svgBoard = $(`<svg viewbox="0 0 810 810">`).addClass("shoddy-board");
+					let temp = boardData.split('\n');
+					let boardDataArr = [];
+					for (let i of temp) {
+						boardDataArr.push(i.split(" "));
+					}
+					const dimension = 100;
+					const padding = 5;
+					const downwardsPadding = 10;
+					for (let i = 0; i < 8; i++)
+					{
+						for (let j = 0; j < 8; j++)
+						{
+							let startingX = padding + j * dimension;
+							let startingY = padding + i * dimension;
+							let cellColor = (i + j) % 2 == 0 ? "shoddy-white-square": "shoddy-black-square";
+							let piece = boardDataArr[i][j] == "###" ? "" : module.pieceDictionary[boardDataArr[i][j].substring(0,2)];
+							piece += module.numberDictionary[boardDataArr[i][j][2]];
+							$SVG(`<rect>`).attr("x", startingX)
+										  .attr("y", startingY)
+										  .attr("width", dimension)
+										  .attr("height", dimension)
+										  .addClass(cellColor).appendTo(svgBoard);
+							let pieceElement = $SVG(`<text>`).attr("x", startingX + dimension / 2)
+										  .attr("y", startingY + dimension / 2 + downwardsPadding)
+										  .text(piece)
+										  .addClass("shoddy-text");
+
+							if (piece.length == 2) {
+								pieceElement.addClass("shoddy-small-text");
+							}
+							else if (piece.length == 1) {
+								pieceElement.addClass("shoddy-big-text");
+							}
+							pieceElement.appendTo(svgBoard);
+						}
+					}
+					module.Stage[1].push({ obj: svgBoard, nobullet: true });
 					return true;
 				}
 			},
