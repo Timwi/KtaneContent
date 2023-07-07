@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Mazeswapper — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        table {
+            text-align: center;
+            margin: 1em auto;
+        }
+
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .dark .invertible {
+            filter: contrast(75%) invert(100%);
+        }
+
+        .hoveron {
+            background-color: #308bbe40;
+        }
+
+        .selected {
+            background-color: #308bbe80;
+        }
+
+        .source {
+            background-color: #00ff0080;
+        }
+
+        .sourceReaches {
+            background-color: #00ff0040;
+        }
+
+        .hoveroff {
+            background-color: none;
+        }
+        
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 1"; }
+
+        li {
+            font-size: 13.4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Sixteen Hours Wasted</span>
+                <span class="page-header-section-title">On This Piece Of Garbage</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Mazeswapper.svg" class="diagram">
+                <h2>On the Subject of Mazeswapper</h2>
+                <ul>
+                    <li>Press the <strong>Reset</strong> button to clear everything: the grid and the source.</li>
+                    <li>While in <strong>Setup</strong> mode, select the tile type to place in the board, then place it in the board.</li>
+                    <li>Select the button that is not <strong>Reset</strong> to switch to <strong>Source</strong> mode to select the tile to act as the source.</li>
+                    <li>Then, select the same button to switch to <strong>Swap</strong> mode, where the tiles in the 6×6 grid can be selected in pairs to swap them.</li>
+                    <li>The button will not switch modes if the grid is not fully filled in.</li>
+                </ul>
+                <div class="buttons">
+                    <button id="reset">Reset</button>
+                    <button id="state">Setup</button>
+                </div>
+                <div id="gridContainer"></div>
+                <div id="cellTypes"></div>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+    </div>
+</body>
+<script>
+    var rows = 6;
+    var columns = 6;
+
+    var cellTypes = ["U", "R", "D", "L", "UR", "DR", "DL", "UL", "URD", "RDL", "DLU", "LUR", "UD", "ULDR", "LR"];
+
+    var grid = new Array(rows);
+    var selection = -1;
+    
+    var resetButton = null;
+
+    var state = 0;
+    var setupButton = null;
+
+    var sourceCoord = [-1, -1];
+    var tempCoords = [-1, -1];
+
+    var gridContainer = document.getElementById("gridContainer");
+    var typeTable = document.getElementById("cellTypes");
+
+    function InitialiseGrids()
+    {
+        for(let i = 0; i < rows; i++)
+            grid[i] = new Array(columns);
+
+        for(let i = 0; i < rows; i++)
+            for(let j = 0; j < columns; j++)
+                grid[i][j] = "";
+    }
+
+    function Reset()
+    {
+        for(let i = 0; i < rows; i++)
+        {
+            for(let j = 0; j < columns; j++)
+            {
+                grid[i][j] = null;
+
+                var cell = gridContainer.getElementsByTagName("table")[0].rows[i].cells[j]
+                var image = cell.getElementsByTagName("img")[0];
+                if(image != null)
+                    cell.removeChild(image);
+            }
+        }
+
+        $(gridContainer.getElementsByTagName("table")[0]).find(".sourceReaches").removeClass("sourceReaches");
+        $(gridContainer.getElementsByTagName("table")[0]).find(".source").removeClass("source");
+        state = 2;
+        sourceCoord = [-1, -1];
+
+        ChangeState();
+    }
+
+    function CreateTable()
+    {
+        var table = $("<table>").appendTo(gridContainer);
+
+        for(let i = 0; i < rows; i++)
+        {
+            var tr = $("<tr>").appendTo(table);
+            for(let j = 0; j < rows; j++)
+            {
+                var cell = $("<td>").appendTo(tr);
+                cell.attr("id", i + "_" + j);
+                cell.attr("width", "54px");
+                cell.attr("height", "54px");
+
+                cell.mouseenter(function()
+                {
+                    $(this).removeClass("hoveroff").addClass("hoveron");
+                });
+                cell.mouseleave(function()
+                {
+                    $(this).removeClass("hoveron").addClass("hoveroff");
+                });
+                cell.click(function()
+                {
+                    CellClickHandler(rows * i + j);
+                })
+            }
+        }
+    }
+
+    function SetCellTypes()
+    {
+        var table = $("<table>").appendTo(typeTable);
+        
+        var tr = null;
+        for(let i = 0; i < 3; i++)
+        {
+            tr = $("<tr>").appendTo(table);
+            for(let j = 0; j < 4; j++)
+            {
+                cell = $("<td>").appendTo(tr);
+
+                var img = $("<img>").appendTo(cell).attr("src", "./img/Mazeswapper/" + ["U", "UR", "URD"][i] + ".svg");
+                img.attr("style", "transform:rotate(" + [0, 90, 180, 270][j] + "deg)");
+                img.attr("class", "invertible");
+
+                cell.mouseenter(function()
+                {
+                    $(this).removeClass("hoveroff").addClass("hoveron");
+                });
+                
+                cell.mouseleave(function()
+                {
+                    $(this).removeClass("hoveron").addClass("hoveroff");
+                });
+
+                cell.click(function()
+                {
+                    $("#cellTypes").find(".selected").removeClass("selected");
+                    $(this).addClass("selected");
+                    selection = 4 * i + j;
+                });
+            }
+        }
+
+        tr = $("<tr>").appendTo(table);
+        for(let i = 12; i < 15; i++)
+        {
+            var cell = $("<td>").appendTo(tr);
+
+            var img = $("<img>").appendTo(cell).attr("src", "./img/Mazeswapper/" + ["V", "URDL"][i % 2] + ".svg");
+
+            if(i == 13)
+                cell.attr("colspan", "2");
+
+            if(i == 14)
+                img.attr("style", "transform:rotate(90deg)");
+
+            img.attr("class", "invertible");
+
+            cell.mouseenter(function()
+            {
+                $(this).removeClass("hoveroff").addClass("hoveron");
+            });
+            cell.mouseleave(function()
+            {
+                $(this).removeClass("hoveron").addClass("hoveroff");
+            });
+            
+            cell.click(function()
+            {
+                $("#cellTypes").find(".selected").removeClass("selected");
+                $(this).addClass("selected");
+                selection = i;
+            });
+        }
+    }
+
+    function CellClickHandler(index)
+    {
+        if(state == 0 && selection != -1)
+        {
+            grid[Math.floor(index / rows)][index % columns] = cellTypes[selection];
+
+            var row = typeTable.getElementsByTagName("table")[0].rows[Math.floor(selection / 4)];
+            var imageSource = row.cells[selection % (selection >= 12 ? 3 : 4)].getElementsByTagName("img")[0];
+            var image = imageSource.cloneNode();
+
+            var targetCell = gridContainer.getElementsByTagName("table")[0].rows[Math.floor(index / rows)].cells[index % columns];
+            if(targetCell.getElementsByTagName("img")[0] != null)
+                targetCell.removeChild(targetCell.getElementsByTagName("img")[0]);
+            targetCell.appendChild(image)
+        }
+        else if(state == 1)
+        {
+            if(sourceCoord[0] != -1)
+                $(gridContainer.getElementsByTagName("table")[0].rows[sourceCoord[0]].cells[sourceCoord[1]]).removeClass("source");
+
+            sourceCoord[0] = Math.floor(index / rows);
+            sourceCoord[1] = index % columns;
+            $(gridContainer.getElementsByTagName("table")[0].rows[sourceCoord[0]].cells[sourceCoord[1]]).addClass("source");
+            
+        }
+        else if(state == 2)
+        {
+            if(tempCoords[0] == tempCoords[1] && tempCoords[0] == -1)
+            {
+                tempCoords[0] = Math.floor(index / rows);
+                tempCoords[1] = index % columns;
+                $(gridContainer.getElementsByTagName("table")[0].rows[tempCoords[0]].cells[tempCoords[1]]).addClass("selected");
+            }
+            else
+            {
+                Swap(tempCoords[0], tempCoords[1], Math.floor(index / rows), index % columns);
+                Pathfinding();
+                $(gridContainer.getElementsByTagName("table")[0].rows[tempCoords[0]].cells[tempCoords[1]]).removeClass("selected");
+                $(gridContainer.getElementsByTagName("table")[0].rows[Math.floor(index / rows)].cells[index % columns]).removeClass("selected");
+                tempCoords[0] = -1;
+                tempCoords[1] = -1;
+            }
+        }
+    }
+
+    function ChangeState()
+    {
+        if(IsGridNotFilled())
+            return;
+        
+        state = (state + 1) % 3;
+        setupButton.innerHTML = ["Setup", "Source", "Swap"][state];
+        if(state == 2)
+            Pathfinding();
+    }
+
+    function IsGridNotFilled()
+    {
+        for(let i = 0; i < rows; i++)
+            if(grid[i].includes(""))
+                return true;
+
+        return false;
+    }
+    
+    function InitialiseButtons()
+    {
+        setupButton = document.getElementById("state");
+        setupButton.onclick = ChangeState;
+
+        resetButton = document.getElementById("reset");
+        resetButton.onclick = Reset;
+    }
+
+    function Swap(x1, y1, x2, y2)
+    {
+        var first = grid[x1][y1];
+        var second = grid[x2][y2];
+
+        grid[x1][y1] = second;
+        grid[x2][y2] = first;
+
+        var firstCell = gridContainer.getElementsByTagName("table")[0].rows[x1].cells[y1];
+        var secondCell = gridContainer.getElementsByTagName("table")[0].rows[x2].cells[y2];
+
+        if(x1 == x2 && y1 == y2)
+        {
+            return;
+        }
+        if($(firstCell).attr("class").split(/\s+/).includes("source"))
+        {
+            sourceCoord[0] = x2;
+            sourceCoord[1] = y2;
+            $(firstCell).removeClass("source");
+            $(secondCell).addClass("source");
+        }
+        else if($(secondCell).attr("class").split(/\s+/).includes("source"))
+        {
+            sourceCoord[0] = x1;
+            sourceCoord[1] = y1;
+            $(secondCell).removeClass("source");
+            $(firstCell).addClass("source");
+        }
+
+        if(firstCell.getElementsByTagName("img")[0] == null)
+        {
+            if(secondCell.getElementsByTagName("img")[0] == null)
+            {
+                return;
+            }
+            else
+            {
+                secondCellImage = secondCell.getElementsByTagName("img")[0].cloneNode();
+                firstCell.appendChild(secondCellImage);
+                secondCell.removeChild(secondCell.getElementsByTagName("img")[0]);
+            }
+        }
+        else
+        {
+            if(secondCell.getElementsByTagName("img")[0] == null)
+            {
+                firstCellImage = firstCell.getElementsByTagName("img")[0].cloneNode();
+                secondCell.appendChild(firstCellImage);
+                firstCell.removeChild(firstCell.getElementsByTagName("img")[0]);
+            }
+            else
+            {
+                firstCellImage = firstCell.getElementsByTagName("img")[0].cloneNode();
+                secondCellImage = secondCell.getElementsByTagName("img")[0].cloneNode();
+                
+                firstCell.removeChild(firstCell.getElementsByTagName("img")[0]);
+                secondCell.removeChild(secondCell.getElementsByTagName("img")[0]);
+
+                firstCell.appendChild(secondCellImage);
+                secondCell.appendChild(firstCellImage);
+            }
+        }
+        Pathfinding();
+    }
+
+    function Pathfinding()
+    {
+        if((sourceCoord[0] == sourceCoord[1] && sourceCoord[0] == -1) || IsGridNotFilled())
+            return;
+        
+        $(gridContainer.getElementsByTagName("table")[0]).find(".sourceReaches").removeClass("sourceReaches");
+
+        var cellStack = [[sourceCoord[0], sourceCoord[1]]];
+        
+        while(cellStack.length != 0)
+        {
+            var currentCoordinate = cellStack.pop();
+            var currentCell = grid[currentCoordinate[0]][currentCoordinate[1]].split("");
+            for(let j = 0; j < currentCell.length; j++)
+            {
+                if(currentCell[j] == "U")
+                {
+                    if(currentCoordinate[0] - 1 == -1)
+                        continue;
+                    if(grid[currentCoordinate[0] - 1][currentCoordinate[1]].includes("D"))
+                    {
+                        var cellTo = gridContainer.getElementsByTagName("table")[0].rows[currentCoordinate[0] - 1].cells[currentCoordinate[1]];
+                        if($(cellTo).attr("class").includes("source") || $(cellTo).attr("class").includes("sourceReaches"))
+                            continue;
+                        $(cellTo).addClass("sourceReaches");
+                        cellStack.push([currentCoordinate[0] - 1, currentCoordinate[1]]);
+                    }
+                }
+                if(currentCell[j] == "R")
+                {
+                    if(currentCoordinate[1] + 1 == rows)
+                        continue;
+                    if(grid[currentCoordinate[0]][currentCoordinate[1] + 1].includes("L"))
+                    {
+                        var cellTo = gridContainer.getElementsByTagName("table")[0].rows[currentCoordinate[0]].cells[currentCoordinate[1] + 1];
+                        if($(cellTo).attr("class").includes("source") || $(cellTo).attr("class").includes("sourceReaches"))
+                            continue;
+                        $(cellTo).addClass("sourceReaches");
+                        cellStack.push([currentCoordinate[0], currentCoordinate[1] + 1]);
+                    }
+                }
+                if(currentCell[j] == "D")
+                {
+                    if(currentCoordinate[0] + 1 == columns)
+                        continue;
+                    if(grid[currentCoordinate[0] + 1][currentCoordinate[1]].includes("U"))
+                    {
+                        var cellTo = gridContainer.getElementsByTagName("table")[0].rows[currentCoordinate[0] + 1].cells[currentCoordinate[1]];
+                        if($(cellTo).attr("class").includes("source") || $(cellTo).attr("class").includes("sourceReaches"))
+                            continue;
+                        $(cellTo).addClass("sourceReaches");
+                        cellStack.push([currentCoordinate[0] + 1, currentCoordinate[1]]);
+                    }
+                }
+                if(currentCell[j] == "L")
+                {
+                    if(currentCoordinate[1] - 1 == -1)
+                        continue;
+                    if(grid[currentCoordinate[0]][currentCoordinate[1] - 1].includes("R"))
+                    {
+                        var cellTo = gridContainer.getElementsByTagName("table")[0].rows[currentCoordinate[0]].cells[currentCoordinate[1] - 1];
+                        if($(cellTo).attr("class").includes("source") || $(cellTo).attr("class").includes("sourceReaches"))
+                            continue;
+                        $(cellTo).addClass("sourceReaches");
+                        cellStack.push([currentCoordinate[0], currentCoordinate[1] - 1]);
+                    }
+                }
+            }
+        }
+    }
+
+    function Initialise()
+    {
+        InitialiseGrids();
+        InitialiseButtons();
+        CreateTable();
+        SetCellTypes();
+    }
+
+    window.onload = Initialise();
+</script>
+</html>
