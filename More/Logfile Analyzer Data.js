@@ -14084,6 +14084,71 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "superpositionRB",
+		loggingTag: "Superposition",
+		matches: [
+			{
+				regex: /(?:Top|Right) Display:/,
+				handler: function(matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(6).join("\n")) });
+					module.toPush = [];
+					module.solves = -1;
+					module.strikes = 0;
+					return true;
+				}
+			},
+			{
+				regex: /The Collasped Superposition is the (?:top|right) display./,
+				handler: function(match, module) {
+					module.push({ label: match[0], obj: $("<hr>") });
+					return true;
+				}
+			},
+			{
+				regex: /The Starting Number plus the number of solved modules is ((?:\d)+)\./,
+				handler: function(matches, module) {
+					if (module.solveFlag === matches[1]) {
+						module.strikes++;
+					}
+					else {
+						module.solves++;
+					}
+					module.solveFlag = matches[1];
+				}
+			},
+			{
+				regex: /The uniquely valid cells in all the stages are: ((?:[A-E1-5, ])+)\./,
+				handler: function(match, module) {
+					module.toPush.push(match[0]);
+					module.push([`Answer for ${module.solves} solve${module.solves === 1 ? "" : "s"} and ${module.strikes} strike${module.strikes === 1 ? "" : "s"}:`, module.toPush]);
+					module.toPush = [];
+					return true;
+				}
+			},
+			{
+				regex: /Module Solved./,
+				handler: function(matches, module) {
+					module.push(match[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Step #[234]:.+/,
+				handler: function(matches, module) {
+					module.toPush.push({ obj: $("<hr>"), nobullet: true });
+					module.toPush.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					module.toPush.push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SymbolCycleModule",
 		loggingTag: "Symbol Cycle",
 		matches: [
