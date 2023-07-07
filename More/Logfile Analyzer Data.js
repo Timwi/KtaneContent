@@ -2940,6 +2940,117 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "cruello",
+		loggingTag: "Cruello",
+		matches: [
+			{
+				regex: /^The grid of (magenta|yellow|cyan) digits is:/,
+				handler: function(matches, module) {
+					if (matches[1] === "magenta") module.mGrid = readTaggedLines(6);
+					if (matches[1] === "yellow") module.yGrid = readTaggedLines(6);
+					if (matches[1] === "cyan") module.cGrid = readTaggedLines(6);
+					return true;
+				}
+			},
+			{
+				regex: /The required (column|row) sums are: ([\d, ]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colSums = matches[2].split(", ");
+					if (matches[1] === "row") module.rowSums = matches[2].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /The (column|row) colours are: ([, WMCY]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colColours = matches[2].split(", ");
+					if (matches[1] === "row") module.rowColours = matches[2].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is:/,
+				handler: function(matches, module) {
+					module.gGrid = readTaggedLines(6);
+					for (let r = 0; r < 6; r++) {
+						module.gGrid[r] = module.gGrid[r].trim();
+					}
+					module.toPush = [];
+					
+					const colourDict = {
+						M: "magenta",
+						Y: "yellow",
+						C: "cyan",
+						W: "white"
+					};
+					let grids = [ module.mGrid, module.yGrid, module.cGrid, module.gGrid ];
+					let sums = [ module.colSums, module.rowSums ];
+					let colours = [ module.colColours, module.rowColours ];
+					let svgs = [];
+					let gridColours = [ "magenta", "yellow", "cyan", "generated" ];
+					for (let gridColour of gridColours) {
+						svgs.push($("<svg viewbox='0 0 710 710'>").addClass("cruello").addClass(`${gridColour}-grid`));
+					}
+					for (let i = 0; i < 4; i++) {
+						let isGenGrid = i === 3;
+						let svg = svgs[i];
+						let grid = grids[i];
+
+						for (let row = 0; row < 7; row++) {
+							if (row === 0) {
+								for (let j = 0; j < 6; j++) {
+									$SVG("<rect>").attr("width", 90).attr("height", 90)
+										.attr("x", 100 * j + 10).attr("y", 10)
+										.appendTo(svg);
+									$SVG("<text>").addClass(colourDict[colours[0][j]]).text(sums[0][j])
+										.attr("x", 100 * j + 55).attr("y", 58)
+										.appendTo(svg);
+								}
+							}
+							else {
+								for (let col = 0; col < 7; col++) {
+									if (col === 6) {
+										$SVG("<rect>").attr("width", 90).attr("height", 90)
+											.attr("x", 610).attr("y", 100 * row + 10)
+											.appendTo(svg);
+										$SVG("<text>").addClass(colourDict[colours[1][row-1]]).text(sums[1][row-1])
+											.attr("x", 655).attr("y", 100 * row + 58)
+											.appendTo(svg);
+									}
+									else {
+										let cellCol = isGenGrid ? colourDict[grid[row-1][col*2]] : gridColours[i]
+										let cellText = isGenGrid ? grids[gridColours.indexOf(cellCol)][row-1][col*2] : grid[row-1][col*2];
+
+										$SVG("<circle>").addClass(cellCol).attr("r", 37.5)
+											.attr("cx", 100 * col + 55 ).attr("cy", 100 * row + 55)
+											.appendTo(svg);
+
+										$SVG("<text>").addClass("cell").addClass(`dark-${cellCol}`)
+											.attr("x", 100 * col + 55).attr("y", 100 * row + 62)
+											.text(cellText)
+											.appendTo(svg);
+									}
+								}
+							}
+						}
+						if (isGenGrid) {
+							module.genSol = ({ label: matches[0], obj: svg });
+						}
+						else {
+							module.toPush.push({ label: `The ${gridColours[i]} grid:`, obj: svg });
+						}
+					}
+					module.push([ `The generated puzzle:`, module.toPush ]);
+					module.push(module.genSol);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "CrittersModule",
 		loggingTag: "Critters",
 		matches: [
@@ -14025,6 +14136,71 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "superpositionRB",
+		loggingTag: "Superposition",
+		matches: [
+			{
+				regex: /(?:Top|Right) Display:/,
+				handler: function(matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(6).join("\n")) });
+					module.toPush = [];
+					module.solves = -1;
+					module.strikes = 0;
+					return true;
+				}
+			},
+			{
+				regex: /The Collasped Superposition is the (?:top|right) display./,
+				handler: function(match, module) {
+					module.push({ label: match[0], obj: $("<hr>") });
+					return true;
+				}
+			},
+			{
+				regex: /The Starting Number plus the number of solved modules is ((?:\d)+)\./,
+				handler: function(matches, module) {
+					if (module.solveFlag === matches[1]) {
+						module.strikes++;
+					}
+					else {
+						module.solves++;
+					}
+					module.solveFlag = matches[1];
+				}
+			},
+			{
+				regex: /The uniquely valid cells in all the stages are: ((?:[A-E1-5, ])+)\./,
+				handler: function(match, module) {
+					module.toPush.push(match[0]);
+					module.push([`Answer for ${module.solves} solve${module.solves === 1 ? "" : "s"} and ${module.strikes} strike${module.strikes === 1 ? "" : "s"}:`, module.toPush]);
+					module.toPush = [];
+					return true;
+				}
+			},
+			{
+				regex: /Module Solved./,
+				handler: function(matches, module) {
+					module.push(match[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Step #[234]:.+/,
+				handler: function(matches, module) {
+					module.toPush.push({ obj: $("<hr>"), nobullet: true });
+					module.toPush.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					module.toPush.push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SymbolCycleModule",
 		loggingTag: "Symbol Cycle",
 		matches: [
@@ -14659,6 +14835,112 @@ let parseData = [
 						}
 					}
 					module.push({label:matches[0], obj:svg});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "Torment",
+		loggingTag: "Torment",
+		matches: [
+			{
+				regex: /The grid generated by the module:/,
+				handler: function(matches, module) {
+					if (module.started) {
+						module.push({ obj: $("<hr>"), nobullet: true });
+					}
+					module.started = true;
+
+					let look = $("<svg viewbox='-5 -5 410 110'>").addClass("torment-header");
+					let letters = [ "L", "O", "O", "K" ];
+					for (let i = 0; i < 4; i++) {
+						$SVG("<rect>").addClass("torment-cell").addClass(i % 2 === 0 ? "red" : "black")
+							.attr("x", 100 * i).attr("y", 0)
+							.attr("width", 100).attr("height", 100)
+							.appendTo(look);
+									
+						$SVG("<text>").addClass("torment-cell").addClass("white")
+							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
+							.appendTo(look);
+					}
+					let svg = $("<svg viewbox='-5 -5 410 410'>").addClass("torment-look");
+					let grid = readTaggedLines(4);
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							$SVG("<rect>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "red" : "black")
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.attr("width", 100).attr("height", 100)
+								.appendTo(svg);
+							
+							$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
+								.attr("x", 100 * col + 50).attr("y", 100 * row + 65).text(grid[row][col])
+								.appendTo(svg);
+						}
+					}
+					module.push({ obj: look, nobullet: true });
+					module.push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /The base number used on the grid is: \d/,
+				handler: function(matches, module) {
+					let fall = $("<svg viewbox='-5 -5 410 110'>").addClass("torment-header");
+					let letters = [ "F", "A", "L", "L" ];
+					for (let i = 0; i < 4; i++) {
+						$SVG("<rect>").addClass("torment-cell").addClass(i % 2 === 0 ? "red" : "black")
+							.attr("x", 100 * i).attr("y", 0)
+							.attr("width", 100).attr("height", 100)
+							.appendTo(fall);
+									
+						$SVG("<text>").addClass("torment-cell").addClass("white")
+							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
+							.appendTo(fall);
+					}
+					let svg = $("<svg viewbox='-5 -5 1610 1610'>").addClass("torment-fall");
+					grids = [];
+					for (let i = 0; i < 16; i++) {
+						grids.push(readTaggedLine().match(/\d\d\d\d\|\d\d\d\d\|\d\d\d\d\|\d\d\d\d/)[0].split("|"));
+					}
+					for (let i = 0; i < 4; i++) {
+						for (let j = 0; j < 4; j++) {
+							let xOffset = 400 * i + 5;
+							let yOffset = 400 * j + 5;
+							let grid = grids[j*4+i];
+							for (let row = 0; row < 4; row++) {
+								for (let col = 0; col < 4; col++) {
+									$SVG("<rect>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "red" : "black")
+										.attr("x", xOffset + 95 * col).attr("y", yOffset + 95 * row)
+										.attr("width", 95).attr("height", 95)
+										.appendTo(svg);
+									
+									$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
+										.attr("x", xOffset + 95 * col + 50).attr("y", yOffset + 95 * row + 65).text(grid[row][col])
+										.appendTo(svg);
+								}
+							}
+						}
+					}
+					module.push({ obj: fall, nobullet: true });
+					module.push({ obj: svg, nobullet: true });
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The tiles should be pressed \(based on my algorithm\) are: ([A-D][1-4]), ([A-D][1-4]), ([A-D][1-4])/,
+				handler: function(matches, module) {
+					module.push(`The tiles that should be pressed \(based on my algorithm\) are: ${matches[1]}, ${matches[2]} and ${matches[3]}.`)
+					return true;
+				}
+			},
+			{
+				regex: /------------------------------------------------------------------/,
+				handler: function() {
 					return true;
 				}
 			},
