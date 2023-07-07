@@ -14958,37 +14958,49 @@ let parseData = [
 				regex: /^(The initial state|The solution grid) is: (.+)$/,
 				handler: function(matches, module)
 				{
-					let grid = [].concat.apply([], matches[2].split("|").map(x => x.split("")));
-					let svg = `<br><svg width="200" height="200" viewbox="0 0 200 200">`
-					for(let i = 0; i < 16; i++)
+					let grid = [].concat.apply([], matches[2].split(";").map(x => x.split(",")));
+					module.rowCount = matches[2].split(";").length;
+					module.columnCount = matches[2].split(";")[0].split(",").length;
+					let svg = `<br><svg width="${50 * module.columnCount}" height="${50 * module.rowCount}" viewbox="0 0 ${50 * module.columnCount} ${50 * module.rowCount}">`
+					for(let i = 0; i < grid.length; i++)
 					{
-						svg += `<rect x="${50 * (i % 4)}" y="${50 * Math.floor(i / 4)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-						svg += `<text font-size='32' x="${50 * (i % 4) + 16}" y="${50 * Math.floor(i / 4) + 37}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
+						svg += `<rect x="${50 * (i % module.rowCount)}" y="${50 * Math.floor(i / module.columnCount)}" width="50" height="50" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+						svg += `<text font-size='32' x="${50 * (i % module.rowCount) + 16}" y="${50 * Math.floor(i / module.columnCount) + 37}" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
 					}
-					module.largeSvg = `<br><svg width="930" height="930" viewbox="0 0 930 930">`
+					module.largeSvg = `<br><svg width="${292.5 * module.rowCount}" height="${292.5 * module.columnCount}" viewbox="0 0 ${292.5 * module.rowCount} ${292.5 * module.columnCount}">`
 					module.push({label: `${matches[1]}` + (matches[1] == "The solution grid" ? " (press counts)" : "") + `: `, obj: svg});
+					return true;
 				}
 			},
 			{
-				regex: /^The matrix for tile ([ABCD][1234]) is: (.+)$/,
-				handler: function(matches, module)
-				{
-					let grid = [].concat.apply([], matches[2].split("|").map(x => x.split("")));
-					let partial = ``;
-					let index = (matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 4 + (matches[1].charCodeAt(1) - "1".charCodeAt(0));
-					partial += `<rect x="${200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="220" height="220" style="fill:${((index ^ (index >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-					for(let i = 0; i < 16; i++)
-					{
-						partial += `<rect x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * Math.floor(i / 4) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-						partial += `<text font-size='32' x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 26 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * (Math.floor(i / 4)) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 47 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i] == 0 ? "" : grid[i]}</text>`
-						module.largeSvg += partial;
-					}
-					if(matches[1] == "D4")
-					{
-						module.push({label: "The offsets (larger tiles affect smaller tiles): ", obj: module.largeSvg});
-					}
-				}
+				regex: /.+/
 			}
+			//{
+			//	regex: /^The matrix for tile ([A-Z]+)(\d+) is: (.+)$/,
+			//	handler: function(matches, module)
+			//	{
+			//		let grid = [].concat.apply([], matches[3].split(";").map(x => x.split(",")));
+			//		let col = matches[1].split("").map((e, i) => (e.charCodeAt(0) - "A".charCodeAt(0)) * (26 ** (matches[1].length - 1 - i)));
+			//		let sum = 0;
+			//		col.forEach(x => {sum += x;});
+			//		
+			//		col = sum;
+			//		let row = parseInt(matches[2]) - 1;
+			//		let partial = ``;
+			//		let index = row * module.rowCount + col;
+			//		partial += `<rect x="${220 * col * module.columnCount / 4}" y="${220 * row * module.rowCount / 4}" width="${(50 * module.columnCount + 20)}" height="${50 * module.rowCount + 20}" style="fill:${(((index % module.columnCount) ^ (index / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+			//		for(let i = 0; i < grid.length; i++)
+			//		{
+			//			partial += `<rect x="${(40 * (i % module.columnCount) + 220 * col + 7.5) * module.columnCount / 4}" y="${(40 * Math.floor(i / module.rowCount) + 220 * row + 7.5) * module.columnCount / 4}" width="50" height="50" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+			//			// partial += `<text font-size='32' x="${50 * (i % module.rowCount) + (230 * module.rowCount / 4) * row + 26}" y="${50 * (Math.floor(i / module.columnCount)) + (230 * module.columnCount / 4) * col + 47}" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i] == 0 ? "" : grid[i]}</text>`
+			//			module.largeSvg += partial;
+			//		}
+			//		if(row * col == (module.rowCount - 1) * (module.columnCount - 1))
+			//		{
+			//			module.push({label: "The offsets (larger tiles affect smaller tiles): ", obj: module.largeSvg});
+			//		}
+			//	}
+			//}
 		]
 	},
 	{
@@ -15037,7 +15049,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /.+/,
+				regex: /.+/
 			}
 		]
 	},
