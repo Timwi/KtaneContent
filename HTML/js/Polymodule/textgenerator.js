@@ -45,26 +45,50 @@ const RULENUMBER = 15+(DAY%3)-(DATE%3);
 const INPUTMETHOD = (YEAR+DATE+DAY+MONTH)%3;
 const RULES = [];
 const RuleText=[];
-
-var seed = YEAR*10000+MONTH*100+DAY;
 var a = 1664525, c = 1013904223, m = Math.pow(2, 32);
-
 function LCG(a, c, m, x) {
     return (a * x + c) % m;
-  }
-
-for (var i = 0; i < 18; i++) {
-    seed = LCG(a, c, m, seed);
-    RULES.push((seed % 16)); //Change if rules increase
 }
 
-if (RULES[0] == 5||RULES[0]==6) { RULES[0] = 8;}
-let WasLastValue5 = false;
-for(var i = 0;i<RULES.length;i++){
-    if(WasLastValue5&&RULES[i]==5){RULES[i]=6;WasLastValue5=false; continue;}
-    if(RULES[i]==5){WasLastValue5=true;}
-    else{WasLastValue5=false;}
+
+
+
+if(DATE>=9||MONTH>7||YEAR>2023){
+    var seed = (DATE*10000)+((MONTH+DAY)*100)+YEAR;
+
+    for (var i = 0; i < 18; i++) {
+        seed = LCG(a, c, m, seed);
+        RULES.push(Math.floor((seed / m) * 16)); //Change if rules increase
+    }
+
+    if (RULES[0] == 5||RULES[0]==6) { RULES[0] = 8;}
+
+    let LastValue = -1;
+    for(var i = 0;i<RULES.length;i++){
+        if(LastValue==RULES[i]){RULES[i]+=1;}
+        if(RULES[i]==16){RULES[i]=1;}
+        LastValue=RULES[i];
+    }
+
+}else{
+    //old design
+    var seed =  YEAR*10000+MONTH*100+DAY;
+    for (var i = 0; i < 18; i++) {
+        seed = LCG(a, c, m, seed);
+        RULES.push((seed % 16)); //Change if rules increase
+    }
+    
+    if (RULES[0] == 5||RULES[0]==6) { RULES[0] = 8;}
+    let WasLastValue5 = false;
+    for(var i = 0;i<RULES.length;i++){
+        if(WasLastValue5&&RULES[i]==5){RULES[i]=6;WasLastValue5=false; continue;}
+        if(RULES[i]==5){WasLastValue5=true;}
+        else{WasLastValue5=false;}
+    }
 }
+
+
+
 
 let FirstSencenceText = "";
 switch(INPUTMETHOD){
@@ -78,7 +102,6 @@ switch(INPUTMETHOD){
         FirstSencenceText="To solve this module, one must tap the button which has the highest final value when the last digit of the timer is the same for the highest final value. To find the final values, take each button's value shown on the module and apply the following rules. If after a rule duplicates appear, add 1 to the value with the highest initial value. Repeat this until there are no duplicates.";
         break;
 }
-
 
 
 switch(DAY){
@@ -106,7 +129,6 @@ switch(DAY){
 }
 
 document.getElementById("FirstSentence").innerHTML = FirstSencenceText;
-
 
 for(let x=0;x<RULENUMBER;x++){
     switch(RULES[x]){
@@ -150,7 +172,7 @@ for(let x=0;x<RULENUMBER;x++){
             RuleText.push("If any value is less than 10, add 20 to that value.");
             break;
         case 13:
-            RuleText.push("If any value (that is not the lowest) is a multiple of the lowest value, multiply that value by 2. (ignore if the lowest value is 0)");
+            RuleText.push("If any value (that is not the lowest) is a multiple of the lowest value, multiply that value by 2 (ignore if the lowest value is 0).");
             break;
         case 14:
             RuleText.push("Add the number of minutes left to the lowest and highest values.");  
@@ -161,20 +183,20 @@ for(let x=0;x<RULENUMBER;x++){
     }
 }
 
-
 let orderedList = document.getElementById("MainList");
 let FirstTimeSaw5 = false;
 
-for(let x = 0; x < RuleText.length; x++){
+for(let x = 0; x < RULENUMBER; x++){
     let listItem = document.createElement("li");
     listItem.textContent = RuleText[x];
     orderedList.appendChild(listItem);
-
+    
     if(FirstTimeSaw5 === false && RULES[x] === 5){
         FirstTimeSaw5 = true; 
         listItem.innerHTML+=" (Note: Adding 1's because of duplicates do not count as operations. Change the value back to what it was before the last operation mentioned on this page. If the value doesn't get changed, don't alter it)";
     }
     else if(RULES[x]==5){listItem.innerHTML+=" (See note above)";}
+    
 }
 
 
