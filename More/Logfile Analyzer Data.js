@@ -13850,6 +13850,191 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "slightGibberishTwistModule",
+		loggingTag: "Slight Gibberish Twist",
+		matches: [
+			{
+				regex: /Allocating board size (\d) by \1\./,
+				handler: function(match, module) {
+					module.size = match[1];
+					module.displays = [];
+					module.inputCounter = 0;
+					module.push([ "Displays", module.displays ]);
+					return true;
+				}
+			},
+			{
+				regex: /-+ (Stage (\d+)) -+/,
+				handler: function(matches, module) {
+					const dim = module.size;
+					module.colourDict = {
+						"K": "#000D",
+						"R": "#F00D",
+						"G": "#0F0D",
+						"Y": "#FF0D",
+						"B": "#55FD",
+						"M": "#F0FD",
+						"C": "#0FFD",
+						"W": "#FFFD"
+					};
+					let info;
+					let operator;
+					let channel;
+					let grid;
+					let validity;
+					let log = module.displays;
+					let colourDict = module.colourDict;
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					if (matches[2] == 1) {
+						info = readTaggedLines(2);
+						operator = info[0].match(/Displayed Operator: (.+)/)[1]
+						module.grid = info[1].match(/Initial board \(from left to right, top to bottom\): (.+)/)[1].split(",");
+						grid = module.grid;
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								$SVG("<rect>").addClass("slight-gib-twist-cell")
+									.attr("fill", colourDict[grid[row][col]])
+									.attr("width", 100).attr("height", 100)
+									.attr("x", 100 * col).attr("y", 100 * row)
+									.appendTo(svg);
+							}
+						}
+						log.push([ `${matches[1]} | Operator: ${operator} | VALID`, [{ nobullet: true, obj: svg }] ]);
+					}
+					else {
+						info = readTaggedLines(4);
+						operator = info[0].match(/Displayed Operator: (.+)/)[1];
+						channel = info[1].match(/Assigned Channel: ([RGB])/)[1];
+						grid = info[2].match(/Displayed Grid \(GOL Style\): (.+)/)[1].split(",");
+						validity = info[3].match(/Validity on current stage: (VALID|INVALID)/)[1];
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								$SVG("<rect>").addClass("slight-gib-twist-cell")
+									.attr("fill", grid[row].includes((col + 1).toString()) ? colourDict[channel] : colourDict["K"])
+									.attr("width", 100).attr("height", 100)
+									.attr("x", 100 * col).attr("y", 100 * row)
+									.appendTo(svg);
+							}	
+						}
+						log.push([ `${matches[1]} | Operator: ${operator} | ${validity}`, [{ nobullet: true, obj: svg }] ]);		
+					}
+					
+					return true;
+				}
+			},
+			{
+				regex: /-+ Submission -+/,
+				handler: function(_, module) {
+					let requiredStages = readTaggedLine().match(/Required stages to solve in order: ([\d, ]+)/)[1];
+					module.submission = [`Required stages (in order): ${requiredStages}`,];
+					module.push([ `Submission`, module.submission ]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) was not a valid stage to calculate\. Current board should be left as is after applying this stage\./,
+				handler: function(matches, module) {
+					let log = module.submission;
+					log.push(`Stage ${matches[1]} was not a valid stage to calculate. Current grid should be left as is after considering this stage.`);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) was a valid stage with the operator: (.+)/,
+				handler: function(matches, module) {
+					const dim = module.size;
+					let info = readTaggedLine();
+					let grid = info.match(/Board after modification on stage (?:\d+) \(from left to right, top to bottom\): (.+)/)[1].split(",");
+					let log = module.submission;
+					let colourDict = module.colourDict;
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push([ `Stage ${matches[1]} was a valid stage to calculate. Applying with operator ${matches[2]}...`, [{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
+					return true;
+				}
+			},
+			{
+				regex: /(New )?(?:E|e)xpected board to submit \(from left to right, top to bottom\): (.+)/i,
+				handler: function(match, module) {
+					const dim = module.size;
+					let grid = match[2].split(",");
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					let log = module.submission;
+					let colourDict = module.colourDict;
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push({ label: `${match[1] == "New " ? "New e" : "E"}xpected grid to submit:`, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /-+ User Interactions -+/,
+				handler: function(_, module) {
+					module.interactions = [];
+					module.push([ "User Interactions", module.interactions ]);
+					return true;
+				}
+			},
+			{
+				regex: /Submitted the current state: \(from left to right, top to bottom\): (.+)/,
+				handler: function(match, module) {
+					let log = module.interactions;
+					const dim = module.size;
+					let grid = match[1].split(",");
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					let colourDict = module.colourDict;
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push({ label: "Submitted the following state:", obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /STRIKE\. Correct cells filled: (\d)+ \/ (\d)+/,
+				handler: function(matches, module) {
+					module.interactions.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /WARNING! Activating Recovery Mode changed the required stages to disarm the module in the particular order: (.+)/,
+				handler: function(matches, module) {
+					module.inputCounter++;
+					let log = module.submission;
+					log.push({ obj: $("<hr>"), nobullet: true });
+					log.push(`After ${module.inputCounter} incorrect input${module.inputCounter == 1 ? "" : "s"}, the new required stages (in order): ${matches[1]}`);
+					module.interactions.push("WARNING! Activating Recovery Mode changed the required stages to disarm the module.");
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Snakes and Ladders",
 		moduleID: "snakesAndLadders",
 		loggingTag: "Snakes and Ladders",
