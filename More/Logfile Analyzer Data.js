@@ -13887,7 +13887,7 @@ let parseData = [
 					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
 					if (matches[2] == 1) {
 						info = readTaggedLines(2);
-						operator = info[0].match(/Displayed Operator: (.+)/)[1]
+						operator = info[0].match(/Displayed Operator: (.+)/)[1];
 						module.grid = info[1].match(/Initial board \(from left to right, top to bottom\): (.+)/)[1].split(",");
 						grid = module.grid;
 						for (let row = 0; row < dim; row++) {
@@ -13957,12 +13957,13 @@ let parseData = [
 								.appendTo(svg);
 						}
 					}
-					log.push([ `Stage ${matches[1]} was a valid stage to calculate. Applying with operator ${matches[2]}...`, [{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
+					log.push([ `Stage ${matches[1]} was a valid stage to calculate. Applying with operator ${matches[2]}...`,
+								[{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
 					return true;
 				}
 			},
 			{
-				regex: /(New )?(?:E|e)xpected board to submit \(from left to right, top to bottom\): (.+)/i,
+				regex: /(New )?expected board to submit \(from left to right, top to bottom\): (.+)/i,
 				handler: function(match, module) {
 					const dim = module.size;
 					let grid = match[2].split(",");
