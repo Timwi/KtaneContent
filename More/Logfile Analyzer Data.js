@@ -2940,6 +2940,117 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "cruello",
+		loggingTag: "Cruello",
+		matches: [
+			{
+				regex: /^The grid of (magenta|yellow|cyan) digits is:/,
+				handler: function(matches, module) {
+					if (matches[1] === "magenta") module.mGrid = readTaggedLines(6);
+					if (matches[1] === "yellow") module.yGrid = readTaggedLines(6);
+					if (matches[1] === "cyan") module.cGrid = readTaggedLines(6);
+					return true;
+				}
+			},
+			{
+				regex: /The required (column|row) sums are: ([\d, ]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colSums = matches[2].split(", ");
+					if (matches[1] === "row") module.rowSums = matches[2].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /The (column|row) colours are: ([, WMCY]+)/,
+				handler: function(matches, module) {
+					if (matches[1] === "column") module.colColours = matches[2].split(", ");
+					if (matches[1] === "row") module.rowColours = matches[2].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is:/,
+				handler: function(matches, module) {
+					module.gGrid = readTaggedLines(6);
+					for (let r = 0; r < 6; r++) {
+						module.gGrid[r] = module.gGrid[r].trim();
+					}
+					module.toPush = [];
+					
+					const colourDict = {
+						M: "magenta",
+						Y: "yellow",
+						C: "cyan",
+						W: "white"
+					};
+					let grids = [ module.mGrid, module.yGrid, module.cGrid, module.gGrid ];
+					let sums = [ module.colSums, module.rowSums ];
+					let colours = [ module.colColours, module.rowColours ];
+					let svgs = [];
+					let gridColours = [ "magenta", "yellow", "cyan", "generated" ];
+					for (let gridColour of gridColours) {
+						svgs.push($("<svg viewbox='0 0 710 710'>").addClass("cruello").addClass(`${gridColour}-grid`));
+					}
+					for (let i = 0; i < 4; i++) {
+						let isGenGrid = i === 3;
+						let svg = svgs[i];
+						let grid = grids[i];
+
+						for (let row = 0; row < 7; row++) {
+							if (row === 0) {
+								for (let j = 0; j < 6; j++) {
+									$SVG("<rect>").attr("width", 90).attr("height", 90)
+										.attr("x", 100 * j + 10).attr("y", 10)
+										.appendTo(svg);
+									$SVG("<text>").addClass(colourDict[colours[0][j]]).text(sums[0][j])
+										.attr("x", 100 * j + 55).attr("y", 58)
+										.appendTo(svg);
+								}
+							}
+							else {
+								for (let col = 0; col < 7; col++) {
+									if (col === 6) {
+										$SVG("<rect>").attr("width", 90).attr("height", 90)
+											.attr("x", 610).attr("y", 100 * row + 10)
+											.appendTo(svg);
+										$SVG("<text>").addClass(colourDict[colours[1][row-1]]).text(sums[1][row-1])
+											.attr("x", 655).attr("y", 100 * row + 58)
+											.appendTo(svg);
+									}
+									else {
+										let cellCol = isGenGrid ? colourDict[grid[row-1][col*2]] : gridColours[i]
+										let cellText = isGenGrid ? grids[gridColours.indexOf(cellCol)][row-1][col*2] : grid[row-1][col*2];
+
+										$SVG("<circle>").addClass(cellCol).attr("r", 37.5)
+											.attr("cx", 100 * col + 55 ).attr("cy", 100 * row + 55)
+											.appendTo(svg);
+
+										$SVG("<text>").addClass("cell").addClass(`dark-${cellCol}`)
+											.attr("x", 100 * col + 55).attr("y", 100 * row + 62)
+											.text(cellText)
+											.appendTo(svg);
+									}
+								}
+							}
+						}
+						if (isGenGrid) {
+							module.genSol = ({ label: matches[0], obj: svg });
+						}
+						else {
+							module.toPush.push({ label: `The ${gridColours[i]} grid:`, obj: svg });
+						}
+					}
+					module.push([ `The generated puzzle:`, module.toPush ]);
+					module.push(module.genSol);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "CrittersModule",
 		loggingTag: "Critters",
 		matches: [
@@ -13067,7 +13178,6 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Stage = ["Stage " + matches[1], []];
 					module.push(module.Stage);
-
 					return true;
 				}
 			},
@@ -13076,14 +13186,78 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Stage = ["Submitted answer", []];
 					module.push(module.Stage);
-
 					return true;
 				}
 			},
 			{
 				regex: /Board:/,
-				handler: function (matches, module) {
-					module.Stage[1].push({ obj: pre(readMultiple(8)), nobullet: true });
+				handler: function (_, module) {
+					if(!module.pieceDictionary || !module.numberDictionary){
+						module.pieceDictionary = {
+							"BR": "♜",
+							"BN": "♞",
+							"BB": "♝",
+							"BQ": "♛",
+							"BK": "♚",
+							"BP": "♟",
+							"WR": "♖",
+							"WN": "♘",
+							"WB": "♗",
+							"WQ": "♕",
+							"WK": "♔",
+							"WP": "♙",
+						};
+						module.numberDictionary = {
+							"#": "",
+							"1": "₁",
+							"2": "₂",
+							"3": "₃",
+							"4": "₄",
+							"5": "₅",
+							"6": "₆",
+							"7": "₇",
+							"8": "₈",
+						};
+					}
+					let boardData = readMultiple(8);
+					let svgBoard = $(`<svg viewbox="0 0 810 810">`).addClass("shoddy-board");
+					let temp = boardData.split('\n');
+					let boardDataArr = [];
+					for (let i of temp) {
+						boardDataArr.push(i.split(" "));
+					}
+					const dimension = 100;
+					const padding = 5;
+					const downwardsPadding = 10;
+					for (let i = 0; i < 8; i++)
+					{
+						for (let j = 0; j < 8; j++)
+						{
+							let startingX = padding + j * dimension;
+							let startingY = padding + i * dimension;
+							let cellColor = (i + j) % 2 == 0 ? "shoddy-white-square": "shoddy-black-square";
+							let piece = boardDataArr[i][j] == "###" ? "" : module.pieceDictionary[boardDataArr[i][j].substring(0,2)];
+							piece += module.numberDictionary[boardDataArr[i][j][2]];
+							$SVG(`<rect>`).attr("x", startingX)
+										  .attr("y", startingY)
+										  .attr("width", dimension)
+										  .attr("height", dimension)
+										  .addClass(cellColor).appendTo(svgBoard);
+							let pieceElement = $SVG(`<text>`).attr("x", startingX + dimension / 2)
+										  .attr("y", startingY + dimension / 2 + downwardsPadding)
+										  .text(piece)
+										  .addClass("shoddy-text");
+
+							if (piece.length == 2) {
+								pieceElement.addClass("shoddy-small-text");
+							}
+							else if (piece.length == 1) {
+								pieceElement.addClass("shoddy-big-text");
+							}
+							pieceElement.appendTo(svgBoard);
+						}
+					}
+					module.Stage[1].push({ obj: svgBoard, nobullet: true });
 					return true;
 				}
 			},
@@ -13962,6 +14136,71 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "superpositionRB",
+		loggingTag: "Superposition",
+		matches: [
+			{
+				regex: /(?:Top|Right) Display:/,
+				handler: function(matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(6).join("\n")) });
+					module.toPush = [];
+					module.solves = -1;
+					module.strikes = 0;
+					return true;
+				}
+			},
+			{
+				regex: /The Collasped Superposition is the (?:top|right) display./,
+				handler: function(match, module) {
+					module.push({ label: match[0], obj: $("<hr>") });
+					return true;
+				}
+			},
+			{
+				regex: /The Starting Number plus the number of solved modules is ((?:\d)+)\./,
+				handler: function(matches, module) {
+					if (module.solveFlag === matches[1]) {
+						module.strikes++;
+					}
+					else {
+						module.solves++;
+					}
+					module.solveFlag = matches[1];
+				}
+			},
+			{
+				regex: /The uniquely valid cells in all the stages are: ((?:[A-E1-5, ])+)\./,
+				handler: function(match, module) {
+					module.toPush.push(match[0]);
+					module.push([`Answer for ${module.solves} solve${module.solves === 1 ? "" : "s"} and ${module.strikes} strike${module.strikes === 1 ? "" : "s"}:`, module.toPush]);
+					module.toPush = [];
+					return true;
+				}
+			},
+			{
+				regex: /Module Solved./,
+				handler: function(matches, module) {
+					module.push(match[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Step #[234]:.+/,
+				handler: function(matches, module) {
+					module.toPush.push({ obj: $("<hr>"), nobullet: true });
+					module.toPush.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					module.toPush.push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SymbolCycleModule",
 		loggingTag: "Symbol Cycle",
 		matches: [
@@ -14605,6 +14844,112 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "Torment",
+		loggingTag: "Torment",
+		matches: [
+			{
+				regex: /The grid generated by the module:/,
+				handler: function(matches, module) {
+					if (module.started) {
+						module.push({ obj: $("<hr>"), nobullet: true });
+					}
+					module.started = true;
+
+					let look = $("<svg viewbox='-5 -5 410 110'>").addClass("torment-header");
+					let letters = [ "L", "O", "O", "K" ];
+					for (let i = 0; i < 4; i++) {
+						$SVG("<rect>").addClass("torment-cell").addClass(i % 2 === 0 ? "red" : "black")
+							.attr("x", 100 * i).attr("y", 0)
+							.attr("width", 100).attr("height", 100)
+							.appendTo(look);
+									
+						$SVG("<text>").addClass("torment-cell").addClass("white")
+							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
+							.appendTo(look);
+					}
+					let svg = $("<svg viewbox='-5 -5 410 410'>").addClass("torment-look");
+					let grid = readTaggedLines(4);
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							$SVG("<rect>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "red" : "black")
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.attr("width", 100).attr("height", 100)
+								.appendTo(svg);
+							
+							$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
+								.attr("x", 100 * col + 50).attr("y", 100 * row + 65).text(grid[row][col])
+								.appendTo(svg);
+						}
+					}
+					module.push({ obj: look, nobullet: true });
+					module.push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /The base number used on the grid is: \d/,
+				handler: function(matches, module) {
+					let fall = $("<svg viewbox='-5 -5 410 110'>").addClass("torment-header");
+					let letters = [ "F", "A", "L", "L" ];
+					for (let i = 0; i < 4; i++) {
+						$SVG("<rect>").addClass("torment-cell").addClass(i % 2 === 0 ? "red" : "black")
+							.attr("x", 100 * i).attr("y", 0)
+							.attr("width", 100).attr("height", 100)
+							.appendTo(fall);
+									
+						$SVG("<text>").addClass("torment-cell").addClass("white")
+							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
+							.appendTo(fall);
+					}
+					let svg = $("<svg viewbox='-5 -5 1610 1610'>").addClass("torment-fall");
+					grids = [];
+					for (let i = 0; i < 16; i++) {
+						grids.push(readTaggedLine().match(/\d\d\d\d\|\d\d\d\d\|\d\d\d\d\|\d\d\d\d/)[0].split("|"));
+					}
+					for (let i = 0; i < 4; i++) {
+						for (let j = 0; j < 4; j++) {
+							let xOffset = 400 * i + 5;
+							let yOffset = 400 * j + 5;
+							let grid = grids[j*4+i];
+							for (let row = 0; row < 4; row++) {
+								for (let col = 0; col < 4; col++) {
+									$SVG("<rect>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "red" : "black")
+										.attr("x", xOffset + 95 * col).attr("y", yOffset + 95 * row)
+										.attr("width", 95).attr("height", 95)
+										.appendTo(svg);
+									
+									$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
+										.attr("x", xOffset + 95 * col + 50).attr("y", yOffset + 95 * row + 65).text(grid[row][col])
+										.appendTo(svg);
+								}
+							}
+						}
+					}
+					module.push({ obj: fall, nobullet: true });
+					module.push({ obj: svg, nobullet: true });
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The tiles should be pressed \(based on my algorithm\) are: ([A-D][1-4]), ([A-D][1-4]), ([A-D][1-4])/,
+				handler: function(matches, module) {
+					module.push(`The tiles that should be pressed \(based on my algorithm\) are: ${matches[1]}, ${matches[2]} and ${matches[3]}.`)
+					return true;
+				}
+			},
+			{
+				regex: /------------------------------------------------------------------/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Torture",
 		moduleID: "TortureModule",
 		loggingTag: "Torture",
@@ -14613,37 +14958,49 @@ let parseData = [
 				regex: /^(The initial state|The solution grid) is: (.+)$/,
 				handler: function(matches, module)
 				{
-					let grid = [].concat.apply([], matches[2].split("|").map(x => x.split("")));
-					let svg = `<br><svg width="200" height="200" viewbox="0 0 200 200">`
-					for(let i = 0; i < 16; i++)
+					let grid = [].concat.apply([], matches[2].split(";").map(x => x.split(",")));
+					module.rowCount = matches[2].split(";").length;
+					module.columnCount = matches[2].split(";")[0].split(",").length;
+					let svg = `<br><svg width="${50 * module.columnCount}" height="${50 * module.rowCount}" viewbox="0 0 ${50 * module.columnCount} ${50 * module.rowCount}">`
+					for(let i = 0; i < grid.length; i++)
 					{
-						svg += `<rect x="${50 * (i % 4)}" y="${50 * Math.floor(i / 4)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-						svg += `<text font-size='32' x="${50 * (i % 4) + 16}" y="${50 * Math.floor(i / 4) + 37}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
+						svg += `<rect x="${50 * (i % module.rowCount)}" y="${50 * Math.floor(i / module.columnCount)}" width="50" height="50" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+						svg += `<text font-size='32' x="${50 * (i % module.rowCount) + 16}" y="${50 * Math.floor(i / module.columnCount) + 37}" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i]}</text>`
 					}
-					module.largeSvg = `<br><svg width="930" height="930" viewbox="0 0 930 930">`
+					module.largeSvg = `<br><svg width="${292.5 * module.rowCount}" height="${292.5 * module.columnCount}" viewbox="0 0 ${292.5 * module.rowCount} ${292.5 * module.columnCount}">`
 					module.push({label: `${matches[1]}` + (matches[1] == "The solution grid" ? " (press counts)" : "") + `: `, obj: svg});
+					return true;
 				}
 			},
 			{
-				regex: /^The matrix for tile ([ABCD][1234]) is: (.+)$/,
-				handler: function(matches, module)
-				{
-					let grid = [].concat.apply([], matches[2].split("|").map(x => x.split("")));
-					let partial = ``;
-					let index = (matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 4 + (matches[1].charCodeAt(1) - "1".charCodeAt(0));
-					partial += `<rect x="${200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="220" height="220" style="fill:${((index ^ (index >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-					for(let i = 0; i < 16; i++)
-					{
-						partial += `<rect x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * Math.floor(i / 4) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 10 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" width="50" height="50" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
-						partial += `<text font-size='32' x="${50 * (i % 4) + 200 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 20 * (matches[1].charCodeAt(0) - "A".charCodeAt(0)) + 26 + ((matches[1].charCodeAt(0) - "A".charCodeAt(0)) * 10)}" y="${50 * (Math.floor(i / 4)) + 200 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 20 * (matches[1].charCodeAt(1) - "1".charCodeAt(0)) + 47 + ((matches[1].charCodeAt(1) - "1".charCodeAt(0)) * 10)}" style="fill:${((i ^ (i >> 2)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i] == 0 ? "" : grid[i]}</text>`
-						module.largeSvg += partial;
-					}
-					if(matches[1] == "D4")
-					{
-						module.push({label: "The offsets (larger tiles affect smaller tiles): ", obj: module.largeSvg});
-					}
-				}
+				regex: /.+/
 			}
+			//{
+			//	regex: /^The matrix for tile ([A-Z]+)(\d+) is: (.+)$/,
+			//	handler: function(matches, module)
+			//	{
+			//		let grid = [].concat.apply([], matches[3].split(";").map(x => x.split(",")));
+			//		let col = matches[1].split("").map((e, i) => (e.charCodeAt(0) - "A".charCodeAt(0)) * (26 ** (matches[1].length - 1 - i)));
+			//		let sum = 0;
+			//		col.forEach(x => {sum += x;});
+			//		
+			//		col = sum;
+			//		let row = parseInt(matches[2]) - 1;
+			//		let partial = ``;
+			//		let index = row * module.rowCount + col;
+			//		partial += `<rect x="${220 * col * module.columnCount / 4}" y="${220 * row * module.rowCount / 4}" width="${(50 * module.columnCount + 20)}" height="${50 * module.rowCount + 20}" style="fill:${(((index % module.columnCount) ^ (index / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+			//		for(let i = 0; i < grid.length; i++)
+			//		{
+			//			partial += `<rect x="${(40 * (i % module.columnCount) + 220 * col + 7.5) * module.columnCount / 4}" y="${(40 * Math.floor(i / module.rowCount) + 220 * row + 7.5) * module.columnCount / 4}" width="50" height="50" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 192, 255)" : "rgb(0, 0, 0)"}" />`
+			//			// partial += `<text font-size='32' x="${50 * (i % module.rowCount) + (230 * module.rowCount / 4) * row + 26}" y="${50 * (Math.floor(i / module.columnCount)) + (230 * module.columnCount / 4) * col + 47}" style="fill:${(((i % module.columnCount) ^ (i / module.columnCount)) & 1) == 1 ? "rgb(0, 0, 0)" : "rgb(0, 192, 255)"}">${grid[i] == 0 ? "" : grid[i]}</text>`
+			//			module.largeSvg += partial;
+			//		}
+			//		if(row * col == (module.rowCount - 1) * (module.columnCount - 1))
+			//		{
+			//			module.push({label: "The offsets (larger tiles affect smaller tiles): ", obj: module.largeSvg});
+			//		}
+			//	}
+			//}
 		]
 	},
 	{
@@ -14692,7 +15049,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /.+/,
+				regex: /.+/
 			}
 		]
 	},
