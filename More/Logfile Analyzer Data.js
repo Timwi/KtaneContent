@@ -10439,17 +10439,16 @@ let parseData = [
 		moduleID: "OrientationHypercube",
 		loggingTag: "Orientation Hypercube",
 		matches: [{
-			regex: /The left face is (.+)/,
+			regex: /The left face is (.+)/  ,
 			handler: function(matches, module) {
 
 				let getColorClass = (str) => {
 					let colorArr = ["black", "blue", "green", "cyan", "magenta", "yellow", "white"];
-					
 					let color = "white";
 					
 					for(let j = 0; j < 7; j++){
 						if(str.includes(colorArr[j])){
-							color = color[j];
+							color = colorArr[j];
 							break;
 						}
 					}
@@ -10467,18 +10466,22 @@ let parseData = [
 					"M1 3 V97 l15 -15 V18z", 
 					"M99 3 V97 l-15 -15 V18z" ];
 
-				let textArr = [{label: "Right", x:"50", y:"11.5", rotate: "rotate(90deg)"},
-							   {label: "Bottom", x:"50", y:"94.5", rotate: "rotate(0deg)"},
-							   {label: "Top", x:"50", y:"11.5", rotate: "rotate(0deg)"},
-							   {label: "Front", x:"50", y:"77", rotate: "rotate(0deg)"},
-							   {label: "Back", x:"50", y:"29.5", rotate: "rotate(0deg)"},
-							   {label: "Zig", x:"50", y:"11.5", rotate: "rotate(-90deg)"},
-							   {label: "Zag", x:"50", y:"11.5", rotate: "rotate(90deg)"},]
+				let textArr = [{label: "Right", x:"50", y:"11.5", style: "transform:rotate(90deg)"},
+							   {label: "Bottom", x:"50", y:"94.5", style: "transform:rotate(0deg)"},
+							   {label: "Top", x:"50", y:"11.5", style: "transform:rotate(0deg)"},
+							   {label: "Front", x:"50", y:"77", style: "transform:rotate(0deg)"},
+							   {label: "Back", x:"50", y:"29.5", style: "transform:rotate(0deg)"},
+							   {label: "Zig", x:"50", y:"11.5", style: "transform:rotate(-90deg)"},
+							   {label: "Zag", x:"50", y:"11.5", style: "transform:rotate(90deg)"},]
 
-				objArr.push({color: matches[1], path: "M19 21 V79 l15 -15 V36z", text: {label: "Left", x:"50", y:"29.5", rotate: "rotate(-90deg)"}});
+				objArr.push({color: getColorClass(matches[1]), path: "M19 21 V79 l15 -15 V36z", text: {label: "Left", x:"50", y:"29.5", rotate: "rotate(-90deg)"}});
 
 				for(let i = 0; i < 7; i++){
 					objArr.push({color: getColorClass(readLine()), path: pathArr[i], text: textArr[i]});
+				}
+
+				for(let i = 0; i < 8; i++){
+
 				}
 
 				let svg = $(`<svg viewbox="0 0 100 100">`);
@@ -10488,15 +10491,33 @@ let parseData = [
 								  .addClass(objArr[i].color)
 								  .appendTo(svg);
 
+
 					$SVG("<text>").attr("x", objArr[i].text.x)
 								  .attr("y", objArr[i].text.y)
-								  .attr("transform", objArr[i].text.rotate)
+								  .attr("style", objArr[i].text.style)
 								  .text(objArr[i].text.label)
+								  .addClass("orientation-hyper-label")
 								  .appendTo(svg);
+
+					// console.log(`${objArr[i].text.label}: ${objArr[i].color}`)
 				}				  
-				module.push("Cube",[{obj: svg, nobullet: true}]);
+				module.push({ obj: svg, nobullet: true });
 				return true;
 			}
+		},
+		{
+			regex: /The initial binaries are:|After shifting:|Final binaries:/,
+			handler: function(matches, module){
+				let line1 = readLine();
+				let line2 = readLine();
+				line1 = line1.substring(line1.indexOf("R+:"));
+				line2 = line2.substring(line2.indexOf("R-:"));
+				module.push({label: matches[0],obj: pre([line1, line2].join("\n")), nobullet: true});
+				return true;
+			}
+		},
+		{
+			regex: /.+/
 		}]
 		
 	},
