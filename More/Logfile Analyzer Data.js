@@ -10508,14 +10508,26 @@ let parseData = [
 		{
 			regex: /The initial binaries are:|After shifting:|Final binaries:/,
 			handler: function(matches, module){
-				let line1 = readLine();
-				let line2 = readLine();
-				line1 = line1.substring(line1.indexOf("R+:"));
-				line2 = line2.substring(line2.indexOf("R-:"));
-				module.push({label: matches[0],obj: pre([line1, line2].join("\n")), nobullet: true});
+				module.push({label: matches[0],obj: pre(readTaggedLines(2).join("\n")), nobullet: true});
 				return true;
 			}
 		},
+		{
+			regex: /Final face mappings:|The submitted rotations resulted in the following map:/,
+			handler: function(matches, module){
+				let arr = readTaggedLines(3);
+				let red = arr[0].split("Red: ");
+				let blue = arr[2].split("Blue: ");
+
+
+				arr[0] = `Red:   ${red[1]}`;
+				arr[2] = `Blue   ${blue[1]}`;
+
+				module.push({label: matches[0],obj: pre(arr.join("\n")), nobullet: true});
+				return true;
+			}
+		},
+		
 		{
 			regex: /.+/
 		}]
