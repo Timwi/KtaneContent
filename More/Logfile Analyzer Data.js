@@ -10433,6 +10433,73 @@ let parseData = [
 			}
 		]
 	},
+
+	{
+		displayName: "Orientation Hypercube",
+		moduleID: "OrientationHypercube",
+		loggingTag: "Orientation Hypercube",
+		matches: [{
+			regex: /The left face is (.+)/,
+			handler: function(matches, module) {
+
+				let getColorClass = (str) => {
+					let colorArr = ["black", "blue", "green", "cyan", "magenta", "yellow", "white"];
+					
+					let color = "white";
+					
+					for(let j = 0; j < 7; j++){
+						if(str.includes(colorArr[j])){
+							color = color[j];
+							break;
+						}
+					}
+					return `orientation-hyper-${color}-color`;
+				}
+
+				let objArr = [];
+
+				let pathArr = [
+					"M81 21 V79 l-15 -15 V36z",
+					"M3 99 H97 l-15 -15 H18z",
+					"M3 1 H97 l-15 15 H18z", 
+					"M21 81 H79 l-15 -15 H36z", 
+					"M21 19 H79 l-15 15 H36z", 
+					"M1 3 V97 l15 -15 V18z", 
+					"M99 3 V97 l-15 -15 V18z" ];
+
+				let textArr = [{label: "Right", x:"50", y:"11.5", rotate: "rotate(90deg)"},
+							   {label: "Bottom", x:"50", y:"94.5", rotate: "rotate(0deg)"},
+							   {label: "Top", x:"50", y:"11.5", rotate: "rotate(0deg)"},
+							   {label: "Front", x:"50", y:"77", rotate: "rotate(0deg)"},
+							   {label: "Back", x:"50", y:"29.5", rotate: "rotate(0deg)"},
+							   {label: "Zig", x:"50", y:"11.5", rotate: "rotate(-90deg)"},
+							   {label: "Zag", x:"50", y:"11.5", rotate: "rotate(90deg)"},]
+
+				objArr.push({color: matches[1], path: "M19 21 V79 l15 -15 V36z", text: {label: "Left", x:"50", y:"29.5", rotate: "rotate(-90deg)"}});
+
+				for(let i = 0; i < 7; i++){
+					objArr.push({color: getColorClass(readLine()), path: pathArr[i], text: textArr[i]});
+				}
+
+				let svg = $(`<svg viewbox="0 0 100 100">`);
+
+				for(let i = 0; i < 8; i++){
+					$SVG(`<path>`).attr("d",objArr[i].path)
+								  .addClass(objArr[i].color)
+								  .appendTo(svg);
+
+					$SVG("<text>").attr("x", objArr[i].text.x)
+								  .attr("y", objArr[i].text.y)
+								  .attr("transform", objArr[i].text.rotate)
+								  .text(objArr[i].text.label)
+								  .appendTo(svg);
+				}				  
+				module.push("Cube",[{obj: svg, nobullet: true}]);
+				return true;
+			}
+		}]
+		
+	},
 	{
 		displayName: "Parallel Mazes",
 		moduleID: "parallel_mazes",
