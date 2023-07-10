@@ -13918,7 +13918,6 @@ let parseData = [
 						}
 						log.push([ `${matches[1]} | Operator: ${operator} | ${validity}`, [{ nobullet: true, obj: svg }] ]);		
 					}
-					
 					return true;
 				}
 			},
@@ -13958,7 +13957,7 @@ let parseData = [
 						}
 					}
 					log.push([ `Stage ${matches[1]} was a valid stage to calculate. Applying with operator ${matches[2]}...`,
-								[{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
+						[{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
 					return true;
 				}
 			},
