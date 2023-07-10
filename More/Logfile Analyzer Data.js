@@ -1829,8 +1829,24 @@ let parseData = [
 		matches: [
 			{
 				regex: /Grid:/,
-				handler: function (matches, module) {
-					module.push({ label: "Grid", obj: pre(readMultiple(11).replace(/-/g, " ")) });
+				handler: function (_, module) {
+					const colourDict = {
+						"-": "outside",
+						"#": "path",
+						"X": "goal",
+						"H": "block"
+					};
+					let grid = readMultiple(11).split("\n");
+					let svg = $("<svg viewbox='-5 -5 1510 1110'>").addClass("bloxx");
+					for (let row = 0; row < 11; row++) {
+						for (let col = 0; col < 15; col++) {
+							$SVG("<rect>").addClass(colourDict[grid[row][col]])
+							.attr("width", 102).attr("height", 102)
+							.attr("x", col * 100).attr("y", row * 100)
+							.appendTo(svg);
+						}
+					}
+					module.push({ label: "The grid in question:", nobullet: true, obj: svg });
 					return true;
 				}
 			}
