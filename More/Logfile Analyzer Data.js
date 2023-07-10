@@ -10852,21 +10852,17 @@ let parseData = [
                 handler: function (match, module) {
                     display = match[1].split(" ");
                     svg = $("<svg viewbox='-5 -5 510 110'>").addClass("pie-display")
-                    
                     for (let i = 0; i < 5; i++) {
                         $SVG("<rect>").addClass("pie-cell")
                             .attr("x", 100 * i).attr("y", 0)
                             .attr("width", 100).attr("height", 100)
                             .appendTo(svg);
-
                         $SVG("<text>").addClass("pie-text")
                             .attr("x", 100 * i + 50).attr("y", 55)
                             .text(display[i])
                             .appendTo(svg);
                     }
-
                     module.push({ label: "Display:", obj: svg });
-
                     return true;
                 }
             },
