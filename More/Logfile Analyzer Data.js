@@ -7812,6 +7812,163 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Logical Hexabuttons",
+		moduleID: "logicalHexabuttons",
+		loggingTag: "Logical Hexabuttons",
+		matches: [
+			{
+				regex: /Clue: (.+)/,
+				handler: function(matches, module){
+
+					const makeTable = (arr, dimension, xOffset, yOffset, table) => {
+						for(let row = 0; row < 6; row++){
+							for(let col = 0; col < 6; col++){
+								let xPos = col * dimension + xOffset;
+								let yPos = row * dimension + yOffset;
+
+								let cellChar = arr[row][col];
+								let colorClass = cellChar == 'G' ?  "logic-hex-green": cellChar == 'R' ? "logic-hex-red" : "";
+
+								$SVG(`<rect>`).attr("x", xPos)
+											  .attr("y", yPos)
+											  .attr("width", dimension)
+											  .attr("height", dimension)
+											  .addClass("logic-hex-cell")
+											  .addClass(colorClass)
+											  .appendTo(table);
+						}
+						}
+					}
+
+					
+					let positionNumberArr = readTaggedLines(6);
+					readTaggedLine();
+					let letterNumberArr = readTaggedLines(6);
+					readTaggedLine();
+					let positonLetterArr = readTaggedLines(6);
+					readTaggedLine();
+
+					let table = $(`<svg viewbox="-5 -5 1310 1310">`).addClass("logic-hex-table");
+
+					const dimension = 100;
+
+					let textRowArr = ["1", "2", "3", "4", "5", "6", "A", "B", "C", "D", "E", "F"];
+					let textColArr = ["TL", "TR", "ML", "MR", "BL", "BR", "A", "B", "C", "D", "E", "F"];
+					
+					// headers
+					for(let i = 1; i < 13; i++){
+						let pos = i * dimension;
+						// col
+						$SVG(`<rect>`).attr("x", 0)
+								      .attr("y", pos)
+									  .attr("width", dimension)
+									  .attr("height", dimension)
+									  .addClass("logic-hex-cell")
+									  .appendTo(table);
+
+						$SVG(`<text>`).attr("x", dimension / 2)
+									  .attr("y", pos + dimension / 2)
+									  .text(textRowArr[i - 1])
+									  .addClass("logic-hex-header")
+									  .appendTo(table);
+
+						// row
+						$SVG(`<rect>`).attr("x", pos)
+								      .attr("y", 0)
+									  .attr("width", dimension)
+									  .attr("height", dimension)
+									  .addClass("logic-hex-cell")
+									  .appendTo(table);
+
+						$SVG(`<text>`).attr("x", pos + dimension / 2)
+									  .attr("y", dimension / 2)
+									  .text(textColArr[i - 1])
+									  .addClass("logic-hex-header")
+									  
+									  .appendTo(table);
+					}
+
+					// cells
+					for(let row = 0; row < 6; row++){
+						for(let col = 0; col < 6; col++){
+
+							// table 1
+							// let table1XPos = col * dimension + dimension;
+							// let table1YPos = row * dimension + dimension;
+
+							// let cellChar1 = positionNumberArr[row][col];
+							// let colorClass1 = cellChar1 == 'G' ?  "logic-hex-green": cellChar1 == 'R' ? "logic-hex-red" : "";
+
+							// $SVG(`<rect>`).attr("x", table1XPos)
+							// 			  .attr("y", table1YPos)
+							// 			  .attr("width", dimension)
+							// 			  .attr("height", dimension)
+							// 			  .addClass("logic-hex-cell")
+							// 			  .addClass(colorClass1)
+							// 			  .appendTo(table);
+
+							
+
+
+
+							// table 2
+							// let table2XPos = table1XPos + dimension * 6;
+							// let table2YPos = table1YPos;
+
+							// let cellChar2 = letterNumberArr[row][col];
+							// let colorClass2 = cellChar2 == 'G' ?  "logic-hex-green": cellChar2 == 'R' ? "logic-hex-red" : "";
+
+							// $SVG(`<rect>`).attr("x", table2XPos)
+							// 			  .attr("y", table2YPos)
+							// 			  .attr("width", dimension)
+							// 			  .attr("height", dimension)
+							// 			  .addClass("logic-hex-cell")
+							// 			  .addClass(colorClass2)
+							// 			  .appendTo(table);
+
+							// table 3
+							// let table3XPos = table1XPos;
+							// let table3YPos = table1YPos + dimension * 6;
+
+							// let cellChar3 = positonLetterArr[row][col];
+							// let colorClass3 = cellChar3 == 'G' ?  "logic-hex-green": cellChar3 == 'R' ? "logic-hex-red" : "";
+
+							// $SVG(`<rect>`).attr("x", table3XPos)
+							// 			  .attr("y", table3YPos)
+							// 			  .attr("width", dimension)
+							// 			  .attr("height", dimension)
+							// 			  .addClass("logic-hex-cell")
+							// 			  .addClass(colorClass3)
+							// 			  .appendTo(table);
+						}
+
+						makeTable(positionNumberArr, dimension, dimension, dimension, table);
+						makeTable(letterNumberArr, dimension, dimension * 7, dimension, table);
+						makeTable(positonLetterArr, dimension, dimension, dimension  * 7, table);
+
+						$SVG(`<path>`).attr("d", "M 700 0 v 1300")
+						.addClass("logic-hex-divider")
+						.appendTo(table);
+
+						$SVG(`<path>`).attr("d", "M 0 700 h 1300")
+						.addClass("logic-hex-divider")
+						.appendTo(table);
+
+					}
+					
+
+					module.push(["Clue: " + matches[1], [{ obj:table, nobullet: true }]]);
+					
+					return true;
+				}
+			},
+
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "logicGates",
 		loggingTag: "Logic Gates",
 		matches: [
