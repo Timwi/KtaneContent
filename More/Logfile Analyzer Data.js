@@ -7818,93 +7818,75 @@ let parseData = [
 		matches: [
 			{
 				regex: /Clue: (.+)/,
-				handler: function(matches, module){
-
+				handler: function (matches, module) {
 					const makeTable = (arr, dimension, xOffset, yOffset, table) => {
-						for(let row = 0; row < 6; row++){
-							for(let col = 0; col < 6; col++){
+						for (let row = 0; row < 6; row++) {
+							for (let col = 0; col < 6; col++) {
 								let xPos = col * dimension + xOffset;
 								let yPos = row * dimension + yOffset;
-
 								let cellChar = arr[row][col];
-								let colorClass = cellChar == 'G' ?  "logic-hex-green": cellChar == 'R' ? "logic-hex-red" : "";
-
+								let colorClass = cellChar == 'G' ? "logic-hex-green" : cellChar == 'R' ? "logic-hex-red" : "";
 								$SVG(`<rect>`).attr("x", xPos)
-											  .attr("y", yPos)
-											  .attr("width", dimension)
-											  .attr("height", dimension)
-											  .addClass("logic-hex-cell")
-											  .addClass(colorClass)
-											  .appendTo(table);
-						}
+									.attr("y", yPos)
+									.attr("width", dimension)
+									.attr("height", dimension)
+									.addClass("logic-hex-cell")
+									.addClass(colorClass)
+									.appendTo(table);
+							}
 						}
 					}
-
 					let positionNumberArr = readTaggedLines(6);
 					readTaggedLine();
 					let letterNumberArr = readTaggedLines(6);
 					readTaggedLine();
 					let positonLetterArr = readTaggedLines(6);
 					readTaggedLine();
-
 					let table = $(`<svg viewbox="-5 -5 1310 1310">`).addClass("logic-hex-table");
-
 					const dimension = 100;
-
 					let textRowArr = ["1", "2", "3", "4", "5", "6", "A", "B", "C", "D", "E", "F"];
 					let textColArr = ["TL", "TR", "ML", "MR", "BL", "BR", "A", "B", "C", "D", "E", "F"];
-					
 					// headers
-					for(let i = 1; i < 13; i++){
+					for (let i = 1; i < 13; i++) {
 						let pos = i * dimension;
 						// col
 						$SVG(`<rect>`).attr("x", 0)
-								      .attr("y", pos)
-									  .attr("width", dimension)
-									  .attr("height", dimension)
-									  .addClass("logic-hex-cell")
-									  .appendTo(table);
-
+							.attr("y", pos)
+							.attr("width", dimension)
+							.attr("height", dimension)
+							.addClass("logic-hex-cell")
+							.appendTo(table);
 						$SVG(`<text>`).attr("x", dimension / 2)
-									  .attr("y", pos + dimension / 2)
-									  .text(textRowArr[i - 1])
-									  .addClass("logic-hex-header")
-									  .appendTo(table);
-
+							.attr("y", pos + dimension / 2)
+							.text(textRowArr[i - 1])
+							.addClass("logic-hex-header")
+							.appendTo(table);
 						// row
 						$SVG(`<rect>`).attr("x", pos)
-								      .attr("y", 0)
-									  .attr("width", dimension)
-									  .attr("height", dimension)
-									  .addClass("logic-hex-cell")
-									  .appendTo(table);
-
+							.attr("y", 0)
+							.attr("width", dimension)
+							.attr("height", dimension)
+							.addClass("logic-hex-cell")
+							.appendTo(table);
 						$SVG(`<text>`).attr("x", pos + dimension / 2)
-									  .attr("y", dimension / 2)
-									  .text(textColArr[i - 1])
-									  .addClass("logic-hex-header")
-									  
-									  .appendTo(table);
+							.attr("y", dimension / 2)
+							.text(textColArr[i - 1])
+							.addClass("logic-hex-header")
+							.appendTo(table);
 					}
-
 					makeTable(positionNumberArr, dimension, dimension, dimension, table);
 					makeTable(letterNumberArr, dimension, dimension * 7, dimension, table);
-					makeTable(positonLetterArr, dimension, dimension, dimension  * 7, table);
-
+					makeTable(positonLetterArr, dimension, dimension, dimension * 7, table);
 					$SVG(`<path>`).attr("d", "M 700 0 v 1300")
-					.addClass("logic-hex-divider")
-					.appendTo(table);
-
+						.addClass("logic-hex-divider")
+						.appendTo(table);
 					$SVG(`<path>`).attr("d", "M 0 700 h 1300")
-					.addClass("logic-hex-divider")
-					.appendTo(table);
-
-					module.push(["Clue: " + matches[1], [{ obj:table, nobullet: true }]]);
-					
+						.addClass("logic-hex-divider")
+						.appendTo(table);
+					module.push(["Clue: " + matches[1], [{ obj: table, nobullet: true }]]);
 					return true;
 				}
 			},
-
 			{
 				regex: /.+/
 			}
