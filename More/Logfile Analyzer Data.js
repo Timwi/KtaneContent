@@ -1514,7 +1514,7 @@ let parseData = [
 					if (!module.sections[module.currentSection]) {
 						module.sections[module.currentSection] = [];
 					}
-					module.push([ module.currentSection, module.sections[module.currentSection] ]);
+					module.push([module.currentSection, module.sections[module.currentSection]]);
 					return true;
 				}
 			},
@@ -1525,7 +1525,7 @@ let parseData = [
 					if (!module.sections[module.currentSection]) {
 						module.sections[module.currentSection] = [];
 					}
-					module.push([ match[0] + ( match[1] == 1 ? ":" : "s:" ), module.sections[module.currentSection] ]);
+					module.push([match[0] + (match[1] == 1 ? ":" : "s:"), module.sections[module.currentSection]]);
 					return true;
 				}
 			},
