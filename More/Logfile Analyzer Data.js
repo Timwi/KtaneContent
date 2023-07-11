@@ -1829,8 +1829,24 @@ let parseData = [
 		matches: [
 			{
 				regex: /Grid:/,
-				handler: function (matches, module) {
-					module.push({ label: "Grid", obj: pre(readMultiple(11).replace(/-/g, " ")) });
+				handler: function (_, module) {
+					const colourDict = {
+						"-": "outside",
+						"#": "path",
+						"X": "goal",
+						"H": "block"
+					};
+					let grid = readMultiple(11).split("\n");
+					let svg = $("<svg viewbox='-5 -5 1510 1110'>").addClass("bloxx");
+					for (let row = 0; row < 11; row++) {
+						for (let col = 0; col < 15; col++) {
+							$SVG("<rect>").addClass(colourDict[grid[row][col]])
+							.attr("width", 102).attr("height", 102)
+							.attr("x", col * 100).attr("y", row * 100)
+							.appendTo(svg);
+						}
+					}
+					module.push({ label: "The grid in question:", nobullet: true, obj: svg });
 					return true;
 				}
 			}
@@ -7812,6 +7828,87 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Logical Hexabuttons",
+		moduleID: "logicalHexabuttons",
+		loggingTag: "Logical Hexabuttons",
+		matches: [
+			{
+				regex: /Clue: (.+)/,
+				handler: function (matches, module) {
+					const makeTable = (arr, dimension, xOffset, yOffset, table) => {
+						for (let row = 0; row < 6; row++) {
+							for (let col = 0; col < 6; col++) {
+								let xPos = col * dimension + xOffset;
+								let yPos = row * dimension + yOffset;
+								let cellChar = arr[row][col];
+								let colorClass = cellChar == 'G' ? "logic-hex-green" : cellChar == 'R' ? "logic-hex-red" : "";
+								$SVG(`<rect>`).attr("x", xPos)
+									.attr("y", yPos)
+									.attr("width", dimension)
+									.attr("height", dimension)
+									.addClass("logic-hex-cell")
+									.addClass(colorClass)
+									.appendTo(table);
+							}
+						}
+					}
+					let positionNumberArr = readTaggedLines(6);
+					readTaggedLine();
+					let letterNumberArr = readTaggedLines(6);
+					readTaggedLine();
+					let positonLetterArr = readTaggedLines(6);
+					readTaggedLine();
+					let table = $(`<svg viewbox="-5 -5 1310 1310">`).addClass("logic-hex-table");
+					const dimension = 100;
+					let textRowArr = ["1", "2", "3", "4", "5", "6", "A", "B", "C", "D", "E", "F"];
+					let textColArr = ["TL", "TR", "ML", "MR", "BL", "BR", "A", "B", "C", "D", "E", "F"];
+					// headers
+					for (let i = 1; i < 13; i++) {
+						let pos = i * dimension;
+						// col
+						$SVG(`<rect>`).attr("x", 0)
+							.attr("y", pos)
+							.attr("width", dimension)
+							.attr("height", dimension)
+							.addClass("logic-hex-cell")
+							.appendTo(table);
+						$SVG(`<text>`).attr("x", dimension / 2)
+							.attr("y", pos + dimension / 2)
+							.text(textRowArr[i - 1])
+							.addClass("logic-hex-header")
+							.appendTo(table);
+						// row
+						$SVG(`<rect>`).attr("x", pos)
+							.attr("y", 0)
+							.attr("width", dimension)
+							.attr("height", dimension)
+							.addClass("logic-hex-cell")
+							.appendTo(table);
+						$SVG(`<text>`).attr("x", pos + dimension / 2)
+							.attr("y", dimension / 2)
+							.text(textColArr[i - 1])
+							.addClass("logic-hex-header")
+							.appendTo(table);
+					}
+					makeTable(positionNumberArr, dimension, dimension, dimension, table);
+					makeTable(letterNumberArr, dimension, dimension * 7, dimension, table);
+					makeTable(positonLetterArr, dimension, dimension, dimension * 7, table);
+					$SVG(`<path>`).attr("d", "M 700 0 v 1300")
+						.addClass("logic-hex-divider")
+						.appendTo(table);
+					$SVG(`<path>`).attr("d", "M 0 700 h 1300")
+						.addClass("logic-hex-divider")
+						.appendTo(table);
+					module.push(["Clue: " + matches[1], [{ obj: table, nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "logicGates",
 		loggingTag: "Logic Gates",
 		matches: [
@@ -10844,6 +10941,34 @@ let parseData = [
 		]
 	},
 	{
+        moduleID: "pieModule",
+        loggingTag: "Pie",
+        matches: [
+            {
+                regex: /Display is (.+)$/,
+                handler: function (match, module) {
+                    display = match[1].split(" ");
+                    svg = $("<svg viewbox='-5 -5 510 110'>").addClass("pie-display")
+                    for (let i = 0; i < 5; i++) {
+                        $SVG("<rect>").addClass("pie-cell")
+                            .attr("x", 100 * i).attr("y", 0)
+                            .attr("width", 100).attr("height", 100)
+                            .appendTo(svg);
+                        $SVG("<text>").addClass("pie-text")
+                            .attr("x", 100 * i + 50).attr("y", 55)
+                            .text(display[i])
+                            .appendTo(svg);
+                    }
+                    module.push({ label: "Display:", obj: svg });
+                    return true;
+                }
+            },
+            {
+                regex: /.+/
+            }
+        ]
+    },
+	{
 		moduleID: 'PineapplePenModule',
 		loggingTag: 'Pineapple Pen',
 		matches: [
@@ -13841,6 +13966,191 @@ let parseData = [
 					span.append($('<span style="font-family:DragonAlphabet">').text(matches[2].replace(/-/g, '\u2003')));
 					span.append($('<span>').text(matches[3]));
 					module.push(span);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "slightGibberishTwistModule",
+		loggingTag: "Slight Gibberish Twist",
+		matches: [
+			{
+				regex: /Allocating board size (\d) by \1\./,
+				handler: function(match, module) {
+					module.size = match[1];
+					module.displays = [];
+					module.inputCounter = 0;
+					module.push([ "Displays", module.displays ]);
+					return true;
+				}
+			},
+			{
+				regex: /-+ (Stage (\d+)) -+/,
+				handler: function(matches, module) {
+					const dim = module.size;
+					module.colourDict = {
+						"K": "#000D",
+						"R": "#F00D",
+						"G": "#0F0D",
+						"Y": "#FF0D",
+						"B": "#55FD",
+						"M": "#F0FD",
+						"C": "#0FFD",
+						"W": "#FFFD"
+					};
+					let info;
+					let operator;
+					let channel;
+					let grid;
+					let validity;
+					let log = module.displays;
+					let colourDict = module.colourDict;
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					if (matches[2] == 1) {
+						info = readTaggedLines(2);
+						operator = info[0].match(/Displayed Operator: (.+)/)[1];
+						module.grid = info[1].match(/Initial board \(from left to right, top to bottom\): (.+)/)[1].split(",");
+						grid = module.grid;
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								$SVG("<rect>").addClass("slight-gib-twist-cell")
+									.attr("fill", colourDict[grid[row][col]])
+									.attr("width", 100).attr("height", 100)
+									.attr("x", 100 * col).attr("y", 100 * row)
+									.appendTo(svg);
+							}
+						}
+						log.push([ `${matches[1]} | Operator: ${operator} | VALID`, [{ nobullet: true, obj: svg }] ]);
+					}
+					else {
+						info = readTaggedLines(4);
+						operator = info[0].match(/Displayed Operator: (.+)/)[1];
+						channel = info[1].match(/Assigned Channel: ([RGB])/)[1];
+						grid = info[2].match(/Displayed Grid \(GOL Style\): (.+)/)[1].split(",");
+						validity = info[3].match(/Validity on current stage: (VALID|INVALID)/)[1];
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								$SVG("<rect>").addClass("slight-gib-twist-cell")
+									.attr("fill", grid[row].includes((col + 1).toString()) ? colourDict[channel] : colourDict["K"])
+									.attr("width", 100).attr("height", 100)
+									.attr("x", 100 * col).attr("y", 100 * row)
+									.appendTo(svg);
+							}	
+						}
+						log.push([ `${matches[1]} | Operator: ${operator} | ${validity}`, [{ nobullet: true, obj: svg }] ]);		
+					}
+					return true;
+				}
+			},
+			{
+				regex: /-+ Submission -+/,
+				handler: function(_, module) {
+					let requiredStages = readTaggedLine().match(/Required stages to solve in order: ([\d, ]+)/)[1];
+					module.submission = [`Required stages (in order): ${requiredStages}`,];
+					module.push([ `Submission`, module.submission ]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) was not a valid stage to calculate\. Current board should be left as is after applying this stage\./,
+				handler: function(matches, module) {
+					let log = module.submission;
+					log.push(`Stage ${matches[1]} was not a valid stage to calculate. Current grid should be left as is after considering this stage.`);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) was a valid stage with the operator: (.+)/,
+				handler: function(matches, module) {
+					const dim = module.size;
+					let info = readTaggedLine();
+					let grid = info.match(/Board after modification on stage (?:\d+) \(from left to right, top to bottom\): (.+)/)[1].split(",");
+					let log = module.submission;
+					let colourDict = module.colourDict;
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push([ `Stage ${matches[1]} was a valid stage to calculate. Applying with operator ${matches[2]}...`,
+						[{ label: `Current grid after applying stage ${matches[1]}`, nobullet: true, obj: svg }] ]);
+					return true;
+				}
+			},
+			{
+				regex: /(New )?expected board to submit \(from left to right, top to bottom\): (.+)/i,
+				handler: function(match, module) {
+					const dim = module.size;
+					let grid = match[2].split(",");
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					let log = module.submission;
+					let colourDict = module.colourDict;
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push({ label: `${match[1] == "New " ? "New e" : "E"}xpected grid to submit:`, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /-+ User Interactions -+/,
+				handler: function(_, module) {
+					module.interactions = [];
+					module.push([ "User Interactions", module.interactions ]);
+					return true;
+				}
+			},
+			{
+				regex: /Submitted the current state: \(from left to right, top to bottom\): (.+)/,
+				handler: function(match, module) {
+					let log = module.interactions;
+					const dim = module.size;
+					let grid = match[1].split(",");
+					let svg = $(`<svg viewbox='-5 -5 ${dim * 100 + 10} ${dim * 100 + 10}'>`).addClass("slight-gib-twist-grid");
+					let colourDict = module.colourDict;
+					for (let row = 0; row < dim; row++) {
+						for (let col = 0; col < dim; col++) {
+							$SVG("<rect>").addClass("slight-gib-twist-cell")
+								.attr("fill", colourDict[grid[row][col]])
+								.attr("width", 100).attr("height", 100)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					log.push({ label: "Submitted the following state:", obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /STRIKE\. Correct cells filled: (\d)+ \/ (\d)+/,
+				handler: function(matches, module) {
+					module.interactions.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /WARNING! Activating Recovery Mode changed the required stages to disarm the module in the particular order: (.+)/,
+				handler: function(matches, module) {
+					module.inputCounter++;
+					let log = module.submission;
+					log.push({ obj: $("<hr>"), nobullet: true });
+					log.push(`After ${module.inputCounter} incorrect input${module.inputCounter == 1 ? "" : "s"}, the new required stages (in order): ${matches[1]}`);
+					module.interactions.push("WARNING! Activating Recovery Mode changed the required stages to disarm the module.");
 					return true;
 				}
 			},
