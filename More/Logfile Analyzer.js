@@ -1010,34 +1010,41 @@ function Bomb(seed) {
         });
 
         const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
-        function GetManual(parseData) {
+        function GetManualPath(parseData) {
             const moduleData = parseData.moduleData;
             const repoName = moduleData.repo?.Name;
-            let manual = (moduleData.repo?.FileName || repoName || moduleData.displayName)
+            let path = (moduleData.repo?.FileName || repoName || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
 
             let preferredManual = preferredManuals[repoName];
             if (parseData.tree && parseData.tree.length != 0 && typeof parseData.tree[0] === "string" && parseData.tree[0].startsWith("Language is ")) {
-                manual += ` (${parseData.tree[0].split(" ")[2]} — *)`;
+                path += ` (${parseData.tree[0].split(" ")[2]} — *)`;
 
-                manual = manual
+                path = path
                     .replace("Big Button", "The Button")
                     .replace("Vent Gas", "Venting Gas")
                     .replace("Passwords", "Password")
                     .replace("Who's on First", "Who’s on First")
                     .replace(" Translated", " translated")
                     + ".html";
+            } else if (preferredManual === "(PDF)") {
+                path = `${repoName}.pdf`;
             } else if (preferredManual !== undefined) {
-                manual = repoName + " " + preferredManual.replace(/ \((HTML|PDF)\)$/, (_, type) => "." + type.toLowerCase());
+                path = repoName + " " + preferredManual.replace(/ \((HTML|PDF)\)$/, (_, type) => "." + type.toLowerCase());
             } else {
-                manual += ".html";
+                path += ".html";
             }
 
-            if (ruleSeed != 1 && manual.endsWith(".html"))
-                manual += "#" + ruleSeed;
+            if (path.endsWith(".html")) {
+                path = `../HTML/${path}`;
+                if (ruleSeed != 1)
+                    path += "#" + ruleSeed;
+            } else {
+                path = `../PDF/${path}`;
+            }
 
-            return manual;
+            return path;
         }
 
         mods = mods.filter(mod => mod?.moduleData?.repo?.Type !== "Holdable");
@@ -1047,7 +1054,7 @@ function Bomb(seed) {
             // Information
             var moduleInfo = $("<div class='module-info'>").appendTo(info).data('module-id', parseData.moduleID);
             $("<h3>").text(parseData.moduleData.displayName).appendTo(moduleInfo);
-            $("<a>").text("Manual").attr("href", `../HTML/${GetManual(parseData)}`).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
+            $("<a>").text("Manual").attr("href", GetManualPath(parseData)).css({ top: 0, right: 0, position: "absolute" }).appendTo(moduleInfo);
             if (parseData.tree && (parseData.tree.length !== 0 || parseData.tree.groups.groups.length !== 0)) {
                 makeTree(parseData.tree, $("<ul>").appendTo(moduleInfo));
             } else if (parseData.moduleData.hasLogging === false) {
