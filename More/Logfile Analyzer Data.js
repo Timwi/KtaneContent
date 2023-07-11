@@ -1501,6 +1501,65 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "bamboozlingTimeKeeper",
+		loggingTag: "Bamboozling Time Keeper",
+		matches: [
+			{
+				regex: /^([A-Z\s\d]+):$/,
+				handler: function(match, module) {
+					if (!module.sections) {
+						module.sections = {};
+					}
+					module.currentSection = match[1];
+					if (!module.sections[module.currentSection]) {
+						module.sections[module.currentSection] = [];
+					}
+					module.push([ module.currentSection, module.sections[module.currentSection] ]);
+					return true;
+				}
+			},
+			{
+				regex: /For holding at (\d+) reset/,
+				handler: function(match, module) {
+					module.currentSection = match[0];
+					if (!module.sections[module.currentSection]) {
+						module.sections[module.currentSection] = [];
+					}
+					module.push([ match[0] + ( match[1] == 1 ? ":" : "s:" ), module.sections[module.currentSection] ]);
+					return true;
+				}
+			},
+			{
+				regex: /—+/,
+				handler: function(_, module) {
+					module.currentSection = null;
+					return true;
+				}
+			},
+			{
+				regex: /Possible Times are: (.+)/,
+				handler: function(match, module) {
+					let times = match[1].split(", ");
+					for (let i = 0; i < times.length; i++) {
+						let hours = times[i] < 3600 ? "" : Math.floor(times[i] / 3600) + ":";
+						let minutes = (Math.floor(times[i] / 60) % 60).toString();
+						let seconds = (Math.floor(times[i] % 60)).toString();
+						times[i] = `${hours}${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
+					}
+					module.sections[module.currentSection].push({ label: "Possible times are:", obj: pre(times.join(", ")) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(match, module) {
+					(module.currentSection ? module.sections[module.currentSection] : module).push(match[0]);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "BattleshipModule",
 		loggingTag: "Battleship",
 		matches: [
