@@ -10523,11 +10523,27 @@ let parseData = [
 				arr[0] = `Red:   ${red[1]}`;
 				arr[2] = `Blue   ${blue[1]}`;
 
-				module.push({label: matches[0],obj: pre(arr.join("\n")), nobullet: true});
+				module.push({label: matches[0], obj: pre(arr.join("\n")), nobullet: true});
 				return true;
 			}
 		},
-		
+
+		{
+			regex: /-=-=-=- Start -=-=-=-|-=-=-=- Reset -=-=-=-/,
+			handler: function(matches, module){
+				module.submission = [];
+				return true;
+			}
+		},
+		{
+			regex: /Pressed (.+)/,
+			handler: function(matches, module){
+				console.log(matches[0])
+				module.submission.push(matches[0]);
+				module.push(["Start", {obj: module.submission.join("\n"), nobullet: true}]);
+				return true;
+			}
+		},
 		{
 			regex: /.+/
 		}]
