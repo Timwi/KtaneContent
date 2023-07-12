@@ -10507,15 +10507,26 @@ let parseData = [
 		{
 			regex: /Final face mappings:|The submitted rotations resulted in the following map:/,
 			handler: function(matches, module){
+
+				let reformat = (str) => {
+					let newStr = str.replace(":", "").replace(".", "");
+
+					if(str.includes("Red")){
+						newStr = "Red  " + newStr.split("Red")[1];
+					}
+
+					else if(str.includes("Blue")){
+						newStr = "Blue " + newStr.split("Blue")[1];
+					}
+					return newStr;
+				}
 				let arr = readTaggedLines(3);
-				let red = arr[0].split("Red: ");
-				let blue = arr[2].split("Blue: ");
 
-
-				arr[0] = `Red:   ${red[1]}`;
-				arr[2] = `Blue:  ${blue[1]}`;
-
-				module.push(pre(arr.join("\n")));
+				for(let i = 0; i < 3; i++){
+					arr[i] = reformat(arr[i]);
+				}
+				module.push({label: matches[0], nobullet: true});
+				module.push({obj: pre(arr.join("\n")), nobullet: true});
 				return true;
 			}
 		},
@@ -10524,7 +10535,7 @@ let parseData = [
 			regex: /-=-=-=- Start -=-=-=-|-=-=-=- Reset -=-=-=-/,
 			handler: function(matches, module){
 				module.bullet = [];
-				module.push([matches[0], module.bullet ]);
+				module.push([matches[0].replaceAll("-=-=-=-", "").replaceAll(" ", ""), module.bullet ]);
 				return true;
 			}
 		},
@@ -10533,6 +10544,26 @@ let parseData = [
 			handler: function(matches, module){
 				console.log(matches[0]);
 				module.bullet.push( { label:matches[0]} );
+				return true;
+			}
+		},
+		{
+			regex: /-=-=-=- Submit -=-=-=-/,
+			handler: function(matches, module){
+				module.bullet.push( { label:"Submit"} );
+				return true;
+			}
+		},
+		{
+			regex: /-=-=-=- Solved -=-=-=-/,
+			handler: function(matches, module){
+				return true;
+			}
+		},
+		{
+			regex: /Submitted the correct orientation!|✕ The faces did not get mapped to the correct places! Strike!|The serial number (.+)/,
+			handler: function(matches, module){
+				module.push({label: matches[0], nobullet: true});
 				return true;
 			}
 		},
