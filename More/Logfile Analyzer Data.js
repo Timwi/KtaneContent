@@ -3965,7 +3965,7 @@ let parseData = [
 				handler: function(matches, module) {
 					const label = matches[1];
 					module[label] = new Array();
-					if (label.match(/Instruction Set \d+/))
+					if (label.match(/Instruction Set \d+/i))
 						module["Instruction Sets"].push([ label, module[label] ]);
 					else
 						module.push([ label, module[label] ]);
