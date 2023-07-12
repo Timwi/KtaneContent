@@ -10463,27 +10463,27 @@ let parseData = [
 						"M99 3 V97 l-15 -15 V18z"
 					];
 					let textArr = [
-						{ label: "Right", x: "50", y: "-70", style: "transform:rotate(90deg)" },
-						{ label: "Bottom", x: "50", y: "94.5", style: "transform:rotate(0deg)" },
-						{ label: "Top", x: "50", y: "11.5", style: "transform:rotate(0deg)" },
-						{ label: "Front", x: "50", y: "77", style: "transform:rotate(0deg)" },
-						{ label: "Back", x: "50", y: "29.5", style: "transform:rotate(0deg)" },
-						{ label: "Zig", x: "-50", y: "11.5", style: "transform:rotate(-90deg)" },
-						{ label: "Zag", x: "50", y: "-88.3", style: "transform:rotate(90deg)" },
-					]
-					objArr.push({ color: getColorClass(matches[1]), path: "M19 21 V79 l15 -15 V36z", text: { label: "Left", x: "-50", y: "29.5", style: "transform:rotate(-90deg)" } });
+						{ label: "Right", x: "50", y: "-72", style: "transform:rotate(90deg)" },
+						{ label: "Bottom", x: "50", y: "93", style: "transform:rotate(0deg)" },
+						{ label: "Top", x: "50", y: "10", style: "transform:rotate(0deg)" },
+						{ label: "Front", x: "50", y: "75", style: "transform:rotate(0deg)" },
+						{ label: "Back", x: "50", y: "27.5", style: "transform:rotate(0deg)" },
+						{ label: "Zig", x: "-50", y: "10", style: "transform:rotate(-90deg)" },
+						{ label: "Zag", x: "50", y: "-90.3", style: "transform:rotate(90deg)" },
+					];
+					objArr.push({ color: getColorClass(matches[1]), path: "M19 21 V79 l15 -15 V36z", text: { label: "Left", x: "-50", y: "27.5", style: "transform:rotate(-90deg)" } });
 					for (let i = 0; i < 7; i++) {
 						objArr.push({ color: getColorClass(readLine()), path: pathArr[i], text: textArr[i] });
 					}
 					let svg = $(`<svg viewbox="0 0 100 100">`).addClass("orientation-hyper-svg");
 					for (let i = 0; i < 8; i++) {
 						$SVG(`<path>`).attr("d", objArr[i].path)
-							.addClass(objArr[i].color)
+							.addClass(`${objArr[i].color} orientation-hyper-face`)
 							.appendTo(svg);
 						let text = $SVG("<text>").attr("x", objArr[i].text.x)
 							.attr("y", objArr[i].text.y)
 							.attr("style", objArr[i].text.style)
-							.text(objArr[i].text.label)
+							.text(`${objArr[i].text.label}: ${objArr[i].color.replace(/orientation-hyper-(\w+)-color/, (_, col) => col)}`)
 							.addClass("orientation-hyper-label");
 						if (objArr[i].color.includes("black")) {
 							text.addClass("orientation-hyper-white-color");
@@ -10535,7 +10535,6 @@ let parseData = [
 			{
 				regex: /Pressed (.+)|The observer (.+)/,
 				handler: function (matches, module) {
-					console.log(matches[0]);
 					module.bullet.push({ label: matches[0] });
 					return true;
 				}
