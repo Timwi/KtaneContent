@@ -10441,7 +10441,6 @@ let parseData = [
 		matches: [{
 			regex: /The left face is (.+)/  ,
 			handler: function(matches, module) {
-
 				let getColorClass = (str) => {
 					let colorArr = ["black", "blue", "green", "cyan", "magenta", "yellow", "white"];
 					let color = "white";
@@ -10479,11 +10478,6 @@ let parseData = [
 				for(let i = 0; i < 7; i++){
 					objArr.push({color: getColorClass(readLine()), path: pathArr[i], text: textArr[i]});
 				}
-
-				for(let i = 0; i < 8; i++){
-
-				}
-
 				let svg = $(`<svg viewbox="0 0 100 100">`);
 
 				for(let i = 0; i < 8; i++){
@@ -10498,8 +10492,6 @@ let parseData = [
 								  .text(objArr[i].text.label)
 								  .addClass("orientation-hyper-label")
 								  .appendTo(svg);
-
-					// console.log(`${objArr[i].text.label}: ${objArr[i].color}`)
 				}				  
 				module.push({ obj: svg, nobullet: true });
 				return true;
@@ -10521,9 +10513,9 @@ let parseData = [
 
 
 				arr[0] = `Red:   ${red[1]}`;
-				arr[2] = `Blue   ${blue[1]}`;
+				arr[2] = `Blue:  ${blue[1]}`;
 
-				module.push({label: matches[0], obj: pre(arr.join("\n")), nobullet: true});
+				module.push(pre(arr.join("\n")));
 				return true;
 			}
 		},
@@ -10531,16 +10523,16 @@ let parseData = [
 		{
 			regex: /-=-=-=- Start -=-=-=-|-=-=-=- Reset -=-=-=-/,
 			handler: function(matches, module){
-				module.submission = [];
+				module.bullet = [];
+				module.push([matches[0], module.bullet ]);
 				return true;
 			}
 		},
 		{
-			regex: /Pressed (.+)/,
+			regex: /Pressed (.+)|The observer (.+)/,
 			handler: function(matches, module){
-				console.log(matches[0])
-				module.submission.push(matches[0]);
-				module.push(["Start", {obj: module.submission.join("\n"), nobullet: true}]);
+				console.log(matches[0]);
+				module.bullet.push( { label:matches[0]} );
 				return true;
 			}
 		},
