@@ -10465,20 +10465,20 @@ let parseData = [
 					"M1 3 V97 l15 -15 V18z", 
 					"M99 3 V97 l-15 -15 V18z" ];
 
-				let textArr = [{label: "Right", x:"50", y:"11.5", style: "transform:rotate(90deg)"},
+				let textArr = [{label: "Right", x:"50", y:"-70", style: "transform:rotate(90deg)"},
 							   {label: "Bottom", x:"50", y:"94.5", style: "transform:rotate(0deg)"},
 							   {label: "Top", x:"50", y:"11.5", style: "transform:rotate(0deg)"},
 							   {label: "Front", x:"50", y:"77", style: "transform:rotate(0deg)"},
 							   {label: "Back", x:"50", y:"29.5", style: "transform:rotate(0deg)"},
-							   {label: "Zig", x:"50", y:"11.5", style: "transform:rotate(-90deg)"},
-							   {label: "Zag", x:"50", y:"11.5", style: "transform:rotate(90deg)"},]
+							   {label: "Zig", x:"-50", y:"11.5", style: "transform:rotate(-90deg)"},
+							   {label: "Zag", x:"50", y:"-88.3", style: "transform:rotate(90deg)"},]
 
-				objArr.push({color: getColorClass(matches[1]), path: "M19 21 V79 l15 -15 V36z", text: {label: "Left", x:"50", y:"29.5", rotate: "rotate(-90deg)"}});
+				objArr.push({color: getColorClass(matches[1]), path: "M19 21 V79 l15 -15 V36z", text: {label: "Left", x:"-50", y:"29.5", style: "transform:rotate(-90deg)"}});
 
 				for(let i = 0; i < 7; i++){
 					objArr.push({color: getColorClass(readLine()), path: pathArr[i], text: textArr[i]});
 				}
-				let svg = $(`<svg viewbox="0 0 100 100">`);
+				let svg = $(`<svg viewbox="0 0 100 100">`).addClass("orientation-hyper-svg");
 
 				for(let i = 0; i < 8; i++){
 					$SVG(`<path>`).attr("d",objArr[i].path)
@@ -10486,12 +10486,17 @@ let parseData = [
 								  .appendTo(svg);
 
 
-					$SVG("<text>").attr("x", objArr[i].text.x)
+					let text = $SVG("<text>").attr("x", objArr[i].text.x)
 								  .attr("y", objArr[i].text.y)
 								  .attr("style", objArr[i].text.style)
 								  .text(objArr[i].text.label)
-								  .addClass("orientation-hyper-label")
-								  .appendTo(svg);
+								  .addClass("orientation-hyper-label");
+
+					if(objArr[i].color.includes("black")){
+						text.addClass("orientation-hyper-white-color");
+					}
+
+					text.appendTo(svg);
 				}				  
 				module.push({ obj: svg, nobullet: true });
 				return true;
