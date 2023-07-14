@@ -6350,6 +6350,84 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "inupiaqNumerals",
+		loggingTag: "Iñupiaq Numerals",
+		matches: [
+			{
+				regex: /Stage (\d): ([\dA-J]+) ([÷×+-]) ([\dA-J]+) = ([\dA-J]+)/,
+				handler: function(matches, module) {
+					const tops = [
+						" ",
+						"l45,-18",
+						"l45,-14 l-45,-13",
+						"l45,-11 l-45,-11 l45,-11"
+					];
+					const bottoms = [
+						" ",
+						"l22,46",
+						"l17,48 l18,-44",
+						"l13,48 l13,-44 l14,44",
+						"l11,48 l11,-44 l11,44 l11,-44"
+					];
+					const zero = "c21 22 52 44 22 44-31 0 0-22 22-44";
+					let operandA = matches[2];
+					let operandB = matches[4];
+					let operator = matches[3];
+					let result = matches[5];
+					let numbers = [ operandA, operandB, result ];
+					let label =`Stage ${matches[1]}: ${parseInt(operandA, 20)} ${operator} ${parseInt(operandB, 20)} = ${parseInt(result, 20)} (base 10)`;
+					let svg = $("<svg viewbox='-5 -5 310 370'>").addClass("inupiaq-numerals-equation");
+					if (operator == "÷") {
+						$SVG("<path>").addClass("inupiaq-numeral").addClass("inupiaq-divide")
+							.attr("d", "M17.5 170 h25 M30 155 v2.5 M30 185 v-2.5")
+							.appendTo(svg);
+					}
+					else {
+						$SVG("<text>").addClass("inupiaq-numerals-operator")
+							.attr("x", 30).attr("y", 170)
+							.text(operator)
+							.appendTo(svg);
+					}
+					$SVG("<path>").addClass("inupiaq-numeral")
+						.attr("d", "M0 235 h300")
+						.appendTo(svg);
+					for (let row = 0; row < 3; row++) {
+						for (let col = 1; col < 3; col++) {
+							let value = parseInt(numbers[row][col-1], 20);
+							let i = Math.floor(value / 5);
+							let j = value % 5;
+							let xStart = col * 100 + 5;
+							let yStart = row * 120 + 40;
+							let start = `M ${xStart} ${yStart} `;
+							let top = tops[i];
+							let bottom = bottoms[j];
+							let path = value == 0 ? start + zero : start + top + start + bottom;
+							$SVG("<path>").addClass("inupiaq-numeral")
+								.attr("d", path)
+								.appendTo(svg);
+							$SVG("<text>").addClass("inupiaq-digits")
+								.attr("x", col * 100 + 55).attr("y", row * 120 + 105)
+								.text(value)
+								.appendTo(svg);
+						}
+					}
+					module.push({ label: label, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /([\dA-J]+)( submitted for Stage \d, that is .+)/,
+				handler: function(matches, module) {
+					module.push(`${parseInt(matches[1], 20)}${matches[2]}`);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "Maze",
 		loggingTag: "InvisibleWallsComponent"
 	},
