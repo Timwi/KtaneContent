@@ -16539,24 +16539,6 @@ let parseData = [
 				handler: function(match, module) {
 					module.stage = 0;
 					module.stageColours = match[1].split(", ");
-					const colours = {
-						"Red": ['#6c190e', '#fc4d40'],
-						"Orange": ['#6c3610', '#ff9533'],
-						"Orange-Yellow": ['#68530f', '#ffd131'],
-						"Chartreuse": ['#91a01c', '#d8ec2f'],
-						"Lime": ['#335c0e', '#85e836'],
-						"Green": ['#0c5a0d', '#2ddf34'],
-						"Seafoam Green": ['#0a5c30', '#2ee38e'],
-						"Cyan-Green": ['#0a5d55', '#29e9ce'],
-						"Dark Blue": ['#0c3368', '#3888ff'],
-						"Purple-Magenta": ['#591c67', '#d852f1'],
-						"Turquoise": ['#0a5169', '#2dcdfe'],
-						"Indigo": ['#101669', '#3848ff'],
-						"Purple": ['#351a69', '#8e4fff'],
-						"Magenta": ['#6d1d56', '#fc54e1'],
-						"Pink": ['#6c1b33', '#fd5287'],
-						"Grey": ['#424242', '#a9a9a9']
-					};
 					module.push(match[0]);
 					for (let stageColour of module.stageColours) {
 						let label = readTaggedLine();
@@ -16565,7 +16547,7 @@ let parseData = [
 						for (let row = 0; row < 11; row++) {
 							for (let col = 0; col < 11; col++) {
 								$SVG("<rect>").addClass("wavetapping-cell")
-									.attr("fill", colours[stageColour]["X0".indexOf(grid[row][col])])
+									.attr("fill", module.colours[stageColour]["X0".indexOf(grid[row][col])])
 									.attr("width", 104).attr("height", 104)
 									.attr("x", 100 * col).attr("y", 100 * row)
 									.appendTo(svg);
@@ -16587,31 +16569,13 @@ let parseData = [
 			{
 				regex: /Submitted pattern:/,
 				handler: function(match, module) {
-					const colours = {
-						"Red": ['#6c190e', '#fc4d40'],
-						"Orange": ['#6c3610', '#ff9533'],
-						"Orange-Yellow": ['#68530f', '#ffd131'],
-						"Chartreuse": ['#91a01c', '#d8ec2f'],
-						"Lime": ['#335c0e', '#85e836'],
-						"Green": ['#0c5a0d', '#2ddf34'],
-						"Seafoam Green": ['#0a5c30', '#2ee38e'],
-						"Cyan-Green": ['#0a5d55', '#29e9ce'],
-						"Dark Blue": ['#0c3368', '#3888ff'],
-						"Purple-Magenta": ['#591c67', '#d852f1'],
-						"Turquoise": ['#0a5169', '#2dcdfe'],
-						"Indigo": ['#101669', '#3848ff'],
-						"Purple": ['#351a69', '#8e4fff'],
-						"Magenta": ['#6d1d56', '#fc54e1'],
-						"Pink": ['#6c1b33', '#fd5287'],
-						"Grey": ['#424242', '#a9a9a9']
-					};
 					let label = match[0];
 					let grid = readTaggedLines(11);
 					let svg = $("<svg viewbox='-5 -5 1110 1110'>").addClass("wavetapping");
 					for (let row = 0; row < 11; row++) {
 						for (let col = 0; col < 11; col++) {
 							$SVG("<rect>").addClass("wavetapping-cell")
-								.attr("fill", colours[module.stageColours[module.stage]]["X0".indexOf(grid[row][col])])
+								.attr("fill", module.colours[module.stageColours[module.stage]]["X0".indexOf(grid[row][col])])
 								.attr("width", 104).attr("height", 104)
 								.attr("x", 100 * col).attr("y", 100 * row)
 								.appendTo(svg);
@@ -16630,7 +16594,31 @@ let parseData = [
 				}
 			},
 			{
-				regex: /.+/
+				regex: /.+/,
+				handler: function (matches, module) {
+					if (!module.colours) {
+						module.colours = {
+							"Red": ['#6c190e', '#fc4d40'],
+							"Orange": ['#6c3610', '#ff9533'],
+							"Orange-Yellow": ['#68530f', '#ffd131'],
+							"Chartreuse": ['#91a01c', '#d8ec2f'],
+							"Lime": ['#335c0e', '#85e836'],
+							"Green": ['#0c5a0d', '#2ddf34'],
+							"Seafoam Green": ['#0a5c30', '#2ee38e'],
+							"Cyan-Green": ['#0a5d55', '#29e9ce'],
+							"Dark Blue": ['#0c3368', '#3888ff'],
+							"Purple-Magenta": ['#591c67', '#d852f1'],
+							"Turquoise": ['#0a5169', '#2dcdfe'],
+							"Indigo": ['#101669', '#3848ff'],
+							"Purple": ['#351a69', '#8e4fff'],
+							"Magenta": ['#6d1d56', '#fc54e1'],
+							"Pink": ['#6c1b33', '#fd5287'],
+							"Grey": ['#424242', '#a9a9a9']
+						};
+					}
+					module.push(matches.input);
+					return true;
+				}
 			}
 		]
 	},
