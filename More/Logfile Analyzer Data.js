@@ -1893,16 +1893,17 @@ let parseData = [
 						"-": "outside",
 						"#": "path",
 						"X": "goal",
-						"H": "block"
+						"H": "block",
+						"U": "block"
 					};
 					let grid = readMultiple(11).split("\n");
 					let svg = $("<svg viewbox='-5 -5 1510 1110'>").addClass("bloxx");
 					for (let row = 0; row < 11; row++) {
 						for (let col = 0; col < 15; col++) {
 							$SVG("<rect>").addClass(colourDict[grid[row][col]])
-							.attr("width", 102).attr("height", 102)
-							.attr("x", col * 100).attr("y", row * 100)
-							.appendTo(svg);
+								.attr("width", 102).attr("height", 102)
+								.attr("x", col * 100).attr("y", row * 100)
+								.appendTo(svg);
 						}
 					}
 					module.push({ label: "The grid in question:", nobullet: true, obj: svg });
@@ -11972,6 +11973,136 @@ let parseData = [
 		moduleID: "punctuationMarks",
 		loggingTag: "...?",
 		icon: "Punctuation Marks",
+	},
+	{
+		moduleID: "PuzzlePandemoniumModule",
+		loggingTag: "Puzzle Pandemonium",
+		matches: [
+			{
+				regex: /Interacting the tiles in (.+) will also affect the tiles in .+/,
+				handler: function(matches, module) {
+					if (!module.yetToSolve) {
+						module.yetToSolve = 4;
+					}
+					let order = [matches[1]];
+					for (let i = 0; i < module.yetToSolve - 1; i++) {
+						order.push(/Interacting the tiles in (.+) will also affect the tiles in .+/.exec(readTaggedLine())[1]);
+					}
+					let cycle = order.join(" > ").concat(` ( > ${order[0]} )`);
+					module.push({ label: "Module interaction cycle:", obj: pre(cycle) });
+					return true;
+				}
+			},
+			{
+				regex: /Expected solution for (.+):/,
+				handler: function(matches, module) {
+					if (!module.dims) {
+						module.dims = {
+							"Plumbing": 35,
+							"Sudoku": 70,
+							"Lights Out": 70,
+							"Kakurasu": 75
+						};
+					}
+					let puzzle = matches[1];
+					let solutionData = readTaggedLines(4).map(x => x.split(" "));
+					if (puzzle == "Kakurasu") {
+						module.colSums = /left to right: (.+)/.exec(readTaggedLine())[1].split(" ");
+						module.rowSums = /top to bottom: (.+)/.exec(readTaggedLine())[1].split(" ");
+					}
+					linen++;
+					let initialData = readTaggedLines(4).map(x => x.split(" "));
+					if (puzzle == "Sudoku")
+						module.sudokuInitial = initialData.map(x => x.map(x => x == 0 ? "gray" : "white"));
+					if (!module.makeSvg) {
+						module.makeSvg = function(grid, puzzle, initial = false) {
+							let dim = module.dims[puzzle];
+							let svg = $("<svg viewbox='-105 -105 610 610'>").addClass("pandemonium-puzzle")
+								.addClass(puzzle.toLowerCase().replace(" ", "-"));
+							for (let row = 0; row < 4; row++) {
+								for (let col = 0; col < 4; col++) {
+									let transform = { x: col * 100, y: row * 100 };
+									let g = $SVG("<g>")
+										.attr("transform", `translate(${transform.x} ${transform.y})`)
+										.appendTo(svg);
+									$SVG("<rect>").addClass((puzzle == "Kakurasu") && (grid[row][col] == 1) ? "black" : "")
+										.attr("width", dim).attr("height", dim)
+										.attr("x", 50 - dim / 2).attr("y", 50 - dim / 2)
+										.appendTo(g);
+									if (puzzle == "Plumbing") {
+										let plumbingOffsets = [`0 -${dim / 2}`, `${dim / 2} 0`, `0 ${dim / 2}`, `-${dim / 2} 0`];
+										let plumbingPaths = ["V0", "H100", "V100", "H0"];
+										$SVG("<circle>").addClass(initial ? "black" : "white")
+											.attr("cx", 50).attr("cy", 50)
+											.attr("r", 12)
+											.appendTo(g);
+										for (let i = 0; i < 4; i++) {
+											if (parseInt(grid[row][col] & (2 ** i)) != 0) {
+												let path = "M50 50 m" + plumbingOffsets[i] + plumbingPaths[i];
+												$SVG("<path>").addClass("pipe")
+													.attr("d", path)
+													.appendTo(g);
+											}
+										}										
+									}
+									if (puzzle == "Sudoku") {
+										$SVG("<text>").addClass(initial ? "white" : module.sudokuInitial[row][col])
+											.attr("x", 50).attr("y", 55).text(grid[row][col] == 0 ? "" : grid[row][col])
+											.appendTo(g);
+									}
+									if (puzzle == "Lights Out") {
+										$SVG("<circle>").addClass(grid[row][col] == 1 ? "white" : "black")
+											.attr("cx", 50).attr("cy", 50).attr("r", 25)
+											.appendTo(g);
+									}
+								}
+							}
+							if (puzzle == "Kakurasu") {
+								for (let i = 0; i < 4; i++) {
+									$SVG("<text>").addClass("sums")
+										.attr("x", 100 * i + 50).attr("y", 450)
+										.text(module.colSums[i])
+										.appendTo(svg);
+									$SVG("<text>").addClass("sums")
+										.attr("x", 450).attr("y", 100 * i + 55)
+										.text(module.rowSums[i])
+										.appendTo(svg);
+								}
+							}
+							return svg;
+						}
+					}
+					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true) };
+					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle) };
+					module.push([puzzle, [initial, solution]]);
+					return true;
+				}
+			},
+			{
+				regex: /Initial Lights Out board:/,
+				handler: function(_, module) {
+					let initialData = readTaggedLines(4).map(x => x.split(" "));
+					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out") };
+					module.push(["Lights Out", [initial]]);
+					return true;
+				}
+			},
+			{
+				regex: /has been solved/,
+				handler: function(_,module) {
+					module.yetToSolve--;
+				}
+			},
+			{
+				regex: /The new interaction chain is as follows:/,
+				handler: function() {
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
 	},
 	{
 		displayName: "QR Code",
