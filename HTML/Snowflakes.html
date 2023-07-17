@@ -8,12 +8,35 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const cells = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        const columnWalls = ["0110", "1001", "0110", "1000", "0100", "0011", "0111", "1001", "0010", "0111", "0100", "1110"];
+        const rowWalls = ["0001001010100", "0010110110000", "0101100000010"];
+
+        $(function() {
+            const div = $(".snow-maze");
+            const maze = $(`<svg viewBox="-10 -10 1320 420" xmlns="http://www.w3.org/2000/svg">`).appendTo(div);
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 13; col++) {
+                    maze.prepend(MakeSvgElem("rect", { class: "highlightable cell", width: 100, height: 100, x: `${100 * col}`, y: `${100 * row}` }));
+                    maze.append(MakeSvgElem("text", { x: `${100 * col + 50}`, y: `${100 * row + 50}` }, cells.charAt(13 * row + col)));
+                    if (col > 0 && columnWalls[col - 1].charAt(row) === "1")
+                        maze.append(MakeSvgElem("path", { class: "wall", d: `M${100 * col} ${100 * row} v100` }));
+                    if (row > 0 && rowWalls[row - 1].charAt(col) === "1")
+                        maze.append(MakeSvgElem("path", { class: "wall", d: `M${100 * col} ${100 * row} h100` }));
+                }
+            }
+            maze.append(MakeSvgElem("rect", { class: "wall", width: 1310, height: 410, x: -5, y: -5 }));
+        });
+    </script>
     <style>
-        table {
-            width: 100%;
-        }
         @media screen and (min-width: 900px) {
-            .snow-maze { margin-left: -5%; }
+            .snow-maze {
+                margin-left: -5%;
+                width: 110%;
+            }
         }
         @font-face {
             font-family: 'FauxSnow';
@@ -23,41 +46,26 @@
             font-family: 'FauxSnow';
             table-layout: fixed;
         }
-        .snow-maze td {
-            text-align: center;
-            vertical-align: middle;
-            width: 50px;
-            font-size: 70px;
-            padding: 2px;
-            border-color: #999;
+        .snow-maze svg { stroke: black; }
+        .dark .snow-maze svg { stroke: #DDD; }
+        .snow-maze svg :not(.highlightable) {
+            user-select: none;
+            pointer-events: none;
         }
-        .dark .snow-maze td {
-            border-color: #666;
+        .snow-maze svg .cell { fill: transparent; }
+        .snow-maze svg .wall {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: square;
         }
-        td.top {
-            border-top: 5px solid;
+        .snow-maze text {
+            stroke: none;
+            fill: black;
+            font-size: 123px;
+            dominant-baseline: middle;
+            text-anchor: middle;
         }
-        td.bottom {
-            border-bottom: 5px solid;
-        }
-        td.right {
-            border-right: 5px solid;
-        }
-        td.left {
-            border-left: 5px solid;
-        }
-        .dark td.top {
-            border-top-color: #DDD;
-        }
-        .dark td.bottom {
-            border-bottom-color: #DDD;
-        }
-        .dark td.left {
-            border-left-color: #DDD;
-        }
-        .dark td.right {
-            border-right-color: #DDD;
-        }
+        .dark .snow-maze text { fill: #DDD; }
     </style>
 </head>
 <body>
@@ -72,71 +80,16 @@
                 <h2>On the Subject of Snowflakes</h2>
                 <p class="flavour-text">Instead of a regular winter, you get a nuclear winter. Plenty of ash and rubble to play in, but no snow.</p>
                 <p>The current position in the maze is the one adjacent to all 4 snowflakes displayed, looping over.</p>
-                <table class='snow-maze'>
-                    <tr>
-                        <td class='top left'>A</td>
-                        <td class='top right'>B</td>
-                        <td class='top'>C</td>
-                        <td class='top right bottom'>D</td>
-                        <td class='top'>E</td>
-                        <td class='top'>F</td>
-                        <td class='top'>G</td>
-                        <td class='top'>H</td>
-                        <td class='top left bottom'>I</td>
-                        <td class='top'>J</td>
-                        <td class='top'>K</td>
-                        <td class='top'>L</td>
-                        <td class='top right left'>M</td>
-                    </tr>
-                    <tr>
-                        <td class='left right'>N</td>
-                        <td>O</td>
-                        <td class='bottom'>P</td>
-                        <td class='left'>Q</td>
-                        <td class='bottom'>R</td>
-                        <td class='bottom left'>S</td>
-                        <td class='right top'>T</td>
-                        <td class='bottom'>U</td>
-                        <td class='bottom'>V</td>
-                        <td>W</td>
-                        <td class='left top right'>X</td>
-                        <td>Y</td>
-                        <td class='right left'>Z</td>
-                    </tr>
-                    <tr>
-                        <td class='left right'>a</td>
-                        <td>b</td>
-                        <td>c</td>
-                        <td class='left bottom'>d</td>
-                        <td class='bottom'>e</td>
-                        <td>f</td>
-                        <td class='left right'>g</td>
-                        <td>h</td>
-                        <td class='right'>i</td>
-                        <td>j</td>
-                        <td class='left'>k</td>
-                        <td>l</td>
-                        <td class='right left'>m</td>
-                    </tr>
-                    <tr>
-                        <td class='left bottom'>n</td>
-                        <td class='bottom right top'>o</td>
-                        <td class='bottom'>p</td>
-                        <td class='bottom'>q</td>
-                        <td class='bottom'>r</td>
-                        <td class='bottom'>s</td>
-                        <td class='bottom left right'>t</td>
-                        <td class='bottom right'>u</td>
-                        <td class='bottom'>v</td>
-                        <td class='bottom'>w</td>
-                        <td class='bottom left'>x</td>
-                        <td class='bottom top'>y</td>
-                        <td class='right bottom'>z</td>
-                    </tr>
-                </table>
+                <div class="snow-maze"></div>
                 <p>Use the four buttons to navigate to the cell that corresponds to the current week. If a wall is hit, a strike will be incurred, and the module will reset.</p>
-                <p>After the first move, not moving for 5 seconds will submit the current position. If that is incorrect, a strike will be incurred, and the module will reset with a new starting position. The goal, however, will still be the same.</p>
-                <p>The cell that corresponds to the current week is determined by its position in the maze in reading order, counting from 1. Weeks start on Monday, and the first week of the year is the week that contains the first Thursday. If it is week 53 or before week 1, simply use 52 instead.</p>
+                <p>
+                    After the first move, not moving for 5 seconds will submit the current position. If that is incorrect, a strike will be incurred, and the module will reset with a new starting position. The goal,
+                    however, will still be the same.
+                </p>
+                <p>
+                    The cell that corresponds to the current week is determined by its position in the maze in reading order, counting from 1. Weeks start on Monday, and the first week of the year is the week that
+                    contains the first Thursday. If it is week 53 or before week 1, simply use 52 instead.
+                </p>
             </div>
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
