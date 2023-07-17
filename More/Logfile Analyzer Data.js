@@ -1836,15 +1836,33 @@ let parseData = [
 			{
 				regex: /Bitmap \((red|green|blue|yellow|cyan|pink)\):/,
 				handler: function (matches, module) {
-					module.push({
-						label: matches.input,
-						obj: pre(readTaggedLines(9).join('\n'))
-							.css('color', matches[1] === 'red' ? '#800' :
-								matches[1] === 'green' ? '#080' :
-									matches[1] === 'blue' ? '#008' :
-										matches[1] === 'yellow' ? '#880' :
-											matches[1] === 'cyan' ? '#088' : '#808')
-					});
+					const colours = {
+						"red": ['#FDD', '#C88'],
+						"green": ['#DFD', '#8C8'],
+						"blue": ['#DDF', '#88C'],
+						"yellow": ['#FFD', '#CC8'],
+						"cyan": ['#DFF', '#8CC'],
+						"pink": ['#FDF', '#C8C']
+					};
+					let grid = readTaggedLines(4);
+					readTaggedLine();
+					for (let i = 0; i < 4; i++) {
+						grid.push(readTaggedLine());
+					}
+					let svg = $("<svg viewbox='-20 -20 840 840'>").addClass("bitmaps-grid")
+						.css("background-color", colours[matches[1]][0]);
+					for (let row = 0; row < 8; row++) {
+						for (let col = 0; col < 8; col++) {
+							let x = col < 4 ? col * 100 + 2 : col * 100 + 8;
+							let y = row < 4 ? row * 100 + 2 : row * 100 + 8;
+							$SVG("<rect>").addClass("bitmaps-cell")
+								.attr("fill", grid[row][col*2+1] == "█" ? "#000" : colours[matches[1]][1])
+								.attr("width", 90).attr("height", 90)
+								.attr("x", x).attr("y", y)
+								.appendTo(svg);
+						}
+					}
+					module.push({ label: matches.input, obj: svg });
 					return true;
 				}
 			},
@@ -10127,6 +10145,59 @@ let parseData = [
 						label: matches[1],
 						obj: pre(readMultiple(11))
 					});
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
+		moduleID: "NotBitmapsModule",
+		loggingTag: "Not Bitmaps",
+		matches: [
+			{
+				regex: /In the (red|green|blue|yellow|cyan|magenta) bitmap, configuration ([A-P]) is present\./,
+				handler: function (matches, module) {
+					const colours = {
+						"red": ['#FDD', '#C88'],
+						"green": ['#DFD', '#8C8'],
+						"blue": ['#DDF', '#88C'],
+						"yellow": ['#FFD', '#CC8'],
+						"cyan": ['#DFF', '#8CC'],
+						"magenta": ['#FDF', '#C8C']
+					};
+					const configurations = {
+						"A": ["123", "034", "024", "014", "123"],
+						"B": ["123", "024", "0134", "024", "123"],
+						"C": ["13", "024", "13", "024", "13"],
+						"D": ["13", "01234", "13", "01234", "13"],
+						"E": ["2", "13", "13", "04", "01234"],
+						"F": ["2", "13", "04", "13", "2"],
+						"G": ["2", "123", "01234", "123", "2"],
+						"H": ["123", "014", "024", "034", "123"],
+						"I": ["04", "123", "13", "123", "04"],
+						"J": ["01234", "04", "13", "13", "2"],
+						"K": ["04", "0134", "13", "123", "2"],
+						"L": ["123", "0134", "04", "0134", "123"],
+						"M": ["0134", "04", "2", "04", "0134"],
+						"N": ["13", "0134", "2", "0134", "13"],
+						"O": ["0134", "024", "123", "024", "0134"],
+						"P": ["2", "123", "13", "0134", "04"]
+					};
+					let svg = $("<svg viewbox='-15 -15 520 520'>").addClass("bitmaps-grid")
+						.css("background-color", colours[matches[1]][0]);
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+							$SVG("<rect>").addClass("bitmaps-cell")
+								.attr("fill", configurations[matches[2]][row].includes(col) ? "#000" : colours[matches[1]][1])
+								.attr("width", 90).attr("height", 90)
+								.attr("x", col * 100).attr("y", row * 100)
+								.appendTo(svg);
+						}
+					}
+					module.push({ label: matches.input, obj: svg });
 					return true;
 				}
 			},
