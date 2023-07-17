@@ -16684,97 +16684,90 @@ let parseData = [
 		loggingTag: "Wavetapping",
 		matches: [
 			{
-				regex: /:?Stage colors are: (.+), (.+), (.+)/,
-				handler: function (matches, module) {
-					var stageColorIndex = [];
-					for (var i = 0; i < 3; i++) {
-						stageColorIndex[i] = matches[i + 1]
-							.replace(/Red/g, "0")
-							.replace(/Orange-Yellow/g, "2")
-							.replace(/Orange/g, "1")
-							.replace(/Chartreuse/g, "3")
-							.replace(/Lime/g, "4")
-							.replace(/Seafoam Green/g, "6")
-							.replace(/Cyan-Green/g, "7")
-							.replace(/Green/g, "5")
-							.replace(/Dark Blue/g, "8")
-							.replace(/Purple-Magenta/g, "9")
-							.replace(/Turquoise/g, "10")
-							.replace(/Indigo/g, "11")
-							.replace(/Purple/g, "12")
-							.replace(/Magenta/g, "13")
-							.replace(/Pink/g, "14")
-							.replace(/Grey/g, "15")
-					};
-					var litColors = [
-						'#fc4d40', //'Red':
-						'#ff9533', //'Orange':
-						'#ffd131', //'Orange-Yellow':
-						'#d8ec2f', //'Chartreuse':
-						'#85e836', //'Lime':
-						'#2ddf34', //'Green':
-						'#2ee38e', //'Seafoam Green':
-						'#29e9ce', //'Cyan-Green':
-						'#3888ff', //'Dark Blue':
-						'#d852f1', //'Purple-Magenta':
-						'#2dcdfe', //'Turquoise':
-						'#3848ff', //'Indigo':
-						'#8e4fff', //'Purple':
-						'#fc54e1', //'Magenta':
-						'#fd5287', //'Pink':
-						'#a9a9a9'  //'Grey':
-					];
-					var unlitColors = [
-						'#6c190e', //'Red':
-						'#6c3610', //'Orange':
-						'#68530f', //'Orange-Yellow':
-						'#91a01c', //'Chartreuse':
-						'#335c0e', //'Lime':
-						'#0c5a0d', //'Green':
-						'#0a5c30', //'Seafoam Green':
-						'#0a5d55', //'Cyan-Green':
-						'#0c3368', //'Dark Blue':
-						'#591c67', //'Purple-Magenta':
-						'#0a5169', //'Turquoise':
-						'#101669', //'Indigo':
-						'#351a69', //'Purple':
-						'#6d1d56', //'Magenta':
-						'#6c1b33', //'Pink':
-						'#424242'  //'Grey':
-					];
-					module.push({ label: "Stage colors are: " + matches[1] + ", " + matches[2] + ", " + matches[3] });
-					for (var st = 1; st < 4; st++) {
-						var table = $('<table>')
-							.css('background-color', 'black')
-							.css('font-size', '30px')
-							.css('color', 'white');
-						var correctPat = readTaggedLine().replace(/Correct pattern for stage (1|2|3) is: /, "");
-						for (var r = 0; r < 11; r++) {
-							var tr = $('<tr>').css('border', '0').appendTo(table);
-							var curLine = readTaggedLine();
-							for (var c = 0; c < 12; c++) {
-								if (curLine[c] == "0") $('<td>')
-									.text(" ")
-									.css('background-color', litColors[stageColorIndex[st - 1]])
-									.css('text-align', 'center')
-									.css('width', '20px')
-									.css('height', '20px')
-									.appendTo(tr);
-								else if (curLine[c] == "X") $('<td>')
-									.text(" ")
-									.css('background-color', unlitColors[stageColorIndex[st - 1]])
-									.css('text-align', 'center')
-									.css('width', '20px')
-									.css('height', '20px').appendTo(tr);
+				regex: /Stage colors are: (.+)/,
+				handler: function(match, module) {
+					module.stage = 0;
+					module.stageColours = match[1].split(", ");
+					module.push(match[0]);
+					for (let stageColour of module.stageColours) {
+						let label = readTaggedLine();
+						let grid = readTaggedLines(11);
+						let svg = $("<svg viewbox='-5 -5 1110 1110'>").addClass("wavetapping");
+						for (let row = 0; row < 11; row++) {
+							for (let col = 0; col < 11; col++) {
+								$SVG("<rect>").addClass("wavetapping-cell")
+									.attr("fill", module.colours[stageColour]["X0".indexOf(grid[row][col])])
+									.attr("width", 104).attr("height", 104)
+									.attr("x", 100 * col).attr("y", 100 * row)
+									.appendTo(svg);
 							}
 						}
-						module.push({ label: "Solution for Stage " + st + " (" + matches[st] + ") is: " + correctPat, obj: table });
+						module.push({ label: label, obj: svg });
 					}
 					return true;
 				}
 			},
 			{
-				regex: /.+/
+				regex: /Pattern was correct!/,
+				handler: function(_, module) {
+					module.stage++;
+					module.push("Submitted pattern was correct!");
+					return true;
+				}
+			},
+			{
+				regex: /Submitted pattern:/,
+				handler: function(match, module) {
+					let label = match[0];
+					let grid = readTaggedLines(11);
+					let svg = $("<svg viewbox='-5 -5 1110 1110'>").addClass("wavetapping");
+					for (let row = 0; row < 11; row++) {
+						for (let col = 0; col < 11; col++) {
+							$SVG("<rect>").addClass("wavetapping-cell")
+								.attr("fill", module.colours[module.stageColours[module.stage]]["X0".indexOf(grid[row][col])])
+								.attr("width", 104).attr("height", 104)
+								.attr("x", 100 * col).attr("y", 100 * row)
+								.appendTo(svg);
+						}
+					}
+					module.stage = 0;
+					module.push({ label: label, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /You submited pattern (\d+) when the correct pattern was (\d+)\./,
+				handler: function(matches, module) {
+					module.push(`You submitted pattern ${matches[1]} when the correct pattern was ${matches[2]}.`);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if (!module.colours) {
+						module.colours = {
+							"Red": ['#6c190e', '#fc4d40'],
+							"Orange": ['#6c3610', '#ff9533'],
+							"Orange-Yellow": ['#68530f', '#ffd131'],
+							"Chartreuse": ['#91a01c', '#d8ec2f'],
+							"Lime": ['#335c0e', '#85e836'],
+							"Green": ['#0c5a0d', '#2ddf34'],
+							"Seafoam Green": ['#0a5c30', '#2ee38e'],
+							"Cyan-Green": ['#0a5d55', '#29e9ce'],
+							"Dark Blue": ['#0c3368', '#3888ff'],
+							"Purple-Magenta": ['#591c67', '#d852f1'],
+							"Turquoise": ['#0a5169', '#2dcdfe'],
+							"Indigo": ['#101669', '#3848ff'],
+							"Purple": ['#351a69', '#8e4fff'],
+							"Magenta": ['#6d1d56', '#fc54e1'],
+							"Pink": ['#6c1b33', '#fd5287'],
+							"Grey": ['#424242', '#a9a9a9']
+						};
+					}
+					module.push(matches.input);
+					return true;
+				}
 			}
 		]
 	},
