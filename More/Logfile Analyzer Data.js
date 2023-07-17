@@ -1840,7 +1840,7 @@ let parseData = [
 						"red": ['#FDD', '#C88'],
 						"green": ['#DFD', '#8C8'],
 						"blue": ['#DDF', '#88C'],
-						"yellow":['#FFD', '#CC8'],
+						"yellow": ['#FFD', '#CC8'],
 						"cyan": ['#DFF', '#8CC'],
 						"pink": ['#FDF', '#C8C']
 					};
@@ -10086,7 +10086,7 @@ let parseData = [
 						"red": ['#FDD', '#C88'],
 						"green": ['#DFD', '#8C8'],
 						"blue": ['#DDF', '#88C'],
-						"yellow":['#FFD', '#CC8'],
+						"yellow": ['#FFD', '#CC8'],
 						"cyan": ['#DFF', '#8CC'],
 						"magenta": ['#FDF', '#C8C']
 					};
