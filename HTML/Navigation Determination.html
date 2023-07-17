@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Navigation Determination — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let visited, mazes = Array(16);
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+        function setRules(rnd) {
+            let divs = document.getElementsByClassName("nd-maze");
+            let svgColors = ["#ff6666", "#ffdd66", "#66ff88", "#66bbff"];
+            for (let i = 0; i < 16; i++) {
+                let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+                rnd.shuffleFisherYates(chars);
+                let maze = generateMaze(rnd);
+                let ixs = [16, 18, 20, 24, 26, 28, 46, 48, 50, 54, 56, 58, 76, 78, 80, 84, 86, 88, 136, 138, 140, 144, 146, 148, 166, 168, 170, 174, 176, 178, 196, 198, 200, 204, 206, 208];
+                for (let ix = 0; ix < ixs.length; ix++)
+                    maze[ixs[ix]] = chars[ix];
+                divs[i].innerHTML = ToSVG(maze.join(""), "ABCD"[(i / 4) | 0], svgColors[i % 4]);
+            }
+        }
+
+        function ToSVG(maze, centerStr, color) {
+            var svg = '';
+            for (var i = 0; i < 7; i++) {
+                for (var j = 0; j < 7; j++) {
+                    let curPos = (j * (7 * 2 + 1) * 2) + (i * 2) + (7 * 2 + 2);
+                    var x = i * 50;
+                    var y = j * 50;
+                    if (maze[curPos] !== ' ')
+                        svg += `<text x='${x + 25}' y='${y + 38}' fill='black'>${maze[curPos]}</text>`;
+                    if (i === 3 && j === 3) {
+                        svg += `<rect width='50' height='50' x='${x}' y='${y}' fill='${color}'/>`;
+                        svg += `<text x='${x + 25}' y='${y + 38}' fill='black'>${centerStr}</text>`;
+                    }
+                    if (maze[curPos - 15] === '█')
+                        svg += `<line x1='${x}' y1='${y}' x2='${x + 50}' y2='${y}' stroke-width='${j === 0 ? 10 : 3}' stroke='black' fill='none' />`;
+                    if (maze[curPos - 1] === '█')
+                        svg += `<line x1='${x}' y1='${y}' x2='${x}' y2='${y + 50}' stroke-width='${i === 0 ? 10 : 3}' stroke='black' fill='none' />`;
+                    if (i === 6)
+                        svg += `<line x1='${x + 50}' y1='${y}' x2='${x + 50}' y2='${y + 50}' stroke-width='10' stroke='black' fill='none' />`;
+                    if (j === 6)
+                        svg += `<line x1='${x}' y1='${y + 50}' x2='${x + 50}' y2='${y + 50}' stroke-width='10' stroke='black' fill='none' />`;
+                }
+            }
+            for (var i = 0; i < 7; i++)
+                for (var j = 0; j < 7; j++)
+                    svg += `<rect class='highlightable' width='50' height='50' x='${i * 50}' y='${j * 50}' />`;
+            return `<svg viewBox='0 0 350 350' text-anchor='middle' font-size='35'>${svg}</svg>`;
+        }
+
+        function generateMaze(rnd) {
+            visited = Array(7);
+            for (let i = 0; i < 7; i++)
+                visited[i] = Array(7).fill(false);
+            let charArr = Array(225).fill('█');
+            for (let a = 0; a < 7; a++)
+                for (let b = 0; b < 7; b++)
+                    charArr[(a * (7 * 2 + 1) * 2) + (b * 2) + 7 * 2 + 2] = ' ';
+            let x = rnd.next(0, 7);
+            let y = rnd.next(0, 7);
+            generate(x, y, rnd, charArr);
+            return charArr;
+        }
+
+        function generate(x, y, rnd, charArr) {
+            visited[x][y] = true;
+            let arr = [0, 1, 2, 3];
+            rnd.shuffleFisherYates(arr);
+            let curPos = (x * (7 * 2 + 1) * 2) + (y * 2) + (7 * 2 + 2);
+            for (let i = 0; i < 4; i++) {
+                if (arr[i] === 0)
+                    if (y !== 0 && !visited[x][y - 1]) {
+                        charArr[curPos - 1] = ' ';
+                        generate(x, y - 1, rnd, charArr);
+                    }
+                if (arr[i] === 1)
+                    if (x !== 7 - 1 && !visited[x + 1][y]) {
+                        charArr[curPos + (7 * 2 + 1)] = ' ';
+                        generate(x + 1, y, rnd, charArr);
+                    }
+                if (arr[i] === 2)
+                    if (y !== 7 - 1 && !visited[x][y + 1]) {
+                        charArr[curPos + 1] = ' ';
+                        generate(x, y + 1, rnd, charArr);
+                    }
+                if (arr[i] === 3)
+                    if (x !== 0 && !visited[x - 1][y]) {
+                        charArr[curPos - (7 * 2 + 1)] = ' ';
+                        generate(x - 1, y, rnd, charArr);
+                    }
+            }
+        }
+    </script>
+    <style>
+        svg rect.highlightable {
+            fill: transparent;
+        }
+
+        .nd-mazes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .nd-maze svg {
+            width: 300px;
+            margin-bottom: 0.5cm;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Navigation Determination</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Navigation Determination.svg" class="diagram">
+                <h2>On the Subject of Navigation Determination</h2>
+                <p class="flavour-text">A demonstration of obviation of detonation with limitation of explanation. Such imagination!</p>
+                <p>Press the display and notate all the directions that the arrow points.</p>
+                <p>The directions that the arrow points represent the directions it takes to travel from the central cell in one of the following mazes to the cell located at a randomly chosen character from the serial number.</p>
+                <p>After determining which maze the arrow is in, press the display, then press the button with the label of the maze when the arrow points at the color of the maze.</p>
+                <div class="nd-mazes">
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Navigation Determination</span>
+            </div>
+            <div class="page-content">
+                <div class="nd-mazes">
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Navigation Determination</span>
+            </div>
+            <div class="page-content">
+                <div class="nd-mazes">
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                    <div class="nd-maze"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+
+    </div>
+</body>
+</html>
