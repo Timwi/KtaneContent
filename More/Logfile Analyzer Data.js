@@ -15435,20 +15435,20 @@ let parseData = [
 			{
 				regex: /Grid (?:before|after) reaching row 6:/,
 				handler: function (matches, module) {
-					const letters = readMultiple(10).replace("\n", "");
-					const gridSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 510 510'>").addClass("tip-toe-grid");
+					const letters = readLines(10).join("");
+					const gridSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 520 520'>").addClass("tip-toe-grid");
 					for (let row = 0; row < 10; row++) {
 						for (let col = 0; col < 10; col++) {
-							$SVG(`<rect x="${5 + col * 50}" y="${5 + row * 50}" width="50" height="50">`)
+							$SVG(`<rect x="${col * 50}" y="${row * 50}" width="50" height="50">`)
 								.addClass(`tip-toe-${(letters[2 * (10 * row + col)] == 'T' ? "allowed" : "blocked")}`)
 								.appendTo(gridSvg);
 						}
 					}
 					for (let line = 1; line <= 9; line++) {
-						$SVG(`<path d="M${5 + line * 50} 5 v500">`).addClass("tip-toe-line").appendTo(gridSvg);
-						$SVG(`<path d="M5 ${5 + line * 50} h500">`).addClass("tip-toe-line").appendTo(gridSvg);
+						$SVG(`<path d="M${line * 50} -5 v510">`).addClass("tip-toe-line").appendTo(gridSvg);
+						$SVG(`<path d="M-5 ${line * 50} h510">`).addClass("tip-toe-line").appendTo(gridSvg);
 					}
-					$SVG("<path d='M5 5 h500 v500 h-500z'>").addClass("tip-toe-line tip-toe-border").appendTo(gridSvg);
+					$SVG("<path d='M-5 -5 h510 v510 h-510z'>").addClass("tip-toe-line tip-toe-border").appendTo(gridSvg);
 					module.push([matches[0], [{ nobullet: true, obj: gridSvg }]]);
 					return true;
 				}
