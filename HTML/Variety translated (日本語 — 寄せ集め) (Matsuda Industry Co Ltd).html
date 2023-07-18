@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>寄せ集め — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .dark table, table {
+            border: none;
+        }
+            table.mazes {
+                margin: 0 auto 0 0;
+            }
+            table.width-3 .maze-td svg {
+                width: 2.4cm;
+            }
+            table.width-4 .maze-td svg {
+                width: 3.2cm;
+            }
+        .maze-symbol {
+            display: inline-block;
+            width: 2cm;
+            height: 2cm;
+        }
+            .maze-symbol.plus {
+                background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M7 2h6v5h5v6h-5v5h-6v-5h-5v-6h5z" /></svg>');
+            }
+            .maze-symbol.star {
+                background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -9 100 100"><path d="M 50,0 61.111168,34.79797 97.552826,34.549152 67.89153,55.869663 79.389262,90.450851 49.946406,68.829681 20.610736,90.450849 32.075347,55.76772 2.4471746,34.549149 38.97555,34.734966 Z" /></svg>');
+            }
+            .maze-symbol.triangle {
+                background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12.5 100 100"><path d="m 50,0 43.301269,75 -86.6025409,0 z" /></svg>');
+            }
+        div.maze-explanation {
+            float: right;
+            width: 5.75cm;
+        }
+        #variety-order {
+            float: right;
+            clear: right;
+            margin-left: .5cm;
+            line-height: 1.2;
+        }
+        div.diagram {
+            margin-left: 1cm;
+            margin-bottom: 0;
+        }
+        .layout {
+            column-count: 2;
+        }
+            .layout > div:first-child h3 {
+                margin-top: 0;
+            }
+            .layout > div {
+                break-inside: avoid;
+            }
+        .wire-conditions td svg {
+            width: 48px;
+            height: 12px;
+            border: 1px solid black;
+        }
+        #word-list {
+            column-count: 10;
+            font-size: 10pt;
+            list-style-type: none;
+            padding: 0;
+        }
+        .button-table, .keypads-table {
+            float: right;
+            margin-left: .5cm;
+            margin-bottom: .5cm;
+            margin-top: .25cm;
+        }
+            .button-table td, .button-table th, .keypads-table td, .keypads-table th {
+                padding: .1em .6em .05em;
+                text-align: left;
+            }
+        #led-color-rules {
+            width: 100%;
+        }
+            #led-color-rules td {
+                padding: .1em 0 .05em;
+                text-align: center;
+            }
+
+        .narrow {
+            display: none;
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .dark .maze-symbol { filter: invert(85%); }
+        .dark .maze-td svg path {
+            stroke: #DDD;
+        }
+
+        @media screen and (max-width: 900px) {
+            .wide { display: none; }
+            .narrow { display: inline; }
+
+            #variety-order {
+                float: none;
+                margin: 0;
+            }
+
+            .layout {
+                column-count: 1;
+            }
+            div.maze-explanation {
+                float: none;
+                width: auto;
+            }
+            .maze-symbol {
+                width: 1cm;
+                height: 1cm;
+            }
+            table.width-3 .maze-td svg {
+                width: 1.35cm;
+            }
+            table.width-4 .maze-td svg {
+                width: 1.8cm;
+            }
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function setRules(rnd)
+        {
+            // WIRES
+            let edgeworkTds = Array.from(document.getElementsByClassName('edgework-condition'));
+            let edgeworkConditions = [
+                '点灯したインジケーターの数が点灯していないインジケーターの数より多い',
+                '単1バッテリーの数が単3バッテリーの数より多い',
+                'パラレル＋シリアルポートの数がそれ以外のポートの数より多い',
+                'シリアルナンバーの英字の数が数字の数より多い',
+                'バッテリーホルダーの数がポートプレートの数より多い'
+            ];
+            rnd.shuffleFisherYates(edgeworkConditions);
+            for (let ec = 0; ec < edgeworkTds.length; ec++)
+                edgeworkTds[ec].innerText = edgeworkConditions[ec];
+
+            // LEDS
+            let ledColors = ['K', 'R', 'Y', 'B', 'W'];
+            let table = '';
+            table += `<tr>${ledColors.slice(1).map(lc => `<th>${lc}<${''}/th>`).join('')}<td class='corner'><${''}/td><${''}/tr>`;
+            let allAnswers = [];
+            for (let color1 = 0; color1 < ledColors.length - 1; color1++)
+            {
+                let tr = Array(color1).fill('<td class="corner"></td>').join('');
+                for (let color2 = color1 + 1; color2 < ledColors.length; color2++)
+                {
+                    let answers;
+                    do
+                        answers = rnd.shuffleFisherYates(ledColors.slice(0)).slice(0, rnd.next(2, 6)).join(' ');
+                    while (allAnswers.includes(answers));
+                    allAnswers.push(answers);
+                    tr += `<td>${answers}<${''}/td>`;
+                }
+                table += `<tr>${tr}<th>${ledColors[color1]}<${''}/th><${''}/tr>`;
+            }
+            document.getElementById('led-color-rules').innerHTML = table;
+
+            // BUTTONS
+            let buttons = Array.from(document.getElementsByClassName('button-color-rule'));
+            let buttonValues = buttons.map((_, c) => c);
+            rnd.shuffleFisherYates(buttonValues);
+            for (let i = 0; i < buttons.length; i++)
+                buttons[i].innerText = buttonValues[i];
+
+            // COLORED KEYPADS
+            let keypads = Array.from(document.getElementsByClassName('keypad-color-rule'));
+            let keypadValues = keypads.map((_, c) => c + 2);
+            rnd.shuffleFisherYates(keypadValues);
+            for (let i = 0; i < keypads.length; i++)
+                keypads[i].innerText = keypadValues[i];
+
+            // MAZES
+            let mazeTds = Array.from(document.getElementsByClassName('maze-td'));
+            let mazeIx = 0;
+            for (let mw = 3; mw <= 4; mw++)
+                for (let mh = 3; mh <= 4; mh++)
+                    for (let sym = 0; sym < 9; sym++)
+                        mazeTds[mazeIx++].innerHTML = generateMaze(rnd, mw, mh);
+
+            let vo = document.getElementById('variety-order');
+            let flavors = [
+                '黒色ワイヤ',
+                '青色ワイヤ',
+                '赤色ワイヤ',
+                '黄色ワイヤ',
+                '白色ワイヤ',
+                '鍵',
+                'LED',
+                '青色スイッチ',
+                '赤色スイッチ',
+                '黄色スイッチ',
+                '白色スイッチ',
+                'ダイヤル',
+                '赤色ボタン',
+                '黄色ボタン',
+                '青色ボタン',
+                '白色ボタン',
+                '点字ディスプレー',
+                '数字ディスプレー',
+                '水平スライダー',
+                '垂直スライダー',
+                '2×2白色キーパッド',
+                '1×3白色キーパッド(縦長)',
+                '1×4白色キーパッド(縦長)',
+                '3×1白色キーパッド(横長)',
+                '4×1白色キーパッド(横長)',
+                '赤色キーパッド',
+                '黄色キーパッド',
+                '青色キーパッド',
+                '3×3迷路',
+                '3×4迷路(縦長)',
+                '4×3迷路(横長)',
+                '4×4迷路',
+                '英字ディスプレー'
+            ];
+            rnd.shuffleFisherYates(flavors);
+            rnd.shuffleFisherYates(flavors);
+            vo.innerHTML = flavors.map(fl => `<li>${fl}<${''}/li>`).join('');
+        }
+
+        function generateMaze(rnd, w, h)
+        {
+            let segs = [];
+            for (let x = 0; x < w; x++)
+                for (let y = 0; y < h; y++)
+                {
+                    if (y > 0)
+                        segs.push({ d1: 1, d2: 3, c: [x | (y << 3), (x + 1) | (y << 3)]});
+                    if (x > 0)
+                        segs.push({ d1: 2, d2: 0, c: [x | (y << 3), x | ((y + 1) << 3)]});
+                }
+
+            let todo = Array(w * h).fill(null).map((_, c) => (c % w) | ((c / w) << 3));
+            let active = [];
+
+            let start = rnd.next(0, todo.length);
+            active.push(todo[start]);
+            todo.splice(start, 1);
+
+            while (todo.length > 0)
+            {
+                let activeIx = rnd.next(0, active.length);
+                let sq = active[activeIx];
+                let adjs = [];
+                if ((sq & 7) > 0 && todo.includes(sq - 1))
+                    adjs.push(sq - 1);
+                if ((sq & 7) < w - 1 && todo.includes(sq + 1))
+                    adjs.push(sq + 1);
+                if ((sq >> 3) > 0 && todo.includes(sq - 8))
+                    adjs.push(sq - 8);
+                if ((sq >> 3) < h - 1 && todo.includes(sq + 8))
+                    adjs.push(sq + 8);
+
+                if (adjs.length == 0)
+                {
+                    active.splice(activeIx, 1);
+                    continue;
+                }
+                else
+                {
+                    let adj = adjs[rnd.next(0, adjs.length)];
+                    todo.splice(todo.indexOf(adj), 1);
+                    active.push(adj);
+
+                    if (adj === sq - 1)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 2 && sg.c[0] === sq), 1);
+                    else if (adj === sq + 1)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 2 && sg.c[0] === adj), 1);
+                    else if (adj === sq - 8)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 1 && sg.c[0] === sq), 1);
+                    else if (adj === sq + 8)
+                        segs.splice(segs.findIndex(sg => sg.d1 === 1 && sg.c[0] === adj), 1);
+                }
+            }
+
+            let svg = [];
+            while (segs.length > 0)
+            {
+                let seg = segs.pop();
+                while (true)
+                {
+                    let extIx = segs.findIndex(sg =>
+                        ((sg.d1 ^ 2) === seg.d1 && sg.c[0] === seg.c[0]) ||
+                        ((sg.d1 ^ 2) === seg.d2 && sg.c[0] === seg.c[seg.c.length - 1]) ||
+                        ((sg.d2 ^ 2) === seg.d1 && sg.c[sg.c.length - 1] === seg.c[0]) ||
+                        ((sg.d2 ^ 2) === seg.d2 && sg.c[sg.c.length - 1] === seg.c[seg.c.length - 1]));
+                    if (extIx === -1)
+                    {
+                        extIx = segs.findIndex(sg =>
+                            ((sg.c[0] === seg.c[0] || sg.c[0] === seg.c[seg.c.length - 1]) &&
+                                !segs.some(s => (s.c[0] === sg.c[0] && (s.d1 ^ 2) === sg.d1) || (s.c[s.c.length - 1] === sg.c[0] && (s.d2 ^ 2) === sg.d1))) ||
+                            ((sg.c[sg.c.length - 1] === seg.c[0] || sg.c[sg.c.length - 1] === seg.c[seg.c.length - 1]) &&
+                                !segs.some(s => (s.c[0] === sg.c[sg.c.length - 1] && (s.d1 ^ 2) === sg.d2) ||
+                                (s.c[s.c.length - 1] === sg.c[sg.c.length - 1] && (s.d2 ^ 2) === sg.d2)))
+                        );
+                    }
+                    if (extIx === -1)
+                        break;
+                    let ext = segs[extIx];
+                    segs.splice(extIx, 1);
+                    if (seg.c[0] === ext.c[0])
+                    {
+                        seg.c.reverse();
+                        seg.c.pop();
+                        if (seg.d1 === (ext.d1 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d1 = seg.d2;
+                        seg.d2 = ext.d2;
+                    }
+                    else if (seg.c[0] === ext.c[ext.c.length - 1])
+                    {
+                        ext.c.pop();
+                        if (seg.d1 === (ext.d2 ^ 2))
+                            seg.c.shift();
+                        ext.c.push(...seg.c);
+                        ext.d2 = seg.d2;
+                        seg = ext;
+                    }
+                    else if (seg.c[seg.c.length - 1] === ext.c[0])
+                    {
+                        seg.c.pop();
+                        if (ext.d1 === (seg.d2 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d2 = ext.d2;
+                    }
+                    else if (seg.c[seg.c.length - 1] === ext.c[ext.c.length - 1])
+                    {
+                        ext.c.reverse();
+                        seg.c.pop();
+                        if (seg.d2 === (ext.d2 ^ 2))
+                            ext.c.shift();
+                        seg.c.push(...ext.c);
+                        seg.d2 = ext.d1;
+                    }
+                }
+                svg.push(`M${seg.c.map(p => `${p & 7} ${p >> 3}`).join(' ')}`);
+            }
+
+            return `
+                <svg viewBox='-.1 -.1 ${w+.2} ${h+.2}'>
+                    <path d='${svg.join('')}' fill='none' stroke='black' stroke-width='.05' />
+                    <path d='M0 0h${w}v${h}H0z' fill='none' stroke='black' stroke-width='.1' />
+                    ${Array(w*h).fill(null).map((_, c) => `<rect class='highlightable' x='${c % w}' y='${(c / w) | 0}' width='1' height='1' fill='transparent' />`).join('')}
+                <${''}/svg>
+            `;
+        }
+
+        const W = 10;
+        const H = 8;
+
+        function range(start, count)
+        {
+            return Array(count).fill(null).map((_, c) => c + start);
+        }
+
+        class ItemFactory
+        {
+            isRectAvailable(taken, cell, width, height)
+            {
+                let x = cell % W;
+                let y = (cell / W) | 0;
+                if (x < 0 || x + width > W || y < 0 || y + height > H)
+                    return false;
+                return range(0, width * height).every(subcell => !taken.has(x + subcell % width + W * (y + ((subcell / width) | 0))));
+            }
+
+            claimRect(taken, cell, width, height)
+            {
+                for (let dx = 0; dx < width; dx++)
+                    for (let dy = 0; dy < height; dy++)
+                        taken.add(cell % W + dx + W * (((cell / W) | 0) + dy));
+            }
+        }
+
+        class WireFactory extends ItemFactory
+        {
+            _allowedDistance = .5;
+            WireColors = [ 'BlackWire', 'BlueWire', 'RedWire', 'YellowWire', 'WhiteWire' ];
+            WireColorsSvg = [ '#000', '#2244dd', '#dd2222', '#dddd22', '#ccc' ];
+
+            Generate(taken)
+            {
+                // Decline to create more wires if there are already two
+                if (Array.from(taken).filter(obj => this.WireColors.includes(obj)).length >= 2)
+                    return null;
+
+                let availableColors = this.WireColors.filter(c => !taken.has(c));
+                if (availableColors.length === 0)
+                    return null;
+
+                let existingWires = Array.from(taken).filter(s => typeof s === 'string' && s.startsWith("Wire:"))
+                    .map(s => s.split(':')).map(arr => ({ Cell1: parseInt(arr[1]), Cell2: parseInt(arr[2]) }));
+
+                let availableCells = range(0, W * H).filter(cell => !taken.has(cell) && !existingWires.some(ew => this.liesOn(cell, ew.Cell1, ew.Cell2)));
+
+                let availableWires = [];
+                for (let startIx = 0; startIx < availableCells.length; startIx++)
+                    for (let endIx = startIx + 1; endIx < availableCells.length; endIx++)
+                        if ((Math.abs(availableCells[startIx] % W - availableCells[endIx] % W) > 1 || Math.abs(((availableCells[startIx] / W) | 0) - ((availableCells[endIx] / W) | 0)) > 1)
+                            && !existingWires.some(ew => this.doIntersect(ew.Cell1, ew.Cell2, availableCells[startIx], availableCells[endIx]))
+                            && range(0, W * H).every(cell =>
+                                this.distance(availableCells[startIx] % W, (availableCells[startIx] / W) | 0, availableCells[endIx] % W, (availableCells[endIx] / W) | 0, cell % W, (cell / W) | 0) >= this._allowedDistance
+                                || !taken.has(cell)))
+                            availableWires.push(availableCells[endIx] * W * H + availableCells[startIx]);
+
+                if (availableWires.length === 0)
+                    return null;
+
+                let color = availableColors[(Math.random() * availableColors.length) | 0];
+                let wire = availableWires[(Math.random() * availableWires.length) | 0];
+                let cell1 = wire % (W * H);
+                let cell2 = (wire / (W * H)) | 0;
+                taken.add(cell1);
+                taken.add(cell2);
+                taken.add(color);
+                taken.add(`Wire:${cell1}:${cell2}`);
+                for (let cell = 0; cell < W * H; cell++)
+                    if (this.distance(cell1 % W, (cell1 / W) | 0, cell2 % W, (cell2 / W) | 0, cell % W, (cell / W) | 0) < this._allowedDistance)
+                        taken.add(cell);
+
+                return `
+                    <g fill='#5E4000' stroke='none'>
+                        <rect x='${(cell1 % W) - .4}' y='${((cell1 / W) | 0) - .4}' width='.8' height='.8' />
+                        <rect x='${(cell2 % W) - .4}' y='${((cell2 / W) | 0) - .4}' width='.8' height='.8' />
+                    <${''}/g>
+                    <path stroke-linecap='round' d='M${cell1 % W} ${(cell1 / W) | 0} ${cell2 % W} ${(cell2 / W) | 0}' fill='none' stroke='${this.WireColorsSvg[this.WireColors.indexOf(color)]}' stroke-width='.25' />
+                `;
+            }
+
+            doIntersect(wire1s, wire1e, wire2s, wire2e)
+            {
+                let w1sx = wire1s % W;
+                let w1ex = wire1e % W;
+                let w2sx = wire2s % W;
+                let w2ex = wire2e % W;
+                let w1sy = (wire1s / W) | 0;
+                let w1ey = (wire1e / W) | 0;
+                let w2sy = (wire2s / W) | 0;
+                let w2ey = (wire2e / W) | 0;
+
+                let l1dy = w1ey - w1sy;
+                let l1dx = w1ex - w1sx;
+                let l2dx = w2ex - w2sx;
+                let l2dy = w2ey - w2sy;
+
+                let det = l1dx * l2dy - l1dy * l2dx;
+                let l1 = l2dx * (w1sy - w2sy) - l2dy * (w1sx - w2sx);
+                let l2 = l1dx * (w1sy - w2sy) - l1dy * (w1sx - w2sx);
+                return det !== 0 && (det > 0
+                    ? l1 >= 0 && l1 <= det && l2 >= 0 && l2 <= det
+                    : l1 <= 0 && l1 >= det && l2 <= 0 && l2 >= det);
+            }
+
+            liesOn(point, start, end)
+            {
+                let x = point % W;
+                let y = (point / W) | 0;
+                let sx = start % W;
+                let sy = (start / W) | 0;
+                let ex = end % W;
+                let ey = (end / W) | 0;
+
+                if (sx === ex)
+                    return x === sx && y >= sy && y <= ey;
+                if (sx > ex)
+                    return this.liesOn(point, end, start);
+                return x >= sx && x <= ex && (x - sx) * (ey - sy) === (ex - sx) * (y - sy);
+            }
+
+            lambdaOfPointDroppedPerpendicularly(lx1, ly1, lx2, ly2, px, py)
+            {
+                let dirX = lx2 - lx1;
+                let dirY = ly2 - ly1;
+                return (dirX * (px - lx1) + dirY * (py - ly1)) / (dirX * dirX + dirY * dirY);
+            }
+
+            distance(lx1, ly1, lx2, ly2, px, py)
+            {
+                let lambda = this.lambdaOfPointDroppedPerpendicularly(lx1, ly1, lx2, ly2, px, py);
+                let dx = lx1 + lambda * (lx2 - lx1);
+                let dy = ly1 + lambda * (ly2 - ly1);
+                return (
+                    lambda <= 0 ? Math.sqrt(Math.pow(px - lx1, 2) + Math.pow(py - ly1, 2)) :
+                    lambda >= 1 ? Math.sqrt(Math.pow(px - lx2, 2) + Math.pow(py - ly2, 2)) :
+                    Math.sqrt(Math.pow(px - dx, 2) + Math.pow(py - dy, 2)));
+            }
+        }
+
+        class KeyFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let availableCells = range(0, W * H).filter(i => this.isRectAvailable(taken, i, 2, 2));
+                if (availableCells.length === 0)
+                    return null;
+
+                let cell = availableCells[(Math.random() * availableCells.length) | 0];
+                this.claimRect(taken, cell, 2, 2);
+                taken.add(this);
+
+                return `
+                    <g transform='translate(${(cell % W) + .5}, ${((cell / W) | 0) + .5})'>
+                        <circle cx='0' cy='0' r='.95' fill='#ddd' />
+                        <circle cx='0' cy='0' r='.8' fill='#aaa' />
+                        <path transform='scale(.02)' d='M -0.113281,-24.999993 A 15,15 0 0 0 -15,-9.999993 15,15 0 0 0 -7.058594,3.234382 L -15,35.000007 H 15 L 7.058594,3.236335 A 15,15 0 0 0 15,-9.999993 a 15,15 0 0 0 -15,-15 15,15 0 0 0 -0.113281,0 z' fill='black' />
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class LedFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let availableCells = range(0, W * H).filter(i => this.isRectAvailable(taken, i, 2, 2));
+                if (availableCells.length === 0)
+                    return null;
+
+                let cell = availableCells[(Math.random() * availableCells.length) | 0];
+                this.claimRect(taken, cell, 2, 2);
+                taken.add(this);
+
+                let colors = [ '#312921', '#4D90FF', '#EE4848', '#FFF', '#F5FF4F' ];
+
+                return `<circle transform='translate(${(cell % W) + .5}, ${((cell / W) | 0) + .5})' cx='0' cy='0' r='.5' fill='${colors[(Math.random() * colors.length) | 0]}' stroke='black' stroke-width='.05' />`;
+            }
+        }
+
+        class SwitchFactory extends ItemFactory
+        {
+            SwitchColors = [ 'BlueSwitch', 'RedSwitch', 'YellowSwitch', 'WhiteSwitch' ];
+            SwitchColorsSvg = [ '#5859FF', '#F23E3E', '#FFEC62', '#FFFFFF' ];
+
+            Generate(taken)
+            {
+                let availableCells = range(0, W * H).filter(c => this.isRectAvailable(taken, c, 1, 4));
+                if (availableCells.length === 0)
+                    return null;
+
+                let availableColors = this.SwitchColors.filter(c => !taken.has(c));
+                if (availableColors.length === 0)
+                    return null;
+
+                let cell = availableCells[(Math.random() * availableCells.length) | 0];
+                this.claimRect(taken, cell, 1, 4);
+
+                let color = availableColors[(Math.random() * availableColors.length) | 0];
+                taken.add(color);
+
+                return `
+                    <g transform='translate(${cell % W}, ${((cell / W) | 0) + 1.5})' fill='${this.SwitchColorsSvg[this.SwitchColors.indexOf(color)]}' stroke='black' stroke-width='.05'>
+                        <circle cx='0' cy='0' r='.4' fill='#ccc' />
+                        <path d='M-.2 0 h .4 L .4 -1.5 h -.8 z' />
+                        <path d='M .4 -1.5 v -.2 h -.8 v .2 z' />
+                    <${''}/g>
+                `;
+                return new Switch(module, cell, color);
+            }
+        }
+
+        class KnobFactory extends ItemFactory
+        {
+            KnobPathSvg = 'M0.401 1.236 0.462 1.223 0.520 1.222 0.574 1.229 0.626 1.240 0.677 1.251 0.727 1.257 0.777 1.256 0.828 1.243 0.881 1.213 0.926 1.172 0.954 1.128 0.971 1.080 0.980 1.031 0.985 0.979 0.991 0.926 1.001 0.872 1.020 0.818 1.051 0.764 1.093 0.717 1.139 0.682 1.187 0.656 1.236 0.634 1.283 0.613 1.328 0.590 1.367 0.559 1.401 0.518 1.426 0.463 1.438 0.404 1.435 0.351 1.421 0.303 1.399 0.257 1.373 0.212 1.346 0.166 1.323 0.117 1.306 0.062 1.3 0 1.306 -0.062 1.323 -0.117 1.346 -0.166 1.373 -0.212 1.399 -0.257 1.421 -0.303 1.435 -0.351 1.438 -0.404 1.426 -0.463 1.401 -0.518 1.367 -0.559 1.328 -0.590 1.283 -0.613 1.236 -0.634 1.187 -0.656 1.139 -0.682 1.093 -0.717 1.051 -0.764 1.020 -0.818 1.001 -0.872 0.991 -0.926 0.985 -0.979 0.980 -1.031 0.971 -1.080 0.954 -1.128 0.926 -1.172 0.881 -1.213 0.828 -1.243 0.777 -1.256 0.727 -1.257 0.677 -1.251 0.626 -1.240 0.574 -1.229 0.520 -1.222 0.462 -1.223 0.401 -1.236 0.344 -1.261 0.297 -1.294 0.257 -1.332 0.221 -1.371 0.187 -1.410 0.150 -1.445 0.109 -1.473 0.060 -1.492 0 -1.5 -0.060 -1.492 -0.109 -1.473 -0.150 -1.445 -0.187 -1.410 -0.221 -1.371 -0.257 -1.332 -0.297 -1.294 -0.344 -1.261 -0.401 -1.236 -0.462 -1.223 -0.520 -1.222 -0.574 -1.229 -0.626 -1.240 -0.677 -1.251 -0.727 -1.257 -0.777 -1.256 -0.828 -1.243 -0.881 -1.213 -0.926 -1.172 -0.954 -1.128 -0.971 -1.080 -0.980 -1.031 -0.985 -0.979 -0.991 -0.926 -1.001 -0.872 -1.020 -0.818 -1.051 -0.764 -1.093 -0.717 -1.139 -0.682 -1.187 -0.656 -1.236 -0.634 -1.283 -0.613 -1.328 -0.590 -1.367 -0.559 -1.401 -0.518 -1.426 -0.463 -1.438 -0.404 -1.435 -0.351 -1.421 -0.303 -1.399 -0.257 -1.373 -0.212 -1.346 -0.166 -1.323 -0.117 -1.306 -0.062 -1.3 0 -1.306 0.062 -1.323 0.117 -1.346 0.166 -1.373 0.212 -1.399 0.257 -1.421 0.303 -1.435 0.351 -1.438 0.404 -1.426 0.463 -1.401 0.518 -1.367 0.559 -1.328 0.590 -1.283 0.613 -1.236 0.634 -1.187 0.656 -1.139 0.682 -1.093 0.717 -1.051 0.764 -1.020 0.818 -1.001 0.872 -0.991 0.926 -0.985 0.979 -0.980 1.031 -0.971 1.080 -0.954 1.128 -0.926 1.172 -0.881 1.213 -0.828 1.243 -0.777 1.256 -0.727 1.257 -0.677 1.251 -0.626 1.240 -0.574 1.229 -0.520 1.222 -0.462 1.223 -0.401 1.236 -0.344 1.261 -0.297 1.294 -0.257 1.332 -0.221 1.371 -0.187 1.410 -0.150 1.445 -0.109 1.473 -0.060 1.492 0 1.5 0.060 1.492 0.109 1.473 0.150 1.445 0.187 1.410 0.221 1.371 0.257 1.332 0.297 1.294 0.344 1.261z';
+
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let availableCells = range(0, W * H).filter(i => this.isRectAvailable(taken, i, 3, 3));
+                if (availableCells.length === 0)
+                    return null;
+
+                let cell = availableCells[(Math.random() * availableCells.length) | 0];
+                this.claimRect(taken, cell, 3, 3);
+                taken.add(this);
+
+                let numTicks = 5 + ((Math.random() * 6) | 0);
+                let ticks = '';
+                for (let tick = 0; tick < numTicks; tick++)
+                    ticks += `<path d='M0 -1.4 v .4' transform='rotate(${360*tick/numTicks})' stroke='black' stroke-width='.15' />`;
+
+                return `
+                    <g transform='translate(${(cell % W) + 1}, ${((cell / W) | 0) + 1})'>
+                        ${ticks}
+                        <path transform='scale(.55)' d='${this.KnobPathSvg}' fill='#ccc' stroke='black' stroke-width='.091' />
+                        <path d='M0 -.6 .2 -.2 -.2 -.2z' transform='rotate(${360*((Math.random() * numTicks) | 0)/numTicks})' />
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class ButtonFactory extends ItemFactory
+        {
+            ButtonColors = [ 'RedButton', 'YellowButton', 'BlueButton', 'WhiteButton' ];
+            ButtonColorsSvg = [ '#FF5656', '#FDFF76', '#4F74FF', '#C1C5C9' ];
+
+            Generate(taken)
+            {
+                let availableColors = this.ButtonColors.filter(col => !taken.has(col));
+                if (availableColors.length === 0)
+                    return null;
+
+                let availableSpots = range(0, W * H).filter(topleft => this.isRectAvailable(taken, topleft, 3, 3));
+                if (availableSpots.length == 0)
+                    return null;
+
+                let topLeftCell = availableSpots[(Math.random() * availableSpots.length) | 0];
+                let color = availableColors[(Math.random() * availableColors.length) | 0];
+                this.claimRect(taken, topLeftCell, 3, 3);
+                taken.add(color);
+                let numVertices = 3 + ((Math.random() * 4) | 0);
+
+                return `<path fill='${this.ButtonColorsSvg[this.ButtonColors.indexOf(color)]}' stroke='black' stroke-width='.05' d='M${range(0, numVertices).map((_, v) => `${1.25*Math.cos(2*Math.PI*v/numVertices)} ${1.25*Math.sin(2*Math.PI*v/numVertices)}`).join(' ')}z' transform='translate(${topLeftCell % W + 1}, ${((topLeftCell / W) | 0) + 1}) rotate(${Math.random() * 360})' />`;
+            }
+        }
+
+        class BrailleDisplayFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 3));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                this.claimRect(taken, location, 2, 3);
+                taken.add(this);
+
+                let dots = '';
+                for (let dot = 0; dot < 6; dot++)
+                    dots += `<circle cx='${-.3 + .6*(dot % 2) + (location % W + .5)}' cy='${-.6 + .6*((dot / 2) | 0) + ((location / W) | 0) + 1}' r='.2' />`;
+
+                return `<rect fill='#581502' stroke='#C46058' stroke-width='.2' x='${location % W - .3}' y='${((location / W) | 0) - .2}' width='1.6' height='2.4' /><g fill='#471C12'>${dots}<${''}/g>`;
+            }
+        }
+
+        class DigitDisplayFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 3));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                this.claimRect(taken, location, 2, 3);
+                taken.add(this);
+
+                return `
+                    <g transform='translate(${location % W + .5}, ${((location / W) | 0) + 1})'>
+                        <rect fill='#253C96' stroke='#4B8EE6' stroke-width='.2' x='-.7' y='-1' width='1.4' height='2' />
+                        <text font-family='LCDClock' fill='#253365' x='.05' y='.8' text-anchor='middle' font-size='1.55'>8<${''}/text>
+                        <path d='M -.5 -1.1 .5 -1.1 0 -1.4 z M -.5 1.1 .5 1.1 0 1.4 z' fill='#EBB16A' />
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class SliderFactory extends ItemFactory
+        {
+            Orientations = [ 'HorizontalSlider', 'VerticalSlider' ];
+            LongSlots = 5;
+            ShortSlots = 2;
+            SW(orientation) { return orientation === 'HorizontalSlider' ? this.LongSlots : this.ShortSlots; }
+            SH(orientation) { return orientation === 'HorizontalSlider' ? this.ShortSlots : this.LongSlots; }
+
+            Generate(taken)
+            {
+                let orientations = this.Orientations.filter(or => !taken.has(or));
+                if (orientations.length === 0)
+                    return null;
+
+                let positions = [];
+                for (let ori of orientations)
+                    for (let c of range(0, W*H))
+                        if (this.isRectAvailable(taken, c, this.SW(ori), this.SH(ori)))
+                            positions.push({ Cell: c, Orientation: ori });
+                if (positions.length === 0)
+                    return null;
+
+                let position = positions[(Math.random() * positions.length) | 0];
+                this.claimRect(taken, position.Cell, this.SW(position.Orientation), this.SH(position.Orientation));
+                taken.add(position.Orientation);
+
+                let numTicks = 3 + ((Math.random() * 5) | 0);
+                let ticks = range(0, numTicks).map(t => `M${4*t/(numTicks-1)} .2 v -.4`).join('');
+                return `
+                    <g transform='translate(${position.Cell % W + .5}, ${((position.Cell / W) | 0) + .5}) rotate(${position.Orientation === "HorizontalSlider" ? 0 : 90}) translate(-.5, -.5)'>
+                        <path d='M-.3 .35 h 4.6 v .3 h -4.6 z' fill='none' stroke='black' stroke-width='.1' />
+                        <path d='${ticks}' fill='none' stroke='black' stroke-width='.1' />
+                        <path d='M${4*((Math.random() * numTicks) | 0)/(numTicks-1) - .25} -.2 h .5 v 1.4 h -.5 z' fill='#ccc' stroke='black' stroke-width='.05' />
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class KeypadFactory extends ItemFactory
+        {
+            Sizes = [ 'Keypad2x2', 'Keypad1x3', 'Keypad1x4', 'Keypad3x1', 'Keypad4x1' ];
+            Widths = [ 2, 1, 1, 3, 4 ];
+            Heights = [ 2, 3, 4, 1, 1 ];
+
+            Generate(taken)
+            {
+                let availableSlots = [];
+                for (let sizeIx = 0; sizeIx < this.Sizes.length; sizeIx++)
+                {
+                    let size = this.Sizes[sizeIx];
+                    if (!taken.has(size))
+                        for (let topleft of range(0, W*H))
+                            if (this.isRectAvailable(taken, topleft, 2 * this.Widths[sizeIx], 2 * this.Heights[sizeIx]))
+                                availableSlots.push({ TopLeft: topleft, Size: size, Width: this.Widths[sizeIx], Height: this.Heights[sizeIx] });
+                }
+                if (availableSlots.length === 0)
+                    return null;
+
+                let slot = availableSlots[(Math.random() * availableSlots.length) | 0];
+                this.claimRect(taken, slot.TopLeft, 2 * slot.Width, 2 * slot.Height);
+                taken.add(slot.Size);
+
+                let keycaps = '';
+                const sf = 1.7;
+                const bv = .16;
+                const ledW = .3;
+                const ledH = .2;
+                for (let x = 0; x < slot.Width; x++)
+                    for (let y = 0; y < slot.Height; y++)
+                        keycaps += `
+                            <rect x='${sf*x - slot.Width*sf/2}' y='${sf*y - slot.Height*sf/2}' width='${sf}' height='${sf}' fill='#E7E3DB' stroke='black' stroke-width='.1' />
+                            <path d='M${sf*x - slot.Width*sf/2 + sf} ${sf*y - slot.Height*sf/2} v ${sf} h ${-sf} l ${sf*bv} ${-sf*bv} h ${sf*(1-2*bv)} v ${-sf*(1-2*bv)} z' fill='black' opacity='.5' />
+                            <path d='M${sf*x - slot.Width*sf/2} ${sf*y - slot.Height*sf/2 + sf} v ${-sf} h ${sf} l ${-sf*bv} ${sf*bv} h ${-sf*(1-2*bv)} v ${sf*(1-2*bv)} z' fill='white' opacity='.5' />
+                            <path d='M${sf*x - slot.Width*sf/2 + sf/2 - ledW} ${sf*y - slot.Height*sf/2 + .35} h ${2*ledW} v ${ledH} h ${-2*ledW} z' fill='#292929' />
+                        `;
+
+                return `<g transform='translate(${slot.TopLeft % W + slot.Width - .5}, ${((slot.TopLeft / W) | 0) + slot.Height - .5})'>${keycaps}<${''}/g>`;
+            }
+        }
+
+        class ColoredKeypadFactory extends ItemFactory
+        {
+            Sizes = [ 'ColoredKeypad1x4', 'ColoredKeypad1x5', 'ColoredKeypad1x6', 'ColoredKeypad2x2', 'ColoredKeypad2x3', 'ColoredKeypad3x2', 'ColoredKeypad4x1', 'ColoredKeypad5x1', 'ColoredKeypad6x1' ];
+            Widths = [ 1, 1, 1, 2, 2, 3, 4, 5, 6 ];
+            Heights = [ 4, 5, 6, 2, 3, 2, 1, 1, 1 ];
+            CWidths = [ 2, 2, 2, 3, 3, 4, 6, 7, 8 ];
+            CHeights = [ 6, 7, 8, 3, 4, 3, 2, 2, 2 ];
+            Colors = [ 'RedKeypad', 'YellowKeypad', 'BlueKeypad' ];
+            ColorsSvg = [ '#F96668', '#E2ED81', '#638EFF' ];
+
+            Generate(taken)
+            {
+                let availableConfigurations = [];
+                for (let color of this.Colors)
+                    if (!taken.has(color))
+                        for (let sizeIx = 0; sizeIx < this.Sizes.length; sizeIx++)
+                        {
+                            let size = this.Sizes[sizeIx];
+                            for (let topLeftCell of range(0, W*H))
+                                if (this.isRectAvailable(taken, topLeftCell, this.CWidths[sizeIx], this.CHeights[sizeIx]))
+                                    availableConfigurations.push({ Color: color, Size: size, TopLeftCell: topLeftCell, Width: this.Widths[sizeIx], Height: this.Heights[sizeIx], CWidth: this.CWidths[sizeIx], CHeight: this.CHeights[sizeIx] });
+                        }
+                if (availableConfigurations.length === 0)
+                    return null;
+
+                let config = availableConfigurations[(Math.random() * availableConfigurations.length) | 0];
+                taken.add(config.Color);
+                this.claimRect(taken, config.TopLeftCell, config.CWidth, config.CHeight);
+
+                let keycaps = '';
+                const sf = 1.25;
+                const bv = .12;
+                const ledW = .22;
+                const ledH = .15;
+                for (let x = 0; x < config.Width; x++)
+                    for (let y = 0; y < config.Height; y++)
+                        keycaps += `
+                            <rect x='${sf*x - config.Width*sf/2}' y='${sf*y - config.Height*sf/2}' width='${sf}' height='${sf}' fill='${this.ColorsSvg[this.Colors.indexOf(config.Color)]}' stroke='black' stroke-width='.1' />
+                            <path d='M${sf*x - config.Width*sf/2 + sf} ${sf*y - config.Height*sf/2} v ${sf} h ${-sf} l ${sf*bv} ${-sf*bv} h ${sf*(1-2*bv)} v ${-sf*(1-2*bv)} z' fill='black' opacity='.5' />
+                            <path d='M${sf*x - config.Width*sf/2} ${sf*y - config.Height*sf/2 + sf} v ${-sf} h ${sf} l ${-sf*bv} ${sf*bv} h ${-sf*(1-2*bv)} v ${sf*(1-2*bv)} z' fill='white' opacity='.5' />
+                            <path d='M${sf*x - config.Width*sf/2 + sf/2 - ledW} ${sf*y - config.Height*sf/2 + .26} h ${2*ledW} v ${ledH} h ${-2*ledW} z' fill='#292929' />
+                        `;
+
+                return `<g transform='translate(${config.TopLeftCell % W + (config.CWidth-1)/2}, ${((config.TopLeftCell / W) | 0) + (config.CHeight-1)/2})'>${keycaps}<${''}/g>`;
+            }
+        }
+
+        class MazeFactory extends ItemFactory
+        {
+            MinWidth = 3;
+            MaxWidth = 4;
+            MinHeight = 3;
+            MaxHeight = 4;
+            NumShapes = 3*3;
+            ShapeColors = [ '#FF3D3D', '#EBEE0B', '#3D94FF' ];
+            Shapes = [
+                'M 0,-5 1.116792,-1.5371323 4.7552826,-1.5450848 1.8070074,0.58713227 2.9389262,4.0450851 0,1.9 l -2.9389264,2.1450849 1.131919,-3.45795261 -2.9482751,-2.13221739 3.6384905,0.00795 z',
+                'M 0,-5 4.330127,2.5 l -8.6602541,0 z',
+                'm -1.5,-4 v 2.5 H -4 v 3 h 2.5 V 4 h 3 V 1.5 H 4 v -3 H 1.5 V -4 Z'
+            ];
+
+            Generate(taken)
+            {
+                let availableConfigs = [];
+                for (let width of range(this.MinWidth, this.MaxWidth - this.MinWidth + 1))
+                    for (let height of range(this.MinHeight, this.MaxHeight - this.MinHeight + 1))
+                        if (!taken.has(`Maze:${width}:${height}`))
+                            for (let cell of range(0, W * H))
+                                if (this.isRectAvailable(taken, cell, width + 1, height + 1))
+                                    availableConfigs.push({ Cell: cell, Width: width, Height: height });
+
+                if (availableConfigs.length === 0)
+                    return null;
+
+                let configIx = (Math.random() * availableConfigs.length) | 0;
+                let config = availableConfigs[configIx];
+
+                this.claimRect(taken, config.Cell, config.Width + 1, config.Height + 1);
+                taken.add(`Maze:${config.Width}:${config.Height}`);
+
+                let shape = (Math.random() * this.NumShapes) | 0;
+
+                let cx = config.Cell % W + config.Width / 2;
+                let cy = ((config.Cell / W) | 0) + config.Height / 2;
+                let dots = '';
+                let symbolPosition = (Math.random() * config.Width * config.Height) | 0;
+                const sf = .8;
+                const ds = .3;
+                const bv = .3;
+                for (let x = 0; x < config.Width; x++)
+                    for (let y = 0; y < config.Height; y++)
+                        dots += `<rect x='${cx - sf*(config.Width-1)/2 + sf*x - ds/2}' y='${cy - sf*(config.Height-1)/2 + sf*y - ds/2}' width='${ds}' height='${ds}' fill='#EAEAEA' />`;
+                return `
+                    <path fill='#241D15' stroke='#aaa' stroke-width='.15' d='M
+                        ${cx - config.Width/2} ${cy - config.Height/2 + bv} ${cx - config.Width/2 + bv} ${cy - config.Height/2}
+                        ${cx + config.Width/2 - bv} ${cy - config.Height/2} ${cx + config.Width/2} ${cy - config.Height/2 + bv}
+                        ${cx + config.Width/2} ${cy + config.Height/2 - bv} ${cx + config.Width/2 - bv} ${cy + config.Height/2}
+                        ${cx - config.Width/2 + bv} ${cy + config.Height/2} ${cx - config.Width/2} ${cy + config.Height/2 - bv}z' />
+                    ${dots}
+                    <path fill='${this.ShapeColors[(shape / 3) | 0]}' d='${this.Shapes[shape % 3]}'
+                        transform='translate(${cx - sf*(config.Width-1)/2 + sf*(symbolPosition % config.Width)}, ${cy - sf*(config.Height-1)/2 + sf*((symbolPosition / config.Width) | 0)}) scale(.1) rotate(${360*Math.random()})' />
+                    <path fill='#EBB16A' transform='translate(${cx}, ${cy})' d='
+                        M -.75 ${-.5*config.Height - .07} .75 ${-.5*config.Height - .07} 0 ${-.5*config.Height - .37} z
+                        M -.75 ${.5*config.Height + .07} .75 ${.5*config.Height + .07} 0 ${.5*config.Height + .37} z
+                        M ${-.5*config.Width - .07} -.75 ${-.5*config.Width - .07} .75 ${-.5*config.Width - .37} 0 z
+                        M ${.5*config.Width + .07} -.75 ${.5*config.Width + .07} .75 ${.5*config.Width + .37} 0 z' />
+                `;
+            }
+        }
+
+        class LetterDisplayFactory extends ItemFactory
+        {
+            Segments = [
+                "M5.104.25L2.855 2.5l2.249 2.25h29.792l2.249-2.25L34.896.25H5.104z",
+                "M2.5 2.855L.25 5.104v27.292l2.25 2.249 2.25-2.249V5.104L2.5 2.855z",
+                "M5.25 5.25v5.66l9.85 21.34h-.041l4.384 2.193-2.193-4.384v-3.885L7.592 5.25H5.25z",
+                "M17.75 5.25v24.691L20 34.443l2.25-4.502V5.25h-4.5z",
+                "M32.408 5.25L22.75 26.174v3.885l-2.193 4.384 4.384-2.193h-.04l9.849-21.34V5.25h-2.342z",
+                "M37.5 2.855l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V5.104L37.5 2.855z",
+                "M5.104 32.75L2.855 35l2.249 2.25h9.837L19.443 35l-4.502-2.25H5.104z",
+                "M25.059 32.75L20.557 35l4.5 2.25h9.84L37.144 35l-2.249-2.25H25.06z",
+                "M2.5 35.355L.25 37.604v27.292l2.25 2.249 2.25-2.249V37.604L2.5 35.355z",
+                "M19.443 35.557L15.06 37.75h.04L5.25 59.09v5.66h2.342l9.658-20.924v-3.885l2.193-4.384z",
+                "M20 35.557l-2.25 4.502V64.75h4.5V40.059L20 35.557z",
+                "M20.557 35.557l2.193 4.384v3.885l9.658 20.924h2.342v-5.66L24.9 37.75h.041l-4.384-2.193z",
+                "M37.5 35.355l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V37.604l-2.25-2.249z",
+                "M5.104 65.25L2.855 67.5l2.249 2.25h29.792l2.249-2.25-2.249-2.25H5.104z"
+            ];
+            SegmentMapping = [ "abfimgh", "adfhkmn", "abin", "adfkmn", "abghin", "abgih", "abinmh", "bighfm", "adkn", "fmn", "bigel", "bin", "ibcefm", "ibclmf", "abfimn", "biafgh", "abfilmn", "abfghil", "abghmn", "adk", "binmf", "bije", "bijlmf", "cejl", "cek", "aejn" ];
+
+            Generate(taken)
+            {
+                if (taken.has(this))
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 4, 3));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                this.claimRect(taken, location, 4, 3);
+                taken.add(this);
+
+                let letters = '';
+                for (let ltrIx = 0; ltrIx < 3; ltrIx++)
+                {
+                    let ltr = (Math.random() * 26) | 0;
+                    for (let sgIx = 0; sgIx < this.Segments.length; sgIx++)
+                        letters += `<path transform='translate(${45*ltrIx}, 0)' d='${this.Segments[sgIx]}' fill='${this.SegmentMapping[ltr].includes(String.fromCharCode(97 + sgIx)) ? "#FBFFD4" : "#28580D"}' />`;
+                }
+
+                return `
+                    <g transform='translate(${location % W + 1.5}, ${((location / W) | 0) + 1})'>
+                        <rect fill='#227B04' stroke='#56D661' stroke-width='.2' x='-1.8' y='-1' width='3.6' height='2' />
+                        <path d='M -.5 1.1 .5 1.1 0 1.4 z' fill='#EBB16A' transform='translate(-1.035, 0)' />
+                        <path d='M -.5 1.1 .5 1.1 0 1.4 z' fill='#EBB16A' />
+                        <path d='M -.5 1.1 .5 1.1 0 1.4 z' fill='#EBB16A' transform='translate(1.035, 0)' />
+                    <${''}/g>
+                    <g transform='translate(${location % W + .02}, ${((location / W) | 0) + .2}) scale(.023)'>${letters}<${''}/g>
+                `;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () =>
+        {
+            let factories = [
+                { weight: 1, factory: new WireFactory() },
+                { weight: 2, factory: new KeyFactory() },
+                { weight: 2, factory: new LedFactory() },
+                { weight: 2, factory: new SwitchFactory() },
+                { weight: 3, factory: new KnobFactory() },
+                { weight: 4, factory: new ButtonFactory() },
+                { weight: 5, factory: new BrailleDisplayFactory() },
+                { weight: 6, factory: new DigitDisplayFactory() },
+                { weight: 7, factory: new SliderFactory() },
+                { weight: 7, factory: new KeypadFactory() },
+                { weight: 7, factory: new ColoredKeypadFactory() },
+                { weight: 10, factory: new MazeFactory() },
+                { weight: 10, factory: new LetterDisplayFactory() }
+            ];
+
+            // Decide what’s going to be on the module
+            let iterations = 0;
+            let items = [];
+            let takens = new Set();
+            const maxItems = 10;
+            while (items.length !== maxItems && iterations < 100)
+            {
+                iterations++;
+                let remainingFactories = factories.slice(0);
+                takens.clear();
+                items = [];
+                while (remainingFactories.length > 0 && items.length < maxItems)
+                {
+                    let cumulativeWeight = remainingFactories.map((_, i) => remainingFactories.slice(0, i + 1).reduce((p, fi) => p + fi.weight, 0));
+                    let rnd = (Math.random() * cumulativeWeight[cumulativeWeight.length - 1]) | 0;
+                    let fIx = cumulativeWeight[cumulativeWeight.length - 1] == 0 ? 0 : cumulativeWeight.findIndex(w => rnd < w);
+                    let item = remainingFactories[fIx].factory.Generate(takens);
+                    if (item === null)
+                        remainingFactories.splice(fIx, 1);
+                    else
+                    {
+                        remainingFactories[fIx] = { weight: Math.max(1, remainingFactories[fIx].weight - 2), factory: remainingFactories[fIx].factory };
+                        items.push(item);
+                    }
+                }
+            }
+
+            document.getElementById('dynamic-svg').innerHTML = items.join('');
+
+            let rndNumber = 0n;
+            for (let i = 0; i < 8; i++)
+                rndNumber = (rndNumber << 8n) | BigInt((Math.random() * 256) | 0);
+            rndNumber %= 1000000000000n;
+            document.getElementById('dynamic-number').textContent = rndNumber;
+
+            let flavourTexts = [
+                '今、私に何を求めているのだろうか？',
+                '野生の多様性には、規則や秩序を超える美しさがある。',
+                'このモジュールに出くわすたびに、私はどれだけ長い間不在だったのだろうと思う。',
+                'あなたは爆弾のある部屋にただ一人でいる。友人達は爆弾の解除に必要な情報を持っている。しかし、1つ問題がある。彼らは爆弾を見ることができない。だから、みんなは急いで話し合う必要があるんだ！',
+                'あなたは物質だ。光速の2乗に自分を乗せない限り、あなたはエネルギーなのだ。',
+                '変化 差異 多様性 異質性 多面性 変形性',
+                '黄色のスイッチを持ち、LEDがキーパッドのスライダーの青色の数字と一致したらボタンを回す。',
+                '人生はチョコレートの箱のようなものだ。何が出てくるかわからない。',
+                'このモジュールは、 KTaNE製作委員会™ により設計されました',
+                '注:このマニュアルのコピーは、1部ごとに異なります。必ず正規のコピーをお持ちください。',
+                'これはおかしい...間違いなくおかしいぞ。',
+                'あなたは、曲がりくねった...ダイヤルの迷路の中にいる？それと同じものなんてない。',
+                `${rndNumber}分の1の確率。`,
+                'そこで、母音の違いを見分けられないプログラマーに出会った。 彼は『var i』を指さして、「it E?」と尋ねた。',
+                '10種類の人間がいます。スライダーが好きな人、ボタンが好きな人、キーパッドが好きな人、迷路が好きな人、ワイヤが好きな人、スイッチが好きな人、LEDが好きな人、点字が好きな人、鍵が好きな人、7セグメントディスプレーが好きな人です。',
+                'このモジュールが変わり続けるという事実が、目に飛び込んできたのでしょうか。',
+                'F5を押す。何回も。ご自由にどうぞ。',
+                'ワンポイントアドバイス:可能な限りアイテムの配置を書き出しておくと、次回に備えることができます！',
+                'あのモジュールには前回迷路はなかったはずだが…。',
+                '『三度目の正直』って言うけど、これはもう…10度目？',
+                `僕の好きな数字は何だと思う？ ${rndNumber}。`,
+                'このモジュールは、自制心や規律を持たない強迫症の電子機器好きな人たちが製造したものである。',
+                '何も変わっていない、何も異なっていないのであれば、私は変化を歓迎します。',
+                '人生、いろいろな人がいて、いろいろなことがある。だから味わい深くなる。',
+                '変化は避けられない。自動販売機を除いて。',
+                'バラエティが人生のスパイスだとしたら、結婚は残り物の大きなスパムの缶詰だ。',
+                'トイレットペーパーホルダーとキッチンシンクがないんです。それと、電話はどうやってかけるんですか？',
+                'いくら見かけが変わっても、本質は変わらないものだ。',
+                '47%の確率で、毎回効果があります。',
+                '強さは違いの中にある…このモジュールには、その違いがたくさんある。',
+                'まさにポロックのようなモジュール。',
+                '当初は「多様性」という名前にする予定でしたが、マーケティングチームが「ダイ」から始まることに気づいたからこうなった。',
+                'バラエティの裏技…それはバラエティ！',
+                'スクラブルなら13点…日本語版があったとしたら何点なんだ？',
+                '不安を煽るモジュールが社会に解き放たれた。スライダーとダイヤル、そしていくつかの部品で構成されたこのモジュールは、急速に有名になっていった。',
+                'こんなの誰が読むんだよ？'
+            ];
+            document.getElementsByClassName('flavour-text')[0].innerText = flavourTexts[(Math.random() * flavourTexts.length) | 0];
+
+            let pages = Array.from(document.getElementsByClassName('page'));
+            for (let pIx = 0; pIx < pages.length; pIx++)
+                pages[pIx].className = `page page-bg-0${(Math.random() * 7 + 1) | 0}`;
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <div class="diagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348">
+                        <g stroke="black" stroke-width="3" fill="none">
+                            <rect x="5" y="5" width="338" height="338"></rect>
+                            <circle cx="305" cy="43" r="15"></circle>
+                        </g>
+                        <rect x="30" y="30" width="230" height="50"></rect>
+                        <text id="dynamic-number" x="0" y="69" fill="white" text-anchor="end" font-size="35" font-family="LCDClock" transform="translate(255, 0) scale(.65, 1)"></text>
+                        <g id="dynamic-svg" transform="translate(39, 105) scale(30)"></g>
+                    </svg>
+                </div>
+                <h2>モジュール詳細：寄せ集め</h2>
+
+                <p class="flavour-text">今、私に何を求めているのだろうか？</p>
+
+                <p>最初に、モジュールにあるアイテムのリストを、<span class='wide'>右</span><span class='narrow'>下</span>にあるリストと同じ順番で並べて作成する。</p>
+
+                <ul id="variety-order"><li>黄色ワイヤ</li><li>青色スイッチ</li><li>LED</li><li>4×4迷路</li><li>垂直スライダー</li><li>青色ワイヤ</li><li>ダイヤル</li><li>赤色スイッチ</li><li>3×4迷路(縦長)</li><li>青色ボタン</li><li>黄色スイッチ</li><li>赤色キーパッド</li><li>黄色ボタン</li><li>鍵</li><li>4×1白色キーパッド(横長)</li><li>青色キーパッド</li><li>4×3迷路(横長)</li><li>1×4白色キーパッド(縦長)</li><li>2×2白色キーパッド</li><li>黒色ワイヤ</li><li>水平スライダー</li><li>白色スイッチ</li><li>赤色ワイヤ</li><li>白色ワイヤ</li><li>黄色キーパッド</li><li>赤色ボタン</li><li>英字ディスプレー</li><li>白色ボタン</li><li>3×3迷路</li><li>数字ディスプレー</li><li>点字ディスプレー</li><li>3×1白色キーパッド(横長)</li><li>1×3白色キーパッド(縦長)</li></ul>
+
+                <p>モジュールの上部に表示されている数字を見る。この数字を解読するには、反復処理を行う必要がある。それぞれの反復処理では、数<var>N</var> が関連する。反復処理を行うにはこれらの計算を実行する:</p>
+
+                <ul>
+                    <li>現在の数字を<var>N</var> で<em>割った時の余り</em>を求める。これが、得られた値である。</li>
+                    <li>現在の数字を<var>N</var> で<em>割った時の商</em>を求める(小数点以下は切り捨てる)。これが、次の現在の数字である。</li>
+                </ul>
+
+                <p>まず、<var>N</var> をリストにあるアイテムの数として、反復処理を適用させる。得られた値によって、どのアイテムを操作するべきかが特定される。リストは上から順に、0から始まる番号が振られている。</p>
+
+                <p>次に、該当するアイテムに対して、以下のセクションで説明する方法で反復処理を適用させる。通常、<var>N</var> はそのアイテムが存在しうる状態の数であり、値はそのアイテムが設定されなければならない状態を特定する。</p>
+
+                <p>その後、そのアイテムをリストから削除する。この手順を続け、残りのアイテムのリストを減らしていく。</p>
+
+                <p>「寄せ集め」モジュールは、この手順の前半でアイテムが無効な状態にあるときに、アイテムが操作された場合にのみミスが記録される。間違ったワイヤを切断した場合、1度だけミスが記録される。それ以外の種類のアイテムの場合、さらにミスが記録されることを防ぐため、修正する必要がある。</p>
+
+                <p>特殊なケースとして、最後のアイテムが正しい状態に設定されているが、ワイヤーが誤って切断されたため、ミスが記録された場合、モジュールを解除するためにアイテムの状態を一度変更し、元に戻す作業を行う必要がある。</p>
+
+            </div>
+            <div class="page-footer relative-footer">ページ 1/5</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <div class='layout'>
+                    <div>
+                        <h3>ダイヤル</h3>
+                        <p><var>N</var> は目盛りの数である。状態は0から時計回りに番号が振られている。どの目盛りが状態0であるかを確認するには、上向きの目盛りから始めて、シリアルナンバーの最初の文字と同じ数だけ目盛りを時計回りに移動する (英字の場合、A=1～Z=26)。</p>
+                    </div>
+                    <div>
+                        <h3>白色キーパッド</h3>
+                        <p><var>N</var> はキーの個数の階乗である。得られた値にこの手順内のみで使用する別の反復処理を適用し、キーを押す順番を求める。それぞれの反復処理における<var>N</var> の値は、残りのキーの数であり、読み順で0から始まる番号が振られている。</p>
+                    </div>
+                    <div>
+                        <h3>色付きキーパッド</h3>
+                        <table class="keypads-table">
+                            <tr><th>色</th><th><var>K</var></th></tr>
+                            <tr><td>赤</td><td class="keypad-color-rule">2</td></tr>
+                            <tr><td>黄</td><td class="keypad-color-rule">3</td></tr>
+                            <tr><td>青</td><td class="keypad-color-rule">4</td></tr>
+                        </table>
+                        <p><var>N</var> は「<var>B</var> 分の<var>K</var> &nbsp;*」である。<var>B</var> はキーの数であり、<var>K</var> はキーパッドの色を使用し、右の表から求める。</p>
+                        <p>あなたはキーを<var>K</var> 個を押す必要がある。<var>B</var> 個のキーから<var>K</var> 個を選ぶ方法をすべて書き出し（キーは読み順）、二進数のように並べ替える（1＝押す、0＝押さない）。値は押すべき組み合わせを特定する（0から番号をつける）。</p>
+                        <p style="font-size: 9pt">*「<var>B</var> 分の<var>K</var> 」 = <var>B</var> ! / (<var>K</var> ! × (<var>B</var> － <var>K</var> ) !).<br>
+                      ! は階乗を意味する。</p>
+                    </div>
+                    <div>
+                        <h3>スライダー</h3>
+                        <p><var>N</var> は目盛りの数である。状態は0から番号が振られ、水平スライダーの場合は左から、垂直スライダーの場合は上から始まる。</p>
+                    </div>
+                    <div>
+                        <h3>LED</h3>
+                        <p>LEDは最初、2色の間で点滅する。その色の組み合わせを以下の表で調べると、新しい色のリストが得られる。<var>N</var> はそのリストの中の色の数である。色は読み順で0から始まる番号が振られている。値は、そのリストの中から、送信すべき色を特定する。</p>
+						<p>LEDを1回タップすると、入力モードに切り替わる。LEDは、5つの色すべてが循環して表示される。正しい色が表示された時に、もう一度LEDをタップして送信する。</p>
+                        <table id="led-color-rules"><tr><th>R</th><th>Y</th><th>B</th><th>W</th><td class="corner"></td></tr><tr><td>K B Y R W</td><td>K Y W B R</td><td>K Y R W</td><td>B R W K</td><th>K</th></tr><tr><td class="corner"></td><td>Y W K B R</td><td>W B</td><td>B K Y</td><th>R</th></tr><tr><td class="corner"></td><td class="corner"></td><td>R Y K B</td><td>Y W B K</td><th>Y</th></tr><tr><td class="corner"></td><td class="corner"></td><td class="corner"></td><td>R W</td><th>B</th></tr></table>
+                        <p style="font-size: 9pt">B = 青, K = 黒, R = 赤, W = 白, Y = 黄</p>
+                    </div>
+                    <div>
+                        <h3>数字ディスプレー</h3>
+                        <p><var>N</var> は、ワイヤを除く、先に操作された項目の数である。最初に操作された項目から順番に、0から始まる番号が振られている。</p>
+                        <p>その項目が操作されたときに青色で表示されていた数字に設定する。入力された数字は黄色で表示される。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/5</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <div class='layout'>
+                    <div>
+                        <h3>ワイヤ</h3>
+                        <p><var>N</var> は2である。下表の条件が<em>偽</em>である場合、1は「切る」、0は「切らない」を意味し、<em>真</em>である場合、両者は逆になる。</p>
+                        <table class="wire-conditions">
+                            <tr><th>ワイヤの色とパターン</th><th>条件</th></tr>
+                            <tr><td><div>黒</div><svg class="wire-diagram" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 8 2" fill="black"><rect x="0" y="0" width="8" height="2" /></svg></td><td class="edgework-condition">バッテリーホルダーの数がポートプレートの数より多い</td></tr>
+                            <tr><td><div>青</div><svg class="wire-diagram" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 8 2" fill="black"><rect x="0" y="0" width="1" height="2" /><rect x="2" y="0" width="1" height="2" /><rect x="4" y="0" width="1" height="2" /><rect x="6" y="0" width="1" height="2" /></svg></td><td class="edgework-condition">シリアルナンバーの英字の数が数字の数より多い</td></tr>
+                            <tr><td><div>赤</div><svg class="wire-diagram" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 8 2" fill="black"><rect x="0" y="0" width="3" height="2" /><rect x="4" y="0" width="3" height="2" /></svg></td><td class="edgework-condition">パラレル＋シリアルポートの数がそれ以外のポートの数より多い</td></tr>
+                            <tr><td><div>黄</div><svg class="wire-diagram" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 8 2" fill="black"><rect x="0" y="0" width="1" height="2" /><rect x="4" y="0" width="1" height="2" /></svg></td><td class="edgework-condition">点灯したインジケーターの数が点灯していないインジケーターの数より多い</td></tr>
+                            <tr><td><div>白</div><svg class="wire-diagram" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 8 2"></svg></td><td class="edgework-condition">単1バッテリーの数が単3バッテリーの数より多い</td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3>ボタン</h3>
+                        <table class="button-table">
+                            <tr><th>色</th><th><var>K</var></th></tr>
+                            <tr><td>赤</td><td class="button-color-rule">2</td></tr>
+                            <tr><td>黄</td><td class="button-color-rule">1</td></tr>
+                            <tr><td>青</td><td class="button-color-rule">0</td></tr>
+                            <tr><td>白</td><td class="button-color-rule">3</td></tr>
+                        </table>
+                        <p><var>N</var> は<var>K</var> ＋<var>P</var> であり、<var>K</var> はボタンの色を右の表から求め、<var>P</var> はボタンの形状が持つ角の数である。</p>
+                        <p>得られた値を<var>V</var> とする。<br>もし、<var>V</var> &lt; <var>K</var> である場合、<var>V</var> 回のタイマーティックにわたってボタンを押し続ける（0の場合、1回だけボタンをタップする）。
+                            <br>それ以外の場合、値から<var>K</var>－2の数だけ引く。その数だけボタンをタップする。</p>
+                        <p>その後、入力が認識されるまでタイマーティックを2回待つ。</p>
+                        <p style="font-size: 9pt">「タイマーティック」とは、爆弾のカウントダウンタイマーの秒数が減少する瞬間のことである。</p>
+                    </div>
+                    <div>
+                        <h3>英字ディスプレー</h3>
+                        <p><var>N</var> は、以下の単語リストから、与えられた英字を使用して形成できる単語の数である。
+                            これらの単語は、アルファベット順に、0から始まる番号が振られている。</p>
+                        <ul id='word-list'><li>ACE</li><li>ACT</li><li>AID</li><li>AIM</li><li>AIR</li><li>ALE</li><li>ALL</li><li>AND</li><li>ANT</li><li>APT</li><li>ARM</li><li>ART</li><li>AWE</li><li>AYE</li><li>BAD</li><li>BAG</li><li>BAR</li><li>BAT</li><li>BAY</li><li>BED</li><li>BEE</li><li>BEG</li><li>BET</li><li>BID</li><li>BIG</li><li>BIT</li><li>BIZ</li><li>BOB</li><li>BOW</li><li>BOY</li><li>BUT</li><li>BUY</li><li>BYE</li><li>CAN</li><li>CAP</li><li>CAR</li><li>CAT</li><li>COP</li><li>COT</li><li>COW</li><li>CUE</li><li>CUP</li><li>CUT</li><li>DAD</li><li>DAM</li><li>DAY</li><li>DIE</li><li>DIG</li><li>DIM</li><li>DIP</li><li>DOG</li><li>DOT</li><li>DRY</li><li>DUE</li><li>DUG</li><li>DUO</li><li>DYE</li><li>EAR</li><li>EAT</li><li>FAN</li><li>FAQ</li><li>FAR</li><li>FAT</li><li>FAX</li><li>FED</li><li>FEE</li><li>FEN</li><li>FEW</li><li>FIN</li><li>FIT</li><li>FIX</li><li>FLY</li><li>FOG</li><li>FOR</li><li>FRK</li><li>FRQ</li><li>FRY</li><li>FUN</li><li>FUR</li><li>GET</li><li>GIG</li><li>GIN</li><li>GUM</li><li>GUT</li><li>GUY</li><li>HAM</li><li>HAT</li><li>HAY</li><li>HEN</li><li>HER</li><li>HEY</li><li>HIM</li><li>HIP</li><li>HIT</li><li>HOP</li><li>HOT</li><li>HOW</li><li>HUT</li><li>ILK</li><li>ILL</li><li>IND</li><li>INK</li><li>IRK</li><li>JAM</li><li>JAR</li><li>JAW</li><li>JOB</li><li>JOY</li><li>KID</li><li>KIN</li><li>KIT</li><li>LAD</li><li>LAP</li><li>LAW</li><li>LAY</li><li>LEG</li><li>LET</li><li>LID</li><li>LIE</li><li>LIP</li><li>LIT</li><li>LOG</li><li>LOO</li><li>LOT</li><li>LOW</li><li>LUA</li><li>LUG</li><li>MAD</li><li>MAN</li><li>MAP</li><li>MAT</li><li>MAX</li><li>MAY</li><li>MIC</li><li>MID</li><li>MIX</li><li>MOB</li><li>MOD</li><li>MUD</li><li>MUG</li><li>MUM</li><li>NET</li><li>NEW</li><li>NIL</li><li>NLL</li><li>NOD</li><li>NOR</li><li>NOT</li><li>NOW</li><li>NUN</li><li>NUT</li><li>OIL</li><li>OPT</li><li>OUR</li><li>OUT</li><li>OWE</li><li>OWL</li><li>PAD</li><li>PAN</li><li>PAR</li><li>PAT</li><li>PAY</li><li>PEG</li><li>PEN</li><li>PER</li><li>PET</li><li>PIE</li><li>PIG</li><li>PIN</li><li>PIT</li><li>POP</li><li>POT</li><li>POW</li><li>PUB</li><li>PUT</li><li>QUA</li><li>QUE</li><li>QUO</li><li>RAG</li><li>RAM</li><li>RAT</li><li>RAW</li><li>RED</li><li>RGB</li><li>RIB</li><li>RID</li><li>RIG</li><li>RIM</li><li>ROB</li><li>ROD</li><li>ROT</li><li>ROW</li><li>RUB</li><li>RUG</li><li>RUM</li><li>RUN</li><li>SAD</li><li>SAW</li><li>SAY</li><li>SEA</li><li>SEE</li><li>SET</li><li>SHE</li><li>SHY</li><li>SIC</li><li>SIG</li><li>SIN</li><li>SIR</li><li>SIT</li><li>SIX</li><li>SLY</li><li>SND</li><li>SUE</li><li>SUM</li><li>SUN</li><li>TAG</li><li>TAP</li><li>TAX</li><li>TEA</li><li>TEE</li><li>TEN</li><li>TGB</li><li>THY</li><li>TIE</li><li>TIN</li><li>TIP</li><li>TOE</li><li>TOO</li><li>TOP</li><li>TOY</li><li>TRN</li><li>TRY</li><li>TUB</li><li>VAT</li><li>VET</li><li>WAR</li><li>WAX</li><li>WAY</li><li>WEE</li><li>WET</li><li>WHY</li><li>WIG</li><li>WIN</li><li>WIT</li><li>WIZ</li><li>WRY</li><li>YEN</li><li>YET</li><li>ZAG</li><li>ZIG</li></ul>
+                    </div>
+                    <div>
+                        <h3>点字ディスプレー</h3>
+                        <p><var>N</var> は、シリアルナンバー内の個別の文字の数である。この値は、これらの文字のうち、どの文字を<a href='https://ktane.timwi.de/HTML/HTML/Braille%20translated%20(日本語%20—%20点字)%20(hatosable).html'>点字</a>で入力するかを特定するもので、最初に出現した文字から順番に0から始まる番号が振られている。入力すべき文字が数字である場合、1=A、2=B…9=I、0=Jとし、それを一段下にシフトして入力する。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/5</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <div class="maze-explanation">
+                    <h3>迷路</h3>
+                    <p><var>N</var> は迷路全体の位置の数（縦×横）である。</p>
+                    <p>矢印ボタンを使用して、値で特定されたゴール位置にシンボルを移動させることができる。これらの位置は、左上から読み順で、0から始まる番号が振られている。</p>
+                    <h3>鍵</h3>
+                    <p><var>N</var> は10である。爆弾のカウントダウンタイマーの秒数一の位がその値に等しくなった時に、鍵を時計回りに回す。</p>
+                    <h3>スイッチ</h3>
+                    <p><var>N</var> は、スイッチが切り替えられる位置の数である（2～4段階）。これらの位置は、完全な「上」位置から順番に、0から始まる番号が振られている。</p>
+                </div>
+                <h3>3×3迷路</h3>
+                <table class="mazes width-3">
+                    <tr>
+                        <td class='corner'></td>
+                        <th>赤</th>
+                        <th>黄</th>
+                        <th>青</th>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol plus"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M1 1 1 2 2 2 2 3M2 1 3 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 1 2 3M0 2 1 2M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 2 3 2M2 1 3 1M1 1 1 3" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol star"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 2 2 3M2 0 2 1M1 2 1 3M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M0 2 2 2M1 0 1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 0 2 1M0 1 1 1 1 2 2 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol triangle"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 2 3 2M2 1 3 1M0 2 1 2M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M2 2 3 2M3 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 3.2">
+                    <path d="M1 2 3 2M2 1 3 1M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                </table>
+                <h3>3×4迷路</h3>
+                <table class="mazes width-3">
+                    <tr>
+                        <td class='corner'></td>
+                        <th>赤</th>
+                        <th>黄</th>
+                        <th>青</th>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol plus"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M2 2 2 3 3 3M2 1 3 1M1 3 1 4M1 1 1 2 0 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M3 3 2 3 2 2 1 2 1 3M2 0 2 1M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M2 1 1 1 1 2 2 2 2 3 1 3 1 4" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol star"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M1 3 3 3M2 2 3 2M2 1 3 1M1 0 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M2 3 3 3M1 1 1 2 3 2M2 1 2 2M1 3 1 4" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M1 3 2 3 2 2 3 2M3 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol triangle"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M1 3 2 3 2 4M2 0 2 1M0 1 1 1 1 2 2 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M0 3 2 3M0 2 2 2M0 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 3.2 4.2">
+                    <path d="M2 1 2 3 0 3M1 2 1 3M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/5</div>
+        </div>
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <h3>4×3迷路</h3>
+                <table class="mazes width-4">
+                    <tr>
+                        <td class='corner'></td>
+                        <th>赤</th>
+                        <th>黄</th>
+                        <th>青</th>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol plus"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 0 3 2M2 2 2 1 3 1M1 0 1 1M0 2 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M2 2 4 2M3 1 4 1M2 0 2 1 1 1M0 2 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 1 4 1M2 3 2 2 3 2M0 1 2 1M0 2 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol star"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 2 3 1 4 1M2 2 2 3M2 0 2 1M1 2 1 3M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M2 1 3 1 3 2M2 0 2 2M1 2 1 3M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M2 1 3 1 3 2M2 0 2 2M1 1 1 2 0 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol triangle"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 1 3 3M2 2 2 3M1 1 1 2M0 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 0 3 2M2 1 2 2M3 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 3.2">
+                    <path d="M3 2 3 3M0 1 3 1M1 1 1 2 2 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                </table>
+                <h3>4×4迷路</h3>
+                <table class="mazes width-4">
+                    <tr>
+                        <td class='corner'></td>
+                        <th>赤</th>
+                        <th>黄</th>
+                        <th>青</th>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol plus"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 3 4 3M3 0 3 2M2 3 2 4M2 2 2 1 3 1M1 0 1 2M0 3 1 3" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M2 2 3 2 3 3 4 3M2 1 4 1M0 2 1 2 1 3 2 3M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 2 3 3M2 2 4 2M3 1 4 1M2 3 2 4M2 0 2 1M1 3 1 4M0 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol star"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 3 3 1 4 1M0 3 2 3M1 1 1 2 2 2M0 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 3 4 3M3 1 3 2M4 1 2 1 2 3M1 2 2 2M1 0 1 1M0 3 1 3" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M2 3 4 3M3 2 3 1 4 1M2 0 2 2M1 3 1 4M1 2 1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                    <tr>
+                        <th><div class="maze-symbol triangle"></div></th>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 3 3 4M3 0 3 2M2 2 2 4M0 2 1 2 1 3M1 0 1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M2 1 3 1 3 3 4 3M2 3 2 4M2 2 3 2M1 1 1 4" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                        <td class="maze-td nohighlight">
+                <svg viewBox="-.1 -.1 4.2 4.2">
+                    <path d="M3 3 4 3M2 1 2 3M2 2 3 2M0 1 3 1M1 1 1 3" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M0 0h4v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
+                    <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="3" y="3" width="1" height="1" fill="transparent"></rect>
+                </svg>
+            </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 5/5</div>
+        </div>
+    </div>
+</body>
+</html>
