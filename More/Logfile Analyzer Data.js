@@ -15459,6 +15459,53 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Toe Tactics",
+		moduleID: "toeTactics",
+		loggingTag: "Toe Tactics",
+		matches: [
+			{
+				regex: /colors: (.+)/,
+				handler: function(matches, module) {
+					module.colors = matches[1];
+					return true;
+				}
+			},
+			{
+				regex: /shapes: (.+)/,
+				handler: function (matches, module) {
+					let colors = module.colors.split('');
+					let shapes = matches[1].split('');
+					
+					let svg = $('<svg>').addClass('toe-tactics').attr('viewbox', '0 0 30 30');
+					$('<line>').attr({ x1:10, y1:0, x2:10, y2:30 }).appendTo(svg);
+					$('<line>').attr({ x1:20, y1:0, x2:20, y2:30 }).appendTo(svg);
+					$('<line>').attr({ x1:0, y1:10, x2:30, y2:10 }).appendTo(svg);
+					$('<line>').attr({ x1:0, y1:20, x2:30, y2:20 }).appendTo(svg);
+					
+					const fills = { 'R':'#D84F4F', 'B':'#4F86D8', 'Y':'#D8C83F' };
+					const paths = { 'X':'m1 3 2-2 2 2 2-2 2 2-2 2 2 2-2 2-2-2-2 2-2-2 2-2z', 'O':'M5 1A4 4 90 001 5 4 4 90 009 5 4 4 90 005 1zM5 3A2 2 90 017 5 2 2 90 013 5 2 2 90 015 3z' };
+					
+					for (let row = 0; row < 3; row++) {
+						for (let col = 0; col < 3; col++) {
+							const ix = 3 * row + col;
+							let tf = `translate(${10*col}, ${10*row})`;
+							if (colors[ix] != '.') {
+								$('<path>').attr({ fill:fills[colors[ix]], d:paths[shapes[ix]], transform:tf }).appendTo(svg);
+							}
+						}
+					}
+					console.log(svg);
+					console.log($(svg.prop('outerHTML')));
+					module.push({ label:'Starting board:', obj:svg.prop('outerHTML') });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Tombstone Maze",
 		moduleID: "TombstoneMazeModule",
 		loggingTag: "Tombstone Maze",
