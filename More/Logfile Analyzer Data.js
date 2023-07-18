@@ -13018,9 +13018,12 @@ let parseData = [
 									pixels += `M${x} ${y+6*bmp}h1v1h-1z`;
 						borders += `M0 ${6*bmp}h${w}v5H0z`;
 					}
+					const gridSvg = $(`<svg viewBox='-.1 -.1 ${w * 1.5 + .2} 17.7'>`).addClass("sapphire-button-grid");
+					$SVG(`<path>`).addClass("border").attr("d", borders).appendTo(gridSvg);
+					$SVG(`<path>`).addClass("pixel").attr("d", pixels).appendTo(gridSvg);
 					module.push({
 						label: matches[0],
-						obj: $(`<svg viewBox='-.1 -.1 ${w*1.5+.2} 17.7'><path fill='none' stroke='black' stroke-width='.05' d='${borders}' /><path d='${pixels}' /></svg>`)
+						obj: gridSvg
 					});
 					return true;
 				}
@@ -13030,7 +13033,8 @@ let parseData = [
 				handler: function(matches, module) {
 					// cw: M.5 2.5A2 2 0 0 1 2.5,.5
 					let data = readLines(5).map(line => line.replace(/^\[The Sapphire Button #\d+\] /, ''));
-					let pixels = '', borders = 'M21 7h5v5h-5z', svg = '';
+					let pixels = '', borders = 'M21 7h5v5h-5z';
+					const gridSvg = $(`<svg viewBox='-.1 -1.6 30.2 14.2'>`).addClass("sapphire-button-grid");
 					for (let bmp = 0; bmp < 3; bmp++)
 					{
 						for (let s = 0; s < 2; s++)
@@ -13041,23 +13045,26 @@ let parseData = [
 											pixels += `M${7*bmp + x} ${7*s + y}h1v1h-1z`;
 							borders += `M${7*bmp} ${7*s}h5v5h-5z`;
 						}
-						svg += `<text x='${7*bmp + 2.5}' y='6.3'>↓</text><text x='${7*bmp + 6}' y='9.8'>${bmp === 2 ? '=' : 'xor'}</text>`;
-						svg += `<text x='${7*bmp + 2.5}' y='-.3'>${matches[1+2*bmp]}</text>`;
-						svg += [
-							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)' fill='none' stroke='#4b4'><path d='M0 0l5 5' stroke-width='.1' /><path d='M4 1C2.5 1.5 1.5 2.5 1 4' stroke-width='.2' /><path transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /><path transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /></g>`,
-							`<g transform='translate(${7*bmp} 0)'><path d='M.5 2.5A2 2 0 0 1 2.5 .5' fill='none' stroke='#4b4' stroke-width='.2' /><path transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' /></g>`,
-							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)'><path d='M.5 2.5A2 2 0 0 1 2.5 .5' fill='none' stroke='#4b4' stroke-width='.2' /><path transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' /></g>`,
-							`<g transform='translate(${7*bmp} 0)' fill='none' stroke='#4b4'><path d='M0 0l5 5' stroke-width='.1' /><path d='M4 1C2.5 1.5 1.5 2.5 1 4' stroke-width='.2' /><path transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /><path transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' fill='#4b4' stroke='none' /></g>`
-						][matches[2+2*bmp]-1];
+						$SVG(`<text class='label' x='${7*bmp + 2.5}' y='6.3'>↓</text>`).appendTo(gridSvg);
+						$SVG(`<text class='label' x='${7*bmp + 6}' y='9.8'>${bmp === 2 ? '=' : 'xor'}</text>`).appendTo(gridSvg);
+						$SVG(`<text class='label' x='${7*bmp + 2.5}' y='-.3'>${matches[1+2*bmp]}</text>`).appendTo(gridSvg);
+						gridSvg.append($SVG([
+							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)'><path class='line' d='M0 0l5 5' /><path class='arrow-path' d='M4 1C2.5 1.5 1.5 2.5 1 4' /><path class='arrow-head' transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' /><path class='arrow-head' transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' /></g>`,
+							`<g transform='translate(${7*bmp} 0)'><path class='arrow-path' d='M.5 2.5A2 2 0 0 1 2.5 .5' /><path class='arrow-head' transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z'/></g>`,
+							`<g transform='translate(${7*bmp + 5} 0) scale(-1 1)'><path class='arrow-path' d='M.5 2.5A2 2 0 0 1 2.5 .5' /><path class='arrow-head' transform='translate(2.5 .5) scale(-.08)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' /></g>`,
+							`<g transform='translate(${7*bmp} 0)'><path class='line' d='M0 0l5 5' /><path class='arrow-path' d='M4 1C2.5 1.5 1.5 2.5 1 4' /><path class='arrow-head'  transform='translate(1 4) scale(.08) rotate(-71.56505119)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' /><path class='arrow-head' transform='translate(4 1) scale(.08) rotate(161.5650512)' d='M0 0L5 -5L-12.5 0L5 5L0 0z' /></g>`
+						][matches[2+2*bmp]-1]));
 					}
 					for (let x = 0; x < 5; x++)
 						for (let y = 0; y < 5; y++)
-								if (data[y][84 + 2*x] === '█')
-									pixels += `M${21 + x} ${7 + y}h1v1h-1z`;
-
+							if (data[y][84 + 2 * x] === '█')
+								pixels += `M${21 + x} ${7 + y}h1v1h-1z`;
+					
+					$SVG(`<path>`).addClass("border").attr("d", borders).prependTo(gridSvg);
+					$SVG(`<path>`).addClass("pixel").attr("d", pixels).prependTo(gridSvg);
 					module.push({
 						label: 'Solving process:',
-						obj: $(`<svg viewBox='-.1 -1.6 30.2 14.2' text-anchor='middle' font-size='1'><path fill='none' stroke='black' stroke-width='.05' d='${borders}' /><path d='${pixels}' />${svg}</svg>`)
+						obj: gridSvg
 					});
 					return true;
 				}
