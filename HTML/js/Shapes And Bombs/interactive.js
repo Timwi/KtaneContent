@@ -10,7 +10,7 @@ for (var i = 0; i < 8; i++) {
 		
 		if (i == 0 && j == 4) {
 			newCell = newRow.insertCell(j + 1);
-			newCell.outerHTML = `<td rowspan = "8" class = "cell-empty"></td>`
+			newCell.outerHTML = `<td rowspan = "8" class = "corner"></td>`
 		}
 	}
 }
