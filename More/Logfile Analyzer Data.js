@@ -11980,7 +11980,7 @@ let parseData = [
 		matches: [
 			{
 				regex: /Interacting the tiles in (.+) will also affect the tiles in .+/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.yetToSolve) {
 						module.yetToSolve = 4;
 					}
@@ -11995,7 +11995,7 @@ let parseData = [
 			},
 			{
 				regex: /Expected solution for (.+):/,
-				handler: function(matches, module) {
+				handler: function (matches, module) {
 					if (!module.dims) {
 						module.dims = {
 							"Plumbing": 35,
@@ -12013,9 +12013,9 @@ let parseData = [
 					linen++;
 					let initialData = readTaggedLines(4).map(x => x.split(" "));
 					if (puzzle == "Sudoku")
-						module.sudokuInitial = initialData.map(x => x.map(x => x == 0 ? "gray" : "white"));
+						module.sudokuInitial = initialData.map(x => x.map(x => x == 0 ? "nonfilled" : "prefilled"));
 					if (!module.makeSvg) {
-						module.makeSvg = function(grid, puzzle, initial = false) {
+						module.makeSvg = function (grid, puzzle, initial = false) {
 							let dim = module.dims[puzzle];
 							let svg = $("<svg viewbox='-105 -105 610 610'>").addClass("pandemonium-puzzle")
 								.addClass(puzzle.toLowerCase().replace(" ", "-"));
@@ -12025,14 +12025,14 @@ let parseData = [
 									let g = $SVG("<g>")
 										.attr("transform", `translate(${transform.x} ${transform.y})`)
 										.appendTo(svg);
-									$SVG("<rect>").addClass((puzzle == "Kakurasu") && (grid[row][col] == 1) ? "black" : "")
+									$SVG("<rect>").addClass("base")
 										.attr("width", dim).attr("height", dim)
 										.attr("x", 50 - dim / 2).attr("y", 50 - dim / 2)
 										.appendTo(g);
 									if (puzzle == "Plumbing") {
 										let plumbingOffsets = [`0 -${dim / 2}`, `${dim / 2} 0`, `0 ${dim / 2}`, `-${dim / 2} 0`];
 										let plumbingPaths = ["V0", "H100", "V100", "H0"];
-										$SVG("<circle>").addClass(initial ? "black" : "white")
+										$SVG("<circle>").addClass(initial ? "off" : "on")
 											.attr("cx", 50).attr("cy", 50)
 											.attr("r", 12)
 											.appendTo(g);
@@ -12043,18 +12043,23 @@ let parseData = [
 													.attr("d", path)
 													.appendTo(g);
 											}
-										}										
+										}
 									}
 									if (puzzle == "Sudoku") {
-										$SVG("<text>").addClass(initial ? "white" : module.sudokuInitial[row][col])
+										$SVG("<text>").addClass(initial ? "prefilled" : module.sudokuInitial[row][col])
 											.attr("x", 50).attr("y", 55).text(grid[row][col] == 0 ? "" : grid[row][col])
 											.appendTo(g);
 									}
 									if (puzzle == "Lights Out") {
-										$SVG("<circle>").addClass(grid[row][col] == 1 ? "white" : "black")
+										$SVG("<circle>").addClass(grid[row][col] == 1 ? "on" : "off")
 											.attr("cx", 50).attr("cy", 50).attr("r", 25)
 											.appendTo(g);
 									}
+									if (puzzle == "Kakurasu")
+										$SVG("<rect>").addClass((grid[row][col] == 1) ? "" : "absent")
+											.attr("width", dim).attr("height", dim)
+											.attr("x", 50 - dim / 2).attr("y", 50 - dim / 2)
+											.appendTo(g);
 								}
 							}
 							if (puzzle == "Kakurasu") {
@@ -12072,30 +12077,30 @@ let parseData = [
 							return svg;
 						}
 					}
-					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true) };
-					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle) };
+					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true), nobullet: true };
+					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle), nobullet: true };
 					module.push([puzzle, [initial, solution]]);
 					return true;
 				}
 			},
 			{
 				regex: /Initial Lights Out board:/,
-				handler: function(_, module) {
+				handler: function (_, module) {
 					let initialData = readTaggedLines(4).map(x => x.split(" "));
-					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out") };
+					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out"), nobullet: true };
 					module.push(["Lights Out", [initial]]);
 					return true;
 				}
 			},
 			{
 				regex: /has been solved/,
-				handler: function(_,module) {
+				handler: function (_, module) {
 					module.yetToSolve--;
 				}
 			},
 			{
 				regex: /The new interaction chain is as follows:/,
-				handler: function() {
+				handler: function () {
 					return true;
 				}
 			},
