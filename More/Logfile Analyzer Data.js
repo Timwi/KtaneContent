@@ -844,7 +844,7 @@ let parseData = [
 							.attr("width", 101.5).attr("height", 101.5)
 							.appendTo(boardSvg);
 						}
-					}		
+					}
 					module.push({ label: matches.input, obj: boardSvg });
 					return true;
 				}
@@ -3329,7 +3329,7 @@ let parseData = [
 							module.grid[a.y][a.x] = temp;
 						}
 					}
-					module.push([matches[0], [{ obj: module.makeSvg(module.grid) }]]);
+					module.push([matches[0], [{ obj: module.makeSvg(module.grid), nobullet: true }]]);
 					return true;
 				}
 			},
@@ -4286,15 +4286,15 @@ let parseData = [
 
 						if (moduleColours[i] != "Black" && moduleColours[i] != "White") {
 							$SVG("<text>").attr("stroke", "#000")
-							.attr("x", coordinates[i][0]).attr("y", coordinates[i][1]).text(moduleColours[i][0]).appendTo(svg);							
+							.attr("x", coordinates[i][0]).attr("y", coordinates[i][1]).text(moduleColours[i][0]).appendTo(svg);
 						}
-								
+
 					}
 					module.push({ label: `${matches[1]}:`, obj: svg, nobullet: true });
 					return true;
 				}
 
-					
+
 			},
 			{
 				regex: /.+/
@@ -4430,7 +4430,7 @@ let parseData = [
 				handler: function (matches, module) {
 					let svg = $('<svg>').addClass('factoring-grid').attr('viewbox', '-1 -1 122 122');
 					let positions = matches[1].split(', ').map(x => parseInt(x));
-					
+
 					let path = '';
 					for (let posIx = 0; posIx < 36; posIx++) {
 						let x = 20 * (positions[posIx] % 6) + 10;
@@ -4438,7 +4438,7 @@ let parseData = [
 						path += `${posIx == 0 ? 'M' : 'L'} ${x} ${y} `;
 					}
 					$('<path>').addClass('solution-path').attr('d', path).appendTo(svg);
-					
+
 					function sharesFactors(x, y) {
 						const primes = [ 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59 ];
 						for (let prime of primes)
@@ -4446,7 +4446,7 @@ let parseData = [
 								return true;
 						return false;
 					}
-					
+
 					for (let row = 0; row < 6; row++){
 						for (let col = 0; col < 6; col++) {
 							let num = module.grid[6 * row + col];
@@ -4460,8 +4460,8 @@ let parseData = [
 					}
 					$('<line>').addClass('edge').attr({ x1:0, y1:120, x2:121, y2:120 }).appendTo(svg);
 					$('<line>').addClass('edge').attr({ x1:120, y1:0, x2:120, y2:121 }).appendTo(svg);
-					
-					
+
+
 					module.push({ label:'Generated number grid and solution path:', obj:svg.prop('outerHTML') });
 					return true;
 				}
@@ -5488,7 +5488,7 @@ let parseData = [
 							for (let i = 0; i < module.numOfSteps; i++) {""
 								let needsArrows = false;
 								let svg;
-								
+
 								if (i == 0) {
 									svg = module.drawSvg(false, "Ants:");
 								}
@@ -6740,7 +6740,7 @@ let parseData = [
 						else if (matches[1] == "-") {
 							preText += "flips the grid horizontally only.";
 						}
-						else if (matches[2] == "-") {							
+						else if (matches[2] == "-") {
 							preText += "flips the grid vertically only.";
 						}
 						else {
@@ -6859,7 +6859,7 @@ let parseData = [
 					$SVG('<rect x="5" y="5" width="700" height="700">')
 						.addClass("border")
 						.appendTo(svg);
-					
+
 					module.iterations.push([`Iteration ${module.currentIteration}: ${match[1].replace(/[()]/g, "").replace(/,\s/g, " → ")} ➤ ${total}`, [{ nobullet: true, obj: svg }]]);
 					return true;
 				}
@@ -7210,7 +7210,7 @@ let parseData = [
 			{
 				regex: /Letters on module: [A-Z]+/,
 				handler: function (match, module) {
-					let nextLine = readLine();					
+					let nextLine = readLine();
 					let nextMatches = nextLine.match(/Decoded binary: (([A-Z]=[01]+(; )?)+)/);
 					combinedBinary = "";
 					for (let number of nextMatches[1].split("; ")) {
@@ -7571,9 +7571,9 @@ let parseData = [
 							}
 						}
 						for (let ix = 0; ix < 5; ix++) {
-							if (swapMatch[1] == 'rows') 
+							if (swapMatch[1] == 'rows')
 								module.grid[s2][ix] = store[ix];
-							else 
+							else
 								module.grid[ix][s2] = store[ix];
 						}
 					}
@@ -7588,7 +7588,7 @@ let parseData = [
 						for (let i = 0; i < 5; i++) {
 							if (row)
 								module.grid[digit][i] = section[(i + adder) % 5];
-							else 
+							else
 								module.grid[i][digit] = section[(i + adder) % 5];
 						}
 					}
@@ -7612,7 +7612,7 @@ let parseData = [
 						module.grid[b.y][b.x] = module.grid[a.y][a.x];
 						module.grid[a.y][a.x] = temp;
 					}
-					module.push([matches[0], [{ obj: module.makeSvg(module.grid) }]]);
+					module.push([matches[0], [{ obj: module.makeSvg(module.grid), nobullet: true }]]);
 					return true;
 				}
 			},
@@ -9513,11 +9513,11 @@ let parseData = [
 				return true;
 			}
 		},
-				
+
 		{
 			regex: /.+/
 		}
-			]		
+			]
 	},
 	{
 		moduleID: "SquaresOfMisery",
@@ -10267,7 +10267,7 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: "notes", 
+		moduleID: "notes",
 		loggingTag: "Notes",
 		displayName: "Notes",
 		matches: [
@@ -11981,13 +11981,11 @@ let parseData = [
 			{
 				regex: /Interacting the tiles in (.+) will also affect the tiles in .+/,
 				handler: function (matches, module) {
-					if (!module.yetToSolve) {
+					if (!module.yetToSolve)
 						module.yetToSolve = 4;
-					}
 					let order = [matches[1]];
-					for (let i = 0; i < module.yetToSolve - 1; i++) {
+					for (let i = 0; i < module.yetToSolve - 1; i++)
 						order.push(/Interacting the tiles in (.+) will also affect the tiles in .+/.exec(readTaggedLine())[1]);
-					}
 					let cycle = order.join(" > ").concat(` ( > ${order[0]} )`);
 					module.push({ label: "Module interaction cycle:", obj: pre(cycle) });
 					return true;
@@ -12077,8 +12075,8 @@ let parseData = [
 							return svg;
 						}
 					}
-					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true), nobullet: true };
-					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle), nobullet: true };
+					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true) };
+					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle) };
 					module.push([puzzle, [initial, solution]]);
 					return true;
 				}
@@ -12087,7 +12085,7 @@ let parseData = [
 				regex: /Initial Lights Out board:/,
 				handler: function (_, module) {
 					let initialData = readTaggedLines(4).map(x => x.split(" "));
-					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out"), nobullet: true };
+					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out") };
 					module.push(["Lights Out", [initial]]);
 					return true;
 				}
@@ -12495,7 +12493,7 @@ let parseData = [
 				regex: /Generated shapes: \[L:(.+), R:(.+)\]/,
 				handler: function (matches, module) {
 					let flex = $('<div>').addClass('raster-prime-gen-shapes');
-					
+
 					module.generateShape(matches[1]).appendTo($('<div>').addClass('shape-container').appendTo(flex));
 					module.generateShape(matches[2]).appendTo($('<div>').addClass('shape-container').appendTo(flex));
 					module.push({ label:'Generated shapes:', obj:flex.prop('outerHTML') });
@@ -12515,11 +12513,11 @@ let parseData = [
 					if (!module.generateShape){
 						module.generateShape = function (pattern) {
 							const values = pattern.split('/').map(str => str.split('').map(ch => ch == '#'));
-							
+
 							let startX = -1, startY = -1, endX, endY;
 							const arrHeight = values.length;
 							const arrWidth = values[0].length;
-							
+
 							for (let x = 0; x < arrWidth; x++) {
 								for (let y = 0; y < arrHeight; y++) {
 									if (values[y][x]) {
@@ -12539,8 +12537,8 @@ let parseData = [
 								}
 							}
 							const height = endY - startY + 1;
-							const width = endX - startX + 1;							
-							
+							const width = endX - startX + 1;
+
 							let svg = $('<svg>').addClass('raster-prime-shape').attr('viewbox', `${startX} ${startY} ${width} ${height}`);
 							for (let row = 0; row < arrHeight; row++) {
 								for (let col = 0; col < arrWidth; col++) {
@@ -14453,9 +14451,9 @@ let parseData = [
 									.attr("width", 100).attr("height", 100)
 									.attr("x", 100 * col).attr("y", 100 * row)
 									.appendTo(svg);
-							}	
+							}
 						}
-						log.push([ `${matches[1]} | Operator: ${operator} | ${validity}`, [{ nobullet: true, obj: svg }] ]);		
+						log.push([ `${matches[1]} | Operator: ${operator} | ${validity}`, [{ nobullet: true, obj: svg }] ]);
 					}
 					return true;
 				}
@@ -15586,7 +15584,7 @@ let parseData = [
 							.attr("x", 100 * i).attr("y", 0)
 							.attr("width", 100).attr("height", 100)
 							.appendTo(look);
-									
+
 						$SVG("<text>").addClass("torment-cell").addClass("white")
 							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
 							.appendTo(look);
@@ -15599,7 +15597,7 @@ let parseData = [
 								.attr("x", 100 * col).attr("y", 100 * row)
 								.attr("width", 100).attr("height", 100)
 								.appendTo(svg);
-							
+
 							$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
 								.attr("x", 100 * col + 50).attr("y", 100 * row + 65).text(grid[row][col])
 								.appendTo(svg);
@@ -15620,7 +15618,7 @@ let parseData = [
 							.attr("x", 100 * i).attr("y", 0)
 							.attr("width", 100).attr("height", 100)
 							.appendTo(fall);
-									
+
 						$SVG("<text>").addClass("torment-cell").addClass("white")
 							.attr("x", 100 * i + 50).attr("y", 65).text(letters[i])
 							.appendTo(fall);
@@ -15641,7 +15639,7 @@ let parseData = [
 										.attr("x", xOffset + 95 * col).attr("y", yOffset + 95 * row)
 										.attr("width", 95).attr("height", 95)
 										.appendTo(svg);
-									
+
 									$SVG("<text>").addClass("torment-cell").addClass((row + col) % 2 === 0 ? "black" : "red")
 										.attr("x", xOffset + 95 * col + 50).attr("y", yOffset + 95 * row + 65).text(grid[row][col])
 										.appendTo(svg);
@@ -15707,7 +15705,7 @@ let parseData = [
 			//		let col = matches[1].split("").map((e, i) => (e.charCodeAt(0) - "A".charCodeAt(0)) * (26 ** (matches[1].length - 1 - i)));
 			//		let sum = 0;
 			//		col.forEach(x => {sum += x;});
-			//		
+			//
 			//		col = sum;
 			//		let row = parseInt(matches[2]) - 1;
 			//		let partial = ``;
@@ -16382,7 +16380,7 @@ let parseData = [
 				regex: /.+/
 			}
 		]
-	},	
+	},
 	{
 		displayName: 'Voltorb Flip',
 		moduleID: 'VoltorbFlip',
@@ -16548,7 +16546,7 @@ let parseData = [
 					let cubePath = matches[1].split(", ");
 					let cubePathSvg = $(`<svg class="walking-cube-path-diagram" viewbox="0 0 420 420">`);
 					$SVG("<rect>").addClass("mod-bg")
-						.attr("x", 5).attr("y", 5) 
+						.attr("x", 5).attr("y", 5)
 						.attr("width", 410).attr("height", 410)
 						.appendTo(cubePathSvg);
 					for (let row = 0; row < 4; row++) {
@@ -16579,7 +16577,7 @@ let parseData = [
 					return true;
 				}
 			},
-			
+
 			{
 				regex: /([RMWBCYOG\.]{2,5})$/,
 				handler: function (matches, module) {
@@ -16593,7 +16591,7 @@ let parseData = [
 					let netPosition = module.netPosition;
 					let net = module.net;
 					readLines(net.length);
-					const colors = { 
+					const colors = {
 						R: "#F99",
 						M: "#F9F",
 						W: "#FFF",
@@ -16618,7 +16616,7 @@ let parseData = [
 						for (let col = 0; col < net[0].length; col++) {
 							netColors[row + startingRow][col + startingCol] = (net[row][col] == '.' ? 'A' : net[row][col]);
 						}
-						
+
 					}
 					for (let row = 0; row < 5; row++) {
 						for (let col = 0; col < 5; col++) {
@@ -16885,7 +16883,7 @@ let parseData = [
 			{
 				regex: /Question: /,
 				handler: function (match, module) {
-					if (module.faceOffPhase) 
+					if (module.faceOffPhase)
 						module.faceOffPhase.push(match.input);
 					else if (module.moneyPhase)
 						module.moneyPhase.push(match.input);
@@ -16910,7 +16908,7 @@ let parseData = [
 					let currentLine;
 					while (!(currentLine = readTaggedLine()).match(/Eliminate them/))
 						eliminationPhase.push(currentLine);
-					linen--;	
+					linen--;
 					return true;
 				}
 			},
@@ -16944,7 +16942,7 @@ let parseData = [
 			}
 		]
 	},
-	
+
 	{
 		displayName: "Who’s on First",
 		moduleID: "WhosOnFirst",
