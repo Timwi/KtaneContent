@@ -10015,11 +10015,74 @@ let parseData = [
 			{
 				regex: /Field:/,
 				handler: function (matches, module) {
-					module.push({ label: "Field:", obj: pre(readMultiple(3, function (str) { return str.replace('0', ' '); })) });
+					if (!module.makeSvg) {
+						module.makeSvg = function(grid, path = null) {
+							let svg = $("<svg viewbox='-5 -5 310 310'>").addClass("mystic-square");
+							const dim = 85;
+							for (let row = 0; row < 3; row++) {
+								for (let col = 0; col < 3; col++) {
+									if (grid[row][col] != 0) {
+										$SVG("<rect>").addClass("slidy-tile")
+											.attr("width", dim).attr("height", dim)
+											.attr("x", col * 100 + 50 - dim / 2).attr("y", row * 100 + 50 - dim / 2)
+											.appendTo(svg);
+									}
+									$SVG("<text>").addClass("number")
+										.attr("x", col * 100 + 50).attr("y", row * 100 + 50)
+										.text(/[0?]/.test(grid[row][col]) ? "" : grid[row][col])
+										.appendTo(svg);
+								}
+							}
+							if (path) {
+								let flatGrid = grid.map(x => x.split("")).flat();
+								let cells = [];
+								for (let i = 0; i < path.length; i++) {
+									let cell = {};
+									let j = flatGrid.indexOf(path[i]);
+									cell.x = (j % 3) * 100 + 50;
+									cell.y = Math.floor(j / 3) * 100 + 50;
+									cell.isStart = path[i] == 0 ? true : false;
+									cells.push(cell);
+								}
+								let line = "";
+								for (let cell of cells) {
+									if (cell.isStart) {
+										$SVG("<circle>").addClass("start")
+											.attr("cx", cell.x).attr("cy", cell.y)
+											.attr("r", 30)
+											.appendTo(svg);
+										line += `M${cell.x} ${cell.y}`;
+									} else {
+										line += `L${cell.x} ${cell.y}`;
+									}
+								}
+								$SVG("<path>").addClass("skull-path")
+									.attr("d", line)
+									.appendTo(svg);
+							}
+							return svg;
+						}
+					}
+					module.field = readMultiple(3, function(str) { return str.replace(" ", ""); }).split("\n");
+					console.log(module.field);
+					linen++;
+					let constellation = readMultiple(3, function(str) { return str.replace(" ", "") }).split("\n");
+					module.push({ label: "Field:", obj: module.makeSvg(module.field) });
+					module.push({ label: "Constellation:", obj: module.makeSvg(constellation) });
+					return true;
 				}
 			},
 			{
-				regex: /Last serial digit|Skull path/
+				regex: /Skull path: (.+)/,
+				handler: function(match, module) {
+					let path = match[1].split(" → ");
+					path[0] = "0";
+					module.push({ label: "Path to skull:", obj: module.makeSvg(module.field, path) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
