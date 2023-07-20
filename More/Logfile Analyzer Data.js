@@ -1241,6 +1241,12 @@ let parseData = [
 							}
 							return grid;
 						}
+						module.drawLine = function (ballNumbers) {
+							const line = $('<svg viewBox="0 0 900 100">').addClass("nine-ball");
+							for (const ix in ballNumbers)
+								line.append(module.drawBall(50 + 100 * ix, 50, ballNumbers[ix]));
+							return line;
+						}
 						module.attemptNumber = 0;
 						module.hasSetProperties = true;
 					}
@@ -1259,9 +1265,15 @@ let parseData = [
 					for (let num = 1; num <= 9; num++)
 						if (!ballNumbers.includes(num.toString()))
 							ballNumbers.push(num);
-					const ballsSvg = $('<svg viewBox="0 0 900 100">').addClass("nine-ball");
-					for (const ix in ballNumbers)
-						ballsSvg.append(module.drawBall(50 + 100 * ix, 50, ballNumbers[ix]));
+					const ballsSvg = module.drawLine(ballNumbers);
+					module.currentDropdown[1].push({ label: "Pot the balls in this order:", obj: ballsSvg });
+					return true;
+				}
+			},
+			{
+				regex: /There are no valid break balls\./,
+				handler: function (match, module) {
+					const ballsSvg = module.drawLine([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 					module.currentDropdown[1].push({ label: "Pot the balls in this order:", obj: ballsSvg });
 					return true;
 				}
