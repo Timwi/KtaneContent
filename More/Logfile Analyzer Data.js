@@ -1200,6 +1200,78 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSNineBall",
+		loggingTag: "9-Ball",
+		matches: [
+			{
+				regex: /^The array of balls in reading order is ((?:\d, ){7}\d and \d)\.$/,
+				handler: function (match, module) {
+					if (!module.hasSetProperties) {
+						const ballColours = {
+							1: "#feed01ee",
+							2: "#182983ee",
+							3: "#e53118ee",
+							4: "#93117eee",
+							5: "#ef7f01ee",
+							6: "#00914eee",
+							7: "#871421ee",
+							8: "#000000ee",
+							9: "#feed01ee",
+							accent: "#f7f2d4ee"
+						};
+						module.drawBall = function (x, y, number) {
+							const ball = $SVG("<g>");
+							$SVG("<circle>").attr("cx", x).attr("cy", y).attr("r", 50).attr("fill", ballColours[number]).appendTo(ball);
+							$SVG("<circle>").attr("cx", x).attr("cy", y).attr("r", 20).attr("fill", ballColours.accent).appendTo(ball);
+							$SVG("<text>").addClass("label").attr("x", x).attr("y", y + 2).text(number).appendTo(ball);
+							if (number == 9) {
+								$SVG("<path>").attr("d", `M${x - 38.3} ${y - 32.14} a 50 50 0 0 1 76.6 0z`).attr("fill", ballColours.accent).appendTo(ball);
+								$SVG("<path>").attr("d", `M${x - 38.3} ${y + 32.14} a 50 50 0 0 0 76.6 0z`).attr("fill", ballColours.accent).appendTo(ball);
+							}
+							if (number == 9 || number == 6)
+								$SVG("<path>").attr("d", `M${x - 6} ${y + 12} a20 20 0 0 0 12 0`).addClass("number-arc").appendTo(ball);
+							return ball;
+						}
+						const ballLayout = [[2, 0], [1, 1], [3, 1], [0, 2], [2, 2], [4, 2], [1, 3], [3, 3], [2, 4]];
+						module.drawGrid = function (ballNumbers) {
+							const grid = $('<svg viewBox="0 0 300 446.4">').addClass("nine-ball grid");
+							for (const ix in ballNumbers) {
+								const position = ballLayout[ix];
+								grid.append(module.drawBall(50 + position[0] * 50, 50 + position[1] * 86.6, ballNumbers[ix]));
+							}
+							return grid;
+						}
+						module.attemptNumber = 0;
+						module.hasSetProperties = true;
+					}
+					const ballNumbers = match[1].replace(" and ", ", ").split(", ");
+					module.attemptNumber++;
+					module.currentDropdown = [`Attempt ${module.attemptNumber}`, []];
+					module.push(module.currentDropdown);
+					module.currentDropdown[1].push({ label: "Generated ball arrangement:", obj: module.drawGrid(ballNumbers) });
+					return true;
+				}
+			},
+			{
+				regex: /^The valid break ball\(s\) is\/are (\d(?:, \d)*)\.$/,
+				handler: function (match, module) {
+					const ballNumbers = match[1].split(", ");
+					for (let num = 1; num <= 9; num++)
+						if (!ballNumbers.includes(num.toString()))
+							ballNumbers.push(num);
+					const ballsSvg = $('<svg viewBox="0 0 900 100">').addClass("nine-ball");
+					for (const ix in ballNumbers)
+						ballsSvg.append(module.drawBall(50 + 100 * ix, 50, ballNumbers[ix]));
+					module.currentDropdown[1].push({ label: "Pot the balls in this order:", obj: ballsSvg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Actual 4x4x4 Sudoku",
 		moduleID: "actual4x4x4SudokuModule",
 		loggingTag: "Actual 4x4x4 Sudoku",
