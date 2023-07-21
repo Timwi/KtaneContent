@@ -7071,84 +7071,40 @@ let parseData = [
 		matches: [
 			{
 				regex: /Initial board/,
-				handler: function(matches, module) {
-
+				handler: function (matches, module) {
 					module.toggleCell = (board, ant) => {
-						console.log(ant);
 						board[ant.y][ant.x] = board[ant.y][ant.x] == "white" ? "black" : "white";
-
 						return board;
-					} 
-
-					module.addAntEater = (ant, obj) => {
-						const d = 100;
-						const p = 5;
-						//xIndex and yIndex start a 0
-						let href = ant ? "ant" : "anteater";
-						let x = p + obj.x * d;
-						let y = p + obj.y * d;
-
-						return $SVG(`<image x="${x}" y="${y}" width="${d}" height="${d}" href="../HTML/img/Langton%20Ant/${href}.svg">`)
-									.css("transform-origin", `${x + d / 2}px ${y + d / 2}px`)
-									.css("transform", `rotate(${obj.direction}deg)`);
 					}
-
+					module.dim = 100;
+					module.pad = 5;
+					module.addAntEater = (ant, obj) => {
+						const href = ant ? "ant" : "anteater";
+						const x = module.pad + obj.x * module.dim;
+						const y = module.pad + obj.y * module.dim;
+						return $SVG(`<image x="${x}" y="${y}" width="${module.dim}" height="${module.dim}" href="../HTML/img/Langton%20Ant/${href}.svg">`)
+							.css("transform-origin", `${x + module.dim / 2}px ${y + module.dim / 2}px`)
+							.css("transform", `rotate(${obj.direction}deg)`);
+					}
 					module.makeSVG = (board) => {
-						const d = 100;
-						const p = 5;
-
-						let svgBoard = $(`<svg viewbox="0 0 510 510">`).addClass("langtons-anteater");
-						for(let i = 0; i < 5; i++){
-							for(let j = 0; j < 5; j++){
-								let startingX = p + j * d;
-								let startingY = p + i * d;
-								$SVG(`<rect>`).attr("x", startingX)
-											  .attr("y", startingY)
-											  .attr("width", d)
-											  .attr("height", d)
-											  .addClass(`tile`)
-											  .addClass(board[i][j])
-											  .addClass("langtons-anteater").appendTo(svgBoard);	
+						const svgBoard = $(`<svg viewbox="0 0 510 510">`).addClass("langtons-anteater");
+						for (let i = 0; i < 5; i++) {
+							for (let j = 0; j < 5; j++) {
+								const startingX = module.pad + j * module.dim;
+								const startingY = module.pad + i * module.dim;
+								$SVG(`<rect>`)
+									.attr("x", startingX)
+									.attr("y", startingY)
+									.attr("width", module.dim)
+									.attr("height", module.dim)
+									.addClass(`tile`)
+									.addClass(board[i][j])
+									.addClass("langtons-anteater").appendTo(svgBoard);
 							}
 						}
 						return svgBoard;
 					}
-
-
-					let getIntitalBoard = (board) => {
-						let boardArr = [];
-
-						for(let i = 0; i < 5; i++){
-							let arr = [];
-							for(let j = 0; j < 5; j++){
-								let color = board[i][j] == "W" ? "white" : "black"; 
-								arr.push(color);
-							}
-
-							boardArr.push(arr);
-						}
-						return boardArr;
-					} 
-
-
-					let boardData = readLines(5).map(l => l.split(' '));
-					module.board = getIntitalBoard(boardData);
-					let svg = module.makeSVG(module.board);
-					module.ant = {x: 2, y: 2, direction: 0};
-					module.addAntEater(true, module.ant).appendTo(svg);
-					
-
-					module.push([matches[0], [{obj: svg, nobullet: true}]]);
-					return true;
-
-				}
-
-			},
-			{
-				regex: /(Gen (\d+):) Ant moved to ([A-E][1-5]), anteater (?:has spawned at|moved to) ([A-E][1-5])\. Ant is now facing (North|East|South|West) and anteater is now facing (North|East|South|West)\./,
-				handler(matches, module){
-					
-					let getAnimal = (coordinate, direction) => {
+					module.getAnimal = (coordinate, direction) => {
 						let obj = {};
 						obj.x = "ABCDE".indexOf(coordinate[0]);
 						obj.y = "12345".indexOf(coordinate[1]);
@@ -7156,27 +7112,41 @@ let parseData = [
 
 						return obj;
 					}
-
-					//toggle cells
-					
-					module.toggleCell(module.board, module.ant);
-
-
-					if(matches[2] != "1"){
-						module.toggleCell(module.board, module.anteater);
+					const getIntitalBoard = (board) => {
+						const boardArr = [];
+						for (let i = 0; i < 5; i++) {
+							const arr = [];
+							for (let j = 0; j < 5; j++) {
+								const color = board[i][j] == "W" ? "white" : "black";
+								arr.push(color);
+							}
+							boardArr.push(arr);
+						}
+						return boardArr;
 					}
-					
-					//create svg
-					let svg = module.makeSVG(module.board);
+					const boardData = readLines(5).map(l => l.split(' '));
+					module.board = getIntitalBoard(boardData);
 
-					//update ant and ant eater position
+					const svg = module.makeSVG(module.board);
+					module.ant = { x: 2, y: 2, direction: 0 };
+					module.addAntEater(true, module.ant).appendTo(svg);
+					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /(Gen (\d+):) Ant moved to ([A-E][1-5]), anteater (?:has spawned at|moved to) ([A-E][1-5])\. Ant is now facing (North|East|South|West) and anteater is now facing (North|East|South|West)\./,
+				handler(matches, module) {
+					module.toggleCell(module.board, module.ant);
+					if (matches[2] != "1")
+						module.toggleCell(module.board, module.anteater);
 					
-					module.ant = getAnimal(matches[3], matches[5]);
-					module.anteater = getAnimal(matches[4], matches[6]);
-
+					const svg = module.makeSVG(module.board);
+					module.ant = module.getAnimal(matches[3], matches[5]);
+					module.anteater = module.getAnimal(matches[4], matches[6]);
 					module.addAntEater(true, module.ant).appendTo(svg);
 					module.addAntEater(false, module.anteater).appendTo(svg);
-					module.push([matches[0], [ { obj: svg, nobullet: true } ]]);
+					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
 					return true;
 				}
 			},
