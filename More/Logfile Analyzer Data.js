@@ -7043,19 +7043,14 @@ let parseData = [
 			{
 				regex: /Expected solution: \[([0-9/]+)\]./,
 				handler: function (matches, module) {
-					var tiles = matches[1].split("/");
-
-					const span = $('<span>').addClass('langtons-ant')
-						.append($('<span>').text("Expected solution:"));
-
-					for (var i = 0; i < 5; i++) {
-						var row = $('<span>').addClass('row');
-						for (var j = 0; j < 5; j++) {
+					const tiles = matches[1].split("/");
+					const span = $('<span>').addClass('langtons-ant').append($('<span>').text("Expected solution:"));
+					for (let i = 0; i < 5; i++) {
+						const row = $('<span>').addClass('row');
+						for (let j = 0; j < 5; j++)
 							row.append($("<img class='tile' src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png'/>"));
-						}
 						span.append(row);
 					}
-
 					module.groups.add(span);
 					return true;
 				}
