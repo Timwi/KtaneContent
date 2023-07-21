@@ -7111,7 +7111,8 @@ let parseData = [
 											  .attr("y", startingY)
 											  .attr("width", d)
 											  .attr("height", d)
-											  .addClass(`langtons-anteater-${board[i][j]}`)
+											  .addClass(`tile`)
+											  .addClass(board[i][j])
 											  .addClass("langtons-anteater").appendTo(svgBoard);	
 							}
 						}
