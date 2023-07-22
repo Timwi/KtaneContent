@@ -10082,7 +10082,7 @@ let parseData = [
 							for (let row = 0; row < 3; row++) {
 								for (let col = 0; col < 3; col++) {
 									if (grid[row][col] != 0) {
-										$SVG("<rect>").addClass("slidy-tile")
+										$SVG("<rect>").addClass("slidey-tile")
 											.attr("width", dim).attr("height", dim)
 											.attr("x", col * 100 + 50 - dim / 2).attr("y", row * 100 + 50 - dim / 2)
 											.appendTo(svg);
