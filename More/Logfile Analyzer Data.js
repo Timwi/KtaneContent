@@ -4188,58 +4188,58 @@ let parseData = [
 					const dim = parseInt(matches[1]);
 					const lineCount = dim * 2 + 1;
 					linen++;
-					let mazeData = readTaggedLines(lineCount);
-					let initialPosData = readTaggedLine();
-					let initialPos = /Your starting position is at ([A-Z])(\d+) and you are facing ([NESW]).+\./.exec(initialPosData);
-					let findCoords = (arr, target) => {
-						let result = { label: target };
-						for (let i = 0; i < dim; i++) {
-							for (let j = 0; j < dim; j++) {
-								if (arr[2 * i + 1][2 * j + 1] === target) {
-									result.y = i;
-									result.x = j;
+					const mazeData = readTaggedLines(lineCount);
+					const initialPosData = readTaggedLine();
+					const initialPos = /Your starting position is at ([A-Z])(\d+) and you are facing ([NESW]).+\./.exec(initialPosData);
+					const findCoords = (arr, target) => {
+						const result = { label: target };
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								if (arr[2 * row + 1][2 * col + 1] === target) {
+									result.y = row;
+									result.x = col;
 								}
 							}
 						}
 						return result;
 					};
-					let you = { label: "u", x: cols.indexOf(initialPos[1]), y: parseInt(initialPos[2]) - 1, dir: initialPos[3] };
-					let key = findCoords(mazeData, "k");
-					let exit = findCoords(mazeData, "e");
-					let objs = [you, key, exit];
-					let vertWalls = [];
-					let horizWalls = [];
-					for (let i = 0; i < dim; i++) {
+					const you = { label: "u", x: cols.indexOf(initialPos[1]), y: parseInt(initialPos[2]) - 1, dir: initialPos[3] };
+					const key = findCoords(mazeData, "k");
+					const exit = findCoords(mazeData, "e");
+					const objs = [you, key, exit];
+					const vertWalls = [];
+					const horizWalls = [];
+					for (let line = 0; line < dim; line++) {
 						let vert = "";
 						let horiz = "";
-						for (let j = 1; j < dim; j++) {
-							vert += mazeData[2 * i + 1][2 * j];
-							horiz += mazeData[2 * j][2 * i + 1];
+						for (let index = 1; index < dim; index++) {
+							vert += mazeData[2 * line + 1][2 * index];
+							horiz += mazeData[2 * index][2 * line + 1];
 						}
 						vertWalls.push(vert);
 						horizWalls.push(horiz);
 					}
-					let svg = $(`<svg viewbox='-0.05 -0.05 ${dim}.1 ${dim}.1'>`).addClass("echolocation-maze");
+					const svg = $(`<svg viewbox='-0.05 -0.05 ${dim}.1 ${dim}.1'>`).addClass("echolocation-maze");
 					$SVG("<rect>").addClass("border").attr("width", dim).attr("height", dim).attr("rx", 0.1).appendTo(svg);
-					for (let i = 0; i < dim; i++) {
-						for (let j = 1; j < dim; j++) {
-							if (vertWalls[i][j - 1] == "█") {
+					for (let line = 0; line < dim; line++) {
+						for (let index = 1; index < dim; index++) {
+							if (vertWalls[line][index - 1] == "█") {
 								$SVG("<path>").addClass("wall")
-									.attr("d", `M${j}.01 ${i}.01 v0.98`)
+									.attr("d", `M${index}.01 ${line}.01 v0.98`)
 									.appendTo(svg);
 							}
-							if (horizWalls[i][j - 1] == "█") {
+							if (horizWalls[line][index - 1] == "█") {
 								$SVG("<path>").addClass("wall")
-									.attr("d", `M${i}.01 ${j}.01 h0.98`)
+									.attr("d", `M${line}.01 ${index}.01 h0.98`)
 									.appendTo(svg);
 							}
 						}
 					}
-					for (let obj of objs) {
-						let translation = `translate(${obj.x} ${obj.y})`;
+					for (const obj of objs) {
+						const translation = `translate(${obj.x} ${obj.y})`;
 						let elem = elems[obj.label].attr("transform", translation).appendTo(svg);
 						if (obj.dir) {
-							let direction = "NESW".indexOf(obj.dir) * 90;
+							const direction = "NESW".indexOf(obj.dir) * 90;
 							elem = elem.attr("transform", translation + `rotate(${direction} 0.5 0.5)`);
 						}
 					}
