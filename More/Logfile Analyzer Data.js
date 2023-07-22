@@ -10077,7 +10077,7 @@ let parseData = [
 				handler: function (matches, module) {
 					if (!module.makeSvg) {
 						module.makeSvg = function(grid, path = null) {
-							let svg = $("<svg viewbox='-5 -5 310 310'>").addClass("mystic-square");
+							const svg = $("<svg viewbox='-5 -5 310 310'>").addClass("mystic-square");
 							const dim = 85;
 							for (let row = 0; row < 3; row++) {
 								for (let col = 0; col < 3; col++) {
@@ -10094,18 +10094,18 @@ let parseData = [
 								}
 							}
 							if (path) {
-								let flatGrid = grid.map(x => x.split("")).flat();
-								let cells = [];
-								for (let i = 0; i < path.length; i++) {
-									let cell = {};
-									let j = flatGrid.indexOf(path[i]);
-									cell.x = (j % 3) * 100 + 50;
-									cell.y = Math.floor(j / 3) * 100 + 50;
-									cell.isStart = path[i] == 0 ? true : false;
+								const flatGrid = grid.map(x => x.split("")).flat();
+								const cells = [];
+								for (let step = 0; step < path.length; step++) {
+									const cell = {};
+									const position = flatGrid.indexOf(path[step]);
+									cell.x = (position % 3) * 100 + 50;
+									cell.y = Math.floor(position / 3) * 100 + 50;
+									cell.isStart = path[step] == 0 ? true : false;
 									cells.push(cell);
 								}
 								let line = "";
-								for (let cell of cells) {
+								for (const cell of cells) {
 									if (cell.isStart) {
 										$SVG("<circle>").addClass("start")
 											.attr("cx", cell.x).attr("cy", cell.y)
@@ -10124,9 +10124,8 @@ let parseData = [
 						}
 					}
 					module.field = readMultiple(3, function(str) { return str.replace(" ", ""); }).split("\n");
-					console.log(module.field);
 					linen++;
-					let constellation = readMultiple(3, function(str) { return str.replace(" ", "") }).split("\n");
+					const constellation = readMultiple(3, function(str) { return str.replace(" ", "") }).split("\n");
 					module.push({ label: "Field:", obj: module.makeSvg(module.field) });
 					module.push({ label: "Constellation:", obj: module.makeSvg(constellation) });
 					return true;
@@ -10135,7 +10134,7 @@ let parseData = [
 			{
 				regex: /Skull path: (.+)/,
 				handler: function(match, module) {
-					let path = match[1].split(" → ");
+					const path = match[1].split(" → ");
 					path[0] = "0";
 					module.push({ label: "Path to skull:", obj: module.makeSvg(module.field, path) });
 					return true;
