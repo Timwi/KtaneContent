@@ -4257,18 +4257,78 @@ let parseData = [
 		]
 	},
 	{
-		displayName: "Echolocation",
 		moduleID: "echolocation",
 		loggingTag: "Echolocation",
 		matches: [
 			{
-				regex: /Generating maze with (?:default )?size of (\d\d?)\.$/,
+				regex: /Generating maze with (?:default )?size of (\d+)\.$/,
 				handler: function (matches, module) {
-					let lineCount = matches[1] * 2 + 1;
-					let legend = readTaggedLine();
+					const elems = {
+						"u": $SVG("<path>").addClass("pointer").attr("d", "M0.5 0.2 l0.3 0.6 l-0.3 -0.3 l-0.3 0.3z"),
+						"k": $SVG("<text>").addClass("cell-text").attr("x", 0.5).attr("y", 0.5).text("K"),
+						"e": $SVG("<text>").addClass("cell-text").attr("x", 0.5).attr("y", 0.5).text("E")
+					};
+					const cols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+					const dim = parseInt(matches[1]);
+					const lineCount = dim * 2 + 1;
+					linen++;
+					const mazeData = readTaggedLines(lineCount);
+					const initialPosData = readTaggedLine();
+					const initialPos = /Your starting position is at ([A-Z])(\d+) and you are facing ([NESW]).+\./.exec(initialPosData);
+					const findCoords = (arr, target) => {
+						const result = { label: target };
+						for (let row = 0; row < dim; row++) {
+							for (let col = 0; col < dim; col++) {
+								if (arr[2 * row + 1][2 * col + 1] === target) {
+									result.y = row;
+									result.x = col;
+								}
+							}
+						}
+						return result;
+					};
+					const you = { label: "u", x: cols.indexOf(initialPos[1]), y: parseInt(initialPos[2]) - 1, dir: initialPos[3] };
+					const key = findCoords(mazeData, "k");
+					const exit = findCoords(mazeData, "e");
+					const objs = [you, key, exit];
+					const vertWalls = [];
+					const horizWalls = [];
+					for (let line = 0; line < dim; line++) {
+						let vert = "";
+						let horiz = "";
+						for (let index = 1; index < dim; index++) {
+							vert += mazeData[2 * line + 1][2 * index];
+							horiz += mazeData[2 * index][2 * line + 1];
+						}
+						vertWalls.push(vert);
+						horizWalls.push(horiz);
+					}
+					const svg = $(`<svg viewbox='-0.05 -0.05 ${dim}.1 ${dim}.1'>`).addClass("echolocation-maze");
+					$SVG("<rect>").addClass("border").attr("width", dim).attr("height", dim).attr("rx", 0.1).appendTo(svg);
+					for (let line = 0; line < dim; line++) {
+						for (let index = 1; index < dim; index++) {
+							if (vertWalls[line][index - 1] == "█") {
+								$SVG("<path>").addClass("wall")
+									.attr("d", `M${index}.01 ${line}.01 v0.98`)
+									.appendTo(svg);
+							}
+							if (horizWalls[line][index - 1] == "█") {
+								$SVG("<path>").addClass("wall")
+									.attr("d", `M${line}.01 ${index}.01 h0.98`)
+									.appendTo(svg);
+							}
+						}
+					}
+					for (const obj of objs) {
+						const translation = `translate(${obj.x} ${obj.y})`;
+						let elem = elems[obj.label].attr("transform", translation).appendTo(svg);
+						if (obj.dir) {
+							const direction = "NESW".indexOf(obj.dir) * 90;
+							elem = elem.attr("transform", translation + `rotate(${direction} 0.5 0.5)`);
+						}
+					}
 					module.push(matches.input);
-					var maze = readTaggedLines(lineCount).join('\n');
-					module.push({ label: legend, obj: pre(maze) });
+					module.push({ label: "Maze: (Key = K, Exit = E)", obj: svg, nobullet: true });
 					return true;
 				}
 			},
@@ -10159,11 +10219,73 @@ let parseData = [
 			{
 				regex: /Field:/,
 				handler: function (matches, module) {
-					module.push({ label: "Field:", obj: pre(readMultiple(3, function (str) { return str.replace('0', ' '); })) });
+					if (!module.makeSvg) {
+						module.makeSvg = function(grid, path = null) {
+							const svg = $("<svg viewbox='-5 -5 310 310'>").addClass("mystic-square");
+							const dim = 85;
+							for (let row = 0; row < 3; row++) {
+								for (let col = 0; col < 3; col++) {
+									if (grid[row][col] != 0) {
+										$SVG("<rect>").addClass("slidey-tile")
+											.attr("width", dim).attr("height", dim)
+											.attr("x", col * 100 + 50 - dim / 2).attr("y", row * 100 + 50 - dim / 2)
+											.appendTo(svg);
+									}
+									$SVG("<text>").addClass("number")
+										.attr("x", col * 100 + 50).attr("y", row * 100 + 50)
+										.text(/[0?]/.test(grid[row][col]) ? "" : grid[row][col])
+										.appendTo(svg);
+								}
+							}
+							if (path) {
+								const flatGrid = grid.map(x => x.split("")).flat();
+								const cells = [];
+								for (let step = 0; step < path.length; step++) {
+									const cell = {};
+									const position = flatGrid.indexOf(path[step]);
+									cell.x = (position % 3) * 100 + 50;
+									cell.y = Math.floor(position / 3) * 100 + 50;
+									cell.isStart = path[step] == 0 ? true : false;
+									cells.push(cell);
+								}
+								let line = "";
+								for (const cell of cells) {
+									if (cell.isStart) {
+										$SVG("<circle>").addClass("start")
+											.attr("cx", cell.x).attr("cy", cell.y)
+											.attr("r", 30)
+											.appendTo(svg);
+										line += `M${cell.x} ${cell.y}`;
+									} else {
+										line += `L${cell.x} ${cell.y}`;
+									}
+								}
+								$SVG("<path>").addClass("skull-path")
+									.attr("d", line)
+									.appendTo(svg);
+							}
+							return svg;
+						}
+					}
+					module.field = readMultiple(3, function(str) { return str.replace(" ", ""); }).split("\n");
+					linen++;
+					const constellation = readMultiple(3, function(str) { return str.replace(" ", "") }).split("\n");
+					module.push({ label: "Field:", obj: module.makeSvg(module.field) });
+					module.push({ label: "Constellation:", obj: module.makeSvg(constellation) });
+					return true;
 				}
 			},
 			{
-				regex: /Last serial digit|Skull path/
+				regex: /Skull path: (.+)/,
+				handler: function(match, module) {
+					const path = match[1].split(" → ");
+					path[0] = "0";
+					module.push({ label: "Path to skull:", obj: module.makeSvg(module.field, path) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
