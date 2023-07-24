@@ -9,19 +9,106 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
     <style>
-        table.chess h4 {
-            margin: 0;
+        table.chess h4, table.chess p, p, ul { margin: 0; }
+        ul { font-size: 0.9em; }
+        #chessboard {
+            display: block;
+            margin: 0.5em;
+            width: 80%;
         }
-
-        table.chess p {
-            margin: 0;
+        #chessboard rect.white { fill: #fffd; }
+        #chessboard rect.black { fill: #000d; }
+        #chessboard rect.border {
+            fill: none;
+            stroke: #666;
+            stroke-width: 10px;
         }
-
-        p, ul {
-            margin: 0;
+        #chessboard text {
+            font-size: 30px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            user-select: none;
         }
+        .dark #chessboard text { fill: #DDD; }
     </style>
+    <script>
+        var defaultRules = null;
+        
+        function makeChessboard (labels) 
+        {
+            const svg = $("#chessboard");
+            svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const x = 100 * col;
+                    const y = 100 * row;
+                    const colour = !((row + col) & 1) ? "white " : "black ";
+                    svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                const rankCoords = { x: -50, y: 550 - 100 * i };
+                const fileCoords = { x: 50 + 100 * i , y: 670 };
+                svg.append(MakeSvgElem( "text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i] ));
+                svg.append(MakeSvgElem( "text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i] ));
+            }
+        }
+        
+        function getDefaultRules ()
+        {
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+        }
+        
+        function setDefaultRules ()
+        {
+            getDefaultRules();
+            for(let i = 1; i <= 6; i++){
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+            }
+            const defaultLabels = { ranks: ['1','2','3','4','5','6'], files: ['a','b','c','d','e','f'] };
+            makeChessboard(defaultLabels);
+        }
+        
+        function setRules (rnd)
+        {
+            getDefaultRules();
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                switch(order[i]) {
+                    case 1: inner = inner.replace("{j}", ind + 1); break;
+                    case 2: inner = inner.replace("нечётна", invertSerial ? "даже" : "нечётна"); break;
+                    case 5: inner = inner.replace("белого", invertField ? "черный" : "белого"); break;
+                }
+                span.innerHTML = inner;
+            }
+            const letters = ['a','b','c','d','e','f'];
+            const numbers = ['1','2','3','4','5','6'];
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
+            }
+            makeChessboard(setLabels);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -51,60 +138,45 @@
                 <table class="chess">
                     <tbody>
                         <tr>
-                            <td>
-                                <h4>Позиция #1: Монархия против теократии</h4>
-                                <p>Занята королем, если Позиция #5 занята ферзём.</p>
+                            <td id = "rule1">
+                                <h4>Позиция #{i}: Монархия против теократии</h4>
+                                <p>Занята королем, если Позиция #{j} занята ферзём.</p>
                                 <p>Иначе это поле занимает слон.</p>
                             </td>
                         </tr>
                         <tr>
-                            <td>
-                                <h4>Позиция #2: Командир армии</h4>
-                                <p>
-                                    Занята ладьёй, если последняя цифра серийного номера нечётна.
-                                </p><p>
-                                    Иначе это поле занимает конь.
-                                </p>
+                            <td id = "rule2">
+                                <h4>Позиция #{i}: Командир армии</h4>
+                                <p>Занята ладьёй, если последняя цифра серийного номера нечётна.</p>
+                                <p>Иначе это поле занимает конь.</p>
                             </td>
                         </tr>
                         <tr>
-                            <td>
-                                <h4>Позиция #3: Дело регентов</h4>
-                                <p>
-                                    Занята ферзём, если на доске менее двух ладей.
-                                </p><p>
-                                    Иначе это поле занимает король.
-                                </p>
+                            <td id = "rule3">
+                                <h4>Позиция #{i}: Дело регентов</h4>
+                                <p>Занята ферзём, если на доске менее двух ладей.</p>
+                                <p>Иначе это поле занимает король.</p>
                             </td>
                         </tr>
                         <tr>
-                            <td>
-                                <h4>Позиция #4: Железная башня</h4>
-                                <p>
-                                    Всегда занята ладьёй.
-                                </p>
+                            <td id = "rule4">
+                                <h4>Позиция #{i}: Железная башня</h4>
+                                <p>Всегда занята ладьёй.</p>
                             </td>
                         </tr>
                         <tr>
-                            <td>
-                                <h4>Позиция #5: Битва добра со злом</h4>
-                                <p>
-                                    Занята ферзём, если поле белого цвета.
-                                </p><p>
-                                    Иначе это поле занимает ладья.
-                                </p>
+                            <td id = "rule5">
+                                <h4>Позиция #{i}: Битва добра со злом</h4>
+                                <p>Занята ферзём, если поле белого цвета.</p>
+                                <p>Иначе это поле занимает ладья.</p>
                             </td>
                         </tr>
                         <tr>
-                            <td>
-                                <h4>Позиция #6: Скипетр, меч и жезл</h4>
-                                <p>
-                                    Занята ферзём, если на доске отсутствуют ферзи.
-                                </p><p>
-                                    Иначе это поле занято конём, если на доске отсутствуют кони.
-                                </p><p>
-                                    Иначе это поле занимает слон.
-                                </p>
+                            <td id = "rule6">
+                                <h4>Позиция #{i}: Скипетр, меч и жезл</h4>
+                                <p>Занята ферзём, если на доске отсутствуют ферзи.</p>
+                                <p>Иначе это поле занято конём, если на доске отсутствуют кони.</p>
+                                <p>Иначе это поле занимает слон.</p>
                             </td>
                         </tr>
                     </tbody>
@@ -119,11 +191,8 @@
             </div>
             <div class="page-content">
                 <h3>Шахматная доска</h3>
-                <p>
-                    Используйте данную схему как покрытие шахматной доски.
-                </p><p>
-                    <img src="img/Chess/ChessBoard.png">
-                </p>
+                <p>Используйте данную схему как покрытие шахматной доски.</p>
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
             <div class="page-footer relative-footer">Стр. 2 из 2</div>
         </div>

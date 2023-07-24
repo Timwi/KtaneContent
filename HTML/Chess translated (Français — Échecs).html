@@ -9,100 +9,107 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
     <style>
-        table.chess h4 {
+        table.chess h4, table.chess p, p, ul { 
             margin: 0;
+            font-size: 0.9em;
         }
-        table.chess p {
-            margin: 0;
+        #chessboard {
+            display: block;
+            margin: 0.5em;
+            width: 80%;
         }
-        p,ul {
-            margin: 0;
+        #chessboard rect.white { fill: #fffd; }
+        #chessboard rect.black { fill: #000d; }
+        #chessboard rect.border {
+            fill: none;
+            stroke: #666;
+            stroke-width: 10px;
         }
-        .chess-horizontal {
-            padding-left: 100px;
-            clear: both;
-            display: grid;
-            grid-auto-flow: column;
-            grid-auto-columns: 62px;
-            grid-gap: 5px;
-            padding-top: 10px;
+        #chessboard text {
+            font-size: 30px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            user-select: none;
         }
-        .chess-vertical {
-            display:grid;
-            grid-auto-flow: row;
-            grid-auto-rows: 62px;
-            grid-gap: 5px;
-            padding-left: 30px;
-            padding-top: 45px;
-        }
-        #chess{
-            float:right;
-            margin: 20px 200px 0 0;
-        }
+        .dark #chessboard text { fill: #DDD; }
     </style>
     <script>
         var defaultRules = null;
-
-        function getDefaultRules(){
-            if (defaultRules !== null)
-            return;
-            defaultRules = {}
-            for (var rule = 1; rule <=6; rule++){
-                defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+        
+        function makeChessboard (labels) 
+        {
+            const svg = $("#chessboard");
+            svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const x = 100 * col;
+                    const y = 100 * row;
+                    const colour = !((row + col) & 1) ? "white " : "black ";
+                    svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                const rankCoords = { x: -50, y: 550 - 100 * i };
+                const fileCoords = { x: 50 + 100 * i , y: 670 };
+                svg.append(MakeSvgElem( "text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i] ));
+                svg.append(MakeSvgElem( "text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i] ));
             }
         }
-
-        function setDefaultRules()
+        
+        function getDefaultRules ()
         {
-            getDefaultRules()
-            for( var i = 1; i <= 6; i++){
-                var span = document.getElementById(`rule${i}`)
-
-                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5)
-            }
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
         }
-
-        function setRules(rnd)
+        
+        function setDefaultRules ()
         {
-            getDefaultRules()
-            var order = [1,2,3,4,5,6]
-            rnd.shuffleFisherYates(order)
-            var ind = order.indexOf(5)
-
-            var invertX = rnd.nextInt() % 2 == 0;
-            var invertY = rnd.nextInt() % 2 == 0;
-            var swap = rnd.nextInt() % 2 == 0;
-            var invertField = rnd.nextInt() % 2 == 1;
-            var invertSerial = rnd.nextInt() % 2 == 0;
-            for (var i = 0; i < 6; i++){
-                var span = document.getElementById(`rule${i+1}`)
-                var inner = defaultRules[order[i]].replace("{i}",i+1);
-                switch(order[i]){
+            getDefaultRules();
+            for(let i = 1; i <= 6; i++){
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+            }
+            const defaultLabels = { ranks: ['1','2','3','4','5','6'], files: ['a','b','c','d','e','f'] };
+            makeChessboard(defaultLabels);
+        }
+        
+        function setRules (rnd)
+        {
+            getDefaultRules();
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                switch(order[i]) {
                     case 1: inner = inner.replace("{j}",ind+1); break;
-                    case 2: inner = inner.replace("impair", invertSerial == true ? "pair" : "impair"); break;
-                    case 5: inner = inner.replace("blanche", invertField == true ? "noire" : "blanche"); break;
+                    case 2: inner = inner.replace("impair", invertSerial ? "pair" : "impair"); break;
+                    case 5: inner = inner.replace("blanche", invertField ? "noire" : "blanche"); break;
                 }
                 span.innerHTML = inner;
             }
-
-            var letters = ['a','b','c','d','e','f']
-            var numbers = ['1','2','3','4','5','6']
+            const letters = ['a','b','c','d','e','f'];
+            const numbers = ['1','2','3','4','5','6'];
             if (invertX) letters.reverse();
             if (invertY) numbers.reverse();
-            for (var i = 1; i <= 6; i++){
-                if(!swap){
-                    document.getElementById(`horizontal${i}`).innerText = letters[i-1]
-                    document.getElementById(`vertical${i}`).innerText = numbers[i-1]
-                }else{
-                    document.getElementById(`horizontal${i}`).innerText = numbers[i-1]
-                    document.getElementById(`vertical${i}`).innerText = letters[i-1]
-                }
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
             }
-
+            makeChessboard(setLabels);
         }
     </script>
-
 </head>
 <body>
     <div class="section">
@@ -115,18 +122,18 @@
                 <img src="img/Component/Chess.svg" class="diagram">
                 <h2>À propos des Échecs</h2>
                 <p class="flavour-text">Sous pression, les échecs ressemblent plus à une partie de bataille navale.</p>
-                <p>Ce module est basé sur un <b>échiquier de 6×6</b> <i>(référencé sur la page suivante)</i> et toutes les pièces suivent les règles standards de mouvement.
-                <p>Le module est composé d'un écran et deux lignes de six boutons chacune.
+                <p>Ce module est basé sur un <b>échiquier de 6×6</b> <i>(référencé sur la page suivante)</i> et toutes les pièces suivent les règles standards de mouvement.</p>
+                <p>Le module est composé d’un écran et deux lignes de six boutons chacune.</p>
                 <ul>
-                    <li>Il y a six coordonnées uniques qui représentent six positions sur l'échiquier.</li>
+                    <li>Il y a six coordonnées uniques qui représentent six positions sur l’échiquier.</li>
                     <li>Utiliser les boutons chiffrés sur la ligne du bas pour naviguer entre les différentes coordonnées. Une LED verte indiquera la position des coordonnées sélectionnées.</li>
-                    <li>En utilisant le tableau de référence ci-dessous, il est possible d'assigner une pièce d'échecs à chaque position.</li>
+                    <li>En utilisant le tableau de référence ci-dessous, il est possible d’assigner une pièce d’échecs à chaque position.</li>
                     <li>Les pièces couvriront 35 des 36 cases possibles avec leurs mouvements possibles combinés.</li>
                     <li>Toutes les pièces sont sans couleur mais peuvent bloquer les mouvements des autres.</li>
                     <li>Trouver la case non attaquée par les pièces et entrer les coordonnées correspondantes.</li>
-                    <li>Pour saisir les coordonnées, appuyez sur la lettre en premier lieu, puis sur le chiffre. Les LED s'allumeront en rouge pour valider la saisie d'une solution.</li>
+                    <li>Pour saisir les coordonnées, appuyez sur la lettre en premier lieu, puis sur le chiffre. Les LED s’allumeront en rouge pour valider la saisie d’une solution.</li>
                 </ul>
-
+                
                 <span>Utiliser ce tableau comme référence pour déterminer la nature de la pièce sur chaque position :</span>
                 <table class='chess'>
                     <tr>
@@ -139,40 +146,39 @@
                     <tr>
                         <td id="rule2">
                             <h4>Position #{i}: Commandant des armées</h4>
-                            <p>Occupée par une Tour si le dernier chiffre du numéro de série est impair.
-                            <p>Sinon, elle est occupée par un Cavalier.
+                            <p>Occupée par une Tour si le dernier chiffre du numéro de série est impair.</p>
+                            <p>Sinon, elle est occupée par un Cavalier.</p>
                         </td>
                     </tr>
                     <tr>
                         <td id="rule3">
                             <h4>Position #{i}: Une affaire de régents</h4>
-                            <p>Occupée par une Reine s'il y a moins de deux tours sur le plateau.
-                            <p>Sinon, elle est occupée par un Roi.
+                            <p>Occupée par une Reine s’il y a moins de deux tours sur le plateau.</p>
+                            <p>Sinon, elle est occupée par un Roi.</p>
                         </td>
                     </tr>
                     <tr>
                         <td id="rule4">
                             <h4>Position #{i}: La Tour de fer</h4>
-                            <p>Toujours occupée par une Tour.
+                            <p>Toujours occupée par une Tour.</p>
                         </td>
                     </tr>
                     <tr>
                         <td id="rule5">
                             <h4>Position #{i}: Conflit entre le Bien et le Mal</h4>
-                            <p>Occupée par une Reine si la case est blanche.
-                            <p>Sinon, elle est occupée par une Tour.
+                            <p>Occupée par une Reine si la case est blanche.</p>
+                            <p>Sinon, elle est occupée par une Tour.</p>
                         </td>
                     </tr>
                     <tr>
                         <td id="rule6">
-                            <h4>Position #{i}: Le Sceptre, l'Épée et la Crosse</h4>
-                            <p>Occupée par une Reine s'il n'y a aucune autre Reine sur le plateau.
-                            <p>Sinon, elle est occupée par un Cavalier si le plateau ne comporte aucun autre Cavalier
-                            <p>Sinon, elle est occupée par un Fou.
+                            <h4>Position #{i}: Le Sceptre, l’Épée et la Crosse</h4>
+                            <p>Occupée par une Reine s’il n’y a aucune autre Reine sur le plateau.</p>
+                            <p>Sinon, elle est occupée par un Cavalier si le plateau ne comporte aucun autre Cavalier</p>
+                            <p>Sinon, elle est occupée par un Fou.</p>
                         </td>
                     </tr>
-                </table>
-
+                </table> 
             </div>
             <div class="page-footer relative-footer">Page 1 sur 2</div>
         </div>
@@ -182,26 +188,9 @@
                 <span class="page-header-section-title">Chess</span>
             </div>
             <div class="page-content">
-                
                 <h3>Échiquier de référence</h3>
-                <p>Utilisez le plateau ci-dessous comme référence du plateau du module.
-                <img src="img/Chess/Chessboard.png"  id="chess">
-                <div class="chess-vertical">
-                    <span id="vertical6">6</span>
-                    <span id="vertical5">5</span>
-                    <span id="vertical4">4</span>
-                    <span id="vertical3">3</span>
-                    <span id="vertical2">2</span>
-                    <span id="vertical1">1</span>
-                </div>
-                <div class="chess-horizontal">
-                    <span id="horizontal1">a</span>
-                    <span id="horizontal2">b</span>
-                    <span id="horizontal3">c</span>
-                    <span id="horizontal4">d</span>
-                    <span id="horizontal5">e</span>
-                    <span id="horizontal6">f</span>
-                </div>
+                <p>Utilisez le plateau ci-dessous comme référence du plateau du module.</p>
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
             <div class="page-footer relative-footer">Page 2 sur 2</div>
         </div>

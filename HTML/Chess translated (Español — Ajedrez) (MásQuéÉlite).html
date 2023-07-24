@@ -8,18 +8,110 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
     <style>
-        table.chess h4 {
+        table.chess h4, table.chess p, p, ul {
             margin: 0;
+            font-size: 0.9em;
         }
-        table.chess p {
-            margin: 0;
+        #chessboard {
+            display: block;
+            margin: 0.5em;
+            width: 80%;
         }
-        p, ul {
-            margin: 0;
+        #chessboard rect.white { fill: #fffd; }
+        #chessboard rect.black { fill: #000d; }
+        #chessboard rect.border {
+            fill: none;
+            stroke: #666;
+            stroke-width: 10px;
         }
+        #chessboard text {
+            font-size: 30px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            user-select: none;
+        }
+        .dark #chessboard text { fill: #DDD; }
     </style>
+    <script>
+        var defaultRules = null;
+        
+        function makeChessboard (labels) 
+        {
+            const svg = $("#chessboard");
+            svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const x = 100 * col;
+                    const y = 100 * row;
+                    const colour = (row + col) % 2 === 0 ? "white " : "black ";
+                    svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                const rankCoords = { x: -50, y: 550 - 100 * i };
+                const fileCoords = { x: 50 + 100 * i , y: 670 };
+                svg.append(MakeSvgElem( "text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i] ));
+                svg.append(MakeSvgElem( "text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i] ));
+            }
+        }
+        
+        function getDefaultRules ()
+        {
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+        }
+        
+        function setDefaultRules ()
+        {
+            getDefaultRules();
+            for(let i = 1; i <= 6; i++){
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+            }
+            const defaultLabels = { ranks: ['1','2','3','4','5','6'], files: ['a','b','c','d','e','f'] };
+            makeChessboard(defaultLabels);
+        }
+        
+        function setRules (rnd)
+        {
+            getDefaultRules();
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                switch(order[i]) {
+                    case 1: inner = inner.replace("{j}",ind+1); break;
+                    case 2: inner = inner.replace("impar", invertSerial ? "par" : "impar"); break;
+                    case 5: inner = inner.replace("blanca", invertField ? "negra" : "blanca"); break;
+                }
+                span.innerHTML = inner;
+            }
+            const letters = ['a','b','c','d','e','f'];
+            const numbers = ['1','2','3','4','5','6'];
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
+            }
+            makeChessboard(setLabels);
+        }
+    </script>
 </head>
+<body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
@@ -30,8 +122,8 @@
                 <img src="img/Component/Chess.svg" class="diagram">
                 <h2>En caso de ajedrez</h2>
                 <p class="flavour-text">Bajo presión, el ajedrez se puede sentir como un juego de Hundir la flota.</p>
-                <p>Este módulo se basa en un <b>tablero de ajedrez 6×6</b> <i>(referenciado en la siguiente página)</i> y todas las piezas siguen las normas estándar de movimiento de la FIDE.
-                <p>El módulo de ajedrez se presentará con una pantalla y dos filas con seis botones.
+                <p>Este módulo se basa en un <b>tablero de ajedrez 6×6</b> <i>(referenciado en la siguiente página)</i> y todas las piezas siguen las normas estándar de movimiento de la FIDE.</p>
+                <p>El módulo de ajedrez se presentará con una pantalla y dos filas con seis botones.</p>
                 <ul>
                     <li>Hay seis coordenadas únicas que representan seis posiciones diferentes en el tablero de ajedrez.</li>
                     <li>Usa los botones con números para ir viendo las diferentes coordenadas. El LED verde de abajo indica la posición de la coordenada seleccionada.</li>
@@ -44,45 +136,45 @@
                 <p>Usa esta tabla para determinar la pieza correcta en cada posición:</p>
                 <table class='chess'>
                     <tr>
-                        <td>
-                            <h4>Posición nº1: Monarquía contra Teocracia</h4>
-                            <p>Ocupado por un rey si la posición nº5 está ocupada por una dama.</p>
+                        <td id="rule1">
+                            <h4>Posición nº{i}: Monarquía contra Teocracia</h4>
+                            <p>Ocupado por un rey si la posición nº{j} está ocupada por una dama.</p>
                             <p>En caso distinto, la casilla está ocupada por un alfil.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posición nº2: Comandante del ejército</h4>
-                            <p>Ocupado por una torre si el último dígito del número de serie es impar.
-                            <p>En caso distinto, la casilla está ocupada por un caballo.
+                        <td id="rule2">
+                            <h4>Posición nº{i}: Comandante del ejército</h4>
+                            <p>Ocupado por una torre si el último dígito del número de serie es impar.</p>
+                            <p>En caso distinto, la casilla está ocupada por un caballo.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posición nº3: Una cuestión de regentes</h4>
-                            <p>Ocupada por una dama si hay menos de dos torres en el tablero.
-                            <p>En caso distinto, la casilla está ocupada por un rey.
+                        <td id="rule3">
+                            <h4>Posición nº{i}: Una cuestión de regentes</h4>
+                            <p>Ocupada por una dama si hay menos de dos torres en el tablero.</p>
+                            <p>En caso distinto, la casilla está ocupada por un rey.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posición nº4: La torre de hierro</h4>
-                            <p>Siempre ocupada por una torre.
+                        <td id="rule4">
+                            <h4>Posición nº{i}: La torre de hierro</h4>
+                            <p>Siempre ocupada por una torre.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posición nº5: Conflicto entre el bien y el mal</h4>
-                            <p>Ocupada por una dama si la casilla es blanca.
-                            <p>En caso distinto, la casilla está ocupada por una torre.
+                        <td id="rule5">
+                            <h4>Posición nº{i}: Conflicto entre el bien y el mal</h4>
+                            <p>Ocupada por una dama si la casilla es blanca.</p>
+                            <p>En caso distinto, la casilla está ocupada por una torre.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posición nº6: El cetro, la espada, y el báculo</h4>
-                            <p>Ocupada por una reina si no hay otras reinas en el tablero.
-                            <p>En caso distinto, está ocupada por un caballo si no hay otros caballos en él.
-                            <p>En caso distinto, la casilla está ocupada por un alfil.
+                        <td id="rule6">
+                            <h4>Posición nº{i}: El cetro, la espada, y el báculo</h4>
+                            <p>Ocupada por una reina si no hay otras reinas en el tablero.</p>
+                            <p>En caso distinto, está ocupada por un caballo si no hay otros caballos en él.</p>
+                            <p>En caso distinto, la casilla está ocupada por un alfil.</p>
                         </td>
                     </tr>
                 </table>
@@ -96,8 +188,8 @@
             </div>
             <div class="page-content">
                 <h3>Referencia del tablero de ajedrez</h3>
-                <p>Usa la siguiente imagen como una referencia del tablero de ajedrez.
-                <p><img src="img/Chess/ChessBoard.png">
+                <p>Usa la siguiente imagen como una referencia del tablero de ajedrez.</p>
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
             <div class="page-footer relative-footer">Página 2 de 2</div>
         </div>

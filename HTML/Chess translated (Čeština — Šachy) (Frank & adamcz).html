@@ -8,74 +8,168 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
     <style>
-        h4, p, ul {
-            margin: 0;
+        table.chess h4, table.chess p, p, ul { margin: 0; }
+        #chessboard {
+            display: block;
+            margin: 0.5em;
+            width: 80%;
         }
+        #chessboard rect.white { fill: #fffd; }
+        #chessboard rect.black { fill: #000d; }
+        #chessboard rect.border {
+            fill: none;
+            stroke: #666;
+            stroke-width: 10px;
+        }
+        #chessboard text {
+            font-size: 30px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            user-select: none;
+        }
+        .dark #chessboard text { fill: #DDD; }
     </style>
+    <script>
+        var defaultRules = null;
+        
+        function makeChessboard (labels) 
+        {
+            const svg = $("#chessboard");
+            svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const x = 100 * col;
+                    const y = 100 * row;
+                    const colour = (row + col) % 2 === 0 ? "white " : "black ";
+                    svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                const rankCoords = { x: -50, y: 550 - 100 * i };
+                const fileCoords = { x: 50 + 100 * i , y: 670 };
+                svg.append(MakeSvgElem( "text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i] ));
+                svg.append(MakeSvgElem( "text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i] ));
+            }
+        }
+        
+        function getDefaultRules ()
+        {
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+        }
+        
+        function setDefaultRules ()
+        {
+            getDefaultRules();
+            for(let i = 1; i <= 6; i++){
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+            }
+            const defaultLabels = { ranks: ['1','2','3','4','5','6'], files: ['a','b','c','d','e','f'] };
+            makeChessboard(defaultLabels);
+        }
+        
+        function setRules (rnd)
+        {
+            getDefaultRules();
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                switch(order[i]) {
+                    case 1: inner = inner.replace("{j}",ind+1); break;
+                    case 2: inner = inner.replace("liché", invertSerial ? "sudý" : "liché"); break;
+                    case 5: inner = inner.replace("bílé", invertField ? "černý" : "bílé"); break;
+                }
+                span.innerHTML = inner;
+            }
+            const letters = ['a','b','c','d','e','f'];
+            const numbers = ['1','2','3','4','5','6'];
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
+            }
+            makeChessboard(setLabels);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Šachy (čeština) v1.4</span>
+                <span class="page-header-section-title">Šachy (čeština)</span>
             </div>
             <div class="page-content">
                 <img src="img/Component/Chess.svg" class="diagram">
                 <h2>Na téma Šachů (čeština)</h2>
                 <p class="flavour-text">Když jste pod tlakem tak hra v šachy se může zdát spíše jako hra lodí.</p>
-                <p>Tento modul je založen na <b>6×6 šachovém poli</b> a všechny figurky mají standardní pravidla
+                <p>Tento modul je založen na <b>6×6 šachovém poli</b> a všechny figurky mají standardní pravidla</p>
                 <ul>
                     <li>Tento modul obsahuje displej s dvěma řadami po šesti tlačítkách.</li>
                     <li>První řada obsahuje písmena (Na ty klikejte až při finální části) Druhá řada obsahuje čísla (Na ty klikejte už při první části).</li>
-        <li>Klikejte na tlačítka ve druhé řadě (čísla) a zapisujte si souřadnice. Zelená LED pod tlačítkem ukazuje jaká pozice je právě vybrána.</li>
+                    <li>Klikejte na tlačítka ve druhé řadě (čísla) a zapisujte si souřadnice. Zelená LED pod tlačítkem ukazuje jaká pozice je právě vybrána.</li>
                     <li>Pomocí tabulky 2) lze každé pozici přiřadit určitou šachovou figurku. Šachové figurky budou pokrývat 35 z 36 možných polí pomocí svých pohybů.</li>
                     <li>Najdete právě to jedno pole které není pokryto žádnou z figurek a zadejte souřadnice abyste zneškodnili modul.</li>
                     <li>Abyste zadali souřadnice tak zmáčkněte jako první písmeno. (LEDky se zbarví na červeno) a pak číslo.</li>
                 </ul>
-                <p>Použijte tuto tabulku abyste zjistili správnou šachovou figurku pro každou pozici:
-                <table>
+                <p>Použijte tuto tabulku abyste zjistili správnou šachovou figurku pro každou pozici:</p>
+                <table class="chess">
                     <tr>
-                        <td>
-                            <h4>Pozice #1:</h4>
-                            <p>Je obsazena KRÁLEM pokud Pozice #5 je obsazená KRÁLOVNOU.
-                            <p>Jinak je tato pozice obsazená STŘELCEM.
+                        <td id="rule1">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je obsazena KRÁLEM pokud Pozice #{j} je obsazená KRÁLOVNOU.</p>
+                            <p>Jinak je tato pozice obsazená STŘELCEM.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Pozice #2:</h4>
-                            <p>Je obsazena VĚŽÍ pokud poslední číslo sériového čísla je liché.
-                            <p>Jinak je toto pole obsazeno KONĚM.
+                        <td id="rule2">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je obsazena VĚŽÍ pokud poslední číslo sériového čísla je liché.</p>
+                            <p>Jinak je toto pole obsazeno KONĚM.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Pozice #3:</h4>
-                            <p>Je obsazena KRÁLOVNOU pokud jsou na poli méně jak 2 věže.
-                            <p>Jinak je toto pole obsazeno KRÁLEM.
+                        <td id="rule3">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je obsazena KRÁLOVNOU pokud jsou na poli méně jak 2 věže.</p>
+                            <p>Jinak je toto pole obsazeno KRÁLEM.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Pozice #4:</h4>
-                            <p>Je vždycky obsazena VĚŽÍ.
+                        <td id="rule4">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je vždycky obsazena VĚŽÍ.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Pozice #5:</h4>
-                            <p>Je obsazena KRÁLOVNOU pokud je toto pole bílé.
-                            <p>Jinak je toto pole obsazeno VĚŽÍ.
+                        <td id="rule5">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je obsazena KRÁLOVNOU pokud je toto pole bílé.</p>
+                            <p>Jinak je toto pole obsazeno VĚŽÍ.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Pozice #6:</h4>
-                            <p>Je obsazeno KRÁLOVNOU pokud na poli nejsou žádné další královny.
-                            <p>Jinak je toto pole obsazeno KONĚM pokud na poli nejsou žádní další KONĚ.
-                            <p>Jinak je toto pole obsazeno STŘELCEM.
+                        <td id="rule6">
+                            <h4>Pozice #{i}:</h4>
+                            <p>Je obsazeno KRÁLOVNOU pokud na poli nejsou žádné další královny.</p>
+                            <p>Jinak je toto pole obsazeno KONĚM pokud na poli nejsou žádní další KONĚ.</p>
+                            <p>Jinak je toto pole obsazeno STŘELCEM.</p>
                         </td>
                     </tr>
                 </table>
@@ -87,12 +181,12 @@
         <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Šachy (čeština) v1.4</span>
+                <span class="page-header-section-title">Šachy (čeština)</span>
             </div>
             <div class="page-content">
                 <h3>Šachovnice</h3>
-                <p>Použijte tuto šachovnici jako pomůcku při řešení tohoto modulu.
-                <p><img src="img/Chess/ChessBoard.png">
+                <p>Použijte tuto šachovnici jako pomůcku při řešení tohoto modulu.</p>
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
             <div class="page-footer relative-footer">Strana 2 ze 2</div>
         </div>
