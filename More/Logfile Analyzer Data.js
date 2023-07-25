@@ -7666,6 +7666,55 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "LightGrid",
+		loggingTag: "Light Grid",
+		matches: [
+			{
+				regex: /Data packet: (.+)/,
+				handler(matches, module) {
+					const data = JSON.parse(matches[1]),
+						table = $("<table>").addClass("light-grid"),
+						numRows = data.labels[0].length,
+						numCols = data.labels[2].length,
+						makeLabelCell = label => $("<td>").append($("<div>").addClass("light-grid-label").text(label)),
+						addLabelRow = index => table.append($("<tr>").append("<td>", data.labels[index].map(makeLabelCell), "<td>")),
+						colorMap = {
+							white: "#fff",
+							red: "#f00",
+							yellow: "rgb(255, 235, 4)", // Unity's `Color.yellow`
+							green: "#0f0",
+							blue: "#00f",
+						},
+						darkColors = ["red", "blue"];
+
+					addLabelRow(2);
+					for (let y = 0; y < numRows; y++) {
+						const row = $("<tr>");
+						row.append(makeLabelCell(data.labels[0][y]));
+						for (let x = 0; x < numCols; x++) {
+							const buttonIndex = y * numRows + x,
+								buttonColor = data.colors[buttonIndex],
+								solutionIndex = data.solution.indexOf(buttonIndex);
+								
+							const button = $("<div>").addClass("light-grid-button").css("background", colorMap[buttonColor]);
+							if (solutionIndex > -1) button.addClass("solution").append($("<div>").addClass("light-grid-rule").css("color", darkColors.includes(buttonColor) ? "#fff" : "#000").text(data.rules[solutionIndex]));
+							row.append($("<td>").append(button));
+						}
+						row.append(makeLabelCell(data.labels[1][y]));
+						table.append(row);
+					}
+					addLabelRow(3);
+
+					module.push({ label: "Light grid:", obj: table });
+					return true;
+				}
+			},
+			{
+				regex: /.*/
+			}
+		]
+	},
+	{
 		moduleID: "linesOfCode",
 		loggingTag: "Lines of Code",
 		matches: [
