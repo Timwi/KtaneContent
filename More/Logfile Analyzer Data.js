@@ -7705,7 +7705,7 @@ let parseData = [
 					}
 					addLabelRow(3);
 
-					module.push({ label: "Light grid:", obj: table });
+					module.push({ label: "Light Grid: (Numbers indicate the first applicable rule for each button that should be pressed)", obj: table, expandable: true, expanded: true });
 					return true;
 				}
 			},
