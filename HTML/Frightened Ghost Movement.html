@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Frightened Ghost Movement — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+        function setRules(rnd) {
+            let romTable = [ ];
+            for (let i = 0; i < 101; i++)
+                romTable.push('00');
+            for (let i = 0; i < 114; i++)
+                romTable.push('01');
+            for (let i = 0; i < 120; i++)
+                romTable.push('10');
+            for (let i = 0; i < 65; i++)
+                romTable.push('11');
+            rnd.shuffleFisherYates(romTable);
+            
+            let cells = $('table.rom-table td');
+            for (let i = 0; i < 400; i++) {
+                $(cells[i]).html(romTable[i]);
+            }
+        }
+    </script>
+        <style>
+            table, .dark table {
+                margin: 1em auto;
+                border: none;
+            }
+            p.formula {
+                margin: 2mm 0;
+                text-align: center;
+                font-size: 18pt;
+            }
+            p.info { font-size: 9pt; }
+            
+            ul.starting-dirs li { width: 85%; }
+            div.arrows-container {
+                position: relative;
+            }
+            img.arrows {
+                position: absolute;
+                left: 550px;
+                top: 40px;
+                width: 1.75in;
+            }
+            .dark img.arrows {
+                filter: invert(87%);
+            }
+            table.rom-table {
+                font-size: 11pt;
+            }
+            table.rom-table td,
+            table.rom-table th {
+                padding: 0;
+                text-align: center;
+                width: .8cm;
+                height: .8cm;
+                vertical-align: middle;
+            }
+            table.rom-table th {
+                border: none;
+                font-weight: normal;
+                font-style: italic;
+            }
+            table.rom-table tr th:nth-child(1) {
+                padding-right: 2mm;
+                text-align: right;
+                width: 1.2cm;
+            }
+            img.map {
+                display: block;
+                margin: 0 auto;
+                width: 600px;
+            }
+            p.maption {
+                font-size: 11pt;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Frightened Ghost Movement</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Frightened Ghost Movement.svg" class="diagram">
+                    <h2>On the Subject of Frightened Ghost Movement</h2>
+                    <p class="flavour-text">“Why are you blue?”</p>
+
+                    <p>This module attempts to simulate the behavior of ghosts in PAC-MAN when they are in a frightened state. In gameplay, this occurs when Pac-Man eats a power pellet. The four blue buttons display each ghost’s coordinate—always at an intersection—on the map and the direction it was traveling when it entered the intersection.</p>
+                    <p>The buttons can be pressed to change the directions displayed. To solve the module, point the arrows in the direction each ghost will go next and then press the yellow button in the center of the module. Hold down the yellow button to reset the displayed arrows.</p>
+                    
+                    <h3>Generating the RNG Indices</h3>
+                    <ul style='margin-bottom: 0'>
+                        <li>To determine the starting directions, four RNG indices must be calculated, which respresent each ghost in reading order.</li>
+                        <li>The first RNG index is equal to the bomb's serial number digits concatenated modulo 8192.</li>
+                        <li>Generate three more indices by multiplying the previous index by 5 and adding 1, modulo 8192.</li>
+                    </ul>
+                    <p class='formula'><var>R<sub>i</sub></var> = (5 × <var>R<sub>i-1</sub></var> + 1) mod 8192</p> 
+                    
+                    <div class='arrows-container'>
+                        <h3>Obtaining the Starting Directions</h3>
+                        <ul class='starting-dirs'>
+                            <li>Once the RNG indices are obtained, take each of them modulo 400 and index them into the ROM Table on the following page.</li>
+                            <li>The numbers obtained from the ROM Table correspond to a direction as depicted to the right.</li>
+                        </ul>
+                        <img class='arrows' src="img/Frightened Ghost Movement/arrow diagram.svg"/>
+                    </div>
+                    <h3>Obtaining the Final Directions</h3>
+                    <ul>
+                        <li>Locate each ghost on the map found on page 3.</li>
+                        <li>If the ghost can move in the direction obtained from the ROM Table, it will move in that direction. Otherwise, rotate it clockwise until the ghost can move in that direction.<ul>
+                            <li>A ghost cannot move in a direction if there is a wall in that direction.</li>
+                            <li>A ghost also cannot move in the direction opposite their current direction (which is displayed on each button).</li>
+                        </ul></li>
+                    </ul>
+                </div>
+                <div class="page-footer relative-footer">Page 1 of 3</div>
+            </div>
+            <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Frightened Ghost Movement</span>
+                </div>
+                <div class="page-content">
+                    
+                    <h3>ROM Table</h3>
+                    <p class='info'>This table is meant to represent the complete ROM data of PAC-MAN. In the actual game, the RNG index mod 8192 is used as a memory address into the game’s memory to obtain a single byte, of which only the rightmost two bits are used to obtain the starting direction. However, since some bytes occur more in the game’s memory than others, the distribution of these bits is uneven. This biased distribution is reflected in the below table—only with 400 memory addresses available instead of 8192.</p>
+                    
+                    <table class='rom-table'>
+                     <tr> <th class='corner'></th> <th>-0</th> <th>-1</th> <th>-2</th> <th>-3</th> <th>-4</th> <th>-5</th> <th>-6</th> <th>-7</th> <th>-8</th> <th>-9</th> <th>-10</th> <th>-11</th> <th>-12</th> <th>-13</th> <th>-14</th> <th>-15</th> <th>-16</th> <th>-17</th> <th>-18</th> <th>-19</th> </tr>
+                     <tr> <th>0–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>20–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>40–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>60–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>80–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>100–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>120–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>140–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>160–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>180–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>200–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>220–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>240–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>260–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>280–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>300–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>320–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>340–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>360–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                     <tr> <th>380–</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> </tr>
+                    </table>
+                </div>
+                <div class="page-footer relative-footer">Page 2 of 3</div>
+            </div>
+            <div class="page page-bg-03">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Frightened Ghost Movement</span>
+                </div>
+                <div class="page-content">
+                    <h2>Map</h2>
+                    <p class='maption'>Note: If a ghost is at an intersection marked with an X in the below map, the ghost cannot move <b>up</b> there.</p>
+                    <img class='map' src='img/Ghost Movement/Map.png'/>
+                </div>
+                <div class="page-footer relative-footer">Page 3 of 3</div>
+            </div>
+            
+        </div>
+    </body>
+</html>

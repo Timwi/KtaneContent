@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Roger — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        body {
+            width: 600px;
+            margin: 0 auto;
+            padding: 1em;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="module" width="600" height="600" tabindex="0"></canvas> <!-- tabindex is such a hack -->
+    <script>
+        (function() { //thanks emik...
+            
+            const canvas = document.getElementById("module");
+            let mouseClicked = false;
+            let mousePos;
+            let clock;
+            
+            const eventListeners = ["mousedown", "mouseup", "pointermove"];
+            for (let e = 0; e < eventListeners.length; e++) {
+                canvas.addEventListener(eventListeners[e], function (evt) {
+                    mousePos = getMousePos(canvas, evt);
+                    switch (e) {
+                        case 0: mouseClicked = true; break;
+                        case 1: mouseClicked = false; break;
+                        default: break;
+                    }
+                    update(mousePos.x, mousePos.y);
+                }, false);
+            }
+            canvas.addEventListener("keydown", (e) => { processKey(e.key)});
+            
+            const TWO_PI = 2 * Math.PI;
+            const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let trueTimer = 0;
+            let timer = 0;
+            let greenLights = 0;
+            let hoveringOver = "none";
+            let buttonFlicker = false;
+            const inputPoly = [[400, 30], [570, 30], [570, 90], [400, 90]];
+            const outputPoly = [[30, 510], [200, 510], [200, 570], [30, 570]];
+            const resetCirc = [535, 535, 35];
+            let button = { shape: null, shapeName: null, char: null, color: null, colorName: null, flickerType: null };
+            let buttonClicked = false;
+            let buttonHoldTime;
+            let buttonReleaseTime;
+            let seed = "";
+            let seedReady = false;
+            let rogerString;
+            let stageOrder = [];
+            let solution = [];
+            let givenInputs = [];
+            let taps = 0;
+            let tapWindow = null;
+            let morsePresses;
+            let givenMorse = "";
+            let hint = "";
+            let outputNumber;
+            let shownNumber;
+            
+            generateButton();
+            draw();
+            
+            clock = setInterval(tick, 1000);
+            
+            function generateButton() {
+                const shapes = [
+                [[230, 160], [370, 160], [450, 300], [370, 440], [230, 440], [150, 300]],
+                [[300, 150], [450, 300], [300, 450], [150, 300]],
+                [[300, 150], [450, 260], [390, 440], [210, 440], [150, 260]],
+                [[300, 150], [440, 440], [160, 440]]
+                ];
+                const shapeNames = ["hexagon", "diamond", "pentagon", "triangle"];
+                const colors = [
+                ["#f00", "#f55", "#f22", "#f66", "#e00"],
+                ["#00f", "#55f", "#22f", "#66f", "#00e"],
+                ["#111", "#666", "#333", "#777", "#000"],
+                ["#777", "#ccc", "#999", "#ddd", "#666"]
+                ];
+                const colorNames = ["red", "blue", "black", "gray"];
+                const flickerNames = ["primes", "squares", "every other", "every three", "length two", "length three"];
+                
+                let chosenShape = RNG(4);
+                let chosenColor = RNG(4);
+                
+                button.shape = shapes[chosenShape];
+                button.shapeName = shapeNames[chosenShape];
+                button.char = CHARS[RNG(36)];
+                button.color = colors[chosenColor];
+                button.colorName = colorNames[chosenColor];
+                button.flickerType = flickerNames[RNG(6)];
+                
+                reset();
+                if (seed != "") { calculateSolution(parseInt(seed, 10)); }
+            }
+            
+            function calculateSolution(z) {
+                solution = [];
+                stageOrder = getStageOrder(z%16);
+                let binarySeed = toBinary(z);
+                const vowels = "AEIOU";
+                for (s = 0; s < 4; s++) {
+                    switch (stageOrder[s]) {
+                        case "shape": 
+                        if ((binarySeed[3] == "0" && button.shapeName == "diamond") || (binarySeed[3] == "1" && (button.shapeName == "hexagon" || button.shapeName == "diamond"))) {
+                            solution.push("press odd prime");
+                        } else if ((binarySeed[4] == "0" && (button.shapeName == "diamond" || button.shapeName == "triangle")) || (binarySeed[4] == "1" && (button.shapeName == "hexagon" || button.shapeName == "pentagon"))) {
+                            solution.push("press even");
+                        } else {
+                            solution.push("press odd composite");
+                        }
+                        break;
+                        case "char": 
+                        if (button.char.match(/\d/)) {
+                            solution.push("hold " + (binarySeed[9] == "0" ? button.char : (10 - parseInt(button.char, 10))));
+                        } else if (button.char.match(/[RSTLN]/)) {
+                            solution.push("hold " + ((CHARS.indexOf(button.char)+1) % (binarySeed[1] == "0" ? 8 : 11)));
+                        } else if (button.char.match(/[AEIOU]/)) {
+                            solution.push("hold " + ((vowels.indexOf(button.char)+1) * (binarySeed[7] == "0" ? 1 : 2))); break;    
+                        } else {
+                            solution.push("hold 7");
+                        }
+                        break;
+                        case "color": 
+                        if (button.colorName == "red") {
+                            solution.push("tap " + (binarySeed[6] == "0" ? 5 : 4));
+                        } else if (button.colorName == (binarySeed[0] == "0" ? "black" : "gray")) {
+                            solution.push("tap 7");
+                        } else {
+                            solution.push("tap 2");
+                        }
+                        break;
+                        case "flicker": 
+                        if ((binarySeed[2] == "0" && button.flickerType == "primes") || (binarySeed[2] == "1" && button.flickerType == "squares")) {
+                            solution.push("morse " + (binarySeed[2] == "0" ? "P" : "S"));
+                            morsePresses = binarySeed[2] == "0" ? 4 : 3;
+                        } else if ((binarySeed[8] == "0" && button.flickerType == "every other") || (binarySeed[8] == "1" && button.flickerType == "every three")) {
+                            solution.push("morse " + (binarySeed[8] == "0" ? "W" : "H"));
+                            morsePresses = binarySeed[8] == "0" ? 3 : 4;
+                        } else if ((binarySeed[5] == "0" && button.flickerType == "length two") || (binarySeed[5] == "1" && button.flickerType == "length three")) {
+                            solution.push("morse " + (binarySeed[5] == "0" ? "Y" : "Q"));
+                            morsePresses = 4;
+                        } else {
+                            solution.push("morse X");
+                            morsePresses = 4;
+                        }
+                        break;
+                    }
+                }
+                
+                rogerString = "Roger " + z.toString().padStart(4, "0");
+                sha1(rogerString).then(hash => {
+                    outputNumber = hash;
+                    outputNumber = outputNumber.replaceAll(/[a-f]/g, "") + "4275";
+                    outputNumber = outputNumber.substring(0, 4);
+                });
+            }
+            
+            function handleButtonInput(b) {
+                if (greenLights == 4) { return; }
+                switch (solution[greenLights].split(" ")[0]) {
+                    case "press": 
+                    if (isPrime(buttonHoldTime%60) && buttonHoldTime%2 == 1) {
+                        givenInputs.push("press odd prime");
+                    } else if (buttonHoldTime%2 == 0) {
+                        givenInputs.push("press even");
+                    } else {
+                        givenInputs.push("press odd composite");
+                    }
+                    greenLights += 1;
+                    hint = "押" + timer.toString().padStart(2, " ");
+                    break;
+                    case "hold": 
+                    givenInputs.push("hold " + (buttonReleaseTime - buttonHoldTime));
+                    greenLights += 1;
+                    hint = "長" + ((buttonReleaseTime - buttonHoldTime)%100).toString().padStart(2, " ") ;
+                    break;
+                    case "tap": 
+                    if (tapWindow == null) { tapWindow = 3; }
+                    taps += (b) ? 1 : 0;
+                    if (!b) {
+                        givenInputs.push("tap " + taps);
+                        greenLights += 1;
+                        hint = "短" + (taps%100).toString().padStart(2, " ");
+                        taps = 0;
+                        tapWindow = null;
+                    }
+                    break;
+                    case "morse": 
+                    givenMorse += buttonHoldTime != buttonReleaseTime ? "-" : ".";
+                    if (givenMorse.length == morsePresses) {
+                        givenInputs.push("morse " + morse(givenMorse));
+                        greenLights += 1;
+                        hint = "信 " + morse(givenMorse);
+                        givenMorse = "";
+                    }
+                    break;
+                }
+                if (greenLights == 4) {
+                    shownNumber = arraysMatch(solution, givenInputs) ? outputNumber : RNG(10000).toString().padStart(4, "0");
+                }
+            }
+            
+            function reset() {
+                greenLights = 0;
+                givenInputs = [];
+                hint = "";
+            }
+            
+            function getStageOrder(n) {
+                switch (n) {
+                    case 0: return ["color", "char", "shape", "flicker"];
+                    case 1: return ["flicker", "color", "char", "shape"];
+                    case 2: return ["shape", "color", "flicker", "char"];
+                    case 3: return ["char", "shape", "flicker", "color"];
+                    case 4: return ["color", "flicker", "shape", "char"];
+                    case 5: return ["flicker", "char", "shape", "color"];
+                    case 6: return ["shape", "char", "color", "flicker"];
+                    case 7: return ["char", "color", "flicker", "shape"];
+                    case 8: return ["color", "shape", "char", "flicker"];
+                    case 9: return ["flicker", "shape", "color", "char"];
+                    case 10: return ["shape", "flicker", "color", "char"];
+                    case 11: return ["char", "color", "shape", "flicker"];
+                    case 12: return ["color", "shape", "flicker", "char"];
+                    case 13: return ["flicker", "shape", "char", "color"];
+                    case 14: return ["shape", "color", "char", "flicker"];
+                    case 15: return ["char", "shape", "color", "flicker"];
+                }
+            }
+            
+            function getButtonShade() {
+                switch (hoveringOver) {
+                    case "button": return (buttonFlicker) ? 3 : 2;
+                    case "buttonClick": return 4;
+                    default: return (buttonFlicker) ? 1 : 0;
+                }
+            }
+            
+            function getCharOffset() {
+                switch (button.shapeName) {
+                    case "triangle": return 403;
+                    case "pentagon": return 378;
+                    default: return 353;
+                }
+            }
+            
+            function draw() {
+                if (canvas.getContext) {
+                    const ctx = canvas.getContext("2d");
+                    ctx.fillStyle = "#b9cef0";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = "#000";
+                    drawPoly(ctx, [[30, 30], [200, 30], [200, 90], [30, 90]]);
+                    ctx.font = "60px Roboto Mono";
+                    ctx.fillStyle = "#f00";
+                    ctx.fillText(timer.toString().padStart(2, "0"), 80, 81);
+                    
+                    ctx.fillStyle = (hoveringOver == "outputBox") ? "#fff" : "#eee";
+                    drawPoly(ctx, outputPoly);
+                    ctx.fillStyle = "#000";
+                    ctx.fillText((greenLights == 4 && hoveringOver != "outputBox") ? shownNumber : hint, 42, 560);
+                    
+                    for (d = 0; d < 4; d++) {
+                        ctx.fillStyle = (d < greenLights) ? "#0f0" : "#000";
+                        drawCirc(ctx, [(245 + 50*d), 540, 15]);
+                    }
+                    
+                    ctx.fillStyle = (hoveringOver == "inputBox") ? "#fff" : "#eee";
+                    drawPoly(ctx, inputPoly);
+                    if (seedReady) {
+                        ctx.fillStyle = "#000";
+                        ctx.fillText(seed.toString().padEnd(4, "-"), 413, 81);
+                    }
+                    
+                    ctx.fillStyle = (hoveringOver == "reset") ? "#b0f" : "#90d";
+                    drawCirc(ctx, resetCirc);
+                    ctx.font = "50px Roboto Mono";
+                    ctx.fillStyle = "#000";
+                    ctx.fillText("R", 520, 553);
+                    
+                    ctx.fillStyle = button.color[getButtonShade()];
+                    drawPoly(ctx, button.shape);
+                    ctx.font = "150px Roboto Mono";
+                    ctx.fillStyle = "#fff";
+                    ctx.fillText(button.char, 258, getCharOffset());
+                }
+            }
+            
+            function tick() {
+                trueTimer += 1;
+                timer = trueTimer % 60;
+                if (tapWindow != null) { 
+                    tapWindow -= 1;
+                    if (tapWindow == 0) {
+                        handleButtonInput(false);
+                    }
+                }
+                switch (button.flickerType) {
+                    case "primes": buttonFlicker = isPrime(timer); break;
+                    case "squares": buttonFlicker = (Math.sqrt(timer)%1 == 0); break;
+                    case "every other": buttonFlicker = (timer%2 == 1); break;
+                    case "every three": buttonFlicker = (timer%3 == 2); break;
+                    case "length two": buttonFlicker = (timer%3 != 0); break;
+                    case "length three": buttonFlicker = (timer%4 != 0); break;
+                }
+                draw();
+            }
+            
+            function update(x, y) {
+                if (buttonClicked && !mouseClicked) {
+                    buttonClicked = false;
+                    buttonReleaseTime = trueTimer;
+                    handleButtonInput(true);
+                }
+                if (hoveringOver == "none" && mouseClicked) {
+                    return;
+                } else if (pointInPoly([x,y], button.shape)) {
+                    hoveringOver = (mouseClicked) ? "buttonClick" : "button";
+                    if (!buttonClicked && mouseClicked && seed.length == 4) { 
+                        buttonClicked = true;
+                        buttonHoldTime = trueTimer;
+                    }
+                } else if ((hoveringOver != "none" && hoveringOver != "inputBox" && hoveringOver != "reset") && mouseClicked) {
+                    return;
+                } else if (pointInPoly([x,y], inputPoly)) {
+                    hoveringOver = "inputBox";
+                    if (mouseClicked) { 
+                        seedReady = true;
+                        if (seed.length != 0) {
+                            seed = "";
+                        }
+                    }
+                } else if (pointInPoly([x,y], outputPoly)) {
+                    hoveringOver = "outputBox";
+                } else if (pointInCirc([x,y], resetCirc)) {
+                    hoveringOver = "reset";
+                    if (mouseClicked) {
+                        reset();
+                    }
+                } else {
+                    hoveringOver = "none";
+                }
+                draw();
+            }
+            
+            function getMousePos(canvas, evt) {
+                let rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            }
+            
+            function processKey(key) {
+                if (seed.length == 4) { return; }
+                if (key.match(/\d/)) {
+                    seed += key;
+                    if (seed.length == 4) {
+                        generateButton();
+                    }
+                }
+                draw();
+            }
+            
+            function RNG(x) {
+                return Math.floor(Math.random() * x);
+            }
+            
+            function arraysMatch(v, w) {
+                if (v.length != w.length) { return false; }
+                for (e = 0; e < v.length; e++) {
+                    if (v[e] != w[e]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            function isPrime(n) {
+                if (n <= 1) { return false; }
+                if (n == 2) { return true; }
+                let lim = Math.floor(Math.sqrt(n));
+                for (i = 2; i <= lim; i++) {
+                    if (n % i == 0) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            function toBinary(n) {
+                let num = n;
+                let string = "";
+                for (p = 13; p >= 0; p--) {
+                    string += (num >= Math.pow(2, p)) ? "1" : "0";
+                    if (string[string.length-1] == "1") { num -= Math.pow(2, p); }
+                }
+                return string;
+            }
+            
+            function morse(m) {
+                const morseCode = [".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."];
+                let index = morseCode.indexOf(m);
+                return (index == -1) ? "?" : CHARS[index];
+            }
+            
+            function drawPoly(ctx, path) {
+                ctx.beginPath();
+                ctx.moveTo(path[0][0], path[0][1]);
+                for (p = 1; p < path.length; p++) {
+                    ctx.lineTo(path[p][0], path[p][1]);
+                }
+                ctx.fill();
+            }
+            
+            function drawCirc(ctx, params) {
+                ctx.beginPath();
+                ctx.arc(params[0], params[1], params[2], 0, TWO_PI);
+                ctx.fill();
+            }
+            
+            function pointOnLeft(p, a, b) {
+                return (b[0] - a[0]) * (p[1] - a[1]) - (p[0] - a[0]) * (b[1] - a[1]) > 0;
+            }
+            
+            function pointInPoly(p, poly) {
+                let w = 0;
+                for (i = 0; i < poly.length; i++) {
+                    let a = poly[i];
+                    let b = poly[(i+1)%poly.length];
+                    if (a[1] <= p[1]) {
+                        if (b[1] > p[1] && pointOnLeft(p, a, b)) {
+                            w++;
+                        }
+                    } else if (b[1] <= p[1] && !pointOnLeft(p, a, b)) {
+                        w--;
+                    }
+                }
+                return w != 0;
+            }
+            
+            function pointInCirc(p, circ) {
+                let x = Math.abs(p[0] - circ[0]);
+                let y = Math.abs(p[1] - circ[1]);
+                return (x*x + y*y) < circ[2]*circ[2];
+            }
+            
+            async function sha1(input) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(input);
+                const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            }
+        })() //...for this hack
+    </script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>シロ認証 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        .steps {
+         font-weight: bold;
+         text-decoration: underline;
+         list-style: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シロ認証</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Silo Authorization.svg" class="diagram">
+                <h2>モジュール詳細：シロ認証</h2>
+                <p class="flavour-text">勝てるわけがない。ゲームそのものが無意味なんだ！</p>
+                <p>二つのボタン、二つのライト、14個のセグメントディスプレーがある。あなたは暗号化されたメッセージを受信し、自分で検証して返答しなければならない。<strong>注意：すべての計算は特に断りがない限り、0~9とA~Zの三十六進数であるとみなす。</strong></p>
+
+                <h3>受信メッセージ</h3>
+                <p>受信ボタンを押した後、暗号化されたメッセージは爆弾の残り時間の20~40％、最低30秒が経過すると、処理担当者に英語およびフォネティックコードで伝えられる。ボタンを押してから30秒待てば、メッセージは何度でも繰り返せる。ミスが記録された場合は、新しいメッセージが与えられる。</p>
+                <ul>
+                    <li class="steps">ステップ1：復号</li>
+                    <li>パーツの最初の文字は、続く3文字のメッセージがどのように暗号化されたかを示す。各パーツの復号方法については、「暗号化」を参照すること。</li>
+                    <li class="steps">ステップ2：認証</li>
+                    <li>認証コードで、復号されたメッセージを検証する。コードの計算方法は、シリアルナンバーを初期値に設定し「認証」を参照すること。</li>
+                    <li class="steps">ステップ3：検証</li>
+                    <li>メッセージの第1パーツと第2パーツと認証コードは、独立して有効である可能性がある。
+                        <ul>
+                            <li>復号された最初のパーツは、爆弾に存在するインジケーターと一致する場合に有効である。インジケーターがない場合は、MRPを使用する。</li>
+                            <li>復号された2番目のパーツは、各文字がシリアルナンバーに含まれている場合に有効である。</li>
+                            <li>認証コードは、十進数表記で与えられたものと一致すれば有効である。</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>認証コードのスクリプト</h3>
+                <p>Skybird; this is [認証システム名] with a [色の名前] dash alpha messages in two parts, break, [色の名前] dash alpha, [色の名前] dash alpha. Break, break, [パーツ1], [パーツ2]. Authentication code, [認証コード].
+                </p>
+                <p><i>注：メッセージの送信中は、「Busy」ランプが点灯する。一度にメッセージを出すのは1つのモジュールのみである。</i></p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シロ認証</span>
+            </div>
+            <div class="page-content">
+                <h3>返答メッセージ</h3>受信したメッセージの解読と検証を行った後、送信するメッセージを求める必要がある。メッセージには、シロID、暗号化された返答コード、起動場所、起動日および認証コードが含まれる。
+                <ul>
+                    <li class="steps">シロID</li>
+                    <li>シロIDは、バッテリーホルダーの個数、バッテリーの個数、ポートプレートの個数をそれぞれ36で割った余りからなる。0になる文字がある場合、シリアルナンバーの最初の英字に変更する。</li>
+                    <li class="steps">メッセージ</li>
+                    <li>返答メッセージは、受信したものを元に作成する。メッセージを暗号化する暗号を示す文字は自由に選ぶことができるが、受信したメッセージですでに使われていた暗号を使うことはできない。
+                        <ul>
+                            <li>受信した認証コードが無効であった場合、ジャミングメッセージで返答する必要がある。ジャミングメッセージは、復号した一番目のパーツの一番目の文字、二番目のパーツの二番目の文字、一番目のパーツの三番目の文字からなる。</li>
+                            <li>そうでなければ、受信したメッセージのいずれかのパーツが有効であった場合、そのパーツを返答してもよい。</li>
+                            <li>そうでなければ、受信したメッセージの両方のパーツが無効であった場合、エラーメッセージを返す必要がある。エラーメッセージは、復号した二番目のパーツの一番目の文字、一番目のパーツの二番目の文字、二番目のパーツの三番目の文字からなる。</li>
+                        </ul>
+                    </li>
+                    <li class="steps">起動場所</li>
+                    <li>起動場所は三十六進数の三桁の数字で、特殊モジュール以外のモジュール数、未解除のモジュール数、解除済モジュール数をそれぞれ36で割った余りからなる。これは、返答メッセージを送信する際に計算される。</li>
+                    <li class="steps">認証コード</li>
+                    <li>認証コードは、復号されたメッセージを検証する。コードの計算方法は、「認証」を参照すること。受信したメッセージがコード「Red-Alpha」だった場合、初期文字列は起動場所である。それ以外の場合は、初期文字列はシロIDである。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シロ認証</span>
+            </div>
+            <div class="page-content">
+                <h3>暗号化</h3>
+                メッセージを暗号化するには、以下の手順で行う。暗号には3つの種類がある。どの暗号が使われているかは、暗号化を示す文字を3で割った余りを求め、0は3として扱う。復号の際は、以下のステップを逆順で行う。
+                <ol>
+                    <li><strong><em>Rot18:</em></strong>現在の文字にI（十進数で18）を足す。必要に応じて10(十進数で36)を足したり引いたりして、文字を0～Zの範囲にする。例：0 -&gt; I, 1 -&gt; J, A -&gt; Sなど。</li>
+                    <li><strong><em>MAtbash:</em></strong>0~9とA~Zを用いたアルファベット上で、自分の文字と鏡合わせの位置にある文字に交換する。例：0 -&gt; Z, 1 -&gt; Y, A -&gt; Pなど。</li>
+                    <li><strong><em>Post-Modern:</em></strong>シロIDの最初の文字分だけ、1~0キーを含むQWERTYキーボードで文字を読み順で次に進める。必要に応じてループする。例：シロIDが155の場合、9 -&gt; 0, 0 -&gt; Q, M -&gt; 1など。</li>
+                </ol>
+                <h3>認証</h3>認証コードを求めるには、以下のステップに従う。
+                <ol>
+                    <li>各文字をすべて十進数に変換する。メッセージと初期値の両方を変換することを忘れないこと。ただし、暗号化を示す文字は無視する。</li>
+                    <li>メッセージの最初の数字と、初期値の最初の数字を乗算する。次のすべての数字について、これを繰り返す。</li>
+                    <li>これらの積を合計し、10000で割った余りを求める。これがあなたの認証コードである。</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

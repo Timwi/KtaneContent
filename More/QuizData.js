@@ -2084,4 +2084,127 @@ const everything = {
 			]
 		}
 	},
+	'Who’s on Trunic': {
+		'Words': {
+			'CSS': 'textonly trunic',
+			'RandomizeLeft': true,
+			'Groups': [ 'trunic', 'words' ],
+			'Items': [
+				[
+					['goud', 'good'],
+					['bid', 'bid'],
+					['kouk', 'cook'],
+					['how', 'how'],
+					['kat', 'cat'],
+					['meet', 'meet'],
+					['woud', 'would'],
+					['bow', 'bough'],
+					['louk', 'look'],
+					['mid', 'mid'],
+					['bo', 'beau'],
+					['buk', 'buck'],
+					['hat', 'hat'],
+					['dheez', 'these'],
+					['bouk', 'book'],
+					['beet', 'beet'],
+					['houd', 'hood'],
+					['rood', 'rude'],
+					['dher', 'there'],
+					['dhis', 'this'],
+					['houk', 'hook'],
+					['grid', 'grid'],
+					['heet', 'heat'],
+					['duk', 'duck'],
+					['bat', 'bat'],
+					['dhat', 'that'],
+					['koud', 'could'],
+					['fuk', 'f***']
+				]
+			]
+		},
+		'Mod Glyphs': {
+			'CSS': 'textonly trunic',
+			'RandomizeLeft': true,
+			'Groups': [ 'glyphs', 'phonemes' ],
+			'Items': [
+				[
+					['-a', 'A (c<u>a</u>t)'],
+					['-er', 'ER (air)'],
+					['-i', 'I (s<u>i</u>t)'],
+					['-o', 'OH'],
+					['-oo', 'OO (f<u>oo</u>d)'],
+					['-ou', 'OU (b<u>oo</u>k)'],
+					['-ow', 'OW'],
+					['-u', 'UH (s<u>u</u>n)'],
+					['b', 'B'],
+					['d', 'D'],
+					['f', 'F'],
+					['g', 'G'],
+					['h', 'H'],
+					['k', 'K'],
+					['l', 'L'],
+					['m', 'M'],
+					['r', 'R'],
+					['s', 'S'],
+					['t', 'T'],
+					['dh', 'DH (<u>th</u>is)'],
+					['w', 'W'],
+					['z', 'Z']
+				]
+			]
+		},
+		'All Glyphs': {
+			'CSS': 'textonly trunic',
+			'RandomizeLeft': true,
+			'LimitLeftAnswers': 24,
+			'Groups': [ 'glyphs', 'phonemes' ],
+			'Items': [
+				[
+					['-a', 'A (c<u>a</u>t)'],
+					['-ar', 'AR (are)'],
+					['-ah', 'AH'],
+					['-ey', 'EY (h<i><b>ey</b></i>)'],
+					['-e', 'E (b<u>e</u>t)'],
+					['-ee', 'EE'],
+					['-eer', 'EER'],
+					['-er', 'ER (air)'],
+					['-i', 'I (s<u>i</u>t)'],
+					['-ie', 'IE (eye)'],
+					['-ir', 'IR (b<u>ir</u>d)'],
+					['-o', 'OH'],
+					['-oy', 'OY'],
+					['-oo', 'OO (f<u>oo</u>d)'],
+					['-ou', 'OU (b<u>oo</u>k)'],
+					['-ow', 'OW'],
+					['-or', 'OR'],
+					['-u', 'UH (s<u>u</u>n)'],
+					['b', 'B'],
+					['ch', 'CH'],
+					['d', 'D'],
+					['f', 'F'],
+					['g', 'G'],
+					['h', 'H'],
+					['j', 'J'],
+					['k', 'K'],
+					['l', 'L'],
+					['m', 'M'],
+					['n', 'N'],
+					['ng', 'NG (si<i><b>ng</b></i>)'],
+					['p', 'P'],
+					['r', 'R'],
+					['s', 'S'],
+					['sh', 'SH'],
+					['t', 'T'],
+					['th', 'TH (<u>th</u>in)'],
+					['dh', 'DH (<u>th</u>is)'],
+					['v', 'V'],
+					['w', 'W'],
+					['y', 'Y'],
+					['z', 'Z'],
+					['zh', 'ZH (vi<u>si</u>on)'],
+					['-_', 'Syll Invert']
+				]
+			]
+		}
+	}
 };
