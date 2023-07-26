@@ -1,0 +1,374 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Technical Keypad — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const colours = {
+            R: "#C00E",
+            O: "#D70E",
+            Y: "#DB3E",
+            G: "#383E",
+            B: "#57CE",
+            T: "#256E",
+            P: "#74AE",
+            W: "#DDDE",
+            K: "#333E",
+            A: "#888E",
+            _: "none"
+        };
+        const colourOrderGrid = "GYTBWOPRK ROYGTKBPW YPBTORWKG WROYKTGBP TKGPYBOWR OGPKRWTYB KBWOPGRTY BWKRGPYOT PTRWBYKGO".replaceAll(" ", "");
+
+        $(function() {
+            $(".grid.instruction").each((_, elem) => {
+                const container = $(`<div>`).addClass("layout-inner grid-container").prependTo(elem);
+                const gridSvg = $('<svg viewBox="-10 -10 320 320" xmlns="http://www.w3.org/2000/svg">').addClass("keypad-grid").appendTo(container);
+                const colourList = elem.dataset.colours ?? "_________";
+                const signs = elem.dataset.signs ?? "_________";
+
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 3; col++) {
+                        const pos = col + row * 3;
+                        const colour = colours[colourList.charAt(pos)];
+                        const sign = signs.charAt(pos);
+                        gridSvg.append(MakeSvgElem("rect", { class: "key", x: 5 + col * 100, y: 5 + row * 100, width: 90, height: 90, rx: 5, fill: colour }));
+
+                        if ("+-".includes(sign)) {
+                            const signImgPath = `img/Technical Keypad/${(sign === "+" ? "Plus" :  "Minus")}.svg`
+                            gridSvg.append(MakeSvgElem("image", { href: signImgPath, x: 20 + col * 100, y: 20 + row * 100, width: 60 }));
+                        }
+                        else if (sign === "O")
+                            gridSvg.append(MakeSvgElem("image", { href: "img/Technical Keypad/Ring.svg", class: "invertible", x: 20 + col * 100, y: 20 + row * 100, width: 60 }));
+                    }
+                }
+                gridSvg.append(MakeSvgElem("rect", { class: "border", x: -5, y: -5, width: 310, height: 310 }));
+            });
+            $(".led-condition").each((_, elem) => {
+                const ledSvg = $('<svg viewBox="-5 -5 210 230" xmlns="http://www.w3.org/2000/svg">').addClass("led-set").appendTo(elem);
+                const colourList = elem.dataset.colours ?? "___";
+
+                for (let pos = 0; pos < 3; pos++)
+                    ledSvg.append(MakeSvgElem("circle", { class: "led", cx: 50, cy: 50 + 60 * pos, r: 20, fill: colours[colourList.charAt(pos)]}));
+                ledSvg.append(MakeSvgElem("rect", { class: "border", width: 100, height: 220, rx: 50 }));
+                ledSvg.append(MakeSvgElem("text", { x: 150, y: 160 }, "?"));
+            });
+            $(".colour-order-grid th, .colour-order-grid td").addClass("empty");
+            $(".colour-order-grid td").each((ix, elem) => {
+                const colourText = colourOrderGrid.charAt(ix)
+                elem.style.backgroundColor = colours[colourText];
+
+                if (!"WK".includes(colourText))
+                    elem.textContent = colourText;
+            });
+            $(".circle").each((_, elem) => {
+                const circleSvg = $('<svg viewBox="-5 -5 110 110" xmlns="http://www.w3.org/2000/svg">').appendTo(elem);
+                const colour = colours[elem.dataset.colour];
+                circleSvg.append(MakeSvgElem("circle", { cx: 50, cy: 50, r: 50, fill: colour }));
+
+                if (!"WK".includes(elem.dataset.colour))
+                    circleSvg.append(MakeSvgElem("text", { x: 50, y: 50, width: 50, height: 50 }, elem.dataset.colour))
+                else
+                    circleSvg.append(MakeSvgElem("image", { href: "img/Technical Keypad/Ring.svg", x: 15, y: 15, width: 70 }));
+            });
+        });
+    </script>
+    <style>
+        .page-bg-01 { background-image: url("img/Technical Keypad/page-01-bg.png"); }
+        .dark .page-bg-01 { background-image: url("img/Technical Keypad/page-01-bg-dark.png"); }
+
+        svg { --outline-colour: black; }
+        .dark svg { --outline-colour: #DDD; }
+        svg .border {
+            fill: none;
+            stroke-width: 6px;
+        }
+        
+        img { width: 100%; }
+
+        .grid-container { width: 300px; }
+        .keypad-grid { stroke: var(--outline-colour); }
+        .keypad-grid .key { stroke-width: 4px; }
+        .keypad-img { margin: .5em; }
+
+        .instruction-row {  display: flex; }
+
+        .instruction {
+            display: flex;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1;
+            flex: 1;
+        }
+        .instruction.thin { flex: 0.5; aspect-ratio: 1 / 2; }
+        .instruction.wide { flex: 2; aspect-ratio: 2 / 1; }
+        .instruction.extra-wide { flex: 3.3; aspect-ratio: 3 / 1;}
+        .instruction.key { margin: .5em; }
+
+        .display-diagram {
+            width: 60%;
+            margin-bottom: .5em;
+        }
+
+        .parallel-ports-diagram { width: 100%; }
+
+        .layout-inner { position: absolute; }
+        .layout-inner.grid-container {
+            width: 70%;
+            transform: translateY(3%);
+        }
+        .colour-rule .layout-inner.grid-container { width: 100%; }
+
+        .led-condition {
+            width: 100px;
+            margin: .5em;
+        }
+        .led-set :not(text) {
+            stroke: var(--outline-colour);
+            stroke-width: 6px;
+        }
+        .led-set text {
+            text-anchor: middle;
+            font-size: 150px;
+            fill: var(--outline-colour);
+        }
+
+        .serial-number-diagram {
+            width: 40%;
+            flex: 0.5;
+            margin-left: 1em;
+        }
+
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+            text-align: center;
+        }
+
+        .order-diagram { margin-top: 1em; }
+
+        .example {
+            background-color: #66F8;
+            border-radius: 15px;
+        }
+
+        .plus-condition {
+            font-size: 50px;
+            margin-bottom: 0;
+        }
+        .plus-condition img {
+            width: 50px;
+            padding-right: 5px;
+            transform: translateY(-10px);
+        }
+
+        .circle text {
+            text-anchor: middle;
+            dominant-baseline: mathematical;
+            font-size: 50px;
+            fill: var(--outline-colour);
+        }
+
+        .red-backing-wrapper {
+            height: 0;
+            width: 0;
+        }
+        .red-backing {
+            width: 51em;
+            height: 66em;
+            background-color: #F003;
+            background-image: url("img/Technical Keypad/Siren.svg");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 5'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technical Keypad</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Technical Keypad.svg" class="diagram invertible">
+                <h2>On the Subject of Technical Keypad</h2>
+                <p class="flavour-text">Unfortunately, our writers at KTaNE Inc. are currently on strike, so we are only able to provide visual aids for defusing this module. In any case, follow the directions and examples below. Good luck.</p>
+
+                <img src="img/Technical Keypad/Display.svg" class="invertible display-diagram centered-img">
+
+                <div class="instruction-row">
+                    <div class="instruction"><img src="img/Technical Keypad/ParallelPorts.svg" class="parallel-ports-diagram"></div>
+                    <div class="grid keypad-img instruction">
+                        <svg viewBox="0 0 300 300" class="layout-inner">
+                            <image href="img/Technical Keypad/Arrows.svg" width="280" x="10" y="5"></image>
+                            <path d="M150 5 l18 18 l-18 18 l-18 -18z" class="invertible"/>
+                        </svg>
+                    </div>
+                    <div class="grid keypad-img instruction"><img src="img/Technical Keypad/HashCircle.svg" class="invertible layout-inner"></div>
+                </div>
+                <div class="instruction-row">
+                    <div class="grid keypad-img instruction" data-colours="BB_BB_GGY" data-signs="______++_"><img src="img/Technical Keypad/Intersections 1.svg" class="layout-inner invertible"></div>
+                    <div class="grid keypad-img instruction" data-colours="GYYB__B__" data-signs="+_____++_"><img src="img/Technical Keypad/Intersections 2.svg" class="layout-inner invertible"></div>
+                    <div class="grid keypad-img instruction" data-colours="__BYYGYYG" data-signs="+____++++"><img src="img/Technical Keypad/Intersections 3.svg" class="layout-inner invertible"></div>
+                </div>
+                <div class="instruction-row">
+                    <div class="grid keypad-img instruction" data-colours="YGY_B__B_" data-signs="++___++++"><img src="img/Technical Keypad/Intersections 4.svg" class="layout-inner invertible"></div>
+                    <div class="grid keypad-img instruction" data-signs="++---++++"><img src="img/Technical Keypad/Intersections 5.svg" class="layout-inner invertible"></div>
+                    <div class="grid keypad-img instruction example" data-colours="ROYPKGWBT" data-signs="++---++++"><img src="img/Technical Keypad/Shapes.svg" class="layout-inner invertible"></div>
+                </div>  
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technical Keypad</span>
+            </div>
+            <div class="page-content">
+                <div class="instruction-row">
+                    <div class="led-condition instruction" data-colours="AA_"></div>
+                    <div class="wide instruction">
+                        <svg viewBox="-5 -5 200 120" xmlns="http://www.w3.org/2000/svg">
+                            <image href="img/Technical Keypad/Plus.svg" y="15" height="70"/>
+                            <image href="img/Technical Keypad/Minus.svg" x="100" y="15" height="70"/>
+                        </svg>
+                    </div>
+                    <div class="led-condition instruction" data-colours="AAR"></div>
+                    <div class="wide instruction">
+                        <svg viewBox="-5 -5 300 120" xmlns="http://www.w3.org/2000/svg">
+                            <image href="img/Technical Keypad/Swap.svg" class="invertible" x="70" width="150"/>
+                            <image href="img/Technical Keypad/Plus.svg" y="15" height="70"/>
+                            <image href="img/Technical Keypad/Minus.svg" x="225" y="15" height="70"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="instruction-row">
+                    <img src="img/Technical Keypad/Last Serial Digit.svg" class="serial-number-diagram">
+                    <table class="colour-order-grid">
+                        <tr><th class="corner"></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th class="corner"></th></tr>
+                        <tr><th>1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>1</th></tr>
+                        <tr><th>2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>2</th></tr>
+                        <tr><th>3</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>3</th></tr>
+                        <tr><th>4</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>4</th></tr>
+                        <tr><th>5</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>5</th></tr>
+                        <tr><th>6</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>6</th></tr>
+                        <tr><th>7</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>7</th></tr>
+                        <tr><th>8</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>8</th></tr>
+                        <tr><th>9</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><th>9</th></tr>
+                        <tr><th class="corner"></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th class="corner"></th></tr>
+                    </table>
+                </div>
+                <div class="instruction-row">
+                    <div class="led-condition instruction" data-colours="__A"></div>
+                    <div class="instruction"><img src="img/Technical Keypad/Arrow.svg" class="invertible arrow"></div>
+                    <div class="led-condition instruction" data-colours="G_A"></div>
+                    <div class="instruction"><img src="img/Technical Keypad/Arrow.svg" class="invertible arrow" style="transform:rotate(-90deg)"></div>
+                    <div class="led-condition instruction" data-colours="_YA"></div>
+                    <div class="instruction"><img src="img/Technical Keypad/Arrow.svg" class="invertible arrow" style="transform:rotate(180deg)"></div>
+                    <div class="led-condition instruction" data-colours="GYA"></div>
+                    <div class="instruction"><img src="img/Technical Keypad/Arrow.svg" class="invertible arrow" style="transform:rotate(90deg)"></div>
+                </div>
+                <img src="img/Technical Keypad/Colour Order.svg" class="order-diagram">
+                <div class="example order-diagram">
+                    <div class="instruction-row">
+                        <img src="img/Technical Keypad/Last Serial Digit Example.svg" class="serial-number-diagram">
+                        <div class="led-condition" data-colours="G_R"></div>
+                    </div>
+                    <img src="img/Technical Keypad/Colour Order Example.svg">
+                </div>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technical Keypad</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Technical Keypad/Colour Execution Order.svg" class="order-diagram">
+                <p class="plus-condition"><img src="img/Technical Keypad/Plus.svg">?</p>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="R"></div>
+                    <div class="grid keypad-img instruction" data-colours="R________" data-signs="OO_O_____"></div>
+                    <div class="grid keypad-img instruction" data-colours="____R____" data-signs="_O_OOO_O_"></div>
+                    <div class="grid keypad-img instruction" data-colours="_____R___" data-signs="__O_OO__O"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="G"></div>
+                    <div class="grid keypad-img instruction" data-colours="G________" data-signs="O___O____"></div>
+                    <div class="grid keypad-img instruction" data-colours="____G____" data-signs="O_O_O_O_O"></div>
+                    <div class="grid keypad-img instruction" data-colours="_____G___" data-signs="_O___O_O_"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="B"></div>
+                    <div class="grid keypad-img instruction" data-colours="B________" data-signs="_OOOOOOOO"></div>
+                    <div class="grid keypad-img instruction" data-colours="____B____" data-signs="OOOO_OOOO"></div>
+                    <div class="grid keypad-img instruction" data-colours="_____B___" data-signs="OOOOO_OOO"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="T"></div>
+                    <div class="grid keypad-img instruction" data-colours="T________" data-signs="O__O__O__"></div>
+                    <div class="grid keypad-img instruction" data-colours="____T____" data-signs="_O__O__O_"></div>
+                    <div class="grid keypad-img instruction" data-colours="_____T___" data-signs="__O__O__O"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technical Keypad</span>
+            </div>
+            <div class="page-content">
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="Y"></div>
+                    <div class="grid keypad-img instruction" data-colours="Y________" data-signs="OOO______"></div>
+                    <div class="grid keypad-img instruction" data-colours="____Y____" data-signs="___OOO___"></div>
+                    <div class="grid keypad-img instruction" data-colours="_______Y_" data-signs="______OOO"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="O"></div>
+                    <div class="extra-wide instruction"><img src="img/Technical Keypad/Orange Press Rule.svg"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="P"></div>
+                    <div class="extra-wide instruction"><img src="img/Technical Keypad/Purple Press Rule.svg"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="W"></div>
+                    <div class="thin key instruction"><img src="img/Technical Keypad/Key Down.svg" class="invertible"></div>
+                    <div class="wide instruction"><img src="img/Technical Keypad/Battery Count.svg" class="invertible"></div>
+                    <div class="thin key instruction"><img src="img/Technical Keypad/Key Up.svg" class="invertible"></div>
+                </div>
+                <div class="colour-rule instruction-row">
+                    <div class="circle instruction" data-colour="K"></div>
+                    <div class="thin key instruction"><img src="img/Technical Keypad/Key Down.svg" class="invertible"></div>
+                    <div class="wide instruction"><img src="img/Technical Keypad/Indicator Count.svg" class="invertible"></div>
+                    <div class="thin key instruction"><img src="img/Technical Keypad/Key Up.svg" class="invertible"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="red-backing-wrapper"><div class="red-backing"></div></div>
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technical Keypad</span>
+            </div>
+            <div class="page-content"></div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+    </div>
+</body>
+</html>
