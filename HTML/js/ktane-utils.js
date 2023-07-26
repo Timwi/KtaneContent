@@ -58,16 +58,16 @@ e.onload = function()
         {
             if ($('#dark-mode-enabled').prop('checked'))
             {
-                $("body").addClass("dark");
+                $("body,.darkable").addClass("dark");
                 localStorage.setItem('ktane-dark-mode', true);
             }
             else
             {
-                $("body").removeClass("dark");
+                $("body,.darkable").removeClass("dark");
                 localStorage.setItem('ktane-dark-mode', false);
             }
         }
-        $('#dark-mode-enabled').click(function() { updateDarkMode(); });
+        $('#dark-mode-enabled').click(updateDarkMode);
 
         // PAGE-LAYOUT OPTIONS
         function updateMultipageView()
