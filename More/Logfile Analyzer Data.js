@@ -5399,7 +5399,7 @@ let parseData = [
 						gridData.push(column);
 					}
 					const solutionGroupsData = /.+: (.+)\./.exec(readTaggedLine())[1].split(" | ").map(x => x.split(", "));
-					function MakeSVG(data, group = null)	{							   				  
+					function MakeSVG(data, group = null) {							   				  
 						const svg = $("<svg viewbox='-0.1 -0.1 8.2 8.2'>").addClass("four-elements-board");
 						for (let row = 0; row < 8; row++) {
 							for (let col = 0; col < 8; col++) {
