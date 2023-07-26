@@ -5377,6 +5377,82 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSFourElements",
+		loggingTag: "Four Elements",
+		matches: [
+			{
+				regex: /The grid is as follows:/,
+				handler: function(match, module) {
+					const elements = {
+						"R": "rock",
+						"F": "fire",
+						"E": "electricity",
+						"W": "water"
+					};
+					const rawGridData = readLines(8).map(l => l.split(" "));
+					let gridData = [];
+					for (let col = 0; col < 8; col++) {
+						const column = [];
+						for (let row = 0; row < 8; row++) {
+							column.push(rawGridData[7 - row][col]);
+						}
+						gridData.push(column);
+					}
+					const solutionGroupsData = /.+: (.+)\./.exec(readTaggedLine())[1].split(" | ").map(x => x.split(", "));
+					function MakeSVG(data, group = null)	{							   				  
+						const svg = $("<svg viewbox='-0.1 -0.1 8.2 8.2'>").addClass("four-elements-board");
+						for (let row = 0; row < 8; row++) {
+							for (let col = 0; col < 8; col++) {
+								$SVG("<rect>").addClass("bg").addClass(!((row + col) & 1) ? "white" : "black")
+									.attr("width", 1).attr("height", 1)
+									.attr("x", col).attr("y", row)
+									.appendTo(svg);
+							}
+						}
+						for (let x = 0; x < 8; x++) {
+							for (let y = 0; y < data[x].length; y++) {
+								const element = elements[data[x][y]];
+								const tile = $SVG("<g>").attr("transform", `translate(${x} ${7 - y})`).appendTo(svg);
+								$SVG("<rect>").addClass(element)
+									.attr("width", 0.94).attr("height", 0.94)
+									.attr("x", 0.03).attr("y", 0.03)
+									.appendTo(tile);
+								$SVG("<image>").attr("width", 0.8).attr("height", 0.8)
+									.attr("x", 0.1).attr("y", 0.1)
+									.attr("href", `../HTML/img/Four Elements/${element}.svg`)
+									.appendTo(tile);
+							}
+						}
+						if (group) {
+							for (let cell of group) {
+								$SVG("<rect>").addClass("solution-group")
+									.attr("width", 1).attr("height", 1)
+									.attr("x", cell.x).attr("y", cell.y)
+									.appendTo(svg);
+							}
+						}
+						return svg;
+					}
+					module.push({ label: match[0], obj: MakeSVG(gridData) });
+					const solution = [];
+					module.push(["One possible solution:", solution]);
+					for (const group of solutionGroupsData) {
+						const cells = [{}, {}, {}, {}];
+						for (let cell = 0; cell < 4; cell++) {
+							cells[cell].x = "ABCDEFGH".indexOf(group[cell][0]);
+							cells[cell].y = "12345678".indexOf(group[cell][1]);
+						}
+						solution.push({ obj: MakeSVG(gridData, cells), nobullet: true });
+						for (let cell of cells) {
+							gridData[cell.x][7 - cell.y] = "X";
+						}
+						gridData = gridData.map(x => x.filter(l => l != "X"));
+					}
+				}
+			}
+		]
+	},
+	{
 		moduleID: "FriendshipModule",
 		loggingTag: "Friendship",
 		matches: [
