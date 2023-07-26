@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<!-- Translated by Zye -->
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>비트맵 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+
+            var edgeworkVariables = [
+                '지시등의 개수', '점등된 지시등의 개수', '점등되지 않은 지시등의 개수', '라벨에 모음이 있는 지시등의 개수', '라벨에 모음이 없는 지시등의 개수',
+                '포트의 개수', '포트 플레이트의 개수', '비어있지 않은 포트 플레이트의 개수', '포트 종류의 개수', '포트 종류 중 폭탄에 그 포트가 1개만 있는 것의 개수', '중복된 포트 종류의 개수',
+                '배터리의 개수', '배터리 홀더의 개수', 'AA 배터리의 개수', 'D 배터리의 개수',
+                '시리얼 넘버의 문자의 개수', '시리얼 넘버의 자음의 개수', '시리얼 넘버의 모음의 개수',
+                '시리얼 넘버의 숫자의 개수', '시리얼 넘버 중 홀수의 개수', '시리얼 넘버 중 짝수의 개수',
+                '폭탄의 (관심종을 포함한) 모듈의 개수', '폭탄의 관심종이 아닌 모듈의 개수',
+                '폭탄의 해체된 모듈의 개수', '폭탄의 해체되지 않은 관심종이 아닌 모듈의 개수',
+
+                // Note: variables that start with “the” are handled specially by later code to ensure grammatical sentences
+                '시리얼 넘버의 첫 번째 숫자', '시리얼 넘버의 숫자 중 마지막에서 두 번째 숫자',
+                '시리얼 넘버의 마지막 숫자', '시리얼 넘버에 있는 숫자들의 합계',
+                '타이머의 초의 일의 자리 숫자',
+                '타이머의 초의 십의 자리 숫자',
+                '타이머의 분의 일의 자리 숫자',
+                '타이머의 분의 십의 자리 숫자'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['완전히 흰색이거나 완전히 검은색인', '완전히 흰색인', '완전히 검은색인'][rnd.next(0, 3)];
+
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: '정확히 한 행 또는 열이 완전히 흰색이거나 완전히 검은색이면' },
+                { extra: 'R', name: '정확히 한 행이 완전히 흰색이거나 완전히 검은색이면' },
+                { extra: 'C', name: '정확히 한 열이 완전히 흰색이거나 완전히 검은색이면' },
+                { extra: 'S', name: '완전히 흰색이거나 완전히 검은색인 3×3 사각형이 있으면' },
+                { extra: 'T', name: `${type2x2} 2×2 사각형이 있으면` },
+                { extra: '', name: `과반수가 흰색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}와 같으면` },
+                { extra: '', name: `과반수가 흰색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}보다 많으면` },
+                { extra: '', name: `과반수가 흰색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}보다 작으면` },
+                { extra: '', name: `과반수가 검은색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}와 같으면` },
+                { extra: '', name: `과반수가 검은색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}보다 많으면` },
+                { extra: '', name: `과반수가 검은색인 사분면의 개수가 ${edgeworkVariables[edgeworkVariableIx++]}보다 작으면` }
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1}개 이하의` : `${16 - pixelCount1}개 이상의`;
+            var blackWhite = rnd.next(0, 2) === 0 ? '흰색' : '검은색';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? '흰색' : '검은색';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `어떤 사분면도 ${moreOrLess} ${blackWhite} 픽셀을 갖고 있지 않다면` },
+                    { extra: 'Q', name: `정확히 한 사분면이 ${moreOrLess} ${blackWhite} 픽셀을 갖고 있다면` },
+                    { extra: '', name: `${moreOrLess} ${blackWhite} 픽셀을 가진 사분면의 개수가 1보다 크면` },
+                ],
+                [
+                    { name: '과반수가 흰색인 사분면의 개수가 과반수가 검은색인 사분면의 개수보다 작으면', extra: '' },
+                    { name: '과반수가 흰색인 사분면의 개수가 과반수가 검은색인 사분면의 개수보다 크면', extra: '' },
+                    { name: '과반수가 흰색인 사분면의 개수와 과반수가 검은색인 사분면의 개수가 같으면', extra: '' },
+                ],
+                [
+                    { name: `비트맵 전체에 ${64 - pixelCount2}개 이상의 ${blackWhite2} 픽셀이 있으면`, extra: '' },
+                    { name: `비트맵 전체에 ${pixelCount2}개 이하의 ${blackWhite2} 픽셀이 있으면`, extra: '' },
+                    { name: `비트맵 전체에 ${pixelCount2 + 1}개 이상 ${63 - pixelCount2}개 이하의 ${blackWhite2} 픽셀이 있으면`, extra: '' },
+                ],
+                [
+                    { name: '어떤 사분면도 흰색 픽셀 8개와 검은색 픽셀 8개를 갖고 있지 않다면', extra: '' },
+                    { name: '정확히 한 사분면이 흰색 픽셀 8개와 검은색 픽셀 8개를 갖고 있다면', extra: 'Q' },
+                    { name: '흰색 픽셀 8개와 검은색 픽셀 8개를 가진 사분면의 개수가 1보다 크면', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = startRule;
+
+            var solutions = [
+                '과반수가 검은색인 사분면의 개수',
+                '과반수가 흰색인 사분면의 개수',
+                '흰색 픽셀 8개와 검은색 픽셀 8개를 가진 사분면의 개수',
+                '흰색 픽셀의 총 개수',
+                '검은색 픽셀의 총 개수',
+                '각 사분면의 검은색 픽셀의 개수 중 최솟값',
+                '각 사분면의 검은색 픽셀의 개수 중 최댓값',
+                '각 사분면의 흰색 픽셀의 개수 중 최솟값',
+                '각 사분면의 흰색 픽셀의 개수 중 최댓값',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    '다른 세 사분면에 있는 흰색 픽셀의 개수',
+                    '다른 세 사분면에 있는 검은색 픽셀의 개수',
+                    '대각선으로 반대쪽에 있는 사분면에 있는 흰색 픽셀의 개수',
+                    '대각선으로 반대쪽에 있는 사분면에 있는 검은색 픽셀의 개수',
+                    '가로로 인접한 사분면에 있는 흰색 픽셀의 개수',
+                    '가로로 인접한 사분면에 있는 검은색 픽셀의 개수',
+                    '세로로 인접한 사분면에 있는 흰색 픽셀의 개수',
+                    '세로로 인접한 사분면에 있는 검은색 픽셀의 개수'
+                ],
+                'R': [
+                    '맨 위를 1로 하고 위에서 아래로 셀 때 그 행의 y좌표',
+                    '맨 아래를 1로 하고 아래에서 위로 셀 때 그 행의 y좌표'
+                ],
+                'C': [
+                    '맨 왼쪽을 1로 하고 왼쪽에서 오른쪽으로 셀 때 그 열의 x좌표',
+                    '맨 오른쪽을 1로 하고 오른쪽에서 왼쪽으로 셀 때 그 열의 x좌표'
+                ],
+                'L': [
+                    '맨 왼쪽/위를 1로 하고 오른쪽/아래 방향으로 셀 때 그 열/행의 x/y좌표',
+                    '맨 오른쪽/아래를 1로 하고 왼쪽/위 방향으로 셀 때 그 열/행의 x/y좌표'
+                ],
+                'S': [
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 중심의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 중심의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 중심의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 중심의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)'
+                ],
+                'T': [
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 위 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 위 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 왼쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 왼쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 첫 번째인 그러한 사각형의 오른쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 아래 귀퉁이의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)',
+                    '읽는 순서(*)로 마지막인 그러한 사각형의 오른쪽 아래 귀퉁이의 y좌표(맨 위를 1로 하고 아래로 셀 때)'
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `${conditions[i].name}, 정답은 ${solution}입니다.`;
+            }
+        }
+    </script>
+    <style>
+        li {
+            margin-bottom: .2em;
+        }
+
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">비트맵</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Bitmaps.svg">
+                <h2>비트맵에 대하여</h2>
+                <p class="flavour-text">1800경 개가 넘는 조합 중, 중요한 건 몇 개 뿐입니다.</p>
+                <ul>
+                    <li>이 모듈에는 64 픽셀로 이루어진 비트맵이 4개의 “사분면”으로 나뉘어 표시됩니다. 각 픽셀은 밝거나 (색을 띨 수도 있지만 이하 “흰색”으로 부릅니다) 어둡습니다 (이하 “검은색”).</li>
+                    <li>그 아래에는 1, 2, 3, 4가 쓰인 4개의 버튼이 있습니다.</li>
+                    <li>다음 표의 규칙들 중, <span id='start-rule'>시리얼 넘버의 마지막 숫자</span><span id='start-rule-modulo'> (10을&nbsp;더하거나&nbsp;빼서&nbsp;0–9의&nbsp;범위에&nbsp;오도록&nbsp;합니다)</span>와 같은 번호를 가진 규칙에서 시작합니다.</li>
+                    <li>현재 상황에 해당되는 규칙을 찾을 때까지 계속해서 다음 규칙으로 넘어갑니다. 규칙 9를 넘어가면 규칙 0으로 되돌아옵니다.</li>
+                    <li>해당되는 규칙에 따라 정답을 계산합니다. 정답이 1에서 4 사이가 될 때까지 4를 더하거나 빼고, 해당하는 버튼을 눌러 모듈을 해제합니다.</li>
+                </ul>
+                <table>
+                    <tr><th>#</th><th>규칙</th></tr>
+                    <tr><th>0</th><td class="rule">정확히 한 사분면이 5개 이하의 흰색 픽셀을 갖고 있다면, 정답은 다른 세 사분면에 있는 흰색 픽셀의 개수입니다.</td></tr>
+                    <tr><th>1</th><td class="rule">과반수가 흰색인 사분면의 개수가 점등된 지시등의 개수와 같으면, 정답은 배터리의 개수입니다.</td></tr>
+                    <tr><th>2</th><td class="rule">정확히 한 행 또는 열이 완전히 흰색이거나 완전히 검은색이면, 정답은 맨 왼쪽/위를 1로 하고 오른쪽/아래 방향으로 셀 때 그 열/행의 x/y좌표입니다.</td></tr>
+                    <tr><th>3</th><td class="rule">과반수가 흰색인 사분면의 개수가 과반수가 검은색인 사분면의 개수보다 작으면, 정답은 과반수가 검은색인 사분면의 개수입니다.</td></tr>
+                    <tr><th>4</th><td class="rule">비트맵 전체에 36개 이상의 흰색 픽셀이 있으면, 정답은 흰색 픽셀의 총 개수입니다.</td></tr>
+                    <tr><th>5</th><td class="rule">과반수가 흰색인 사분면의 개수가 과반수가 검은색인 사분면의 개수보다 크면, 정답은 각 사분면의 검은색 픽셀의 개수 중 최솟값입니다.</td></tr>
+                    <tr><th>6</th><td class="rule">정확히 한 사분면이 5개 이하의 검은색 픽셀을 갖고 있다면, 정답은 다른 세 사분면에 있는 검은색 픽셀의 개수입니다.</td></tr>
+                    <tr><th>7</th><td class="rule">과반수가 검은색인 사분면의 개수가 점등되지 않은 지시등의 개수와 같으면, 정답은 포트의 개수입니다.</td></tr>
+                    <tr><th>8</th><td class="rule">완전히 흰색이거나 완전히 검은색인 3×3 사각형이 있으면, 정답은 읽는 순서(*)로 첫 번째인 그러한 사각형의 중심의 x좌표(맨 왼쪽을 1로 하고 오른쪽으로 셀 때)입니다.</td></tr>
+                    <tr><th>9</th><td class="rule">과반수가 흰색인 사분면의 개수와 과반수가 검은색인 사분면의 개수가 같으면, 정답은 시리얼 넘버의 첫 번째 숫자입니다.</td></tr>
+                </table>
+                <p class="footnote">*맨 윗줄을 왼쪽에서 오른쪽으로 읽고, 오른쪽 끝에 도달하면 다음 줄의 왼쪽부터 읽는 순서.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

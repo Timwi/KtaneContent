@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<!-- Translated by Zye -->
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>전구 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        p {
+            margin: .7em 0;
+        }
+
+        ul {
+            padding-left: 2em;
+            margin: 0;
+        }
+
+        strong {
+            white-space: nowrap;
+        }
+
+        table.layout {
+            border: none;
+        }
+
+            table.layout td, table.layout th {
+                border: none;
+                vertical-align: top;
+                padding: .5em 0;
+            }
+
+            table.layout th {
+                white-space: nowrap;
+            }
+
+        .ruleseed-active .bulb-page-2 {
+            font-size: 11pt;
+        }
+    </style>
+    <script>
+
+        var _colors = ['파란색', '붉은색', '초록색', '노란색', '흰색', '보라색'];
+
+        var _conditions = [
+            ["전구가 투명하다면"],
+            ["I 버튼이 왼쪽에 있다면"],
+            [
+                [
+                    "시리얼 넘버의 마지막 숫자가 짝수라면",
+                    "시리얼 넘버의 셋째 자리가 짝수인 숫자라면",
+                    "시리얼 넘버의 첫째 자리가 문자라면",
+                    "시리얼 넘버의 둘째 자리가 문자라면",
+                    "시리얼 넘버에 모음이 있다면",
+                    "시리얼 넘버에 짝수가 있다면",
+                    "시리얼 넘버에 중복되는 숫자나 문자가 있다면",
+                    "시리얼 넘버가 숫자 3개와 문자 3개로 이루어져 있다면"
+                ],
+                [
+                    "폭탄에 병렬 포트가 있다면",
+                    "폭탄에 Serial 포트가 있다면",
+                    "폭탄에 PS/2 포트가 있다면",
+                    "폭탄에 Stereo RCA 포트가 있다면",
+                    "폭탄에 RJ-45 포트가 있다면",
+                    "폭탄에 DVI-D 포트가 있다면",
+                    "폭탄에 중복된 포트가 있다면",
+                    "폭탄에 빈 포트 플레이트가 있다면",
+                    "폭탄에 짝수 개의 포트가 있다면",
+                    "폭탄에 홀수 개의 포트가 있다면",
+                    "폭탄에 짝수 개의 포트 플레이트가 있다면",
+                    "폭탄에 홀수 개의 포트 플레이트가 있다면",
+                    "폭탄에 있는 포트의 종류가 짝수 개라면",
+                    "폭탄에 있는 포트의 종류가 홀수 개라면"
+                ],
+                [
+                    "폭탄에 점등된 지시등이 있다면",
+                    "폭탄에 점등되지 않은 지시등이 있다면",
+                    "폭탄에 모음이 있는 라벨을 가진 지시등이 있다면",
+                    "폭탄에 짝수 개의 지시등이 있다면",
+                    "폭탄에 홀수 개의 지시등이 있다면",
+                    "폭탄에 짝수 개의 점등된 지시등이 있다면",
+                    "폭탄에 홀수 개의 점등된 지시등이 있다면",
+                    "폭탄에 짝수 개의 점등되지 않은 지시등이 있다면",
+                    "폭탄에 홀수 개의 점등되지 않은 지시등이 있다면",
+                    "폭탄에 BOB 지시등이 있다면",
+                    "폭탄에 CAR 지시등이 있다면",
+                    "폭탄에 CLR 지시등이 있다면",
+                    "폭탄에 FRK 지시등이 있다면",
+                    "폭탄에 FRQ 지시등이 있다면",
+                    "폭탄에 IND 지시등이 있다면",
+                    "폭탄에 MSA 지시등이 있다면",
+                    "폭탄에 NSA 지시등이 있다면",
+                    "폭탄에 SIG 지시등이 있다면",
+                    "폭탄에 SND 지시등이 있다면",
+                    "폭탄에 TRN 지시등이 있다면"
+                ],
+                [
+                    "폭탄에 AA 배터리가 있다면",
+                    "폭탄에 D 배터리가 있다면",
+                    "폭탄에 짝수 개의 배터리가 있다면",
+                    "폭탄에 홀수 개의 배터리가 있다면",
+                    "폭탄에 짝수 개의 배터리 홀더가 있다면",
+                    "폭탄에 홀수 개의 배터리 홀더가 있다면"
+                ]
+            ]
+        ];
+
+        function deepCopy(arr)
+        {
+            return Array.isArray(arr) ? arr.map(x => deepCopy(x)) : arr;
+        }
+
+        function getRandom(rnd, arr, extra)
+        {
+            if (extra && rnd.next(0, 2))
+                return [extra === 'now' ? "지금 불이 켜져 있다면" : "불이 1단계 이후에도 켜져 있었다면", extra];
+            var ix = rnd.next(0, arr.length);
+            if (Array.isArray(arr[ix]))
+            {
+                var res = getRandom(rnd, arr[ix]);
+                if (arr[ix].length === 0)
+                    arr.splice(ix, 1);
+                res[1] = `${ix}/${res[1]}`;
+                return res;
+            }
+            return [arr.splice(ix, 1)[0], ix];
+        }
+
+        var _defaultRules = null;
+
+        function ensureDefaultRules()
+        {
+            if (_defaultRules !== null)
+                return _defaultRules;
+
+            _defaultRules = {};
+            for (var i = 0; i < 15; i++)
+                _defaultRules[i] = document.getElementById(`step-${i+1}`).innerHTML;
+
+            return _defaultRules;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultRules();
+            for (var i = 0; i < 15; i++)
+                document.getElementById(`step-${i+1}`).innerHTML = _defaultRules[i];
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultRules();
+
+            var conditions = deepCopy(_conditions);
+            var stepsTypes = new Array(16); // we’re numbering the steps from 1, so index [0] will remain unused
+            var stepsConds = new Array(16);
+            var ths = document.getElementsByClassName('rule');
+
+            var colors1 = rnd.shuffleFisherYates(deepCopy(_colors));
+            var colors2_3 = [rnd.shuffleFisherYates(deepCopy(_colors)), rnd.shuffleFisherYates(deepCopy(_colors))];
+
+            // *** START LEFT HALF (steps 1-3, 5-8)
+
+            stepsTypes[1] = rnd.next(0, 2);
+            if (stepsTypes[1] === 0)
+            {
+                // Boolean condition
+                stepsConds[1] = getRandom(rnd, conditions);
+                document.getElementById('step-1').innerHTML = `
+                    <li>불이 꺼져 있다면, 전구를 빼고 <strong>4단계</strong>로 가세요.</li>
+                    <li>불이 켜져 있고 ${stepsConds[1][0]}, <strong>I</strong>를 누르고 <strong>2단계</strong>로 가세요.</li>
+                    <li>아니라면, <strong>O</strong>를 누르고 <strong>3단계</strong>로 가세요.</li>
+                `;
+            }
+            else
+            {
+                // Colors
+                stepsConds[1] = [null, 'colors'];
+                document.getElementById('step-1').innerHTML = `
+                    <li>불이 꺼져 있다면, 전구를 빼고 <strong>4단계</strong>로 가세요.</li>
+                    <li>불이 켜져 있고 전구가 ${colors1[0]}, ${colors1[1]}, ${colors1[2]} 중 하나라면, <strong>I</strong>를 누르고 <strong>2단계</strong>로 가세요.</li>
+                    <li>아니라면, <strong>O</strong>를 누르고 <strong>3단계</strong>로 가세요.</li>
+                `;
+            }
+
+            // Take a copy of the remaining conditions so that the right half can re-use them
+            var rightConditions = deepCopy(conditions);
+
+            for (var step = 2; step <= 3; step++)
+            {
+                stepsTypes[step] = stepsTypes[1] === 1 ? 2 : rnd.next(0, 2);
+                if (stepsTypes[step] === 0)
+                {
+                    // All colors
+                    stepsConds[step] = [null, 'colors'];
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>전구가 ${colors2_3[step-2][0]}이라면, <strong>I</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 5 : 6}단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors2_3[step-2][1]}이라면, <strong>O</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 6 : 5}단계</strong>로 가세요.</li>
+                        <li>아니라면, 전구를 빼고 <strong>${step === 2 ? 7 : 8}단계</strong>로 가세요.</li>
+                    `;
+                }
+                else if (stepsTypes[step] === 1)
+                {
+                    // 4 colors + a boolean
+                    stepsConds[step] = getRandom(rnd, conditions, 'now');
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>전구가 ${colors2_3[step-2][2]}, ${colors2_3[step-2][3]}, ${colors2_3[step-2][4]}, ${colors2_3[step-2][5]} 중 하나이면, 전구를 빼고 <strong>${step === 2 ? 7 : 8}단계</strong>로 가세요.</li>
+                        <li>${stepsConds[step][0]}, <strong>I</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 6 : 5}단계</strong>로 가세요.</li>
+                        <li>아니라면, <strong>O</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 5 : 6}단계</strong>로 가세요.</li>
+                    `;
+                }
+                else if (stepsTypes[step] === 2)
+                {
+                    // 2 colors + a boolean
+                    stepsConds[step] = getRandom(rnd, conditions, 'now');
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>전구가 ${colors1[step*3 - 5]}이나 ${colors1[step*3 - 4]}이라면, 전구를 빼고 <strong>${step === 2 ? 7 : 8}단계</strong>로 가세요.</li>
+                        <li>${stepsConds[step][0]}, <strong>I</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 6 : 5}단계</strong>로 가세요.</li>
+                        <li>아니라면, <strong>O</strong>를 누르고, 전구를 빼고 <strong>${step === 2 ? 5 : 6}단계</strong>로 가세요.</li>
+                    `;
+                }
+            }
+
+            for (var step = 5; step <= 6; step++)
+            {
+                var condStr;
+                // Check if steps 5 & 6 can use the bulb color, and if so, use it with 90% likelihood
+                if (stepsTypes[2] === 1 && stepsTypes[3] === 1 && rnd.next(0, 10) != 0)
+                {
+                    var c21 = colors2_3[0][0];
+                    var c22 = colors2_3[0][1];
+                    var c31 = colors2_3[1][0];
+                    var c32 = colors2_3[1][1];
+
+                    if (c21 === c32 || c22 === c31)
+                    {
+                        var t = c31;
+                        c31 = c32;
+                        c32 = t;
+                    }
+
+                    var c1 = c21 === c31 ? c21 : `${c21} 또는 ${c31}`;
+                    var c2 = c22 === c32 ? c22 : `${c22} 또는 ${c32}`;
+                    condStr = `전구가 ${step === 5 ? c1 : c2}이라면`;
+                }
+                else
+                {
+                    stepsConds[step] = getRandom(rnd, conditions, (stepsConds[2][1] !== 'now' && stepsConds[3][1] !== 'now') ? 'step1' : false);
+                    condStr = stepsConds[step][0];
+                }
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>${condStr}, <strong>I</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                    <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                `;
+            }
+
+            for (var step = 7; step <= 8; step++)
+            {
+                var cond1 = getRandom(rnd, conditions)[0];
+                var cond2 = getRandom(rnd, conditions)[0];
+                if (stepsTypes[step-5] !== 2)
+                {
+                    // Must use up all four of the remaining colors
+                    stepsTypes[step] = 2;
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>전구가 ${colors2_3[step-7][2]}이라면, <strong>I</strong>를 누르고, “${cond1}”을 기억하고 <strong>11단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors2_3[step-7][3]}이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors2_3[step-7][4]}이라면, <strong>O</strong>를 누르고, “${cond2}”을 기억하고 <strong>11단계</strong>로 가세요.</li>
+                        <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                    `;
+                }
+                else
+                {
+                    stepsTypes[step] = rnd.next(0, 2);
+                    var b2 = getRandom(rnd, conditions)[0], b1;
+                    if (stepsTypes[step] === 0)
+                    {
+                        // Two colors and a boolean
+                        b1 = `전구가 ${colors1[step*3 - 20]}이라면`;
+                    }
+                    else
+                    {
+                        // Two booleans
+                        b1 = getRandom(rnd, conditions)[0];
+                    }
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>${b1}:
+                            <ul>
+                                <li>${b2}, <strong>I</strong>를 누르고, “${cond1}”을 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                            </ul>
+                        </li>
+                        <li>아니라면:
+                            <ul>
+                                <li>${b2}, <strong>O</strong>를 누르고, “${cond2}”을 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                            </ul>
+                        </li>
+                    `;
+                }
+            }
+
+            // 11단계 is always the same; it relies on a condition “remembered” by a previous step
+            document.getElementById(`step-11`).innerHTML = `
+                <li>기억한 조건이 참이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우세요.</li>
+            `;
+
+            // *** START RIGHT HALF (steps 4, 9-10)
+            stepsTypes[4] = rnd.next(0, 2);
+            if (stepsTypes[4] === 0)
+            {
+                // 4단계 is a boolean, steps 9 and 10 use the colors
+                var colors9_10 = [rnd.shuffleFisherYates(deepCopy(_colors)), rnd.shuffleFisherYates(deepCopy(_colors))];
+                stepsConds[4] = getRandom(rnd, rightConditions);
+                document.getElementById(`step-4`).innerHTML = `
+                    <li>${stepsConds[4][0]}, <strong>I</strong>를 누르고 <strong>9단계</strong>로 가세요.</li>
+                    <li>아니라면, <strong>O</strong>를 누르고 <strong>10단계</strong>로 가세요.</li>
+                `;
+
+                for (var step = 9; step <= 10; step++)
+                {
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>전구가 ${colors9_10[step-9][0]}이라면, <strong>I</strong>를 누르고 <strong>14단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors9_10[step-9][1]}이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors9_10[step-9][2]}이라면, <strong>O</strong>를 누르고 <strong>15단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors9_10[step-9][3]}이라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                        <li>전구가 ${colors9_10[step-9][4]}이라면, 전구를 도로 끼운 다음, <strong>I</strong>를 누르고 <strong>12단계</strong>로 가세요.</li>
+                        <li>아니라면, 전구를 도로 끼우고, <strong>O</strong>를 누르고 <strong>13단계</strong>로 가세요.</li>
+                    `;
+                }
+            }
+            else
+            {
+                // 4단계 uses colors and 9/10 are colors combined with a boolean
+                var colors4 = rnd.shuffleFisherYates(deepCopy(_colors));
+                document.getElementById(`step-4`).innerHTML = `
+                    <li>전구가 ${colors4[0]}, ${colors4[1]}, ${colors4[2]} 중 하나이면, <strong>I</strong>를 누르고 <strong>9단계</strong>로 가세요.</li>
+                    <li>아니라면, <strong>O</strong>를 누르고 <strong>10단계</strong>로 가세요.</li>
+                `;
+
+                for (var step = 9; step <= 10; step++)
+                {
+                    stepsConds[step] = getRandom(rnd, rightConditions);
+                    document.getElementById(`step-${step}`).innerHTML = `
+                        <li>${stepsConds[step][0]}:
+                            <ul>
+                                <li>전구가 ${colors4[step*3 - 27]}이라면, <strong>I</strong>를 누르고 <strong>14단계</strong>로 가세요.</li>
+                                <li>전구가 ${colors4[step*3 - 27 + 1]}이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>${step + 3}단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고 <strong>15단계</strong>로 가세요.</li>
+                            </ul>
+                        </li>
+                        <li>아니라면:
+                            <ul>
+                                <li>전구가 ${colors4[step*3 - 27]}이라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>${step === 9 ? 13 : 12}단계</strong>로 가세요.</li>
+                                <li>전구가 ${colors4[step*3 - 27 + 1]}이라면, 전구를 도로 끼운 다음, <strong>I</strong>를 누르고 <strong>${step === 9 ? 12 : 13}단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 도로 끼우고, <strong>O</strong>를 누르고 <strong>${step === 9 ? 13 : 12}단계</strong>로 가세요.</li>
+                            </ul>
+                        </li>
+                    `;
+                }
+            }
+
+            stepsConds[14] = getRandom(rnd, rightConditions);
+            for (var step = 14; step <= 15; step++)
+            {
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>${stepsConds[14][0]}, <strong>${step === 14 ? 'I' : 'O'}</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                    <li>아니라면, <strong>${step === 14 ? 'O' : 'I'}</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                `;
+            }
+
+            // Steps 12 and 13 are the only ones shared by both left and right halves.
+            // Not a big deal if this one rarely re-uses a condition already used by the right half.
+            // Also, they can safely use the current lit state regardless of earlier stages.
+            stepsConds[12] = getRandom(rnd, conditions, 'now');
+            for (var step = 12; step <= 13; step++)
+            {
+                document.getElementById(`step-${step}`).innerHTML = `
+                    <li>${stepsConds[12][0]}, <strong>${step === 12 ? 'I' : 'O'}</strong>를 누르세요.</li>
+                    <li>아니라면, <strong>${step === 12 ? 'O' : 'I'}</strong>를 누르세요.</li>
+                `;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">전구</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/The Bulb.svg">
+                <h2>전구에 대하여</h2>
+
+                <p class="flavour-text">전구 하나를 끼우려면 폭탄 해체 전문가 몇 명이 필요할까요?</p>
+
+                <p>
+                    이 모듈은 <strong>I</strong>와 <strong>O</strong>가 각각 적힌 버튼 두 개와 전구로 구성되어 있습니다.<br/>
+                    전구는 투명(반투명)하거나 불투명하며, 여섯 개의 색깔 중 하나입니다
+                    (파란색, 초록색, 보라색, 붉은색, 흰색, 노란색).
+                </p>
+                <p>
+                    잘못된 버튼을 눌러 실수로 처리된 경우, 무시하고 계속하세요. <br/>
+                    잘못된 시점에 전구를 빼거나 끼워 실수로 처리된 경우, <em>반드시</em> 원상으로 복구한 뒤 계속해야 합니다.
+                </p>
+                <p>아래의 <em>1단계</em>에서 시작하세요.</p>
+                <p>
+                    전구가 끼워져 있는 동안, 양쪽 버튼 중 하나를 길게 누르면 모듈이 1단계로 리셋됩니다.
+                    전구가 빠져 있는 동안 이를 시도하는 것은 실수로 처리됩니다.
+                </p>
+
+                <table class="layout">
+                    <tr>
+                        <th>1단계</th>
+                        <td>
+                            <ul id='step-1'>
+                                <li>불이 켜져 있고 전구가 투명하면, <strong>I</strong>를 누르고 <strong>2단계</strong>로 가세요.</li>
+                                <li>불이 켜져 있고 전구가 불투명하면, <strong>O</strong>를 누르고 <strong>3단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 빼고 <strong>4단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>2단계</th>
+                        <td>
+                            <ul id='step-2'>
+                                <li>전구가 붉은색이라면, <strong>I</strong>를 누르고, 전구를 빼고 <strong>5단계</strong>로 가세요.</li>
+                                <li>전구가 흰색이라면, <strong>O</strong>를 누르고, 전구를 빼고 <strong>6단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 빼고 <strong>7단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>3단계</th>
+                        <td>
+                            <ul id='step-3'>
+                                <li>전구가 초록색이라면, <strong>I</strong>를 누르고, 전구를 빼고 <strong>6단계</strong>로 가세요.</li>
+                                <li>전구가 보라색이라면, <strong>O</strong>를 누르고, 전구를 빼고 <strong>5단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 빼고 <strong>8단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>4단계</th>
+                        <td>
+                            <ul id='step-4'>
+                                <li>폭탄에 CAR, IND, MSA, SND 지시등 중 하나라도 있으면, <strong>I</strong>를 누르고 <strong>9단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고 <strong>10단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>5단계</th>
+                        <td>
+                            <ul id='step-5'>
+                                <li>1단계에서 불이 꺼졌다면, 같은 버튼을 다시 누르고, 전구를 도로 끼우세요.</li>
+                                <li>아니라면, 아직 누르지 않은 버튼을 누르고, 전구를 도로 끼우세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>6단계</th>
+                        <td>
+                            <ul id='step-6'>
+                                <li><strong>I</strong>를 눌렀을 때 전구가 꺼졌다면, 1단계에서 눌렀던 버튼을 누르고, 전구를 도로 끼우세요.</li>
+                                <li>아니라면, 2단계나 3단계에서 눌렀던 버튼을 누르고, 전구를 도로 끼우세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-04 bulb-page-2">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">전구</span>
+            </div>
+            <div class="page-content">
+                <table class="layout">
+                    <tr>
+                        <th>7단계</th>
+                        <td>
+                            <ul id='step-7'>
+                                <li>전구가 초록색이라면, <strong>I</strong>를 누르고, <u>SIG</u>를 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>전구가 보라색이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                                <li>전구가 파란색이라면, <strong>O</strong>를 누르고, <u>CLR</u>를 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>8단계</th>
+                        <td>
+                            <ul id='step-8'>
+                                <li>전구가 흰색이라면, <strong>I</strong>를 누르고, <u>FRQ</u>를 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>전구가 붉은색이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                                <li>전구가 노란색이라면, <strong>O</strong>를 누르고, <u>FRK</u>를 기억하고 <strong>11단계</strong>로 가세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>9단계</th>
+                        <td>
+                            <ul id='step-9'>
+                                <li>전구가 파란색이라면, <strong>I</strong>를 누르고 <strong>14단계</strong>로 가세요.</li>
+                                <li>전구가 초록색이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                                <li>전구가 노란색이라면, <strong>O</strong>를 누르고 <strong>15단계</strong>로 가세요.</li>
+                                <li>전구가 흰색이라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                                <li>전구가 보라색이라면, 전구를 도로 끼운 다음, <strong>I</strong>를 누르고 <strong>12단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 도로 끼우고, <strong>O</strong>를 누르고 <strong>13단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>10단계</th>
+                        <td>
+                            <ul id='step-10'>
+                                <li>전구가 보라색이라면, <strong>I</strong>를 누르고 <strong>14단계</strong>로 가세요.</li>
+                                <li>전구가 붉은색이라면, <strong>I</strong>를 누르고, 전구를 도로 끼우고 <strong>13단계</strong>로 가세요.</li>
+                                <li>전구가 파란색이라면, <strong>O</strong>를 누르고 <strong>15단계</strong>로 가세요.</li>
+                                <li>전구가 노란색이라면, <strong>O</strong>를 누르고, 전구를 도로 끼우고 <strong>12단계</strong>로 가세요.</li>
+                                <li>전구가 초록색이라면, 전구를 도로 끼운 다음, <strong>I</strong>를 누르고 <strong>13단계</strong>로 가세요.</li>
+                                <li>아니라면, 전구를 도로 끼우고, <strong>O</strong>를 누르고 <strong>12단계</strong>로 가세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>11단계</th>
+                        <td>
+                            <ul id='step-11'>
+                                <li>폭탄에 기억한 지시등이 있으면, <strong>I</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>12단계</th>
+                        <td>
+                            <ul id='step-12'>
+                                <li>불이 지금 켜져 있다면, <strong>I</strong>를 누르세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>13단계</th>
+                        <td>
+                            <ul id='step-13'>
+                                <li>불이 지금 켜져 있다면, <strong>O</strong>를 누르세요.</li>
+                                <li>아니라면, <strong>I</strong>를 누르세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>14단계</th>
+                        <td>
+                            <ul id='step-14'>
+                                <li>전구가 불투명하다면, <strong>I</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>15단계</th>
+                        <td>
+                            <ul id='step-15'>
+                                <li>전구가 투명하다면, <strong>I</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                                <li>아니라면, <strong>O</strong>를 누르고, 전구를 도로 끼우세요.</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
