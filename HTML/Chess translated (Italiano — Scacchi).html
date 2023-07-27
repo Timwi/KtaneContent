@@ -8,17 +8,87 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/Modules/Chess.css">
     <style>
-        table.chess h4 {
-            margin: 0;
-        }
-        table.chess p {
-            margin: 0;
-        }
-        p, ul {
-            margin: 0;
-        }
+        table.chess { font-size: .9em; }
     </style>
+    <script>
+        var defaultRules = null;
+
+        function makeChessboard (labels)
+        {
+            const svg = $("#chessboard");
+            svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const x = 100 * col;
+                    const y = 100 * row;
+                    const colour = !((row + col) & 1) ? "white " : "black ";
+                    svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                const rankCoords = { x: -50, y: 550 - 100 * i };
+                const fileCoords = { x: 50 + 100 * i , y: 670 };
+                svg.append(MakeSvgElem("text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i]));
+                svg.append(MakeSvgElem("text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i]));
+            }
+        }
+
+        function getDefaultRules ()
+        {
+            if (defaultRules !== null) return;
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+        }
+
+        function setDefaultRules ()
+        {
+            getDefaultRules();
+            for(let i = 1; i <= 6; i++){
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+            }
+            const defaultLabels = { ranks: ['1','2','3','4','5','6'], files: ['a','b','c','d','e','f'] };
+            makeChessboard(defaultLabels);
+        }
+
+        function setRules (rnd)
+        {
+            getDefaultRules();
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                switch(order[i]) {
+                    case 1: inner = inner.replace("{j}",ind+1); break;
+                    case 2: inner = inner.replace("dispari", invertSerial ? "pari" : "dispari"); break;
+                    case 5: inner = inner.replace("bianca", invertField ? "nero" : "bianca"); break;
+                }
+                span.innerHTML = inner;
+            }
+            const letters = ['a','b','c','d','e','f'];
+            const numbers = ['1','2','3','4','5','6'];
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
+            }
+            makeChessboard(setLabels);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -45,42 +115,42 @@
                 <p>Usa questa tavola come riferimento per determinare la figura adatta ad ogni posizione:</p>
                 <table class='chess'>
                     <tr>
-                        <td>
-                            <h4>Posizione #1: Monarchia contro Teocrazia</h4>
-                            <p>Occupata da un re se la Posizione #5 è occupata da una donna.</p>
+                        <td id="rule1">
+                            <h4>Posizione #{i}: Monarchia contro Teocrazia</h4>
+                            <p>Occupata da un re se la Posizione #{j} è occupata da una donna.</p>
                             <p>Altrimenti, la casella è occupata da un alfiere.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posizione #2: Comandante dell’Esercito</h4>
+                        <td id="rule2">
+                            <h4>Posizione #{i}: Comandante dell’Esercito</h4>
                             <p>Occupata da una torre se l’ultima cifra del numero seriale è dispari.</p>
                             <p>Altrimenti, la casella è occupata da un cavallo.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posizione #3: Una Questione di Reggenti</h4>
+                        <td id="rule3">
+                            <h4>Posizione #{i}: Una Questione di Reggenti</h4>
                             <p>Occupata da una regina se ci sono meno di due torri sulla scacchiera.</p>
                             <p>Altrimenti, la casella è occupata da un re.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posizione #4: La Torre Ferrea</h4>
+                        <td id="rule4">
+                            <h4>Posizione #{i}: La Torre Ferrea</h4>
                             <p>Sempre occupata da una torre.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posizione #5: Conflitto tra Bene e Male</h4>
+                        <td id="rule5">
+                            <h4>Posizione #{i}: Conflitto tra Bene e Male</h4>
                             <p>Occupata da una regina se la casella è bianca.</p>
                             <p>Altrimenti, la casella è occupata da una torre.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <h4>Posizione #6: Lo Scettro, la Spada e il Pastorale</h4>
+                        <td id="rule6">
+                            <h4>Posizione #{i}: Lo Scettro, la Spada e il Pastorale</h4>
                             <p>Occupata da una regina se non ci sono altre regine sulla scaccchiera.</p>
                             <p>Altrimenti, occupata da un cavallo se non ci sono altri cavalli sulla scacchiera.</p>
                             <p>Altrimenti, la casella è occupata da un alfiere.</p>
@@ -88,7 +158,7 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
+            <div class="page-footer relative-footer">Pagina 1 di 2</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -98,9 +168,9 @@
             <div class="page-content">
                 <h3>Riferimento Scacchiera</h3>
                 <p>Usa l’immagine seguente come riferimento per la scacchiera.</p>
-                <p><img src="img/Chess/ChessBoard.png">
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
+            <div class="page-footer relative-footer">Pagina 2 di 2</div>
         </div>
     </div>
 </body>
