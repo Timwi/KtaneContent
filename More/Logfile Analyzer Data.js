@@ -10678,48 +10678,35 @@ let parseData = [
 				regex: /Building layout:/,
 				handler: function(matches, module){
 					module.makeMansionLayout = (roomNames) => {
-						const svgBoard = $(`<svg viewbox="0 0 610 610">`);
-						const padding = 5;
+						const svgBoard = $(`<svg viewbox="-5 -5 610 410">`).addClass("not-murder");
 						const dimension = 200;
 
-						let textXOffset = 
-						{
-							"Ballroom": 35,
-							"Billiard Room": 60,
-							"Conservatory": 60,
-							"Dining Room": 55,
-							"Hall": 15,
-							"Kitchen": 40,
-							"Library": 33,
-							"Lounge": 40,
-							"Study": 25,
-						}
-
 						for(let i = 0; i < 6; i++){
-								const startingX = padding + (i % 3) * dimension;
-								const startingY = padding + Math.floor(i / 3) * dimension;
+								const startingX = (i % 3) * dimension;
+								const startingY = Math.floor(i / 3) * dimension;
 
 								$SVG(`<rect>`)
-								.attr("x", startingX)
-								.attr("y", startingY)
-								.attr("width", dimension)
-								.attr("height", dimension)
-								.addClass("not-murder")
-								.appendTo(svgBoard);
+									.attr("x", startingX)
+									.attr("y", startingY)
+									.attr("width", dimension)
+									.attr("height", dimension)
+									.addClass("not-murder")
+									.appendTo(svgBoard);
 
-								let string = roomNames[i];
+								const string = roomNames[i];
 
 								$SVG("<text>")
-								.attr("x", startingX + (dimension / 2) - textXOffset[string])
-								.attr("y", startingY + (dimension * 0.95))
-								.text(string)
-								.addClass("not-murder-room")
-								.appendTo(svgBoard);
+									.attr("x", startingX + (dimension / 2))
+									.attr("y", startingY + (dimension * 0.95))
+									.text(string)
+									.addClass("not-murder")
+									.addClass("not-murder-room")
+									.appendTo(svgBoard);
 						}
 						return svgBoard;
 					}
 
-					let dict = 
+					const roomAbbreviationDictionary = 
 					{
 						"Bal": "Ballroom",
 						"Bil": "Billiard Room",
@@ -10729,37 +10716,25 @@ let parseData = [
 						"Kit": "Kitchen",
 						"Lib": "Library",
 						"Lou": "Lounge",
-						"Stu": "Study",
+						"Stu": "Study"
 					};
 
-					let layoutArr = [];
+					module.roomNames = readTaggedLines(2).join(" | ").split(" | ").map(room => roomAbbreviationDictionary[room]);
 
-					for(let i = 0; i < 2; i++){
-						layoutArr.push(readTaggedLine().replaceAll("|", "").replaceAll("  ", " "));
-					}
-
-					let roomAbrevArr = layoutArr.join(" ").split(" ");
-
-					module.roomNames = [];
-
-					for(let i = 0; i < 6; i++){
-						module.roomNames[i] = dict[roomAbrevArr[i]];
-					}
-
-					let svg = module.makeMansionLayout(module.roomNames);
+					const svg = module.makeMansionLayout(module.roomNames);
 					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
 					return true;
 				}
 			},
 
 			{
-				regex: /Initial state:|Turn \d+:/,
+				regex: /Initial state:|Turn +\d:/,
 				handler: function(matches, module){
 
-					let getSuspectInformation = (line) => {
-						let suspectRegex = /(.+) was in the (.+) with the (.+)\./.exec(line);
+					const getSuspectInformation = (line) => {
+						const suspectRegex = /(.+) was in the (.+) with the (.+)\./.exec(line);
 					
-						let obj = {};
+						const obj = {};
 						obj.name = suspectRegex[1];
 						obj.room = suspectRegex[2];
 						obj.weapon = suspectRegex[3];
@@ -10767,67 +10742,83 @@ let parseData = [
 						return obj;
 					}
 
-					let makeSuspectSvg = (sus, roomPos, numInRoom, roomNames) => {
+					const makeSuspectSvg = (sus, roomPos, numInRoom, roomIndex) => {
 						const dimension = 200;
-						const padding = 5;
-						
 						let x;
 						let y;
-						let xPosOffset;
-						let yPosOffset;
+						const xPosOffset = 65;
+						const yPosOffset = 80;
 
 						switch(numInRoom)
 						{
 							case 1:
-								x = padding + dimension / 2 - 30;
-								y = padding + dimension / 2 - 30;
+								x = dimension / 2 - 30;
+								y = dimension / 2 - 30;
 								break;
 
 							case 2:
-								xPosOffset = 65;
-								x = padding + xPosOffset * (roomPos % 2) + 30;
-								y = padding + dimension / 2 - 40;
+								x = xPosOffset * (roomPos % 2) + 40;
+								y = dimension / 2 - 40;
 								break;
 
 							case 3:
-								xPosOffset = 65;
-								yPosOffset = 80;
-								x = padding + xPosOffset * (roomPos % 2) + (Math.floor(roomPos / 2) == 1 ? 30 : 0) + 30;
-								y = padding + yPosOffset * Math.floor(roomPos / 2) + 15;
+								x = xPosOffset * (roomPos % 2) + (Math.floor(roomPos / 2) == 1 ? 30 : 0) + 40;
+								y = yPosOffset * Math.floor(roomPos / 2) + 15;
 								break;
 
 							case 4:
-								xPosOffset = 65;
-								yPosOffset = 80;
-								x = padding + xPosOffset * (roomPos % 2) + 30;
-								y = padding + yPosOffset * Math.floor(roomPos / 2) + 15;
+								x = xPosOffset * (roomPos % 2) + 30;
+								y = yPosOffset * Math.floor(roomPos / 2) + 15;
 								break;
 
 							case 5:
-								xPosOffset = 65;
-								yPosOffset = 80;
-								x = padding + xPosOffset * (roomPos % 3) + (Math.floor(roomPos / 3) == 1 ? 30 : 0);
-								y = padding + yPosOffset * Math.floor(roomPos / 3);
+								x = xPosOffset * (roomPos % 3) + (Math.floor(roomPos / 3) == 1 ? 30 : 0);
+								y = yPosOffset * Math.floor(roomPos / 3);
 								break;
 						}
 
+						x += dimension * (roomIndex % 3);
+						y += dimension * Math.floor(roomIndex / 3);
+
+						const obj = {};
+						obj.image =  $SVG("<image>")
+										.attr("x", x)
+										.attr("y", y)
+										.attr("width", dimension / 3.5)
+										.attr("height", dimension / 3.5)
+										.attr("href", `../HTML/img/Not Murder/${sus.name.includes("Green") ? "Reverend Green" : sus.name}.svg`);
+
+						const text = sus.weapon.includes("Lead") ? "PIP" : sus.weapon.toUpperCase().substring(0, 3);
+
+						obj.text = $SVG("<text>")
+										.attr("x", x + 28)
+										.attr("y", y + 70)
+										.text(text)
+										.addClass("not-murder")
+										.addClass("not-murder-weapon");
 						
-						//console.log(roomNames.indexOf(sus.room));
-						return $SVG(`<image x="${x}" y="${y}" width="${dimension/3.5}" height="${dimension/3.5}" href="../HTML/img/Not Murder/${sus.name.includes("Green") ? "Reverend Green" : sus.name}.svg">`);
+						return obj;
 					}
 
-					let svg = module.makeMansionLayout(module.roomNames);
-					let lines = readTaggedLines(5);
-					//lines.forEach(l => { console.log(l) });
-					let suspectInfo = lines.map(line => getSuspectInformation(line));
-					let suspectSvgs = [];
-
-					for(let i = 0; i < 5; i++){
-						suspectSvgs.push(makeSuspectSvg(suspectInfo[i], i, 5, module.roomNames)); 
-						//i want to make this a map fucntion but idk how with the roomName paramter
-					} 
 					
-					suspectSvgs.forEach(suspectSvg => suspectSvg.appendTo(svg));
+					const svg = module.makeMansionLayout(module.roomNames);
+					const suspectInfo = readTaggedLines(5).map(line => getSuspectInformation(line));
+					const suspectSvgs = [];
+
+					for(let i = 0; i < 6; i++){
+						const roomName = module.roomNames[i];
+						const arr = suspectInfo.filter(suspect => suspect.room == roomName);
+
+						for(let j = 0; j < arr.length; j++) {
+							suspectSvgs.push(makeSuspectSvg(arr[j], j, arr.length, module.roomNames.indexOf(roomName)));
+						}
+					}
+
+					suspectSvgs.forEach(ele => {
+						ele.image.appendTo(svg);
+						ele.text.appendTo(svg);
+					});
+
 					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
 					return true;
 				}
