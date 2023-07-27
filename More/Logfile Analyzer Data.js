@@ -10670,6 +10670,101 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'notMurder',
+		loggingTag: 'Not Murder',
+
+		matches: [
+			{
+				regex: /Building layout:/,
+				handler: function(matches, module){
+					module.makeMansionLayout = (roomNames) => {
+						const svgBoard = $(`<svg viewbox="0 0 610 610">`).addClass("not-murder");
+						const padding = 5;
+						const dimension = 200;
+
+						let textXOffset = 
+						{
+							"Ballroom": 45,
+							"Billiard Room": 73,
+							"Conservatory": 70,
+							"Dining Room": 67,
+							"Hall": 20,
+							"Kitchen": 40,
+							"Library": 33,
+							"Lounge": 40,
+							"Study": 25,
+						}
+
+						for(let i = 0; i < 2; i++){
+							for(let j = 0; j < 3; j++){
+								const startingX = padding + j * dimension;
+								const startingY = dimension + i * dimension;
+								$SVG(`<rect>`)
+								.attr("x", startingX)
+								.attr("y", startingY)
+								.attr("width", dimension)
+								.attr("height", dimension)
+								.addClass("not-murder")
+								.appendTo(svgBoard);
+
+								let string = roomNames[i * 3 + j];
+
+								$SVG("<text>")
+								.attr("x", startingX + (dimension / 2) - textXOffset[string])
+								.attr("y", startingY + dimension - 10)
+								.text(string)
+								.addClass("not-murder")
+								.appendTo(svgBoard);
+							}
+						}
+						return svgBoard;
+					}
+
+					let dict = 
+					{
+						"Bal": "Ballroom",
+						"Bil": "Billiard Room",
+						"Con": "Conservatory",
+						"Din": "Dining Room",
+						"Hal": "Hall",
+						"Kit": "Kitchen",
+						"Lib": "Library",
+						"Lou": "Lounge",
+						"Stu": "Study",
+					};
+
+					let layoutArr = [];
+
+					for(let i = 0; i < 2; i++){
+						layoutArr.push(readTaggedLine().replaceAll("|", "").replaceAll("  ", " "));
+					}
+
+					let roomAbrevArr = layoutArr.join(" ").split(" ");
+
+					module.roomNames = [];
+
+					for(let i = 0; i < 6; i++){
+						module.roomNames[i] = dict[roomAbrevArr[i]];
+					}
+
+					let svg = module.makeMansionLayout(module.roomNames);
+					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
+					return true;
+				}
+			},
+
+			{
+				regex: /Initial state:|Turn \d+:/,
+				handler: function(matches, module){
+					
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'notNumberPad',
 		loggingTag: 'Not Number Pad',
 		matches: [
