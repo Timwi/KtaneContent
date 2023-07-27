@@ -10684,11 +10684,11 @@ let parseData = [
 
 						let textXOffset = 
 						{
-							"Ballroom": 45,
-							"Billiard Room": 73,
-							"Conservatory": 70,
-							"Dining Room": 67,
-							"Hall": 20,
+							"Ballroom": 35,
+							"Billiard Room": 60,
+							"Conservatory": 60,
+							"Dining Room": 55,
+							"Hall": 15,
 							"Kitchen": 40,
 							"Library": 33,
 							"Lounge": 40,
@@ -10771,12 +10771,6 @@ let parseData = [
 						const dimension = 200;
 						const padding = 5;
 						
-
-
-						//console.log(roomNames.indexOf(sus.room));
-						//let x = (roomNames.indexOf(sus.room) % 3) * dimension + padding;
-						//let y = (roomNames.indexOf(sus.room) / 3) * dimension + padding;
-
 						let x;
 						let y;
 						let xPosOffset;
@@ -10797,16 +10791,16 @@ let parseData = [
 
 							case 3:
 								xPosOffset = 65;
-								yPosOffset = 90;
+								yPosOffset = 80;
 								x = padding + xPosOffset * (roomPos % 2) + (Math.floor(roomPos / 2) == 1 ? 30 : 0) + 30;
-								y = padding + xPosOffset * Math.floor(roomPos / 2) + 20;
+								y = padding + yPosOffset * Math.floor(roomPos / 2) + 15;
 								break;
 
 							case 4:
 								xPosOffset = 65;
-								yPosOffset = 90;
+								yPosOffset = 80;
 								x = padding + xPosOffset * (roomPos % 2) + 30;
-								y = padding + xPosOffset * Math.floor(roomPos / 2) + 20;
+								y = padding + yPosOffset * Math.floor(roomPos / 2) + 15;
 								break;
 
 							case 5:
@@ -10818,20 +10812,18 @@ let parseData = [
 						}
 
 						
-
-						console.log(x, y);
-						
+						//console.log(roomNames.indexOf(sus.room));
 						return $SVG(`<image x="${x}" y="${y}" width="${dimension/3.5}" height="${dimension/3.5}" href="../HTML/img/Not Murder/${sus.name.includes("Green") ? "Reverend Green" : sus.name}.svg">`);
 					}
 
 					let svg = module.makeMansionLayout(module.roomNames);
 					let lines = readTaggedLines(5);
-					lines.forEach(l => { console.log(l) });
+					//lines.forEach(l => { console.log(l) });
 					let suspectInfo = lines.map(line => getSuspectInformation(line));
 					let suspectSvgs = [];
 
-					for(let i = 0; i < 1; i++){
-						suspectSvgs.push(makeSuspectSvg(suspectInfo[i], i, 1, module.roomNames)); 
+					for(let i = 0; i < 5; i++){
+						suspectSvgs.push(makeSuspectSvg(suspectInfo[i], i, 5, module.roomNames)); 
 						//i want to make this a map fucntion but idk how with the roomName paramter
 					} 
 					
