@@ -10678,7 +10678,7 @@ let parseData = [
 				regex: /Building layout:/,
 				handler: function(matches, module){
 					module.makeMansionLayout = (roomNames) => {
-						const svgBoard = $(`<svg viewbox="0 0 610 610">`).addClass("not-murder");
+						const svgBoard = $(`<svg viewbox="0 0 610 610">`);
 						const padding = 5;
 						const dimension = 200;
 
@@ -10695,10 +10695,10 @@ let parseData = [
 							"Study": 25,
 						}
 
-						for(let i = 0; i < 2; i++){
-							for(let j = 0; j < 3; j++){
-								const startingX = padding + j * dimension;
-								const startingY = dimension + i * dimension;
+						for(let i = 0; i < 6; i++){
+								const startingX = padding + (i % 3) * dimension;
+								const startingY = padding + Math.floor(i / 3) * dimension;
+
 								$SVG(`<rect>`)
 								.attr("x", startingX)
 								.attr("y", startingY)
@@ -10707,15 +10707,14 @@ let parseData = [
 								.addClass("not-murder")
 								.appendTo(svgBoard);
 
-								let string = roomNames[i * 3 + j];
+								let string = roomNames[i];
 
 								$SVG("<text>")
 								.attr("x", startingX + (dimension / 2) - textXOffset[string])
-								.attr("y", startingY + dimension - 10)
+								.attr("y", startingY + (dimension * 0.95))
 								.text(string)
 								.addClass("not-murder")
 								.appendTo(svgBoard);
-							}
 						}
 						return svgBoard;
 					}
@@ -10756,7 +10755,89 @@ let parseData = [
 			{
 				regex: /Initial state:|Turn \d+:/,
 				handler: function(matches, module){
+
+					let getSuspectInformation = (line) => {
+						let suspectRegex = /(.+) was in the (.+) with the (.+)\./.exec(line);
 					
+						let obj = {};
+						obj.name = suspectRegex[1];
+						obj.room = suspectRegex[2];
+						obj.weapon = suspectRegex[3];
+
+						return obj;
+					}
+
+					let makeSuspectSvg = (sus, roomPos, numInRoom, roomNames) => {
+						const dimension = 200;
+						const padding = 5;
+						
+
+
+						//console.log(roomNames.indexOf(sus.room));
+						//let x = (roomNames.indexOf(sus.room) % 3) * dimension + padding;
+						//let y = (roomNames.indexOf(sus.room) / 3) * dimension + padding;
+
+						let x;
+						let y;
+						let xPosOffset;
+						let yPosOffset;
+
+						switch(numInRoom)
+						{
+							case 1:
+								x = padding + dimension / 2 - 30;
+								y = padding + dimension / 2 - 30;
+								break;
+
+							case 2:
+								xPosOffset = 65;
+								x = padding + xPosOffset * (roomPos % 2) + 30;
+								y = padding + dimension / 2 - 40;
+								break;
+
+							case 3:
+								xPosOffset = 65;
+								yPosOffset = 90;
+								x = padding + xPosOffset * (roomPos % 2) + (Math.floor(roomPos / 2) == 1 ? 30 : 0) + 30;
+								y = padding + xPosOffset * Math.floor(roomPos / 2) + 20;
+								break;
+
+							case 4:
+								xPosOffset = 65;
+								yPosOffset = 90;
+								x = padding + xPosOffset * (roomPos % 2) + 30;
+								y = padding + xPosOffset * Math.floor(roomPos / 2) + 20;
+								break;
+
+							case 5:
+								xPosOffset = 65;
+								yPosOffset = 80;
+								x = padding + xPosOffset * (roomPos % 3) + (Math.floor(roomPos / 3) == 1 ? 30 : 0);
+								y = padding + yPosOffset * Math.floor(roomPos / 3);
+								break;
+						}
+
+						
+
+						console.log(x, y);
+						
+						return $SVG(`<image x="${x}" y="${y}" width="${dimension/3.5}" height="${dimension/3.5}" href="../HTML/img/Not Murder/${sus.name.includes("Green") ? "Reverend Green" : sus.name}.svg">`);
+					}
+
+					let svg = module.makeMansionLayout(module.roomNames);
+					let lines = readTaggedLines(5);
+					lines.forEach(l => { console.log(l) });
+					let suspectInfo = lines.map(line => getSuspectInformation(line));
+					let suspectSvgs = [];
+
+					for(let i = 0; i < 1; i++){
+						suspectSvgs.push(makeSuspectSvg(suspectInfo[i], i, 1, module.roomNames)); 
+						//i want to make this a map fucntion but idk how with the roomName paramter
+					} 
+					
+					suspectSvgs.forEach(suspectSvg => suspectSvg.appendTo(svg));
+					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
+					return true;
 				}
 			},
 			{
