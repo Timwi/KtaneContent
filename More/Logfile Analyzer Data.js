@@ -10713,7 +10713,7 @@ let parseData = [
 								.attr("x", startingX + (dimension / 2) - textXOffset[string])
 								.attr("y", startingY + (dimension * 0.95))
 								.text(string)
-								.addClass("not-murder")
+								.addClass("not-murder-room")
 								.appendTo(svgBoard);
 						}
 						return svgBoard;
