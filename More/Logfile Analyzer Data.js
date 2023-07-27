@@ -2479,6 +2479,67 @@ let parseData = [
 		loggingTag: "CharacterCodes"
 	},
 	{
+		moduleID: "characterSlots",
+		loggingTag: "Character Slots",
+		matches: [
+			{
+				regex: /The appearing characters on stage (\d+) are : (.+)/,
+				handler: function(matches, module) {
+					console.log(matches[0]);
+
+					module.currentDropdown = ["Atempt 1", []];
+					module.attemptNum = 1;
+
+					module.push(matches[0]);
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Checking validy for (.+).../,
+				handler: function(matches, module) {
+					let name = matches[1];
+					let lines = [];
+
+					let finalLine = `${name} has a score of`;
+
+					do
+					{
+						lines.push(readTaggedLine());
+					} while(!lines[lines.length - 1].includes(finalLine));
+					
+					module.currentDropdown[1].push([matches[0], lines]);
+					
+					return true;
+				}
+
+				
+			},
+
+			{
+				regex: /Your answer for this character is incorrect. Strike!|All keep states are correct. Stage \d+ done!/,
+				handler: function(matches, module) {
+
+					let strike = matches[0] == "Your answer for this character is incorrect. Strike!";
+					if(strike){
+						module.attemptNum++;
+						module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					}
+
+					module.push(matches[0]);
+
+					if(strike){
+						module.push(module.currentDropdown);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "CheapCheckoutModule",
 		loggingTag: "Cheap Checkout",
 		matches: [
