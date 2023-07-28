@@ -11,73 +11,73 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
     <script>
-        function setDefaultRules(rnd) { setRules(rnd); }
+     function setDefaultRules(rnd) { setRules(rnd); }
 
-        function setRules(rnd)
-        {
-            let tds = document.querySelectorAll('.bitseq');
-            let num0s = document.querySelectorAll('.num0s');
+     function setRules(rnd)
+     {
+         let tds = document.querySelectorAll('.bitseq');
+         let num0s = document.querySelectorAll('.num0s');
 
-            let bitLength = 12;
-            let results = [];
-            while (results.length < tds.length)
-            {
-                let all = Array(1 << bitLength).fill(null).map((_, c) => c)
-                    .filter(v =>
-                    {
-                        for (let cycle = 1; cycle < bitLength; cycle++)
-                        {
-                            let cycled = ((v << cycle) & ((1 << bitLength) - 1)) | (v >> (bitLength - cycle));
-                            let nb = countBits(cycled ^ v);
-                            if (nb === 0 || nb === 2)
-                                return false;
-                        }
-                        return true;
-                    });
-                results = [];
-                while (all.length > 0 && results.length < tds.length)
-                {
-                    let rndIx = rnd.next(0, all.length);
-                    let bits = all[rndIx];
-                    for (let cycle = 0; cycle < bitLength; cycle++)
-                    {
-                        let compare = ((bits << cycle) & ((1 << bitLength) - 1)) | (bits >> (bitLength - cycle));
-                        all = all.filter(v => { let nb = countBits(compare ^ v); return nb != 0 && nb != 2; });
-                    }
-                    results.push(bits);
-                }
-            }
+         let bitLength = 16;
+         let results = [];
+         while (results.length < tds.length)
+         {
+             let all = Array(1 << bitLength).fill(null).map((_, c) => c)
+                 .filter(v =>
+                 {
+                     for (let cycle = 1; cycle < bitLength; cycle++)
+                     {
+                         let cycled = ((v << cycle) & ((1 << bitLength) - 1)) | (v >> (bitLength - cycle));
+                         let nb = countBits(cycled ^ v);
+                         if (nb === 0 || nb === 2)
+                             return false;
+                     }
+                     return true;
+                 });
+             results = [];
+             while (all.length > 0 && results.length < tds.length)
+             {
+                 let rndIx = rnd.next(0, all.length);
+                 let bits = all[rndIx];
+                 for (let cycle = 0; cycle < bitLength; cycle++)
+                 {
+                     let compare = ((bits << cycle) & ((1 << bitLength) - 1)) | (bits >> (bitLength - cycle));
+                     all = all.filter(v => { let nb = countBits(compare ^ v); return nb != 0 && nb != 2; });
+                 }
+                 results.push(bits);
+             }
+         }
 
-            for (let i = 0; i < tds.length; i++)
-            {
-                let bits = results[i].toString(2).padStart(bitLength, '0');
-                tds[i].innerText = bits;
-                num0s[i].innerText = `( ${(bits.match(/0/g) || []).length}つの0と${(bits.match(/1/g) || []).length}つの1で構成されている)`;
-            }
-        }
+         for (let i = 0; i < tds.length; i++)
+         {
+             let bits = results[i].toString(2).padStart(bitLength, '0');
+             tds[i].innerText = bits;
+             num0s[i].innerText = `(${(bits.match(/0/g) || []).length}つの0と${(bits.match(/1/g) || []).length}つの1で構成されている)`;
+         }
+     }
 
-        function countBits(v)
-        {
-            let n = 0;
-            while (v > 0)
-            {
-                n++;
-                v &= (v - 1);
-            }
-            return n;
-        }
-    </script>
-    <style>
-        td, th {
-            padding: .3em 1em .2em;
-        }
-        .bitseq {
-            font-size: 14pt;
-        }
-        .num0s {
-            font-size: 10pt;
-        }
-    </style>
+     function countBits(v)
+     {
+         let n = 0;
+         while (v > 0)
+         {
+             n++;
+             v &= (v - 1);
+         }
+         return n;
+     }
+ </script>
+ <style>
+     td, th {
+         padding: .3em 1em .2em;
+     }
+     .bitseq {
+         font-size: 14pt;
+     }
+     .num0s {
+         font-size: 10pt;
+     }
+ </style>
 </head>
 <body>
     <div class="section">
@@ -92,23 +92,23 @@
                 <p class="flavour-text">マクドナルドのスプライトを飲みながら肘をぶつけてジーンとする感覚を、1つのボタンに凝縮。</p>
                 <p>モジュールには、不具合のあるボタンと、0と1の循環シークエンスを示すディスプレーがある。</p>
                 <p>表示されるシークエンスは、下の表のいずれかである。ただし1ビットのみ反転している。</p>
-                <p>タイマーの秒の2桁(15でモジュロ)が、対応するリストの数字に反転したビットの位置を加算した結果(15でモジュロ)と等しくなった時にボタンをタップする必要がある。</p>
+                <p>反転したビットがハイライト表示された時にボタンを長押しし、n番目のビットがハイライトされたら離す。nはビットシークエンスに対応する数字である。
                 <table>
-                    <tr> <th>0</th><td class="bitseq">010111101010</td><td class="num0s">(contains 5 0-bits and 7 1-bits)</td></tr>
-                    <tr> <th>1</th><td class="bitseq">001100111100</td><td class="num0s">(contains 6 0-bits and 6 1-bits)</td></tr>
-                    <tr> <th>2</th><td class="bitseq">111011110000</td><td class="num0s">(contains 5 0-bits and 7 1-bits)</td></tr>
-                    <tr> <th>3</th><td class="bitseq">001111101101</td><td class="num0s">(contains 4 0-bits and 8 1-bits)</td></tr>
-                    <tr> <th>4</th><td class="bitseq">110101011011</td><td class="num0s">(contains 4 0-bits and 8 1-bits)</td></tr>
-                    <tr> <th>5</th><td class="bitseq">010001011010</td><td class="num0s">(contains 7 0-bits and 5 1-bits)</td></tr>
-                    <tr> <th>6</th><td class="bitseq">101001001000</td><td class="num0s">(contains 8 0-bits and 4 1-bits)</td></tr>
-                    <tr> <th>7</th><td class="bitseq">100011000010</td><td class="num0s">(contains 8 0-bits and 4 1-bits)</td></tr>
-                    <tr> <th>8</th><td class="bitseq">110010101110</td><td class="num0s">(contains 5 0-bits and 7 1-bits)</td></tr>
-                    <tr> <th>9</th><td class="bitseq">010001001101</td><td class="num0s">(contains 7 0-bits and 5 1-bits)</td></tr>
-                    <tr><th>10</th><td class="bitseq">110011011111</td><td class="num0s">(contains 3 0-bits and 9 1-bits)</td></tr>
-                    <tr><th>11</th><td class="bitseq">011011000000</td><td class="num0s">(contains 8 0-bits and 4 1-bits)</td></tr>
-                    <tr><th>12</th><td class="bitseq">100010111010</td><td class="num0s">(contains 6 0-bits and 6 1-bits)</td></tr>
-                    <tr><th>13</th><td class="bitseq">100100000001</td><td class="num0s">(contains 9 0-bits and 3 1-bits)</td></tr>
-                    <tr><th>14</th><td class="bitseq">100110010011</td><td class="num0s">(contains 6 0-bits and 6 1-bits)</td></tr>
+                    <tr> <th>0</th><td class="bitseq">010111101010</td><td class="num0s">(5つの0と7つの1で構成されている)</td></tr>
+                    <tr> <th>1</th><td class="bitseq">001100111100</td><td class="num0s">(6つの0と6つの1で構成されている)</td></tr>
+                    <tr> <th>2</th><td class="bitseq">111011110000</td><td class="num0s">(5つの0と7つの1で構成されている)</td></tr>
+                    <tr> <th>3</th><td class="bitseq">001111101101</td><td class="num0s">(4つの0と8つの1で構成されている)</td></tr>
+                    <tr> <th>4</th><td class="bitseq">110101011011</td><td class="num0s">(4つの0と8つの1で構成されている)</td></tr>
+                    <tr> <th>5</th><td class="bitseq">010001011010</td><td class="num0s">(7つの0と5つの1で構成されている)</td></tr>
+                    <tr> <th>6</th><td class="bitseq">101001001000</td><td class="num0s">(8つの0と4つの1で構成されている)</td></tr>
+                    <tr> <th>7</th><td class="bitseq">100011000010</td><td class="num0s">(8つの0と4つの1で構成されている)</td></tr>
+                    <tr> <th>8</th><td class="bitseq">110010101110</td><td class="num0s">(5つの0と7つの1で構成されている)</td></tr>
+                    <tr> <th>9</th><td class="bitseq">010001001101</td><td class="num0s">(7つの0と5つの1で構成されている)</td></tr>
+                    <tr><th>10</th><td class="bitseq">110011011111</td><td class="num0s">(3つの0と9つの1で構成されている)</td></tr>
+                    <tr><th>11</th><td class="bitseq">011011000000</td><td class="num0s">(8つの0と4つの1で構成されている)</td></tr>
+                    <tr><th>12</th><td class="bitseq">100010111010</td><td class="num0s">(6つの0と6つの1で構成されている)</td></tr>
+                    <tr><th>13</th><td class="bitseq">100100000001</td><td class="num0s">(9つの0と3つの1で構成されている)</td></tr>
+                    <tr><th>14</th><td class="bitseq">100110010011</td><td class="num0s">(6つの0と6つの1で構成されている)</td></tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">ページ 1/1</div>
