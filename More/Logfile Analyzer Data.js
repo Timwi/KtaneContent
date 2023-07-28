@@ -13750,6 +13750,31 @@ let parseData = [
 		loggingTag: "Settlers Of KTaNE"
 	},
 	{
+		moduleID: "scrutinySquares",
+		loggingTag: "Scrutiny Squares",
+		matches: [
+			{
+				regex: /Current cell: (.+)../,
+				handler: function(matches, module) {
+					let regex = /the word (.+) in (.+) with (.+) around it on a (.+) background/
+
+					let colors = matches[1].match(regex);
+
+					console.log(colors);
+					
+					let dropdown = ["Word: " + colors[1], "Color: " + colors[2], "Border: " + colors[3], "Background: " + colors[4]];
+
+					module.push(["Current cell:", dropdown]);
+					return true;
+				}
+			},
+
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Shape Fill",
 		moduleID: "ShapeFillModule",
 		loggingTag: "Shape Fill",
