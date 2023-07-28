@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!-- Translated by Zye -->
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>빠른 산수 — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        li {
+            margin-bottom: .25em;
+            word-break: keep-all;
+        }
+        .number, .letter-col, .letter-row {
+            font-family: 'Special Elite', 'Courier New', monospace;
+        }
+        .ruleseed-active .left-right {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function setDefaultRules()
+        {
+            let rulesHtml = document.getElementsByClassName('rule');
+            rulesHtml[0].innerText = '폭탄에 점등된 MSA 지시등이 있다면, 계산 결과에 20을 더하세요.';
+            rulesHtml[1].innerText = '폭탄에 Serial 포트가 있다면, 계산 결과에 14를 더하세요.';
+            rulesHtml[2].innerText = '시리얼 넘버에 로마자 F, A, S, T 중 하나라도 포함된다면, 계산 결과에서 5를 빼세요.';
+            rulesHtml[3].innerText = '폭탄에 RJ-45 포트가 있다면, 계산 결과에 27을 더하세요.';
+            rulesHtml[4].innerText = '폭탄에 배터리가 3개보다 많다면, 계산 결과에서 15를 빼세요.';
+
+            let candidateLetters = ['A', 'B', 'C', 'D', 'E', 'G', 'K', 'N', 'P', 'S', 'T', 'X', 'Z'];
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers =
+                [ 25, 11, 53, 97,  2, 42, 51, 97, 12, 86, 55, 73, 33,
+                  54,  7, 32, 19, 84, 33, 27, 78, 26, 46,  9, 13, 58,
+                  86, 37, 44,  1,  5, 26, 93, 49, 18, 69, 23, 40, 22,
+                  54, 28, 77, 93, 11,  0, 35, 61, 27, 48, 13, 72, 80,
+                  99, 36, 23, 95, 67,  5, 26, 17, 44, 60, 26, 41, 67,
+                  74, 95,  3,  4, 56, 23, 54, 29, 52, 38, 10, 76, 98,
+                  88, 46, 37, 96,  2, 52, 81, 37, 12, 70, 14, 36, 78,
+                  54, 43, 12, 65, 94,  3, 47, 23, 16, 62, 73, 46, 21,
+                   7, 33, 26,  1, 67, 26, 27, 77, 83, 14, 27, 93,  9,
+                  63, 64, 94, 27, 48, 84, 33, 10, 16, 74, 43, 99,  4,
+                  35, 39,  3, 25, 47, 62, 38, 45, 88, 48, 34, 31, 27,
+                  67, 30, 27, 71,  9, 11, 44, 37, 18, 40, 32, 15, 78,
+                  13, 23, 26, 85, 92, 12, 73, 56, 81,  7, 75, 47, 99 ];
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            lrs[0].innerText = '오른쪽 문자:';
+            lrs[1].innerText = '왼쪽 문자:';
+        }
+
+        function setRules(rnd)
+        {
+            let candidates = {
+                's': [
+                    "시리얼 넘버의 마지막 숫자가 짝수라면",
+                    "시리얼 넘버에 모음이 있다면",
+                    function(rnd) {
+                        let values = rnd.shuffleFisherYates([...Array(36).keys()]).slice(0, 4);
+                        let letterNames = values.filter(v => v >= 10).map(v => String.fromCodePoint(55 + v));
+                        let digitNames = values.filter(v => v < 10);
+                        switch (digitNames.length)
+                        {
+                            case 0: return `시리얼 넘버에 로마자 ${letterNames[0]}, ${letterNames[1]}, ${letterNames[2]}, ${letterNames[3]} 중 하나라도 포함된다면`;
+                            case 1: return `시리얼 넘버에 로마자 ${letterNames[0]}, ${letterNames[1]}, ${letterNames[2]}나 숫자 ${digitNames[0]} 중 하나라도 포함된다면`;
+                            case 2: return `시리얼 넘버에 로마자 ${letterNames[0]}, ${letterNames[1]}나 숫자 ${digitNames[0]}, ${digitNames[1]} 중 하나라도 포함된다면`;
+                            case 3: return `시리얼 넘버에 로마자 ${letterNames[0]}나 숫자 ${digitNames[0]}, ${digitNames[1]}, ${digitNames[2]} 중 하나라도 포함된다면`;
+                            case 4: return `시리얼 넘버에 숫자 ${digitNames[0]}, ${digitNames[1]}, ${digitNames[2]}, ${digitNames[3]} 중 하나라도 포함된다면`;
+                        }
+                    }
+                ],
+                'p': [
+                    "폭탄에 병렬 포트가 있다면",
+                    "폭탄에 Serial 포트가 있다면",
+                    "폭탄에 PS/2 포트가 있다면",
+                    "폭탄에 Stereo RCA 포트가 있다면",
+                    "폭탄에 RJ-45 포트가 있다면",
+                    "폭탄에 DVI-D 포트가 있다면",
+                    "폭탄에 중복되는 포트가 있다면",
+                    "폭탄에 빈 포트 플레이트가 있다면"
+                ],
+                'i': [
+                    "폭탄에 SND 지시등이 있다면",
+                    "폭탄에 CLR 지시등이 있다면",
+                    "폭탄에 CAR 지시등이 있다면",
+                    "폭탄에 IND 지시등이 있다면",
+                    "폭탄에 FRQ 지시등이 있다면",
+                    "폭탄에 SIG 지시등이 있다면",
+                    "폭탄에 NSA 지시등이 있다면",
+                    "폭탄에 MSA 지시등이 있다면",
+                    "폭탄에 TRN 지시등이 있다면",
+                    "폭탄에 BOB 지시등이 있다면",
+                    "폭탄에 FRK 지시등이 있다면",
+                    "폭탄에 점등된 SND 지시등이 있다면",
+                    "폭탄에 점등된 CLR 지시등이 있다면",
+                    "폭탄에 점등된 CAR 지시등이 있다면",
+                    "폭탄에 점등된 IND 지시등이 있다면",
+                    "폭탄에 점등된 FRQ 지시등이 있다면",
+                    "폭탄에 점등된 SIG 지시등이 있다면",
+                    "폭탄에 점등된 NSA 지시등이 있다면",
+                    "폭탄에 점등된 MSA 지시등이 있다면",
+                    "폭탄에 점등된 TRN 지시등이 있다면",
+                    "폭탄에 점등된 BOB 지시등이 있다면",
+                    "폭탄에 점등된 FRK 지시등이 있다면",
+                    "폭탄에 점등되지 않은 SND 지시등이 있다면",
+                    "폭탄에 점등되지 않은 CLR 지시등이 있다면",
+                    "폭탄에 점등되지 않은 CAR 지시등이 있다면",
+                    "폭탄에 점등되지 않은 IND 지시등이 있다면",
+                    "폭탄에 점등되지 않은 FRQ 지시등이 있다면",
+                    "폭탄에 점등되지 않은 SIG 지시등이 있다면",
+                    "폭탄에 점등되지 않은 NSA 지시등이 있다면",
+                    "폭탄에 점등되지 않은 MSA 지시등이 있다면",
+                    "폭탄에 점등되지 않은 TRN 지시등이 있다면",
+                    "폭탄에 점등되지 않은 BOB 지시등이 있다면",
+                    "폭탄에 점등되지 않은 FRK 지시등이 있다면"
+                ],
+                'b': [
+                    function (rnd) { return `폭탄에 배터리가 ${rnd.next(2, 5)}개보다 많다면`; },
+                    function (rnd) { return `폭탄에 배터리가 ${rnd.next(2, 5)}개보다 적다면`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `폭탄에 배터리가 ${min}개 이상 ${rnd.next(min+1, min+3)}개 이하라면`; },
+                    function (rnd) { return `폭탄에 배터리 홀더가 ${rnd.next(2, 5)}개보다 많다면`; },
+                    function (rnd) { return `폭탄에 배터리 홀더가 ${rnd.next(2, 5)}개보다 적다면`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `폭탄에 배터리 홀더가 ${min}개 이상 ${rnd.next(min+1, min+3)}개 이하라면`; }
+                ]
+            };
+            let rules = [];
+            let offsets = rnd.shuffleFisherYates([...Array(60).keys()].map(i => i < 30 ? i-30 : i-29));
+            let ruleTypes = ['s', 'p', 'i', 'b'];
+            ruleTypes.push(['s', 'p', 'i', 'b'][rnd.next(0, 4)]);
+            for (let ruleType of ruleTypes)
+            {
+                let ix = rnd.next(0, candidates[ruleType].length);
+                rules.push(candidates[ruleType][ix]);
+                candidates[ruleType].splice(ix, 1);
+            }
+            rnd.shuffleFisherYates(rules);
+
+            let rulesHtml = document.getElementsByClassName('rule');
+            for (let i = 0; i < 5; i++)
+            {
+                let ruleStr = typeof rules[i] === 'function' ? rules[i](rnd) : rules[i];
+                let absOffset = Math.abs(offsets[i]);
+                let isVowel = absOffset%10 === 2 || absOffset%10 === 4 || absOffset%10 === 5 || absOffset%10 === 9;
+                rulesHtml[i].innerText = `${ruleStr}, 계산 결과${offsets[i] < 0 ? '에서' : '에'} ${absOffset}${isVowel ? '를' : '을'} ${offsets[i] < 0 ? '빼세요' : '더하세요'}`;
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            if (rnd.next(0, 2) != 0)
+            {
+                lrs[0].innerText = '왼쪽 문자:';
+                lrs[1].innerText = '오른쪽 문자:';
+            }
+            else
+            {
+                lrs[0].innerText = '오른쪽 문자:';
+                lrs[1].innerText = '왼쪽 문자:';
+            }
+
+            let candidateLetters = rnd.shuffleFisherYates(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']).slice(0, 13).sort();
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers = rnd.shuffleFisherYates([...Array(200).keys()].map(i => i % 100));
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">빠른 산수</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Fast Math.svg" class="diagram">
+                <h2>빠른 산수에 대하여</h2>
+                <p class="flavour-text">
+                    Gotta go fast!
+                </p>
+
+                <ul>
+                    <li>화면에 로마자 2개가 표시됩니다. 숫자 패드와 제출(Submit) 버튼을 사용해 모듈을 해제하세요. 모듈이 해제될 때까지 총 3 - 5단계가 걸립니다.</li>
+                    <li>"GO!" 버튼을 눌러 시작합니다. <b>두 자릿수</b> 정답을 제출할 시간이 10초 주어집니다. (모드 설정 파일에서 제한 시간을 변경할 수 있습니다.)</li>
+                    <li>제한 시간 타이머가 0에 도달하면 실수로 처리되고, 모듈이 리셋됩니다.</li>
+                    <li>하나의 단계가 끝나면, 타이머가 재시작되며, 화면에 새로운 로마자 2개가 표시됩니다.</li>
+                    <li>
+                        정답을 제출하기 전에 다음 규칙을 모두 따르세요.
+                        <ul>
+                            <li class='rule'>폭탄에 점등된 MSA 지시등이 있다면, 계산 결과에 20을 더하세요.</li>
+                            <li class='rule'>폭탄에 Serial 포트가 있다면, 계산 결과에 14를 더하세요.</li>
+                            <li class='rule'>시리얼 넘버에 로마자 F, A, S, T 중 하나라도 포함된다면, 계산 결과에서 5를 빼세요.</li>
+                            <li class='rule'>폭탄에 RJ-45 포트가 있다면, 계산 결과에 27을 더하세요.</li>
+                            <li class='rule'>폭탄에 배터리가 3개보다 많다면, 계산 결과에서 15를 빼세요.</li>
+                        </ul>
+                    </li>
+                    <li><i>계산 결과가 99보다 크다면, 결괏값의 마지막 두 자리를 답으로 하세요. 계산 결과가 0보다 작다면, 계산 결과에 50을 더하세요.</i></li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th class="repeaters-spacer left-right" colspan="2">오른쪽 문자:</th>
+                        <th class='letter-col'>A</th>
+                        <th class='letter-col'>B</th>
+                        <th class='letter-col'>C</th>
+                        <th class='letter-col'>D</th>
+                        <th class='letter-col'>E</th>
+                        <th class='letter-col'>G</th>
+                        <th class='letter-col'>K</th>
+                        <th class='letter-col'>N</th>
+                        <th class='letter-col'>P</th>
+                        <th class='letter-col'>S</th>
+                        <th class='letter-col'>T</th>
+                        <th class='letter-col'>X</th>
+                        <th class='letter-col'>Z</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="13" class='left-right'>왼쪽 문자:</th>
+                        <th class='letter-row'>A</th>
+                        <td class='number'>25</td>
+                        <td class='number'>11</td>
+                        <td class='number'>53</td>
+                        <td class='number'>97</td>
+                        <td class='number'>02</td>
+                        <td class='number'>42</td>
+                        <td class='number'>51</td>
+                        <td class='number'>97</td>
+                        <td class='number'>12</td>
+                        <td class='number'>86</td>
+                        <td class='number'>55</td>
+                        <td class='number'>73</td>
+                        <td class='number'>33</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>B</th>
+                        <td class='number'>54</td>
+                        <td class='number'>07</td>
+                        <td class='number'>32</td>
+                        <td class='number'>19</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>27</td>
+                        <td class='number'>78</td>
+                        <td class='number'>26</td>
+                        <td class='number'>46</td>
+                        <td class='number'>09</td>
+                        <td class='number'>13</td>
+                        <td class='number'>58</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>C</th>
+                        <td class='number'>86</td>
+                        <td class='number'>37</td>
+                        <td class='number'>44</td>
+                        <td class='number'>01</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>93</td>
+                        <td class='number'>49</td>
+                        <td class='number'>18</td>
+                        <td class='number'>69</td>
+                        <td class='number'>23</td>
+                        <td class='number'>40</td>
+                        <td class='number'>22</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>D</th>
+                        <td class='number'>54</td>
+                        <td class='number'>28</td>
+                        <td class='number'>77</td>
+                        <td class='number'>93</td>
+                        <td class='number'>11</td>
+                        <td class='number'>00</td>
+                        <td class='number'>35</td>
+                        <td class='number'>61</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>13</td>
+                        <td class='number'>72</td>
+                        <td class='number'>80</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>E</th>
+                        <td class='number'>99</td>
+                        <td class='number'>36</td>
+                        <td class='number'>23</td>
+                        <td class='number'>95</td>
+                        <td class='number'>67</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>17</td>
+                        <td class='number'>44</td>
+                        <td class='number'>60</td>
+                        <td class='number'>26</td>
+                        <td class='number'>41</td>
+                        <td class='number'>67</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>G</th>
+                        <td class='number'>74</td>
+                        <td class='number'>95</td>
+                        <td class='number'>03</td>
+                        <td class='number'>04</td>
+                        <td class='number'>56</td>
+                        <td class='number'>23</td>
+                        <td class='number'>54</td>
+                        <td class='number'>29</td>
+                        <td class='number'>52</td>
+                        <td class='number'>38</td>
+                        <td class='number'>10</td>
+                        <td class='number'>76</td>
+                        <td class='number'>98</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>K</th>
+                        <td class='number'>88</td>
+                        <td class='number'>46</td>
+                        <td class='number'>37</td>
+                        <td class='number'>96</td>
+                        <td class='number'>02</td>
+                        <td class='number'>52</td>
+                        <td class='number'>81</td>
+                        <td class='number'>37</td>
+                        <td class='number'>12</td>
+                        <td class='number'>70</td>
+                        <td class='number'>14</td>
+                        <td class='number'>36</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>N</th>
+                        <td class='number'>54</td>
+                        <td class='number'>43</td>
+                        <td class='number'>12</td>
+                        <td class='number'>65</td>
+                        <td class='number'>94</td>
+                        <td class='number'>03</td>
+                        <td class='number'>47</td>
+                        <td class='number'>23</td>
+                        <td class='number'>16</td>
+                        <td class='number'>62</td>
+                        <td class='number'>73</td>
+                        <td class='number'>46</td>
+                        <td class='number'>21</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>P</th>
+                        <td class='number'>07</td>
+                        <td class='number'>33</td>
+                        <td class='number'>26</td>
+                        <td class='number'>01</td>
+                        <td class='number'>67</td>
+                        <td class='number'>26</td>
+                        <td class='number'>27</td>
+                        <td class='number'>77</td>
+                        <td class='number'>83</td>
+                        <td class='number'>14</td>
+                        <td class='number'>27</td>
+                        <td class='number'>93</td>
+                        <td class='number'>09</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>S</th>
+                        <td class='number'>63</td>
+                        <td class='number'>64</td>
+                        <td class='number'>94</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>10</td>
+                        <td class='number'>16</td>
+                        <td class='number'>74</td>
+                        <td class='number'>43</td>
+                        <td class='number'>99</td>
+                        <td class='number'>04</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>T</th>
+                        <td class='number'>35</td>
+                        <td class='number'>39</td>
+                        <td class='number'>03</td>
+                        <td class='number'>25</td>
+                        <td class='number'>47</td>
+                        <td class='number'>62</td>
+                        <td class='number'>38</td>
+                        <td class='number'>45</td>
+                        <td class='number'>88</td>
+                        <td class='number'>48</td>
+                        <td class='number'>34</td>
+                        <td class='number'>31</td>
+                        <td class='number'>27</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>X</th>
+                        <td class='number'>67</td>
+                        <td class='number'>30</td>
+                        <td class='number'>27</td>
+                        <td class='number'>71</td>
+                        <td class='number'>09</td>
+                        <td class='number'>11</td>
+                        <td class='number'>44</td>
+                        <td class='number'>37</td>
+                        <td class='number'>18</td>
+                        <td class='number'>40</td>
+                        <td class='number'>32</td>
+                        <td class='number'>15</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>Z</th>
+                        <td class='number'>13</td>
+                        <td class='number'>23</td>
+                        <td class='number'>26</td>
+                        <td class='number'>85</td>
+                        <td class='number'>92</td>
+                        <td class='number'>12</td>
+                        <td class='number'>73</td>
+                        <td class='number'>56</td>
+                        <td class='number'>81</td>
+                        <td class='number'>07</td>
+                        <td class='number'>75</td>
+                        <td class='number'>47</td>
+                        <td class='number'>99</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
