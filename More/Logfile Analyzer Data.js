@@ -2496,7 +2496,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Checking validy for (.+).../,
+				regex: /Checking validity for (.+).../,
 				handler: function(matches, module) {
 					let name = matches[1];
 					let lines = [];
