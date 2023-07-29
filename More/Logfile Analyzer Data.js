@@ -5946,9 +5946,9 @@ let parseData = [
 			{
 				regex: /^(.*:) (\d+) +(.*:) ([A-Z])$/,
 				handler: function (matches, module) {
-					var label = matches[1];
-					var extra = matches[3];
-					var letter = matches[4];
+					let label = matches[1];
+					let extra = matches[3];
+					const letter = matches[4];
 					if (label === 'Seed Grid:')
 						return true;
 					if (label === 'Current Grid:') {
@@ -5967,15 +5967,15 @@ let parseData = [
 						else
 							return true;
 					}
-					var n = parseInt(matches[2]);
+					const n = matches[2];
 					function each(n, fnc) {
-						var str = '';
-						for (var i = 0; i < n; i++)
+						let str = '';
+						for (let i = 0; i < n; i++)
 							str += fnc(i);
 						return str;
 					}
 					module.push({
-						label: `${label}${(extra === null ? '' : ` (${extra} ${letter})`)}`,
+						label: label + (!extra ? '' : ` (${extra} ${letter})`),
 						obj: $(`<table class='grid-matching'>
 							${each(6, row => `<tr>${each(6, col => `<td class='${Math.floor(n / Math.pow(2, 6 * row + col)) % 2 ? 'empty' : 'filled'}'>`)}</tr>`)}
 						</table>`)
