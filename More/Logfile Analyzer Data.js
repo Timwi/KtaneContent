@@ -5382,7 +5382,7 @@ let parseData = [
 		matches: [
 			{
 				regex: /The grid is as follows:/,
-				handler: function(match, module) {
+				handler: function (match, module) {
 					const elements = {
 						"R": "rock",
 						"F": "fire",
@@ -5393,13 +5393,12 @@ let parseData = [
 					let gridData = [];
 					for (let col = 0; col < 8; col++) {
 						const column = [];
-						for (let row = 0; row < 8; row++) {
+						for (let row = 0; row < 8; row++)
 							column.push(rawGridData[7 - row][col]);
-						}
 						gridData.push(column);
 					}
 					const solutionGroupsData = /.+: (.+)\./.exec(readTaggedLine())[1].split(" | ").map(x => x.split(", "));
-					function MakeSVG(data, group = null) {							   				  
+					function MakeSVG(data, group = null) {
 						const svg = $("<svg viewbox='-0.1 -0.1 8.2 8.2'>").addClass("four-elements-board");
 						for (let row = 0; row < 8; row++) {
 							for (let col = 0; col < 8; col++) {
@@ -7276,7 +7275,7 @@ let parseData = [
 					module.toggleCell(module.board, module.ant);
 					if (matches[2] != "1")
 						module.toggleCell(module.board, module.anteater);
-					
+
 					const svg = module.makeSVG(module.board);
 					module.ant = module.getAnimal(matches[3], matches[5]);
 					module.anteater = module.getAnimal(matches[4], matches[6]);
@@ -13545,7 +13544,7 @@ let parseData = [
 						for (let y = 0; y < 5; y++)
 							if (data[y][84 + 2 * x] === '█')
 								pixels += `M${21 + x} ${7 + y}h1v1h-1z`;
-					
+
 					$SVG(`<path>`).addClass("border").attr("d", borders).prependTo(gridSvg);
 					$SVG(`<path>`).addClass("pixel").attr("d", pixels).prependTo(gridSvg);
 					module.push({
@@ -15968,16 +15967,16 @@ let parseData = [
 				handler: function (matches, module) {
 					let colors = module.colors.split('');
 					let shapes = matches[1].split('');
-					
+
 					let svg = $('<svg>').addClass('toe-tactics').attr('viewbox', '0 0 30 30');
 					$('<line>').attr({ x1:10, y1:0, x2:10, y2:30 }).appendTo(svg);
 					$('<line>').attr({ x1:20, y1:0, x2:20, y2:30 }).appendTo(svg);
 					$('<line>').attr({ x1:0, y1:10, x2:30, y2:10 }).appendTo(svg);
 					$('<line>').attr({ x1:0, y1:20, x2:30, y2:20 }).appendTo(svg);
-					
+
 					const fills = { 'R':'#D84F4F', 'B':'#4F86D8', 'Y':'#D8C83F' };
 					const paths = { 'X':'m1 3 2-2 2 2 2-2 2 2-2 2 2 2-2 2-2-2-2 2-2-2 2-2z', 'O':'M5 1A4 4 90 001 5 4 4 90 009 5 4 4 90 005 1zM5 3A2 2 90 017 5 2 2 90 013 5 2 2 90 015 3z' };
-					
+
 					for (let row = 0; row < 3; row++) {
 						for (let col = 0; col < 3; col++) {
 							const ix = 3 * row + col;
