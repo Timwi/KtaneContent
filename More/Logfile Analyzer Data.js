@@ -5969,8 +5969,8 @@ let parseData = [
 					}
 					const n = matches[2];
 					function each(n, fnc) {
-						var str = '';
-						for (var i = 0; i < n; i++)
+						let str = '';
+						for (let i = 0; i < n; i++)
 							str += fnc(i);
 						return str;
 					}
