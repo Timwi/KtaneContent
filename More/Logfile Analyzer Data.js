@@ -5357,6 +5357,115 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Forget Them All",
+		moduleID: "forgetThemAll",
+		loggingTag: "Forget Them All",
+		matches: [
+			{
+				regex: /--------------------------- Stage (\d+) ---------------------------/,
+				handler: function (matches, module) {
+					if(!module.stageDropdowns)
+					{
+						module.stageDropdowns = [];
+					}
+
+					const stage = parseInt(matches[1]);
+					const index = stage - 1;
+					module.stageDropdowns.push([`Stage ${stage}: ?`, []]);
+					module.push(module.stageDropdowns[index]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) LED: \[(.+)\]/,
+				handler: function (matches, module) {
+					const stage = parseInt(matches[1]);
+					const index = stage - 1;
+					const leds = `Displayed LEDS: ${matches[2].replaceAll(" ", ", ")}`;
+					module.stageDropdowns[index][1].push(leds);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+)'s corresponding module: (.+)/,
+				handler: function (matches, module) {
+					const stage = parseInt(matches[1]);
+					const index = stage - 1;
+					const moduleName = matches[2];
+					module.stageDropdowns[index][0] = `Stage ${stage}: ${moduleName}`;
+					return true;
+				 }
+			},
+			{
+				regex: /Stage (\d+)'s Actual LED \(after evaluating broken\): \[(.+)\]/,
+				handler: function (matches, module) {
+					const stage = parseInt(matches[1]);
+					const index = stage - 1;
+					const leds = `Actual LEDS: ${matches[2].replaceAll(" ", ", ")}`;
+					module.stageDropdowns[index][1].push(leds);
+					return true;
+				 }
+			},
+			{
+				regex: /Stage (\d+)'s corresponding module name contains "(.+)".(.+)./,
+				handler: function (matches, module) {
+					const index = parseInt(matches[1]) - 1;
+					module.stageDropdowns[index][1].push(matches[0]);
+					return true;
+				 }
+			},
+			{
+				regex: /--------------------------- Solving ---------------------------/,
+				handler: function (matches, module) {
+					linen++
+					module.colorDropdown = ["Color Values", []];
+					module.push(module.colorDropdown);
+					return true;
+
+				 }
+			},
+			{
+				regex: /(.+) ocurrences: (\d+). Multiplier: (\d+). LED value: (\d+)./,
+				handler: function (matches, module) {
+					if(!module.answerDropdowns) {
+						module.answerDropdowns = [];
+					}
+
+					const color = matches[1];
+					const ocurrences = matches[2];
+					const multiplier = matches[3];
+					const ledValue = matches[4];
+
+					module.colorDropdown[1].push([`${color} value: ${ledValue}`, [`Ocurrences: ${ocurrences}`, `Multiplier: ${multiplier}`]]);
+					return true;
+				 }
+			},
+			{
+				regex: /(Wire cut order): \[(.+)\]/,
+				handler: function (matches, module) {
+					console.log(matches);
+					const words =  matches[1];
+					const wires = matches[2].replaceAll(" ", ", ");
+					module.push(`${words}: ${wires}`)
+					return true;
+				 }
+			},
+			{
+				regex: /(The remaining wires to cut) in order are: \[(.+)\]./,
+				handler: function (matches, module) {
+					console.log(matches);
+					const words =  matches[1];
+					const wires = matches[2].replaceAll(" ", ", ");
+					module.push(`${words}: ${wires}`)
+					return true;
+				 }
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Forget Us Not",
 		moduleID: "forgetUsNot",
 		loggingTag: "Forget Us Not",
