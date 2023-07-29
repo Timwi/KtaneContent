@@ -5365,7 +5365,7 @@ let parseData = [
 				regex: /Non-FUN modules: (\d+)/,
 				handler: function (matches, module) {
 					module.push(matches[0]);
-					let length = parseInt(matches[1]);
+					const length = parseInt(matches[1]);
 					module.stageOrder = Array(length);
 					module.dropdowns = Array(length);
 					return true;
@@ -5378,9 +5378,8 @@ let parseData = [
 						label: "Stage order:",
 						obj: pre(matches[1])
 					});
-
-					for(let i = 0; i < module.dropdowns.length; i++){
-						module.dropdowns[i] = [`Stage ${i + 1} = ?`, []];
+					for (let i = 0; i < module.dropdowns.length; i++) {
+						module.dropdowns[i] = [`Stage ${i + 1} = ?`, [ "This stage has not been shown yet." ]];
 						module.push(module.dropdowns[i]);
 					}
 					return true;
@@ -5389,11 +5388,11 @@ let parseData = [
 			{
 				regex: /Stage = (\d+)/,
 				handler: function (matches, module) {
-					let index = parseInt(matches[1]) - 1;
-					let lines = readTaggedLines(3);
-					let dropdown = lines.slice(0, 2);
-					module.dropdowns[index][0] = lines[2]; 
-					module.dropdowns[index][1] = dropdown; 
+					const index = parseInt(matches[1]) - 1;
+					const lines = readTaggedLines(3);
+					const dropdown = lines.slice(0, 2);
+					module.dropdowns[index][0] = lines[2];
+					module.dropdowns[index][1] = dropdown;
 					return true;
 				}
 			},
