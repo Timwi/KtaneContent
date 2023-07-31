@@ -5437,7 +5437,6 @@ let parseData = [
 			{
 				regex: /(Wire cut order): \[(.+)\]/,
 				handler: function (matches, module) {
-					console.log(matches);
 					const words = matches[1];
 					const wires = matches[2].replaceAll(" ", ", ");
 					module.push(`${words}: ${wires}`);
@@ -5447,7 +5446,6 @@ let parseData = [
 			{
 				regex: /(The remaining wires to cut) in order are: \[(.+)\]./,
 				handler: function (matches, module) {
-					console.log(matches);
 					const words = matches[1];
 					const wires = matches[2].replaceAll(" ", ", ");
 					module.push(`${words}: ${wires}`);
