@@ -4134,7 +4134,6 @@ let parseData = [
 		]
 	},
 	{
-		displayName: "Drive-In Window",
 		moduleID: "DIWindow",
 		loggingTag: "Drive-In Window",
 		matches: [
@@ -4143,22 +4142,20 @@ let parseData = [
 				handler: function (matches, module) {
 					const getFoodObj = (line) => {
 						const lineMatch = line.match(/(.+) will cost (.+) dollars./);
-						const obj = {};
-						obj.name = lineMatch[1];
-						obj.amount = lineMatch[2];
-						return obj;
+						const food = {};
+						food.name = lineMatch[1];
+						food.amount = lineMatch[2];
+						return food;
 					}
-
 					const printFood = (food) => {
 						const maxSize = 36;
-						let dotAmount =  maxSize - food.name.length - food.amount.length - 1;
+						const dotAmount = maxSize - food.name.length - food.amount.length - 1;
 						let dotStr = "";
-						for(let i = 0; i < dotAmount; i++){
+						for (let i = 0; i < dotAmount; i++)
 							dotStr += ".";
-						}
 						return `\t\t${[food.name, dotStr, `$${food.amount}`].join("")}`;
-					} 
-					const restuarantName = readTaggedLine().match(/Hi. Welcome to (.+)./)[1];
+					}
+					const restuarantName = readTaggedLine().match(/Hi\. Welcome to (.+)\./)[1];
 					readTaggedLine();
 					const menu = readTaggedLines(3).map(line => getFoodObj(line));
 					const menuLog = menu.map(food => printFood(food));
@@ -4173,7 +4170,7 @@ let parseData = [
 			},
 			{
 				regex: /.+/
-			}	
+			}
 		]
 	},
 	{
