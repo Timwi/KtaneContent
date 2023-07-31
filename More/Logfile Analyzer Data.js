@@ -2484,51 +2484,34 @@ let parseData = [
 		matches: [
 			{
 				regex: /The appearing characters on stage (\d+) are : (.+)/,
-				handler: function(matches, module) {
-					console.log(matches[0]);
-
-					module.currentDropdown = ["Atempt 1", []];
+				handler: function (matches, module) {
+					module.currentDropdown = ["Attempt 1", []];
 					module.attemptNum = 1;
-
 					module.push(matches[0]);
 					module.push(module.currentDropdown);
 					return true;
 				}
 			},
 			{
-				regex: /Checking validity for (.+).../,
-				handler: function(matches, module) {
-					let name = matches[1];
-					let lines = [];
-
-					let finalLine = `${name} has a score of`;
-
-					do
-					{
+				regex: /Checking validity for (.+)\.{3}/,
+				handler: function (matches, module) {
+					const name = matches[1];
+					const lines = [];
+					const finalLine = `${name} has a score of`;
+					do {
 						lines.push(readTaggedLine());
-					} while(!lines[lines.length - 1].includes(finalLine));
-					
+					} while (!lines[lines.length - 1].includes(finalLine));
 					module.currentDropdown[1].push([matches[0], lines]);
-					
 					return true;
 				}
-
-				
 			},
-
 			{
-				regex: /Your answer for this character is incorrect. Strike!|All keep states are correct. Stage \d+ done!/,
-				handler: function(matches, module) {
-
-					let strike = matches[0] == "Your answer for this character is incorrect. Strike!";
-					if(strike){
+				regex: /Your answer for this character is incorrect\. Strike!|All keep states are correct\. Stage \d+ done!/,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					if (matches[0] == "Your answer for this character is incorrect. Strike!") {
 						module.attemptNum++;
 						module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
-					}
-
-					module.push(matches[0]);
-
-					if(strike){
 						module.push(module.currentDropdown);
 					}
 					return true;
