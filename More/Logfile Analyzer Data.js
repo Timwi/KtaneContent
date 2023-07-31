@@ -16892,6 +16892,119 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ultimateTeam",
+		loggingTag: "Ultimate Team",
+		matches: [
+			{
+				regex: /The virtual bomb is displayed as follows: (.+)/,
+				handler: function (match, module) {
+					const modules = match[1].split(", ");
+					const experts = /The candidates of experts are: (.+)/.exec(readLine())[1].split(", ");
+					const preferredDifficulties = /These experts have these preferred difficulties: (.+)/.exec(readLine())[1].split(", ");
+					const proficiencies = /The proficiencies.+: (.+)\./.exec(readLine())[1].split(", ")
+						.map(m => m.split(" — ")[1].split(" | "));
+					const assignedScores = /The assigned scores.+: (.+)/.exec(readLine())[1].split(", ");
+					const afterProficiency = /After adding proficiency.+: (.+)/.exec(readLine())[1].split(", ");
+					const afterPreferred = /After adding preferred.+: (.+)/.exec(readLine())[1].split(", ");
+					const finalScores = /Final scores: (.+)/.exec(readLine())[1].split(", ");
+					const expertCount = readTaggedLine();
+					const winnersData = /According to the two highest scores, you should take (.+)(?: and (.+)\.)/.exec(readLine());
+					const winners = !winnersData[2] ? [winnersData[1]] : [winnersData[1], winnersData[2]];
+					const imgDirPath = "../HTML/img/Ultimate Team";
+					for (let face = 0; face < 2; face++) {
+						const bombSvg = $("<svg viewbox='0 0 3 2'>").addClass("ultimate-team-bomb");
+						for (let row = 0; row < 2; row++) {
+							for (let col = 0; col < 3; col++) {
+								const slot = $SVG("<g>").attr("transform", `translate(${col + 0.05} ${row + 0.05})`).appendTo(bombSvg);
+								const module = modules[face * 6 + row * 3 + col];
+								$SVG("<image>").addClass("icon")
+									.attr("href", `../Icons/${module == "[TIMER]" ? "Timer" : module}.png`)
+									.attr("width", 0.9).attr("height", 0.9)
+									.appendTo(slot);
+								const proficiency = proficiencies[face * 6 + row * 3 + col];
+								if (proficiency[0] != "none") {
+									if (proficiency.length == 1) {
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[0]}.png`)
+											.attr("x", 0.6).attr("y", 0.6)
+											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
+									}
+									else if (proficiency.length == 2) {
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[0]}.png`)
+											.attr("x", 0.3).attr("y", 0.6)
+											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[1]}.png`)
+											.attr("x", 0.6).attr("y", 0.6)
+											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
+									}
+								}
+							}
+						}
+						module.push({ label: face == 0 ? "Front face:" : "Back face:", obj: bombSvg });
+					}
+					const expertProficiencies = experts.map(ex => modules.filter(md => proficiencies[modules.indexOf(md)].includes(ex)));
+					const expertObjs = experts.map((ex) => {
+						const ix = experts.indexOf(ex);
+						return {
+							name: ex,
+							proficiencies: expertProficiencies[ix],
+							preferredDifficulty: preferredDifficulties[ix],
+							assignedScore: assignedScores[ix],
+							afterProficiency: afterProficiency[ix],
+							afterPreferred: afterPreferred[ix],
+							finalScore: finalScores[ix]
+						};
+					});
+					console.log(expertObjs);
+					const expertDropdowns = expertObjs.map((ex) =>
+						[
+							ex.name + ": Final score = " + ex.finalScore,
+							[
+								"Assigned score: " + ex.assignedScore,
+								"Expert’s proficiencies: " + ex.proficiencies.join(", "),
+								"Score after proficiency: " + ex.afterProficiency,
+								"Score after preferred: " + ex.afterPreferred,
+								"Preferred difficulty: " + ex.preferredDifficulty,
+								"Final score: " + ex.finalScore
+							]
+						]
+					);
+					module.push(["Experts:", expertDropdowns]);
+					const winnersSvg = $("<svg viewbox='0 0 20 9'>").addClass("ultimate-team-winners");
+					if (winners.length == 1) {
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
+							.attr("width", 8).attr("height", 8)
+							.attr("x", 2).attr("y", 1)
+							.appendTo(winnersSvg);
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[0]}.png`)
+							.attr("width", 4).attr("height", 4)
+							.attr("x", 10).attr("y", 2)
+							.appendTo(winnersSvg);
+					}
+					if (winners.length == 2) {
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
+							.attr("width", 8).attr("height", 8)
+							.attr("x", 0).attr("y", 1)
+							.appendTo(winnersSvg);
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[0]}.png`)
+							.attr("width", 4).attr("height", 4)
+							.attr("x", 2).attr("y", 2)
+							.appendTo(winnersSvg);
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
+							.attr("width", 8).attr("height", 8)
+							.attr("x", 10).attr("y", 1)
+							.appendTo(winnersSvg);
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[1]}.png`)
+							.attr("width", 4).attr("height", 4)
+							.attr("x", 12).attr("y", 2)
+							.appendTo(winnersSvg);
+					}
+					module.push(expertCount);
+					module.push({ label: `Winner${winners.length == 1 ? "" : "s"}:`, obj: winnersSvg, nobullet: true });
+				}
+			}
+		]
+	},
+	{
 		moduleID: "UltraStores",
 		loggingTag: "UltraStores",
 		displayName: "UltraStores",
@@ -16904,7 +17017,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /^(X|Y|Z|W|V|U)(X|Y|Z|W|V|U)\((.+)/,
+				regex: /^([U-Z])([U-Z])\((.+)/,
 				handler: function (matches, module) {
 					module.push({ obj: pre(" " + matches[1] + matches[2] + "(" + matches[3]).css('display', 'block').css('margin', '0').css('padding', '0'), nobullet: true });
 					return true;
