@@ -5364,11 +5364,8 @@ let parseData = [
 			{
 				regex: /--------------------------- Stage (\d+) ---------------------------/,
 				handler: function (matches, module) {
-					if(!module.stageDropdowns)
-					{
+					if (!module.stageDropdowns)
 						module.stageDropdowns = [];
-					}
-
 					const stage = parseInt(matches[1]);
 					const index = stage - 1;
 					module.stageDropdowns.push([`Stage ${stage}: ?`, []]);
@@ -5394,7 +5391,7 @@ let parseData = [
 					const moduleName = matches[2];
 					module.stageDropdowns[index][0] = `Stage ${stage}: ${moduleName}`;
 					return true;
-				 }
+				}
 			},
 			{
 				regex: /Stage (\d+)'s Actual LED \(after evaluating broken\): \[(.+)\]/,
@@ -5404,61 +5401,58 @@ let parseData = [
 					const leds = `Actual LEDS: ${matches[2].replaceAll(" ", ", ")}`;
 					module.stageDropdowns[index][1].push(leds);
 					return true;
-				 }
+				}
 			},
 			{
-				regex: /Stage (\d+)'s corresponding module name contains "(.+)".(.+)./,
+				regex: /Stage (\d+)'s corresponding module name contains "(.+)"\.(.+)./,
 				handler: function (matches, module) {
 					const index = parseInt(matches[1]) - 1;
 					module.stageDropdowns[index][1].push(matches[0]);
 					return true;
-				 }
+				}
 			},
 			{
-				regex: /--------------------------- Solving ---------------------------/,
+				regex: /^-+ (Solving|Upon Detonation) -+$/,
 				handler: function (matches, module) {
-					linen++
-					module.colorDropdown = ["Color Values", []];
+					linen++;
+					module.colorDropdown = [`Color values on ${matches[1] == "Solving" ? "solve" : "detonation"}`, []];
 					module.push(module.colorDropdown);
 					return true;
 
-				 }
+				}
 			},
 			{
-				regex: /(.+) ocurrences: (\d+). Multiplier: (\d+). LED value: (\d+)./,
+				regex: /(.+) ocurrences: (\d+)\. Multiplier: (\d+)\. LED value: (\d+)\./,
 				handler: function (matches, module) {
-					if(!module.answerDropdowns) {
+					if (!module.answerDropdowns)
 						module.answerDropdowns = [];
-					}
-
 					const color = matches[1];
-					const ocurrences = matches[2];
+					const occurrences = matches[2];
 					const multiplier = matches[3];
 					const ledValue = matches[4];
-
-					module.colorDropdown[1].push([`${color} value: ${ledValue}`, [`Ocurrences: ${ocurrences}`, `Multiplier: ${multiplier}`]]);
+					module.colorDropdown[1].push([`${color} value: ${ledValue}`, [`Occurrences: ${occurrences}`, `Multiplier: ${multiplier}`]]);
 					return true;
-				 }
+				}
 			},
 			{
 				regex: /(Wire cut order): \[(.+)\]/,
 				handler: function (matches, module) {
 					console.log(matches);
-					const words =  matches[1];
+					const words = matches[1];
 					const wires = matches[2].replaceAll(" ", ", ");
-					module.push(`${words}: ${wires}`)
+					module.push(`${words}: ${wires}`);
 					return true;
-				 }
+				}
 			},
 			{
 				regex: /(The remaining wires to cut) in order are: \[(.+)\]./,
 				handler: function (matches, module) {
 					console.log(matches);
-					const words =  matches[1];
+					const words = matches[1];
 					const wires = matches[2].replaceAll(" ", ", ");
-					module.push(`${words}: ${wires}`)
+					module.push(`${words}: ${wires}`);
 					return true;
-				 }
+				}
 			},
 			{
 				regex: /.+/
@@ -7911,7 +7905,7 @@ let parseData = [
 							const buttonIndex = y * numRows + x,
 								buttonColor = data.colors[buttonIndex],
 								solutionIndex = data.solution.indexOf(buttonIndex);
-								
+
 							const button = $("<div>").addClass("light-grid-button").css("background", colorMap[buttonColor]);
 							if (solutionIndex > -1) button.addClass("solution").append($("<div>").addClass("light-grid-rule").css("color", darkColors.includes(buttonColor) ? "#fff" : "#000").text(data.rules[solutionIndex]));
 							row.append($("<td>").append(button));
