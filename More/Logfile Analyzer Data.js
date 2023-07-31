@@ -7200,7 +7200,7 @@ let parseData = [
 					module.toggleCell(module.board, module.ant);
 					if (matches[2] != "1")
 						module.toggleCell(module.board, module.anteater);
-					
+
 					const svg = module.makeSVG(module.board);
 					module.ant = module.getAnimal(matches[3], matches[5]);
 					module.anteater = module.getAnimal(matches[4], matches[6]);
@@ -7695,7 +7695,7 @@ let parseData = [
 							const buttonIndex = y * numRows + x,
 								buttonColor = data.colors[buttonIndex],
 								solutionIndex = data.solution.indexOf(buttonIndex);
-								
+
 							const button = $("<div>").addClass("light-grid-button").css("background", colorMap[buttonColor]);
 							if (solutionIndex > -1) button.addClass("solution").append($("<div>").addClass("light-grid-rule").css("color", darkColors.includes(buttonColor) ? "#fff" : "#000").text(data.rules[solutionIndex]));
 							row.append($("<td>").append(button));
@@ -13518,7 +13518,7 @@ let parseData = [
 						for (let y = 0; y < 5; y++)
 							if (data[y][84 + 2 * x] === '█')
 								pixels += `M${21 + x} ${7 + y}h1v1h-1z`;
-					
+
 					$SVG(`<path>`).addClass("border").attr("d", borders).prependTo(gridSvg);
 					$SVG(`<path>`).addClass("pixel").attr("d", pixels).prependTo(gridSvg);
 					module.push({
@@ -15941,16 +15941,16 @@ let parseData = [
 				handler: function (matches, module) {
 					let colors = module.colors.split('');
 					let shapes = matches[1].split('');
-					
+
 					let svg = $('<svg>').addClass('toe-tactics').attr('viewbox', '0 0 30 30');
 					$('<line>').attr({ x1:10, y1:0, x2:10, y2:30 }).appendTo(svg);
 					$('<line>').attr({ x1:20, y1:0, x2:20, y2:30 }).appendTo(svg);
 					$('<line>').attr({ x1:0, y1:10, x2:30, y2:10 }).appendTo(svg);
 					$('<line>').attr({ x1:0, y1:20, x2:30, y2:20 }).appendTo(svg);
-					
+
 					const fills = { 'R':'#D84F4F', 'B':'#4F86D8', 'Y':'#D8C83F' };
 					const paths = { 'X':'m1 3 2-2 2 2 2-2 2 2-2 2 2 2-2 2-2-2-2 2-2-2 2-2z', 'O':'M5 1A4 4 90 001 5 4 4 90 009 5 4 4 90 005 1zM5 3A2 2 90 017 5 2 2 90 013 5 2 2 90 015 3z' };
-					
+
 					for (let row = 0; row < 3; row++) {
 						for (let col = 0; col < 3; col++) {
 							const ix = 3 * row + col;
@@ -16369,7 +16369,7 @@ let parseData = [
 		matches: [
 			{
 				regex: /The virtual bomb is displayed as follows: (.+)/,
-				handler: function(match, module) {
+				handler: function (match, module) {
 					const modules = match[1].split(", ");
 					const experts = /The candidates of experts are: (.+)/.exec(readLine())[1].split(", ");
 					const preferredDifficulties = /These experts have these preferred difficulties: (.+)/.exec(readLine())[1].split(", ");
@@ -16382,10 +16382,11 @@ let parseData = [
 					const expertCount = readTaggedLine();
 					const winnersData = /According to the two highest scores, you should take (.+)(?: and (.+)\.)/.exec(readLine());
 					const winners = !winnersData[2] ? [winnersData[1]] : [winnersData[1], winnersData[2]];
+					const imgDirPath = "../HTML/img/Ultimate Team";
 					for (let face = 0; face < 2; face++) {
 						const bombSvg = $("<svg viewbox='0 0 3 2'>").addClass("ultimate-team-bomb");
 						for (let row = 0; row < 2; row++) {
-							for (let col = 0; col < 3; col ++) {
+							for (let col = 0; col < 3; col++) {
 								const slot = $SVG("<g>").attr("transform", `translate(${col + 0.05} ${row + 0.05})`).appendTo(bombSvg);
 								const module = modules[face * 6 + row * 3 + col];
 								$SVG("<image>").addClass("icon")
@@ -16395,15 +16396,15 @@ let parseData = [
 								const proficiency = proficiencies[face * 6 + row * 3 + col];
 								if (proficiency[0] != "none") {
 									if (proficiency.length == 1) {
-										$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${proficiency[0]}.png`)
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[0]}.png`)
 											.attr("x", 0.6).attr("y", 0.6)
 											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
 									}
-									if (proficiency.length == 2) {
-										$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${proficiency[0]}.png`)
+									else if (proficiency.length == 2) {
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[0]}.png`)
 											.attr("x", 0.3).attr("y", 0.6)
 											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
-										$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${proficiency[1]}.png`)
+										$SVG("<image>").attr("href", `${imgDirPath}/${proficiency[1]}.png`)
 											.attr("x", 0.6).attr("y", 0.6)
 											.attr("width", 0.3).attr("height", 0.3).appendTo(slot);
 									}
@@ -16427,7 +16428,8 @@ let parseData = [
 					});
 					console.log(expertObjs);
 					const expertDropdowns = expertObjs.map((ex) =>
-						[ex.name + ": Final score = " + ex.finalScore,
+						[
+							ex.name + ": Final score = " + ex.finalScore,
 							[
 								"Assigned score: " + ex.assignedScore,
 								"Expert’s proficiencies: " + ex.proficiencies.join(", "),
@@ -16441,29 +16443,29 @@ let parseData = [
 					module.push(["Experts:", expertDropdowns]);
 					const winnersSvg = $("<svg viewbox='0 0 20 9'>").addClass("ultimate-team-winners");
 					if (winners.length == 1) {
-						$SVG("<image>").attr("href", "../HTML/img/Ultimate Team/Shield.svg")
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
 							.attr("width", 8).attr("height", 8)
 							.attr("x", 2).attr("y", 1)
 							.appendTo(winnersSvg);
-						$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${winners[0]}.png`)
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[0]}.png`)
 							.attr("width", 4).attr("height", 4)
 							.attr("x", 10).attr("y", 2)
 							.appendTo(winnersSvg);
 					}
 					if (winners.length == 2) {
-						$SVG("<image>").attr("href", "../HTML/img/Ultimate Team/Shield.svg")
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
 							.attr("width", 8).attr("height", 8)
 							.attr("x", 0).attr("y", 1)
 							.appendTo(winnersSvg);
-						$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${winners[0]}.png`)
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[0]}.png`)
 							.attr("width", 4).attr("height", 4)
 							.attr("x", 2).attr("y", 2)
 							.appendTo(winnersSvg);
-						$SVG("<image>").attr("href", "../HTML/img/Ultimate Team/Shield.svg")
+						$SVG("<image>").attr("href", `${imgDirPath}/Shield.svg`)
 							.attr("width", 8).attr("height", 8)
 							.attr("x", 10).attr("y", 1)
 							.appendTo(winnersSvg);
-						$SVG("<image>").attr("href", `../HTML/img/Ultimate Team/${winners[1]}.png`)
+						$SVG("<image>").attr("href", `${imgDirPath}/${winners[1]}.png`)
 							.attr("width", 4).attr("height", 4)
 							.attr("x", 12).attr("y", 2)
 							.appendTo(winnersSvg);
