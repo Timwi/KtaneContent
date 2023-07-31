@@ -13754,21 +13754,15 @@ let parseData = [
 		loggingTag: "Scrutiny Squares",
 		matches: [
 			{
-				regex: /Current cell: (.+)../,
+				regex: /Current cell: (.+)\.\./,
 				handler: function(matches, module) {
-					let regex = /the word (.+) in (.+) with (.+) around it on a (.+) background/
-
-					let colors = matches[1].match(regex);
-
-					console.log(colors);
-					
-					let dropdown = ["Word: " + colors[1], "Color: " + colors[2], "Border: " + colors[3], "Background: " + colors[4]];
-
+					const regex = /the word (.+) in (.+) with (.+) around it on a (.+) background/;
+					const colors = matches[1].match(regex);					
+					const dropdown = ["Word: " + colors[1], "Color: " + colors[2], "Border: " + colors[3], "Background: " + colors[4]];
 					module.push(["Current cell:", dropdown]);
 					return true;
 				}
 			},
-
 			{
 				regex: /.+/
 			}
