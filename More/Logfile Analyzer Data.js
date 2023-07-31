@@ -10922,6 +10922,133 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'notMurder',
+		loggingTag: 'Not Murder',
+		matches: [
+			{
+				regex: /Building layout:/,
+				handler: function (matches, module) {
+					module.makeMansionLayout = (roomNames) => {
+						const svgBoard = $(`<svg viewbox="-5 -5 610 410">`).addClass("not-murder");
+						const dimension = 200;
+						for (let i = 0; i < 6; i++) {
+							const startingX = (i % 3) * dimension;
+							const startingY = Math.floor(i / 3) * dimension;
+							const roomName = roomNames[i];
+							$SVG(`<rect>`)
+								.attr("x", startingX)
+								.attr("y", startingY)
+								.attr("width", dimension)
+								.attr("height", dimension)
+								.addClass("not-murder")
+								.appendTo(svgBoard);
+							$SVG("<text>")
+								.attr("x", startingX + (dimension / 2))
+								.attr("y", startingY + (dimension * 0.95))
+								.text(roomName)
+								.addClass("not-murder")
+								.addClass("not-murder-room")
+								.appendTo(svgBoard);
+						}
+						return svgBoard;
+					}
+					const roomAbbreviationDictionary = {
+						"Bal": "Ballroom",
+						"Bil": "Billiard Room",
+						"Con": "Conservatory",
+						"Din": "Dining Room",
+						"Hal": "Hall",
+						"Kit": "Kitchen",
+						"Lib": "Library",
+						"Lou": "Lounge",
+						"Stu": "Study"
+					};
+					module.roomNames = readTaggedLines(2).join(" | ").split(" | ").map(room => roomAbbreviationDictionary[room]);
+					const svg = module.makeMansionLayout(module.roomNames);
+					module.push([matches[0], [{ obj: svg, nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /Initial state:|Turn +\d:/,
+				handler: function (matches, module) {
+					const getSuspectInformation = (line) => {
+						const suspectRegex = /(.+) was in the (.+) with the (.+)\./.exec(line);
+						const suspectInfo = {};
+						suspectInfo.name = suspectRegex[1];
+						suspectInfo.room = suspectRegex[2];
+						suspectInfo.weapon = suspectRegex[3];
+						return suspectInfo;
+					}
+					const makeSuspectSvg = (sus, roomPos, numInRoom, roomIndex) => {
+						const dimension = 200;
+						const xPosOffset = 65;
+						const yPosOffset = 80;
+						let x;
+						let y;
+						switch (numInRoom) {
+							case 1:
+								x = dimension / 2 - 30;
+								y = dimension / 2 - 30;
+								break;
+							case 2:
+								x = xPosOffset * (roomPos % 2) + 40;
+								y = dimension / 2 - 40;
+								break;
+							case 3:
+								x = xPosOffset * (roomPos % 2) + (Math.floor(roomPos / 2) == 1 ? 30 : 0) + 40;
+								y = yPosOffset * Math.floor(roomPos / 2) + 15;
+								break;
+							case 4:
+								x = xPosOffset * (roomPos % 2) + 30;
+								y = yPosOffset * Math.floor(roomPos / 2) + 15;
+								break;
+							case 5:
+								x = xPosOffset * (roomPos % 3) + (Math.floor(roomPos / 3) == 1 ? 30 : 0);
+								y = yPosOffset * Math.floor(roomPos / 3);
+								break;
+						}
+						x += dimension * (roomIndex % 3);
+						y += dimension * Math.floor(roomIndex / 3);
+						const svgParts = {};
+						svgParts.image = $SVG("<image>")
+							.attr("x", x)
+							.attr("y", y)
+							.attr("width", dimension / 3.5)
+							.attr("height", dimension / 3.5)
+							.attr("href", `../HTML/img/Not Murder/${sus.name.includes("Green") ? "Reverend Green" : sus.name}.svg`);
+						const text = sus.weapon.includes("Lead") ? "PIP" : sus.weapon.toUpperCase().substring(0, 3);
+						svgParts.text = $SVG("<text>")
+							.attr("x", x + 28)
+							.attr("y", y + 70)
+							.text(text)
+							.addClass("not-murder")
+							.addClass("not-murder-weapon");
+						return svgParts;
+					}
+					const mansionSvg = module.makeMansionLayout(module.roomNames);
+					const suspectInfo = readTaggedLines(5).map(line => getSuspectInformation(line));
+					const suspectSvgs = [];
+					for (let room = 0; room < 6; room++) {
+						const roomName = module.roomNames[room];
+						const suspectsInRoom = suspectInfo.filter(suspect => suspect.room == roomName);
+						for (let suspect = 0; suspect < suspectsInRoom.length; suspect++)
+							suspectSvgs.push(makeSuspectSvg(suspectsInRoom[suspect], suspect, suspectsInRoom.length, module.roomNames.indexOf(roomName)));
+					}
+					suspectSvgs.forEach(elem => {
+						elem.image.appendTo(mansionSvg);
+						elem.text.appendTo(mansionSvg);
+					});
+					module.push([matches[0], [{ obj: mansionSvg, nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'notNumberPad',
 		loggingTag: 'Not Number Pad',
 		matches: [
