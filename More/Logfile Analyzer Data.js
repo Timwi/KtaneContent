@@ -6962,6 +6962,96 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "JuxtacoloredSquaresModule",
+		loggingTag: "Juxtacolored Squares",
+		matches: [
+			{
+				regex: /^Using rule seed: \d+$/,
+				handler: function (matches, module) {
+					module.colourInfo = {
+						"Cyan": ["C", "#00feffdd"],
+						"Gray": ["A", "#b4b4b4dd"],
+						"Forest": ["F", "#002b14dd"],
+						"Black": ["", "#000000dd"],
+						"DarkBlue": ["B", "#1313d4dd"],
+						"Azure": ["Z", "#2875fdde"],
+						"Brown": ["N", "#b16110dd"],
+						"Magenta": ["M", "#ff00ffdd"],
+						"Orange": ["O", "#fe9700dd"],
+						"Jade": ["J", "#87ed8ddd"],
+						"Green": ["G", "#00ff00dd"],
+						"Mauve": ["V", "#e0a9fdde"],
+						"Chestnut": ["H", "#930400dd"],
+						"Red": ["R", "#ff0000dd"],
+						"Purple": ["P", "#8516cadd"],
+						"Yellow": ["Y", "#ffff00dd"],
+					}
+					module.attemptCount = 0;
+				}
+			},
+			{
+				regex: /^Colors on module: ((?:\w+, ){15}\w+)$/,
+				handler: function (matches, module) {
+					module.gridSvg = $('<svg viewBox="-5 -5 410 410" xmlns="http://www.w3.org/2000/svg">').addClass("juxtacolored-squares");
+					$SVG("<rect>").attr("width", 400).attr("height", 400).addClass("border").appendTo(module.gridSvg);
+					for (let line = 0; line < 3; line++)
+						$SVG("<path>").attr("d", `M${100 * (line + 1)} 0 v400 M0 ${100 * (line + 1)} h400`).addClass("border").appendTo(module.gridSvg);
+
+					const colours = matches[1].split(", ");
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							const colour = colours[row * 4 + col];
+							$SVG("<rect>")
+								.attr("x", col * 100).attr("y", row * 100)
+								.attr("width", 100).attr("height", 100)
+								.attr("fill", module.colourInfo[colour][1]).prependTo(module.gridSvg);
+							$SVG("<text>")
+								.attr("x", col * 100 + 50).attr("y", row * 100 + 50)
+								.text(module.colourInfo[colour][0])
+								.addClass(colour == "Forest" ? "outlined" : "")
+								.appendTo(module.gridSvg);
+						}
+					}
+					module.currentDropdown = [`Attempt ${++module.attemptCount}`, [{ label: "Generated colors:", obj: module.gridSvg }]];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /^Expected key presses: ((?:(?:[A-D][1-4])(?:, |$))+)$/,
+				handler: function (matches, module) {
+					const correctCells = matches[1].split(", ");
+					for (const cell of correctCells) {
+						$SVG("<circle>")
+							.attr("cx", 50 + 100 * "ABCD".indexOf(cell.charAt(0)))
+							.attr("cy", 50 + 100 * "1234".indexOf(cell.charAt(1)))
+							.attr("r", 40).addClass("outer ring").appendTo(module.gridSvg);
+						$SVG("<circle>")
+							.attr("cx", 50 + 100 * "ABCD".indexOf(cell.charAt(0)))
+							.attr("cy", 50 + 100 * "1234".indexOf(cell.charAt(1)))
+							.attr("r", 40).addClass("inner ring").appendTo(module.gridSvg);
+					}
+					module.currentDropdown[1].push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /^Button #(\d|1[1-5]) \(\w+\) was incorrect at this time\.$/,
+				handler: function (matches, module) {
+					const position = parseInt(matches[1]);
+					$SVG("<path>")
+						.attr("d", `M${position % 4 * 100 + 20} ${(position - position % 4) / 4 * 100 + 20} l60 60 m-60 0 l60 -60`)
+						.addClass("cross").appendTo(module.gridSvg);
+					module.currentDropdown[1].push(`You pressed ${"ABCD".charAt(position % 4)}${(position - position % 4) / 4 + 1}, which was incorrect.`);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'juxtacolourFlash',
 		loggingTag: 'Juxtacolour Flash',
 		matches: [
@@ -14176,7 +14266,7 @@ let parseData = [
 				regex: /Current cell: (.+)\.\./,
 				handler: function(matches, module) {
 					const regex = /the word (.+) in (.+) with (.+) around it on a (.+) background/;
-					const colors = matches[1].match(regex);					
+					const colors = matches[1].match(regex);
 					const dropdown = ["Word: " + colors[1], "Color: " + colors[2], "Border: " + colors[3], "Background: " + colors[4]];
 					module.push(["Current cell:", dropdown]);
 					return true;
