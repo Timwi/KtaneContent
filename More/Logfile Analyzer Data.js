@@ -4178,6 +4178,46 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "DIWindow",
+		loggingTag: "Drive-In Window",
+		matches: [
+			{
+				regex: /Generated code is as follows:/,
+				handler: function (matches, module) {
+					const getFoodObj = (line) => {
+						const lineMatch = line.match(/(.+) will cost (.+) dollars./);
+						const food = {};
+						food.name = lineMatch[1];
+						food.amount = lineMatch[2];
+						return food;
+					}
+					const printFood = (food) => {
+						const maxSize = 36;
+						const dotAmount = maxSize - food.name.length - food.amount.length - 1;
+						let dotStr = "";
+						for (let i = 0; i < dotAmount; i++)
+							dotStr += ".";
+						return `\t\t${[food.name, dotStr, `$${food.amount}`].join("")}`;
+					}
+					const restuarantName = readTaggedLine().match(/Hi\. Welcome to (.+)\./)[1];
+					readTaggedLine();
+					const menu = readTaggedLines(3).map(line => getFoodObj(line));
+					const menuLog = menu.map(food => printFood(food));
+					readTaggedLine();
+					const sides = readTaggedLines(3).map(line => getFoodObj(line));
+					const sidesLog = sides.map(food => printFood(food));
+					const log = `${menuLog.join("\n")}\n${sidesLog.join("\n")}`;
+					readTaggedLine();
+					module.push({ label: `Wecome to ${restuarantName}`, obj: pre(log) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Dungeon",
 		moduleID: "dungeon",
 		loggingTag: "Dungeon",
