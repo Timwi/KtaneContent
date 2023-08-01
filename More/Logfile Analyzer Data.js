@@ -17001,6 +17001,9 @@ let parseData = [
 					module.push(expertCount);
 					module.push({ label: `Winner${winners.length == 1 ? "" : "s"}:`, obj: winnersSvg, nobullet: true });
 				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
