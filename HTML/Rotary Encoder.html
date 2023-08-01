@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Rotary Encoder — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const center = { x: 200, y: 320 };
+        // Each element is a "column", going from the centre outwards. Direction starts positive x and then goes clockwise.
+        const cells = [
+            "FYFKIS",
+            "IIYSUY",
+            "sFuIkF",
+            "uykFsu",
+            "KKUYSI",
+            "YSIUFK",
+        ];
+
+        $(() => {
+            const mazeSvg = $(".circle-maze");
+            mazeSvg.append(MakeSvgElem("text", { class: "start", x: 200, y: 15 }, "Start Here"));
+            mazeSvg.append(MakeSvgElem("path", { d: "M200 40 v70 m-15 -15 l15 15 l15 -15" }));
+            for (let angle = 0; angle < 6; angle++) {
+                const rads = angle * Math.PI / 3;
+                const dirFrom = { x: Math.cos(rads), y: Math.sin(rads) };
+                const dirTo = { x: Math.cos(rads + Math.PI / 3), y: Math.sin(rads + Math.PI / 3) };
+                for (let ring = 0; ring < 6; ring++) {
+                    const shortDist = 14 + 186 * ring / 6;
+                    const longDist = 14 + 186 * (ring + 1) / 6;
+                    mazeSvg.append(MakeSvgElem("path", {
+                        class: "highlightable cell",
+                        d: `M${center.x + shortDist * dirFrom.x} ${center.y + shortDist * dirFrom.y}
+                            A${shortDist} ${shortDist} 0 0 1 ${center.x + shortDist * dirTo.x} ${center.y + shortDist * dirTo.y}
+                            L${center.x + longDist * dirTo.x} ${center.y + longDist * dirTo.y}
+                            A${longDist} ${longDist} 0 0 0 ${center.x + longDist * dirFrom.x} ${center.y + longDist * dirFrom.y}z` }));
+                    const letter = cells[angle].charAt(ring);
+                    const transform = letter === letter.toLowerCase() ? `scale(-1 1) rotate(${-(angle + 2) * 60})` : `rotate(${(angle + 2) * 60})`;
+                    mazeSvg.append(MakeSvgElem("text", { class: "cell", x: center.x + 2, y: center.y - shortDist - 23, transform: transform}, letter));
+                }
+            }
+        });
+    </script>
+    <style>
+        ol {
+            list-style-type: circle;
+            font-size: 15px;
+            font-style: italic;
+        }
+
+        .circle-maze {
+            padding: 0;
+            margin: 0;
+            --colour: black;
+        }
+        .dark .circle-maze {
+            --colour: #DDD;
+        }
+        .circle-maze :not(text) {
+            stroke: var(--colour);
+            stroke-width: 1.5px;
+            stroke-linecap: butt;
+            fill: transparent;
+        }
+        .circle-maze text {
+            dominant-baseline: mathematical;
+            text-anchor: middle;
+            fill: var(--colour);
+            font-size: 35px;
+        }
+        .circle-maze text.cell {
+            font: 30px 'Primitiva';
+            transform-origin: 200px 320px;
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+            width: 100%;
+            text-align: center;
+            font-size: 21px;
+        }
+        .alphabetical-order td {
+            width: 7.7%;
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 3'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rotary Encoder</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Rotary Encoder.svg" class="diagram">
+                <h2>On the Subject of Rotary Encoder</h2>
+                <p class="flavour-text">Maybe there isn't a God after all, maybe there's only a universe rotating by itself like a millstone.</p>
+
+                <p>This module have 6 buttons that all needs to be lit up in order to solve it.</p>
+                <ol>
+                    <li>
+                        Determine the first correct symbol by adding the first number of the serial number to the number of modules on the bomb and move that many spaces clockwise in the maze on the next page, starting from
+                        the marked spot. Then add the last number of the serial number to the number of modules and move that many spaces inwards. That is your starting position—DO NOT PRESS IT YET.
+                    </li>
+                    <li>
+                        Take the first character in the serial number—if this is a letter, convert it into its alphabetical position—then move in the maze on the next page, starting from your starting position following
+                        these rules:
+                        <ol>
+                            <li>if the number is divisible by 7 move one space outwards.</li>
+                            <li>otherwise if the number is divisible by 11 move one space counterclockwise.</li>
+                            <li>otherwise if the number is divisible by 9 move one space clockwise.</li>
+                            <li>otherwise if the number is divisible by 5 move one space inwards.</li>
+                            <li>otherwise if the number is divisible by 2 move one space outwards.</li>
+                            <li>otherwise move one space counterclockwise.</li>
+                            <li>if there is a vowel in the serial number invert all clockwise and counter clockwise movements.</li>
+                            <li>if you ever find yourself at the outward or inward table limit just keep going from the opposite side (IN -> OUT, OUT -> IN) staying in the same table slice.</li>
+                        </ol>
+                    </li>
+                    <li>
+                        If none of the buttons are lit up, press the one with the symbol on your the current cell in the maze; otherwise, you may only press a button once the button counterclockwise from it has lit up (if the symbol
+                        does not correspond to the symbol you are on in the table, press the center button to cycle the symbols on the buttons clockwise). After pressing <b>any</b> button, repeat the previous step but use the
+                        next character of the serial number, wrapping back to the start if you reach the end.
+                    </li>
+                    <li>Repeat until all the buttons are lit up.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rotary Encoder</span>
+            </div>
+            <div class="page-content">
+                <svg viewBox="-5 -5 410 550" xmlns="http://www.w3.org/2000/svg" class="circle-maze"></svg>      
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Appendix Alphabet</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix Alphabet: Alphabet References</h2>
+                <h3>Alphabetical Order</h3>
+                <table class="alphabetical-order">
+                    <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th></tr>
+                    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td></tr>
+                </table>
+                <table class="alphabetical-order">
+                    <tr><th>N</th><th>O</th><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th><th>U</th><th>V</th><th>W</th><th>X</th><th>Y</th><th>Z</th></tr>
+                    <tr><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>
