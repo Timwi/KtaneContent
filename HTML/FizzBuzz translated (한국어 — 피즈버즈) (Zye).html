@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>피즈버즈 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/Modules/FizzBuzz.css">
+    <style>
+        li { word-break: keep-all; }
+    </style>
+    <script>
+        var DefaultTable = [
+            [7, 3, 2, 4, 5], // ≥ 3 battery holders present
+            [3, 4, 9, 2, 8], // Serial & parallel ports present
+            [4, 5, 8, 8, 2], // 3 letters & 3 digits in serial number
+            [2, 3, 7, 9, 1], // DVI & Stereo RCA ports present
+            [1, 2, 2, 5, 3], // ≥ 5 batteries present
+            [3, 1, 8, 3, 4], // None of the above
+            [6, 6, 1, 2, 8] // ≥ 2 strikes
+        ];
+
+        function GenerateOffsetTable(rnd) {
+            if (rnd.seed === 1) {
+                return DefaultTable.slice(0);
+            }
+            var rules = [];
+            for (var i = 0; i < 7; i++) {
+                rules.push([]);
+            }
+            for (var i = 0; i < 5; i++) {
+                let list = generateIntList(1, 10);
+                list = rnd.shuffleFisherYates(list);
+                list.splice(0, 3);
+                list.push(list[rnd.next(0, 6)]);
+                for (var j = 0; j < 7; j++) {
+                    rules[j][i] = list[j];
+                }
+            }
+            return rules;
+        }
+
+        function generateIntList(min, max) {
+            var result = [];
+            for (var i = min; i < max; i++) {
+                result.push(i);
+            }
+            return result;
+        }
+
+        var divisibilityRules = [
+            [ 2, 4, 5, 8 ],
+            [ 3, 7, 9, 11 ]
+        ];
+        var NumNames = [null, "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+
+        function GenerateDivisibilityRules(rnd) {
+            if (rnd.seed === 1) {
+                return [ 3, 5 ];
+            }
+            var result = [
+                divisibilityRules[0][rnd.next(0, divisibilityRules[0].length)],
+                divisibilityRules[1][rnd.next(0, divisibilityRules[1].length)]
+            ];
+            result.sort((a, b) => a - b);
+            return result;
+        }
+
+        var ports = ["PS/2", "DVI-D", "Stereo RCA", "RJ-45"];
+        var indicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK", "NLL"];
+
+        var ruleSet1 = [
+            {
+                Id: "AtLeast2Strikes",
+                RuleText: "폭탄에서 실수를 2회 이상 하였음."
+            },
+            {
+                Id: "LessThanOneThirdStartingTime",
+                RuleText: "카운트다운 타이머에 폭탄의 원래 제한 시간의 3분의 1 미만의 시간이 남아있음."
+            },
+            {
+                Id: "MoreThanTwoThirdsModulesSolved",
+                RuleText: "폭탄에 있는 모듈 개수의 3분의 2를 넘는 모듈들을 해제함."
+            }
+        ];
+
+        var ruleSet2 = [
+            {
+                Id: "SerialAndParallelPortPresent",
+                RuleText: "폭탄에 Serial 포트<u>와</u> 병렬 포트가 적어도 한 개씩 있음."
+            },
+            {
+                Id: "ThreeLettersAndThreeDigitsInSerialNumber",
+                RuleText: "시리얼 넘버에 로마자 3개와 숫자 3개가 있음."
+            },
+            {
+                Id: "SerialNumberHasVowel",
+                RuleText: "시리얼 넘버에 모음이 있음."
+            },
+            {
+                Id: "GreenNumberPresent",
+                RuleText: "모듈에 초록색 자연수가 있음."
+            }
+        ];
+
+        var ruleSet3 = [
+            {
+                Id: "AtLeastXBatteryHoldersPresent",
+                RuleText: a => `폭탄에 배터리 홀더가 ${a}개 이상 있음.`,
+                GenRule: rnd => [ rnd.next(2, 4) ],
+            },
+            {
+                Id: "AtLeastXBatteriesPresent",
+                RuleText: a => `폭탄에 배터리가 ${a}개 이상 있음.`,
+                GenRule: rnd => [ rnd.next(4, 6) ],
+            },
+            {
+                Id: "XAndYPortsPresent",
+                RuleText: (a, b) => `폭탄에 ${a} 포트<u>와</u> ${b} 포트가 적어도 한 개씩 있음.`,
+                GenRule: rnd => {
+                    var port1Index = rnd.next(0, 4);
+                    var port2Index;
+                    do { port2Index = rnd.next(0, 4); } while (port2Index === port1Index);
+                    var port1 = ports[port1Index];
+                    var port2 = ports[port2Index];
+                    return [
+                        port1, port2
+                    ]
+                },
+            },
+            {
+                Id: "IndicatorXPresent",
+                RuleText: (a, b) => `폭탄에 ${a} ${b} 지시등이 있음.`,
+                GenRule: rnd => {
+                    var label = indicators[rnd.next(0, indicators.length)];
+                    var lit = rnd.next(0, 2) === 0;
+                    return [lit ? "점등된" : "점등되지 않은", label]
+                },
+            },
+        ];
+
+        function GenerateRuleSet(rnd) {
+            if (rnd.seed === 1) {
+                return [
+                    ruleSet3[0].RuleText(3),
+                    ruleSet2[0].RuleText,
+                    ruleSet2[1].RuleText,
+                    ruleSet3[2].RuleText("DVI-D", "Stereo RCA"),
+                    ruleSet3[1].RuleText(5),
+                    "위 조건들에 해당하지 않음.",
+                    ruleSet1[0].RuleText
+                ];
+            }
+            var result = [];
+
+            var ix1 = rnd.next(0, ruleSet2.length);
+            var ix2;
+            do { ix2 = rnd.next(0, ruleSet2.length); } while (ix2 === ix1);
+            result.push(ruleSet2[ix1].RuleText);
+            result.push(ruleSet2[ix2].RuleText);
+
+            var ix1 = rnd.next(0, ruleSet3.length);
+            var ix2, ix3;
+            do { ix2 = rnd.next(0, ruleSet3.length); } while (ix2 === ix1);
+            do { ix3 = rnd.next(0, ruleSet3.length); } while (ix3 === ix1 || ix3 === ix2);
+            var rs3Rule1 = ruleSet3[ix1];
+            var rs3Rule2 = ruleSet3[ix2];
+            var rs3Rule3 = ruleSet3[ix3];
+            var rs3Rule1Configs = rs3Rule1.GenRule(rnd);
+            var rs3Rule2Configs = rs3Rule2.GenRule(rnd);
+            var rs3Rule3Configs = rs3Rule3.GenRule(rnd);
+            result.push(rs3Rule1.RuleText(rs3Rule1Configs[0], rs3Rule1Configs[1]));
+            result.push(rs3Rule2.RuleText(rs3Rule2Configs[0], rs3Rule2Configs[1]));
+            result.push(rs3Rule3.RuleText(rs3Rule3Configs[0], rs3Rule3Configs[1]));
+
+            result = rnd.shuffleFisherYates(result); // After this, they are in the same order as C#
+
+            result.push("위 조건들에 해당하지 않음.");
+            result.push(ruleSet1[rnd.next(0, ruleSet1.length)].RuleText);
+
+            return result;
+        }
+
+        function setRules(rnd) {
+            var nums = document.getElementsByClassName("rule-num");
+            var conditions = document.getElementsByClassName("rule-condition");
+            var table = GenerateOffsetTable(rnd);
+            var ruleSet = GenerateRuleSet(rnd);
+
+            var divisibilityRules = GenerateDivisibilityRules(rnd);
+            for (var el of document.getElementsByClassName("rule-div-1")) el.innerHTML = NumNames[divisibilityRules[0]];
+            for (var el of document.getElementsByClassName("rule-div-2")) el.innerHTML = NumNames[divisibilityRules[1]];
+
+            var ix = ruleSet.indexOf("위 조건들에 해당하지 않음.");
+            var noneRule = ruleSet.splice(ix, 1)[0];
+            var noneNums = table.splice(ix, 1)[0];
+
+            var newRuleSet = [];
+            var newTable = [];
+            var indices;
+            if (rnd.seed === 1) {
+                indices = [0, 1, 2, 3, 5, 4];
+            } else {
+                indices = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(indices);
+            }
+            for (var i = 0; i < 6; i++) {
+                newRuleSet.push(ruleSet[indices[i]]);
+                newTable.push(table[indices[i]]);
+            }
+
+            newRuleSet.push(noneRule);
+            newTable.push(noneNums);
+
+            for (var i = 0; i < 7; i++) {
+                conditions[i].innerHTML = newRuleSet[i];
+                for (var j = 0; j < 5; j++) {
+                    nums[i * 5 + j].innerHTML = newTable[i][j];
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">피즈버즈</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/FizzBuzz.svg" class="diagram">
+            <h2>피즈버즈에 대하여</h2>
+            <p class="flavour-text">
+                왜 폭탄에 369 게임 같은 걸 넣어놓은 거죠? 잠깐... 좀 이상한데...
+
+            <ul>
+                <li>
+                    이 모듈에는 7자리 자연수가 표시된 화면이 세 개 있습니다.
+                <li>
+                    각 자연수에 대해, 자연수의 색깔에 해당하는 열을 아래 표에서 찾으세요. 해당 열을 아래로 훑으며 조건이 성립하는 행의 숫자들을 기억하세요.
+                <li>
+                    기억한 숫자들을 모두 더한 합을 구합니다. 이 합을 화면에 표시된 자연수의 각 자리 숫자에 더해 새로운 7자리 자연수(가장 높은 자릿수가 0인 경우 6자리 이하의 자연수)를 구합니다.
+                    <b>이 연산을 할 때 발생하는 받아올림은 모두 무시하세요.</b>
+                <li>
+                    새로운 자연수가 <span class="rule-div-1">3</span>의 배수도 <span class="rule-div-2">5</span>의 배수도 아니라면, 아무것도 하지 마세요.<br>
+                    새로운 자연수가 <span class="rule-div-1">3</span>의 배수지만 <span class="rule-div-2">5</span>의 배수는 아니라면, 버튼을 이용해 화면에 “FIZZ”가 표시되게 하세요.<br>
+                    새로운 자연수가 <span class="rule-div-2">5</span>의 배수지만 <span class="rule-div-1">3</span>의 배수는 아니라면, 버튼을 이용해 화면에 “BUZZ”가 표시되게 하세요.<br>
+                    새로운 자연수가 <span class="rule-div-2">5</span>의 배수면서 <span class="rule-div-1">3</span>의 배수라면, 버튼을 이용해 화면에 “FIZZBUZZ”가 표시되게 하세요.
+                <li>
+                    이 과정을 나머지 자연수들에 대해서도 반복한 뒤, 세 화면이 모두 올바르게 표시되었다면 "SUBMIT"를 누르세요.
+            </ul>
+
+            <table class='fizz-buzz'>
+                <tr class='rotated'>
+                    <th class='corner'>조건
+                    <th><span class='text'>빨강</span>
+                    <th><span class='text'>초록</span>
+                    <th><span class='text'>파랑</span>
+                    <th><span class='text'>노랑</span>
+                    <th><span class='text'>흰색</span>
+                </tr>
+
+                <tr><th><span class="rule-condition">폭탄에 배터리 홀더가 3개 이상 있음.</span><td class="rule-num">7<td class="rule-num">3<td class="rule-num">2<td class="rule-num">4<td class="rule-num">5</tr>
+                <tr><th><span class="rule-condition">폭탄에 Serial 포트<u>와</u> 병렬 포트가 적어도 한 개씩 있음.</span><td class="rule-num">3<td class="rule-num">4<td class="rule-num">9<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">시리얼 넘버에 문자 3개와 숫자 3개가 있음.</span><td class="rule-num">4<td class="rule-num">5<td class="rule-num">8<td class="rule-num">8<td class="rule-num">2</tr>
+                <tr><th><span class="rule-condition">폭탄에 DVI-D 포트<u>와</u> Stereo RCA 포트가 적어도 한 개씩 있음.</span><td class="rule-num">2<td class="rule-num">3<td class="rule-num">7<td class="rule-num">9<td class="rule-num">1</tr>
+                <tr><th><span class="rule-condition">폭탄에서 실수를 2회 이상 하였음.</span><td class="rule-num">6<td class="rule-num">6<td class="rule-num">1<td class="rule-num">2<td class="rule-num">8</tr>
+                <tr><th><span class="rule-condition">폭탄에 배터리가 5개 이상 있음.</span><td class="rule-num">1<td class="rule-num">2<td class="rule-num">2<td class="rule-num">5<td class="rule-num">3</tr>
+                <tr><th><span class="rule-condition">위 조건들에 해당하지 않음.</span><td class="rule-num">3<td class="rule-num">1<td class="rule-num">8<td class="rule-num">3<td class="rule-num">4</tr>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+</div>
+</body>
+</html>

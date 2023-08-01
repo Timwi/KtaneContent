@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>3D 미로 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/Modules/3DMaze.css">
+    <script>
+        function setRules(rnd)
+        {
+            let WIDTH = 8, NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
+            let mazeLabels = "ABC,ABD,ABH,ACD,ACH,ADH,BCD,BCH,BDH,CDH".split(',');
+            let tds = document.getElementsByClassName('tmaze-td');
+
+            function neighbor(cell, dir)
+            {
+                switch (dir)
+                {
+                    case NORTH: return { x: cell.x, y: (cell.y + WIDTH - 1) % WIDTH };
+                    case EAST: return { x: (cell.x + 1) % WIDTH, y: cell.y };
+                    case SOUTH: return { x: cell.x, y: (cell.y + 1) % WIDTH };
+                    default: return { x: (cell.x + WIDTH - 1) % WIDTH, y: cell.y };
+                }
+            }
+
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels = mazeLabels[mapIndex];
+                let mapData = [...Array(WIDTH).keys()].map(col => [...Array(WIDTH).keys()].map(cell => ({ label: ' ', n_wall: true, w_wall: true })));
+                let todo = [...Array(WIDTH * WIDTH).keys()].map(ix => ({ x: ix % WIDTH, y: (ix / WIDTH)|0 }));
+                let visited = [];
+                let done = [];
+
+                // Choose a random square to start from
+                let startIx = rnd.next(0, todo.length);
+                visited.push(todo[startIx]);
+                todo.splice(startIx, 1);
+
+                // Generate a maze
+                while (todo.length > 0)
+                {
+                    let cellIx = rnd.next(0, visited.length);
+                    let cell = visited[cellIx];
+
+                    let validWalls = [ NORTH, EAST, SOUTH, WEST ].map(dir => ({ dir: dir, cell: neighbor(cell, dir) })).filter(c => todo.some(t => t.x === c.cell.x && t.y === c.cell.y));
+                    if (validWalls.length == 0)
+                    {
+                        visited.splice(cellIx, 1);
+                        done.push(cell);
+                        continue;
+                    }
+
+                    let wallIx = rnd.next(0, validWalls.length);
+                    let wall = validWalls[wallIx];
+                    switch (wall.dir)
+                    {
+                        case NORTH: mapData[cell.x][cell.y].n_wall = false; break;
+                        case WEST: mapData[cell.x][cell.y].w_wall = false; break;
+                        case SOUTH: mapData[wall.cell.x][wall.cell.y].n_wall = false; break;
+                        default: mapData[wall.cell.x][wall.cell.y].w_wall = false; break;
+                    }
+                    todo = todo.filter(t => t.x !== wall.cell.x || t.y !== wall.cell.y);
+                    visited.push(wall.cell);
+                }
+
+                // Remove 20–35% of the remaining walls to make the maze more spacious
+                let remainingWalls = [];
+                for (let x = 0; x < WIDTH; x++)
+                    for (let y = 0; y < WIDTH; y++)
+                    {
+                        if (mapData[x][y].n_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2);
+                        if (mapData[x][y].w_wall)
+                            remainingWalls.push((WIDTH * y + x) * 2 + 1);
+                    }
+                let percentage = (rnd.nextDouble() * .15) + .2;
+                let removeWalls = (remainingWalls.length * percentage)|0;
+                while (removeWalls > 0)
+                {
+                    let wallIx = rnd.next(0, remainingWalls.length);
+                    let wall = remainingWalls[wallIx];
+                    remainingWalls.splice(wallIx, 1);
+                    let x = (wall >> 1) % WIDTH;
+                    let y = ((wall >> 1) / WIDTH)|0;
+
+                    if (wall % 2 === 1)
+                    {
+                        // Make sure not to remove a wall that would leave an entire row devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(xx => mapData[xx][y].w_wall).length === 1)
+                            continue;
+                        mapData[x][y].w_wall = false;
+                    }
+                    else
+                    {
+                        // Make sure not to remove a wall that would leave an entire column devoid of walls
+                        if ([...Array(WIDTH).keys()].filter(yy => mapData[x][yy].n_wall).length === 1)
+                            continue;
+                        mapData[x][y].n_wall = false;
+                    }
+                    removeWalls--;
+                }
+
+                // Select 33 random cells for the labels (letters and cardinals)
+                done.push(...visited);
+                rnd.shuffleFisherYates(done);
+                // Add the labels (5 of each letter)
+                for (let letterIx = 0; letterIx < labels.length; letterIx++)
+                    for (let i = 0; i < 5; i++)
+                        mapData[done[5 * letterIx + i].x][done[5 * letterIx + i].y].label = labels[letterIx];
+                // Add the 3 asterisks
+                for (let i = 0; i < 3; i++)
+                    mapData[done[30 + i].x][done[30 + i].y].label = '*';
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${create2DMazeSvg(
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].n_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].w_wall)),
+                    [...Array(WIDTH).keys()].map(row => [...Array(WIDTH).keys()].map(col => mapData[col][row].label).join('')),
+                    false, false, '')}</div>`;
+            }
+
+            let phrases = [
+                "MAZE GAMER",
+                "MAZE TRAVELER",
+                "MAZE CORRIDOR",
+                "MAZE SOJOURNER",
+                "MAZE VOYAGER",
+                "HELP IM LOST",
+                "WINDING MAZE",
+                "TWISTY PASSAGES",
+                "ADVENTURING",
+                "FIND THE EXIT",
+                "WHERES THE EXIT",
+                "GO TO THE EXIT",
+                "FIND THE WALL",
+                "UPON DISCOVERY",
+                "ON A JOURNEY",
+                "SOS WHERE AM I",
+                "SHOW ME AROUND",
+                "I NEED ASSISTANCE",
+                "LABYRINTHIAN",
+                "PATH FINDER",
+                "CARDINAL DIRECTION",
+                "WHAT IS THIS PLACE",
+                "GO IN CIRCLES",
+                "DEAD END",
+                "TURN AROUND"
+            ];
+            let ix = rnd.next(0, phrases.length);
+            document.getElementById('row-phrase').innerText = phrases[ix];
+            phrases.splice(ix, 1);
+            document.getElementById('col-phrase').innerText = phrases[rnd.next(0, phrases.length)];
+
+            makeHighlightCells();
+        }
+
+        function setDefaultRules()
+        {
+            let tds = document.getElementsByClassName('tmaze-td');
+            for (let mapIndex = 0; mapIndex < 10; mapIndex++)
+            {
+                let labels, nWalls, wWalls;
+
+                switch (mapIndex)
+                {
+                    // ABC
+                    case 0:
+                        labels = [ "     A  ", " *A    B", "A  B C  ", " C  *  B", "    A   ", " B C  B ", "* C     ", "    A C " ];
+                        nWalls = [ "11000110", "00001000", "01011100", "00100011", "10011001", "00000100", "00110010", "11000001" ];
+                        wWalls = [ "10101001", "10100100", "00010001", "01010110", "01010001", "01100100", "01001101", "00101100" ];
+                        break;
+
+                    // ABD
+                    case 1:
+                        labels = [ "A  B  A*", "  D     ", "     D B", " A B    ", "  *   A ", "D   A   ", "  B  D  ", " D  *  B" ];
+                        nWalls = [ "10100011", "01100100", "00011010", "00100000", "11100110", "00010100", "10100001", "00011000" ];
+                        wWalls = [ "10000010", "11000100", "00010001", "01000100", "10010001", "00010100", "01000101", "00010100" ];
+                        break;
+
+                    // ABH
+                    case 2:
+                        labels = [ "B    A H", "* H     ", "B   B   ", "    * HA", " A H    ", "    A B ", " B   *  ", "A  H    " ];
+                        nWalls = [ "11101011", "01011000", "10001101", "01010000", "00001000", "00110100", "00101110", "01100000" ];
+                        wWalls = [ "10010000", "01000001", "00110011", "11010101", "11010010", "11100000", "00010101", "00000001" ];
+                        break;
+
+                    // ACD
+                    case 3:
+                        labels = [ "D       ", "  C D* C", " *   C  ", " A      ", "D  C D  ", "  A  * A", "   A  D ", "A    C  " ];
+                        nWalls = [ "10111011", "01100110", "00000111", "01000000", "11101110", "01100100", "00010110", "01101100" ];
+                        wWalls = [ "00001000", "11001100", "01110010", "10011001", "10001001", "01100101", "01010000", "10000010" ];
+                        break;
+
+                    // ACH
+                    case 4:
+                        labels = [ "H C   A ", "*   H   ", "      *C", " A   H  ", "C H C A ", " *     A", "   C H  ", "  A     " ];
+                        nWalls = [ "00111100", "11010000", "01100110", "00000000", "01000100", "00000001", "11100010", "01011011" ];
+                        wWalls = [ "10000110", "10010001", "01010101", "10000001", "11000000", "01010101", "10010000", "01000010" ];
+                        break;
+
+                    // ADH
+                    case 5:
+                        labels = [ "D D  *  ", "    H  A", " *H   A ", "A  D    ", "    HD  ", "* H    A", "D       ", "   A H  " ];
+                        nWalls = [ "01110101", "00001110", "00000111", "01001100", "00110101", "11100000", "01100000", "11001000" ];
+                        wWalls = [ "10100100", "11110000", "11011000", "01110000", "10000101", "10001110", "00011111", "10000101" ];
+                        break;
+
+                    // BCD
+                    case 6:
+                        labels = [ "     B  ", "C D   * ", " * B  C ", " C    B ", "    C  D", "B    D  ", " C  * D ", "D  B    " ];
+                        nWalls = [ "01011110", "01101011", "01100100", "10000111", "10110011", "10011001", "01100010", "10111001" ];
+                        wWalls = [ "10010000", "00001010", "11101000", "00001000", "00100010", "00010001", "00000110", "00100001" ];
+                        break;
+
+                    // BCH
+                    case 7:
+                        labels = [ "C   H   ", "  C    H", "  * B   ", "B  H*   ", " H   B C", "   *    ", "  B C   ", " C   H B" ];
+                        nWalls = [ "10110011", "01010111", "10101100", "00000110", "01111110", "00100010", "10010100", "00000110" ];
+                        wWalls = [ "10000100", "01001000", "01111001", "10001000", "10001000", "01101101", "01101001", "00010010" ];
+                        break;
+
+                    // BDH
+                    case 8:
+                        labels = [ "  D B  H", "   *  D ", "  H *  B", "D    B  ", "    D  H", "  B     ", "   H  H*", "D    B  " ];
+                        nWalls = [ "00100001", "00010001", "11011000", "11011011", "00010011", "10000000", "01101100", "01001111" ];
+                        wWalls = [ "01101000", "11010111", "00000110", "00100000", "00110100", "10001110", "11000000", "00011010" ];
+                        break;
+
+                    // CDH
+                    default:
+                        labels = [ "  H  D  ", "    C*  ", "   H   D", "H    D  ", "  C     ", "C  D C H", "*D  H * ", "       C" ];
+                        nWalls = [ "01011010", "00100100", "00000000", "01000010", "01000010", "01100110", "01011010", "10100101" ];
+                        wWalls = [ "11001001", "11110111", "00100010", "00011100", "10011100", "10001000", "11000001", "00101010" ];
+                        break;
+                }
+
+                tds[mapIndex].innerHTML = `<div class='tmaze-outer'>${create2DMazeSvg(
+                    nWalls.map(row => row.split('').map(ch => ch === '1')),
+                    wWalls.map(row => row.split('').map(ch => ch === '1')),
+                    labels, false, false, '')}</div>`;
+            }
+            document.getElementById('col-phrase').innerText = 'HELP IM LOST';
+            document.getElementById('row-phrase').innerText = 'MAZE GAMER';
+
+            makeHighlightCells();
+        }
+
+        function create2DMazeSvg(nWalls, wWalls, labels, frame, omitAxes, extra)
+        {
+            let ySize = nWalls.length;
+            let xSize = nWalls[0].length;
+
+            function n(x, y) { return frame && y % ySize == 0 ? true : nWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+            function w(x, y) { return frame && x % xSize == 0 ? true : wWalls[(y + ySize) % ySize][(x + xSize) % xSize]; }
+
+            function isCell(x, y) { return x % 2 != 0 && y % 2 != 0; }
+            function isOn(x, y) {
+                return (x % 2 == 0)
+                    ? (y % 2 == 0)
+                        ? (x != 0 && n((x >> 1) - 1, y >> 1)) || (x != xSize * 2 && n(x >> 1, y >> 1)) || (y != 0 && w(x >> 1, (y >> 1) - 1)) || (y != ySize * 2 && w(x >> 1, y >> 1))
+                        : w(x >> 1, y >> 1)
+                    : (y % 2 == 0)
+                        ? n(x >> 1, y >> 1)
+                        : false;
+            }
+
+            function getX(gridX) { return (gridX >> 1) * 25 + (gridX % 2) * 5; }
+            function getY(gridY) { return (gridY >> 1) * 25 + (gridY % 2) * 5; }
+            function getCoord(p) { return `${getX(p.X)},${getY(p.Y)}`; }
+
+            let offset = omitAxes ? 0 : 14;
+            return `<svg viewBox='${-offset} ${-offset} ${25 * xSize + 5 + offset} ${25 * ySize + 5 + offset}' class='tmaze'>${
+                extra +
+                // Polygons
+                `<path d='${BoolsToPaths([...Array(2 * xSize + 1).keys()].map(x => [...Array(2 * ySize + 1).keys()].map(y => isOn(x, y)))).map(poly => poly.map((p, ix) => (ix === 0 ? "M" : ix === 1 ? "L" : "") + getCoord(p)).join(" ") + "z").join(" ")}' />` +
+                // Column headers
+                (omitAxes ? '' : [...Array(xSize).keys()].map(colIx => `<text x='${colIx * 25 + 15}' y='-4' class='x-label'>${colIx}</text>`).join('')) +
+                // Row headers
+                (omitAxes ? '' : [...Array(ySize).keys()].map(rowIx => `<text x='-4' y='${rowIx * 25 + 20}' class='y-label'>${rowIx}</text>`).join('')) +
+                // Text objects
+                (labels === null ? '' : [...Array(8).keys()].map(rowIx =>
+                    [...Array(8).keys()].map(colIx =>
+                        labels[rowIx][colIx] !== ' ' ? `<text class='cell' x='${25 * colIx + 15}' y='${25 * rowIx + (labels[rowIx][colIx] === '*' ? 25 : 22)}'>${labels[rowIx][colIx]}</text>` : '')
+                        .join(''))
+                    .join(''))
+            }</svg>`;
+        }
+
+        function BoolsToPaths(input)
+        {
+            let width = input.length;
+            let height = input[0].length;
+
+            let results = [];
+            let visitedUpArrow = [...Array(width).keys()].map(col => [...Array(height).keys()].map(row => false));
+
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                    // every region must have at least one up arrow (left edge)
+                    if (!visitedUpArrow[i][j] && get(input, i, j) && !get(input, i - 1, j))
+                        results.push(tracePolygon(input, i, j, visitedUpArrow));
+
+            return results;
+        }
+
+        function get(arr, i, j)
+        {
+            return i < 0 || i >= arr.length ? false :
+                   j < 0 || j >= arr[i].length ? false : arr[i][j];
+        }
+
+        let Up = 0, Down = 1, Left = 2, Right = 3;
+
+        function tracePolygon(input, i, j, visitedUpArrow)
+        {
+            let result = [];
+            let dir = Up;
+
+            while (true)
+            {
+                // In each iteration of this loop, we move from the current edge to the next one.
+                // We have to prioritise right-turns so that the diagonal-adjacent case is handled correctly.
+                // Every time we take a 90° turn, we add the corner coordinate to the result list.
+                // When we get back to the original edge, the polygon is complete.
+                switch (dir)
+                {
+                    case Up:
+                        // If we’re back at the beginning, we’re done with this polygon
+                        if (visitedUpArrow[i][j])
+                            return result;
+
+                        visitedUpArrow[i][j] = true;
+
+                        if (!get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        else if (get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else
+                            j--;
+                        break;
+
+                    case Down:
+                        j++;
+                        if (!get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else if (get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        break;
+
+                    case Left:
+                        if (!get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        else if (get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else
+                            i--;
+                        break;
+
+                    case Right:
+                        i++;
+                        if (!get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else if (get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        break;
+                }
+            }
+        }
+
+        function makeHighlightCells() {
+            let mazesvg = $(".tmaze");
+
+            for (m = 0; m < mazesvg.length; m++) {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        let cell = MakeSvgElem("rect", {
+                            class: "highlightable", x:(2.5 + c*25), y:(2.5 + r*25),
+                            width:25, height:25, fill:"transparent"
+                        });
+                        mazesvg[m].appendChild(cell);
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">3D 미로</span>
+        </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/3D Maze.svg">
+            <h2>3D 미로에 대하여</h2>
+
+            <p class="flavour-text">당신은 구불구불한 길이 반복되는 미로 속에 있습니다.
+                출구는 동, 서, 남, 북 방향에 있습니다.</p>
+
+            <ul>
+                <li>시작 시 해체자는 다음 페이지의 열 개의 미로 중 하나 안의 임의의 위치에서 임의의 방향을 바라보고 있습니다.</li>
+                <li>미로를 3차원으로 보여주는 화면을 이용해 해체자의 위치를 알아내세요.
+                    이 화면에는 현재 칸의 바닥에 적힌 기호, 그리고 바로 앞 칸의 바닥에 기호가 있는지 여부도 표시됩니다.</li>
+                <li>미로의 지도는 양끝이 이어져 있습니다.
+                    한쪽 모서리를 넘어가면 지도 반대편의 칸으로 도착합니다(두 칸 사이에 벽이 없다면요).</li>
+                <li>벽 중 하나는 골인 지점입니다. 그 외의 벽에 부딪히는 것은 실수로 처리됩니다.</li>
+                <li>모듈을 해제하려면 골인 지점인 벽을 찾고, 그 벽을 양쪽 어느 쪽에서든 통과하세요.</li>
+                <li>아래의 방법을 이용해 행 번호(0–7)와 열 번호(0–7), 그리고 방향을 계산하세요.
+                    계산한 행과 열이 가리키는 위치에서 계산한 방향에 있는 첫 번째 벽이 골인 지점입니다.</li>
+            </ul>
+            
+
+            <p class='heading'>행 번호:</p>
+            <ul>
+                <li>시리얼 넘버의 첫 번째 숫자에서 시작합니다.</li>
+                <li>점등되지 않았고 라벨에 <strong>“<span id='row-phrase'>MAZE GAMER</span>”</strong>에 포함되는 글자가 있는 지시등의 개수를 더합니다.</li>
+                <li>숫자가 7보다 크다면, 8을 뺍니다.</li>
+            </ul>
+            
+
+            <p class='heading'>열 번호:</p>
+            <ul>
+                <li>시리얼 넘버의 마지막 숫자에서 시작합니다.</li>
+                <li>점등되어 있고 라벨에 <strong>“<span id='col-phrase'>HELP IM LOST</span>”</strong>에 포함되는 글자가 있는 지시등의 개수를 더합니다.</li>
+                <li>숫자가 7보다 크다면, 8을 뺍니다.</li>
+            </ul>
+            
+
+            <p class='heading'>방향:</p>
+            <ul>
+                <li>각 미로의 지도에는 세 개의 별 표시가 있습니다.</li>
+                <li>해당 지점의 바닥에는 글자가 있습니다. 이것이 골인 지점의 방향을 가리킵니다.
+                    “N”은 북쪽, “S”는 남쪽, “E”는 동쪽, “W”는 서쪽입니다.</li>
+                <li>표시되지 않은 지점의 바닥에 있는 글자를 주의하세요.
+                    그 글자들은 부정확한 가짜 지시입니다!</li>
+            </ul>
+            
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 3</div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3D 미로</span>
+            </div>
+            <div class="page-content">
+
+<!-- ##[## -->
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
+<!-- ##]## -->
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3D 미로</span>
+            </div>
+            <div class="page-content">
+<!-- ###[### -->
+<div class='mazes-table'>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+<div class="tmaze-row"><div class='tmaze-td'><div class='tmaze-outer'></div></div><div class='tmaze-td'><div class='tmaze-outer'></div></div></div>
+</div>
+<!-- ###]### -->
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
