@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>미로 속 생쥐 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        td {
+            word-break: keep-all;
+        }
+
+        u {
+            text-decoration: none;
+            border-bottom: 1px solid black;
+        }
+
+        .mouse-maze-outer {
+            border: none;
+            width: 100%;
+        }
+
+            .mouse-maze-outer > tbody > tr > td {
+                border: none;
+                padding: 0 1mm 1mm 0;
+            }
+
+        .mouse-maze {
+            float: left;
+            border-width: .5mm;
+        }
+
+            .mouse-maze td, .mouse-maze th {
+                padding: 1mm;
+                text-align: center;
+            }
+
+            .mouse-maze svg {
+                width: 47mm;
+                display: block;
+            }
+
+                .dark .mouse-maze svg path, .dark .mouse-maze svg text {
+                    fill: #DDD;
+                }
+                .dark .mouse-maze svg circle {
+                    filter: invert(80%);
+                }
+
+                .mouse-maze svg text.x-label, .mouse-maze svg text.y-label {
+                    font-size: 9pt;
+                    text-anchor: middle;
+                }
+
+                .mouse-maze svg text.cell {
+                    font-size: 14pt;
+                    text-anchor: middle;
+                    font-weight: bold;
+                }
+    </style>
+    <script>
+        function setRules(rnd)
+        {
+            let mazes = [];
+
+            // Generate 6 random mazes and then remove 10–12 walls from each
+            for (let mazeIx = 0; mazeIx < 6; mazeIx++)
+            {
+                let hWalls = Array.from(Array(90).keys()).map(x => "1");
+                let vWalls = Array.from(Array(90).keys()).map(x => "1");
+
+                let todo = Array.from(Array(100).keys());
+                let visited = [];
+
+                let startingSquare = rnd.next(0, 100);
+                visited.push(startingSquare);
+                todo.splice(startingSquare, 1);
+
+                while (todo.length > 0)
+                {
+                    // Pick a random square from “visited”
+                    let randomSquareIx = rnd.next(0, visited.length);
+                    let sq = visited[randomSquareIx];
+                    let validNeighbors = [];
+                    if (sq % 10 != 0 && todo.includes(sq - 1))
+                        validNeighbors.push(sq - 1);
+                    if (sq % 10 != 9 && todo.includes(sq + 1))
+                        validNeighbors.push(sq + 1);
+                    if (((sq / 10) | 0) != 0 && todo.includes(sq - 10))
+                        validNeighbors.push(sq - 10);
+                    if (((sq / 10) | 0) != 9 && todo.includes(sq + 10))
+                        validNeighbors.push(sq + 10);
+
+                    if (validNeighbors.length === 0)
+                    {
+                        visited.splice(randomSquareIx, 1);
+                        continue;
+                    }
+
+                    let neighIx = rnd.next(0, validNeighbors.length);
+                    let neigh = validNeighbors[neighIx];
+                    if (sq % 10 === neigh % 10)
+                        hWalls[sq % 10 + 10 * Math.min(((sq / 10) | 0), ((neigh / 10) | 0))] = "0";
+                    else
+                        vWalls[((sq / 10) | 0) + 10 * Math.min(sq % 10, neigh % 10)] = "0";
+                    visited.push(neigh);
+                    todo.splice(todo.indexOf(neigh), 1);
+                }
+
+                // Remove between 2–4 random walls to create some loops
+                let numWallsToRemove = rnd.next(2, 5);
+                while (numWallsToRemove > 0)
+                {
+                    let hv = rnd.next(0, 2) !== 0;
+                    let i = rnd.next(0, 10);
+                    let j = rnd.next(0, 9);
+                    if (hv ? (hWalls[i + 10 * j] === '1') : (vWalls[i + 10 * j] === '1'))
+                    {
+                        if (hv)
+                            hWalls[i + 10 * j] = '0';
+                        else
+                            vWalls[i + 10 * j] = '0';
+                        numWallsToRemove--;
+                    }
+                }
+
+                mazes.push({
+                    goalFromTorusColor: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    h: hWalls.join(''),
+                    v: vWalls.join(''),
+                });
+            }
+
+            setMazes(mazes);
+        }
+
+        function setDefaultRules(rnd)
+        {
+            setMazes([
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [1, 2, 3, 0],
+                    goalFromTorusColor: [0, 1, 3, 2],
+                    h: "010011011100011011100001110011011001111011000000110001100000000111101000101100111101010110",
+                    v: "011100111001100110101100110100010110001000000100010110011010000111011000000110000000001000",
+                },
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [0, 3, 1, 2],
+                    goalFromTorusColor: [1, 2, 0, 3],
+                    h: "011111001000111000111101101100010010101010110100100101110001001100011010010011010100111010",
+                    v: "010000110000101101100001000011000000000000101011000111011000110011010101000110100011000000"
+                },
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [1, 2, 0, 3],
+                    goalFromTorusColor: [0, 1, 3, 2],
+                    h: "010000001000001111000110010010111000000101110110110011011110011010100111100001100110001001",
+                    v: "011001100001000000001110000010011110110110011001100101000110101110010001011011110010000000"
+                },
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [3, 0, 2, 1],
+                    goalFromTorusColor: [2, 1, 3, 0],
+                    h: "000000001101100111101011101010001101110001100011101111000110011110000100100011000110011010",
+                    v: "010010011010000100000100000100110011001101111111101000011000010100100000000001100001101010"
+                },
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [3, 1, 0, 2],
+                    goalFromTorusColor: [0, 2, 1, 3],
+                    h: "011110000001110000000010001011000100001000111001000010111100110111100101101101000111000110",
+                    v: "001111000000011000000000001100001101001001111000010110110011110110010001110111001100110110"
+                },
+                {
+                    torusOrder: rnd.shuffleFisherYates(Array.from(Array(4).keys())),
+                    sphereColors: [2, 3, 0, 1],
+                    goalFromTorusColor: [0, 1, 3, 2],
+                    h: "010110011000101100100111101000001001011010000011010011001010011011010000010110000010100110",
+                    v: "011101011000001110110110100100000110001000001110001101000011011010100000110101100001101100"
+                }
+            ]);
+        }
+
+        function setMazes(mazes)
+        {
+            let colorNames = ["흰색", "초록색", "파란색", "노란색"];
+
+            let torusTds = document.getElementsByClassName('torus');
+            let sphereTds = document.getElementsByClassName('sphere');
+            let mazeTds = document.getElementsByClassName('mmaze');
+            for (let maze = 0; maze < 6; maze++)
+            {
+                for (let torus = 0; torus < 4; torus++)
+                {
+                    let c = mazes[maze].torusOrder[torus];
+                    let g = mazes[maze].goalFromTorusColor[c];
+                    torusTds[4 * maze + torus].innerText = colorNames[c];
+                    sphereTds[4 * maze + torus].innerText = colorNames[mazes[maze].sphereColors[g]];
+                }
+
+                function tr(ix) { return ix === null ? ' ' : "WGBY"[mazes[maze].sphereColors[ix]]; }
+                let labels = Array.from(Array(10).keys()).map(row => Array.from(Array(10).keys()).map(col => tr(col === 2 ? (row === 2 ? 0 : row === 7 ? 3 : null) : col === 7 ? (row === 2 ? 1 : row === 7 ? 2 : null) : null)));
+                mazeTds[maze].innerHTML = create2DMazeSvg(mazes[maze].h, mazes[maze].v, labels);
+            }
+        }
+
+        function create2DMazeSvg(hWalls, vWalls, labels)
+        {
+            let ySize = 10;
+            let xSize = 10;
+
+            function n(x, y) { return y % ySize == 0 ? true : hWalls.substr((x + xSize) % xSize + 10 * ((ySize - 1 - y + ySize) % ySize), 1) === '1'; }
+            function w(x, y) { return x % xSize == 0 ? true : vWalls.substr((ySize - 1 - y + ySize) % ySize + 10 * ((x + xSize - 1) % xSize), 1) === '1'; }
+
+            function isOn(x, y)
+            {
+                return (x % 2 == 0)
+                    ? (y % 2 == 0)
+                        ? (x != 0 && n((x >> 1) - 1, y >> 1)) || (x != xSize * 2 && n(x >> 1, y >> 1)) || (y != 0 && w(x >> 1, (y >> 1) - 1)) || (y != ySize * 2 && w(x >> 1, y >> 1))
+                        : w(x >> 1, y >> 1)
+                    : (y % 2 == 0)
+                        ? n(x >> 1, y >> 1)
+                        : false;
+            }
+
+            function getX(gridX) { return (gridX >> 1) * 25 + (gridX % 2) * 5; }
+            function getY(gridY) { return (gridY >> 1) * 25 + (gridY % 2) * 5; }
+            function getCoord(p) { return `${getX(p.X)},${getY(p.Y)}`; }
+
+            return `<svg viewBox='0 0 ${25 * xSize + 5} ${25 * ySize + 5}' class='tmaze'><circle cx="127.5" cy="127.5" stroke-width="3" stroke="#ccc" fill="none" r="8.5"></circle>${
+                // Polygons
+                `<path d='${BoolsToPaths([...Array(2 * xSize + 1).keys()].map(x => [...Array(2 * ySize + 1).keys()].map(y => isOn(x, y)))).map(poly => poly.map((p, ix) => (ix === 0 ? "M" : ix === 1 ? "L" : "") + getCoord(p)).join(" ") + "z").join(" ")}' />` +
+                // Text objects
+                (labels === null ? '' : [...Array(ySize).keys()].map(rowIx =>
+                    [...Array(xSize).keys()].map(colIx =>
+                        labels[rowIx][colIx] !== ' ' ? `<text class='cell' x='${25 * colIx + 15}' y='${25 * rowIx + (labels[rowIx][colIx] === '*' ? 25 : 22)}'>${labels[rowIx][colIx]}</text>` : '')
+                        .join(''))
+                    .join(''))
+                }</svg>`;
+        }
+
+        function BoolsToPaths(input)
+        {
+            let width = input.length;
+            let height = input[0].length;
+
+            let results = [];
+            let visitedUpArrow = [...Array(width).keys()].map(col => [...Array(height).keys()].map(row => false));
+
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                    // every region must have at least one up arrow (left edge)
+                    if (!visitedUpArrow[i][j] && get(input, i, j) && !get(input, i - 1, j))
+                        results.push(tracePolygon(input, i, j, visitedUpArrow));
+
+            return results;
+        }
+
+        function get(arr, i, j)
+        {
+            return i < 0 || i >= arr.length ? false :
+                j < 0 || j >= arr[i].length ? false : arr[i][j];
+        }
+
+        let Up = 0, Down = 1, Left = 2, Right = 3;
+
+        function tracePolygon(input, i, j, visitedUpArrow)
+        {
+            let result = [];
+            let dir = Up;
+
+            while (true)
+            {
+                // In each iteration of this loop, we move from the current edge to the next one.
+                // We have to prioritise right-turns so that the diagonal-adjacent case is handled correctly.
+                // Every time we take a 90° turn, we add the corner coordinate to the result list.
+                // When we get back to the original edge, the polygon is complete.
+                switch (dir)
+                {
+                    case Up:
+                        // If we’re back at the beginning, we’re done with this polygon
+                        if (visitedUpArrow[i][j])
+                            return result;
+
+                        visitedUpArrow[i][j] = true;
+
+                        if (!get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        else if (get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else
+                            j--;
+                        break;
+
+                    case Down:
+                        j++;
+                        if (!get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Left;
+                            i--;
+                        }
+                        else if (get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Right;
+                        }
+                        break;
+
+                    case Left:
+                        if (!get(input, i - 1, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        else if (get(input, i - 1, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else
+                            i--;
+                        break;
+
+                    case Right:
+                        i++;
+                        if (!get(input, i, j))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Down;
+                        }
+                        else if (get(input, i, j - 1))
+                        {
+                            result.push({ X: i, Y: j });
+                            dir = Up;
+                            j--;
+                        }
+                        break;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">미로 속 생쥐</span>
+            </div>
+
+            <div class="page-content">
+                <img class='diagram' src='img/Component/Mouse In The Maze.svg'>
+                <h2>미로 속 생쥐에 대하여</h2>
+                <p class='flavour-text'>어떤 폭탄 속에는 생쥐가 있습니다. 생쥐는 척추에 삽입된 칩을 통해 원격조정됩니다.</p>
+
+                <ul>
+                    <li>생쥐는 다음 미로들 중 하나 안에 위치합니다.</li>
+                    <li>생쥐를 앞뒤로 움직이거나, 좌우로 돌릴 수 있습니다.</li>
+                    <li>생쥐를 올바른 위치로 이동시킨 뒤 미궁이 그려진 원형 버튼을 눌러 모듈을 해제합니다.</li>
+                    <li>올바르지 않은 위치에서 버튼을 누르면 실수로 처리됩니다.</li>
+                    <li>올바른 위치는 4가지의 색칠된 구가 있는 위치(W: 흰색, Y: 노란색, G: 초록색, B: 파란색) 중 하나입니다. 아래 표에 기반해, 미로 중앙에 있는 원환(도넛)의 색에 따라 올바른 구의 색깔이 정해집니다.</li>
+                </ul>
+
+                <table class='mouse-maze-outer'>
+                    <tr>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##0--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,30 L5,30 5,125 50,125 50,75 55,75 55,130 5,130 5,250 75,250 75,200 130,200 130,205 105,205 105,225 150,225 150,180 75,180 75,175 100,175 100,125 105,125 105,175 155,175 155,200 230,200 230,205 155,205 155,230 100,230 100,205 80,205 80,250 250,250 250,230 175,230 175,225 250,225 250,180 200,180 200,175 250,175 250,130 200,130 200,75 230,75 230,105 225,105 225,80 205,80 205,125 250,125 250,55 200,55 200,50 250,50 250,5 130,5 130,25 155,25 155,55 100,55 100,30 75,30 75,25 105,25 105,50 150,50 150,30 125,30 125,5 5,5 5,25 55,25 55,50 80,50 80,75 175,75 175,25 230,25 230,30 180,30 180,80 155,80 155,130 150,130 150,80 75,80 75,55 50,55 50,30 30,30 30,105 25,105z M25,150 L75,150 75,100 130,100 130,130 125,130 125,105 80,105 80,155 30,155 30,225 50,225 50,175 55,175 55,230 25,230z M125,150 L175,150 175,100 180,100 180,150 230,150 230,155 180,155 180,180 175,180 175,155 125,155z' /><text class='cell' x='65' y='72'>G</text><text class='cell' x='190' y='72'>B</text><text class='cell' x='65' y='197'>W</text><text class='cell' x='190' y='197'>Y</text></svg><!--###0--></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>파란색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>흰색</td></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>노란색</td></tr>
+                            </table>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##3--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,25 L55,25 55,75 105,75 105,80 50,80 50,30 25,30z M25,55 L5,55 5,125 30,125 30,130 5,130 5,175 55,175 55,200 125,200 125,180 75,180 75,150 80,150 80,175 130,175 130,205 50,205 50,180 5,180 5,250 175,250 175,200 180,200 180,250 250,250 250,205 205,205 205,225 230,225 230,230 200,230 200,200 225,200 225,155 200,155 200,150 230,150 230,200 250,200 250,105 225,105 225,100 250,100 250,55 225,55 225,50 250,50 250,5 180,5 180,30 100,30 100,25 175,25 175,5 80,5 80,50 105,50 105,55 75,55 75,5 5,5 5,50 30,50 30,100 55,100 55,125 105,125 105,130 55,130 55,155 25,155 25,150 50,150 50,105 25,105z M25,200 L30,200 30,225 150,225 150,150 175,150 175,100 180,100 180,155 155,155 155,175 205,175 205,180 155,180 155,230 25,230z M75,100 L125,100 125,50 130,50 130,100 150,100 150,75 155,75 155,130 130,130 130,155 100,155 100,150 125,150 125,125 150,125 150,105 75,105z M150,50 L200,50 200,25 230,25 230,30 205,30 205,55 180,55 180,75 230,75 230,80 205,80 205,125 230,125 230,130 200,130 200,80 175,80 175,55 150,55z' /><text class='cell' x='65' y='72'>W</text><text class='cell' x='190' y='72'>Y</text><text class='cell' x='65' y='197'>B</text><text class='cell' x='190' y='197'>G</text></svg><!--###3--></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>노란색</td></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>흰색</td></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>파란색</td></tr>
+                            </table>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##1--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,25 L80,25 80,55 5,55 5,150 80,150 80,155 5,155 5,250 75,250 75,180 30,180 30,225 50,225 50,200 55,200 55,230 25,230 25,175 80,175 80,250 125,250 125,225 130,225 130,250 175,250 175,225 180,225 180,250 250,250 250,155 225,155 225,150 250,150 250,130 205,130 205,175 230,175 230,205 225,205 225,180 200,180 200,125 250,125 250,80 225,80 225,75 250,75 250,30 225,30 225,25 250,25 250,5 205,5 205,50 230,50 230,55 205,55 205,100 230,100 230,105 125,105 125,100 200,100 200,55 180,55 180,80 150,80 150,25 180,25 180,30 155,30 155,75 175,75 175,50 200,50 200,5 105,5 105,30 100,30 100,5 5,5 5,50 75,50 75,30 25,30z M25,75 L80,75 80,80 30,80 30,125 105,125 105,200 175,200 175,130 130,130 130,175 150,175 150,150 155,150 155,180 125,180 125,125 180,125 180,200 205,200 205,225 230,225 230,230 200,230 200,205 155,205 155,230 150,230 150,205 105,205 105,230 100,230 100,130 25,130z M50,100 L100,100 100,50 105,50 105,75 125,75 125,25 130,25 130,80 105,80 105,105 50,105z' /><text class='cell' x='65' y='72'>G</text><text class='cell' x='190' y='72'>B</text><text class='cell' x='65' y='197'>Y</text><text class='cell' x='190' y='197'>W</text></svg><!--###1--></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>파란색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>노란색</td></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>흰색</td></tr>
+                            </table>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##4--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,25 L80,25 80,30 30,30 30,75 75,75 75,55 50,55 50,50 80,50 80,75 125,75 125,25 180,25 180,30 130,30 130,150 205,150 205,155 180,155 180,180 150,180 150,175 175,175 175,155 130,155 130,200 230,200 230,205 180,205 180,230 175,230 175,205 130,205 130,230 125,230 125,180 50,180 50,175 125,175 125,80 25,80z M25,125 L50,125 50,105 5,105 5,175 30,175 30,180 5,180 5,250 50,250 50,225 55,225 55,250 100,250 100,200 105,200 105,250 150,250 150,225 155,225 155,250 250,250 250,230 200,230 200,225 250,225 250,80 230,80 230,105 175,105 175,75 180,75 180,100 225,100 225,75 250,75 250,5 105,5 105,55 100,55 100,5 5,5 5,100 105,100 105,155 50,155 50,150 100,150 100,105 55,105 55,125 80,125 80,130 30,130 30,155 25,155z M25,200 L80,200 80,230 75,230 75,205 30,205 30,230 25,230z M150,50 L200,50 200,25 230,25 230,55 225,55 225,30 205,30 205,80 200,80 200,55 150,55z M150,75 L155,75 155,125 230,125 230,180 200,180 200,175 225,175 225,130 150,130z' /><text class='cell' x='65' y='72'>Y</text><text class='cell' x='190' y='72'>W</text><text class='cell' x='65' y='197'>G</text><text class='cell' x='190' y='197'>B</text></svg><!--###4--></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>노란색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>흰색</td></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>파란색</td></tr>
+                            </table>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##2--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,25 L105,25 105,50 150,50 150,5 130,5 130,30 125,30 125,5 5,5 5,75 55,75 55,80 5,80 5,250 175,250 175,200 180,200 180,250 225,250 225,200 230,200 230,250 250,250 250,180 205,180 205,230 200,230 200,150 225,150 225,100 230,100 230,155 205,155 205,175 250,175 250,80 225,80 225,30 175,30 175,25 230,25 230,75 250,75 250,5 155,5 155,55 100,55 100,30 25,30z M25,50 L80,50 80,75 175,75 175,50 205,50 205,130 180,130 180,180 155,180 155,230 150,230 150,175 175,175 175,125 200,125 200,105 155,105 155,155 150,155 150,105 105,105 105,125 130,125 130,230 25,230 25,225 125,225 125,130 55,130 55,175 80,175 80,180 50,180 50,125 100,125 100,100 200,100 200,55 180,55 180,80 80,80 80,105 50,105 50,100 75,100 75,55 25,55z M25,100 L30,100 30,200 100,200 100,155 75,155 75,150 105,150 105,205 25,205z' /><text class='cell' x='65' y='72'>Y</text><text class='cell' x='190' y='72'>G</text><text class='cell' x='65' y='197'>B</text><text class='cell' x='190' y='197'>W</text></svg><!--###2--></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>노란색</td></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>흰색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>파란색</td></tr>
+                            </table>
+                        <td>
+                            <table class='mouse-maze'>
+                                <tr><th>미로<th rowspan='2'>원환의 색깔<th rowspan='2'>구의 색깔</tr>
+                                <tr><td rowspan='5' class='mmaze'><!--##5--><svg viewBox='0 0 255 255' class='tmaze'><circle cx='127.5' cy='127.5' r='10' fill='#ccc' /><circle cx='127.5' cy='127.5' r='7' fill='#fff' /><path d='M0,0 L255,0 255,255 0,255z M25,25 L30,25 30,75 75,75 75,50 100,50 100,25 130,25 130,30 105,30 105,55 80,55 80,80 55,80 55,100 105,100 105,105 55,105 55,150 75,150 75,125 80,125 80,155 50,155 50,80 25,80z M25,100 L30,100 30,130 5,130 5,250 150,250 150,205 100,205 100,200 155,200 155,250 250,250 250,130 230,130 230,180 225,180 225,155 205,155 205,200 230,200 230,205 200,205 200,155 175,155 175,130 150,130 150,125 200,125 200,100 225,100 225,50 230,50 230,105 205,105 205,130 180,130 180,150 225,150 225,125 250,125 250,5 155,5 155,50 180,50 180,55 125,55 125,50 150,50 150,5 55,5 55,25 80,25 80,30 55,30 55,55 50,55 50,5 5,5 5,125 25,125z M25,150 L30,150 30,175 100,175 100,125 105,125 105,175 130,175 130,180 80,180 80,225 130,225 130,230 75,230 75,205 50,205 50,200 75,200 75,180 30,180 30,225 55,225 55,230 25,230z M100,75 L155,75 155,80 130,80 130,150 155,150 155,175 180,175 180,225 230,225 230,230 175,230 175,180 150,180 150,155 125,155 125,80 100,80z M150,100 L175,100 175,75 200,75 200,30 175,30 175,25 230,25 230,30 205,30 205,80 180,80 180,105 150,105z' /><text class='cell' x='65' y='72'>B</text><text class='cell' x='190' y='72'>Y</text><text class='cell' x='65' y='197'>G</text><text class='cell' x='190' y='197'>W</text></svg><!--###5--></tr>
+                                <tr><td class='torus'>초록색</td><td class='sphere'>노란색</td></tr>
+                                <tr><td class='torus'>파란색</td><td class='sphere'>초록색</td></tr>
+                                <tr><td class='torus'>흰색</td><td class='sphere'>파란색</td></tr>
+                                <tr><td class='torus'>노란색</td><td class='sphere'>흰색</td></tr>
+                            </table>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
