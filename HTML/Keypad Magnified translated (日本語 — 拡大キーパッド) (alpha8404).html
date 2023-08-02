@@ -12,199 +12,196 @@
     <script src="js/jquery.3.7.0.min.js"></script>
     <script src="js/ruleseed.js"></script>
     <script>
-     let numToFile = [ '18-nwithhat', '11-six', '26-cursive', '6-omega', '1-copyright', '7-squidknife', '16-euro', '3-hollowstar', '19-dragon' ];
+        let numToFile = [ '18-nwithhat', '11-six', '26-cursive', '6-omega', '1-copyright', '7-squidknife', '16-euro', '3-hollowstar', '19-dragon' ];
 
-     function setDefaultRules() {
-         makeTables();
-         setMiniGrids([ [0,2,5,7],[1,3,6,4],[2,1,8,3],[3,4,7,2],[4,6,1,8],[5,7,2,0],[6,8,0,5],[7,5,4,6],[8,0,3,1] ]);
-         setBigGrid([ 0,4,1,2,8,5,3,6,7,7,3,6,0,4,1,5,2,8,2,5,8,6,3,7,4,0,1,3,1,4,7,5,2,0,8,6,6,8,2,1,0,4,7,3,5,5,7,0,8,6,3,2,1,4,8,6,7,4,2,0,1,5,3,4,0,3,5,1,6,8,7,2,1,2,5,3,7,8,6,4,0 ]);
-         setWords(['段', '列', '段', '列'], ['左から右', '上から下', '右から左', '下から上']);
+        function setDefaultRules() {
+            makeTables();
+            setMiniGrids([ [0,2,5,7],[1,3,6,4],[2,1,8,3],[3,4,7,2],[4,6,1,8],[5,7,2,0],[6,8,0,5],[7,5,4,6],[8,0,3,1] ]);
+            setBigGrid([ 0,4,1,2,8,5,3,6,7,7,3,6,0,4,1,5,2,8,2,5,8,6,3,7,4,0,1,3,1,4,7,5,2,0,8,6,6,8,2,1,0,4,7,3,5,5,7,0,8,6,3,2,1,4,8,6,7,4,2,0,1,5,3,4,0,3,5,1,6,8,7,2,1,2,5,3,7,8,6,4,0 ]);
+            setWords(['段', '列', '段', '列'], ['左から右', '上から下', '右から左', '下から上']);
 
-     }
-     function setRules(rnd) {
-         makeTables();
-         randomizeMiniGrids();
-         randomizeBigGrid();
-         randomizeWords();
+        }
+        function setRules(rnd) {
+            makeTables();
+            randomizeMiniGrids();
+            randomizeBigGrid();
+            randomizeWords();
 
-         function randomizeMiniGrids() {
-             let mergedGrid = recurse(
-                 Array(4 * 9).fill(null),
-                 Array(4 * 9).fill(null).map(x => [0,1,2,3,4,5,6,7,8]),
-                 4, 9, rnd);
-             let grids = [ ];
-             for (let gIx = 0; gIx < 9; gIx++) {
-                 grids[gIx] = new Array(4);
-                 for (let     i = 0; i < 4; i++){
-                     grids[gIx][i] = mergedGrid[4 * gIx + i];
-                 }
-             }
-             setMiniGrids(grids);
-         }
-         function randomizeBigGrid() {
-             let grid = recurse(
-                 Array(9 * 9).fill(null),
-                 Array(9 * 9).fill(null).map(x => Array(9).fill(null).map((_, c) => c)),
-                 9, 9);
-             setBigGrid(grid);
-         }
-         function randomizeWords() {
-             let rc = [ '段', '列', '段', '列' ];
-             let reverse = [ true, true, false, false ];
-             rnd.shuffleFisherYates(rc);
-             rnd.shuffleFisherYates(reverse);
-             let dir = new Array(4);
-             for (let i = 0; i < 4; i++) {
-                 if (rc[i] == '段'){
-                     if (reverse[i])
-                         dir[i] = '右から左';
-                     else
-                         dir[i] = '左から右';
-                 }
-                 else {
-                     if (reverse[i])
-                         dir[i] = '下から上';
-                     else
-                         dir[i] = '上から下';
-                 }
-             }
-             setWords(rc, dir);
-         }
+            function randomizeMiniGrids() {
+                let mergedGrid = recurse(
+                    Array(4 * 9).fill(null),
+                    Array(4 * 9).fill(null).map(x => [0,1,2,3,4,5,6,7,8]),
+                    4, 9, rnd);
+                let grids = [ ];
+                for (let gIx = 0; gIx < 9; gIx++) {
+                    grids[gIx] = new Array(4);
+                    for (let     i = 0; i < 4; i++){
+                        grids[gIx][i] = mergedGrid[4 * gIx + i];
+                    }
+                }
+                setMiniGrids(grids);
+            }
+            function randomizeBigGrid() {
+                let grid = recurse(
+                    Array(9 * 9).fill(null),
+                    Array(9 * 9).fill(null).map(x => Array(9).fill(null).map((_, c) => c)),
+                    9, 9);
+                setBigGrid(grid);
+            }
+            function randomizeWords() {
+                let rc = [ '段', '列', '段', '列' ];
+                let reverse = [ true, true, false, false ];
+                rnd.shuffleFisherYates(rc);
+                rnd.shuffleFisherYates(reverse);
+                let dir = new Array(4);
+                for (let i = 0; i < 4; i++) {
+                    if (rc[i] == '段'){
+                        if (reverse[i])
+                            dir[i] = '右から左';
+                        else
+                            dir[i] = '左から右';
+                    }
+                    else {
+                        if (reverse[i])
+                            dir[i] = '下から上';
+                        else
+                            dir[i] = '上から下';
+                    }
+                }
+                setWords(rc, dir);
+            }
 
-         function recurse(sofar, available, w, h) {
-             function processAvailable(sq, v) {
-                 let newAvailable = available.slice(0);
-                 for (let c = 0; c < w; c++) {
-                     let avIx = c + w * ((sq / w) | 0);
-                     let ix = newAvailable[avIx].indexOf(v);
-                     if (ix !== -1) {
-                         newAvailable[avIx] = newAvailable[avIx].slice(0);
-                         newAvailable[avIx].splice(ix, 1);
-                     }
-                 }
-                 for (let r = 0; r < h; r++) {
-                     let avIx = (sq % w) + w * r;
-                     let ix = newAvailable[avIx].indexOf(v);
-                     if (ix !== -1) {
-                         newAvailable[avIx] = newAvailable[avIx].slice(0);
-                         newAvailable[avIx].splice(ix, 1);
-                     }
-                 }
-                 return newAvailable;
-             }
+            function recurse(sofar, available, w, h) {
+                function processAvailable(sq, v) {
+                    let newAvailable = available.slice(0);
+                    for (let c = 0; c < w; c++) {
+                        let avIx = c + w * ((sq / w) | 0);
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    for (let r = 0; r < h; r++) {
+                        let avIx = (sq % w) + w * r;
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1) {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    return newAvailable;
+                }
 
-             let ixs = [];
-             let lowest = 9;
-             for (let sq = 0; sq < w * h; sq++) {
-                 if (sofar[sq] !== null)
-                     continue;
-                 if (available[sq].length < lowest) {
-                     ixs = [sq];
-                     lowest = available[sq].length;
-                 }
-                 else if (available[sq].length === lowest)
-                     ixs.push(sq);
-                 if (lowest === 1)
-                     break;
-             }
+                let ixs = [];
+                let lowest = 9;
+                for (let sq = 0; sq < w * h; sq++) {
+                    if (sofar[sq] !== null)
+                        continue;
+                    if (available[sq].length < lowest) {
+                        ixs = [sq];
+                        lowest = available[sq].length;
+                    }
+                    else if (available[sq].length === lowest)
+                        ixs.push(sq);
+                    if (lowest === 1)
+                        break;
+                }
 
-             if (ixs.length === 0)
-                 return sofar;
+                if (ixs.length === 0)
+                    return sofar;
 
-             let square = ixs[rnd.next(0, ixs.length)];
-             let offset = rnd.next(0, available[square].length);
-             for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++) {
-                 let avIx = (fAvIx + offset) % available[square].length;
-                 let v = available[square][avIx];
-                 sofar[square] = v;
+                let square = ixs[rnd.next(0, ixs.length)];
+                let offset = rnd.next(0, available[square].length);
+                for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++) {
+                    let avIx = (fAvIx + offset) % available[square].length;
+                    let v = available[square][avIx];
+                    sofar[square] = v;
 
-                 let result = recurse(sofar, processAvailable(square, v), w, h);
-                 if (result !== null)
-                     return result;
-             }
-             sofar[square] = null;
-             return null;
-         }
+                    let result = recurse(sofar, processAvailable(square, v), w, h);
+                    if (result !== null)
+                        return result;
+                }
+                sofar[square] = null;
+                return null;
+            }
 
-     }
+        }
 
-     function makeTables() {
-         let stack = $(".hstack.wrap");
-         stack.html("");
-         for (let i = 0; i < 9; i++)
-             $('<table> <tr><td></td><td></td></tr> <tr><td></td><td></td></tr> </table>').appendTo(stack);
-         let bigTable = $(".big-table");
-         bigTable.html("");
-         let tr = $("<tr>").appendTo(bigTable);
-         $(`<th>`).addClass("corner").appendTo(tr);
-         for (let i = 1; i <= 9; i++)
-             $("<th>").addClass("empty").text(i).appendTo(tr);
-         for (let i = 1; i <= 9; i++)
-             $(`<tr><th class="empty">${i}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`).appendTo(bigTable);
-     }
+        function makeTables() {
+            let stack = $(".hstack.wrap");
+            stack.html("");
+            for (let i = 0; i < 9; i++)
+                $('<table> <tr><td></td><td></td></tr> <tr><td></td><td></td></tr> </table>').appendTo(stack);
+            let bigTable = $(".big-table");
+            bigTable.html("");
+            let tr = $("<tr>").appendTo(bigTable);
+            $(`<th>`).addClass("corner").appendTo(tr);
+            for (let i = 1; i <= 9; i++)
+                $("<th>").addClass("empty").text(i).appendTo(tr);
+            for (let i = 1; i <= 9; i++)
+                $(`<tr><th class="empty">${i}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`).appendTo(bigTable);
+        }
 
-     function setMiniGrids(grids){
-         let cells = $('.hstack.wrap td');
-         for (let gridIx = 0; gridIx < 9; gridIx++){
-             for (let cellIx = 0; cellIx < 4; cellIx++) {
-                 let value = grids[gridIx][cellIx];
-                 setImage(cells[4 * gridIx + cellIx], value);
-             }
-         }
-     }
-     function setBigGrid(grid){
-         let cells = $('.big-table td');
-         for (let i = 0; i < 81; i++){
-             setImage(cells[i], grid[i]);
-         }
-     }
-     function setWords(rc, dir) {
-         let rcSpans = document.getElementsByClassName('row-column-indicator');
-         let dirSpans = document.getElementsByClassName('direction-indicator');
-         for (let i = 0; i < 4; i++){
-             rcSpans[i].innerText = rc[i];
-             dirSpans[i].innerText = dir[i];
-         }
-     }
-     function setImage(cell, value) {
-         $(cell).append(`<img src="img/Keypad/${numToFile[value]}.png">`);
-     }
- </script>
-<style>
- .dark table, table {
-     border: none;
-     margin: 1em auto;
-     font-size: 10px;
-     text-align: center;
- }
- .dark img:not(.diagram) {
-     filter: invert(87%);
- }
- .hstack {
-     display: flex;
-     flex-direction: row;
-     align-items: center;
-     justify-content: center;
- }
- .big-table { font-size: 1px; }
- td img {
-     width: 1.25cm;
-     height: 1.25cm;
- }
- .big-table td {
-     padding: 0;
-     width: 1.5cm;
-     height: 1.5cm;
- }
- li {
-     margin: 0.5mm;
- }
- .wrap { flex-wrap: wrap; }
- th.empty {
-     font-weight: normal;
-     font-size: 30px;
- }
-</style>
+        function setMiniGrids(grids){
+            let cells = $('.hstack.wrap td');
+            for (let gridIx = 0; gridIx < 9; gridIx++){
+                for (let cellIx = 0; cellIx < 4; cellIx++) {
+                    let value = grids[gridIx][cellIx];
+                    setImage(cells[4 * gridIx + cellIx], value);
+                }
+            }
+        }
+        function setBigGrid(grid){
+            let cells = $('.big-table td');
+            for (let i = 0; i < 81; i++){
+                setImage(cells[i], grid[i]);
+            }
+        }
+        function setWords(rc, dir) {
+            let rcSpans = document.getElementsByClassName('row-column-indicator');
+            let dirSpans = document.getElementsByClassName('direction-indicator');
+            for (let i = 0; i < 4; i++){
+                rcSpans[i].innerText = rc[i];
+                dirSpans[i].innerText = dir[i];
+            }
+        }
+        function setImage(cell, value) {
+            $(cell).append(`<img src="img/Keypad/${numToFile[value]}.png">`);
+        }
+    </script>
+    <style>
+        .dark table, table {
+            border: none;
+            margin: 1em auto;
+            font-size: 10px;
+            text-align: center;
+        }
+        .dark img:not(.diagram) {
+            filter: invert(87%);
+        }
+        .hstack {
+            align-items: center;
+        }
+        .big-table { font-size: 1px; }
+        td img {
+            width: 1.25cm;
+            height: 1.25cm;
+        }
+        .big-table td {
+            padding: 0;
+            width: 1.5cm;
+            height: 1.5cm;
+        }
+        li {
+            margin: 0.5mm;
+        }
+        .wrap { flex-wrap: wrap; }
+        th.empty {
+            font-weight: normal;
+            font-size: 30px;
+        }
+    </style>
 </head>
 <body>
     <div class="section">
