@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>New World — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .maze svg {
+            stroke-linecap: square;
+            --colour: #000;
+        }
+        .dark .maze svg { --colour: #DDD; }
+        .maze svg :not(.highlightable, g) {
+            user-select: none;
+            pointer-events: none;
+        }
+        .maze svg .line {
+            stroke: var(--colour);
+            stroke-width: 2;
+        }
+        .maze svg .square { fill: var(--colour); }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+    </style>
+    <script>
+        const cells = [];
+        const cardinal = ["N", "E", "W", "S"];
+        const locations = [[-1, 0, 0, 1], [0, 1, -1, 0]];
+        let defaultRules = null;
+        let generated;
+        let rng;
+
+        function Cell() {
+            this.visited = false;
+            this.directions = { N: true, E: true, W: true, S: true };
+        }
+
+        function getDefaultRules() {
+            if (defaultRules !== null)
+                return;
+            defaultRules = {};
+            for (let i = 1; i <= 8; i++)
+                defaultRules[`rule-${i}`] = document.getElementById(`rule-${i}`).innerText;
+        }
+
+        function setDefaultRules() {
+            getDefaultRules();
+            for (let i = 1; i <= 8; i++)
+                document.getElementById(`rule-${i}`).innerText = defaultRules[`rule-${i}`];
+            const maze = [
+                ["U L D", "U", "U R D", "U L", "U", "U R D"],
+                ["U L", "D R", "U L", "D R", "L D", "U R"],
+                ["L R", "L U", "D R", "U L", "U D", "R"],
+                ["L", "D R", "U L", "D R", "U L R", "L R"],
+                ["L R", "L U R", "L R", "U L", "D R", "L R"],
+                ["L D R", "L D", "D R", "L D", "U D", "D R"]
+            ];
+            InitializeGeneration();
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) {
+                    cells[j][k].directions.N = !maze[j][k].includes('U');
+                    cells[j][k].directions.E = !maze[j][k].includes('R');
+                    cells[j][k].directions.W = !maze[j][k].includes('L');
+                    cells[j][k].directions.S = !maze[j][k].includes('D');
+                }
+            }
+            generateSVG();
+        }
+
+        function setRules(rnd) {
+            setDefaultRules();
+            rng = rnd;
+            generateRuleSeed2();
+            rnd = new MonoRandom(rnd.seed);
+            rng = rnd;
+            makeMaze();
+        }
+
+        function makeMaze() {
+            InitializeGeneration();
+            CheckCell(rng.nextMax(5), rng.nextMax(5));
+            generateSVG();
+        }
+
+        function InitializeGeneration() {
+            for (let j = 0; j < 6; j++) {
+                cells[j] = [];
+                for (let k = 0; k < 6; k++)
+                    cells[j][k] = new Cell();
+            }
+        }
+
+        function generateRuleSeed2() {
+            const rules = new Array(8);
+            const random = rng.nextMax(8);
+            for (let i = 0; i < 8; i++)
+                rules[i] = i;
+            for (let i = 0; i < random; i++) {
+                const r1 = rng.nextMax(8);
+                const r2 = rng.nextMax(8);
+                const temp = rules[r1];
+                rules[r1] = rules[r2];
+                rules[r2] = temp;
+            }
+            for (let i = 0; i < 8; i++) {
+                const span = document.getElementById(`rule-${i + 1}`);
+
+                switch (rules[i]) {
+                    case 0: span.innerText = `Number of D Batteries`; break;
+                    case 1: span.innerText = `Number of AA Batteries`; break;
+                    case 2: span.innerText = `Number of Battery Holders`; break;
+                    case 3: span.innerText = `Number of Port Plates`; break;
+                    case 4: span.innerText = `Number of Ports`; break;
+                    case 5: span.innerText = `Number of Unlit Indicators`; break;
+                    case 6: span.innerText = `Number of Lit Indicators`; break;
+                    case 7: span.innerText = `Digits of Serial Number (Excluding Leading Zeros)`; break;
+                }
+            }
+        }
+
+        function CheckCell(row, col, prevDir = -1) {
+            if (!inRange(row, 0, 5) || !inRange(col, 0, 5) || cells[row][col].visited)
+                return false;
+            cells[row][col].visited = true;
+            const start = rng.nextMax(4);
+            for (let i = 0; i < 4; i++) {
+                const point = (start + i) % 4;
+                cells[row][col].directions[cardinal[point]] = CheckCell(row + locations[0][point], col + locations[1][point], point);
+            }
+            if (prevDir != -1)
+                cells[row][col].directions[cardinal[3 - prevDir]] = true;
+            return true;
+        }
+
+        function inRange(value, min, max) { return (value >= min && value <= max); }
+
+        function generateSVG() {
+            const svg = document.getElementsByClassName("maze")[0].getElementsByTagName("svg")[0];
+            if (!generated) {
+                const maze = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                svg.appendChild(maze);
+            }
+            generated = true;
+            maze = svg.firstChild;
+            maze.innerHTML = '';
+
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) {
+                    const x = 2 + 45 * k + 237.5;
+                    const y = 21 + 45 * j;
+
+                    const highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        ["class", "x", "y", "width", "height", "fill"],
+                        ["highlightable", `${x - 1}`, `${y}`, "45", "45", "transparent"]);
+                    maze.prepend(highlight);
+
+                    const small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        ["x", "y", "width", "height", "class"],
+                        [`${x + 17}`, `${y + 17}`, "12", "12", "square"]);
+                    maze.appendChild(small);
+
+                    if (k < 5 && !cells[j][k].directions.E) {
+                        const e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            ["x1", "y1", "x2", "y2", "class"],
+                            [`${x + 45}`, `${y}`, `${x + 45}`, `${y + 45}`, "line"]);
+                        maze.appendChild(e);
+                    }
+                    if (j < 5 && !cells[j][k].directions.S) {
+                        const s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            ["x1", "y1", "x2", "y2", "class"],
+                            [`${x}`, `${y + 45}`, `${x + 45}`, `${y + 45}`, "line"]);
+                        maze.appendChild(s);
+                    }
+                }
+            }
+            let square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                ["x", "y", "width", "height", "fill", "class"],
+                [`239.5`, `21`, "270", "270", "none", "line"]);
+            maze.appendChild(square);
+        }
+        function setElement(element, names, values) {
+            if (names.length <= 0 || values.length <= 0)
+                return null;
+            for (let i = 0; i < names.length; i++)
+                element.setAttribute(names[i], values[i]);
+            return element;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">New World</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/New World.svg" class="diagram">
+                <h2>On the Subject of New World</h2>
+                <p class="flavour-text">I swear I was just here before...</p>
+                <p>
+                    This module uses two rule seeds. To visit the necessary pages for this module, copy <code><em>https://ktane.timwi.de/HTML/New%20World.html#</em></code> into your search bar and append any necessary
+                    rule seed.
+                </p>
+                <p>
+                    This module features a flashing text showing multiple digits and four arrow buttons. The flashing text lists digits used in a rule seed. To tell the difference of the first and last
+                    digits, a long space is placed between them.
+                </p>
+                <p>Visit the rule-seeded page using the first rule seed provided to obtain a second rule seed.</p>
+                <p>Visit the rule-seeded page using the second rule seed obtained to have the maze used by the module.</p>
+                <p>
+                    To advance the module further, interact with the background of the flashing text to reveal a maze. At this point, the flashing text will no longer appear and the arrow buttons can
+                    be successfully interacted with.
+                </p>
+                <p>
+                    When the maze shows up, the defuser has to navigate the green square to the red triangle. Once any of the arrow buttons have been pressed, the green square and red triangle become
+                    hidden to the defuser.
+                </p>
+                <p>To solve the module, go through a maze provided by a different rule seed obtained from the flashed rule seed.</p>
+                <p>Running into any walls of the maze results a strike and shows the location of the red triangle and current location of the green square.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">New World</span>
+            </div>
+            <div class="page-content">
+                <p>Concatenate these numbers in the following order for the second rule seed, then modulo by 2147483647:</p>
+                <span class='rule' id='rule-1'>Number of D Batteries</span><br>
+                <span class='rule' id='rule-2'>Number of AA Batteries</span><br>
+                <span class='rule' id='rule-3'>Number of Battery Holders</span><br>
+                <span class='rule' id='rule-4'>Number of Port Plates</span><br>
+                <span class='rule' id='rule-5'>Number of Ports</span><br>
+                <span class='rule' id='rule-6'>Number of Unlit Indicators</span><br>
+                <span class='rule' id='rule-7'>Number of Lit Indicators</span><br>
+                <span class='rule' id='rule-8'>Digits of Serial Number (Excluding Leading Zeros)</span>
+                <p>Assuming this is the correct rule seed, the maze below is the maze used by the module.</p>
+                <span class='maze'><svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 1.5 725 300"></svg></span>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
