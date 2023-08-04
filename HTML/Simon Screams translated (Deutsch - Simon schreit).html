@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Simon Schreit — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.simon-screams, table.simon-screams table {
+            border: none;
+        }
+
+            table.simon-screams td.corner, table.simon-screams th.corner {
+                border: none;
+            }
+
+            table.simon-screams td {
+                text-align: center;
+            }
+
+            table.simon-screams th {
+                text-align: right;
+            }
+
+                table.simon-screams th.little {
+                    text-align: left;
+                }
+
+            table.simon-screams tr.top > th {
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+                table.simon-screams tr.top > th > p {
+                    margin: .25em;
+                }
+
+            table.simon-screams tr.rotated > th {
+                position: relative;
+                text-align: left;
+                height: 4em;
+            }
+
+                table.simon-screams tr.rotated > th > span.text {
+                    top: 50%;
+                    left: 50%;
+                    position: absolute;
+                    transform: translate(-50%, -50%) rotate(-50deg);
+                    transform-origin: center center;
+                    text-align: center;
+                    line-height: 1.25;
+                }
+
+        table.simon-screams-small td, table.simon-screams-small th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .column-rule {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        var _rules = [
+            { prob:  50, name: "jede Farbe mindestens einmal blinkt" },
+            { prob: 120, name: "drei Farben, mit jeweils einer dazwischen, im Uhrzeigersinn blinken" },
+            { prob: 220, name: "eine Farbe blinkt, dann eine daneben, und dann die erste nochmal" },
+            { prob: 121, name: "drei nebeneinanderliegende Farben gegen den Uhrzeigersinn blinken" },
+            { prob: 122, name: "drei nebeneinanderliegende Farben im Uhrzeigersinn blinken" },
+            { prob: 123, name: "eine Farbe blinkt, dann die gegenüberliegende, dann die erste nochmal" },
+            { prob: 100, name: "drei nebeneinanderliegende Farben nicht geblinkt haben" },
+            { prob: 170, name: "die erste und letzte blinkende Farbe die selbe ist" },
+            { prob: 124, name: "drei Farben, mit jeweils einer dazwischen, gegen den Uhrzeigersinn blinken" },
+            { prob: 230, name: "eine Farbe blinkt, dann eine mit zwei Abstand, und dann die erste nochmal" },
+            { prob: 260, name: "eine Farbe blinkt, dann eine daneben, und dann die gegenüberliegende" },
+            { prob: 261, name: "eine Farbe blinkt, dann eine daneben, und dann die gegenüberliegende der ersten" },
+            { prob: 262, name: "eine Farbe blinkt, dann eine mit einer Abstand, und dann die gegenüberliegende davon" },
+            { prob: 263, name: "eine Farbe blinkt, dann eine mit einer Abstand, und dann die gegenüberliegende der ersten" },
+            { prob: 231, name: c => `maximal eine von ${c[0]}, ${c[1]}, und ${c[2]} blinkt` },
+            { prob: 264, name: "eine Farbe blinkt, dann die gegenüberliegende, und dann eine neben der ersten" },
+            { prob: 221, name: "keine Farbe blinkt mehr als einmal" },
+            { prob: 265, name: "eine Farbe blinkt, dann die gegenüberliegende, und dann eine daneben" },
+            { prob: 240, name: "genau zwei Farben genau zweimal blinken" },
+            { prob: 420, name: "zwei nebeneinander liegende Farben nicht blinken" },
+            { prob: 270, name: "genau eine Farbe nicht blinkt" },
+            { prob: 280, name: "keine Farbe blinkt genau zweimal" },
+            { prob: 290, name: "mindestens drei Farben nicht blinken" },
+            { prob: 300, name: "genau zwei Farben mehr als einmal blinken" },
+            { prob: 330, name: "die erste und letzte blinkende Farbe nebeneinander liegen" },
+            { prob: 380, name: "genau eine Farbe mehr als einmal blinkt" },
+            { prob: 440, name: "zwei Farben, mit einer Farbe dazwischen, nicht blinken" },
+            { prob: 266, name: "zwei gegenüberliegende Farben nicht blinken" },
+            { prob: 400, name: "genau zwei Farben nicht blinken" },
+            { prob: 410, name: "genau eine Farbe genau zweimal blinkt" },
+            { prob: 480, name: "die Anzahl der blinkenden unterscheidbaren Farben gerade ist" },
+            { prob: 390, name: "keine zwei nebeneinanderliegenden Farben im Uhrzeigersinn blinken" },
+            { prob: 391, name: "keine zwei nebeneinanderliegenden Farben gegen den Uhrzeigersinn blinken" },
+            { prob: 610, name: "zwei nebeneinanderliegende Farben im Uhrzeigersinn blinken" },
+            { prob: 392, name: "keine zwei Farben, mit einer Farbe dazwischen, gegen den Uhrzeigersinn blinken" },
+            { prob: 500, name: "die erste und letzte blinkende Farbe nicht gleich sind und nicht nicht nebeneinander liegen" },
+            { prob: 520, name: "eine Farbe blinkt, dann eine andere, dann die erste nochmal" },
+            { prob: 393, name: "keine zwei Farben, mit einer Farbe dazwischen, im Uhrzeigersinn blinken" },
+            { prob: 611, name: "zwei nebeneinanderliegende Farben gegen den Uhrzeigersinn blinken" },
+            { prob: 612, name: "zwei Farben, mit einer Farbe dazwischen, im Uhrzeigersinn blinken" },
+            { prob: 613, name: "zwei Farben, mit einer Farbe dazwischen, gegen den Uhrzeigersinn blinken" },
+            { prob: 521, name: "die Anzahl der blinkenden unterscheidbaren Farben ungerade ist" },
+            { prob: 770, name: c => `mindestens zwei Farben von ${c[0]}, ${c[1]}, und ${c[2]} blinken` }];
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var steps = rnd.next(0, 25);
+            for (var i = 0; i < steps; i++)
+                rnd.nextDouble();
+
+            var rules = _rules.slice(0);
+            rnd.shuffleFisherYates(rules);
+            var ths = document.getElementsByClassName('row-rule');
+            rules = rules.slice(0, ths.length);
+            rules.sort((a, b) => a.prob < b.prob ? -1 : a.prob > b.prob ? 1 : 0);
+            for (var i = 0; i < ths.length; i++)
+            {
+                var name = rules[i].name;
+                if (typeof rules[i].name === 'function')
+                {
+                    var colors = 'orange,gelb,rot,grün,blau,lila'.split(',');
+                    rnd.shuffleFisherYates(colors);
+                    name = rules[i].name(colors);
+                }
+                ths[i].innerText = name;
+            }
+
+            var gt = rnd.next(0, 2);
+
+            var condThs = document.getElementsByClassName('little');
+            var conds = ['Ports', 'Indikatoren', 'Batterien', 'Zahlen in #', 'Buchstaben in #', 'Batteriehalter'];
+            rnd.shuffleFisherYates(conds);
+            for (var i = 0; i < 6; i++)
+                condThs[i].innerText = `${gt ? '≥' : '≤'} 3 ${conds[i]}`;
+
+            var sts = [0, 1, 2];
+            var grid = [
+                "FFC,CEH,HAF,ECD,DDE,AHA".split(','),
+                "AHF,DFC,ECH,CDE,FEA,HAD".split(','),
+                "DED,ECF,FHE,HAA,AFH,CDC".split(','),
+                "HCE,ADA,CFD,DHH,EAC,FEF".split(','),
+                "CAH,FHD,DDA,AEC,HCF,EFE".split(','),
+                "EDA,HAE,AEC,FFF,CHD,DCH".split(',')];
+            var smallGrid = [
+                "gOGRBL",
+                "LgRBOG",
+                "OGBLRg",
+                "GBOgLR",
+                "RLgOGB",
+                "BRLGgO"];
+
+            if (rnd.seed != 1)
+            {
+                sts[0] = rnd.next(0, 3);
+                sts[1] = rnd.next(sts[0] + 1, 4);
+                sts[2] = rnd.next(sts[1] + 1, 5);
+
+                var numbers = [];
+                for (var i = 0; i < 6; i++)
+                    numbers.push(i);
+
+                var columnShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle3 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle = [columnShuffle1, columnShuffle2, columnShuffle3];
+
+                var rowShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle3 = rnd.shuffleFisherYates(numbers);
+                var rowShuffle = [rowShuffle1, rowShuffle2, rowShuffle3];
+
+                var newGrid = grid.map(arr => arr.slice(0));
+                for (var r = 0; r < 6; r++)
+                    for (var c = 0; c < 6; c++)
+                        newGrid[r][c] = [0, 1, 2].map(ix => grid[rowShuffle[ix][r]][columnShuffle[ix][c]].substr(ix, 1)).join('');
+                grid = newGrid;
+
+                rnd.shuffleFisherYates(columnShuffle1);
+                rnd.shuffleFisherYates(rowShuffle1);
+
+                var newSmallGrid = [];
+                for (var r = 0; r < 6; r++)
+                    newSmallGrid.push([0, 1, 2, 3, 4, 5].map(c => smallGrid[rowShuffle1[r]].substr(columnShuffle1[c], 1)).join(''));
+                smallGrid = newSmallGrid;
+            }
+
+            var ords = ["erste", "zweite", "dritte", "vierte", "fünfte"];
+            var colSpans = document.getElementsByClassName('column-rule');
+            for (var i = 0; i < 3; i++)
+                colSpans[i].innerText = ords[sts[i]];
+
+            var cellRules = document.getElementsByClassName('cell-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    cellRules[r * 6 + c].innerText = grid[r][c];
+
+            var smallRules = document.getElementsByClassName('small-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    smallRules[r * 6 + c].innerText = smallGrid[r].substr(c, 1);
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Schreit</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Screams.svg" class="diagram">
+                <h2>Zum Thema Simon Schreit</h2>
+                <p class="flavour-text">
+                    Er ist sauer!  Er ist wild!  Er hat genug!
+                </p>
+                <ul>
+                    <li>
+                        Dieses Modul hat 6 Lichter in den Farben rot, orange, gelb, grün,
+                        blau und lila. Diese werden in einer bestimmten Sequenz
+                        aufleuchten. Mit jeder der drei Runden verlängert sich diese Sequenz.
+                    </li>
+                    <li>
+                        Suche in jeder Runde die erste Regel aus der großen Tabelle,
+                        welche zur Sequenz passt.
+                        Nimm den passenden Buchstaben aus der passenden Spalte.
+                        Dieser zeigt dir, welche Spalte aus der kleineren Tabelle du brauchst.
+                    </li>
+                    <li>
+                        Gehe von oben nach unten durch die Spalte in der kleineren Tabelle,
+                        und drücke die passende Farbe, wenn die Bedingung zutrifft.
+                        Die Farben sind (R)ot, (O)range, (g)elb, (G)rün, (B)lau und (L)ila.
+                        Das ‚#‘ steht für „Seriennummer“
+                    </li>
+                    <li>
+                        Immer wenn die Sequenz wiederholt wird, werden alle Eingaben der aktuellen Runde
+                        zurückgesetzt, und die Runde beginnt von vorne.
+                    </li>
+                </ul>
+
+                <table class='simon-screams'>
+                    <tr class='top'>
+                        <td class='corner' rowspan='2'>
+                            <table class='simon-screams-small'>
+                                <tr>
+                                    <td class='corner'></td>
+                                    <th>A</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th>E</th>
+                                    <th>F</th>
+                                    <th>H</th>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Indikatoren</th>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Ports</th>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Zahlen in #</th>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>Y</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Buchstaben in #</th>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Batterien</th>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 Batteriehalter</th>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <th colspan='6' class='corner'>
+                            <p>Runde 1: <span class='column-rule'>erste</span> blinkende Farbe</p>
+                            <p>Runde 2: <span class='column-rule'>zweite</span> blinkende Farbe</p>
+                            <p>Runde 3: <span class='column-rule'>dritte</span> blinkende Farbe</p>
+                        </th>
+                    </tr>
+                    <tr class='rotated'>
+                        <th><span class='text'>rot</span></th>
+                        <th><span class='text'>orange</span></th>
+                        <th><span class='text'>gelb</span></th>
+                        <th><span class='text'>grün</span></th>
+                        <th><span class='text'>blau</span></th>
+                        <th><span class='text'>lila</span></th>
+                    </tr>
+                    <tr>
+                        <th>Wenn <span class='row-rule'>three adjacent colors flashed in clockwise order</span></th>
+                        <td class='cell-rule'>FFC</td>
+                        <td class='cell-rule'>CEH</td>
+                        <td class='cell-rule'>HAF</td>
+                        <td class='cell-rule'>ECD</td>
+                        <td class='cell-rule'>DDE</td>
+                        <td class='cell-rule'>AHA</td>
+                    </tr>
+                    <tr>
+                        <th>Sonst, wenn <span class='row-rule'>a color flashed, then an adjacent color, then the first again</span></th>
+                        <td class='cell-rule'>AHF</td>
+                        <td class='cell-rule'>DFC</td>
+                        <td class='cell-rule'>ECH</td>
+                        <td class='cell-rule'>CDE</td>
+                        <td class='cell-rule'>FEA</td>
+                        <td class='cell-rule'>HAD</td>
+                    </tr>
+                    <tr>
+                        <th>Sonst, wenn <span class='row-rule'>at most one color flashed out of red, yellow, and blue</span></th>
+                        <td class='cell-rule'>DED</td>
+                        <td class='cell-rule'>ECF</td>
+                        <td class='cell-rule'>FHE</td>
+                        <td class='cell-rule'>HAA</td>
+                        <td class='cell-rule'>AFH</td>
+                        <td class='cell-rule'>CDC</td>
+                    </tr>
+                    <tr>
+                        <th>Sonst, wenn <span class='row-rule'>there are two colors opposite each other that didn’t flash</span></th>
+                        <td class='cell-rule'>HCE</td>
+                        <td class='cell-rule'>ADA</td>
+                        <td class='cell-rule'>CFD</td>
+                        <td class='cell-rule'>DHH</td>
+                        <td class='cell-rule'>EAC</td>
+                        <td class='cell-rule'>FEF</td>
+                    </tr>
+                    <tr>
+                        <th>Sonst, wenn <span class='row-rule'>two adjacent colors flashed in clockwise order</span></th>
+                        <td class='cell-rule'>CAH</td>
+                        <td class='cell-rule'>FHD</td>
+                        <td class='cell-rule'>DDA</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>HCF</td>
+                        <td class='cell-rule'>EFE</td>
+                    </tr>
+                    <tr>
+                        <th>Sonst</th>
+                        <td class='cell-rule'>EDA</td>
+                        <td class='cell-rule'>HAE</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>FFF</td>
+                        <td class='cell-rule'>CHD</td>
+                        <td class='cell-rule'>DCH</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Seite 1 von 1</div>
+        </div>
+    </div>
+</body>
+</html>
