@@ -10,103 +10,85 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/Modules/Chess.css">
     <style>
-        .info-list {
-            margin: 1em 0;
-        }
-        .info-list li {
-            margin-bottom: .2em;
-        }
-        table.chess h4 {
-            margin: 0;
-        }
-        table.chess p {
-            margin: 0;
-        }
-        .chess-horizontal {
-            padding-left: 100px;
-            clear: both;
-            display: grid;
-            grid-auto-flow: column;
-            grid-auto-columns: 62px;
-            grid-gap: 5px;
-            padding-top: 10px;
-        }
-        .chess-vertical {
-            display:grid;
-            grid-auto-flow: row;
-            grid-auto-rows: 62px;
-            grid-gap: 5px;
-            padding-left: 30px;
-            padding-top: 45px;
-        }
-        #chess{
-            float:right;
-            margin: 20px 200px 0 0;
+        li, p {
+            margin-bottom: .3em;
+            word-break: keep-all;
         }
     </style>
     <script>
         var defaultRules = null;
 
-        function getDefaultRules(){
-            if (defaultRules !== null)
-            return;
-            defaultRules = {}
-            for (var rule = 1; rule <=6; rule++){
-                defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
-            }
-        }
-
-        function setDefaultRules()
-        {
-            getDefaultRules()
-            for( var i = 1; i <= 6; i++){
-                var span = document.getElementById(`rule${i}`)
-
-                span.innerHTML = defaultRules[i].replace("{i}",i).replace("{j}",5)
-            }
-        }
-
-        function setRules(rnd)
-        {
-            getDefaultRules()
-            var order = [1,2,3,4,5,6]
-            rnd.shuffleFisherYates(order)
-            var ind = order.indexOf(5)
-
-            var invertX = rnd.nextInt() % 2 == 0;
-            var invertY = rnd.nextInt() % 2 == 0;
-            var swap = rnd.nextInt() % 2 == 0;
-            var invertField = rnd.nextInt() % 2 == 1;
-            var invertSerial = rnd.nextInt() % 2 == 0;
-            for (var i = 0; i < 6; i++){
-                var span = document.getElementById(`rule${i+1}`)
-                var inner = defaultRules[order[i]].replace("{i}",i+1);
-                switch(order[i]){
-                    case 1: inner = inner.replace("{j}",ind+1); break;
-                    case 2: inner = inner.replace("홀수", invertSerial == true ? "짝수" : "홀수"); break;
-                    case 5: inner = inner.replace("흰색", invertField == true ? "검은색" : "흰색"); break;
+            function makeChessboard(labels) {
+                const svg = $("#chessboard");
+                svg.append(MakeSvgElem("rect", { class: "border", "x": -5, "y": -5, "width": 610, "height": 610 }));
+                for (let row = 0; row < 6; row++) {
+                    for (let col = 0; col < 6; col++) {
+                        const x = 100 * col;
+                        const y = 100 * row;
+                        const colour = !((row + col) & 1) ? "white " : "black ";
+                        svg.append(MakeSvgElem("rect", { "class": colour + "highlightable", "x": x, "y": y, "width": 100, "height": 100 }));
+                    }
                 }
-                span.innerHTML = inner;
-            }
-
-            var letters = ['a','b','c','d','e','f']
-            var numbers = ['1','2','3','4','5','6']
-            if (invertX) letters.reverse();
-            if (invertY) numbers.reverse();
-            for (var i = 1; i <= 6; i++){
-                if(!swap){
-                    document.getElementById(`horizontal${i}`).innerText = letters[i-1]
-                    document.getElementById(`vertical${i}`).innerText = numbers[i-1]
-                }else{
-                    document.getElementById(`horizontal${i}`).innerText = numbers[i-1]
-                    document.getElementById(`vertical${i}`).innerText = letters[i-1]
+                for (let i = 0; i < 6; i++) {
+                    const rankCoords = { x: -50, y: 550 - 100 * i };
+                    const fileCoords = { x: 50 + 100 * i, y: 670 };
+                    svg.append(MakeSvgElem("text", { "x": rankCoords.x, "y": rankCoords.y, "class": "coordinate" }, labels.ranks[i]));
+                    svg.append(MakeSvgElem("text", { "x": fileCoords.x, "y": fileCoords.y, "class": "coordinate" }, labels.files[i]));
                 }
             }
 
-        }
+            function getDefaultRules() {
+                if (defaultRules !== null) return;
+                defaultRules = {};
+                for (let rule = 1; rule <= 6; rule++) defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+            }
+
+            function setDefaultRules() {
+                getDefaultRules();
+                for (let i = 1; i <= 6; i++) {
+                    const span = document.getElementById(`rule${i}`);
+                    span.innerHTML = defaultRules[i].replace("{i}", i).replace("{j}", 5);
+                }
+                const defaultLabels = { ranks: ['1', '2', '3', '4', '5', '6'], files: ['a', 'b', 'c', 'd', 'e', 'f'] };
+                makeChessboard(defaultLabels);
+            }
+
+            function setRules(rnd) {
+                getDefaultRules();
+                const order = [1, 2, 3, 4, 5, 6];
+                rnd.shuffleFisherYates(order);
+                const ind = order.indexOf(5);
+                const invertX = !(rnd.nextInt() & 1);
+                const invertY = !(rnd.nextInt() & 1);
+                const swap = !(rnd.nextInt() & 1);
+                const invertField = !!(rnd.nextInt() & 1);
+                const invertSerial = !(rnd.nextInt() & 1);
+                for (let i = 0; i < 6; i++) {
+                    const span = document.getElementById(`rule${i + 1}`);
+                    let inner = defaultRules[order[i]].replace("{i}", i + 1);
+                    switch (order[i]) {
+                        case 1: inner = inner.replace("{j}", ind + 1); break;
+                        case 2: inner = inner.replace("odd", invertSerial ? "even" : "odd"); break;
+                        case 5: inner = inner.replace("white", invertField ? "black" : "white"); break;
+                    }
+                    span.innerHTML = inner;
+                }
+                const letters = ['a', 'b', 'c', 'd', 'e', 'f'];
+                const numbers = ['1', '2', '3', '4', '5', '6'];
+                if (invertX) letters.reverse();
+                if (invertY) numbers.reverse();
+                const setLabels = { ranks: [], files: [] };
+                for (let i = 0; i < 6; i++) {
+                    setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                    setLabels.files.push(swap ? numbers[i] : letters[i]);
+                }
+                makeChessboard(setLabels);
+            }
     </script>
-
 </head>
 <body>
     <div class="section">
@@ -118,12 +100,12 @@
             <div class="page-content">
                 <img src="img/Component/Chess.svg" class="diagram">
                 <h2>체스에 대하여</h2>
-                <p class="flavour-text">중압감 속에서는, 체스는 마치 배틀쉽 게임처럼 느껴질 수도 있습니다.</p>
-
+                <p class="flavour-text">중압감 속에서는, 체스가 마치 배틀쉽 게임처럼 느껴질 수도 있습니다.</p>
+                
                 <p>이 모듈은 <strong>6×6 체스판</strong> <i>(다음 페이지에 묘사됨)</i>을 기반으로 하며, 모든 기물들은 일반적인 FIDE의 행마법을 따릅니다.</p>
                 <p>체스 모듈은 화면 하나와, 두 줄에 각각 여섯 개씩 있는 버튼으로 이루어져 있습니다.</p>
-
-                <ul class="info-list">
+                
+                <ul>
                     <li>체스판 위의 여섯 개의 칸을 가리키는 여섯 개의 좌표가 있습니다.</li>
                     <li>아래 줄의 숫자가 적힌 버튼을 이용하여 좌표들을 훑어보세요. 버튼 아래의 초록색 LED가 현재 몇 번째 좌표가 선택됐는지를 나타냅니다.</li>
                     <li>아래의 참조 표를 이용하면, 각각의 칸에 특정 체스 기물을 배치할 수 있습니다.</li>
@@ -132,7 +114,7 @@
                     <li>어떤 체스 기물도 이동할 수 없는 유일한 칸을 찾고, 그 좌표를 입력해 모듈을 해제하세요.</li>
                     <li>좌표를 입력할 때는 로마자를 먼저 누르고, 그 다음 숫자를 누르세요. 정답이 입력되고 있음을 알리기 위해 LED가 붉은색으로 변합니다.</li>
                 </ul>
-
+                
                 <span>다음 표를 참조해 각 칸을 차지하고 있는 기물을 알아내세요.</span>
                 <table class="chess">
                     <tr>
@@ -178,7 +160,7 @@
                         </td>
                     </tr>
                 </table>
-
+                
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -188,25 +170,9 @@
                 <span class="page-header-section-title">체스</span>
             </div>
             <div class="page-content">
-                <h4>참고용 체스판</h4>
+                <h4>체스판 참고자료</h4>
                 <p>체스판의 레이아웃은 다음 그림을 참고하세요.</p>
-                <img src="img/Chess/Chessboard.png"  id="chess">
-                <div class="chess-vertical">
-                    <span id="vertical6">6</span>
-                    <span id="vertical5">5</span>
-                    <span id="vertical4">4</span>
-                    <span id="vertical3">3</span>
-                    <span id="vertical2">2</span>
-                    <span id="vertical1">1</span>
-                </div>
-                <div class="chess-horizontal">
-                    <span id="horizontal1">a</span>
-                    <span id="horizontal2">b</span>
-                    <span id="horizontal3">c</span>
-                    <span id="horizontal4">d</span>
-                    <span id="horizontal5">e</span>
-                    <span id="horizontal6">f</span>
-                </div>
+                <svg id="chessboard" viewbox="-110 -10 720 720"></svg>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
