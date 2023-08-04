@@ -1012,7 +1012,7 @@ function Bomb(seed) {
         const preferredManuals = JSON.parse(localStorage.getItem("preferredManuals") ?? "{}");
         function GetManualPath(parseData) {
             const moduleData = parseData.moduleData;
-            const repoName = moduleData.repo?.Name;
+            const repoName = encodeURIComponent(moduleData.repo?.Name);
             let path = (moduleData.repo?.FileName || repoName || moduleData.displayName)
                 .replace("'", "’")
                 .replace(/[<>:"/\\|?*]/g, "");
