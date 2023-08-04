@@ -12028,7 +12028,7 @@ let parseData = [
 					for (let y = 0; y < 5; y++)
 						for (let z = 0; z < 5; z++)
 							for (let x = 0; x < 5; x++)
-								grid[x][y][z] = lines[5 * y + z][x];
+								grid[x][y][z] = lines[5 * (4 - y) + z][x];
 
 					function makePanel(cube, z) {
 
