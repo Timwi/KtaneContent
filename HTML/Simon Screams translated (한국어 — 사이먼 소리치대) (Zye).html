@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>사이먼 소리치대 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        li, th { word-break: keep-all; }
+
+        table.simon-screams, table.simon-screams table {
+            border: none;
+        }
+
+            table.simon-screams td.corner, table.simon-screams th.corner {
+                border: none;
+                font-size: 90%;
+            }
+
+            table.simon-screams td {
+                text-align: center;
+            }
+
+            table.simon-screams th {
+                text-align: right;
+            }
+
+                table.simon-screams th.little {
+                    text-align: left;
+                }
+
+            table.simon-screams tr.top > th {
+                text-align: center;
+                vertical-align: bottom;
+            }
+
+                table.simon-screams tr.top > th > p {
+                    margin: .25em;
+                }
+
+            table.simon-screams tr.rotated > th {
+                position: relative;
+                text-align: left;
+                height: 4em;
+            }
+
+                table.simon-screams tr.rotated > th > span.text {
+                    top: 50%;
+                    left: 50%;
+                    position: absolute;
+                    transform: translate(-50%, -50%) rotate(-50deg);
+                    transform-origin: center center;
+                    text-align: center;
+                    line-height: 1.25;
+                }
+
+        table.simon-screams-small td, table.simon-screams-small th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .column-rule {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        var _rules = [
+            { prob:  50, name: "모든 색이 최소 1번 빛났다면" },
+            { prob: 120, name: "서로 2칸씩 떨어진 3개의 색이 시계방향으로 빛났다면" },
+            { prob: 220, name: "한 색이 빛나고, 그에 인접한 색이 빛나고, 다시 먼젓번 색이 빛났다면" },
+            { prob: 121, name: "서로 인접한 3개의 색이 시계반대방향으로 빛났다면" },
+            { prob: 122, name: "서로 인접한 3개의 색이 시계방향으로 빛났다면" },
+            { prob: 123, name: "한 색이 빛나고, 그 반대편 색이 빛나고, 다시 먼젓번 색이 빛났다면" },
+            { prob: 100, name: "서로 인접한 3개의 색이 빛나지 않았다면" },
+            { prob: 170, name: "처음과 마지막에 빛난 색이 같다면" },
+            { prob: 124, name: "서로 2칸씩 떨어진 3개의 색이 시계반대방향으로 빛났다면" },
+            { prob: 230, name: "한 색이 빛나고, 2칸 떨어진 색이 빛나고, 다시 먼젓번 색이 빛났다면" },
+            { prob: 260, name: "한 색이 빛나고, 그에 인접한 색이 빛나고, 나중 색의 반대편 색이 빛났다면" },
+            { prob: 261, name: "한 색이 빛나고, 그에 인접한 색이 빛나고, 먼젓번 색의 반대편 색이 빛났다면" },
+            { prob: 262, name: "한 색이 빛나고, 2칸 떨어진 색이 빛나고, 나중 색의 반대편 색이 빛났다면" },
+            { prob: 263, name: "한 색이 빛나고, 2칸 떨어진 색이 빛나고, 먼젓번 색의 반대편 색이 빛났다면" },
+            { prob: 231, name: c => `${c[0]}, ${c[1]}, ${c[2]} 중 최대 1개의 색이 빛났다면` },
+            { prob: 264, name: "한 색이 빛나고, 그 반대편 색이 빛나고, 먼젓번 색에 인접한 색이 빛났다면" },
+            { prob: 221, name: "1번 넘게 빛난 색이 없다면" },
+            { prob: 265, name: "한 색이 빛나고, 그 반대편 색이 빛나고, 나중 색에 인접한 색이 빛났다면" },
+            { prob: 240, name: "정확히 2번 빛난 색이 정확히 2개 있다면" },
+            { prob: 420, name: "빛나지 않았으며 서로 인접한 2개의 색이 있다면" },
+            { prob: 270, name: "빛나지 않은 색이 정확히 1개 있다면" },
+            { prob: 280, name: "정확히 2번 빛난 색이 없다면" },
+            { prob: 290, name: "빛나지 않은 색이 적어도 3개 있다면" },
+            { prob: 300, name: "1번 넘게 빛난 색이 정확히 2개라면" },
+            { prob: 330, name: "처음과 마지막에 빛난 색이 서로 인접하다면" },
+            { prob: 380, name: "1번 넘게 빛난 색이 정확히 1개라면" },
+            { prob: 440, name: "빛나지 않았으며 서로 2칸 떨어진 2개의 색이 있다면" },
+            { prob: 266, name: "빛나지 않았으며 서로 반대편에 위치한 2개의 색이 있다면" },
+            { prob: 400, name: "빛나지 않은 색이 정확히 2개 있다면" },
+            { prob: 410, name: "정확히 2번 빛난 색이 정확히 1개 있다면" },
+            { prob: 480, name: "빛난 서로 다른 색의 개수가 짝수라면" },
+            { prob: 390, name: "서로 인접한 2개의 색이 시계방향으로 빛난 경우가 없다면" },
+            { prob: 391, name: "서로 인접한 2개의 색이 시계반대방향으로 빛난 경우가 없다면" },
+            { prob: 610, name: "서로 인접한 2개의 색이 시계방향으로 빛났다면" },
+            { prob: 392, name: "서로 2칸 떨어진 2개의 색이 시계반대방향으로 빛난 경우가 없다면" },
+            { prob: 500, name: "처음과 마지막에 빛난 색이 다르고 서로 인접하지 않다면" },
+            { prob: 520, name: "한 색이 빛나고, 다른 색이 빛나고, 다시 먼젓번 색이 빛났다면" },
+            { prob: 393, name: "서로 2칸 떨어진 2개의 색이 시계방향으로 빛난 경우가 없다면" },
+            { prob: 611, name: "서로 인접한 2개의 색이 시계반대방향으로 빛났다면" },
+            { prob: 612, name: "서로 2칸 떨어진 2개의 색이 시계방향으로 빛났다면" },
+            { prob: 613, name: "서로 2칸 떨어진 2개의 색이 시계반대방향으로 빛났다면" },
+            { prob: 521, name: "빛난 서로 다른 색의 개수가 홀수라면" },
+            { prob: 770, name: c => `${c[0]}, ${c[1]}, ${c[2]} 중 최소 2개의 색이 빛났다면` }];
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var steps = rnd.next(0, 25);
+            for (var i = 0; i < steps; i++)
+                rnd.nextDouble();
+
+            var rules = _rules.slice(0);
+            rnd.shuffleFisherYates(rules);
+            var ths = document.getElementsByClassName('row-rule');
+            rules = rules.slice(0, ths.length);
+            rules.sort((a, b) => a.prob < b.prob ? -1 : a.prob > b.prob ? 1 : 0);
+            for (var i = 0; i < ths.length; i++)
+            {
+                var name = rules[i].name;
+                if (typeof rules[i].name === 'function')
+                {
+                    var colors = '주황색,노란색,붉은색,초록색,파란색,보라색'.split(',');
+                    rnd.shuffleFisherYates(colors);
+                    name = rules[i].name(colors);
+                }
+                ths[i].innerText = name;
+            }
+
+            var gt = rnd.next(0, 2);
+
+            var condThs = document.getElementsByClassName('little');
+            var conds = ['포트', '지시등', '배터리', '#의 숫자', '#의 로마자', '배터리 홀더'];
+            rnd.shuffleFisherYates(conds);
+            for (var i = 0; i < 6; i++)
+                condThs[i].innerText = `${conds[i]} ${gt ? '≥' : '≤'} 3개`;
+
+            var sts = [0, 1, 2];
+            var grid = [
+                "FFC,CEH,HAF,ECD,DDE,AHA".split(','),
+                "AHF,DFC,ECH,CDE,FEA,HAD".split(','),
+                "DED,ECF,FHE,HAA,AFH,CDC".split(','),
+                "HCE,ADA,CFD,DHH,EAC,FEF".split(','),
+                "CAH,FHD,DDA,AEC,HCF,EFE".split(','),
+                "EDA,HAE,AEC,FFF,CHD,DCH".split(',')];
+            var smallGrid = [
+                "YOGRBP",
+                "PYRBOG",
+                "OGBPRY",
+                "GBOYPR",
+                "RPYOGB",
+                "BRPGYO"];
+
+            if (rnd.seed != 1)
+            {
+                sts[0] = rnd.next(0, 3);
+                sts[1] = rnd.next(sts[0] + 1, 4);
+                sts[2] = rnd.next(sts[1] + 1, 5);
+
+                var numbers = [];
+                for (var i = 0; i < 6; i++)
+                    numbers.push(i);
+
+                var columnShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle3 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle = [columnShuffle1, columnShuffle2, columnShuffle3];
+
+                var rowShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle3 = rnd.shuffleFisherYates(numbers);
+                var rowShuffle = [rowShuffle1, rowShuffle2, rowShuffle3];
+
+                var newGrid = grid.map(arr => arr.slice(0));
+                for (var r = 0; r < 6; r++)
+                    for (var c = 0; c < 6; c++)
+                        newGrid[r][c] = [0, 1, 2].map(ix => grid[rowShuffle[ix][r]][columnShuffle[ix][c]].substr(ix, 1)).join('');
+                grid = newGrid;
+
+                rnd.shuffleFisherYates(columnShuffle1);
+                rnd.shuffleFisherYates(rowShuffle1);
+
+                var newSmallGrid = [];
+                for (var r = 0; r < 6; r++)
+                    newSmallGrid.push([0, 1, 2, 3, 4, 5].map(c => smallGrid[rowShuffle1[r]].substr(columnShuffle1[c], 1)).join(''));
+                smallGrid = newSmallGrid;
+            }
+
+            var ords = ["1번째", "2번째", "3번째", "4번째", "5번째"];
+            var colSpans = document.getElementsByClassName('column-rule');
+            for (var i = 0; i < 3; i++)
+                colSpans[i].innerText = ords[sts[i]];
+
+            var cellRules = document.getElementsByClassName('cell-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    cellRules[r * 6 + c].innerText = grid[r][c];
+
+            var smallRules = document.getElementsByClassName('small-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    smallRules[r * 6 + c].innerText = smallGrid[r].substr(c, 1);
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">사이먼 소리치대</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Screams.svg" class="diagram">
+                <h2>사이먼 소리치대에 대하여</h2>
+                <p class="flavour-text">
+                    그가 화났다! 그가 성났다! 그가 노했다! 그가 분개했다!
+                </p>
+                <ul>
+                    <li>
+                        이 모듈에는 붉은색, 주황색, 노란색, 초록색, 파란색, 보라색이 칠해진 6개의 전등이 있습니다.
+                        불은 어떤 배열에 따라 빛나며 배열은 단계가 진행될수록 길어집니다. 단계는 총 3개 있습니다.
+                    </li>
+                    <li>
+                        각 단계마다 배열 전체를 확인하세요. 큰 표에서 처음으로 해당되는 행을 찾고, 올바른 열을 찾으세요.
+                        찾은 칸의 로마자들 중 현재 단계에 해당하는 번째의 로마자를 보고,
+                        작은 표에서 그 로마자에 해당하는 열을 보세요.
+                    </li>
+                    <li>
+                        그 열을 위부터 순서대로 보면서, 조건이 참인 색깔들을 모두 누르세요.
+                        색깔 기호는 R(붉은색), O(주황색), Y(노란색), G(초록색), B(파란색), P(보라색)이며,
+                        “#”는 “시리얼 넘버”를 의미합니다.
+                    </li>
+                    <li>
+                        전등에 배열이 다시 표시될 때마다 현재 단계에 입력했던 것은 초기화됩니다.
+                    </li>
+                </ul>
+
+                <table class='simon-screams'>
+                    <tr class='top'>
+                        <td class='corner' rowspan='2'>
+                            <table class='simon-screams-small'>
+                                <tr>
+                                    <td class='corner'></td>
+                                    <th>A</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th>E</th>
+                                    <th>F</th>
+                                    <th>H</th>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 indicators</th>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 ports</th>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 digits in #</th>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>Y</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 letters in #</th>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>R</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 batteries</th>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>B</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 bat. holders</th>
+                                    <td class='small-rule'>B</td>
+                                    <td class='small-rule'>R</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>G</td>
+                                    <td class='small-rule'>Y</td>
+                                    <td class='small-rule'>O</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <th colspan='6' class='corner'>
+                            <p>1단계: <span class='column-rule'>1번째</span>로 빛난 색깔</p>
+                            <p>2단계: <span class='column-rule'>2번째</span>로 빛난 색깔</p>
+                            <p>3단계: <span class='column-rule'>3번째</span>로 빛난 색깔</p>
+                        </th>
+                    </tr>
+                    <tr class='rotated'>
+                        <th><span class='text'>붉은색</span></th>
+                        <th><span class='text'>주황색</span></th>
+                        <th><span class='text'>노란색</span></th>
+                        <th><span class='text'>초록색</span></th>
+                        <th><span class='text'>파란색</span></th>
+                        <th><span class='text'>보라색</span></th>
+                    </tr>
+                    <tr>
+                        <th>만약 <span class='row-rule'>three adjacent colors flashed in clockwise order</span></th>
+                        <td class='cell-rule'>FFC</td>
+                        <td class='cell-rule'>CEH</td>
+                        <td class='cell-rule'>HAF</td>
+                        <td class='cell-rule'>ECD</td>
+                        <td class='cell-rule'>DDE</td>
+                        <td class='cell-rule'>AHA</td>
+                    </tr>
+                    <tr>
+                        <th>그렇지 않고, <span class='row-rule'>a color flashed, then an adjacent color, then the first again</span></th>
+                        <td class='cell-rule'>AHF</td>
+                        <td class='cell-rule'>DFC</td>
+                        <td class='cell-rule'>ECH</td>
+                        <td class='cell-rule'>CDE</td>
+                        <td class='cell-rule'>FEA</td>
+                        <td class='cell-rule'>HAD</td>
+                    </tr>
+                    <tr>
+                        <th>그렇지 않고, <span class='row-rule'>at most one color flashed out of red, yellow, and blue</span></th>
+                        <td class='cell-rule'>DED</td>
+                        <td class='cell-rule'>ECF</td>
+                        <td class='cell-rule'>FHE</td>
+                        <td class='cell-rule'>HAA</td>
+                        <td class='cell-rule'>AFH</td>
+                        <td class='cell-rule'>CDC</td>
+                    </tr>
+                    <tr>
+                        <th>그렇지 않고, <span class='row-rule'>there are two colors opposite each other that didn’t flash</span></th>
+                        <td class='cell-rule'>HCE</td>
+                        <td class='cell-rule'>ADA</td>
+                        <td class='cell-rule'>CFD</td>
+                        <td class='cell-rule'>DHH</td>
+                        <td class='cell-rule'>EAC</td>
+                        <td class='cell-rule'>FEF</td>
+                    </tr>
+                    <tr>
+                        <th>그렇지 않고, <span class='row-rule'>two adjacent colors flashed in clockwise order</span></th>
+                        <td class='cell-rule'>CAH</td>
+                        <td class='cell-rule'>FHD</td>
+                        <td class='cell-rule'>DDA</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>HCF</td>
+                        <td class='cell-rule'>EFE</td>
+                    </tr>
+                    <tr>
+                        <th>그렇지 않다면</th>
+                        <td class='cell-rule'>EDA</td>
+                        <td class='cell-rule'>HAE</td>
+                        <td class='cell-rule'>AEC</td>
+                        <td class='cell-rule'>FFF</td>
+                        <td class='cell-rule'>CHD</td>
+                        <td class='cell-rule'>DCH</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
