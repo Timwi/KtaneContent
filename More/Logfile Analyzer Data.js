@@ -18358,14 +18358,14 @@ let parseData = [
 				handler: function (matches, module) {
 					var m, span = null, txt = matches[0];
 					while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt)) {
-						if (span === null)
+						if (!span)
 							span = $('<span>');
 						span
 							.append($('<span>').text(m[1]))
-							.append($(`<div style='display: inline-block; width: 20px; height: 20px; background-image: url(img/X-Ray/Icons.svg); background-size: 220px 200px; background-repeat: no-repeat; background-position: ${-20 * (m[2] % 11)}px ${-20 * Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
+							.append($(`<div class='xray-symbol' style='background-position: ${-20 * (m[2] % 11)}px ${-20 * Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
 						txt = txt.substr(m[0].length);
 					}
-					module.groups.add(span === null ? matches.input : span.append($('<span>').text(txt)));
+					module.groups.add(!span ? matches.input : span.append($('<span>').text(txt)));
 					if (matches.input.indexOf('Resetting module') !== -1)
 						module.groups.addGroup();
 				}
