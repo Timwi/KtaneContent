@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Snakes and Ladders Optimized — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            let numbers = [[100, 99, 98, 97, 96, 95, 94, 93, 92, 91],
+            [81, 82, 83, 84, 85, 86, 87, 88, 89, 90],
+            [80, 79, 78, 77, 76, 75, 74, 73, 72, 71],
+            [61, 62, 63, 64, 65, 66, 67, 68, 69, 70],
+            [60, 59, 58, 57, 56, 55, 54, 53, 52, 51],
+            [41, 42, 43, 44, 45, 46, 47, 48, 49, 50],
+            [40, 39, 38, 37, 36, 35, 34, 33, 32, 31],
+            [21, 22, 23, 24, 25, 26, 27, 28, 29, 30],   
+            [20, 19, 18, 17, 16, 15, 14, 13, 12, 11],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]];
+            let divisible = [11, 10, 5, 8, 6, 4, 3, 2];
+            let tenDigits = [8, 2, 6, 3, 5, 7, 4, 9];
+            let onesDigits = [5, 3, 7, 9, 4, 2, 6, 8];
+            let minValues = [34, 89, 12, 23, 45, 67, 78, 56];
+            let lookupTable = $(".megaLookup")
+            function GetNewCellValue(row, col, direction)
+            {
+                switch(direction)
+                {
+                    case 0:
+                        return numbers[(row + 9) % 10][(col + 9) % 10];
+                    case 1:
+                        return numbers[(row + 9) % 10][(col) % 10];
+                    case 2:
+                        return numbers[(row + 9) % 10][(col + 1) % 10];
+                    case 3:
+                        return numbers[(row) % 10][(col + 9) % 10];
+                    case 4:
+                        return numbers[(row) % 10][(col) % 10];
+                    case 5:
+                        return numbers[(row) % 10][(col + 1) % 10];
+                    case 6:
+                        return numbers[(row + 1) % 10][(col + 9) % 10];
+                    case 7:
+                        return numbers[(row + 1) % 10][(col) % 10];
+                    case 8:
+                        return numbers[(row + 1) % 10][(col + 1) % 10];
+                }
+            }
+
+            for (let row = 0; row < 10; row++)
+            {
+                let nextRowT = $("<tr>");
+                let nextRowB = $("<tr>");
+                for (let col = 0; col < 10; col++)
+                    {
+                        if (row == 0 && col == 0)
+                        {
+                            $("<td>").attr("colspan","2").attr("rowspan","2").addClass("corner").appendTo(nextRowT);
+                            continue;
+                        }
+                        let currentValue = numbers[row][col];
+
+                        let nextCellTL = $("<td>");
+                        let curCellIdxTL = 8;
+                        let storedMaxVal = 1;
+                        for (let p = 0; p < 8; p++)
+                            if (currentValue >= minValues[p] && storedMaxVal < minValues[p])
+                            {
+                                storedMaxVal = minValues[p];
+                                curCellIdxTL = p;
+                            }
+                        nextCellTL.text(GetNewCellValue(row, col, curCellIdxTL));
+                        nextCellTL.appendTo(nextRowT);
+
+                        let nextCellBL = $("<td>");
+                        let curCellIdxBL = 8;
+                        for (let p = 0; p < 8; p++)
+                            if (currentValue % 10 == onesDigits[p])
+                            {
+                                curCellIdxBL = p;
+                                break;
+                            }
+                        nextCellBL.text(GetNewCellValue(row, col, curCellIdxBL));
+                        nextCellBL.appendTo(nextRowB);
+
+                        let nextCellTR = $("<td>");
+                        let curCellIdxTR = 8;
+                        for (let p = 0; p < 8; p++)
+                            if (Math.floor(currentValue / 10) == tenDigits[p])
+                            {
+                                curCellIdxTR = p;
+                                break;
+                            }
+                        nextCellTR.text(GetNewCellValue(row, col, curCellIdxTR));
+                        nextCellTR.appendTo(nextRowT);
+                        
+                        let nextCellBR = $("<td>");
+                        let curCellIdxBR = 8;
+                        for (let p = 0; p < 8; p++)
+                            if (currentValue % divisible[p] == 0)
+                            {
+                                curCellIdxBR = p;
+                                break;
+                            }
+                        nextCellBR.text(GetNewCellValue(row, col, curCellIdxBR));
+                        nextCellBR.appendTo(nextRowB);
+                    }
+                nextRowT.appendTo(lookupTable);
+                nextRowB.appendTo(lookupTable);
+            }
+        });
+    </script>
+    <style>
+        .dark table, table {
+            margin: .7em auto;
+            border: none;
+        }
+        .megaLookup
+        {
+            font-size: 70%;
+            width: 100%;
+        }
+        .megaLookup :is(tr:nth-child(n+3) td:nth-child(2n + 3), tr:nth-child(1) td:nth-child(2n + 2), tr:nth-child(2) td:nth-child(2n + 1))
+        { border-left-width: thick; }
+        .megaLookup tr:nth-child(2n + 3) td
+        { border-top-width: thick; }
+        .center-text
+        {
+            text-align: center;
+        }
+
+        .originalTable tr td, .originalTable tr th {
+            width: 33%;
+        }
+
+        .originalTable, .innerTable {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snakes and Ladders</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Snakes and Ladders.svg" class="diagram">
+                <h2>On the Optimization of Snakes and Ladders</h2>
+                <p class="flavour-text">Where is the fun of sliding and climbing in a playground board game?</p>
+                <p>Refer to the <a href="Snakes%20and%20Ladders.html">original manual</a> for the instructions.</p>
+                <p><strong>The next page contains all solutions corresponding to the given conditions.</strong></p>
+                <h3>Board Layout</h3>
+                <table class="center-text">
+                    <tr><td>100</td><td>99</td><td>98</td><td>97</td><td>96</td><td>95</td><td>94</td><td>93</td><td>92</td><td>91</td></tr>
+                    <tr><td>81</td><td>82</td><td>83</td><td>84</td><td>85</td><td>86</td><td>87</td><td>88</td><td>89</td><td>90</td></tr>
+                    <tr><td>80</td><td>79</td><td>78</td><td>77</td><td>76</td><td>75</td><td>74</td><td>73</td><td>72</td><td>71</td></tr>
+                    <tr><td>61</td><td>62</td><td>63</td><td>64</td><td>65</td><td>66</td><td>67</td><td>68</td><td>69</td><td>70</td></tr>
+                    <tr><td>60</td><td>59</td><td>58</td><td>56</td><td>55</td><td>54</td><td>53</td><td>57</td><td>52</td><td>51</td></tr>
+                    <tr><td>41</td><td>42</td><td>43</td><td>44</td><td>45</td><td>46</td><td>47</td><td>48</td><td>49</td><td>50</td></tr>
+                    <tr><td>40</td><td>39</td><td>38</td><td>37</td><td>36</td><td>35</td><td>34</td><td>33</td><td>32</td><td>31</td></tr>
+                    <tr><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td><td>29</td><td>30</td></tr>
+                    <tr><td>20</td><td>19</td><td>18</td><td>17</td><td>16</td><td>15</td><td>14</td><td>13</td><td>12</td><td>11</td></tr>
+                    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td></tr>
+                </table>
+                <table class="originalTable center-text">
+                    <tr><th>Red</th><th>Yellow</th></tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table class="innerTable">
+                                <tr><td>34–44</td><td>89–99</td><td>12–22</td></tr>
+                                <tr><td>23–33</td><td>45–55</td><td>67–77</td></tr>
+                                <tr><td>78–88</td><td>56–66</td><td>1-11</td></tr>
+                            </table>
+                        </td>
+                        <td class="nohighlight">
+                            <table class="innerTable">
+                                <tr><td>8_</td><td>2_</td><td>6_</td></tr>
+                                <tr><td>3_</td><td>5_</td><td>7_</td></tr>
+                                <tr><td>4_</td><td>9_</td><td>0_, 1_</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr><th>Green</th><th>Blue</th></tr>
+                    <tr>
+                        <td class="nohighlight">
+                            <table class="innerTable">
+                                <tr><td>_5</td><td>_3</td><td>_7</td></tr>
+                                <tr><td>_9</td><td>_4</td><td>_2</td></tr>
+                                <tr><td>_6</td><td>_8</td><td>_0, _1</td></tr>
+                            </table>
+                        </td>
+                        <td class="nohighlight">
+                            <table class="innerTable">
+                                <tr><td>% 11 = 0</td><td>% 10 = 0</td><td>% 5 = 0</td></tr>
+                                <tr><td>% 8 = 0</td><td>% 6 = 0</td><td>% 4 = 0</td></tr>
+                                <tr><td>% 3 = 0</td><td>% 2 = 0</td><td>% 1 = 0</td></tr>
+                            </table>
+                            <strong>(First in reading order)</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Snakes and Ladders</span>
+            </div>
+            <div class="page-content">
+                <table class="centered">
+                    <tr><th>Red</th><th>Yellow</th></tr>
+                    <tr><th>Green</th><th>Blue</th></tr>
+                </table>
+                <table class="megaLookup centered center-text"></table>
+                <table class="center-text">
+                    <tr><td>100</td><td>99</td><td>98</td><td>97</td><td>96</td><td>95</td><td>94</td><td>93</td><td>92</td><td>91</td></tr>
+                    <tr><td>81</td><td>82</td><td>83</td><td>84</td><td>85</td><td>86</td><td>87</td><td>88</td><td>89</td><td>90</td></tr>
+                    <tr><td>80</td><td>79</td><td>78</td><td>77</td><td>76</td><td>75</td><td>74</td><td>73</td><td>72</td><td>71</td></tr>
+                    <tr><td>61</td><td>62</td><td>63</td><td>64</td><td>65</td><td>66</td><td>67</td><td>68</td><td>69</td><td>70</td></tr>
+                    <tr><td>60</td><td>59</td><td>58</td><td>56</td><td>55</td><td>54</td><td>53</td><td>57</td><td>52</td><td>51</td></tr>
+                    <tr><td>41</td><td>42</td><td>43</td><td>44</td><td>45</td><td>46</td><td>47</td><td>48</td><td>49</td><td>50</td></tr>
+                    <tr><td>40</td><td>39</td><td>38</td><td>37</td><td>36</td><td>35</td><td>34</td><td>33</td><td>32</td><td>31</td></tr>
+                    <tr><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td><td>29</td><td>30</td></tr>
+                    <tr><td>20</td><td>19</td><td>18</td><td>17</td><td>16</td><td>15</td><td>14</td><td>13</td><td>12</td><td>11</td></tr>
+                    <tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
