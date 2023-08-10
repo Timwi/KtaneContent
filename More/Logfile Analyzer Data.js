@@ -1458,7 +1458,7 @@ let parseData = [
 							const icon = icons[module.grid[6 * row + col]];
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
 							table += `<td style='background: ${fill}'>
-										<img src='img/PPAP/${icon}.png'/>
+										<img src='img/PPAP/${icon}.png'>
 									</td>`;
 						}
 						table += '</tr>';
@@ -1864,7 +1864,7 @@ let parseData = [
 					const itempair = [glyph[0], glyph.substring(1)];
 					const index = (("ABCDE".indexOf(itempair[0]) + 1) + (5 * (itempair[1] - 1)) - 1);
 					const name = "ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7);
-					const img = `<img class='bioscanner-image' 	src='img/The Bioscanner/${name}.png' height='100' />`;
+					const img = `<img class='bioscanner-image' 	src='img/The Bioscanner/${name}.png' height='100'>`;
 
 					module.push({ label:matches[1] + ':', obj:img});
 					return true;
@@ -1883,7 +1883,7 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'>`);
 					}
 					module.push({ label:matches[1] + ':', obj:div});
 					return true;
@@ -1902,7 +1902,7 @@ let parseData = [
 						actualGlyphs.push("ABCDEFGH".charAt(Math.floor(index / 7)) + ((index + 1) % 7 == 0 ? 7 : (index + 1) % 7).toString());
 					});
 					for (var i = 0; i < actualGlyphs.length; i++) {
-						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'/>`);
+						div.append(`<img class='bioscanner-image' src='img/The Bioscanner/${actualGlyphs[i]}.png' height='100'>`);
 					}
 					module.push({ label:matches[1], obj:div });
 					return true;
@@ -5751,7 +5751,7 @@ let parseData = [
 					var colDisregards = '';
 					var rowDisregards = '';
 					for (var i = 0; i < module.Symbols.length; i++) {
-						cutieMarks += `<img src='../HTML/img/Friendship/${module.Symbols[i].Pony}.png' style='position: absolute; left: ${30 * module.Symbols[i].X + 23}px; top: ${30 * module.Symbols[i].Y + 23}px; width: 84px; height: 84px;' />`;
+						cutieMarks += `<img src='../HTML/img/Friendship/${module.Symbols[i].Pony}.png' style='position: absolute; left: ${30 * module.Symbols[i].X + 23}px; top: ${30 * module.Symbols[i].Y + 23}px; width: 84px; height: 84px;'>`;
 
 						var color;
 
@@ -6728,7 +6728,7 @@ let parseData = [
 						var correct = matches[i + 1].split(", ").includes(module.selectedCaptcha);
 						if (!index || index == 3) currentRow = $('<tr>').appendTo(table);
 						var cell = $('<td>').append(`<img class='bomb-pic' src="img/I'm Not a Robot/${matches[i]}.png"  />`).appendTo(currentRow);
-						if (correct) cell.append(`<img class='check' src="img/I'm Not a Robot/CorrectCheck.png" />`);
+						if (correct) cell.append(`<img class='check' src="img/I'm Not a Robot/CorrectCheck.png">`);
 					}
 					module.push({ label: "Current images:", obj: table });
 					return true;
@@ -6766,7 +6766,7 @@ let parseData = [
 					var div = $('<div>');
 					var photos = matches[3].split(' ');
 					for (var i = 0; i < photos.length; i++) {
-						div.append(`<img class='icon-kit-image' src='../HTML/img/The Icon Kit/${photos[i]}.png'/>`);
+						div.append(`<img class='icon-kit-image' src='../HTML/img/The Icon Kit/${photos[i]}.png'>`);
 					}
 					module.push(div);
 					if (matches[6] != '.') {
@@ -6781,7 +6781,7 @@ let parseData = [
 					var div = $('<div>');
 					var photos = matches[0].split(' ');
 					for (var i = 0; i < photos.length; i++) {
-						div.append(`<img class='icon-kit-image' src='../HTML/img/The Icon Kit/${photos[i]}.png' />`);
+						div.append(`<img class='icon-kit-image' src='../HTML/img/The Icon Kit/${photos[i]}.png'>`);
 					}
 					module.push(div);
 					return true;
@@ -6902,7 +6902,7 @@ let parseData = [
 					var div = $('<div>');
 					var photos = matches[2].split(', ');
 					for (var i = 0; i < photos.length; i++)
-						div.append(`<img class='iphone-angry-birds' src='img/The iPhone/${photos[i]}.*' />`);
+						div.append(`<img class='iphone-angry-birds' src='img/The iPhone/${photos[i]}.*'>`);
 					module.push(div);
 					return true;
 				}
@@ -7490,7 +7490,7 @@ let parseData = [
 					for (let i = 0; i < 5; i++) {
 						const row = $('<span>').addClass('row');
 						for (let j = 0; j < 5; j++)
-							row.append($("<img class='tile' src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png'/>"));
+							row.append($("<img class='tile' src='../HTML/img/Langton Ant/" + tiles[i * 5 + j] + ".png'>"));
 						span.append(row);
 					}
 					module.groups.add(span);
@@ -8319,8 +8319,8 @@ let parseData = [
 			{
 				regex: /(\w+) -> (\w+)/,
 				handler: function (matches, module) {
-					let a = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[1]}.png'/>`;
-					let b = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[2]}.png'/>`;
+					let a = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[1]}.png'>`;
+					let b = `<img style='display: inline-block; width: 1.5cm' src='../HTML/img/Astrological/${matches[2]}.png'>`;
 					let style = '<style>.dark-mode .msigns img { filter: invert(87%) }</style>';
 					module.push({obj: `${style} <span class='msigns' style='display: flex; align-items: center; font-size: 36px'>${a} → ${b}</span>` });
 				}
@@ -8791,7 +8791,7 @@ let parseData = [
 					const tiles = matches[2].trim().split(' ');
 					let div = $('<div>');
 					tiles.forEach(tile => {
-						div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tile]}.png' />`);
+						div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tile]}.png'>`);
 					});
 					module.push({ label: matches[1], obj: div });
 				}
@@ -8816,14 +8816,14 @@ let parseData = [
 					for (var i = 0; i < tileStrings.length; i++) {
 						const tiles = tileStrings[i].match(/.{2}/g);
 						if (i == 0) {
-							div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png'/>`);
+							div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[0]]}.png'>`);
 							div.append(`<span class='arrow'>-><span>`);
 						} else {
 							for (var j = 0; j < tiles.length; j++) {
 								if (j == tiles.length - 1) {
-									div.append(`<img class='mahjong-quiz-tile break' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'/>`);
+									div.append(`<img class='mahjong-quiz-tile break' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'>`);
 								} else {
-									div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'/>`);
+									div.append(`<img class='mahjong-quiz-tile' src='../HTML/img/Mahjong/${fileNames[tiles[j]]}.png'>`);
 								}
 							}
 						}
@@ -8847,7 +8847,7 @@ let parseData = [
 						var imgDiv = $(`<div>`).addClass('marble-tumble-wheels-diagram').appendTo(div);
 						var imgs = [];
 						for (i = 0; i < 5; i++)
-							imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg' />`).addClass('cylinder').appendTo(imgDiv));
+							imgs.push($(`<img src='img/Marble Tumble/Cylinder-${i}-${data.traps[i]}-${data.colors[i]}.svg'>`).addClass('cylinder').appendTo(imgDiv));
 						function setRotations(rot) {
 							for (var i = 0; i < 5; i++)
 								imgs[i].css('transform', `rotate(${rot[i] * 36 - 90}deg)`);
@@ -9257,7 +9257,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push({
 						label: "Node mapping:",
-						obj: $("<img class='maze-3-diagram' src='img/Maze³/mazeLog.png'/>")
+						obj: $("<img class='maze-3-diagram' src='img/Maze³/mazeLog.png'>")
 					});
 					return true;
 				}
@@ -10018,7 +10018,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Desired Bomb is "))
-						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'/>`).addClass('mineseeker-bomb'))
+						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'>`).addClass('mineseeker-bomb'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -10029,7 +10029,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Bomb shown is "))
-						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'/>`).addClass('mineseeker-bomb'))
+						.append($(`<img src='../HTML/img/Mineseeker/${matches[1]}.png'>`).addClass('mineseeker-bomb'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -10223,7 +10223,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Shown icon is "))
-						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").addClass('module-maze-icon'))
+						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "'>").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					if (!module.FirstPass) {
 						module.FirstPass = true;
@@ -10254,7 +10254,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Expected icon is "))
-						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "' />").addClass('module-maze-icon'))
+						.append($("<img src='../Icons/" + matches[1] + ".png' alt='" + matches[1] + "' title='" + matches[1] + "'>").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					module.groups.add(span);
 					return true;
@@ -10265,7 +10265,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Wall detected to the " + matches[1] + " from "))
-						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").addClass('module-maze-icon'))
+						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "'>").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 					module.Info.push(span);
 					module.Moves = false;
@@ -10277,9 +10277,9 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Moved " + matches[1] + " from icon "))
-						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "' />").addClass('module-maze-icon'))
+						.append($("<img src='../Icons/" + matches[2] + ".png' alt='" + matches[2] + "' title='" + matches[2] + "'>").addClass('module-maze-icon'))
 						.append($('<span>').text(" to "))
-						.append($("<img src='../Icons/" + matches[3] + ".png' alt='" + matches[3] + "' title='" + matches[3] + "' />").addClass('module-maze-icon'))
+						.append($("<img src='../Icons/" + matches[3] + ".png' alt='" + matches[3] + "' title='" + matches[3] + "'>").addClass('module-maze-icon'))
 						.append($('<span>').text("."));
 
 					if (!module.Moves) {
@@ -10790,12 +10790,12 @@ let parseData = [
 					let table = `<table style='margin: 0.25cm 0.5cm'> <tr> <td style='width: 1cm; text-align: center'>to→<br>from↓</td>`;
 
 					for (let ix = 0; ix < 6; ix++) {
-						table += `<td style='padding: 0; width: 1cm'><img src='../HTML/img/Nomai/${module.planets[ix]}.png' style='${imgStyle}'/></td>`;
+						table += `<td style='padding: 0; width: 1cm'><img src='../HTML/img/Nomai/${module.planets[ix]}.png' style='${imgStyle}'></td>`;
 					}
 					table += '</tr>';
 
 					for (let row = 0; row < 6; row++){
-						table += `<tr> <td style='${tdStyle}'><img src='../HTML/img/Nomai/${module.planets[row]}.png' style='${imgStyle}'/>`;
+						table += `<tr> <td style='${tdStyle}'><img src='../HTML/img/Nomai/${module.planets[row]}.png' style='${imgStyle}'>`;
 						for (let col = 0; col < 6; col++) {
 							if (values[row][col] == '2'){
 								table += `<td style='${tdStyle}'><img src='../HTML/img/Nomai/PurpleSpiral.png' style='${imgStyle}'></td>`;
@@ -11380,7 +11380,7 @@ let parseData = [
 							$SVG("<text>").addClass(isWhiteSquare ? "black" : "white").attr("x", col * 100 + 50).attr("y", row * 100 + 78).text(rawGrid[row][col]).appendTo(grid);
 						}
 					}
-					module.push({ nobullet: true, obj: $("<hr/>") });
+					module.push({ nobullet: true, obj: $("<hr>") });
 					module.push({ label: "The grid generated by the module:", obj: grid });
 					readLines(1);
 					return true;
@@ -11389,7 +11389,7 @@ let parseData = [
 			{
 				regex: /-+/,
 				handler: function(_, module) {
-					module.push({ nobullet: true, obj: $("<hr/>") });
+					module.push({ nobullet: true, obj: $("<hr>") });
 					return true;
 				}
 			},
@@ -11410,9 +11410,9 @@ let parseData = [
 			{
 				regex: /You tried to stepped on ([A-D][1-4])\. You were unable to do that\. The module striked\./,
 				handler: function(matches, module) {
-					module.push({ nobullet: true, obj: $("<hr/>") });
+					module.push({ nobullet: true, obj: $("<hr>") });
 					module.push(`You tried to step on ${matches[1]}. You were unable to do that. The module striked.`);
-					module.push({ nobullet: true, obj: $("<hr/>") });
+					module.push({ nobullet: true, obj: $("<hr>") });
 					return true;
 				}
 			},
@@ -12168,7 +12168,7 @@ let parseData = [
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
 							table += `<td style='${tdstyle} background-color: ${fill}'>`;
 							if (grid[row][col] != -1)
-								table += `<img style='${imgstyle}' src='img/PPAP/${icons[grid[row][col]]}.png'/>`;
+								table += `<img style='${imgstyle}' src='img/PPAP/${icons[grid[row][col]]}.png'>`;
 							table += '</td>';
 						}
 						table += '</tr>';
@@ -12749,7 +12749,7 @@ let parseData = [
 					let div = $("<div>").addClass("proc-maze");
 					module.mazeSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 610 610'>").appendTo(div);
 					$SVG("<path d='M5 5 h600 v600 h-600z'>").addClass("proc-maze-wall proc-maze-border").appendTo(module.mazeSvg);
-					module.push({ nobullet: true, obj: $("<hr/>") });
+					module.push({ nobullet: true, obj: $("<hr>") });
 					module.push([match[0], [{ nobullet: true, obj: div }]]);
 					module.svgCount += 1;
 					return true;
@@ -13225,7 +13225,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Successfully placed "))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20'>"))
 						.append($('<span>').text(" at " + matches[2] + "."));
 					module.groups.add(span);
 					return true;
@@ -13236,7 +13236,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Strike! Tried to place "))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20' />"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[1] + ".png' width='20'>"))
 						.append($('<span>').text(" at " + matches[2] + ", which violates placement rules."));
 					module.groups.add(span);
 					return true;
@@ -13247,12 +13247,12 @@ let parseData = [
 				handler: function (matches, module) {
 					const span = $('<span>')
 						.append($('<span>').text("Available pieces for stage " + matches[1] + " are "))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[2] + ".png' width='20' />"))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[3] + ".png' width='20' />"))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[4] + ".png' width='20' />"))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[5] + ".png' width='20' />"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[2] + ".png' width='20'>"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[3] + ".png' width='20'>"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[4] + ".png' width='20'>"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[5] + ".png' width='20'>"))
 						.append($('<span>').text(". "))
-						.append($("<img src='../HTML/img/Qwirkle/" + matches[6] + ".png' width='20' />"))
+						.append($("<img src='../HTML/img/Qwirkle/" + matches[6] + ".png' width='20'>"))
 						.append($('<span>').text(" is guaranteed valid for " + matches[7] + "."));
 					module.groups.add(span);
 					return true;
@@ -13269,7 +13269,7 @@ let parseData = [
 					for (var i = 0; i < 7; i++) {
 						var row = $('<span style="height: 20px;">');
 						for (var j = 0; j < 7; j++) {
-							row.append($("<img src='../HTML/img/Qwirkle/" + tiles[i * 7 + j] + ".png' width='20' />"));
+							row.append($("<img src='../HTML/img/Qwirkle/" + tiles[i * 7 + j] + ".png' width='20'>"));
 						}
 						span.append(row);
 					}
@@ -15910,7 +15910,7 @@ let parseData = [
 					}
 					module.groups.prefix = "Stage #";
 					module.groups.addGroup(true);
-					module.groups.add({ label: `${matches[1]}:`, obj: `<div>${matches[2].split(' ').map(x => `<img src='../HTML/img/Symbolic Coordinates/${conversion[x]}.png' />`).join(' ')}</div>` });
+					module.groups.add({ label: `${matches[1]}:`, obj: `<div>${matches[2].split(' ').map(x => `<img src='../HTML/img/Symbolic Coordinates/${conversion[x]}.png'>`).join(' ')}</div>` });
 					module.groups.add($(`<span>The LEDs are ${color(matches[3])}, ${color(matches[4])} and ${color(matches[5])}.</span>`));
 					return true;
 				}
@@ -17454,8 +17454,8 @@ let parseData = [
 					module.push({
 						obj: $(`<table>
 							<tr><th>Original</th><th>On the module</th></tr>
-							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' /></td>
-								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)' /></td>
+							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png'></td>
+								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)'></td>
 						</table>`)
 					});
 				}
@@ -18358,14 +18358,14 @@ let parseData = [
 				handler: function (matches, module) {
 					var m, span = null, txt = matches[0];
 					while (m = /^(.*?)\[(\d+)( flipped)?\]/.exec(txt)) {
-						if (span === null)
+						if (!span)
 							span = $('<span>');
 						span
 							.append($('<span>').text(m[1]))
-							.append($(`<div style='display: inline-block; width: 20px; height: 20px; background-image: url(img/X-Ray/Icons.svg); background-size: 220px 200px; background-repeat: no-repeat; background-position: ${-20 * (m[2] % 11)}px ${-20 * Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
+							.append($(`<div class='xray-symbol' style='background-position: ${-20 * (m[2] % 11)}px ${-20 * Math.floor(m[2] / 11)}px; ${m[3] ? 'transform: scaleY(-1);' : ''}'></div>`));
 						txt = txt.substr(m[0].length);
 					}
-					module.groups.add(span === null ? matches.input : span.append($('<span>').text(txt)));
+					module.groups.add(!span ? matches.input : span.append($('<span>').text(txt)));
 					if (matches.input.indexOf('Resetting module') !== -1)
 						module.groups.addGroup();
 				}
