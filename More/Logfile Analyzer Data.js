@@ -14988,12 +14988,12 @@ let parseData = [
 						const columnLimits = [ 3, 4, 5, 4, 3 ];
 						const xOffset = 11;
 						const yOffset = 12.65;
-						let getTranslation = function(x, y) {
+						const getTranslation = function(x, y) {
 							return `translate(${xOffset * x}, ${yOffset * y + columnOffsets[x]})`;
 						}
 						const coords = pattern.split(', ').map(c => ({ x:"ABCDE".indexOf(c[0]), y:parseInt(c[1]) - 1 }));
 						const svg = $("<svg viewbox='0 -2 58 65'>").addClass("simon-stacks");
-						for (let coord of coords) {
+						for (const coord of coords) {
 							$SVG("<polygon>").attr("points", hexPoints)
 								.attr("transform", getTranslation(coord.x, coord.y))
 								.attr("fill", color)
@@ -15019,13 +15019,11 @@ let parseData = [
 				regex: /Stage (\d+) - Flashing \((.+)\) as (\w+), Solution is \((.+)\)/,
 				handler: function (matches, module) {
 					const colors = { 'Red':'#921E21', 'Green':'#228D23', 'Blue':'#232091', 'Yellow':'#998E24' };
-
 					module.currentStage = parseInt(matches[1]);
 					if (!module.stages[module.currentStage]) {
 						module.stages[module.currentStage] = [`Stage ${matches[1]}`, []];
 						module.push(module.stages[module.currentStage]);
 					}
-
 					const flashFill = colors[matches[3]];
 					module.addToCurrentStage(`Flashing in ${matches[3]}:`, module.generateSVG(matches[2], flashFill));
 					module.addToCurrentStage('Solution is:', module.generateSVG(matches[4], 'gray') );
