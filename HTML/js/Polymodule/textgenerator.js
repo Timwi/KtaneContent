@@ -145,7 +145,7 @@ for(let x=0;x<RULENUMBER;x++){
             RuleText.push("Swap the values between the lowest number and the highest.");
             break;
         case 4: 
-            RuleText.push("Add the intial value for each value.");
+            RuleText.push("Add the initial value for each value.");
             break;
         case 5:
             RuleText.push("Undo the last operation done to the highest value.");
