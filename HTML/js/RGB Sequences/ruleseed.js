@@ -1,20 +1,20 @@
-const colorSequence = ["RKBKGBGRKG", "BBGKKRKRGB", "KRKGGGRRRB", "RGGBKKKGRG", "RRKBRBGBGK", "GKBRRKBBBG", "RBRBGRBKGK", "GRKBBBRRBG", "KBRRBRGKKB", "BBGBRBRBBR"];
 const colorClasses = { K: "black", R: "red", G: "green", B: "blue" };
 
-function setDefaultRules() {
-    setTableColors();
-}
-
-function setTableColors() {
+function setTableColors(colors) {
     for (let row = 0; row < 10; row++) {
         for (let col = 0; col < 10; col++) {
             const td = document.getElementById(`RGB-${row}${col}`);
-            td.className = colorClasses[colorSequence[row][col]];
+            td.className = colorClasses[colors[row][col]];
         }
     }
 }
 
+function setDefaultRules() {
+    setTableColors(["RKBKGBGRKG", "BBGKKRKRGB", "KRKGGGRRRB", "RGGBKKKGRG", "RRKBRBGBGK", "GKBRRKBBBG", "RBRBGRBKGK", "GRKBBBRRBG", "KBRRBRGKKB", "BBGBRBRBBR"]);
+}
+
 function setRules(rnd) {
+    const colorSequence = Array(10);
     const ColorVenn = "KRGYBMCW";
     const PossibleColors = "KRGB";
     let Answers;
@@ -49,7 +49,7 @@ function setRules(rnd) {
             }
         }
     } while (Answers.filter(onlyUnique).length != 120);
-    setTableColors();
+    setTableColors(colorSequence);
 }
 
 function onlyUnique(value, index, array) {
