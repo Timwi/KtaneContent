@@ -11607,6 +11607,72 @@ let parseData = [
 			}
 		]
 	},
+
+{
+	moduleID: "PapyrusTiles",
+	loggingTag: "Papyrus Tiles",
+	matches: [
+		{
+			regex: /([ROGBPI] ?){8}/,
+			handler: function (matches, module) {
+
+				module.coordinates = [];
+				const colorDict = {
+					"R" : "red",
+					"O": "orange",
+					"Y": "yellow",
+					"G": "green",
+					"B": "blue",
+					"P": "purple",
+					"I": "pink" };
+
+
+				if(!module.foundGrid) {
+					module.foundGrid = true;
+					const colors = [matches[0].replaceAll(" ", "")].concat(readTaggedLines(5).map(line => line.replaceAll(" ", "")));
+
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 320'>");
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 8; col++) {
+							const x = col * 49;
+							const y = row * 49;
+							$SVG(`<rect x="${x}" y="${y}" width="50" height="50">`)
+								.addClass(`papyrus-tiles-${colorDict[colors[row][col][0]]}`)
+								.appendTo(svg);
+						}
+					}
+
+					const coordinateStr = readTaggedLine().match(/Final Answer: \((.+)\)/)[1].split(") (");
+					const coordinateArr = [];
+					for(const str of coordinateStr) {
+						coordinateArr.push({ y: (+str[0]) - 1, x: (+str[2]) - 1 });
+					}
+					const pathArr = [`M ${coordinateArr[0].x  * 49 + 24.5} ${coordinateArr[0].y * 49+ 24.5} `];
+
+						for(let i = 1; i < coordinateArr.length; i++) {
+							pathArr.push(`L ${coordinateArr[i].x * 49 + 24.5} ${coordinateArr[i].y * 49 + 24.5} `);
+
+							if(coordinateArr[i].x == 7) {
+								break;
+							}
+						}
+
+					$SVG(`<path d='${pathArr.join("")}'`)
+					.addClass("papyrus-tiles-path")
+					.appendTo(svg);
+
+					module.push( { nobullet: true, obj: svg });
+				}
+				return true;
+			}
+		},
+		{
+			regex: /.+/
+		}
+
+	]
+},
+
 	{
 		displayName: "Parallel Mazes",
 		moduleID: "parallel_mazes",
