@@ -12878,10 +12878,10 @@ let parseData = [
 				handler: function (matches, module) {
 					if (!module.yetToSolve)
 						module.yetToSolve = 4;
-					let order = [matches[1]];
+					const order = [matches[1]];
 					for (let i = 0; i < module.yetToSolve - 1; i++)
 						order.push(/Interacting the tiles in (.+) will also affect the tiles in .+/.exec(readTaggedLine())[1]);
-					let cycle = order.join(" > ").concat(` ( > ${order[0]} )`);
+					const cycle = order.join(" > ").concat(` ( > ${order[0]} )`);
 					module.push({ label: "Module interaction cycle:", obj: pre(cycle) });
 					return true;
 				}
@@ -12897,25 +12897,25 @@ let parseData = [
 							"Kakurasu": 75
 						};
 					}
-					let puzzle = matches[1];
-					let solutionData = readTaggedLines(4).map(x => x.split(" "));
+					const puzzle = matches[1];
+					const solutionData = readTaggedLines(4).map(x => x.split(" "));
 					if (puzzle == "Kakurasu") {
 						module.colSums = /left to right: (.+)/.exec(readTaggedLine())[1].split(" ");
 						module.rowSums = /top to bottom: (.+)/.exec(readTaggedLine())[1].split(" ");
 					}
 					linen++;
-					let initialData = readTaggedLines(4).map(x => x.split(" "));
+					const initialData = readTaggedLines(4).map(x => x.split(" "));
 					if (puzzle == "Sudoku")
 						module.sudokuInitial = initialData.map(x => x.map(x => x == 0 ? "nonfilled" : "prefilled"));
 					if (!module.makeSvg) {
 						module.makeSvg = function (grid, puzzle, initial = false) {
-							let dim = module.dims[puzzle];
-							let svg = $("<svg viewbox='-105 -105 610 610'>").addClass("pandemonium-puzzle")
+							const dim = module.dims[puzzle];
+							const svg = $("<svg viewbox='-105 -105 610 610'>").addClass("pandemonium-puzzle")
 								.addClass(puzzle.toLowerCase().replace(" ", "-"));
 							for (let row = 0; row < 4; row++) {
 								for (let col = 0; col < 4; col++) {
-									let transform = { x: col * 100, y: row * 100 };
-									let g = $SVG("<g>")
+									const transform = { x: col * 100, y: row * 100 };
+									const g = $SVG("<g>")
 										.attr("transform", `translate(${transform.x} ${transform.y})`)
 										.appendTo(svg);
 									$SVG("<rect>").addClass("base")
@@ -12923,15 +12923,15 @@ let parseData = [
 										.attr("x", 50 - dim / 2).attr("y", 50 - dim / 2)
 										.appendTo(g);
 									if (puzzle == "Plumbing") {
-										let plumbingOffsets = [`0 -${dim / 2}`, `${dim / 2} 0`, `0 ${dim / 2}`, `-${dim / 2} 0`];
-										let plumbingPaths = ["V0", "H100", "V100", "H0"];
+										const plumbingOffsets = [`0 -${dim / 2}`, `${dim / 2} 0`, `0 ${dim / 2}`, `-${dim / 2} 0`];
+										const plumbingPaths = ["V0", "H100", "V100", "H0"];
 										$SVG("<circle>").addClass(initial ? "off" : "on")
 											.attr("cx", 50).attr("cy", 50)
 											.attr("r", 12)
 											.appendTo(g);
 										for (let i = 0; i < 4; i++) {
 											if (parseInt(grid[row][col] & (2 ** i)) != 0) {
-												let path = "M50 50 m" + plumbingOffsets[i] + plumbingPaths[i];
+												const path = "M50 50 m" + plumbingOffsets[i] + plumbingPaths[i];
 												$SVG("<path>").addClass("pipe")
 													.attr("d", path)
 													.appendTo(g);
@@ -12970,8 +12970,8 @@ let parseData = [
 							return svg;
 						}
 					}
-					let initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true) };
-					let solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle) };
+					const initial = { label: `Initial state for ${puzzle}:`, obj: module.makeSvg(initialData, puzzle, true) };
+					const solution = { label: `Expected solution for ${puzzle}:`, obj: module.makeSvg(solutionData, puzzle) };
 					module.push([puzzle, [initial, solution]]);
 					return true;
 				}
@@ -12979,8 +12979,8 @@ let parseData = [
 			{
 				regex: /Initial Lights Out board:/,
 				handler: function (_, module) {
-					let initialData = readTaggedLines(4).map(x => x.split(" "));
-					let initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out") };
+					const initialData = readTaggedLines(4).map(x => x.split(" "));
+					const initial = { label: "Initial state for Lights out:", obj: module.makeSvg(initialData, "Lights Out") };
 					module.push(["Lights Out", [initial]]);
 					return true;
 				}
