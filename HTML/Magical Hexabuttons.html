@@ -7,13 +7,116 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const alchViewBoxSize = 300;
+        const sin60 = Math.sin(Math.PI / 3);
+        const cos60 = Math.cos(Math.PI / 3);
+        const alchCentres = { S: getCentres(60), B: getCentres(80) };
+        const alchRadii = { S: 40, B: 60 };
+        const alchColours = ["red", "green", "blue"];
+
+        function getCentres(radius) {
+            return [
+                [alchViewBoxSize / 2, alchViewBoxSize / 2 - radius], // Red
+                [alchViewBoxSize / 2 - radius * sin60, alchViewBoxSize / 2 + radius * cos60], // Green
+                [alchViewBoxSize / 2 + radius * sin60, alchViewBoxSize / 2 + radius * cos60] // Blue
+            ];
+        }
+
+        function drawAlchemicalSymbols() {
+            $(".alch-symbol").each((_, elem) => {
+                const svg = MakeSvgTag(alchViewBoxSize, alchViewBoxSize, 0, -20).appendTo(elem);
+                const rgbs = elem.dataset.rgbs.replaceAll("P", "+");
+                svg.append(MakeSvgElem("path", { d: `M${alchCentres.S[0][0]} ${alchCentres.S[0][1]} ${alchCentres.S[1][0]} ${alchCentres.S[1][1]} ${alchCentres.S[2][0]} ${alchCentres.S[2][1]}z`, class: "external" }));
+                for (let colour = 0; colour < 3; colour++) {
+                    const size = rgbs[colour * 2];
+                    const centre = alchCentres[size][colour];
+                    svg.append(MakeSvgElem("circle", { cx: centre[0], cy: centre[1], class: alchColours[colour] + " external", r: alchRadii[size] }));
+                    svg.append(MakeSvgElem("text", { x: centre[0], y: centre[1] }, rgbs[colour * 2 + 1]));
+                }
+            });
+        }
+
+        const potionColours = { R: "red", G: "green", B: "blue", Y: "yellow", M: "magenta", C: "cyan", W: "white", K: "black" };
+        const potionSymbols = {
+            P: "M80 130h40v40h40v40h-40v40h-40v-40h-40v-40h40z",
+            0: "m100,125c -29.80,-0.65-57.75,23.45-61.44,53.05-3.99,26.44 10.91,54.72 35.62,65.42 23.64,10.90 53.99,5.30 71.41,-14.31 17.27,-18.61 21.75,-48.16 9.56,-70.66-10.27,-19.96-31.91,-33.49-54.44,-33.47z m0,20c7.62,-0.03 15.24,2.09 21.77,6.05-19.24,19.24-38.48,38.48-57.72,57.72C51.38,189.41 59.26,160.24 80.04,149.99 86.15,146.72 93.07,144.97 100,145Z m35.95,20.24c12.54,19.40 4.72,48.49-16.01893,58.81148-12.82002,6.84119-29.343232,6.71271-41.69107,-1.15148 19.236667,-19.22 38.47333,-38.44 57.71,-57.66z",
+            M: "M40 170h120v40h-120z"
+        };
+
+        function drawPotions() {
+            $(".potion").each((_, elem) => {
+                const svg = MakeSvgTag(220, 300, -10, -10).appendTo(elem);
+                const info = elem.dataset.potionInfo.replaceAll("+", "P").replaceAll("-", "M");
+                svg.append(MakeSvgElem("path", { class: `external ${potionColours[info[0]]}`, d: "M80 0 h40 v100 a90 90 0 1 1 -40 0z" }));
+                svg.append(MakeSvgElem("path", { class: `white symbol`, d: potionSymbols[info[1]] }));
+            });
+        }
+
+        $(() => {
+            drawAlchemicalSymbols();
+            drawPotions();
+            $(".examples th").addClass("nohighlight");
+        });
+    </script>
     <script src="js/ktane-utils.js"></script>
     <style>
         .dark table, table {
             margin: 1em auto;
             border: none;
         }
-        td { text-align: center; }
+
+        table.alch-diagrams { width: 100%; }
+        table.alch-diagrams th { padding: 2px; }
+        th.alch-symbol { width: 12%; }
+        th.potion { width: 13%; }
+
+        th svg {
+            display: block;
+            margin: auto;
+            height: 100%;
+            user-select: none;
+        }
+        svg text {
+            text-anchor: middle;
+            dominant-baseline: mathematical;
+            fill: #ddd;
+            font-size: 100px;
+        }
+        svg .external {
+            stroke: #000;
+            stroke-width: 10;
+        }
+        .dark svg .external { stroke: #ccc; }
+
+        .alch-symbol svg { fill: none; }
+        .alch-symbol svg .red { fill: #c00; }
+        .alch-symbol svg .green { fill: #0c0; }
+        .alch-symbol svg .blue { fill: #00c; }
+
+        .potion svg .red { fill: #f00d; }
+        .potion svg .green { fill: #0f0d; }
+        .potion svg .blue { fill: #00fd; }
+        .potion svg .yellow { fill: #ff0d; }
+        .potion svg .magenta { fill: #f0fd; }
+        .potion svg .cyan { fill: #0ffd; }
+        .potion svg .white { fill: #eee; }
+        .potion svg .black { fill: #000; }
+
+        .potion svg .symbol {
+            fill-rule: evenodd;
+            stroke: #000;
+            stroke-width: 6;
+        }
+
+        .examples th {
+            border: none;
+            height: 100px;
+        }
+        .examples :nth-child(2) { width: 10%; }
+        .examples :nth-child(4) { width: 20%; }
     </style>
 </head>
 <body>
@@ -28,18 +131,17 @@
                 <h2>On the Subject of Magical Hexabuttons</h2>
                 <p class="flavour-text">They are magically delicious, as long as you don’t eat the buttons.</p>
                 <p>Each non-center button is assigned an alchemical symbol. Use the table below by using the 1st number as the row and the 2nd number as the column to get the alchemical symbol:</p>
-                <table>
+                <table class="alch-diagrams">
                     <tr><th class="corner"><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
-                    <tr><th>1</th><th><img src="img/Colored Hexabuttons 2/BrownSPSPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-SPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPB-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPSPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPB-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-SPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-B-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-B-B-.png" ></th></tr>
-                    <tr><th>2</th><th><img src="img/Colored Hexabuttons 2/BrownS-BPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPS-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPBPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPS-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-BPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-B-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-S-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPSPBP.png" ></th></tr>
-                    <tr><th>3</th><th><img src="img/Colored Hexabuttons 2/BrownBPB-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPSPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPB-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-BPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-S-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-S-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPBPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-SPSP.png" ></th></tr>
-                    <tr><th>4</th><th><img src="img/Colored Hexabuttons 2/BrownSPBPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPB-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-SPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-S-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-B-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPSPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-BPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPS-BP.png" ></th></tr>
-                    <tr><th>5</th><th><img src="img/Colored Hexabuttons 2/BrownSPS-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-BPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-S-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-B-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPSPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-BPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPB-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPSPS-.png" ></th></tr>
-                    <tr><th>6</th><th><img src="img/Colored Hexabuttons 2/BrownB-SPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-B-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-S-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPBPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-BPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPS-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPSPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPB-S-.png" ></th></tr>
-                    <tr><th>7</th><th><img src="img/Colored Hexabuttons 2/BrownB-S-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-B-B-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPBPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-SPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPS-BP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPBPS-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPS-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-BPS-.png" ></th></tr>
-                    <tr><th>8</th><th><img src="img/Colored Hexabuttons 2/BrownBPBPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPS-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-SPB-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownS-B-SP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-S-S-.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownBPBPSP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownB-SPBP.png" ></th><th><img src="img/Colored Hexabuttons 2/BrownSPB-BP.png" ></th></tr>
+                    <tr><th>1</th><th class="alch-symbol" data-rgbs="SPSPSP"></th><th class="alch-symbol" data-rgbs="S-SPBP"></th><th class="alch-symbol" data-rgbs="SPB-SP"></th><th class="alch-symbol" data-rgbs="BPSPS-"></th><th class="alch-symbol" data-rgbs="BPB-S-"></th><th class="alch-symbol" data-rgbs="B-SPB-"></th><th class="alch-symbol" data-rgbs="S-B-BP"></th><th class="alch-symbol" data-rgbs="B-B-B-"></th></tr>
+                    <tr><th>2</th><th class="alch-symbol" data-rgbs="S-BPSP"></th><th class="alch-symbol" data-rgbs="BPS-SP"></th><th class="alch-symbol" data-rgbs="BPBPS-"></th><th class="alch-symbol" data-rgbs="BPS-B-"></th><th class="alch-symbol" data-rgbs="S-BPB-"></th><th class="alch-symbol" data-rgbs="B-B-BP"></th><th class="alch-symbol" data-rgbs="S-S-S-"></th><th class="alch-symbol" data-rgbs="SPSPBP"></th></tr>
+                    <tr><th>3</th><th class="alch-symbol" data-rgbs="BPB-SP"></th><th class="alch-symbol" data-rgbs="BPSPB-"></th><th class="alch-symbol" data-rgbs="SPB-B-"></th><th class="alch-symbol" data-rgbs="B-BPB-"></th><th class="alch-symbol" data-rgbs="S-S-SP"></th><th class="alch-symbol" data-rgbs="S-S-B-"></th><th class="alch-symbol" data-rgbs="SPBPSP"></th><th class="alch-symbol" data-rgbs="B-SPSP"></th></tr>
+                    <tr><th>4</th><th class="alch-symbol" data-rgbs="SPBPB-"></th><th class="alch-symbol" data-rgbs="BPB-B-"></th><th class="alch-symbol" data-rgbs="S-SPS-"></th><th class="alch-symbol" data-rgbs="S-S-BP"></th><th class="alch-symbol" data-rgbs="S-B-S-"></th><th class="alch-symbol" data-rgbs="BPSPSP"></th><th class="alch-symbol" data-rgbs="B-BPSP"></th><th class="alch-symbol" data-rgbs="BPS-BP"></th></tr>
+                    <tr><th>5</th><th class="alch-symbol" data-rgbs="SPS-B-"></th><th class="alch-symbol" data-rgbs="S-BPS-"></th><th class="alch-symbol" data-rgbs="B-S-SP"></th><th class="alch-symbol" data-rgbs="B-B-S-"></th><th class="alch-symbol" data-rgbs="BPSPBP"></th><th class="alch-symbol" data-rgbs="S-BPBP"></th><th class="alch-symbol" data-rgbs="BPB-BP"></th><th class="alch-symbol" data-rgbs="SPSPS-"></th></tr>
+                    <tr><th>6</th><th class="alch-symbol" data-rgbs="B-SPS-"></th><th class="alch-symbol" data-rgbs="B-B-SP"></th><th class="alch-symbol" data-rgbs="B-S-B-"></th><th class="alch-symbol" data-rgbs="SPBPBP"></th><th class="alch-symbol" data-rgbs="B-BPBP"></th><th class="alch-symbol" data-rgbs="SPS-SP"></th><th class="alch-symbol" data-rgbs="SPSPB-"></th><th class="alch-symbol" data-rgbs="SPB-S-"></th></tr>
+                    <tr><th>7</th><th class="alch-symbol" data-rgbs="B-S-BP"></th><th class="alch-symbol" data-rgbs="S-B-B-"></th><th class="alch-symbol" data-rgbs="BPBPBP"></th><th class="alch-symbol" data-rgbs="S-SPSP"></th><th class="alch-symbol" data-rgbs="SPS-BP"></th><th class="alch-symbol" data-rgbs="SPBPS-"></th><th class="alch-symbol" data-rgbs="BPS-S-"></th><th class="alch-symbol" data-rgbs="B-BPS-"></th></tr>
+                    <tr><th>8</th><th class="alch-symbol" data-rgbs="BPBPB-"></th><th class="alch-symbol" data-rgbs="SPS-S-"></th><th class="alch-symbol" data-rgbs="S-SPB-"></th><th class="alch-symbol" data-rgbs="S-B-SP"></th><th class="alch-symbol" data-rgbs="B-S-S-"></th><th class="alch-symbol" data-rgbs="BPBPSP"></th><th class="alch-symbol" data-rgbs="B-SPBP"></th><th class="alch-symbol" data-rgbs="SPB-BP"></th></tr>
                 </table>
-                <p>The text on the center button represents the starting potion. Pressing the center button will cause it to play a text-to-speech message consisting of 6 letters. Each of these letters represents the potions you will need to make, but it doesn’t have to be in that order. Use the letters in the table on the next page to get your potions:</p>
             </div>
             <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
@@ -49,15 +151,15 @@
                 <span class="page-header-section-title">Magical Hexabuttons</span>
             </div>
             <div class="page-content">
-                <table>
-                    <tr><th>A</th><th><img src="img/Colored Hexabuttons 2/BrownR-.png" ></th><th>E</th><th><img src="img/Colored Hexabuttons 2/BrownR0.png" ></th><th>I</th><th><img src="img/Colored Hexabuttons 2/BrownRP.png" ></th><th>M</th><th><img src="img/Colored Hexabuttons 2/BrownG-.png" ></th><th>Q</th><th><img src="img/Colored Hexabuttons 2/BrownG0.png" ></th><th>U</th><th><img src="img/Colored Hexabuttons 2/BrownGP.png" ></th></tr>
-                    <tr><th>B</th><th><img src="img/Colored Hexabuttons 2/BrownB-.png" ></th><th>F</th><th><img src="img/Colored Hexabuttons 2/BrownB0.png" ></th><th>J</th><th><img src="img/Colored Hexabuttons 2/BrownBP.png" ></th><th>N</th><th><img src="img/Colored Hexabuttons 2/BrownC-.png" ></th><th>R</th><th><img src="img/Colored Hexabuttons 2/BrownC0.png" ></th><th>V</th><th><img src="img/Colored Hexabuttons 2/BrownCP.png" ></th></tr>
-                    <tr><th>C</th><th><img src="img/Colored Hexabuttons 2/BrownM-.png" ></th><th>G</th><th><img src="img/Colored Hexabuttons 2/BrownM0.png" ></th><th>K</th><th><img src="img/Colored Hexabuttons 2/BrownMP.png" ></th><th>O</th><th><img src="img/Colored Hexabuttons 2/BrownY-.png" ></th><th>S</th><th><img src="img/Colored Hexabuttons 2/BrownY0.png" ></th><th>W</th><th><img src="img/Colored Hexabuttons 2/BrownYP.png" ></th></tr>
-                    <tr><th>D</th><th><img src="img/Colored Hexabuttons 2/BrownK-.png" ></th><th>H</th><th><img src="img/Colored Hexabuttons 2/BrownK0.png" ></th><th>L</th><th><img src="img/Colored Hexabuttons 2/BrownKP.png" ></th><th>P</th><th><img src="img/Colored Hexabuttons 2/BrownW-.png" ></th><th>T</th><th><img src="img/Colored Hexabuttons 2/BrownW0.png" ></th><th>X</th><th><img src="img/Colored Hexabuttons 2/BrownWP.png" ></th></tr>
+                <p>The text on the center button represents the starting potion. Pressing the center button will cause it to play a text-to-speech message consisting of 6 letters. Each of these letters represents the potions you will need to make, but it doesn’t have to be in that order. Use the letters in the table to get your potions:</p>
+                <table class="alch-diagrams">
+                    <tr><th>A</th><th class="potion" data-potion-info="R-"></th><th>E</th><th class="potion" data-potion-info="R0"></th><th>I</th><th class="potion" data-potion-info="RP"></th><th>M</th><th class="potion" data-potion-info="G-"></th><th>Q</th><th class="potion" data-potion-info="G0"></th><th>U</th><th class="potion" data-potion-info="GP"></th></tr>
+                    <tr><th>B</th><th class="potion" data-potion-info="B-"></th><th>F</th><th class="potion" data-potion-info="B0"></th><th>J</th><th class="potion" data-potion-info="BP"></th><th>N</th><th class="potion" data-potion-info="C-"></th><th>R</th><th class="potion" data-potion-info="C0"></th><th>V</th><th class="potion" data-potion-info="CP"></th></tr>
+                    <tr><th>C</th><th class="potion" data-potion-info="M-"></th><th>G</th><th class="potion" data-potion-info="M0"></th><th>K</th><th class="potion" data-potion-info="MP"></th><th>O</th><th class="potion" data-potion-info="Y-"></th><th>S</th><th class="potion" data-potion-info="Y0"></th><th>W</th><th class="potion" data-potion-info="YP"></th></tr>
+                    <tr><th>D</th><th class="potion" data-potion-info="K-"></th><th>H</th><th class="potion" data-potion-info="K0"></th><th>L</th><th class="potion" data-potion-info="KP"></th><th>P</th><th class="potion" data-potion-info="W-"></th><th>T</th><th class="potion" data-potion-info="W0"></th><th>X</th><th class="potion" data-potion-info="WP"></th></tr>
                 </table>
                 <p>Pressing a non-center button will mix the button’s assigned alchemical to the current potion. This will cause the current potion to become a different potion using the mixing rules.</p>
                 <p>Press the non-center buttons in such a way to create all 6 potions starting from the starting potion to disarm the module. After all 6 buttons have been pressed, the module will check if you have made all 6 potions. If not, the module will strike and will reset all input. Pressing the center button will also reset any input you have made.</p>
-
             </div>
             <div class="page-footer relative-footer">Page 2 of 3</div>
         </div>
@@ -81,7 +183,29 @@
                     <li>Otherwise, the potion becomes a neutral potion.</li>
                 </ul>
                 <h4 class="centered">Examples</h4>
-                <p class="centered"><img src="img/Colored Hexabuttons 2/BrownEx.png" ></p>
+                <table class="examples">
+                    <tr>
+                        <th class="potion" data-potion-info="B+"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                        <th class="alch-symbol" data-rgbs="B-S-S-"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                        <th class="potion" data-potion-info="M-"></th>
+                    </tr>
+                    <tr>
+                        <th class="potion" data-potion-info="M-"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                        <th class="alch-symbol" data-rgbs="BPB-SP"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                        <th class="potion" data-potion-info="C0"></th>
+                    </tr>
+                    <tr>
+                        <th class="potion" data-potion-info="C0"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                        <th class="alch-symbol" data-rgbs="BPBPB-"></th>
+                        <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                        <th class="potion" data-potion-info="R+"></th>
+                    </tr>
+                </table>
             </div>
             <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
