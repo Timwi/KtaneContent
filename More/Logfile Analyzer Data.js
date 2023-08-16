@@ -11612,9 +11612,8 @@ let parseData = [
 		loggingTag: "Papyrus Tiles",
 		matches: [
 			{
-				regex: /([ROGBPI] ?){8}/,
+				regex: /([ROGBPI]\s?){8}/,
 				handler: function (matches, module) {
-					module.coordinates = [];
 					const colorDict = {
 						"R": "red",
 						"O": "orange",
@@ -11623,41 +11622,46 @@ let parseData = [
 						"P": "purple",
 						"I": "pink"
 					};
-					if (!module.foundGrid) {
-						module.foundGrid = true;
-						const colors = [matches[0].replaceAll(" ", "")].concat(readTaggedLines(5).map(line => line.replaceAll(" ", "")));
-						const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 320'>");
-						for (let row = 0; row < 6; row++) {
-							for (let col = 0; col < 8; col++) {
-								const x = col * 49;
-								const y = row * 49;
-								$SVG(`<rect x="${x}" y="${y}" width="50" height="50">`)
-									.addClass(`papyrus-tiles-${colorDict[colors[row][col][0]]}`)
-									.appendTo(svg);
-							}
+					const colors = [matches[0].replaceAll(" ", "")].concat(readTaggedLines(5).map(line => line.replaceAll(" ", "")));
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 320'>").addClass("papyrus-tiles");
+					for (let row = 0; row < 6; row++) {
+						for (let col = 0; col < 8; col++) {
+							const x = col * 49;
+							const y = row * 49;
+							$SVG("<rect>").addClass(colorDict[colors[row][col][0]])
+								.attr("width", 50).attr("height", 50)
+								.attr("x", x).attr("y", y)
+								.appendTo(svg);
 						}
-						const coordinateStr = readTaggedLine().match(/Final Answer: \((.+)\)/)[1].split(") (");
-						const coordinateArr = [];
-						for (const str of coordinateStr)
-							coordinateArr.push({ y: (+str[0]) - 1, x: (+str[2]) - 1 });
-						const pathArr = [`M ${coordinateArr[0].x * 49 + 24.5} ${coordinateArr[0].y * 49 + 24.5} `];
-						for (let i = 1; i < coordinateArr.length; i++) {
-							pathArr.push(`L ${coordinateArr[i].x * 49 + 24.5} ${coordinateArr[i].y * 49 + 24.5} `);
-							if (coordinateArr[i].x == 7)
-								break;
-						}
-						$SVG(`<path d='${pathArr.join("")}'`)
-							.addClass("papyrus-tiles-path")
-							.appendTo(svg);
-						module.push({ nobullet: true, obj: svg });
 					}
+					const coordinateStr = readTaggedLine().match(/Final Answer: \((.+)\)/)[1].split(") (");
+					const coordinateArr = [];
+					for (const str of coordinateStr)
+						coordinateArr.push({ y: (str[0]) - 1, x: (str[2]) - 1 });
+					const pathArr = [`M ${coordinateArr[0].x * 49 + 24.5} ${coordinateArr[0].y * 49 + 24.5}`];
+					for (let i = 1; i < coordinateArr.length; i++) {
+						pathArr.push(`L ${coordinateArr[i].x * 49 + 24.5} ${coordinateArr[i].y * 49 + 24.5}`);
+						if (coordinateArr[i].x == 7)
+							break;
+					}
+					$SVG("<path>").addClass("pathfinder")
+						.attr("d", pathArr.join(" "))
+						.appendTo(svg);
+					module.push({ label: "One possible path:", nobullet: true, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /(Pressed:?|Moved to) \((\d) (\d)\)/,
+				handler: function(matches, module) {
+					const coord = { col: "_ABCDEFGH"[matches[3]], row: matches[2] };
+					module.push([matches[1] == "Pressed:" ? "Pressed" : matches[1], coord.col + coord.row].join(" "));
 					return true;
 				}
 			},
 			{
 				regex: /.+/
 			}
-
 		]
 	},
 	{
