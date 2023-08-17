@@ -13399,7 +13399,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Coupled|Car \d+:/
+				regex: /Coupled|Car \d+( correct car)?:/
 			}
 		]
 	},
