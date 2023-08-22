@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>틱택토 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        function setRules(rnd)
+        {
+            // This increases randomness
+            for (var i = rnd.next(0, 10); i > 0; i--)
+                rnd.nextDouble();
+
+            var conditionTypes = rnd.shuffleFisherYates(['s', 'p', 'i', 'b']);
+
+            var conditions = {
+                's': [
+                    "시리얼 넘버의 마지막 숫자가 짝수라면",
+                    "시리얼 넘버의 세 번째 자가 짝수인 숫자라면",
+                    "시리얼 넘버의 첫 번째 자가 로마자라면",
+                    "시리얼 넘버의 두 번째 자가 로마자라면",
+                    "시리얼 넘버에 모음이 있다면",
+                    "시리얼 넘버에 짝수가 있다면",
+                    "시리얼 넘버에 중복되는 자가 있다면",
+                    "시리얼 넘버에 로마자 3개와 숫자 3개가 있다면"
+                ],
+                'p': [
+                    "폭탄에 병렬 포트가 있다면",
+                    "폭탄에 Serial 포트가 있다면",
+                    "폭탄에 PS/2 포트가 있다면",
+                    "폭탄에 Stereo RCA 포트가 있다면",
+                    "폭탄에 RJ-45 포트가 있다면",
+                    "폭탄에 DVI-D 포트가 있다면",
+                    "폭탄에 중복되는 포트가 있다면",
+                    "폭탄에 빈 포트 플레이트가 있다면",
+                    "폭탄에 포트가 짝수 개 있다면",
+                    "폭탄에 포트가 홀수 개 있다면",
+                    "폭탄에 포트 플레이트가 짝수 개 있다면",
+                    "폭탄에 포트 플레이트가 홀수 개 있다면",
+                    "폭탄에 서로 다른 포트 종류가 짝수 개 있다면",
+                    "폭탄에 서로 다른 포트 종류가 홀수 개 있다면"
+                ],
+                'i': [
+                    "폭탄에 점등된 지시등이 있다면",
+                    "폭탄에 점등되지 않은 지시등이 있다면",
+                    "폭탄에 모음이 적힌 지시등이 있다면",
+                    "폭탄에 지시등이 짝수 개 있다면",
+                    "폭탄에 지시등이 홀수 개 있다면",
+                    "폭탄에 점등된 지시등이 짝수 개 있다면",
+                    "폭탄에 점등된 지시등이 홀수 개 있다면",
+                    "폭탄에 점등되지 않은 지시등이 짝수 개 있다면",
+                    "폭탄에 점등되지 않은 지시등이 홀수 개 있다면"
+                ],
+                'b': [
+                    "폭탄에 AA 배터리가 있다면",
+                    "폭탄에 D 배터리가 있다면",
+                    "폭탄에 배터리가 짝수 개 있다면",
+                    "폭탄에 배터리가 홀수 개 있다면",
+                    "폭탄에 배터리 홀더가 짝수 개 있다면",
+                    "폭탄에 배터리 홀더가 홀수 개 있다면"
+                ]
+            };
+            var comparisons = {
+                's': [
+                    ["시리얼 넘버에 로마자가 숫자보다 많으면", "시리얼 넘버에 숫자가 로마자보다 많으면", "시리얼 넘버에 로마자 3개와 숫자 3개가 있다면"],
+                    ["시리얼 넘버의 첫 번째 숫자가 두 번째 숫자보다 크면", "시리얼 넘버의 첫 번째 숫자가 두 번째 숫자보다 작으면", "시리얼 넘버의 첫 번째 숫자가 두 번째 숫자와 같으면"],
+                    ["시리얼 넘버의 첫 번째 숫자가 마지막 숫자보다 크면", "시리얼 넘버의 첫 번째 숫자가 마지막 숫자보다 작으면", "시리얼 넘버의 첫 번째 숫자가 마지막 숫자와 같으면"],
+                    ["시리얼 넘버에 모음이 자음보다 많으면", "시리얼 넘버에 자음이 모음보다 많으면", "시리얼 넘버에 있는 자음과 모음의 개수가 같다면"],
+                    ["시리얼 넘버의 첫 번째 로마자가 두 번째 로마자보다 알파벳 순서상 먼저라면", "시리얼 넘버의 첫 번째 로마자가 두 번째 로마자보다 알파벳 순서상 나중이라면", "시리얼 넘버의 첫 번째 로마자와 두 번째 로마자가 같다면"],
+                    ["시리얼 넘버의 첫 번째 로마자가 마지막 로마자보다 알파벳 순서상 먼저라면", "시리얼 넘버의 첫 번째 로마자가 마지막 로마자보다 알파벳 순서상 나중이라면", "시리얼 넘버의 첫 번째 로마자와 마지막 로마자가 같다면"],
+                    ["시리얼 넘버의 네 번째 자가 다섯 번째 자보다 알파벳 순서상 먼저라면", "시리얼 넘버의 네 번째 자가 다섯 번째 자보다 알파벳 순서상 나중이라면", "시리얼 넘버의 네 번째 자와 다섯 번째 자가 같다면"],
+                    {
+                        'p': [
+                            ["시리얼 넘버의 첫 번째 숫자가 포트의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 포트의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 포트의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 포트 플레이트의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 포트 플레이트의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 포트 플레이트의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 포트의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 포트의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 포트의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 포트 플레이트의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 포트 플레이트의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 포트 플레이트의 개수와 같으면"],
+                        ],
+                        'i': [
+                            ["시리얼 넘버의 첫 번째 숫자가 지시등의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 지시등의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 지시등의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 점등된 지시등의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 점등된 지시등의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 점등된 지시등의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 점등되지 않은 지시등의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 점등되지 않은 지시등의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 점등되지 않은 지시등의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 지시등의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 지시등의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 지시등의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 점등된 지시등의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 점등된 지시등의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 점등된 지시등의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 점등되지 않은 지시등의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 점등되지 않은 지시등의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 점등되지 않은 지시등의 개수와 같으면"],
+                        ],
+                        'b': [
+                            ["시리얼 넘버의 첫 번째 숫자가 배터리의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 배터리의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 AA 배터리의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 AA 배터리의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 AA 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 D 배터리의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 D 배터리의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 D 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 첫 번째 숫자가 배터리 홀더의 개수보다 크면", "시리얼 넘버의 첫 번째 숫자가 배터리 홀더의 개수보다 작으면", "시리얼 넘버의 첫 번째 숫자가 배터리 홀더의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 배터리의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 배터리의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 AA 배터리의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 AA 배터리의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 AA 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 D 배터리의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 D 배터리의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 D 배터리의 개수와 같으면"],
+                            ["시리얼 넘버의 마지막 숫자가 배터리 홀더의 개수보다 크면", "시리얼 넘버의 마지막 숫자가 배터리 홀더의 개수보다 작으면", "시리얼 넘버의 마지막 숫자가 배터리 홀더의 개수와 같으면"],
+                        ],
+                    }
+                ],
+                'p': [
+                    {
+                        'i': [
+                            ["폭탄에 포트가 지시등보다 많으면", "폭탄에 지시등이 포트보다 많으면", "폭탄에 포트의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 지시등보다 많으면", "폭탄에 지시등이 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 포트가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 포트보다 많으면", "폭탄에 포트의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 포트가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 포트보다 많으면", "폭탄에 포트의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                        ],
+                        'b': [
+                            ["폭탄에 포트가 배터리보다 많으면", "폭탄에 배터리가 포트보다 많으면", "폭탄에 포트의 개수와 배터리의 개수가 같으면"],
+                            ["폭탄에 포트가 AA 배터리보다 많으면", "폭탄에 AA 배터리가 포트보다 많으면", "폭탄에 포트의 개수와 AA 배터리의 개수가 같으면"],
+                            ["폭탄에 포트가 D 배터리보다 많으면", "폭탄에 D 배터리가 포트보다 많으면", "폭탄에 포트의 개수와 D 배터리의 개수가 같으면"],
+                            ["폭탄에 포트가 배터리 홀더보다 많으면", "폭탄에 배터리 홀더가 포트보다 많으면", "폭탄에 포트의 개수와 배터리 홀더의 개수가 같으면"],
+
+                            ["폭탄에 포트 플레이트가 배터리보다 많으면", "폭탄에 배터리가 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 배터리의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 AA 배터리보다 많으면", "폭탄에 AA 배터리가 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 AA 배터리의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 D 배터리보다 많으면", "폭탄에 D 배터리가 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 D 배터리의 개수가 같으면"],
+                            ["폭탄에 포트 플레이트가 배터리 홀더보다 많으면", "폭탄에 배터리 홀더가 포트 플레이트보다 많으면", "폭탄에 포트 플레이트의 개수와 배터리 홀더의 개수가 같으면"],
+
+                            ["폭탄에 서로 다른 포트 종류 수가 배터리보다 많으면", "폭탄에 배터리가 서로 다른 포트 종류 수보다 많으면", "폭탄에 서로 다른 포트 종류의 수와 배터리의 개수가 같으면"],
+                            ["폭탄에 서로 다른 포트 종류 수가 AA 배터리보다 많으면", "폭탄에 AA 배터리가 서로 다른 포트 종류 수보다 많으면", "폭탄에 서로 다른 포트 종류의 수와 AA 배터리의 개수가 같으면"],
+                            ["폭탄에 서로 다른 포트 종류 수가 D 배터리보다 많으면", "폭탄에 D 배터리가 서로 다른 포트 종류 수보다 많으면", "폭탄에 서로 다른 포트 종류의 수와 D 배터리의 개수가 같으면"],
+                            ["폭탄에 서로 다른 포트 종류 수가 배터리 홀더보다 많으면", "폭탄에 배터리 홀더가 서로 다른 포트 종류 수보다 많으면", "폭탄에 서로 다른 포트 종류의 수와 배터리 홀더의 개수가 같으면"],
+                        ]
+                    }
+                ],
+                'i': [
+                    ["폭탄에 점등되지 않은 지시등이 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 점등되지 않은 지시등보다 많으면", "폭탄에 점등된 지시등과 점등되지 않은 지시등의 수가 같으면"],
+                    ["폭탄에 모음이 적힌 지시등이 안 적힌 지시등보다 많으면", "폭탄에 모음이 안 적힌 지시등이 적힌 지시등보다 많으면", "폭탄에 모음이 적힌 지시등과 안 적힌 지시등의 수가 같으면"],
+                    {
+                        'b': [
+                            ["폭탄에 배터리가 지시등보다 많으면", "폭탄에 지시등이 배터리보다 많으면", "폭탄에 배터리의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 배터리가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 배터리보다 많으면", "폭탄에 배터리의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 배터리가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 배터리보다 많으면", "폭탄에 배터리의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                            ["폭탄에 배터리 홀더가 지시등보다 많으면", "폭탄에 지시등이 배터리 홀더보다 많으면", "폭탄에 배터리 홀더의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 배터리 홀더가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 배터리 홀더보다 많으면", "폭탄에 배터리 홀더의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 배터리 홀더가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 배터리 홀더보다 많으면", "폭탄에 배터리 홀더의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                            ["폭탄에 AA 배터리가 지시등보다 많으면", "폭탄에 지시등이 AA 배터리보다 많으면", "폭탄에 AA 배터리의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 AA 배터리가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 AA 배터리보다 많으면", "폭탄에 AA 배터리의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 AA 배터리가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 AA 배터리보다 많으면", "폭탄에 AA 배터리의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                            ["폭탄에 D 배터리가 지시등보다 많으면", "폭탄에 지시등이 D 배터리보다 많으면", "폭탄에 D 배터리의 개수와 지시등의 개수가 같으면"],
+                            ["폭탄에 D 배터리가 점등된 지시등보다 많으면", "폭탄에 점등된 지시등이 D 배터리보다 많으면", "폭탄에 D 배터리의 개수와 점등된 지시등의 개수가 같으면"],
+                            ["폭탄에 D 배터리가 점등되지 않은 지시등보다 많으면", "폭탄에 점등되지 않은 지시등이 D 배터리보다 많으면", "폭탄에 D 배터리의 개수와 점등되지 않은 지시등의 개수가 같으면"],
+                        ]
+                    }
+                ],
+                'b': [
+                    ["폭탄에 AA 배터리가 D 배터리보다 많으면", "폭탄에 D 배터리가 AA 배터리보다 많으면", "폭탄에 an equal number of AA D 배터리의 개수가 같으면"],
+                ],
+            };
+            var ports = ["병렬", "Serial", "PS/2", "DVI-D", "Stereo RCA", "RJ-45"];
+            for (var i = 0; i < ports.length; i++)
+            {
+                for (var j = 0; j < comparisons['s'].length; j++)
+                    if ('p' in comparisons['s'][j])
+                    {
+                        comparisons['s'][j]['p'].push([`시리얼 넘버의 첫 번째 숫자가 ${ports[i]} 포트의 개수보다 크면`, `시리얼 넘버의 첫 번째 숫자가 ${ports[i]} 포트의 개수보다 작으면`, `시리얼 넘버의 첫 번째 숫자가 ${ports[i]} 포트의 개수와 같으면`]);
+                        comparisons['s'][j]['p'].push([`시리얼 넘버의 마지막 숫자가 ${ports[i]} 포트의 개수보다 크면`, `시리얼 넘버의 마지막 숫자가 ${ports[i]} 포트의 개수보다 작으면`, `시리얼 넘버의 마지막 숫자가 ${ports[i]} 포트의 개수와 같으면`]);
+                    }
+                for (var j = i + 1; j < ports.length; j++)
+                    comparisons['p'].push([`폭탄에 ${ports[i]} 포트가 ${ports[j]} 포트보다 많으면`, `폭탄에 ${ports[j]} 포트가 ${ports[i]} 포트보다 많으면`, `폭탄에 ${ports[i]} 포트와 ${ports[j]} 포트의 개수가 같으면`]);
+            }
+
+            document.getElementById('condition-1').innerText = pickRandom(rnd, conditions[conditionTypes[0]]);
+            document.getElementById('condition-2').innerText = pickRandom(rnd, conditions[conditionTypes[1]]);
+
+            var c1 = conditionTypes[2];
+            var c2 = conditionTypes[3];
+            var list = [];
+            for (var i = 0; i < comparisons[c1].length; i++)
+                if (Array.isArray(comparisons[c1][i]))
+                    list.push(comparisons[c1][i]);
+                else if (c2 in comparisons[c1][i])
+                    for (var j = 0; j < comparisons[c1][i][c2].length; j++)
+                        list.push(comparisons[c1][i][c2][j]);
+            for (var i = 0; i < comparisons[c2].length; i++)
+                if (Array.isArray(comparisons[c2][i]))
+                    list.push(comparisons[c2][i]);
+                else if (c1 in comparisons[c2][i])
+                    for (var j = 0; j < comparisons[c2][i][c1].length; j++)
+                        list.push(comparisons[c2][i][c1][j]);
+            var comparison = pickRandom(rnd, list);
+            document.getElementById('condition-3a').innerText = comparison[0];
+            document.getElementById('condition-3b').innerText = comparison[1];
+            document.getElementById('condition-3c').innerText = comparison[2];
+
+            var cells = Array.from(document.getElementsByClassName('number-row')).map(tr => Array.from(tr.getElementsByClassName('number')));
+            var digits = rnd.shuffleFisherYates('123456789'.split(''));
+            for (var column = 0; column < 6; column++)
+            {
+                for (var i = 0; i < cells.length; i++)
+                    cells[i][column].innerText = digits[i];
+                rnd.shuffleFisherYates(digits);
+            }
+        }
+
+        function pickRandom(rnd, list)
+        {
+            return list[rnd.next(0, list.length)];
+        }
+
+        function setDefaultRules()
+        {
+            document.getElementById("condition-1").innerText = "시리얼 넘버의 마지막 숫자가 짝수라면";
+            document.getElementById("condition-2").innerText = "병렬 포트가 최소 1개 있다면";
+            document.getElementById("condition-3a").innerText = "폭탄에 점등되지 않은 지시등이 점등된 지시등보다 많으면";
+            document.getElementById("condition-3b").innerText = "폭탄에 점등된 지시등이 점등되지 않은 지시등보다 많으면";
+            document.getElementById("condition-3c").innerText = "폭탄에 점등된 지시등과 점등되지 않은 지시등의 개수가 같으면";
+            var digits = "933981566712782158457896141673875244618439229525394367";
+            var tds = document.getElementsByClassName('number');
+            for (var i = 0; i < tds.length; i++)
+                tds[i].innerText = digits.substr(i, 1);
+        }
+    </script>
+    <style>
+        .ttt-table {
+            width: 100%;
+        }
+        .ttt-table td {
+            text-align: center;
+        }
+        .ruleseed-active .condition {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .dark table, table {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">틱택토</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Tic Tac Toe.svg" class="diagram">
+                <h2>틱택토에 대하여</h2>
+                <p class="flavour-text">틱택토에서 비기기만 하던 날들을 보상받을 때가 왔습니다.</p>
+
+                <p>모듈을 해제하려면 키패드의 9개의 버튼을 전부 “X” 또는 “O”로 채워야 합니다.</p>
+                <p>“Up Next:”라고 쓰인 화면에 “X” 또는 “O”가 표시됩니다. 키패드에는 1에서 9 사이의 숫자 몇 개와 이미 채워진 “X”와 “O” 몇 개가 표시됩니다. 기호를 채우기 시작하면 키패드의 화면들이 빈 칸으로 변합니다.</p>
+                <p>다음 페이지의 표에 있는 숫자들은 각 기호를 키패드 위의 어떤 숫자가 적힌 위치에 채워야 하는지를 의미합니다.</p>
+                <p>아래의 규칙을 이용해 “시작 행”을 알아내세요:</p>
+                <ol>
+                    <li>만약 <span class='condition' id="condition-1">시리얼 넘버의 마지막 숫자가 짝수라면</span>, 시작 행은 5,&nbsp;6,&nbsp;7,&nbsp;8,&nbsp;9 중 하나입니다. 그렇지 않다면, 시작하는 행은 1,&nbsp;2,&nbsp;3,&nbsp;4 중 하나입니다.</li>
+                    <li>만약 <span class='condition' id="condition-2">병렬 포트가 최소 1개 있다면</span>, 시작 행은 짝수입니다. 그렇지 않다면, 시작 행은 홀수입니다.</li>
+                    <li>만약 <span class='condition' id="condition-3a">폭탄에 점등되지 않은 지시등이 점등된 지시등보다 많으면</span>, 시작 행은 2번 규칙에서 남은 숫자 중 가장 작은 숫자입니다.</li>
+                    <li>만약 <span class='condition' id="condition-3b">폭탄에 점등된 지시등이 점등되지 않은 지시등보다 많으면</span>, 시작 행은 2번 규칙에서 남은 숫자 중 가장 큰 숫자입니다.</li>
+                    <li>만약 <span class='condition' id="condition-3c">폭탄에 점등된 지시등과 점등되지 않은 지시등의 개수가 같으면</span>, 시작 행은 2번 규칙에서 남은 숫자들의 평균입니다.</li>
+                </ol>
+
+                <p>
+                    표에서, 먼저 모듈에 이미 채워진 “X”와 “O”의 개수에 따라 올바른 열을 선택하세요.
+                    선택한 열의 “시작 행” 번째 칸에서 출발하여, 키패드 위의 채워지지 않은 칸에 적힌 숫자가 나올 때까지 아래로 내려갑니다.
+                    9번째 행 다음에는 1번째 행으로 돌아갑니다.
+                </p>
+
+                <p>
+                    만약 나온 숫자가 적힌 위치에 주어진 기호를 채우면 틱택토가 완성될 경우(가로, 세로, 대각선 중 한 방향으로 같은 기호 3개가 이어지는 경우),
+                    반드시 “PASS”를 누른 다음 표의 <u>동일한 칸</u>에서부터 계속 진행해야 합니다.
+                    그렇지 않다면, 키패드의 해당 위치를 눌러 주어진 기호를 채운 다음 표의 <u>한 칸 아래</u> 칸에서부터 계속 진행합니다.
+                </p>
+
+                <p>
+                    패스(PASS)를 두 번 연속으로 할 경우, 남아있는 빈 공간 중 하나에 기호 하나가 자동으로 채워집니다(키패드에 표시됩니다).
+                    이 기호로 인해 틱택토가 완성되어도 실수로 간주하지 않습니다. 이러한 경우 표의 <u>한 칸 아래</u> 칸에서부터 계속 진행합니다.
+                </p>
+
+                <p>
+                    실수를 하면, 키패드에 현재까지 채워진 기호와 남아있는 빈 칸의 숫자가 표시되며, 표의 시작 행 번째 칸에서부터 다시 진행해야 합니다.
+                    이미 채웠던 기호는 모듈이 해제될 때까지 남아있습니다.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">틱택토</span>
+            </div>
+            <div class="page-content">
+                <p><strong>Table 1</strong></p>
+                <table class='ttt-table'>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>“X”가 더 많음</td>
+                        <td colspan=2>“X” 개수 = “O” 개수</td>
+                        <td colspan=2>“O”가 더 많음</td>
+                    </tr>
+                    <tr>
+                        <td class='corner'></td>
+                        <td colspan=2>채울 기호:</td>
+                        <td colspan=2>채울 기호:</td>
+                        <td colspan=2>채울 기호:</td>
+                    </tr>
+                    <tr>
+                        <th>행</th>
+                        <th>“X”</th>
+                        <th>“O”</th>
+                        <th>“X”</th>
+                        <th>“O”</th>
+                        <th>“X”</th>
+                        <th>“O”</th>
+                    </tr>
+                    <tr class='number-row'><th>1</th><td class='number'>9</td><td class='number'>3</td><td class='number'>3</td><td class='number'>9</td><td class='number'>8</td><td class='number'>1</td></tr>
+                    <tr class='number-row'><th>2</th><td class='number'>5</td><td class='number'>6</td><td class='number'>6</td><td class='number'>7</td><td class='number'>1</td><td class='number'>2</td></tr>
+                    <tr class='number-row'><th>3</th><td class='number'>7</td><td class='number'>8</td><td class='number'>2</td><td class='number'>1</td><td class='number'>5</td><td class='number'>8</td></tr>
+                    <tr class='number-row'><th>4</th><td class='number'>4</td><td class='number'>5</td><td class='number'>7</td><td class='number'>8</td><td class='number'>9</td><td class='number'>6</td></tr>
+                    <tr class='number-row'><th>5</th><td class='number'>1</td><td class='number'>4</td><td class='number'>1</td><td class='number'>6</td><td class='number'>7</td><td class='number'>3</td></tr>
+                    <tr class='number-row'><th>6</th><td class='number'>8</td><td class='number'>7</td><td class='number'>5</td><td class='number'>2</td><td class='number'>4</td><td class='number'>4</td></tr>
+                    <tr class='number-row'><th>7</th><td class='number'>6</td><td class='number'>1</td><td class='number'>8</td><td class='number'>4</td><td class='number'>3</td><td class='number'>9</td></tr>
+                    <tr class='number-row'><th>8</th><td class='number'>2</td><td class='number'>2</td><td class='number'>9</td><td class='number'>5</td><td class='number'>2</td><td class='number'>5</td></tr>
+                    <tr class='number-row'><th>9</th><td class='number'>3</td><td class='number'>9</td><td class='number'>4</td><td class='number'>3</td><td class='number'>6</td><td class='number'>7</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
