@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1">
+    <meta charset='utf-8'>
+    <meta name='viewport' content='initial-scale=1'>
     <title>Souvenir — Keep Talking and Nobody Explodes Module</title>
-    <link rel="stylesheet" type="text/css" href="css/font.css">
-    <link rel="stylesheet" type="text/css" href="css/normalize.css">
-    <link rel="stylesheet" type="text/css" href="css/main.css">
-    <script src="js/ktane-utils.js"></script>
-    <style>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel='stylesheet' type='text/css' href='css/normalize.css'>
+    <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <script src='js/ktane-utils.js'></script>
+    <style id='souvenir-style'>
         .souvenir {
             clear: both;
             font-family: 'Agency FB';
@@ -59,7 +59,7 @@
     </style>
 </head>
 <body>
-    <div class="section">
+    <div class='section'>
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
@@ -729,12 +729,13 @@
             <div class="page-footer relative-footer">11</div>
         </div>
     </div>
-    <script>
-        /* - use this to reflow the questions after adding/removing any
-        window.setTimeout(function()
-        {
+    <script id='reflow'>
+        // use this to reflow the questions after adding/removing any
+        document.addEventListener("paste", event => {
+            let newTags = event.clipboardData.getData('Text') ?? '';
             let pages = Array.from(document.querySelectorAll('div.souvenir'));
             let indentation = pages[0].firstChild.textContent;
+            pages[0].insertAdjacentHTML("beforeend", newTags);
             let allModules = Array.from(document.querySelectorAll('div.module'));
             function getSortKey(obj) {
                 return obj.dataset.sort || obj.innerText.replace(/\(The\)$|[^A-Za-z0-9]/g, '');
@@ -749,6 +750,28 @@
             let curPage = 0;
             for (let i = 0; i < allModules.length;)
             {
+                if (curPage >= pages.length)
+                {
+                    let newPage = document.createElement('div');
+                    newPage.className = `page page-bg-0${curPage % 7 + 1}`;
+                    document.querySelector('div.section').appendChild(newPage);
+                    document.querySelector('div.section').appendChild(document.createTextNode('\n    '));
+                    newPage.innerHTML = `
+            <div class='page-header'>
+                <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod<${''}/span>
+                <span class='page-header-section-title'>Souvenir<${''}/span>
+            <${''}/div>
+            <div class='page-content'>
+                <div class='souvenir'><${''}/div>
+            <${''}/div>
+            <div class='page-footer relative-footer'>${curPage + 1}<${''}/div>
+        `;
+                    pages.push(newPage.querySelector('.souvenir'));
+                    let ss = document.getElementById('souvenir-style');
+                    ss.innerText = ss.innerText.replace(/\.page-footer::after \{ content: ' of \d+'; \}/,
+                        `.page-footer::after { content: ' of ${curPage + 1}'; }`);
+                    tops.push(newPage.querySelector('.page-footer').offsetTop);
+                }
                 let tn = document.createTextNode(indentation);
                 pages[curPage].appendChild(tn);
                 pages[curPage].appendChild(allModules[i]);
@@ -762,8 +785,36 @@
                     i++;
             }
             pages.forEach(p => { p.appendChild(document.createTextNode(indentation.substr(0, indentation.length - 4))); });
-        }, 100);
-        /**/
+
+            // Finally, generate the new HTML
+            let newHtml = `<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='initial-scale=1'>
+    <title>Souvenir — Keep Talking and Nobody Explodes Module<${''}/title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel='stylesheet' type='text/css' href='css/normalize.css'>
+    <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <script src='js/ktane-utils.js'><${''}/script>
+    <style id='souvenir-style'>${document.getElementById('souvenir-style').innerHTML.replace(/<br>/g, '\n')}<${''}/style>
+<${''}/head>
+<body>
+    <div class='section'>${document.querySelector('div.section').innerHTML}<${''}/div>
+    <script id='reflow'>${document.getElementById('reflow').innerText}<${''}/script>
+<${''}/body>
+<${''}/html>`;
+
+            window.requestAnimationFrame(async function()
+            {
+                let handle = await showSaveFilePicker({ suggestedName: 'Souvenir.html' });
+                const blob = new Blob([newHtml]);
+                const writableStream = await handle.createWritable();
+                await writableStream.write(blob);
+                await writableStream.close();
+            });
+            return false;
+        });
     </script>
 </body>
 </html>
