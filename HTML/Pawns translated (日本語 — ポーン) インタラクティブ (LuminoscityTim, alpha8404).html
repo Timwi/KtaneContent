@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ポーン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            var pieces = ["☒", "♔", "♕", "♖", "♗", "♘", "♙"];
+            var selected = "";
+            var start;
+
+            $(document).click(function() {
+                start = null;
+            });
+
+            var row;
+            var chessboard = $(".chessboard");
+            let rows = 7
+            // Based on code from Samfundev's Chess interactive
+            for (let y = 0; y < rows; y++) {
+                row = $("<div>").addClass("chess-row").appendTo(chessboard);
+                $("<div>").addClass("square").text(rows - y).appendTo(row);
+                for (let x = 0; x < rows; x++) {
+                    $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "black" : "white")).appendTo(row).each(function(_, e) {
+                        var element = $(e);
+                        element.mousedown(function(event) {
+                            start = [x, y];
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+
+                        element.mouseup(function(event) {
+                            if (start) { // Just in case.
+                                var changed = [];
+                                var a, b, i;
+                                if (start[0] == x) {
+                                    a = (start[1] > y ? y : start[1]);
+                                    b = (start[1] > y ? start[1] : y);
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([x, i]);
+                                    }
+                                } else if (start[1] == y) {
+                                    a = (start[0] > x ? x : start[0]);
+                                    b = (start[0] > x ? start[0] : x);
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([i, y]);
+                                    }
+                                } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                    var dist = Math.abs(start[0] - x);
+                                    var dirx = (start[0] < x) ? 1 : -1;
+                                    var diry = (start[1] < y) ? 1 : -1;
+
+                                    for (i = 0; i <= dist; i++) {
+                                        changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                    }
+                                }
+
+                                if (changed.length > 0) {
+                                    var first = chessboard.children().eq(start[1]).children().eq(start[0] + 1).hasClass("occupied");
+                                    changed.forEach(function(pos) {
+                                        var elm = chessboard.children().eq(pos[1]).children().eq(pos[0] + 1);
+                                        if (selected == "marking") {
+                                            if (changed.length == 1) {
+                                                elm.toggleClass("occupied");
+                                            } else {
+                                                elm.toggleClass("occupied", !first);
+                                            }
+                                        } else if (changed.length == 1) {
+                                            elm.text(elm.text() == "" ? selected : "");
+                                        }
+                                    });
+                                }
+
+                                start = null;
+                            }
+                            event.preventDefault();
+                            event.stopPropagation();
+                        });
+
+                        if (x === 0) {
+                            element.css("border-left-width", "2px");
+                        } else if (x == (rows - 1)) {
+                            element.css("border-right-width", "2px");
+                        }
+
+                        if (y === 0) {
+                            element.css("border-top-width", "2px");
+                            element.parent().addClass("extra-height");
+                        } else if (y == (rows - 1)) {
+                            element.css("border-bottom-width", "2px");
+                            element.parent().addClass("extra-height");
+                        }
+                    });
+                }
+            }
+            row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+            for (var i = 0; i < rows; i++) {
+                $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+            }
+
+            var chesspieces = $(".chess-pieces");
+            $("<div>").addClass("piece square").css("background-color", "rgba(255, 105, 105, 1)").appendTo(chesspieces).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = "marking";
+            }).click();
+            pieces.forEach(function(val) {
+                 $("<div>").addClass("piece square").appendTo(chesspieces).click(function() {
+                    $(".piece").removeClass("selected");
+                    $(this).addClass("selected");
+                    selected = val;
+                }).text(val);
+            });
+
+            $(".reset").click(function() {
+                $(".black.square, .white.square").text("").removeClass("occupied");
+            });
+        });
+    </script>
+    <style>
+        .chess-board {
+            width: 424px;
+        }
+
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+        .chess-row.extra-height {
+            height: 62px;
+        }
+        .chess-row.letters {
+            margin-left: 60px;
+        }
+
+        .chess-pieces {
+            margin-top: 10px;
+        }
+
+        .square {
+            font-family: 'Special Elite';
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            text-align: center;
+            border: black 0px solid;
+            cursor: default;
+        }
+
+        @media screen and (max-width: 600px) {
+            .chess-row, .chess-pieces {
+                height: 40px;
+            }
+            .chess-row.extra-height {
+                height: 42px;
+            }
+            .chess-row.letters {
+                margin-left: 40px;
+            }
+
+            .square {
+                width: 40px;
+                height: 40px;
+                font-size: 40px;
+            }
+        }
+
+        .white.square, .black.square {
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .black {
+            background-color: #303030;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .white.occupied {
+            background-color: rgba(255, 105, 105, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .black.occupied {
+            background-color: rgba(150, 0, 0, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+        .dark .piece.selected { border-color: #DDD; }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        table.chess h4 {
+            margin: 0;
+        }
+        table.chess p {
+            margin: 0;
+        }
+        .page-bg-01 {
+            background-repeat: repeat-y;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ポーン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Pawns.svg" class="diagram">
+                <h2>モジュール詳細：ポーン</h2>
+                <p class="flavour-text">ここで行うことは、戻ることである。まぁ、ポーンはそうではないけれども、私たちは確かにそうしている。</p>
+
+                <p>このモジュールには2セットのチェスの駒と、その座標が横に表示されたディスプレーがある。選択したペアは、モジュールの右側にあるLEDに表示され、矢印ボタンを押して切り替えることが出来る。</p>
+                  <p>各セットは7×7のチェス盤上の2つの駒を表す。ペアごとに左の駒が右の駒を1手で取ることが出来る場合は「Capture」を押す。それ以外の場合は「Pass」を押す。</p>
+                  <p>駒はお互いにブロックすることができ、回答を送信してもピースが消えたり移動したりすることはない。</p>
+                  <br>
+                  <p>チェス盤には、動きを妨げる可能性のあるオブジェクトもいくつか存在する。これらの座標を取得するには、シリアルナンバーの最初の英字と最初の数字を取得する。両方をA~Gまたは1~7の範囲になるように7を加減する。シリアルナンバーの次の英字と次の数字が無くなるまで繰り返す。</p>
+                  <p>座標は英字と数字を使用して表記される。英字は左から右への列に対応し、数字は上から下の段に対応している。</p>
+                  <p>チェスの駒の動きについては、<a href="Chess%20translated%20(日本語%20—%20チェス)%20(alpha8404).html">「チェス(Chess)」</a>を参照すること。このモジュールに出現する駒のアイコンは、「チェス」マニュアルと異なり、<a href="https://www.google.com/search?q=%E3%83%81%E3%82%A7%E3%82%B9+%E9%A7%92+%E4%B8%80%E8%A6%A7">実際のチェスの駒と近い形状</a>となっていることに注意する。</p>
+                <h3>チェス盤</h3>
+                <p>次のインタラクティブなチェス盤を使用して解除に役立てることが出来る。
+                <p>チェス盤の下にあるツールの1つを選択し、チェス盤をクリックしてそのツールを使用する。
+                <br>
+                ツールを使用して駒または障害物(☒)を配置/削除できる。
+                <br>
+                マーカーツールを使用して、セルを色付け出来る。
+                <br>
+                マーカーツールを使用してドラッグすることで、複数のセルをまとめて色付けできる。
+                <br>
+                ボードの下にあるボタンを使用して、ボードをリセットできる。
+                <div class="chessboard"></div>
+                <div class="chess-pieces"></div>
+                <br>
+                <p><button class="reset">チェス盤リセット</button></p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
