@@ -10608,6 +10608,11 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Musher the Batten",
+		moduleID: "musherTheBatten",
+		loggingTag: "Musher The Batten"
+	},
+	{
 		displayName: "Mystic Maze",
 		moduleID: "mysticmaze",
 		loggingTag: "Mystic Maze",
