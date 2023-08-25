@@ -48,10 +48,6 @@ function setRules(rnd) {
                 }
             }
         }
-    } while (Answers.filter(onlyUnique).length != 120);
+    } while (Answers.filter(FilterOnlyUnique).length != 120);
     setTableColors(colorSequence);
-}
-
-function onlyUnique(value, index, array) {
-    return array.indexOf(value) === index;
 }
