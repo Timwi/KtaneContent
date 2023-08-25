@@ -334,155 +334,142 @@ class BombGroup {
         // Graph
         if (this.Events.length !== 0 && this.isSingleBomb)
         {
-            const graph = $SVG(`<svg viewBox="-1 -1 23 14">`);
-
             const totalRealTime = this.Events[this.Events.length - 1].realTime;
+            const useSeconds = totalRealTime < 180;
+            const timeScaleFactor = useSeconds ? 1 : 1 / 60;
+            const timeUnits = useSeconds ? "seconds" : "minutes";
 
             const stats = {
                 strikes: {
                     name: "Strikes",
-                    color: "red",
                     max: this.Bombs[0].TotalStrikes,
                     final: this.Bombs[0].Strikes,
-                    invert: true,
-                    type: "STRIKE"
+                    type: "STRIKE",
+                    dataPoints: [{ x: 0, y: 0, text: `0/${this.Bombs[0].TotalStrikes} strikes` }],
                 },
                 solves: {
                     name: "Solves",
-                    color: "rgb(0, 225, 0)",
-                    max: totalModules,
+                    max: totalModules - totalNeedies,
                     final: this.Bombs[0].Solved,
-                    invert: true,
-                    type: "PASS"
+                    type: "PASS",
+                    dataPoints: [{ x: 0, y: 0, text: `0/${totalModules - totalNeedies} solves` }],
                 },
                 time: {
                     name: "Time",
-                    color: "grey",
                     max: this.Bombs[0].Time,
-                    final: this.Bombs[0].TimeLeft
+                    final: this.Bombs[0].Time - this.Bombs[0].TimeLeft,
+                    dataPoints: [{ x: 0, y: 0 }]
                 }
             };
 
-            for (const stat of Object.values(stats)) {
-                stat.line = "M 0 10 ";
+            for (const stat of Object.values(stats))
                 stat.value = 0;
-            }
 
             for (const event of this.Events) {
-                if (event.type == "PASS")
-                {
+                if (event.type == "PASS") {
                     const mod = lastBombGroup.GetMod(event.moduleID, event.loggingID);
                     if (mod != null && mod.moduleData.needy)
                         continue;
                 }
 
-                const baseCommand = `L ${(event.realTime / totalRealTime * 2 * 10)} `;
-
                 for (const stat of Object.values(stats)) {
                     if (stat.type == event.type || stat.type == undefined) {
-                        let beforeRatio = stat.value / stat.max;
-                        if (stat.invert) beforeRatio = 1 - beforeRatio;
-
-                        if (stat.name != "Time")
-                        {
-                            stat.line += baseCommand + (beforeRatio * 10);
-                            stat.value++;
-                        }
+                        if (stat.name === "Time")
+                            stat.value = stat.max - event.bombTime;
                         else
-                        {
-                            stat.value = event.bombTime;
-                        }
+                            stat.value++;
 
-                        let afterRatio = stat.value / stat.max;
-                        if (stat.invert) afterRatio = 1 - afterRatio;
-
-                        stat.line += baseCommand + (afterRatio * 10);
+                        const dataPoint = { x: event.realTime * timeScaleFactor, y: stat.value / stat.max * 100 };
+                        if (stat.name === "Solves" || stat.name === "Strikes")
+                            dataPoint.text = `${stat.value}/${stat.max} ${stat.name.toLowerCase()}<br>${this.GetMod(event.moduleID, event.loggingID).moduleData.displayName}<br>${formatTime(event.realTime)}`;
+                        stat.dataPoints.push(dataPoint);
                     }
                 }
             }
 
-            let i = 0;
             for (const stat of Object.values(stats)) {
-                if (stat.name != "Time")
-                {
-                    let beforeRatio = stat.value / stat.max;
-                    if (stat.invert) beforeRatio = 1 - beforeRatio;
-                    stat.line += `L 20 ${beforeRatio * 10}`;
+                const dataPoint = { x: totalRealTime * timeScaleFactor, y: stat.final / stat.max * 100 };
+                if (stat.name === "Solves" || stat.name === "Strikes") {
+                    if (stat.final === stat.max)
+                        continue;
+                    dataPoint.text = `${stat.final}/${stat.max} ${stat.name.toLowerCase()}<br>${formatTime(totalRealTime)}`
                 }
-
-                let afterRatio = stat.final / stat.max;
-                if (stat.invert) afterRatio = 1 - afterRatio;
-                stat.line += `L 20 ${afterRatio * 10}`;
-
-                // Draw line and preprend it to make sure lines are drawn in the right order.
-                $SVG(`<path stroke="${stat.color}" stroke-width=0.1 fill=none d="${stat.line}">`).prependTo(graph);
-
-                // Legend
-                $SVG(`<rect fill="${stat.color}" x=0.2 width=0.75 height=0.75 y=${i}>`).appendTo(graph);
-                $SVG(`<text font-size=0.5 x=1.1 dominant-baseline=middle y=${i + 0.375}>${stat.name}`).appendTo(graph);
-
-                i++;
+                stat.dataPoints.push(dataPoint);
             }
 
-            // Graph lines
-            $SVG(`<path stroke=black stroke-width=0.1 fill=none d="M 0 0 0 10.1 20.1 10.1">`).appendTo(graph);
-
-            function printTime(num) {
-                num = Math.floor(num);
-                let sec = num % 60;
-                let min = (num / 60) | 0;
-                return `${min}:${sec < 10 ? `0${sec}` : sec}`;
-            }
-
-            let timerLabels = [];
-            if(totalRealTime > 120) {
-                if (totalRealTime < 420) {
-                    for (let i = 60; i < totalRealTime - 60; i += 60) {
-                        timerLabels = timerLabels.concat(i);
-                    }
+            const solvesTrace = {
+                name: "solves",
+                type: "scatter",
+                mode: "lines",
+                hoverinfo: "text",
+                x: stats.solves.dataPoints.map(dp => dp.x),
+                y: stats.solves.dataPoints.map(dp => dp.y),
+                hovertext: stats.solves.dataPoints.map(dp => dp.text),
+                line: {
+                    shape: "hv",
+                    color: "#0d0"
                 }
-                else if (totalRealTime < 2100) {
-                    for (let i = 300; i < totalRealTime - 300; i += 300) {
-                        timerLabels = timerLabels.concat(i);
-                    }
+            };
+            const strikesTrace = {
+                name: "strikes",
+                type: "scatter",
+                mode: "lines",
+                hoverinfo: "text",
+                x: stats.strikes.dataPoints.map(dp => dp.x),
+                y: stats.strikes.dataPoints.map(dp => dp.y),
+                hovertext: stats.strikes.dataPoints.map(dp => dp.text),
+                line: {
+                    shape: "hv",
+                    color: "#d00"
                 }
-                else {
-                    for (let i = 1800; i < totalRealTime - 1800; i += 1800) {
-                        timerLabels = timerLabels.concat(i);
-                    }
+            };
+            const timeTrace = {
+                name: "time",
+                type: "scatter",
+                mode: "lines",
+                hoverinfo: "none",
+                x: stats.time.dataPoints.map(dp => dp.x),
+                y: stats.time.dataPoints.map(dp => dp.y),
+                line: {
+                    shape: "linear",
+                    color: "#888"
                 }
             }
-
-            // Graph time labels
-            let group = $SVG(`
-            <g>
-                <defs>
-                    <path id='left-label' stroke=black stroke-width=0.1 fill=none d="M 0 10.6 2 12.6"/>
-                    <path id='right-label' stroke=black stroke-width=0.1 fill=none d="M 20.1 10.6 22.1 12.6"/>
-                </defs>
-                <text>
-                    <textpath href='#left-label' font-size=".5">0:00</textpath>
-                    <textpath href='#right-label' font-size=".5">${printTime(totalRealTime)}</textpath>
-                </text>
-                <text x='10' y='12' font-size=".5" style="text-anchor: middle;">Real Time</text>
-            </g>
-            `);
-
-            for (const item of timerLabels) {
-                $SVG(`<text transform='translate(${item * 2 / totalRealTime * 10}, 0)'><textpath href='#left-label' font-size=".5">${printTime(item)}</textpath></text>`).appendTo(group);
-                $SVG(`<path stroke='#ccc' stroke-width='.05' d='M${item * 2 / totalRealTime * 10} 0v10.1'/>`).appendTo(group);
+            const layout = {
+                xaxis: {
+                    title: `Real time (${timeUnits})`,
+                    type: "linear",
+                    range: [0, totalRealTime * timeScaleFactor * 1.05],
+                    gridcolor: "#0000",
+                    color: "#888",
+                },
+                yaxis: {
+                    title: "Percentage",
+                    type: "linear",
+                    range: [-5, 105],
+                    gridcolor: "#0000",
+                    color: "#888",
+                },
+                paper_bgcolor: "#0000",
+                plot_bgcolor: "#0000",
+                legend: { font: { color: "#888" }}
+            };
+            const config = {
+                responsive: true,
+                scrollZoom: true,
+                displayModeBar: false,
             }
-
-            group.prependTo(graph);
-
-            var graphInfo = $("<div class='module-info'>").appendTo(info);
-            $("<h3>").css("margin-top", "10px").text("Graph").appendTo(graphInfo);
-            graph.appendTo(graphInfo);
+            const graphDiv = document.createElement("div");
+            Plotly.newPlot(graphDiv, [timeTrace, strikesTrace, solvesTrace], layout, config);
+            
+            const graphInfo = $("<div class='module-info'>").appendTo(info);
+            graphInfo.append(graphDiv);
 
             $("<button class='module'>")
                 .text("Graph")
                 .appendTo(modules)
-                .addCardClick(graphInfo);
+                .addCardClick(graphInfo)
+                .on("click", () => Plotly.Plots.resize(graphDiv));
         }
 
         this.loggedBombs.forEach((bomb) => {
