@@ -10,6 +10,7 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.7.0.min.js"></script>
     <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
     <script>
     $(function() {
         var selected;
@@ -105,23 +106,21 @@
                 return false;
             down = true;
             let k = event.key.toLowerCase();
-            if (!event.shiftKey) {
+            if (NoSpecialKeys(event)) {
                 n = parseInt(event.key);
-                if (n > 0 && !event.altKey) {
-                    if (mode() == MODE_READ) {
-                        if (selected && selected.hasClass("netsq")) {
-                            gameGrid[currX][currY] = n;
-                            origGameGrid[currX][currY] = n;
-                            selected.text(n);
-                            if (currX == rows - 1)
-                                currY = (currY + 1) % cols;
-                            currX = (currX + 1) % rows;
-                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
-                            selected = elem;
-                            updateSelection();
-                            $(".solved-text").addClass("invis");
-                        }
+                if (mode() == MODE_READ && selected && selected.hasClass("netsq") && (n > 0 || k == " ")) {
+                    if (k != " " && n > 0) {
+                        gameGrid[currX][currY] = n;
+                        origGameGrid[currX][currY] = n;
+                        selected.text(n);
                     }
+                    if (currX == rows - 1)
+                        currY = (currY + 1) % cols;
+                    currX = (currX + 1) % rows;
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
+                    $(".solved-text").addClass("invis");
+                    event.preventDefault();
                 }
             }
             down = false;
@@ -647,7 +646,7 @@
                 <h3>Interactive Controls</h3>
                 <ul>
                     <li>
-                        In <strong>Read</strong> mode, you can <i>press [1]-[9] on your keyboard</i> or click individual squares to input the puzzle grid.
+                        In <strong>Read</strong> mode, you can <i>press [1]-[9] / Space on your keyboard</i> or click individual squares to input the puzzle grid.
                         Enter the display digits into the text boxes.
                     </li>
                     <li>In <strong>Solve</strong> mode, the grid behaves like the module. <strong>Click a circle</strong> to switch it off. <strong>Right-click a circle</strong> to mark it as known.</li>
