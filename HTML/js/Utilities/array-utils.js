@@ -62,3 +62,8 @@ function MinElement(arr, func) {
     }
     return null;
 }
+
+// usage: array.filter(FilterOnlyUnique);
+function FilterOnlyUnique(value, index, array) {
+    return array.indexOf(value) === index;
+}

@@ -1,0 +1,665 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Rullo — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        let rows = 6;
+        let cols = 6;
+        let sums = Array(cols + rows).fill(0);
+        let gameGrid = Array(cols).fill().map(()=>Array(rows).fill(1));
+        let origGameGrid = Array(cols).fill().map(()=>Array(rows).fill(1));
+        let currX = 0;
+        let currY = 0;
+        var start;
+        let movementList = [];
+        let answerList = [];
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        let nTiles = rows * cols;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function resetPos() {
+            selected = null;
+            updateSelection();
+            currX = currY = 0;
+        }
+        //This function is taken from the module source code
+        function generate() {
+            generating = true;
+
+            let rand = Math.floor(Math.random() * 2) + 2;
+            let not = Array(cols).fill().map(()=>Array(rows).fill(false));
+            for (let k = 0; k < rand; k++) {
+                let shuffle = [[],[]];
+                for(let i = 0; i < 2; i++)
+                    shuffle[i] = ShuffleFisherYates([ 0, 1, 2, 3, 4, 5 ]);
+                for (let i = 0; i < cols; i++)
+                    not[ shuffle[0][i] ][ shuffle[1][i] ] = true;
+            }
+            for (let i = 0; i < 36; i++) {
+                let r = Math.floor(Math.random() * 9) + 1
+                let xy = coordinate(i);
+                origGameGrid[ xy[0] ][ xy[1] ] = r;
+                $(`.netsq.x${xy[0]}.y${xy[1]}`).text(r);
+            }
+            // console.log(origGameGrid);
+            answerList = [];
+            sums = Array(cols + rows).fill(0);
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    sums[x] += not[y][x] ? 0 : origGameGrid[y][x];
+                    sums[x + cols] += not[x][y] ? 0 : origGameGrid[x][y];
+                    if (not[x][y]) answerList.push(coordinateName(y * cols + x));
+                    // $(`.netsq.x${x}.y${y}`).toggleClass("on", !not[x][y]);
+                }
+                $(`.sum input.s${x}`).val(sums[x + cols]);
+                $(`.sum input.s${x + cols}`).val(sums[x]);
+            }
+            // console.log(sums);
+
+            $(".solution .str").text(answerList.join(" "));
+            generating = false;
+        }
+
+        function coordinateName(pos) {
+            let coord = coordinate(pos);
+            return `${String.fromCharCode(65 + coord[0])}${coord[1] + 1}`;
+        }
+
+        function coordinate(pos) {
+            return [ pos % cols, Math.floor(pos / cols) ];
+        }
+
+        //This function is based on the module source code
+        let down = false;
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (!event.shiftKey) {
+                n = parseInt(event.key);
+                if (n > 0 && !event.altKey) {
+                    if (mode() == MODE_READ) {
+                        if (selected && selected.hasClass("netsq")) {
+                            gameGrid[currX][currY] = n;
+                            origGameGrid[currX][currY] = n;
+                            selected.text(n);
+                            if (currX == rows - 1)
+                                currY = (currY + 1) % cols;
+                            currX = (currX + 1) % rows;
+                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                            selected = elem;
+                            updateSelection();
+                            $(".solved-text").addClass("invis");
+                        }
+                    }
+                }
+            }
+            down = false;
+        });
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function addMoves() {
+            movementList = [];
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    let elem = $(`.netsq.x${x}.y${y}`);
+                    if (!elem.hasClass("on")) movementList.push(coordinateName(y * cols + x));
+                }
+            }
+            movementList.sort();
+            $(".path .str").text(movementList.join(" "));
+        }
+
+        function setupSum(sum, which) {
+            sum.addClass(`borderless square sum s${which}`);
+            $(`<input class="s${which}">`).appendTo(sum).change(function(event) {
+                let val = $(this).val().replace(/\D/g, '');
+                val = Math.max(Math.min(parseInt(val), 54), 6);
+                $(this).val(isNaN(val) ? '' : val);
+            });
+        }
+
+        function CheckSolution() {
+            let sums2 = Array(cols + rows).fill(0);
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    $(`.netsq.x${x}.y${y}`).hasClass("on");
+                    sums2[x] += $(`.netsq.x${y}.y${x}`).hasClass("on") ? origGameGrid[y][x] : 0;
+                    sums2[x + cols] += $(`.netsq.x${x}.y${y}`).hasClass("on") ? origGameGrid[x][y] : 0;
+                }
+            }
+            return sums.every((s,i) => { return s == sums2[i]; });
+        }
+
+        let row = $("<div>").addClass("square-row").appendTo(grid);
+        $("<div>").addClass("square borderless").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            setupSum($("<div>").appendTo(row), i);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq on x${x-1} y${y-1}`).text(1).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+                        if ($(".marking").hasClass("mark")) {
+                            element.contextmenu();
+                            return false;
+                        }
+                        if (element.hasClass("marked")) return false;
+                        if (mode() == MODE_READ) {
+                            selected = $(this);
+                            updateSelection();
+                            currX = x-1;
+                            currY = y-1;
+                            gameGrid[x-1][y-1] = gameGrid[x-1][y-1] % 9 + 1;
+                            origGameGrid[x-1][y-1] = gameGrid[x-1][y-1];
+                            element.text(gameGrid[x-1][y-1]);
+                            $(".solved-text").addClass("invis");
+                        }
+                        else {
+                            element.toggleClass("on");
+                            addMoves();
+
+                            $(".solved-text").addClass("invis");
+                            if (mode() == MODE_PLAY && CheckSolution()) {
+                                if ($("button.sound").hasClass("play"))
+                                    audioSolve[0].play();
+                                $(".solved-text").removeClass("invis");
+                            }
+                            else if ($("button.sound").hasClass("play")) {
+                                let aud = element.hasClass("on") ? audio0[0].cloneNode() : audio1[0].cloneNode();
+                                aud.volume = 0.3;
+                                aud.play();
+                            }
+                        }
+                        event.stopPropagation();
+                    });
+
+                    element.contextmenu( function(event) {
+                        $(this).toggleClass("marked");
+                        if ($("button.sound").hasClass("play")) {
+                            let m = $(this).hasClass("marked");
+                            let aud = m ? audioH[0].cloneNode() : audioN[0].cloneNode();
+                            aud.volume = m ? 0.3 : 0.7;
+                            aud.play();
+                        }
+                        event.stopPropagation();
+                        event.preventDefault();
+                    });
+                    if (x == 1 && y == 1) {
+                        selected = element;
+                        element.addClass("selected");
+                    }
+                });
+            }
+            setupSum($("<div>").appendTo(row), y+5);
+        }
+        row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+
+        let audio0 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/TapCode.wav")
+            .appendTo(grid);
+        let audio1 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
+            .appendTo(grid);
+        let audioN = $("<audio>")
+            .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+            .appendTo(grid);
+        let audioH = $("<audio>")
+            .attr("src", "audio/Module Listening/Rhythms.ogg")
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Not The Bulb/StarDing.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+            if (mode() != MODE_READ) {
+                resetPos();
+            }
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+            }
+            $(".reset-grid").click();
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+        $("<button>").addClass("all-on").text("All On").appendTo(tools).click(function() {
+            $(".netsq").addClass("on");
+            addMoves();
+        });
+        $("<button>").addClass("unmark").text("Unmark\xa0All").appendTo(tools).click(function() {
+            $(".netsq").removeClass("marked");
+        });
+        if (/mobi/i.test(navigator.userAgent))
+            $("<button>").addClass("marking").appendTo(tools).click(function() {
+                $(this).toggleClass("mark");
+            });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("free solution-shown solve play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            $(".netsq").text(1);
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = 1;
+                    origGameGrid[x][y] = 1;
+                }
+            }
+            $(".sum input").val("");
+            $(".netsq").removeClass("marked").addClass("on");
+            resetPos();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveSumInputs = Array.from($(".sum input")).map(x => $(x)).map(x => x.val() || "");
+            let saveCellText = Array.from($(".netsq")).map(x => $(x)).map(x => x.text() || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gameGrid = Array(cols).fill().map(()=>Array(rows).fill(1));
+            let s_origGameGrid = Array(cols).fill().map(()=>Array(rows).fill(1));
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                }
+            let s_answerList = [];
+            let s_movementList = [];
+            let s_sums = [];
+            Object.assign(s_movementList, movementList);
+            Object.assign(s_answerList, answerList);
+            Object.assign(s_sums, sums);
+            let s_selected = selected;
+            let s_currX = currX;
+            let s_currY = currY;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".netsquare, .solved-text, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".sum input").each((i, x) => $(x).val(saveSumInputs[i]));
+                $(".netsq").each((i, x) => $(x).text(saveCellText[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                movementList = Array(s_movementList.length);
+                answerList = Array(s_answerList.length);
+                sums = Array(s_sums.length);
+                Object.assign(movementList, s_movementList);
+                Object.assign(answerList, s_answerList);
+                Object.assign(sums, s_sums);
+                $(".path .str").text(movementList.join(" "));
+                $(".solution .str").text(answerList.join(" "));
+                currentState = stateNumber;
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                    }
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        html {
+            --cellsize: 50px;
+        }
+        .aligncenter {
+            text-align: center;
+        }
+        .note {
+            text-align: center;
+            font-size: x-small;
+            font-style: italic;
+        }
+        th img {
+            height: auto;
+            width: 80%;
+        }
+        table {
+            margin: 1em auto;
+        }
+        .hstack {
+            align-items: center;
+        }
+        .vstack {
+            align-items: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 130px;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        .square-row {
+            height: var(--cellsize);
+            margin: 3px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .solution, .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+        }
+        body.free.solution-shown .path span.str { color: #F00; }
+
+        .square {
+            margin: 3px;
+            width: var(--cellsize);
+            height: var(--cellsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 10px;
+            border-width: 0;
+            width: var(--cellsize);
+            height: var(--cellsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .square.borderless { border: none; }
+        .sum {
+            line-height: var(--cellsize);
+        }
+        .sum input {
+            font-size: 20px;
+            text-align: center;
+            max-width: calc(var(--cellsize) - 10px);
+        }
+
+        .netsquare {
+            height: var(--cellsize);
+            width: var(--cellsize);
+            font-size: 35px;
+            line-height: calc(var(--cellsize) + 0px);
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #111;
+            border-radius: 50%;
+            border-width: 5px;
+            border-color: transparent;
+            color: #DDD;
+        }
+        body:not(.dark) .netsquare:not(.on) {
+            background-color: #DDD;
+            color: #000;
+        }
+        .netsquare.on {
+            background-color: #FF77FFAA;
+            color: #DDD;
+        }
+        body:not(.dark) .netsquare.on { color: #000; }
+        body:not(.dark) .netsquare.on.selected { color: #DDD; }
+        body:not(.dark) .netsquare.selected, .netsquare.selected {
+            background-color: #13149E;
+            color: #DDD;
+        }
+        .netsquare.marked { border-color: #D00; }
+
+        .netsquare.reset-grid {
+            font-size: 70px;
+            padding-top: 2px;
+            color: #DDD;
+            background-color: #555;
+        }
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 9px 10px 5px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        body:not(.solve, .play) button:is(.all-on, .unmark),
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        button.marking.mark::before {
+            content: 'Marking';
+        }
+        button.marking:not(.mark)::before {
+            content: 'On/Off';
+        }
+        button.all-on { margin-top: 50px; }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        strong { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rullo</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Rullo.svg" class="diagram">
+                <h2>On the Subject of Rullo</h2>
+                <p class="flavour-text">Easy as 1 2 3...<br>or is it 3 3 3?</p>
+
+                <p>This module consists of a 6×6 grid of magenta buttons, each labelled with a number from 1–9.</p>
+                <p>Each of the twelve screens display a number, the sums of the digits in the corresponding rows and columns must be equal to the displayed number.<br>
+                   To do this, turn off the buttons whose digits do not contribute to the displayed totals.</p>
+                <p>Pressing a button will toggle it between its on and off states.<br> Initially, every button is in the on state.</p>
+                <p>Holding a button until a sound is heard will flag the button.<br>The state of a flagged button cannot be changed until it is unflagged by holding it down again.</p>
+                <p>Once the grid is configured, press the large magenta button to submit it.<br>If any rows or columns of digits do not add up to the number shown on its corresponding display, the border around that display will turn red.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rullo</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap left">
+                    <div class="vstack tools"></div>
+                    <div class="grid vstack just-left"></div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack just-left path"><span>Off:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack just-left solution"><span>Solution:</span><span class="str"></span></div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Read</strong> mode, you can <i>press [1]-[9] on your keyboard</i> or click individual squares to input the puzzle grid.
+                        Enter the display digits into the text boxes.
+                    </li>
+                    <li>In <strong>Solve</strong> mode, the grid behaves like the module. <strong>Click a circle</strong> to switch it off. <strong>Right-click a circle</strong> to mark it as known.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Press the Manual button to switch into <strong>Generated</strong> mode where you can have fun solving generated puzzles.</li>
+                    <li>The solution you came up with in <strong>Solve</strong> mode as well as the solution to generated puzzles can be <em>shown</em> or <em>hidden</em>.<br></li>
+                    <li>Using the other buttons, you can switch all cells back to, reset the marked cells, reset the save the current state of the grid, delete the saves, or reset everything.</li>
+                    <li>On mobile, you can use switch from <strong>On/Off</strong> mode to <strong>Marking</strong> mode to mark cells.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
