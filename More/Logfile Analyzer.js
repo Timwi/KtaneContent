@@ -324,6 +324,7 @@ class BombGroup {
         // Events
         var eventInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").css("margin-top", "10px").text("Events").appendTo(eventInfo);
+        $("<p>").css("font-weight", "bold").text(">>> Real time elapsed > Event").appendTo(eventInfo);
         makeTree(this.Events.length > 0 ? this.Events.map(eventInfo => this.EventToNode(eventInfo)) : ["No events."], $("<ul>").appendTo(eventInfo));
 
         $("<button class='module'>")
@@ -334,6 +335,10 @@ class BombGroup {
         // Graph
         if (this.Events.length !== 0 && this.isSingleBomb)
         {
+            function formatTimeForTooltip(time) {
+                return formatTime(time, time < 60);
+            }
+
             const totalRealTime = this.Events[this.Events.length - 1].realTime;
             const useSeconds = totalRealTime < 180;
             const timeScaleFactor = useSeconds ? 1 : 1 / 60;
@@ -381,7 +386,7 @@ class BombGroup {
 
                         const dataPoint = { x: event.realTime * timeScaleFactor, y: stat.value / stat.max * 100 };
                         if (stat.name === "Solves" || stat.name === "Strikes")
-                            dataPoint.text = `${stat.value}/${stat.max} ${stat.name.toLowerCase()}<br>${this.GetMod(event.moduleID, event.loggingID).moduleData.displayName}<br>${formatTime(event.realTime)}`;
+                            dataPoint.text = `${stat.value}/${stat.max} ${stat.name.toLowerCase()}<br>${this.GetMod(event.moduleID, event.loggingID).moduleData.displayName}<br>${formatTimeForTooltip(event.realTime)} elapsed<br>${formatTimeForTooltip(event.bombTime)} left`;
                         stat.dataPoints.push(dataPoint);
                     }
                 }
@@ -391,8 +396,8 @@ class BombGroup {
                 const dataPoint = { x: totalRealTime * timeScaleFactor, y: stat.final / stat.max * 100 };
                 if (stat.name === "Solves" || stat.name === "Strikes") {
                     if (stat.final === stat.max)
-                        continue;
-                    dataPoint.text = `${stat.final}/${stat.max} ${stat.name.toLowerCase()}<br>${formatTime(totalRealTime)}`
+                    continue;
+                    dataPoint.text = `${stat.final}/${stat.max} ${stat.name.toLowerCase()}<br>${formatTimeForTooltip(totalRealTime)} elapsed<br>${formatTimeForTooltip(this.Bombs[0].TimeLeft)} left`
                 }
                 stat.dataPoints.push(dataPoint);
             }
@@ -424,7 +429,7 @@ class BombGroup {
                 }
             };
             const timeTrace = {
-                name: "time",
+                name: "bomb time",
                 type: "scatter",
                 mode: "lines",
                 hoverinfo: "none",
@@ -437,7 +442,7 @@ class BombGroup {
             }
             const layout = {
                 xaxis: {
-                    title: `Real time (${timeUnits})`,
+                    title: `Real time elapsed (${timeUnits})`,
                     type: "linear",
                     range: [0, totalRealTime * timeScaleFactor * 1.05],
                     gridcolor: "#0000",
@@ -452,12 +457,18 @@ class BombGroup {
                 },
                 paper_bgcolor: "#0000",
                 plot_bgcolor: "#0000",
-                legend: { font: { color: "#888" }}
+                legend: { font: { color: "#888" } },
+                modebar: {
+                    bgcolor: "#0000",
+                    color: "#8888",
+                    activecolor: "#888",
+                    remove: "autoscale",
+                }
             };
             const config = {
                 responsive: true,
                 scrollZoom: true,
-                displayModeBar: false,
+                displaylogo: false
             }
             const graphDiv = document.createElement("div");
             Plotly.newPlot(graphDiv, [timeTrace, strikesTrace, solvesTrace], layout, config);
@@ -566,9 +577,9 @@ class BombGroup {
                 const mod = this.GetMod(eventInfo.moduleID, eventInfo.loggingID);
 
                 return [
-                    `${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "solved" : "struck"} at ${formatTime(eventInfo.realTime)}.`,
+                    `${formatTime(eventInfo.realTime)} > ${mod.moduleData.displayName + (eventInfo.loggingID != null ? ` #${eventInfo.loggingID}` : "")} ${eventInfo.type == "PASS" ? "was solved" : "struck"}.`,
                     [
-                        `Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`,
+                        `Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))} left.`,
                         eventInfo.timeMode == null ? null : `Time mode: ${eventInfo.timeMode}`
                     ]
                 ];
@@ -576,7 +587,7 @@ class BombGroup {
             case "BOMB_DETONATE":
                 for (const bomb of this.loggedBombs) {
                     if (bomb.Serial == eventInfo.serial) {
-                        return [`Bomb (${bomb.Serial}) exploded at ${formatTime(eventInfo.realTime)} ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]];
+                        return [`${formatTime(eventInfo.realTime)} > Bomb (${bomb.Serial}) exploded ${bomb.Strikes == bomb.TotalStrikes ? "due to strikes" : "because time ran out"}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))} left.`]];
                     }
                 }
 
@@ -584,7 +595,7 @@ class BombGroup {
             case "BOMB_SOLVE":
                 for (const bomb of this.loggedBombs) {
                     if (bomb.Serial == eventInfo.serial) {
-                        return [`Bomb (${bomb.Serial}) solved at ${formatTime(eventInfo.realTime)}.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))}`]];
+                        return [`${formatTime(eventInfo.realTime)} > Bomb (${bomb.Serial}) was solved.`, [`Bomb time: ${formatTime(Math.max(eventInfo.bombTime, 0))} left.`]];
                     }
                 }
 
