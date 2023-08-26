@@ -13539,9 +13539,9 @@ let parseData = [
 		loggingTag: "Remote Math",
 		matches: [
 			{
-				regex: /Websocket API: ([0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}\/[A-Z]{6}\/[A-Z0-9]{8})/,
+				regex: /Websocket API: LogFile\/([0-9]{4}-[0-9]{2}-[0-9]{2})\/([A-Z]{6})/,
 				handler: function (matches, module) {
-					module.groups.add($('<a target="_blank" href="https://remote-math.mrmelon54.com/logs/?q=' + matches[1] + '">Open server\'s logfile</a>'))
+					module.groups.add($(`<a href="https://api.mrmelon54.com/v1/remote-math/log?date=${matches[1]}&code=${matches[2]}" download="${matches[1]}-${matches[2]}.log">Download server's logfile</a>`))
 				}
 			},
 			{
