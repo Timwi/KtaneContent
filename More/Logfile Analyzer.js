@@ -281,22 +281,22 @@ class BombGroup {
             missionInfoTree.push("State: " + this.State);
         }
 
-        if (this.CompetitiveLogger) missionInfoTree.push("Competitive Logger enabled.")
+        if (this.CompetitiveLogger) missionInfoTree.push("Competitive Logger enabled.");
 
         // Copy DMG string
         const dmgString =
-        `/// ${this.MissionName}\n\n` +
-        this.loggedBombs
-            .map(bomb =>
-                [
-                    this.isSingleBomb ? null : "(",
-                    formatTime(bomb.Time, false),
-                    `strikes:${bomb.TotalStrikes}`,
-                    `widgets:${bomb.Widgets - 1}`,
-                    ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => module.includes(" ") ? `"${module}"` : module).join(", ")),
-                    this.isSingleBomb ? null : ")"
-                ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
-            .join("\n\n");
+            `/// ${this.MissionName}\n\n` +
+            this.loggedBombs
+                .map(bomb =>
+                    [
+                        this.isSingleBomb ? null : "(",
+                        formatTime(bomb.Time, false),
+                        `strikes:${bomb.TotalStrikes}`,
+                        `widgets:${bomb.Widgets - 1}`,
+                        ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => module.includes(" ") ? `"${module}"` : module).join(", ")),
+                        this.isSingleBomb ? null : ")"
+                    ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
+                .join("\n\n");
 
         // Download profile
         const profileWrapper = $("<div>");
@@ -333,8 +333,7 @@ class BombGroup {
             .addCardClick(eventInfo);
 
         // Graph
-        if (this.Events.length !== 0 && this.isSingleBomb)
-        {
+        if (this.Events.length !== 0 && this.isSingleBomb) {
             function formatTimeForTooltip(time) {
                 return formatTime(time, time < 60);
             }
@@ -396,8 +395,8 @@ class BombGroup {
                 const dataPoint = { x: totalRealTime * timeScaleFactor, y: stat.final / stat.max * 100 };
                 if (stat.name === "Solves" || stat.name === "Strikes") {
                     if (stat.final === stat.max)
-                    continue;
-                    dataPoint.text = `${stat.final}/${stat.max} ${stat.name.toLowerCase()}<br>${formatTimeForTooltip(totalRealTime)} elapsed<br>${formatTimeForTooltip(this.Bombs[0].TimeLeft)} left`
+                        continue;
+                    dataPoint.text = `${stat.final}/${stat.max} ${stat.name.toLowerCase()}<br>${formatTimeForTooltip(totalRealTime)} elapsed<br>${formatTimeForTooltip(this.Bombs[0].TimeLeft)} left`;
                 }
                 stat.dataPoints.push(dataPoint);
             }
@@ -439,7 +438,7 @@ class BombGroup {
                     shape: "linear",
                     color: "#888"
                 }
-            }
+            };
             const layout = {
                 xaxis: {
                     title: `Real time elapsed (${timeUnits})`,
@@ -469,10 +468,10 @@ class BombGroup {
                 responsive: true,
                 scrollZoom: true,
                 displaylogo: false
-            }
+            };
             const graphDiv = document.createElement("div");
             Plotly.newPlot(graphDiv, [timeTrace, strikesTrace, solvesTrace], layout, config);
-            
+
             const graphInfo = $("<div class='module-info'>").appendTo(info);
             graphInfo.append(graphDiv);
 
@@ -914,7 +913,7 @@ function Bomb(seed) {
 
             this.VoltageMeterWidgets.forEach(function(voltage) {
                 var widget = $("<div class='widget voltagemeter'>").appendTo(edgework);
-                $("<span>").css({left: (voltage/10*83)+9 }).appendTo(widget);
+                $("<span>").css({ left: (voltage / 10 * 83) + 9 }).appendTo(widget);
             });
         }
 
@@ -1144,7 +1143,7 @@ function Bomb(seed) {
         if (this.Anchors != null && this.ModuleOrder != null) {
             const viewBox = [0, 0, 0, 0];
 
-            const faceParent = $("<div>").css({position: "relative", "transform-style": "preserve-3d" });
+            const faceParent = $("<div>").css({ position: "relative", "transform-style": "preserve-3d" });
             caseHTML.replaceWith(faceParent);
 
             const faceStyle = { width: "50%", "transform-origin": "center", "backface-visibility": "hidden", "transition": "transform 0.5s" };
@@ -1218,8 +1217,7 @@ function Bomb(seed) {
 
 // (Store keys for the below function so it doesn't need to search through the entire parseData every time.)
 parseKeys = [];
-function generateParseDataKeys(field)
-{
+function generateParseDataKeys(field) {
     parseKeys[field] = [];
     parseData.forEach((moduleData, index) => {
         if (parseKeys[field][moduleData[field]] !== undefined) {
@@ -1422,7 +1420,7 @@ function parseLog(opt) {
             const poolCount = parseInt(pool[1]);
             for (let i = 0; i < poolCount; i++) {
                 const matches = /\[(.+)\] Count: (\d+)/.exec(readLine());
-                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]) })
+                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]) });
             }
 
             linen += 1;
@@ -1583,7 +1581,7 @@ function setupExceptions() {
     let buffer = "";
     let starts = exceptions.map(e => e.start);
     let ends = exceptions.map(e => e.end);
-    let exceptionElements = []
+    let exceptionElements = [];
     for (const [n, line] of lines.entries()) {
         if (starts.includes(n)) {
             pre.append(document.createTextNode(buffer));
@@ -1675,8 +1673,7 @@ $(function() {
 
     function uploadFiles(files) {
         if (files.length === 1) {
-            if ($("#upload-to-server").prop('checked'))
-            {
+            if ($("#upload-to-server").prop('checked')) {
                 $('#upload')[0].files = files;
                 $('#upload-form').submit();
                 return;
@@ -1732,10 +1729,9 @@ $(function() {
         if (!event.altKey || event.shiftKey || event.ctrlKey || event.metaKey)
             return;
         let k = event.key.toLowerCase();
-        if (k == "w" || event.keyCode === 87)
-        {
-            if(!confirm("Refresh to toggle dark mode?")) return;
-            if(document.documentElement.classList.contains("dark-mode"))
+        if (k == "w" || event.keyCode === 87) {
+            if (!confirm("Refresh to toggle dark mode?")) return;
+            if (document.documentElement.classList.contains("dark-mode"))
                 localStorage.removeItem('theme');
             else
                 localStorage.setItem('theme', "dark");
