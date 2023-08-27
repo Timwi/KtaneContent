@@ -7064,14 +7064,13 @@ let parseData = [
 						for (let col = 0; col < 11; col++) {
 							let g = `<g transform='translate(${100 * col}, ${100 * row})'>`;
 							if (grid[2 * row][2 * col + 1] == '■') //Up
-								g += '<line x1=-10 y1=0 x2=110 y2=0/>';
+								g += "<path d='M-10 0 h120'/>";
 							if (grid[2 * row + 1][2 * col] == '■') //Left
-								g += '<line x1=0 y1=-10 x2=0 y2=110/>';
+								g += "<path d='M0 -10 v120 x2=0 y2=110'/>";
 							svg += g + '</g>';
 						}
 					}
-					svg += "<line x1=0 y1=1100 x2=1110 y2=1100 />";
-					svg += "<line x1=1100 y1=0 x2=1100 y2=1110 />";
+					svg += "<path d='M0 0h1100 v1100 h-1100z'/>";
 					module.push({ label:match.input, obj:svg + '</svg>' });
 					return true;
 				}
