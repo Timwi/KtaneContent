@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ナイトの移動回数 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        let movesNumber = $(".movesNumber");
+        let gameGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+        let origGameGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+        let currX = 0;
+        let currY = 0;
+        let moves = 24;
+        let prevPos = 0;
+        let pressing = false;
+        var start;
+        let movementList = [];
+        let answerList = [];
+        let generating = false;
+        let modeWasSolve = true;
+        let saveStates = [];
+        let currentState = 0;
+        let rows = 4;
+        let cols = 4;
+        let nTiles = rows * cols;
+        const MOV_RANGE = 9;
+        const MIN_MOVES = 2;
+        const MAX_MOVES = 41;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const MOV_FREE = 0;
+        const MOV_ENFORCE = 1;
+
+        const ValidTiles = [
+            [6, 9],
+            [8, 10, 7],
+            [9, 11, 4],
+            [5, 10],
+            [2, 10, 13],
+            [3, 11, 14, 12],
+            [0, 8, 15, 13],
+            [1, 9, 14],
+            [6, 14, 1],
+            [2, 0, 7, 15],
+            [1, 3, 4, 12],
+            [5, 13, 2],
+            [10, 5],
+            [4, 6, 11],
+            [5, 7, 8],
+            [9, 6]
+        ];
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function resetPos() {
+            selected = null;
+            updateSelection();
+            currX = currY = 0;
+            movementList = [];
+            $(".path .str").text("");
+            updateMovesLeft();
+        }
+        //This function is taken from the module source code
+        function generate() {
+            generating = true;
+            answerList = [];
+            let mList = [];
+            let movementAmount = Math.floor(Math.random() * MOV_RANGE) + moves;
+
+            let all = $(".netsq");
+            all.text(0);
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    origGameGrid[x][y] = gameGrid[x][y] = 0;
+            for (let p = 0; p < movementAmount; p++) {
+                let start = (p == 0 ? Math.floor(Math.random() * nTiles) :
+                    ValidTiles[ mList[p-1] ][Math.floor(Math.random() * ValidTiles[ mList[p-1] ].length)]);
+                mList.push(start);
+                let xy = coordinate(start);
+                answerList.push(coordinateName(start));
+                gameGrid[ xy[0] ][ xy[1] ] += 1;
+                let n = gameGrid[ xy[0] ][ xy[1] ];
+                origGameGrid[ xy[0] ][ xy[1] ] = n;
+                grid.children().eq(xy[1]+1).children().eq(xy[0]+1).text(n);
+            }
+
+            $(".solution .str").text(answerList.join(" "));
+            generating = false;
+        }
+
+        function coordinateName(pos) {
+            let coord = coordinate(pos);
+            return `${String.fromCharCode(65 + coord[0])}${coord[1] + 1}`;
+        }
+
+        function coordinate(pos) {
+            return [ pos % cols, Math.floor(pos / cols) ];
+        }
+
+        //This function is based on the module source code
+        function attemptMove(pos) {
+            let x = pos % cols;
+            let y = Math.floor(pos / cols);
+            if ((selected == null) || (ValidTiles[prevPos].includes(pos) && !pressing && gameGrid[x][y] != 0)) {
+                pressing = true;
+                return true;
+            }
+            return false;
+        }
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == "-")
+                movesDec();
+            else if (k == "=" || k == "+")
+                movesInc();
+            else if (!event.shiftKey) {
+                n = parseInt(event.key);
+                if (n >= 0 && !event.altKey) {
+                    if (mode() == MODE_READ) {
+                        if (selected && selected.hasClass("netsq")) {
+                            gameGrid[currX][currY] = n;
+                            origGameGrid[currX][currY] = n;
+                            selected.text(n);
+                            if (currX == rows - 1)
+                                currY = (currY + 1) % cols;
+                            currX = (currX + 1) % rows;
+                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                            selected = elem;
+                            updateSelection();
+                            $(".solved-text").addClass("invis");
+                        }
+                    }
+                }
+                updateMovesLeft();
+            }
+            down = false;
+        });
+        function updateMoves() {
+            movesNumber.text(`${moves} - ${moves + MOV_RANGE - 1}`);
+        }
+
+        function updateMovesLeft() {
+            let sum = 0;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    sum += gameGrid[x][y];
+            $(".movesleft").text(`移動: ${sum}`);
+        }
+
+        function movesDec() {
+            moves = Math.max(MIN_MOVES, moves - 1);
+            updateMoves();
+        }
+        function movesInc() {
+            moves = Math.min(MAX_MOVES, moves + 1);
+            updateMoves();
+        }
+        $(".movestext.minus").click(function() {
+            movesDec();
+        });
+        $(".movestext.plus").click(function() {
+            movesInc();
+        });
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+        function movement() {
+            if ($("button.movement").hasClass("free"))
+                return MOV_FREE;
+            else
+                return MOV_ENFORCE;
+        }
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let color = (x + y % 2) % 2 == 1 ? "black" : "white";
+                let square = $("<div>").addClass(`netsquare square netsq ${color}`).text("0").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+                        let pos = (y-1) * cols + x-1;
+                        if (mode() != MODE_READ && (gameGrid[x-1][y-1] == 0 ||
+                            ((mode() == MODE_PLAY || mode() == MODE_SOLVE && movement() == MOV_ENFORCE) && !attemptMove(pos))
+                        )) {
+                            pressing = false;
+                            return false;
+                        }
+                        selected = $(this);
+                        updateSelection();
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            gameGrid[x-1][y-1] = Math.min(99, gameGrid[x-1][y-1] + 1);
+                            origGameGrid[x-1][y-1] = gameGrid[x-1][y-1];
+                            $(this).text(gameGrid[x-1][y-1]);
+                            $(".solved-text").addClass("invis");
+                        }
+                        else {
+                            let n = Math.max(0, gameGrid[x-1][y-1] - 1);
+                            gameGrid[x-1][y-1] = n;
+                            $(this).text(n);
+                            movementList.push(coordinateName(pos));
+                            $(".path .str").text(movementList.join(" "));
+
+                            prevPos = pos;
+                            let zeros = 0;
+                            for (let r = 0; r < rows; r++)
+                                for (let c = 0; c < cols; c++)
+                                    zeros += (gameGrid[c][r] == 0 ? 1 : 0);
+                            $(".solved-text").addClass("invis");
+                            if (zeros == nTiles && (mode() == MODE_PLAY || mode() == MODE_SOLVE && movement() == MOV_ENFORCE)) {
+                                if ($("button.sound").hasClass("play"))
+                                    audioSolve[0].play();
+                                $(".solved-text").removeClass("invis");
+                            }
+                            else if ($("button.sound").hasClass("play")) {
+                                let aud = audioStep[0].cloneNode();
+                                aud.volume = 0.3;
+                                aud.play();
+                            }
+                            if (zeros == nTiles) {
+                                setTimeout(function(){
+                                    element.addClass("fallen").removeClass("selected");
+                                }, 500);
+                            }
+
+                            setTimeout(function(){
+                                for (let r = 0; r < rows; r++) {
+                                    for (let c = 0; c < cols; c++) {
+                                        if ((x-1 != c || y-1 != r) && gameGrid[c][r] == 0)
+                                            grid.children().eq(r+1).children().eq(c+1).addClass("fallen");
+                                    }
+                                }
+                            }, 150);
+                        }
+                        updateMovesLeft();
+                        pressing = false;
+                    });
+                    if (x == 1 && y == 1) {
+                        selected = element;
+                        element.addClass("selected");
+                    }
+                });
+            }
+            if (y == 1) {
+                $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(row).click(function() {
+                    for (let yy = 0; yy < rows; yy++) {
+                        for (let xx = 0; xx < cols; xx++) {
+                            let n = origGameGrid[xx][yy];
+                            gameGrid[xx][yy] = n;
+                            var elem = grid.children().eq(yy+1).children().eq(xx+1);
+                            elem.text(n);
+                            if (n == 0 && mode() != MODE_READ)
+                                elem.addClass("fallen");
+                            else
+                                elem.removeClass("fallen");
+                        }
+                    }
+                    resetPos();
+                    $(".solved-text").addClass("invis");
+                });
+            } else if (y == 2) {
+                $("<div>").addClass("movesleft square").text("移動: 0").appendTo(row);
+            }
+        }
+
+        let audioStep = $("<audio>")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("解除！").appendTo(tools);
+        
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (mode() != MODE_READ) {
+                        if (gameGrid[x][y] == 0)
+                            grid.children().eq(y+1).children().eq(x+1).addClass("fallen");
+                    }
+                }
+            }
+            if (mode() != MODE_READ) {
+                resetPos();
+            } else {
+                $(".netsquare").removeClass("fallen");
+            }
+        });
+        $("<button>").addClass("movement").appendTo(tools).click(function() {
+            $(this).toggleClass("free");
+            $("body").toggleClass("free", $(this).hasClass("free"));
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                modeWasSolve = $(".read-solve").hasClass("solve");
+                generate();
+            }
+            else {
+                if (!modeWasSolve)
+                    $(".netsquare").removeClass("fallen");
+            }
+            $(".reset-grid").click();
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $(".solved-text").addClass("invis");
+            $("button.movement").removeClass("free");
+            $("body").removeClass("free solution-shown solve play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = 0;
+                    origGameGrid[x][y] = 0;
+                    var elem = grid.children().eq(y+1).children().eq(x+1);
+                    elem.text(0);
+                    elem.removeClass("fallen");
+                }
+            }
+            resetPos();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            moves = 24;
+            updateMoves();
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .movesHolder")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gameGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+            let s_origGameGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) {
+                    s_gameGrid[x][y] = gameGrid[x][y];
+                    s_origGameGrid[x][y] = origGameGrid[x][y];
+                }
+            let s_answerList = [];
+            let s_movementList = [];
+            Object.assign(s_movementList, movementList);
+            Object.assign(s_answerList, answerList);
+            let s_selected = selected;
+            let s_moves = moves;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_pressing = pressing;
+            let s_prevPos = prevPos;
+            let s_modeWasSolve = modeWasSolve;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".netsquare, .solved-text, .tools button, .movesHolder").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                movementList = Array(s_movementList.length);
+                answerList = Array(s_answerList.length);
+                Object.assign(movementList, s_movementList);
+                Object.assign(answerList, s_answerList);
+                $(".path .str").text(movementList.join(" "));
+                $(".solution .str").text(answerList.join(" "));
+                currentState = stateNumber;
+                moves = s_moves;
+                updateMoves();
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                prevPos = s_prevPos;
+                pressing = s_pressing;
+                modeWasSolve = s_modeWasSolve;
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++) {
+                        gameGrid[x][y] = s_gameGrid[x][y];
+                        origGameGrid[x][y] = s_origGameGrid[x][y];
+                        grid.children().eq(y+1).children().eq(x+1).text(gameGrid[x][y]);
+                    }
+                updateMovesLeft();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .aligncenter {
+            text-align: center;
+        }
+        .note {
+            text-align: center;
+            font-size: x-small;
+            font-style: italic;
+        }
+        th img {
+            height: auto;
+            width: 80%;
+        }
+        table {
+            margin: 1em auto;
+        }
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+        .tools {
+            width: 80px;
+        }
+        .tools button {
+            margin: 10px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        .square-row {
+            height: 76px;
+            margin: 3px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .solution, .path {
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+        }
+        body.free.solution-shown .path span.str { color: #F00; }
+
+        .square {
+            margin: 3px;
+            width: 76px;
+            height: 76px;
+            float: left;
+            font-size: 40px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 18px;
+            border-width: 0;
+            width: 76px;
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .square.movesleft {
+            font-size: 20px;
+            line-height: 80px;
+            border: none;
+        }
+
+        .netsquare {
+            height: 76px;
+            width: 76px;
+            font-size: 50px;
+            line-height: 85px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #13140E;
+            font-family: 'Special Elite';
+        }
+        .netsquare.black {
+            background-color: #000;
+            color: #DDD;
+        }
+        .netsquare.white {
+            background-color: #FFF;
+            color: #222;
+        }
+        .netsquare.selected {
+            background-color: #13149E;
+            color: #DDD;
+        }
+        .netsquare.fallen:not(.selected),
+        .netsquare.fallen:not(.selected) {
+            cursor: default;
+            transition: 1.2s;
+            color: #888;
+            background-color: #88888833;
+            border-color: transparent;
+        }
+
+        .netsquare.reset-grid {
+            font-size: 70px;
+            padding-top: 2px;
+            color: #DDD;
+            background-color: #555;
+        }
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+        .movestext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .movesNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 128px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .movesHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: '解除';
+        }
+        button.read-solve:not(.solve)::before {
+            content: '入力';
+        }
+        button.movement, button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        button.movement.free::before,
+        body:not(.solve) button.movement::before {
+            content: '自由';
+        }
+        button.movement:not(.free)::before,
+        body.play button.movement::before {
+            content: '指定';
+        }
+        body.play button.read-solve,
+        body.play button.movement,
+        body:not(.solve) button.movement {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        button.expert-play.play::before {
+            content: '生成';
+        }
+        button.expert-play:not(.play)::before {
+            content: '手動';
+        }
+        button.sound.play::before {
+            content: '効果音有り';
+        }
+        button.sound:not(.play)::before {
+            content: '効果音無し';
+        }
+        button.show-sol.show::before {
+            content: '回答表示';
+        }
+        button.show-sol:not(.show)::before {
+            content: '回答非表示';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ナイトの移動回数</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Numerical Knight Movement.svg" class="diagram">
+                <h2>モジュール詳細：ナイトの移動回数</h2>
+                <p class="flavour-text">モジュールが嘘をついていると言っても過言ではない。</p>
+                <p>モジュールは、各タイルに数字が書かれた4×4のチェス盤で構成されている。全てのタイルにある数字の合計は24~32である。これは、盤上にあるナイトが移動する回数である。</p>
+                <p>全てのタイルの数字が0になるように、ナイトを移動させる必要がある。開始地点は、<b>「0」</b>以外の任意のタイルを押す事で決定する。<b>「0」</b>のタイルを選択するとミスが記録される。</p>
+                <p>0以外のタイルを押すと、押されたタイルの数字が1つ減る。そして別のタイルに移動し続けることが出来る。ただし、ナイトが移動できる場所のみである。無効なタイルを押すとミスが記録される。</p>
+                <p>動くことが出来ない場合、または元の盤面に戻したい場合は、ナイトがいるタイルを2回押すことでリセットすることが出来る。リセット後は別の開始地点を選んでよい。</p>
+                <table>
+                    <tr><th>ナイトの移動</th></tr>
+                    <tr><th><img src="img/Numerical Knight Movement/Knight Movement.png"></th></tr>
+                </table>
+                <p class="note">Pruzのモジュール「Taurus Knight」に触発された。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ナイトの移動回数</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap">
+                    <div class="vstack tools"></div>
+                    <div class="grid vstack just-left"></div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap just-left">
+                    <button class="save">保存</button>
+                </div>
+                <div class="hstack just-left" style="margin-top: 5mm">
+                    <button class="reset-saves">保存リセット</button>
+                    <button class="reset-all">全てリセット</button>
+                    <div style="width: 8mm"></div>
+                    <div class="movesHolder hstack">
+                        <div class="movestext label">移動:</div>
+                        <div class="movestext movesNumber">24 - 32</div>
+
+                        <button class="movestext minus">-</button>
+                        <button class="movestext plus">+</button>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack just-left path"><span>入力:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack just-left solution"><span>回答:</span><span class="str"></span></div>
+                <h3>インタラクティブ</h3>
+                <p>上のインタラクティブチェス盤を使用することで解除に役立てることが出来る。</p>
+                <ul>
+                    <li>「<b>入力</b>」モードでは、キーボードの0~9を押すか、各セルをクリックして数字を入力することが出来る。</li>
+                    <li>「<b>解除</b>」モードではモジュールのように動作し、「自由」に移動できるモードか「指定」された動きしかできないモードがある。</li>
+                    <li>「解除」モードで自由に移動できるモードの場合、入力が無効になる場合がある。</li>
+                    <li>「<b>↻</b>」を使用してグリッドを開始状態にリセットすることが出来る。</li>
+                    <li>効果音はミュートすることが出来る。</li>
+                    <li>4番目のボタンを押すと「<b>生成</b>」モードになり、2~50手の生成されたパズルを楽しむことが出来る。</li>
+                    <li>「<b>-</b>」または「<b>+</b>」ボタンを使用するか、キーボードで「<b>-</b>」または「<b>+</b>」を入力することで、生成されるパズルの手数を増やす。</li>
+                    <li>解除モードで入力した座標及び、生成されたパズルの入力と回答は表示/非表示にすることが出来る。</li>
+                    <li>他のボタンを使用して、グリッドの現在の状態を保存したり、保存を削除したり、全てをリセットしたりすることが出来る。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
