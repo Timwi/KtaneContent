@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ポーン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        var pieces = ["☒", "♔", "♕", "♖", "♗", "♘", "♙"];
+        var selected = "";
+        var start;
+
+        $(document).click(function() {
+            start = null;
+        });
+
+        var row;
+        var chessboard = $(".chessboard");
+        let rows = 7
+        // Based on code from Samfundev's Chess interactive
+        for (let y = 0; y < rows; y++) {
+            row = $("<div>").addClass("chess-row").appendTo(chessboard);
+            $("<div>").addClass("square").text(rows - y).appendTo(row);
+            for (let x = 0; x < rows; x++) {
+                $("<div>").addClass("square " + ((y + x) % 2 == 0 ? "black" : "white")).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+
+                    element.mouseup(function(event) {
+                        if (start) { // Just in case.
+                            var changed = [];
+                            var a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                for (i = a; i <= b; i++) {
+                                    changed.push([x, i]);
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                for (i = a; i <= b; i++) {
+                                    changed.push([i, y]);
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                var dist = Math.abs(start[0] - x);
+                                var dirx = (start[0] < x) ? 1 : -1;
+                                var diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+
+                            if (changed.length > 0) {
+                                var first = chessboard.children().eq(start[1]).children().eq(start[0] + 1).hasClass("occupied");
+                                changed.forEach(function(pos) {
+                                    var elm = chessboard.children().eq(pos[1]).children().eq(pos[0] + 1);
+                                    if (selected == "marking") {
+                                        if (changed.length == 1) {
+                                            elm.toggleClass("occupied");
+                                        } else {
+                                            elm.toggleClass("occupied", !first);
+                                        }
+                                    } else if (changed.length == 1) {
+                                        elm.text(elm.text() == "" ? selected : "");
+                                    }
+                                });
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+
+                    if (x === 0) {
+                        element.css("border-left-width", "2px");
+                    } else if (x == (rows - 1)) {
+                        element.css("border-right-width", "2px");
+                    }
+
+                    if (y === 0) {
+                        element.css("border-top-width", "2px");
+                        element.parent().addClass("extra-height");
+                    } else if (y == (rows - 1)) {
+                        element.css("border-bottom-width", "2px");
+                        element.parent().addClass("extra-height");
+                    }
+                });
+            }
+        }
+        row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+        for (var i = 0; i < rows; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+
+        var chesspieces = $(".chess-pieces");
+        $("<div>").addClass("piece square").css("background-color", "rgba(255, 105, 105, 1)").appendTo(chesspieces).click(function() {
+            $(".piece").removeClass("selected");
+            $(this).addClass("selected");
+            selected = "marking";
+        }).click();
+        pieces.forEach(function(val) {
+                $("<div>").addClass("piece square").appendTo(chesspieces).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = val;
+            }).text(val);
+        });
+
+        $(".reset").click(function() {
+            $(".black.square, .white.square").text("").removeClass("occupied");
+        });
+    });
+    </script>
+    <style>
+        .chess-board {
+            width: 424px;
+        }
+
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+        .chess-row.extra-height {
+            height: 62px;
+        }
+        .chess-row.letters {
+            margin-left: 60px;
+        }
+
+        .chess-pieces {
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            text-align: center;
+            border: black 0px solid;
+            cursor: default;
+        }
+
+        @media screen and (max-width: 600px) {
+            .chess-row, .chess-pieces {
+                height: 40px;
+            }
+            .chess-row.extra-height {
+                height: 42px;
+            }
+            .chess-row.letters {
+                margin-left: 40px;
+            }
+
+            .square {
+                width: 40px;
+                height: 40px;
+                font-size: 40px;
+            }
+        }
+
+        .white.square, .black.square {
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .black {
+            background-color: #303030;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .white.occupied {
+            background-color: rgba(255, 105, 105, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .black.occupied {
+            background-color: rgba(150, 0, 0, 1);
+            border-color: rgba(150, 0, 0, 1);
+        }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: black 3px solid;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        table.chess h4 {
+            margin: 0;
+        }
+        table.chess p {
+            margin: 0;
+        }
+        .page-bg-01 {
+            background-repeat: repeat-y;
+        }
+        .w {
+            width: 10px;
+            height: 10px;
+            padding: 1em;
+        }
+        .r {
+            background-color: rgba(255, 0, 0, 0.6);
+            width: 10px;
+            height: 10px;
+            padding: 1em;
+        }
+        .b {
+            background-color: rgba(0, 0, 255, 0.6);
+        }
+        .gray {
+            background-color: rgba(30, 30, 30, 0.5);
+        }
+        .icon {
+            background-color: rgba(30, 30, 30, 0.5);
+        }
+        .iconimg {
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ポーン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Pawns.svg" class="diagram">
+                <h2>モジュール詳細：ポーン</h2>
+                <p class="flavour-text">チェスって日本にはあまり馴染みがないけど、将棋は意外とやり方知ってる人が多いんだよね。え？そんなことどうでもいい？ごめんて。</p>
+
+                <ul>
+                    <li>各ペアを見て、左の駒が右の駒を取れるなら「Capture」、無理なら「Pass」を選択する。</li>
+                    <li>他のすべての駒と障害物に遮られてる場合は取れない。</li>
+                    <li>障害物は、シリアルナンバーの最初の英字と数字をA~G/1~7の範囲にしたもの。作成できるペア分障害物の座標を求める。</li>
+                    <li>赤は確定で取れる位置、青は障害物/駒が途中になければ取れる位置を示す。</li>
+                </ul>
+                <table>
+                    <tr>
+                        <th>見た目</th><th>名称</th><th>移動</th>
+                    </tr>
+                    <tr>
+                        <th class="icon">
+                            <img class="iconimg" src="img/Pawns/rook.png" alt="Rook">
+                        </th>
+                        <td>ルーク</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="b"></td><td class="b"></td><td class="r"></td><td class="gray"></td><td class="r"></td><td class="b"></td><td class="b"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="icon">
+                            <img class="iconimg" src="img/Pawns/knight.png" alt="Knight">
+                        </th>
+                        <td>ナイト</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="gray"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ポーン</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <tr>
+                        <th>見た目</th><th>名称</th><th>移動</th>
+                    </tr>
+                    <tr>
+                        <th class="icon">
+                            <img class="iconimg" src="img/Pawns/bishop.png" alt="Bishop">
+                        </th>
+                        <td>ビショップ</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="gray"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="b"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="b"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="icon">
+                            <img class="iconimg" src="img/Pawns/queen.png" alt="Queen">
+                        </th>
+                        <td>クイーン</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="b"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="b"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="b"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="b"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="b"></td><td class="b"></td><td class="r"></td><td class="gray"></td><td class="r"></td><td class="b"></td><td class="b"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="b"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="b"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="b"></td><td class="w"></td><td class="w"></td><td class="b"></td><td class="w"></td><td class="w"></td><td class="b"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="icon">
+                            <img class="iconimg" src="img/Pawns/king.png" alt="King">
+                        </th>
+                        <td>キング</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="gray"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="r"></td><td class="r"></td><td class="r"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                                <tr>
+                                    <td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td><td class="w"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ポーン</span>
+            </div>
+            <div class="page-content">
+                <h3>チェス盤</h3>
+                <p>次のインタラクティブなチェス盤を使用して解除に役立てることが出来る。
+                <p>チェス盤の下にあるツールの1つを選択し、チェス盤をクリックしてそのツールを使用する。
+                <br>
+                ツールを使用して駒または障害物(☒)を配置/削除できる。
+                <br>
+                マーカーツールを使用して、セルを色付け出来る。
+                <br>
+                マーカーツールを使用してドラッグすることで、複数のセルをまとめて色付けできる。
+                <br>
+                ボードの下にあるボタンを使用して、ボードをリセットできる。
+                <div class="chessboard"></div>
+                <div class="chess-pieces"></div>
+                <br>
+                <p><button class="reset">チェス盤リセット</button></p>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>
