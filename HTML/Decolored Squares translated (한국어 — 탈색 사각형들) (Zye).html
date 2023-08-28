@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>탈색 사각형들 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        li, p { word-break: keep-all; }
+        body.ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        svg#flowchart {
+            width: 85%;
+            margin: 0 auto;
+            display: block;
+        }
+        .dark svg text { fill: #DDD; }
+        .dark svg path { stroke: #DDD; }
+
+        ul {
+            margin-bottom: .5em;
+            padding-left: 1.25em;
+        }
+
+        @media print {
+            svg#flowchart {
+                width: 82%;
+            }
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 50);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            var direction = rnd.next(0, 8);
+            document.getElementById('rule-start').innerText = ['왼쪽 위', '오른쪽 위', '왼쪽 아래', '오른쪽 아래'][direction % 4];
+            document.getElementById('rule-dir1').innerText = ['아래', '아래', '위', '위', '오른쪽', '왼쪽', '오른쪽', '왼쪽'][direction];
+            document.getElementById('rule-dir-colrow1').innerText = ['열', '행'][(direction / 4)|0];
+            document.getElementById('rule-dir-colrow2').innerText = ['열', '행'][(direction / 4)|0];
+            document.getElementById('rule-dir2').innerText = ['왼쪽에서 오른쪽', '오른쪽에서 왼쪽', '왼쪽에서 오른쪽', '오른쪽에서 왼쪽', '위에서 아래', '위에서 아래', '아래에서 위', '아래에서 위'][direction];
+
+            var convert = function(coord)
+            {
+                return String.fromCharCode(0x41 + (coord % 4)) + String.fromCharCode(0x31 + (coord / 4)|0);
+            }
+
+            var c1 = rnd.next(0, 16);
+            var c2 = rnd.next(0, 15);
+            if (c2 >= c1)
+                c2++;
+
+            document.getElementById('initial-col').innerText = convert(c1);
+            document.getElementById('initial-row').innerText = convert(c2);
+
+            var colorNames = ['R', 'G', 'B', 'Y', 'M'];
+            var subsets = [];
+            for (var i = 0; i < 32; i++)
+            {
+                var colors = [];
+                for (var j = 0; j < 5; j++)
+                    if ((i & (1 << j)) != 0)
+                        colors.push(colorNames[j]);
+                rnd.shuffleFisherYates(colors);
+                subsets.push(colors);
+            }
+            rnd.shuffleFisherYates(subsets);
+
+            var svg, paths, missingCells, pointedAt = new Array(36);
+            do
+            {
+                svg = '';
+                paths = [];
+                missingCells = [];
+
+                var ixs = [0, 1, 2, 3, 4, 5];
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='${5 + 15*ixs[i]}' y='-2.5' font-size='4'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    missingCells.push(ixs[5] + 6*i);
+
+                rnd.shuffleFisherYates(ixs);
+                for (var i = 0; i < 5; i++)
+                    svg += `<text x='-2.5' y='${5 + 15*ixs[i]}' font-size='4' text-anchor='end'>${colorNames[i]}</text>`;
+                for (var i = 0; i < 6; i++)
+                    if (missingCells.indexOf(i + 6*ixs[5]) === -1)
+                        missingCells.push(i + 6*ixs[5]);
+
+                for (var ix = 0; ix < 36; ix++)
+                    pointedAt[ix] = false;
+
+                rnd.shuffleFisherYates(missingCells);
+                missingCells = missingCells.slice(0, 4);
+
+                function pointsAt(px, dir)
+                {
+                    var x = px % 6;
+                    var y = (px / 6)|0;
+                    do
+                    {
+                        x += [0, 1, 0, -1][dir];
+                        y += [-1, 0, 1, 0][dir];
+                        if (x < 0 || x >= 6 || y < 0 || y >= 6)
+                            return null;
+                    }
+                    while (missingCells.indexOf(x + 6*y) >= 0);
+                    return x + 6*y;
+                }
+
+                for (var ix = 0; ix < 36; ix++)
+                {
+                    if (missingCells.indexOf(ix) >= 0)
+                        continue;
+
+                    var x = ix % 6;
+                    var y = (ix / 6)|0;
+                    var dirs = [];
+                    for (var dir = 0; dir < 4; dir++)
+                        if (pointsAt(ix, dir) !== null)
+                            dirs.push(dir);
+                    rnd.shuffleFisherYates(dirs);
+                    dirs = dirs.slice(0, 2);    // 0 = no, 1 = yes
+
+                    var sbstIx = ix - missingCells.filter(cel => cel < ix).length;
+                    svg += `<text transform='translate(${5 + 15*x}, ${5 + 15*y}) rotate(-45)' x='0' y='1'>${subsets[sbstIx].join('')}</text>`;
+                    if (subsets[sbstIx].length === 0)
+                        dirs[1] = null;
+                    else if (subsets[sbstIx].length === 5)
+                        dirs[0] = null;
+
+                    var path = `M${x*15} ${y*15}`;
+                    path += (dirs.indexOf(0) >= 0) ? 'h3l2-2 2 2h3' : 'h10';
+                    path += (dirs.indexOf(1) >= 0) ? 'v3l2 2-2 2v3' : 'v10';
+                    path += (dirs.indexOf(2) >= 0) ? 'h-3l-2 2-2-2h-3' : 'h-10';
+                    path += (dirs.indexOf(3) >= 0) ? 'v-3l-2-2 2-2z' : 'z';
+                    paths.push({ pathData: path, ix: ix });
+
+                    for (var yn = 0; yn < 2; yn++)
+                    {
+                        if (dirs[yn] === null)
+                            continue;
+                        pointedAt[pointsAt(ix, dirs[yn])] = true;
+                        svg += `<text x='${[5, 9, 5, 1][dirs[yn]] + x*15}' y='${[1.5, 6, 10.5, 6][dirs[yn]] + y*15}' text-anchor='${['middle', 'start', 'middle', 'end'][dirs[yn]]}'>${['N', 'P'][yn]}</text>`;
+                    }
+                }
+            }
+            while (pointedAt.filter((p, pIx) => !p && (missingCells.indexOf(pIx) < 0)).length);
+            for (var pIx = 0; pIx < paths.length; pIx++)
+                svg += `<path fill='none' stroke='black' stroke-width='.3' d='${paths[pIx].pathData}' />`;
+
+            document.getElementById('flowchart-inner').innerHTML = svg;
+
+            setLinks(`#${rnd.seed}`);
+        }
+
+        function setLinks(hash)
+        {
+            document.querySelectorAll('.link > a').forEach(lnk => {
+                lnk.setAttribute('href', /^(.*?)(#.*)?$/.exec(lnk.getAttribute('href'))[1] + hash);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">탈색 사각형들</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Decolored Squares.svg">
+                <h2>탈색 사각형들에 대하여</h2>
+                <p class="flavour-text">구조물은 토대 없이는 설 수 없습니다. 수행의 토대는 논리입니다. 제어의 본질은 수행입니다.</p>
+                <p class="appendix-reference" id="appendix-reference">색 사각형 부류의 모듈 식별에 관해서는 <span class="link"><a href="Colored Squares translated (한국어 — 색 사각형들) (Zye).html">색 사각형들</a></span>의 부록을 참조하세요.</p>
+
+                <ul>
+                    <li>처음 모듈에 3가지의 색깔이 정확히 2번씩 나타나고 2가지의 색깔이 정확히 5번씩 나타나는 것이 아니라면, 그것은 다른 모듈입니다.</li>
+                    <li>다음 순서도에서 시작할 칸을 찾으세요. 시작할 칸의 열은 <span class='rule' id='initial-col'>B1</span>의 색깔이고, 행은 <span class='rule' id='initial-row'>B4</span>의 색깔입니다(로마자는 모듈의 격자에서 왼쪽부터 센 열을 의미하고, 숫자는 위부터 센 행을 의미합니다). 모듈 해제 중에 실수한 경우 이를 다시 계산하세요.</li>
+                    <li><span class='rule' id='rule-start'>왼쪽 위</span> 사각형을 보세요. 그 색깔이 현재 순서도의 칸에 적혀 있다면, “P” 화살표를 따라 이동하고 사각형을 누릅니다. 그렇지 않다면, “N” 화살표를 따라 이동합니다. 그리고는 다음 사각형으로 넘어갑니다.</li>
+                    <li>“다음 사각형”이란 현재 사각형 <span class='rule' id='rule-dir1'>오른쪽</span>의 사각형을 뜻합니다. 만약 각 <span class='rule' id='rule-dir-colrow1'>행</span>의 끝까지 도달했다면, <span class='rule' id='rule-dir2'>위에서 아래</span> 방향으로 나머지 <span class='rule' id='rule-dir-colrow2'>행</span>들로 이동하며 계속합니다.</li>
+                    <li>로마자의 뜻은 <strong>B</strong>(파란색), <strong>G</strong>(초록색), <strong>M</strong>(자주색), <strong>R</strong>(붉은색), <strong>Y</strong>(노란색)입니다.
+                </ul>
+
+                <svg id='flowchart' viewBox='-5.5 -5.5 91.5 91.5' font-family='Special Elite' font-size='2.5' text-anchor='middle'>
+                    <g id='flowchart-inner'></g>
+                    <g>
+                        <rect class='highlightable'  x='1'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76'  y='1' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='16' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='31' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='46' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='61' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable'  x='1' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='16' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='31' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='46' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='61' y='76' width='8' height='8' fill='transparent' />
+                        <rect class='highlightable' x='76' y='76' width='8' height='8' fill='transparent' />
+                    </g>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
