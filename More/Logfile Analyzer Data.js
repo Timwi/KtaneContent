@@ -495,7 +495,7 @@ let parseData = [
 
 					bombgroup.LoggedSerials.push(bombInfo.serial);
 
-					// Find the bomb being referenced based on it's serial number
+					// Find the bomb being referenced based on its serial number
 					let targetBomb;
 					for (const bomb of bombgroup.Bombs) {
 						if (bomb.Serial == bombInfo.serial) {
