@@ -6793,6 +6793,23 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "IDVerification",
+		loggingTag: "ID Verification",
+		matches: [
+			{
+				regex: /Card ./,
+				handler: function (matches, module) {
+					let lines = readTaggedLines(2);
+					module.push([matches.input, lines]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "IKEADocuments",
 		loggingTag: "IKEA Documents",
 		matches: [
