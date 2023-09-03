@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>블라인드 미로 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+
+    <script>
+        var cells = [];
+        var cardinal = [ "N", "E", "W", "S" ];
+        var locations = [ [ -1, 0, 0, 1 ], [ 0, 1, -1, 0 ] ];
+
+        var rules = document.getElementsByClassName("rules");
+        var colorNames = [ "붉은색", "초록색", "파란색", "회색", "노란색" ];
+        var indicatorNames = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+        var rulesCount = [ "붉은색 버튼이", "배터리가", "노란색 버튼이", "붉은색 버튼이", "폭탄에 있는 다른 미로 기반 모듈의 종류의 수가", "포트의 종류의 수가", "초록색 버튼이", "파란색 버튼이", "회색 버튼이", "AA 배터리가", "D 배터리가", "배터리 홀더가", "포트가", "포트 플레이트가", "지시등이", "점등된 지시등이", "점등되지 않은 지시등이" ];
+        var rulesCountCopy;
+        var conditionCount = [ 2, 5, 1, 1, 1 ];
+        var conditionCountCopy;
+        var conditionIndicator = 3;
+        var mazeRotation = [ 1, 1, 2, 1, 2, 1 ];
+        var mazeRotationCopy;
+        var clockwise = [ true, true, true, false, true, false ];
+        var clockwiseCopy;
+        var calculate = [ false, true, false, false, true, true ];
+        var calculateCopy;
+        var generated;
+        var pass;
+
+        var rng;
+
+        //Cell class
+        function Cell() {
+            this.visited = false;
+            this.directions = { N: true, E: true, W: true, S: true };
+        }
+
+        //Initializing maze cells
+        function InitializeCells() {
+            for (var i = 0; i < 10; i++) {
+                cells[i] = [];
+
+                for (var j = 0; j < 5; j++) {
+                    cells[i][j] = [];
+
+                    for (var k = 0; k < 5; k++)
+                        cells[i][j][k] = new Cell();
+                }
+            }
+        }
+
+        //Default rules
+        function setDefaultRules() {
+            InitializeCells();
+            var mazes = [
+                [ "UL", "U", "NDR", "LU", "UR",
+                  "LR", "DL", "U", "DR", "LR",
+                  "LD", "UR", "LD", "UR", "LDR",
+                  "LU", "R", "LUR", "DL", "UR",
+                  "DLR", "LD", "DR", "DUL", "RD" ],
+
+                [ "UDL", "UR", "NRL", "UL", "UR",
+                  "UL", "D", "RD", "RL", "RDL",
+                  "L", "U", "UD", "D", "UR",
+                  "RL", "RDL", "URL", "UDL", "R",
+                  "DL", "UD", "RD", "UDL", "RD" ],
+
+                [ "UL", "URD", "GL", "URD", "LUR",
+                  "LD", "UD", "D", "UD", "R",
+                  "LUD", "U", "U", "U", "DR",
+                  "LUR", "RL", "RL", "LD", "UR",
+                  "DL", "DR", "LD", "UDR", "LRD" ],
+
+                [ "ULD", "UR", "GLD", "U", "UR",
+                  "LU", "D", "DU", "DR", "LR",
+                  "L", "UR", "UL", "U", "RD",
+                  "LDR", "LRD", "RL", "L", "UR",
+                  "DLU", "DU", "DR", "LDR", "LDR" ],
+
+                [ "UL", "U", "ND", "UR", "LUR",
+                  "LDR", "LR", "LUR", "LD", "R",
+                  "LU", "D", "DR", "LU", "DR",
+                  "LR", "UDL", "RU", "DL", "RU",
+                  "DL", "UDR", "DL", "UD", "RD" ],
+
+                [ "UL", "UR", "GLD", "UD", "UR",
+                  "LR", "L", "URD", "UL", "DR",
+                  "LR", "L", "UD", "", "UR",
+                  "LRD", "LR", "UL", "RD", "LR",
+                  "DLU", "RD", "DL", "DUR", "LRD" ],
+
+                [ "UL", "U", "GD", "UD", "UR",
+                  "LR", "LDR", "LU", "UR", "LR",
+                  "LR", "UDL", "DR", "L", "R",
+                  "LD", "UR", "UDL", "RD", "LR",
+                  "DLU", "D", "DRU", "DLU", "RD" ],
+
+                [ "ULD", "UR", "GRL", "ULR", "LUR",
+                  "LU", "R", "RL", "L", "DR",
+                  "LR", "LD", "R", "LD", "UR",
+                  "LR", "LRU", "LD", "UR", "LR",
+                  "DLR", "LD", "UD", "D", "RD" ],
+
+                [ "UL", "UD", "GR", "UL", "URD",
+                  "LR", "UL", "D", "D", "UR",
+                  "LR", "LD", "URD", "ULD", "R",
+                  "LD", "URD", "UL", "UR", "LR",
+                  "DLU", "UD", "DR", "LD", "RD" ],
+
+                [ "ULR", "LUD", "GR", "LU", "UR",
+                  "LD", "UR", "LR", "LR", "LRD",
+                  "LUR", "DL", "D", "", "DR",
+                  "L", "UR", "UL", "", "UDR",
+                  "DLR", "DL", "DR", "D", "URD" ]
+            ];
+
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 5; j++) {
+                    for (var k = 0; k < 5; k++) {
+                        cells[i][j][k].directions.N = !mazes[i][5 * j + k].includes("U");
+                        cells[i][j][k].directions.E = !mazes[i][5 * j + k].includes("R");
+                        cells[i][j][k].directions.W = !mazes[i][5 * j + k].includes("L");
+                        cells[i][j][k].directions.S = !mazes[i][5 * j + k].includes("D");
+                    }
+                }
+            }
+
+            var colorTable = [ 1, 5, 2, 2, 3, 3, 1, 5, 5, 2, 3, 2, 4, 3, 2, 2, 5, 3, 1, 4 ];
+            for (var i = 0; i < 4; i++) {
+                Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
+            }
+            handleRules(true);
+            if (!pass)
+                generateSVG();
+        }
+
+        //Rule Seed rules
+        function setRules(rnd) {
+            rng = rnd;
+
+            pass = true;
+            setDefaultRules();
+            pass = false;
+
+            for (var i = 0; i < 10; i++)
+                checkCell(i, rng.nextMax(4), rng.nextMax(4));
+
+            var colorTable = [];
+
+            for (var i = 0; i < 20; i++)
+                colorTable.push(rng.next(1, 5));
+
+            for (var i = 0; i < 5; i++) {
+                Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
+            }
+            rulesCountCopy = rng.shuffleFisherYates(rulesCountCopy).slice(0, 7);
+            conditionIndicator = rng.nextMax(11);
+
+            for (var i = 0; i < 6; i++) {
+                if (i < 5) conditionCountCopy[i] = rng.next(1, 5);
+
+                mazeRotationCopy[i] = rng.next(1, 4);
+                clockwiseCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+                calculateCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+            }
+
+            handleRules(rng.seed == 1);
+            generateSVG();
+        }
+
+        //Recursive algorithm for the maze generation
+        function checkCell(maze, row, col, prevDir = -1) {
+            if (!inRange(row, 0, 4) || !inRange(col, 0, 4) || cells[maze][row][col].visited) return false;
+
+            cells[maze][row][col].visited = true;
+            var start = rng.nextMax(4);
+
+            for (var i = 0; i < 4; i++) {
+                var point = (start + i) % 4;
+                cells[maze][row][col].directions[cardinal[point]] = checkCell(maze, row + locations[0][point], col + locations[1][point], point);
+            }
+
+            if (prevDir != -1) cells[maze][row][col].directions[cardinal[3 - prevDir]] = true;
+
+            return true;
+        }
+
+        function inRange(value, min, max) { return (value >= min && value <= max); }
+
+        //Handle for the text of the rules and actions
+        function handleRules(original) {
+            var countRule = 0;
+            var countCondition = 0;
+            if (!rulesCountCopy || original) {
+                rulesCountCopy = rulesCount.slice();
+                conditionCountCopy = conditionCount.slice();
+                clockwiseCopy = clockwise.slice();
+                mazeRotationCopy = mazeRotation.slice();
+                calculateCopy = calculate.slice();
+            }
+
+            var ruleTemplates = [
+                "만약 {r} {c}개 이상이면, {m}.",
+                "그렇지 않고, {r} {c}개 이상이면, {m}.",
+                "그렇지 않고, {i} 지시등이 있으면, {m}.",
+                "그렇지 않고, {r1} 없으며 {r2} {c}개 이상이면, {m}.",
+                "그렇지 않고, {r} {c}개 이상이면, {m}.",
+                "그렇지 않고, {r} {c}개 이하면, {m}.",
+                "그렇지 않으면, 미로를 그대로 둡니다."];
+
+            for (var i = 0; i < rules.length; i++) {
+                var ruleText = ruleTemplates[i];
+                if (i != 2) {
+                    if (i == 3) ruleText = ruleText.replace("{r1}", rulesCountCopy[countRule++]).replace("{c}", conditionCountCopy[countCondition++]).replace("{r2}", rulesCountCopy[countRule++]);
+                    else ruleText = ruleText.replace("{c}", conditionCountCopy[countCondition++]).replace("{r}", rulesCountCopy[countRule++]);
+                } else {
+                    ruleText = ruleText.replace("{i}", indicatorNames[conditionIndicator]);
+                }
+
+                if (calculateCopy[i]) ruleText = ruleText.replace("{m}", `시작 위치를 계산한 뒤, 미로를 ${clockwiseCopy[i] ? "시계 방향으로": "반시계 방향으로"} ${mazeRotationCopy[i] * 90}도 회전하세요`);
+                else ruleText = ruleText.replace("{m}", `미로를 ${clockwiseCopy[i] ? "시계 방향으로": "반시계 방향으로"} ${mazeRotationCopy[i] * 90}도 회전한 뒤, 시작 위치를 계산하세요`);
+                rules[i].innerHTML = ruleText;
+            }
+        }
+
+        function generateSVG() {
+
+            var svg = document.getElementsByClassName("mazes")[0].getElementsByTagName("svg")[0];
+            if (!generated)
+            {
+                var mazes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                svg.appendChild(mazes);
+            }
+            generated = true;
+            mazes = svg.firstChild;
+            mazes.innerHTML = '';
+
+            for (var i = 0; i < 10; i++) {
+                var text = document.createTextNode(i.toString());
+                var textElement = setElement(document.createElementNS("http://www.w3.org/2000/svg", "text"),
+                [ "x",                     "y" ],
+                [ `${59 + 145 * (i % 5)}`, `${15 + 150 * Math.floor(i / 5)}` ]);
+                textElement.appendChild(text);
+                mazes.appendChild(textElement);
+
+                var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "class",         "x",                     "y",                                "width", "height", "fill" ],
+                [ "highlightable", `${-9 + 145 * (i % 5)}`, `${1.5 + 150 * Math.floor(i / 5)}`, "145",   "18",     "transparent" ]);
+                mazes.appendChild(highlight);
+
+                var square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "x",                    "y",                               "width", "height", "fill",        "class" ],
+                [ `${2 + 145 * (i % 5)}`, `${21 + 150 * Math.floor(i / 5)}`, "125",   "125",    "transparent", "wall" ]);
+                mazes.appendChild(square);
+
+                var exit = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                [ "x",                     "y",                               "width", "height", "class" ],
+                [ `${52 + 145 * (i % 5)}`, `${18 + 150 * Math.floor(i / 5)}`, "25",    "6",      "exit" ]);
+                mazes.appendChild(exit);
+            }
+
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 5; j++) {
+                    for (var k = 0; k < 5; k++) {
+                        var x = 2 + 25 * k + 145 * (i % 5);
+                        var y = 21 + 25 * j + 150 * Math.floor(i / 5);
+                        var small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        [ "x",          "y",          "width", "height", "class" ],
+                        [ `${x + 9.5}`, `${y + 9.5}`, "5",     "5",      "dots" ]);
+                        mazes.appendChild(small);
+
+                        if (k < 4 && !cells[i][j][k].directions.E) {
+                            var e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            [ "x1",        "y1",   "x2",        "y2",        "class" ],
+                            [ `${x + 25}`, `${y}`, `${x + 25}`, `${y + 25}`, "wall" ]);
+                            mazes.appendChild(e);
+                        }
+
+                        if (j < 4 && !cells[i][j][k].directions.S) {
+                            var s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            [ "x1",   "y1",        "x2",        "y2",        "class" ],
+                            [ `${x}`, `${y + 25}`, `${x + 25}`, `${y + 25}`, "wall" ]);
+                            mazes.appendChild(s);
+                        }
+                        var highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        [ "class",         "x",        "y",    "width", "height", "fill" ],
+                        [ "highlightable", `${x - 1}`, `${y}`, "25",    "25",     "transparent" ]);
+                        mazes.appendChild(highlight);
+                    }
+                }
+            }
+        }
+
+        function setElement(element, names, values) {
+            if (names.length <= 0 || values.length <= 0) return null;
+
+            for (var i = 0; i < names.length; i++)
+                element.setAttribute(names[i], values[i]);
+
+            return element;
+        }
+    </script>
+
+    <style>
+        li, p { word-break: keep-all; }
+        .dark table, table {
+            border: none;
+            text-align: center;
+            margin: 0 auto;
+        }
+        svg rect.exit { fill: white; }
+        .dark svg rect.exit { fill: #222; }
+        .dark svg line { stroke: #DDD; }
+        svg rect.wall, svg line.wall { stroke-width: 2; }
+        svg rect.wall, svg line.wall { stroke: black; }
+        .dark svg rect.wall, .dark svg line.wall { stroke: #DDD; }
+        svg rect.dots { fill: black; }
+        .dark svg rect.dots, .dark svg text { fill: #DDD; }
+
+        div.mazes {
+            text-align: center;
+        }
+            div.mazes > img {
+                width:90%;
+            }
+
+        .footnotes {
+            font-size: smaller;
+            margin: .3em 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">블라인드 미로</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Blind Maze.svg" class="diagram">
+                <h2>블라인드 미로에 대하여</h2>
+                <p class="flavour-text">출구를 찾아야 할 뿐 아니라, 입구도 찾으셔야 합니다!</p>
+                <p>
+                    이 모듈에는 N(북쪽), E(동쪽), S(남쪽), W(서쪽)이 적힌 4개의 버튼이 있습니다. 해체자는 이 버튼을 이용해 보이지 않는 미로를 통과해야 합니다. 다음 단계를 따르며 미로의 모습을 알아내고, 현재 위치를 알아내고, 출구가 어느 쪽에 있는지를 알아내세요.
+                </p>
+                <h3>1단계: 미로 알아내기</h3>
+                <ul>
+                    <li>시리얼 넘버의 마지막 숫자에 현재까지 해제한 모듈의 수를 더합니다.
+                    <li>수가 9보다 크다면, 0에서 9의 수가 될 때까지 10을 계속 빼세요.
+                    <li>결괏값과 같은 번호의 미로를 아래에서 찾으세요. 이것이 당신의 미로입니다. 단, 미로가 회전되었을 수 있습니다.
+                </ul>
+                <div class="mazes">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 1.5 725 300"></svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">블라인드 미로</span>
+            </div>
+            <div class="page-content">
+                <h3>2단계: 회전 상태 알아내기</h3>
+                <p>
+                    다음 목록에서 처음으로 해당하는 조건을 적용하여 미로가 어떻게 회전되었는지를 알아내세요.
+                </p>
+                <ul>
+                    <li class="rules">만약 {r} {c}개 이상이면, {m}.
+                    <li class="rules">그렇지 않고, {r} {c}개 이상이면, {m}.
+                    <li class="rules">그렇지 않고, {i} 지시등이 있으면, {m}.
+                    <li class="rules">그렇지 않고, {r1} 없으며 {r2} {c}개 이상이면, {m}.
+                    <li class="rules">그렇지 않고, {r} {c}개 이상이면, {m}.
+                    <li class="rules">그렇지 않고, {r} {c}개 이하면, {m}.
+                    <li class="rules">그렇지 않으면, 미로를 그대로 둡니다.
+                </ul>
+                <h3>3단계: 시작 위치 찾기</h3>
+                <p>
+                    각각의 버튼에 대해 아래 표를 이용해 버튼의 값을 알아내세요. 그 뒤에 다음 규칙들을 이용해 미로의 시작 위치를 알아내세요:
+                </p>
+                <ul>
+                    <li>X 위치: 북쪽과 남쪽 버튼의 값을 더하세요.
+                    <li>Y 위치: 동쪽과 서쪽 버튼의 값을 더하세요.
+                    <li>만약 합이 5를 넘으면, 1에서 5의 수가 될 때까지 5를 계속 빼세요.
+                    <li>X는 열 번호로 왼쪽에서 오른쪽으로 세고, Y는 행 번호로 위에서 아래로 셉니다. 미로의 왼쪽 위 좌표를 [1,1]로 합니다.
+                </ul>
+                <table>
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <tr>
+                        <td class="corner"></td>
+                        <th>붉은색</th>
+                        <th>초록색</th>
+                        <th>파란색</th>
+                        <th>회색</th>
+                        <th>노란색</th>
+                    </tr>
+                    <tr>
+                        <th>북쪽</th>
+                        <td class="colorTable1">1</td>
+                        <td class="colorTable1">5</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">3</td>
+                    </tr>
+                    <tr>
+                        <th>동쪽</th>
+                        <td class="colorTable2">3</td>
+                        <td class="colorTable2">1</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">2</td>
+                    </tr>
+                    <tr>
+                        <th>서쪽</th>
+                        <td class="colorTable4">2</td>
+                        <td class="colorTable4">5</td>
+                        <td class="colorTable4">3</td>
+                        <td class="colorTable4">1</td>
+                        <td class="colorTable4">4</td>
+                    </tr>
+                    <tr>
+                        <th>남쪽</th>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
+                        <td class="colorTable3">4</td>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
+                    </tr>
+                </table>
+                <p class="comment">“미로 기반” 모듈에 포함되는 것은 다음뿐입니다: 3D Maze(3D 미로), A-maze-ing Buttons, Boolean Maze, Colored Maze, The Crystal Maze, Factory Maze, Faulty RGB Maze, Hexamaze, Mazes(미로), Mazematics, Maze Scrambler, Maze³, Module Maze, Morse-A-Maze, Mouse In The Maze(미로 속 생쥐), Polyhedral Maze, RGB Maze, USA Maze</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
