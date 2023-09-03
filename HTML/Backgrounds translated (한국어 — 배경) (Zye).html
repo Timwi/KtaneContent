@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>배경 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-korean.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        p, td { word-break: keep-all; }
+        p.note {
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        .dark table, table {
+            text-align: center;
+            border: none;
+            margin: 0 auto;
+            width: 90%;
+        }
+    </style>
+    <script>
+        var options1;
+        var options2;
+        var options3;
+        var possibilities;
+        var ports =
+            [
+                "DVI", "병렬", "PS/2", "RJ-45", "Serial", "Stereo RCA", "Component Video",
+                "Composite Video", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+            ];
+        var indicators =
+            [
+                "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"
+            ];
+        var indicatorColors =
+            [
+                "파란색", "회색", "초록색", "자주색", "주황색", "보라색", "붉은색", "노란색"
+            ];
+        var coordX =
+            [
+                "A", "D", "C", "D", "B", "F", "E", "B", "C", "E"
+            ];
+        var coordXCopy;
+        var coordY =
+            [
+                "C", "B", "E", "D", "F", "E", "B", "C", "D", "A"
+            ];
+        var coordYCopy;
+        var ManualTable =
+            [
+                3, 2, 9, 1, 7, 4,
+                7, 9, 8, 8, 2, 3,
+                5, 1, 7, 4, 4, 6,
+                6, 4, 2, 6, 8, 5,
+                5, 1, 5, 3, 9, 9,
+                1, 2, 3, 6, 7, 8
+            ];
+        var ManualTableCopy;
+        function setRules(rnd)
+        {
+            //Make clones of the lists to avoid randomization issues when changing seeds
+            coordXCopy = coordX.slice();
+            coordYCopy = coordY.slice();
+            ManualTableCopy = ManualTable.slice();
+            if (rnd.seed != 1)
+            {
+                rnd.shuffleFisherYates(coordXCopy);
+                rnd.shuffleFisherYates(coordYCopy);
+                rnd.shuffleFisherYates(ManualTableCopy);
+            }
+            for (var j = 0; j < coordXCopy.length; j++)
+                document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
+            for (var j = 0; j < coordYCopy.length; j++)
+                document.getElementById('background-r-' + j).innerHTML = coordYCopy[j];
+            for (var j = 0; j < ManualTableCopy.length; j++)
+                document.getElementById('background-tbl-' + j).innerHTML = ManualTableCopy[j];
+            //Primaries randomization
+            var i = rnd.next(0, 2);
+            //Initialize lists for current randomization
+            options1 = [];
+            options2 = [];
+            options3 = [];
+            possibilities = [];
+            chosen = [];
+            //Create possible options for Possibilities
+            AddToOptions(i, rnd.seed == 1);
+            //Generate all possible rules
+            Possibilities();
+            //Variable for holding the chosen Possibilty indicies
+            var RuleIndicies = []
+            //Function for generating the original manual for rule seed 1
+            Swap();
+            //Choose the rules for the manual
+            for (var j = 0; j < 9; j++)
+            {
+                var value = rnd.next(0, possibilities.length);
+                while (RuleIndicies.includes(value))
+                    value = rnd.next(0, possibilities.length);
+                RuleIndicies.push(value);
+                chosen.push(possibilities[RuleIndicies[j]]);
+            }
+            //Apply the chosen rules
+            for (var j = 0; j < chosen.length; j++)
+            {
+                var hold = "";
+                if (j == 0) hold = "만약 " + chosen[0];
+                else hold = "그렇지 않고, " + chosen[j];
+                document.getElementById('background-rule-' + j).innerHTML = hold;
+            }
+        }
+        function Swap()
+        {
+            var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+            var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+            for (var i = 0; i < values.length; i++)
+            {
+                var hold = possibilities[values[i]];
+                possibilities[values[i]] = possibilities[newValues[i]];
+                possibilities[newValues[i]] = hold;
+            }
+        }
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+        function AddToOptions(i, r)
+        {
+            options1.push("배경");
+            options1.push("버튼");
+            options1.push("제출 버튼");
+            options1.push("화면");
+            DetermineColors(i, r);
+            for (var j = 0; j < ports.length; j++)
+                options3.push(ports[j]);
+            for (var j = 0; j < indicators.length; j++)
+                options3.push(indicators[j]);
+            var listSize = 1;
+            while (listSize < 4)
+            {
+                var coloredArray = ["붉은색", i == 0 ? "주황색" : "청록색", "노란색", "초록색", "파란색",
+                    i == 0 ? "보라색" : "자주색", "흰색", "회색", "검은색"];
+                var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+                var intList = [[]];
+                var current = -1;
+                for (var j = 0; j < orderedArray.length; j++)
+                {
+                    if (current != -1)
+                        intList.push([]);
+                    current++;
+                    intList[current].push(coloredArray[j]);
+                    if (listSize > 1)
+                    {
+                        var list = orderedArray.slice(j + 1);
+                        for (var k = 0; k < list.length; k++)
+                        {
+                            intList[current].push(" 또는 " + coloredArray[list[k]]);
+                            if (listSize > 2)
+                            {
+                                intList[current].pop();
+                                intList[current].push(" " + coloredArray[list[k]]);
+                                var list2 = orderedArray.slice(list[k] + 1);
+                                for (var l = 0; l < list2.length; l++)
+                                {
+                                    intList[current].push(" 또는 " + coloredArray[list2[l]]);
+                                    current++;
+                                    intList.push([]);
+                                    intList[current].push(coloredArray[j]);
+                                    intList[current].push(" " + coloredArray[list[k]]);
+                                }
+                                intList.pop();
+                                current--;
+                            }
+                            current++;
+                            intList.push([]);
+                            intList[current].push(coloredArray[j]);
+                        }
+                        intList.pop();
+                        current--;
+                    }
+                }
+                for (var j = 0; j < intList.length; j++)
+                {
+                    //Check if options already has the sequences created
+                    var check = [false, false, false];
+                    var check2 = [false, false, false];
+                    for (var k = 0; k < options2[0].length; k++)
+                    {
+                        check[k] = options2[0][k] == intList[j][k];
+                        check2[k] = options2[1][k] == intList[j][k];
+                    }
+                    if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                    options2.push(intList[j]);
+                }
+                listSize++;
+            }
+        }
+        //Checking the primary colors chosen
+        function DetermineColors(i, r) {
+            if (i == 0)
+            {
+                options2.push(["붉은색", " 노란색", " 또는 파란색"]);
+                options2.push(["주황색", " 초록색", " 또는 보라색"]);
+                options2.push("에 붉은색을 섞으면 ");
+                options2.push("에 노란색을 섞으면 ");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("초록색", "노란색");
+                foot1.innerHTML = foot1.innerHTML.replace("청록색, 노란색, 자주색", "주황색, 초록색, 보라색");
+                if (r) {
+                    document.getElementById('background-foot-2').innerHTML = "****: 붉은색과 노란색을 섞으면 주황색, 파란색과 노란색을 섞으면 초록색, 붉은색과 파란색을 섞으면 보라색이 됩니다. 파란색과 흰색을 섞으면 파란색이 되지 <strong>않습니다</strong>.";
+                }
+                else
+                    document.getElementById('background-foot-2').innerHTML = "****: 붉은색과 노란색을 섞으면 주황색, 파란색과 노란색을 섞으면 초록색, 붉은색과 파란색을 섞으면 보라색이 됩니다. 어떤 색이든 흰색과 섞으면 자기 자신이 되지 <strong>않습니다</strong>.";
+            }
+            else
+            {
+                options2.push(["붉은색", " 초록색", " 또는 파란색"]);
+                options2.push(["청록색", " 노란색", " 또는 자주색"]);
+                options2.push("에 붉은색을 섞을 시 ");
+                options2.push("에 초록색을 섞을 시 ");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("노란색", "초록색");
+                foot1.innerHTML = foot1.innerHTML.replace("주황색, 초록색, 보라색", "청록색, 노란색, 자주색");
+                document.getElementById('background-foot-2').innerHTML = "****: 붉은색과 초록색을 섞으면 노란색, 파란색과 초록색을 섞으면 청록색, 붉은색과 파란색을 섞으면 자주색이 됩니다. 어떤 색이든 흰색과 섞으면 자기 자신이 되지 <strong>않습니다</strong>.";
+            }
+            options2.push("에 파란색을 섞을 시 ");
+        }
+        function Possibilities() {
+            var check = false;
+
+            possibilities.push(options1[0] + "의 색이 " + options1[1] + "의 색과 같으면");
+            possibilities.push(options1[0] + "의 색이 " + options1[1] + "의 색과 다르면");
+            possibilities.push("제출 버튼에 숫자가 있으면");
+            possibilities.push("제출 버튼에 숫자가 없으면");
+            for (var i = 0; i < options2.length; i++) {
+                if (options2[i].length == 2)
+                    options2[i] = ("" + options2[i]).replace(",", "");
+                if (i < 2) {
+                    var word = i == 0 ? "원색**" : "2차색***";
+                    possibilities.push("버튼 또는 배경(또는 둘 모두)의 색이 " + word + "이면");
+                    possibilities.push("오직 버튼의 색만이 " + word + "이면");
+                    possibilities.push("오직 배경의 색만이 " + word + "이면");
+                    possibilities.push("버튼 또는 배경(둘 중 정확히 하나)의 색이 " + word + "이면");
+                    possibilities.push("버튼과 배경의 색이 모두 " + word + "이면");
+                    possibilities.push("버튼과 배경의 색이 모두 " + word + "이 아니면");
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + "의 색이 " + word + "이면");
+                        possibilities.push(options1[j] + "의 색이 " + word + "이 아니면");
+                    }
+                }
+                else if (i < 5) {
+                    for (var j = 0; j < 2; j++)
+                        possibilities.push(options1[j] + "의 색" + options2[i] + (j == 0 ? "버튼의" : "배경의") + " 색이 되면****");
+                }
+                else {
+                    var word = i < 16 ? "이면" : " 중 하나면";
+                    var word_neg = i < 16 ? "이 아니면" : " 중 하나가 아니면";
+                    possibilities.push("버튼 또는 배경(또는 둘 모두)의 색이 " + options2[i] + word);
+                    possibilities.push("오직 버튼의 색만이 " + options2[i] + word);
+                    possibilities.push("오직 배경의 색만이 " + options2[i] + word);
+                    possibilities.push("버튼 또는 배경(둘 중 정확히 하나)의 색이 " + options2[i] + word);
+                    possibilities.push("버튼과 배경의 색이 모두 " + options2[i] + word);
+                    possibilities.push("버튼과 배경의 색이 모두 " + options2[i] + word_neg);
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + "의 색이 " + options2[i] + word);
+                        possibilities.push(options1[j] + "의 색이 " + options2[i] + word_neg);
+                    }
+                }
+            }
+            possibilities.push("폭탄에 포트가 없으면");
+            possibilities.push("폭탄에 빈 포트 플레이트가 있으면");
+            possibilities.push("폭탄에 포트가 1개 있으면");
+            possibilities.push("폭탄에 포트가 2개보다 많으면");
+            possibilities.push("폭탄에 포트 플레이트가 1개보다 많으면");
+            possibilities.push("폭탄에 배터리가 없으면");
+            possibilities.push("폭탄에 배터리가 홀수 개 있으면");
+            possibilities.push("폭탄에 배터리가 짝수 개 있으면");
+            possibilities.push("폭탄에 D 배터리가 없으면*");
+            possibilities.push("폭탄에 D 배터리가 있으면*");
+            possibilities.push("폭탄에 D 배터리가 1개보다 많으면*");
+            possibilities.push("폭탄에 AA 배터리가 없으면");
+            possibilities.push("폭탄에 AA 배터리가 2개 있으면");
+            possibilities.push("폭탄에 AA 배터리가 정확히 3개 있으면");
+            possibilities.push("폭탄에 AA 배터리가 4개 있으면");
+            possibilities.push("폭탄에 AA 배터리가 4개보다 많으면");
+            possibilities.push("폭탄에 배터리 홀더가 없으면");
+            possibilities.push("폭탄에 배터리 홀더가 정확히 1개 있으면");
+            possibilities.push("폭탄에 배터리 홀더가 1개보다 많으면");
+            possibilities.push("폭탄에 배터리가 없는 배터리 홀더가 있으면");
+            possibilities.push("폭탄에 배터리가 2개 든 배터리 홀더가 있으면");
+            possibilities.push("폭탄에 배터리가 3개 든 배터리 홀더가 있으면");
+            possibilities.push("폭탄에 배터리가 홀수 개 든 배터리 홀더가 여러 개 있으면");
+            possibilities.push("폭탄에 배터리가 4개 든 배터리 홀더가 있으면");
+            possibilities.push("폭탄에 배터리가 짝수 개 든 배터리 홀더가 여러 개 있으면");
+            possibilities.push("폭탄에 지시등이 없으면");
+            possibilities.push("폭탄에 지시등이 정확히 1개 있으면");
+            possibilities.push("폭탄에 지시등이 1개보다 많으면");
+            possibilities.push("폭탄에 점등된 지시등이 없으면");
+            possibilities.push("폭탄에 점등된 지시등이 정확히 1개 있으면");
+            possibilities.push("폭탄에 점등된 지시등이 1개보다 많으면");
+            possibilities.push("폭탄에 점등되지 않은 지시등이 없으면");
+            possibilities.push("폭탄에 점등되지 않은 지시등이 정확히 1개 있으면");
+            possibilities.push("폭탄에 점등되지 않은 지시등이 1개보다 많으면");
+            for (var i = 0; i < options3.length; i++) {
+                if (i < 13) {
+                    possibilities.push("폭탄에 " + options3[i] + " 포트가 있으면");
+                    possibilities.push("폭탄에 " + options3[i] + " 포트가 1개보다 많으면");
+                    possibilities.push("폭탄에 " + options3[i] + " 포트가 정확히 1개 있으면");
+                    possibilities.push("폭탄에 " + options3[i] + " 포트가 없으면");
+                    continue;
+                }
+                else {
+                    possibilities.push("폭탄에 " + options3[i] + " 지시등이 있으면");
+                    possibilities.push("폭탄에 " + options3[i] + " 지시등이 없으면");
+                    possibilities.push("폭탄에 점등된 " + options3[i] + " 지시등이 있으면");
+                    possibilities.push("폭탄에 점등된 " + options3[i] + " 지시등이 없으면");
+                    possibilities.push("폭탄에 점등되지 않은 " + options3[i] + " 지시등이 있으면");
+                    possibilities.push("폭탄에 점등되지 않은 " + options3[i] + " 지시등이 없으면");
+                    for (var j = 0; j < indicatorColors.length; j++) {
+                        if (!check)
+                            possibilities.push(indicatorColors[j] + " 지시등이 있으면");
+                        possibilities.push(indicatorColors[j] + " " + options3[i] + " 지시등이 있으면");
+                    }
+                    check = true;
+                }
+            }
+            possibilities.push("폭탄에 2단계 보안이 없으면");
+            possibilities.push("폭탄에 2단계 보안이 정확히 1개 있으면");
+            possibilities.push("폭탄에 2단계 보안이 1개보다 많으면");
+            possibilities.push("폭탄에 제조일자 위젯이 없으면");
+            possibilities.push("폭탄에 제조일자 위젯이 있으면");
+            possibilities.push("폭탄에 요일 위젯이 없으면");
+            possibilities.push("폭탄에 요일 위젯이 있으면");
+            possibilities.push("폭탄에 요일 위젯과 제조일자 위젯이 있으면");
+            possibilities.push("폭탄에 랜덤 시간 위젯이 없으면");
+            possibilities.push("폭탄에 랜덤 시간 위젯이 2개보다 적으면");
+            possibilities.push("폭탄에 랜덤 시간 위젯이 정확히 2개 있으면");
+            possibilities.push("폭탄에 랜덤 시간 위젯이 2개보다 많으면");
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">배경</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Backgrounds.svg">
+                <h2>배경에 대하여</h2>
+                <p class="flavour-text">이번만은 당신 바로 앞에 있는 것에만 집중하지 말아야 합니다. 무대 뒤에서 무슨 일이 일어나는지 관심을 기울이세요. 폭발하는 기분이 어떤지는 아실 테니까요.</p>
+                <p>이 모듈에는 색칠된 버튼, 카운터, 제출 버튼이 있습니다. 또한 모듈의 배경이 특정한 색깔을 띱니다. 배경과 버튼의 색에 따라, 카운터에 특정 숫자가 나올 때까지 ‘Push Me’ 버튼을 누르고 제출(Submit)을 누르세요.</p>
+                <h3>1단계:</h3>
+                <p>표 B의 규칙들을 이용해 글자 쌍을 알아냅니다. 이때 처음으로 해당하는 조건 2개를 찾고, 그 중 1번째 조건에서 1번째 글자를, 2번째 조건에서 2번째 글자를 따옵니다.</p>
+                <h3>2단계:</h3>
+                <p>1단계에서 찾은 글자 쌍과 표 A를 이용합니다. 왼쪽에서 1번째 글자를 찾고, 위에서 2번째 글자를 찾아 얻은 숫자만큼 버튼을 누르고 제출을 누릅니다.</p>
+
+                <p class="caption">표 A:</p>
+                <table>
+                    <tr>
+                        <td class="corner"></td>
+                        <td><strong>A</strong></td>
+                        <td><strong>B</strong></td>
+                        <td><strong>C</strong></td>
+                        <td><strong>D</strong></td>
+                        <td><strong>E</strong></td>
+                        <td><strong>F</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td><div id="background-tbl-0"></div></td>
+                        <td><div id="background-tbl-1"></div></td>
+                        <td><div id="background-tbl-2"></div></td>
+                        <td><div id="background-tbl-3"></div></td>
+                        <td><div id="background-tbl-4"></div></td>
+                        <td><div id="background-tbl-5"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>B</strong></td>
+                        <td><div id="background-tbl-6"></div></td>
+                        <td><div id="background-tbl-7"></div></td>
+                        <td><div id="background-tbl-8"></div></td>
+                        <td><div id="background-tbl-9"></div></td>
+                        <td><div id="background-tbl-10"></div></td>
+                        <td><div id="background-tbl-11"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>C</strong></td>
+                        <td><div id="background-tbl-12"></div></td>
+                        <td><div id="background-tbl-13"></div></td>
+                        <td><div id="background-tbl-14"></div></td>
+                        <td><div id="background-tbl-15"></div></td>
+                        <td><div id="background-tbl-16"></div></td>
+                        <td><div id="background-tbl-17"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>D</strong></td>
+                        <td><div id="background-tbl-18"></div></td>
+                        <td><div id="background-tbl-19"></div></td>
+                        <td><div id="background-tbl-20"></div></td>
+                        <td><div id="background-tbl-21"></div></td>
+                        <td><div id="background-tbl-22"></div></td>
+                        <td><div id="background-tbl-23"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>E</strong></td>
+                        <td><div id="background-tbl-24"></div></td>
+                        <td><div id="background-tbl-25"></div></td>
+                        <td><div id="background-tbl-26"></div></td>
+                        <td><div id="background-tbl-27"></div></td>
+                        <td><div id="background-tbl-28"></div></td>
+                        <td><div id="background-tbl-29"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>F</strong></td>
+                        <td><div id="background-tbl-30"></div></td>
+                        <td><div id="background-tbl-31"></div></td>
+                        <td><div id="background-tbl-32"></div></td>
+                        <td><div id="background-tbl-33"></div></td>
+                        <td><div id="background-tbl-34"></div></td>
+                        <td><div id="background-tbl-35"></div></td>
+                    </tr>
+                </table>
+                <p class="note">(참고: 카운터에 9가 표시된 때에 버튼을 누르면 카운터가 0으로 초기화됩니다.)</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">배경</span>
+            </div>
+            <div class="page-content">
+                <p class="caption">표 B: 우선순위 규칙</p>
+                <table>
+                    <tr>
+                        <td style="width:50%"><strong>규칙</strong></td>
+                        <td><strong>1번째 글자</strong></td>
+                        <td><strong>2번째 글자</strong></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-0">만약 배경의 색과 버튼의 색이 같으면</td>
+                        <td><div id="background-l-0"></div></td>
+                        <td><div id="background-r-0"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-1">그렇지 않고, 버튼 또는 배경(둘 중 정확히 하나)의 색이 검은색이나 흰색이라면</td>
+                        <td><div id="background-l-1"></div></td>
+                        <td><div id="background-r-1"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-2">Otherwise, if there are no D batteries on the bomb *</td>
+                        <td><div id="background-l-2"></div></td>
+                        <td><div id="background-r-2"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-3">Otherwise, if there are no AA batteries on the bomb</td>
+                        <td><div id="background-l-3"></div></td>
+                        <td><div id="background-r-3"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-4">Otherwise, if the button and the backing are primary colors **</td>
+                        <td><div id="background-l-4"></div></td>
+                        <td><div id="background-r-4"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-5">Otherwise, if the button is a secondary color ***</td>
+                        <td><div id="background-l-5"></div></td>
+                        <td><div id="background-r-5"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-6">Otherwise, if there is an unlit "SND" indicator</td>
+                        <td><div id="background-l-6"></div></td>
+                        <td><div id="background-r-6"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-7">Otherwise, if there is a Serial Port on the bomb</td>
+                        <td><div id="background-l-7"></div></td>
+                        <td><div id="background-r-7"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-8">Otherwise, if the backing’s color mixed with blue creates the Button’s Color ****</td>
+                        <td><div id="background-l-8"></div></td>
+                        <td><div id="background-r-8"></div></td>
+                    </tr>
+                    <tr>
+                        <td>그렇지 않다면, 이 규칙을 사용합니다. (이 규칙은 2번 사용될 수 있습니다)</td>
+                        <td><div id="background-l-9"></div></td>
+                        <td><div id="background-r-9"></div></td>
+                    </tr>
+                </table>
+                <p>
+                    <span id="background-foot-3" class="comment">*: D 배터리에는 정확히 1개의 배터리가 들어있는 배터리 홀더가 모두 포함됩니다.</span>
+                    <span id="background-foot-0" class="comment">**: 원색이란 붉은색, 노란색, 파란색입니다.</span>
+                    <span id="background-foot-1" class="comment">***: 2차색이란 주황색, 초록색, 보라색입니다.</span>
+                    <span id="background-foot-2" class="comment">****: 붉은색과 노란색을 섞으면 주황색, 파란색과 노란색을 섞으면 초록색, 붉은색과 파란색을 섞으면 보라색이 됩니다. 파란색과 흰색을 섞으면 파란색이 되지 <strong>않습니다</strong>.</span>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
