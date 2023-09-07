@@ -10,362 +10,354 @@
     <link rel="stylesheet" type="text/css" href="css/Canny Maze/Canny Maze.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <script>
-        var mazeNames=["TILES","SUM","COMPARE","BINARY","AVOID","STRICT","WALLS","AVERAGE","DIGITAL","MOVEMENT","DOUBLE BINARY","FOURS"];
-        var defaultMazeOrder=null;
-        var defaultTilesMovement="Tiles";
-        var defaultTilesMazeOr="Tiles Maze or ";
-        var defaultTilesTraversedOrMovementsMade="tiles traversed";
-        var defaultTilesNote="<b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b>";
-        var defaultSumAverageDigitalTitle="Sum";
-        var defaultSumAverageDigitalTitle2="Sum";
-        var defaultSumAverageDigital="";
-        var defaultCompare1="to the left and right";
-        var defaultCompare2="above and below";
-        var defaultCompareSmallerOrLarger="larger";
-        var defaultBinaryDoubleFours="Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any one bit is the tile to navigate to.";
-        var defaultBinaryDoubleGuide="<h3>Binary Maze Guide</h3>\n<p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p>";
-        var defaultAvoidUp="tiles 1 or 2";
-        var defaultAvoidRight="tiles 3 or 4";
-        var defaultAvoidDown="tiles 5 or 6";
-        var defaultAvoidLeft="tile 7";
-        var defaultStrictVertical="Can only move up or down if moving from an odd tile to an even tile or vice versa,";
-        var defaultStrictHorizontal="can only move right if moving to a higher tile, can only move left if moving to a lower tile.";
-        var defaultWallsMazeLayouts=
-        [[["down","right","left right down","left","down"],
-        ["right up","left right down","left right up","left right","left up down"],
-        ["right","left up down","right","left right down","left up down"],
-        ["down","right up","down","up down","up"],
-        ["right up","left right","left up","right up","left"]],
+        var mazeNames = ["TILES", "SUM", "COMPARE", "BINARY", "AVOID", "STRICT", "WALLS", "AVERAGE", "DIGITAL", "MOVEMENT", "DOUBLE BINARY", "FOURS"];
+        var defaultMazeOrder = null;
+        var defaultTilesMovement = "Tiles";
+        var defaultTilesMazeOr = "Tiles Maze or ";
+        var defaultTilesTraversedOrMovementsMade = "tiles traversed";
+        var defaultTilesNote = "<b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b>";
+        var defaultSumAverageDigitalTitle = "Sum";
+        var defaultSumAverageDigitalTitle2 = "Sum";
+        var defaultSumAverageDigital = "";
+        var defaultCompare1 = "to the left and right";
+        var defaultCompare2 = "above and below";
+        var defaultCompareSmallerOrLarger = "larger";
+        var defaultBinaryDoubleFours = "Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any one bit is the tile to navigate to.";
+        var defaultBinaryDoubleGuide = "<h3>Binary Maze Guide</h3>\n<p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p>";
+        var defaultAvoidUp = "tiles 1 or 2";
+        var defaultAvoidRight = "tiles 3 or 4";
+        var defaultAvoidDown = "tiles 5 or 6";
+        var defaultAvoidLeft = "tile 7";
+        var defaultStrictVertical = "Can only move up or down if moving from an odd tile to an even tile or vice versa,";
+        var defaultStrictHorizontal = "can only move right if moving to a higher tile, can only move left if moving to a lower tile.";
+        var defaultWallsMazeLayouts =
+            [[["down", "right", "left right down", "left", "down"],
+            ["right up", "left right down", "left right up", "left right", "left up down"],
+            ["right", "left up down", "right", "left right down", "left up down"],
+            ["down", "right up", "down", "up down", "up"],
+            ["right up", "left right", "left up", "right up", "left"]],
 
-        [["down","down","right","left right","left down","down"],
-        ["up down","right up","left right down","left down","up down","up down"],
-        ["up down","right down","left up down","up","right up down","left up"],
-        ["right up","left up down","right up","left right","left right up","left down"],
-        ["right","left up","right down","left right down","left right","left up down"],
-        ["right","left right","left up","right up","left","up"]],
+            [["down", "down", "right", "left right", "left down", "down"],
+            ["up down", "right up", "left right down", "left down", "up down", "up down"],
+            ["up down", "right down", "left up down", "up", "right up down", "left up"],
+            ["right up", "left up down", "right up", "left right", "left right up", "left down"],
+            ["right", "left up", "right down", "left right down", "left right", "left up down"],
+            ["right", "left right", "left up", "right up", "left", "up"]],
 
-        [["down","right down","left right","left right","left down","right","left down"],
-        ["right up down","left up","right down","left","right up","left right","left up"],
-        ["right up down","left","right up","left right","left right down","left right","left down"],
-        ["up down","right down","left down","right down","left right up","left down","up down"],
-        ["right up","left up down","right up","left up","down","up down","up down"],
-        ["right down","left up","right down","left right","left right up","left up","up down"],
-        ["right up","left","right up","left right","left right","left","up"]],
+            [["down", "right down", "left right", "left right", "left down", "right", "left down"],
+            ["right up down", "left up", "right down", "left", "right up", "left right", "left up"],
+            ["right up down", "left", "right up", "left right", "left right down", "left right", "left down"],
+            ["up down", "right down", "left down", "right down", "left right up", "left down", "up down"],
+            ["right up", "left up down", "right up", "left up", "down", "up down", "up down"],
+            ["right down", "left up", "right down", "left right", "left right up", "left up", "up down"],
+            ["right up", "left", "right up", "left right", "left right", "left", "up"]],
 
-        [["right down","left","down","right down","left right","left","right down","left down"],
-        ["up down","right","left right up","left right up down","left right","left right","left up down","up"],
-        ["up down","right","left down","right up","left down","right","left up down","down"],
-        ["up down","right down","left right up","left right down","left up","right","left right up","left up down"],
-        ["up down","up down","right down","left right up","left right","left right down","left right","left up down"],
-        ["right up","left up down","up down","right down","left right down","left up","down","up down"],
-        ["down","right up","left up down","up down","right up","left","up down","up down"],
-        ["right up","left right","left up","right up","left right","left right","left up","up"]]]
-        function getDefaultRules(){
-            if(defaultMazeOrder!=null)
+            [["right down", "left", "down", "right down", "left right", "left", "right down", "left down"],
+            ["up down", "right", "left right up", "left right up down", "left right", "left right", "left up down", "up"],
+            ["up down", "right", "left down", "right up", "left down", "right", "left up down", "down"],
+            ["up down", "right down", "left right up", "left right down", "left up", "right", "left right up", "left up down"],
+            ["up down", "up down", "right down", "left right up", "left right", "left right down", "left right", "left up down"],
+            ["right up", "left up down", "up down", "right down", "left right down", "left up", "down", "up down"],
+            ["down", "right up", "left up down", "up down", "right up", "left", "up down", "up down"],
+            ["right up", "left right", "left up", "right up", "left right", "left right", "left up", "up"]]]
+        function getDefaultRules() {
+            if (defaultMazeOrder != null)
                 return;
-            defaultMazeOrder=mazeNames.slice(0,7);
-            for(var i=0;i<7;i++)
-                document.getElementById(`maze${i+1}`).innerText=`${defaultMazeOrder[i]} MAZE`;
-            document.getElementById("tilesMovement").innerText=defaultTilesMovement;
-            document.getElementById("tilesMazeOr").innerText=defaultTilesMazeOr;
-            document.getElementById("tilesTraversedOrMovementsMade").innerText=defaultTilesTraversedOrMovementsMade;
-            document.getElementById("tilesNote").innerHTML=defaultTilesNote;
-            document.getElementById("sumAverageDigitalTitle").innerText=defaultSumAverageDigitalTitle;
-            document.getElementById("sumAverageDigitalTitle2").innerText=defaultSumAverageDigitalTitle2;
-            document.getElementById("sumAverageDigital").innerText=defaultSumAverageDigital;
-            document.getElementById("compare1").innerText=defaultCompare1;
-            document.getElementById("compare2").innerText=defaultCompare2;
-            document.getElementById("compareSmallerOrLarger").innerText=defaultCompareSmallerOrLarger;
-            document.getElementById("binaryDoubleFours").innerText=defaultBinaryDoubleFours;
-            document.getElementById("binaryDoubleGuide").innerHTML=defaultBinaryDoubleGuide;
-            document.getElementById("avoidUp").innerText=defaultAvoidUp;
-            document.getElementById("avoidRight").innerText=defaultAvoidRight;
-            document.getElementById("avoidDown").innerText=defaultAvoidDown;
-            document.getElementById("avoidLeft").innerText=defaultAvoidLeft;
-            document.getElementById("strictHorizontal").innerText=defaultStrictHorizontal;
-            document.getElementById("strictVertical").innerText=defaultStrictVertical;
-            for(var i=5;i<9;i++){
-                for(var j=0;j<i;j++){
-                    for(var k=0;k<i;k++){
-                        document.getElementsByClassName(`checkerboard${i}x${i}`)[0].children[j].children[k].className=defaultWallsMazeLayouts[i-5][j][k];
+            defaultMazeOrder = mazeNames.slice(0, 7);
+            for (var i = 0; i < 7; i++)
+                $(`#maze${i + 1}`).text(`${defaultMazeOrder[i]} MAZE`);
+            $("#tilesMovement").text(defaultTilesMovement);
+            $("#tilesMazeOr").text(defaultTilesMazeOr);
+            $("#tilesTraversedOrMovementsMade").text(defaultTilesTraversedOrMovementsMade);
+            $("#tilesNote").html(defaultTilesNote);
+            $("#sumAverageDigitalTitle").text(defaultSumAverageDigitalTitle);
+            $("#sumAverageDigitalTitle2").text(defaultSumAverageDigitalTitle2);
+            $("#sumAverageDigital").text(defaultSumAverageDigital);
+            $("#compare1").text(defaultCompare1);
+            $("#compare2").text(defaultCompare2);
+            $("#compareSmallerOrLarger").text(defaultCompareSmallerOrLarger);
+            $("#binaryDoubleFours").text(defaultBinaryDoubleFours);
+            $("#binaryDoubleGuide").html(defaultBinaryDoubleGuide);
+            $("#avoidUp").text(defaultAvoidUp);
+            $("#avoidRight").text(defaultAvoidRight);
+            $("#avoidDown").text(defaultAvoidDown);
+            $("#avoidLeft").text(defaultAvoidLeft);
+            $("#strictHorizontal").text(defaultStrictHorizontal);
+            $("#strictVertical").text(defaultStrictVertical);
+            for (var i = 5; i < 9; i++) {
+                for (var j = 0; j < i; j++) {
+                    for (var k = 0; k < i; k++) {
+                        $(`.checkerboard${i}x${i} tr:nth-child(${j+1}) td:nth-child(${k+1})`)[0].className = defaultWallsMazeLayouts[i - 5][j][k];
                     }
                 }
             }
         }
-        function setDefaultRules(){
+        function setDefaultRules() {
             getDefaultRules();
-            for(var i=0;i<7;i++)
-                defaultMazeOrder[i]=document.getElementById(`maze${i+1}`).innerText.substring(0,document.getElementById(`maze${i+1}`).innerText.indexOf(" "));
-            defaultTilesMovement=document.getElementById("tilesMovement").innerText;
-            defaultTilesMazeOr=document.getElementById("tilesMazeOr").innerText;
-            defaultTilesTraversedOrMovementsMade=document.getElementById("tilesTraversedOrMovementsMade").innerText;
-            defaultTilesNote=document.getElementById("tilesNote").innerHTML;
-            defaultsumAverageDigitalTitle=document.getElementById("sumAverageDigitalTitle").innerText;
-            defaultsumAverageDigitalTitle2=document.getElementById("sumAverageDigitalTitle2").innerText;
-            defaultsumAverageDigital=document.getElementById("sumAverageDigital").innerText;
-            defaultCompare1=document.getElementById("compare1").innerText;
-            defaultCompare2=document.getElementById("compare2").innerText;
-            defaultCompareSmallerOrLarger=document.getElementById("compareSmallerOrLarger").innerText;
-            defaultBinaryDoubleFours=document.getElementById("binaryDoubleFours").innerText;
-            defaultBinaryDoubleGuide=document.getElementById("binaryDoubleGuide").innerHTML;
-            defaultAvoidUp=document.getElementById("avoidUp").innerText;
-            defaultAvoidRight=document.getElementById("avoidRight").innerText;
-            defaultAvoidDown=document.getElementById("avoidDown").innerText;
-            defaultAvoidLeft=document.getElementById("avoidLeft").innerText;
-            defaultStrictHorizontal=document.getElementById("strictHorizontal").innerText;
-            defaultStrictVertical=document.getElementById("strictVertical").innerText;
-            for(var i=5;i<9;i++){
-                for(var j=0;j<i;j++){
-                    for(var k=0;k<i;k++){
-                        defaultWallsMazeLayouts[i-5][j][k]=document.getElementsByClassName(`checkerboard${i}x${i}`)[0].children[j].children[k].className;
+            for (var i = 0; i < 7; i++)
+                defaultMazeOrder[i] = $(`#maze${i + 1}`).text().substring(0, $(`#maze${i + 1}`).text().indexOf(" "));
+            defaultTilesMovement = $("#tilesMovement").text();
+            defaultTilesMazeOr = $("#tilesMazeOr").text();
+            defaultTilesTraversedOrMovementsMade = $("#tilesTraversedOrMovementsMade").text();
+            defaultTilesNote = $("#tilesNote").html();
+            defaultsumAverageDigitalTitle = $("#sumAverageDigitalTitle").text();
+            defaultsumAverageDigitalTitle2 = $("#sumAverageDigitalTitle2").text();
+            defaultsumAverageDigital = $("#sumAverageDigital").text();
+            defaultCompare1 = $("#compare1").text();
+            defaultCompare2 = $("#compare2").text();
+            defaultCompareSmallerOrLarger = $("#compareSmallerOrLarger").text();
+            defaultBinaryDoubleFours = $("#binaryDoubleFours").text();
+            defaultBinaryDoubleGuide = $("#binaryDoubleGuide").html();
+            defaultAvoidUp = $("#avoidUp").text();
+            defaultAvoidRight = $("#avoidRight").text();
+            defaultAvoidDown = $("#avoidDown").text();
+            defaultAvoidLeft = $("#avoidLeft").text();
+            defaultStrictHorizontal = $("#strictHorizontal").text();
+            defaultStrictVertical = $("#strictVertical").text();
+            for (var i = 5; i < 9; i++) {
+                for (var j = 0; j < i; j++) {
+                    for (var k = 0; k < i; k++) {
+                        defaultWallsMazeLayouts[i - 5][j][k] = $(`.checkerboard${i}x${i} tr:nth-child(${j+1}) td:nth-child(${k+1})`)[0].className;
                     }
                 }
             }
         }
-        function setRules(rnd){
+        function setRules(rnd) {
             getDefaultRules();
-            if(rnd.nextMax(2)==1){
-                document.getElementById("maze1").innerText="TILES MAZE";
-                document.getElementById("tilesMovement").innerText="Tiles";
-                document.getElementById("tilesTraversedOrMovementsMade").innerText="tiles traversed";
-                document.getElementById("tilesNote").innerHTML="<b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b>";
-                document.getElementById("tilesMazeOr").innerText="Tiles Maze or ";
-            }else{
-                document.getElementById("maze1").innerText="MOVEMENT MAZE";
-                document.getElementById("tilesMovement").innerText="Movement";
-                document.getElementById("tilesTraversedOrMovementsMade").innerText="movements made";
-                document.getElementById("tilesNote").innerHTML="";
-                document.getElementById("tilesMazeOr").innerText="";
+            if (rnd.nextMax(2) == 1) {
+                $("#maze1").text("TILES MAZE");
+                $("#tilesMovement").text("Tiles");
+                $("#tilesTraversedOrMovementsMade").text("tiles traversed");
+                $("#tilesNote").html("<b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b>");
+                $("#tilesMazeOr").text("Tiles Maze or ");
+            } else {
+                $("#maze1").text("MOVEMENT MAZE");
+                $("#tilesMovement").text("Movement");
+                $("#tilesTraversedOrMovementsMade").text("movements made");
+                $("#tilesNote").html("");
+                $("#tilesMazeOr").text("");
             }
             var sumAverageDigital;
-            do{
-                sumAverageDigital=rnd.nextMax(9);
-            }while(sumAverageDigital!=1&&sumAverageDigital!=7&&sumAverageDigital!=8);
-            document.getElementById("maze2").innerText=`${mazeNames[sumAverageDigital]} MAZE`;
-            switch(sumAverageDigital){
+            do {
+                sumAverageDigital = rnd.nextMax(9);
+            } while (sumAverageDigital != 1 && sumAverageDigital != 7 && sumAverageDigital != 8);
+            $("#maze2").text(`${mazeNames[sumAverageDigital]} MAZE`);
+            switch (sumAverageDigital) {
                 case 1:
-                    document.getElementById("sumAverageDigitalTitle").innerText="Sum";
-                    document.getElementById("sumAverageDigital").innerText="";
-                    document.getElementById("sumAverageDigitalTitle2").innerText="Sum";
-                break;
+                    $("#sumAverageDigitalTitle").text("Sum");
+                    $("#sumAverageDigital").text("");
+                    $("#sumAverageDigitalTitle2").text("Sum");
+                    break;
                 case 7:
-                    document.getElementById("sumAverageDigitalTitle").innerText="Average";
-                    document.getElementById("sumAverageDigital").innerText="take the average, and round to the nearest whole number, ";
-                    document.getElementById("sumAverageDigitalTitle2").innerText="Average";
-                break;
-                case 8:
+                    $("#sumAverageDigitalTitle").text("Average");
+                    $("#sumAverageDigital").text("take the average, and round to the nearest whole number, ");
+                    $("#sumAverageDigitalTitle2").text("Average");
+                    break;
                 default:
-                    document.getElementById("sumAverageDigitalTitle").innerText="Digital";
-                    document.getElementById("sumAverageDigital").innerText="and take the digital root, ";
-                    document.getElementById("sumAverageDigitalTitle2").innerText="Digital";
-                break;
+                    $("#sumAverageDigitalTitle").text("Digital");
+                    $("#sumAverageDigital").text("and take the digital root, ");
+                    $("#sumAverageDigitalTitle2").text("Digital");
+                    break;
             }
-            var compare=rnd.nextMax(6);
-            switch(compare){
+            var compare = rnd.nextMax(6);
+            switch (compare) {
                 case 0:
-                    document.getElementById("compare1").innerText="to the left and right";
-                    document.getElementById("compare2").innerText="above and below";
-                    document.getElementById("compareSmallerOrLarger").innerText="larger";
+                    $("#compare1").text("to the left and right");
+                    $("#compare2").text("above and below");
+                    $("#compareSmallerOrLarger").text("larger");
                     break;
                 case 1:
-                    document.getElementById("compare1").innerText="to the left and right";
-                    document.getElementById("compare2").innerText="above and below";
-                    document.getElementById("compareSmallerOrLarger").innerText="smaller";
+                    $("#compare1").text("to the left and right");
+                    $("#compare2").text("above and below");
+                    $("#compareSmallerOrLarger").text("smaller");
                     break;
                 case 2:
-                    document.getElementById("compare1").innerText="to the left and above";
-                    document.getElementById("compare2").innerText="to the right and below";
-                    document.getElementById("compareSmallerOrLarger").innerText="larger";
+                    $("#compare1").text("to the left and above");
+                    $("#compare2").text("to the right and below");
+                    $("#compareSmallerOrLarger").text("larger");
                     break;
                 case 3:
-                    document.getElementById("compare1").innerText="to the left and above";
-                    document.getElementById("compare2").innerText="to the right and below";
-                    document.getElementById("compareSmallerOrLarger").innerText="smaller";
+                    $("#compare1").text("to the left and above");
+                    $("#compare2").text("to the right and below");
+                    $("#compareSmallerOrLarger").text("smaller");
                     break;
                 case 4:
-                    document.getElementById("compare1").innerText="to the left and below";
-                    document.getElementById("compare2").innerText="to the right and above";
-                    document.getElementById("compareSmallerOrLarger").innerText="larger";
+                    $("#compare1").text("to the left and below");
+                    $("#compare2").text("to the right and above");
+                    $("#compareSmallerOrLarger").text("larger");
                     break;
-                case 5:
                 default:
-                    document.getElementById("compare1").innerText="to the left and below";
-                    document.getElementById("compare2").innerText="to the right and above";
-                    document.getElementById("compareSmallerOrLarger").innerText="smaller";
+                    $("#compare1").text("to the left and below");
+                    $("#compare2").text("to the right and above");
+                    $("#compareSmallerOrLarger").text("smaller");
                     break;
             }
             var binaryDoubleOrFours;
-            do{
-                binaryDoubleOrFours=rnd.nextMax(12);
-            }while(binaryDoubleOrFours!=3&&binaryDoubleOrFours!=10&&binaryDoubleOrFours!=11);
-            document.getElementById("maze4").innerText=`${mazeNames[binaryDoubleOrFours]} MAZE`;
-            switch(binaryDoubleOrFours){
+            do {
+                binaryDoubleOrFours = rnd.nextMax(12);
+            } while (binaryDoubleOrFours != 3 && binaryDoubleOrFours != 10 && binaryDoubleOrFours != 11);
+            $("#maze4").text(`${mazeNames[binaryDoubleOrFours]} MAZE`);
+            switch (binaryDoubleOrFours) {
                 case 3:
-                    document.getElementById("binaryDoubleFours").innerText="Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any one bit is the tile to navigate to.";
-                    document.getElementById("binaryDoubleGuide").innerHTML="<h3>Binary Maze Guide</h3>\n<p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p>";
+                    $("#binaryDoubleFours").text("Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any one bit is the tile to navigate to.");
+                    $("#binaryDoubleGuide").html("<h3>Binary Maze Guide</h3>\n<p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p>");
                     break;
                 case 10:
-                    document.getElementById("binaryDoubleFours").innerText="Double Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any two bits is the tile to navigate to.";
-                    document.getElementById("binaryDoubleGuide").innerHTML="<h3>Double Binary Maze Guide</h3>\n<p>1: 2, 4, 7<br>2: 1, 4, 7<br>3: 5, 6<br>4: 1, 2, 7<br>5: 3, 6<br>6: 3, 5<br>7: 1, 2, 4</p>";
+                    $("#binaryDoubleFours").text("Double Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any two bits is the tile to navigate to.");
+                    $("#binaryDoubleGuide").html("<h3>Double Binary Maze Guide</h3>\n<p>1: 2, 4, 7<br>2: 1, 4, 7<br>3: 5, 6<br>4: 1, 2, 7<br>5: 3, 6<br>6: 3, 5<br>7: 1, 2, 4</p>");
                     break;
-                case 11:
                 default:
-                    document.getElementById("binaryDoubleFours").innerText="Fours Maze: Take the base-4 representation of each surrounding tile. Whichever tiles provide the number that is in the majority are safe to navigate to.";
-                    document.getElementById("binaryDoubleGuide").innerText="";
+                    $("#binaryDoubleFours").text("Fours Maze: Take the base-4 representation of each surrounding tile. Whichever tiles provide the number that is in the majority are safe to navigate to.");
+                    $("#binaryDoubleGuide").text("");
                     break;
             }
-            var avoidMazeOrder=[];
-            var findDuplicates=arr=>arr.filter((item,index)=>arr.indexOf(item)!==index);
-            for(var i=0;i<8;i++){
+            var avoidMazeOrder = [];
+            var findDuplicates = arr => arr.filter((item, index) => arr.indexOf(item) !== index);
+            for (var i = 0; i < 8; i++) {
                 avoidMazeOrder.push(rnd.nextMax(8));
-                while(findDuplicates(avoidMazeOrder).length>0){
-                    avoidMazeOrder[i]=rnd.nextMax(8);
+                while (findDuplicates(avoidMazeOrder).length > 0) {
+                    avoidMazeOrder[i] = rnd.nextMax(8);
                 }
             }
-            var av=[`tiles ${avoidMazeOrder[1]} or ${avoidMazeOrder[2]}`,`tiles ${avoidMazeOrder[3]} or ${avoidMazeOrder[4]}`,`tiles ${avoidMazeOrder[5]} or ${avoidMazeOrder[6]}`,`tiles ${avoidMazeOrder[7]} or ${avoidMazeOrder[0]}`];
-            for(var i=0;i<8;i++){
-                if(avoidMazeOrder[i]==0){
-                    if((i%2)==0)
-                        av[Math.floor(((i-1)%8)/2)]=`tile ${avoidMazeOrder[(i-1)%8]}`;
-                    else av[Math.floor(((i-1)%8)/2)]=`tile ${avoidMazeOrder[(i+1)%8]}`;//not a typo (hopefully)
+            var av = [`tiles ${avoidMazeOrder[1]} or ${avoidMazeOrder[2]}`, `tiles ${avoidMazeOrder[3]} or ${avoidMazeOrder[4]}`, `tiles ${avoidMazeOrder[5]} or ${avoidMazeOrder[6]}`, `tiles ${avoidMazeOrder[7]} or ${avoidMazeOrder[0]}`];
+            for (var i = 0; i < 8; i++) {
+                if (avoidMazeOrder[i] == 0) {
+                    if ((i % 2) == 0)
+                        av[Math.floor(((i - 1) % 8) / 2)] = `tile ${avoidMazeOrder[(i - 1) % 8]}`;
+                    else av[Math.floor(((i - 1) % 8) / 2)] = `tile ${avoidMazeOrder[(i + 1) % 8]}`;//not a typo (hopefully)
                 }
             }
-            document.getElementById("avoidUp").innerText=av[0];
-            document.getElementById("avoidRight").innerText=av[1];
-            document.getElementById("avoidDown").innerText=av[2];
-            document.getElementById("avoidLeft").innerText=av[3];
+            $("#avoidUp").text(av[0]);
+            $("#avoidRight").text(av[1]);
+            $("#avoidDown").text(av[2]);
+            $("#avoidLeft").text(av[3]);
 
-            var strictH=rnd.nextMax(4);
+            var strictH = rnd.nextMax(4);
             var strictV;
-            do{
-                strictV=rnd.nextMax(4);
-            }while(strictH==strictV);
-            switch(strictH){
+            do {
+                strictV = rnd.nextMax(4);
+            } while (strictH == strictV);
+            switch (strictH) {
                 case 0:
-                    document.getElementById("strictHorizontal").innerText="can only move left or right if moving from an odd tile to an even tile or vice versa.";
+                    $("#strictHorizontal").text("can only move left or right if moving from an odd tile to an even tile or vice versa.");
                     break;
                 case 1:
-                    document.getElementById("strictHorizontal").innerText="can only move left or right if moving from a prime-numbered tile to a composite-numbered tile or vice versa (1 is composite in this case).";
+                    $("#strictHorizontal").text("can only move left or right if moving from a prime-numbered tile to a composite-numbered tile or vice versa (1 is composite in this case).");
                     break;
                 case 2:
-                    document.getElementById("strictHorizontal").innerText="can only move right if moving to a higher tile, can only move left if moving to a lower tile.";
+                    $("#strictHorizontal").text("can only move right if moving to a higher tile, can only move left if moving to a lower tile.");
                     break;
                 case 3:
                 default:
-                    document.getElementById("strictHorizontal").innerText="can only move right if moving to a lower tile, can only move left if moving to a higher tile.";
+                    $("#strictHorizontal").text("can only move right if moving to a lower tile, can only move left if moving to a higher tile.");
                     break;
             }
-            switch(strictV){
+            switch (strictV) {
                 case 0:
-                    document.getElementById("strictVertical").innerText="Can only move up or down if moving from an odd tile to an even tile or vice versa,";
+                    $("#strictVertical").text("Can only move up or down if moving from an odd tile to an even tile or vice versa,");
                     break;
                 case 1:
-                    document.getElementById("strictVertical").innerText="Can only move up or down if moving from a prime-numbered tile to a composite-numbered tile or vice versa (1 is composite in this case),";
+                    $("#strictVertical").text("Can only move up or down if moving from a prime-numbered tile to a composite-numbered tile or vice versa (1 is composite in this case),");
                     break;
                 case 2:
-                    document.getElementById("strictVertical").innerText="Can only move up if moving to a higher tile, can only move down if moving to a lower tile,";
+                    $("#strictVertical").text("Can only move up if moving to a higher tile, can only move down if moving to a lower tile,");
                     break;
                 case 3:
                 default:
-                    document.getElementById("strictVertical").innerText="Can only move up if moving to a lower tile, can only move down if moving to a higher tile,";
+                    $("#strictVertical").text("Can only move up if moving to a lower tile, can only move down if moving to a higher tile,");
                     break;
             }
-            for(var i=5;i<9;i++){
-                for(var j=0;j<i;j++){
-                    for(var k=0;k<i;k++){
-                        document.getElementsByClassName(`checkerboard${i}x${i}`)[0].children[j].children[k].className="";
-                    }
-                }
-            }
-            generateWallsMaze(rnd,5);
-            generateWallsMaze(rnd,6);
-            generateWallsMaze(rnd,7);
-            generateWallsMaze(rnd,8);
+            $('td.corner > table td').removeClass("left right up down");
+            generateWallsMaze(rnd, 5);
+            generateWallsMaze(rnd, 6);
+            generateWallsMaze(rnd, 7);
+            generateWallsMaze(rnd, 8);
         }
-        function generateWallsMaze(r,d){
-                var coordLetters="ABCDEFGH";
-                var letterNum=r.nextMax(d);
-                var letter,letterLeft,letterRight;
-                var number=r.next(1,d+1);
-                var numberUp,numberDown;
-                var primCurrent,primLeft,primRight,primUp,primDown;
-                var primDirs=[];
-                var primTraversed=[];
-                var primDir;
-                var primRandomTile="";
-                do{
-                    letter=coordLetters.substring(letterNum,letterNum+1);
-                    letterLeft="";
-                    letterRight="";
-                    if(letter!="A")
-                        letterLeft=coordLetters.substring(letterNum-1,letterNum);
-                    if(letter!=coordLetters.substring(d-1,d))
-                        letterRight=coordLetters.substring(letterNum+1,letterNum+2);
-                    numberUp=0;
-                    numberDown=0;
-                    if(number!=1)
-                        numberUp=number-1;
-                    if(number!=d)
-                        numberDown=number+1;
-                    primCurrent=letter+number.toString();
-                    primLeft="";
-                    primRight="";
-                    primUp="";
-                    primDown="";
-                    if(letterLeft!=""){
-                        primLeft=letterLeft+number.toString();
-                        if(!primTraversed.includes(primLeft))
-                            primDirs.push(primLeft);
-                    }
-                    if(letterRight!=""){
-                        primRight=letterRight+number.toString();
-                        if(!primTraversed.includes(primRight))
-                            primDirs.push(primRight);
-                    }
-                    if(numberUp!=0){
-                        primUp=letter+numberUp.toString();
-                        if(!primTraversed.includes(primUp))
-                            primDirs.push(primUp);
-                    }
-                    if(numberDown!=0){
-                        primDown=letter+numberDown.toString();
-                        if(!primTraversed.includes(primDown))
-                            primDirs.push(primDown);
-                    }
-                    if(primDirs.length==0){
-                        primRandomTile=primTraversed[r.nextMax(primTraversed.length)];
-                        letterNum=coordLetters.indexOf(primRandomTile.substring(0,1));
-                        number=parseInt(primRandomTile.substring(1,2));
-                        continue;
-                    }
-                    primDir=primDirs[r.nextMax(primDirs.length)];
-                    if(primDir==primLeft){
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum-1].classList.add("right");
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum].classList.add("left");
-                    }
-                    if(primDir==primRight){
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum+1].classList.add("left");
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum].classList.add("right");
-                    }
-                    if(primDir==primUp){
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-2].children[letterNum].classList.add("down");
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum].classList.add("up");
-                    }
-                    if(primDir==primDown){
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number].children[letterNum].classList.add("up");
-                        document.getElementsByClassName(`checkerboard${d}x${d}`)[0].children[number-1].children[letterNum].classList.add("down");
-                    }
-                    primDirs=[];
-                    if(!primTraversed.includes(primCurrent))
-                        primTraversed.push(primCurrent);
-                    if(!primTraversed.includes(primDir))
-                        primTraversed.push(primDir);
-                    primRandomTile=primTraversed[r.nextMax(primTraversed.length)];
-                    letterNum=coordLetters.indexOf(primRandomTile.substring(0,1));
-                    number=parseInt(primRandomTile.substring(1,2));
-                }while(primTraversed.length<d*d);
-            }
+        function generateWallsMaze(r, d) {
+            var coordLetters = "ABCDEFGH";
+            var letterNum = r.nextMax(d);
+            var letter, letterLeft, letterRight;
+            var number = r.next(1, d + 1);
+            var numberUp, numberDown;
+            var primCurrent, primLeft, primRight, primUp, primDown;
+            var primDirs = [];
+            var primTraversed = [];
+            var primDir;
+            var primRandomTile = "";
+            do {
+                letter = coordLetters.substring(letterNum, letterNum + 1);
+                letterLeft = "";
+                letterRight = "";
+                if (letter != "A")
+                    letterLeft = coordLetters.substring(letterNum - 1, letterNum);
+                if (letter != coordLetters.substring(d - 1, d))
+                    letterRight = coordLetters.substring(letterNum + 1, letterNum + 2);
+                numberUp = 0;
+                numberDown = 0;
+                if (number != 1)
+                    numberUp = number - 1;
+                if (number != d)
+                    numberDown = number + 1;
+                primCurrent = letter + number.toString();
+                primLeft = "";
+                primRight = "";
+                primUp = "";
+                primDown = "";
+                if (letterLeft != "") {
+                    primLeft = letterLeft + number.toString();
+                    if (!primTraversed.includes(primLeft))
+                        primDirs.push(primLeft);
+                }
+                if (letterRight != "") {
+                    primRight = letterRight + number.toString();
+                    if (!primTraversed.includes(primRight))
+                        primDirs.push(primRight);
+                }
+                if (numberUp != 0) {
+                    primUp = letter + numberUp.toString();
+                    if (!primTraversed.includes(primUp))
+                        primDirs.push(primUp);
+                }
+                if (numberDown != 0) {
+                    primDown = letter + numberDown.toString();
+                    if (!primTraversed.includes(primDown))
+                        primDirs.push(primDown);
+                }
+                if (primDirs.length == 0) {
+                    primRandomTile = primTraversed[r.nextMax(primTraversed.length)];
+                    letterNum = coordLetters.indexOf(primRandomTile.substring(0, 1));
+                    number = parseInt(primRandomTile.substring(1, 2));
+                    continue;
+                }
+                primDir = primDirs[r.nextMax(primDirs.length)];
+                if (primDir == primLeft) {
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum})`).addClass("right");
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum + 1})`).addClass("left");
+                }
+                if (primDir == primRight) {
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum + 2})`).addClass("left");
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum + 1})`).addClass("right");
+                }
+                if (primDir == primUp) {
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number - 1}) td:nth-child(${letterNum + 1})`).addClass("down");
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum + 1})`).addClass("up");
+                }
+                if (primDir == primDown) {
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number + 1}) td:nth-child(${letterNum + 1})`).addClass("up");
+                    $(`.checkerboard${d}x${d} tr:nth-child(${number}) td:nth-child(${letterNum + 1})`).addClass("down");
+                }
+                primDirs = [];
+                if (!primTraversed.includes(primCurrent))
+                    primTraversed.push(primCurrent);
+                if (!primTraversed.includes(primDir))
+                    primTraversed.push(primDir);
+                primRandomTile = primTraversed[r.nextMax(primTraversed.length)];
+                letterNum = coordLetters.indexOf(primRandomTile.substring(0, 1));
+                number = parseInt(primRandomTile.substring(1, 2));
+            } while (primTraversed.length < d * d);
+        }
     </script>
 </head>
 <body>
@@ -380,32 +372,39 @@
                 <h2>On the Subject of Canny Maze</h2>
                 <p class="flavour-text">The thing that gets me about these modules is that the instructions are actually well-written, even though we only see images and text. We create the whole solution in our text-editing software, and it turns out correct.</p>
                 <p>On this module is an image of Mr. Incredible becoming canny alongside four arrows and two red buttons. These images (tiles) are numbered 1-7 in order of the table below, and are randomly distributed across a square grid (maze) with dimensions ranging from 5 to 8.</p>
-                <p>Clicking on the center of the module reveals the entire maze, and clicking again returns to the view of the current position. In the view of the entire maze, the current position is surrounded by a blue border and the goal by a red border. Additionally, there will be text in the top left corner giving letter-number coordinates of the current position and the goal.</p>
-                <p>The button on the bottom right completely resets all progress, but does not regenerate the maze. The button on the bottom left turns all of the images into numbers when viewing the entire maze to make communication easier. As with the maze view, the blue number represents the current position and the red number represents the goal.</p>
+                <p>Clicking on the center of the module reveals the entire maze, and clicking again returns to the view of the current position. In the view of the entire maze, the current position is surrounded by a blue border and the goal by a red border. Additionally, there will be text in the
+                    top left corner giving letter-number coordinates of the current position and the goal.</p>
+                <p>The button on the bottom right completely resets all progress, but does not regenerate the maze. The button on the bottom left turns all of the images into numbers when viewing the entire maze to make communication easier. As with the maze view, the blue number represents the
+                    current position and the red number represents the goal.</p>
                 <p>Whichever tile is on the module at first is the type of maze present, and the type will never change. Upon reaching the goal, the module will automatically solve.</p>
                 <p><b>In the case that the maze takes more than ten seconds to generate (starting from the bomb creation), it will activate a failsafe in which it can be automatically solved by pressing either the NUMBERS or RESET buttons.</b></p>
-                <table class="mazeTypes"><thead>
-                    <tr><th colspan=6 id="yourMazeIs">YOUR MAZE IS:</th></tr>
-                    </thead>
-                    <tbody>
+                <table class="mazeTypes">
                     <tr>
-                        <td class="mazeType"><img src="img/Canny Maze/canny1.png" width="75"></td>
+                        <th colspan="6" id="yourMazeIs">YOUR MAZE IS:</th>
+                    </tr>
+                    <tr>
+                        <td class="mazeType"><img src="img/Canny Maze/canny1.png"></td>
                         <td class="mazeType" id="maze1">TILES MAZE</td>
-                        <td class="mazeType"><img src="img/Canny Maze/canny2.png" width="75"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny2.png"></td>
                         <td class="mazeType" id="maze2">SUM MAZE</td>
-                        <td class="mazeType"><img src="img/Canny Maze/canny3.png" width="75"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny3.png"></td>
                         <td class="mazeType" id="maze3">COMPARE MAZE</td>
                     </tr>
                     <tr>
-                        <td class="mazeType"><img src="img/Canny Maze/canny4.png" width="75"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny4.png"></td>
                         <td class="mazeType" id="maze4">BINARY MAZE</td>
-                        <td class="mazeType"><img src="img/Canny Maze/canny5.png" width="75"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny5.png"></td>
                         <td class="mazeType" id="maze5">AVOID MAZE</td>
-                        <td class="mazeType"><img src="img/Canny Maze/canny6.png" width="75"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny6.png"></td>
                         <td class="mazeType" id="maze6">STRICT MAZE</td>
                     </tr>
-                    <tr><td colspan=2 style="border-width:0px"></td><td class="mazeType"><img src="img/Canny Maze/canny7.png" width="75"></td><td class="mazeType" id="maze7">WALLS MAZE</td><td colspan=2 style="background-color:transparent;border-width:0px"></td></tr>
-                </tbody></table>
+                    <tr>
+                        <td colspan="2" class="corner"></td>
+                        <td class="mazeType"><img src="img/Canny Maze/canny7.png"></td>
+                        <td class="mazeType" id="maze7">WALLS MAZE</td>
+                        <td colspan="2" class="corner"></td>
+                    </tr>
+                </table>
             </div>
             <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
@@ -416,9 +415,12 @@
             </div>
             <div class="page-content">
                 <h3>Instructions</h3>
-                <p><span id="tilesMovement">Tiles</span> Maze: Take (the total number of <span id="tilesTraversedOrMovementsMade">tiles traversed</span> multiplied by the current tile) modulo 7 and add 1. Whichever surrounding tile is closest or equal to this number is the tile to navigate to. Do not consider tiles that have already been traversed when determining the closest to the result. <span id="tilesNote"><b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b></span></p>
-                <p><span id="sumAverageDigitalTitle">Sum</span> Maze: Sum all orthogonally adjacent tiles, <span id="sumAverageDigital"></span>then modulo 7 and add 1. Whichever surrounding tile is closest or equal to this number is the tile to navigate to. Include the tiles that have already been traversed in the sum, but do not consider them when determining the closest to the result.</p>
-                <p>Compare Maze: Compare the sum of the tiles immediately <span id="compare1">to the left and right</span> with that of the tiles immediately <span id="compare2">above and below</span>. The defuser can only move in the directions of whichever pair is <span id="compareSmallerOrLarger">larger</span>. In the case of them being equal, the defuser can move in any direction.</p>
+                <p><span id="tilesMovement">Tiles</span> Maze: Take (the total number of <span id="tilesTraversedOrMovementsMade">tiles traversed</span> multiplied by the current tile) modulo 7 and add 1. Whichever surrounding tile is closest or equal to this number is the tile to navigate to. Do
+                    not consider tiles that have already been traversed when determining the closest to the result. <span id="tilesNote"><b>Note that the total number of tiles traversed includes the starting tile, and begins at 1.</b></span></p>
+                <p><span id="sumAverageDigitalTitle">Sum</span> Maze: Sum all orthogonally adjacent tiles, <span id="sumAverageDigital"></span>then modulo 7 and add 1. Whichever surrounding tile is closest or equal to this number is the tile to navigate to. Include the tiles that have already been
+                    traversed in the sum, but do not consider them when determining the closest to the result.</p>
+                <p>Compare Maze: Compare the sum of the tiles immediately <span id="compare1">to the left and right</span> with that of the tiles immediately <span id="compare2">above and below</span>. The defuser can only move in the directions of whichever pair is <span
+                        id="compareSmallerOrLarger">larger</span>. In the case of them being equal, the defuser can move in any direction.</p>
                 <p><span id="binaryDoubleFours">Binary Maze: Take the binary representation of the current tile. Whichever tile can be reached by inverting any one bit is the tile to navigate to.</span></p>
                 <p>Avoid Maze: Cannot move up to <span id="avoidUp">tiles 1 or 2</span>, cannot move right to <span id="avoidRight">tiles 3 or 4</span>, cannot move down to <span id="avoidDown">tiles 5 or 6</span>, cannot move left to <span id="avoidLeft">tile 7</span>.</p>
                 <p>Strict Maze: <span id="strictVertical">Can only move up or down if moving from an odd tile to an even tile or vice versa,</span> <span id="strictHorizontal">can only move right if moving to a higher tile, can only move left if moving to a lower tile.</span></p>
@@ -436,108 +438,262 @@
             </div>
             <div class="page-content">
                 <h3>Walls Maze Maps</h3>
-                <table class="wallsMazeMaps"><tbody>
-                    <tr>
-                        <td style="border-right-style:hidden;border-bottom-style:hidden">
-                            <table style="margin-left:auto;margin-right:auto;width:250px"><thead><tr><td class="wallsMazeHeader" colspan=5>5x5</td></tr></thead><tbody class="checkerboard5x5">
-                                <tr>
-                                    <td class="down"></td><td class="right"></td><td class="left right down"></td><td class="left"></td><td class="down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left right down"></td><td class="left right up"></td><td class="left right"></td><td class="left up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right"></td><td class="left up down"></td><td class="right"></td><td class="left right down"></td><td class="left up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="down"></td><td class="right up"></td><td class="down"></td><td class="up down"></td><td class="up"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left right"></td><td class="left up"></td><td class="right up"></td><td class="left"></td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                        <td>
-                            <table style="margin-left:auto;margin-right:auto;width:250px"><thead><tr><td class="wallsMazeHeader" colspan=6>6x6</td></tr></thead><tbody class="checkerboard6x6">
-                                <tr>
-                                    <td class="down"></td><td class="down"></td><td class="right"></td><td class="left right"></td><td class="left down"></td><td class="down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right up"></td><td class="left right down"></td><td class="left down"></td><td class="up down"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right down"></td><td class="left up down"></td><td class="up"></td><td class="right up down"></td><td class="left up"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left up down"></td><td class="right up"></td><td class="left right"></td><td class="left right up"></td><td class="left down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right"></td><td class="left up"></td><td class="right down"></td><td class="left right down"></td><td class="left right"></td><td class="left up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right"></td><td class="left right"></td><td class="left up"></td><td class="right up"></td><td class="left"></td><td class="up"></td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <table style="margin-left:auto;margin-right:auto;width:250px"><thead><tr><td class="wallsMazeHeader" colspan=7>7x7</td></tr></thead><tbody class="checkerboard7x7">
-                                <tr>
-                                    <td class="down"></td><td class="right down"></td><td class="left right"></td><td class="left right"></td><td class="left down"></td><td class="right"></td><td class="left down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up down"></td><td class="left up"></td><td class="right down"></td><td class="left"></td><td class="right up"></td><td class="left right"></td><td class="left up"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up down"></td><td class="left"></td><td class="right up"></td><td class="left right"></td><td class="left right down"></td><td class="left right"></td><td class="left down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right down"></td><td class="left down"></td><td class="right down"></td><td class="left right up"></td><td class="left down"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left up down"></td><td class="right up"></td><td class="left up"></td><td class="down"></td><td class="up down"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right down"></td><td class="left up"></td><td class="right down"></td><td class="left right"></td><td class="left right up"></td><td class="left up"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left"></td><td class="right up"></td><td class="left right"></td><td class="left right"></td><td class="left"></td><td class="up"></td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                        <td style="border-left-style:hidden;border-top-style:hidden">
-                            <table style="margin-left:auto;margin-right:auto;width:250px"><thead><tr><td class="wallsMazeHeader" colspan=8>8x8</td></tr></thead><tbody class="checkerboard8x8">
-                                <tr>
-                                    <td class="right down"></td><td class="left"></td><td class="down"></td><td class="right down"></td><td class="left right"></td><td class="left"></td><td class="right down"></td><td class="left down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right"></td><td class="left right up"></td><td class="left right up down"></td><td class="left right"></td><td class="left right"></td><td class="left up down"></td><td class="up"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right"></td><td class="left down"></td><td class="right up"></td><td class="left down"></td><td class="right"></td><td class="left up down"></td><td class="down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="right down"></td><td class="left right up"></td><td class="left right down"></td><td class="left up"></td><td class="right"></td><td class="left right up"></td><td class="left up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="up down"></td><td class="up down"></td><td class="right down"></td><td class="left right up"></td><td class="left right"></td><td class="left right down"></td><td class="left right"></td><td class="left up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left up down"></td><td class="up down"></td><td class="right down"></td><td class="left right down"></td><td class="left up"></td><td class="down"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="down"></td><td class="right up"></td><td class="left up down"></td><td class="up down"></td><td class="right up"></td><td class="left"></td><td class="up down"></td><td class="up down"></td>
-                                </tr>
-                                <tr>
-                                    <td class="right up"></td><td class="left right"></td><td class="left up"></td><td class="right up"></td><td class="left right"></td><td class="left right"></td><td class="left up"></td><td class="up"></td>
-                                </tr>
-                            </tbody></table>
-                        </td>
-                    </tr>
-                </tbody></table>
-                <div id="binaryDoubleGuide"><h3>Binary Maze Guide</h3>
-                <p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p></div>
+                <table class="wallsMazeMaps centered">
+                <tr>
+                    <td class="corner">
+                        <p class="caption">5x5</p>
+                        <table class="checkerboard5x5">
+                            <tr>
+                                <td class="down"></td>
+                                <td class="right"></td>
+                                <td class="left right down"></td>
+                                <td class="left"></td>
+                                <td class="down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left right down"></td>
+                                <td class="left right up"></td>
+                                <td class="left right"></td>
+                                <td class="left up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right"></td>
+                                <td class="left up down"></td>
+                                <td class="right"></td>
+                                <td class="left right down"></td>
+                                <td class="left up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="down"></td>
+                                <td class="right up"></td>
+                                <td class="down"></td>
+                                <td class="up down"></td>
+                                <td class="up"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left up"></td>
+                                <td class="right up"></td>
+                                <td class="left"></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td class="corner">
+                        <p class="caption">6x6</p>
+                        <table class="checkerboard6x6">
+                            <tr>
+                                <td class="down"></td>
+                                <td class="down"></td>
+                                <td class="right"></td>
+                                <td class="left right"></td>
+                                <td class="left down"></td>
+                                <td class="down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right up"></td>
+                                <td class="left right down"></td>
+                                <td class="left down"></td>
+                                <td class="up down"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right down"></td>
+                                <td class="left up down"></td>
+                                <td class="up"></td>
+                                <td class="right up down"></td>
+                                <td class="left up"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left up down"></td>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left right up"></td>
+                                <td class="left down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right"></td>
+                                <td class="left up"></td>
+                                <td class="right down"></td>
+                                <td class="left right down"></td>
+                                <td class="left right"></td>
+                                <td class="left up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right"></td>
+                                <td class="left right"></td>
+                                <td class="left up"></td>
+                                <td class="right up"></td>
+                                <td class="left"></td>
+                                <td class="up"></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="corner">
+                        <p class="caption">7x7</p>
+                        <table class="checkerboard7x7">
+                            <tr>
+                                <td class="down"></td>
+                                <td class="right down"></td>
+                                <td class="left right"></td>
+                                <td class="left right"></td>
+                                <td class="left down"></td>
+                                <td class="right"></td>
+                                <td class="left down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up down"></td>
+                                <td class="left up"></td>
+                                <td class="right down"></td>
+                                <td class="left"></td>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left up"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up down"></td>
+                                <td class="left"></td>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left right down"></td>
+                                <td class="left right"></td>
+                                <td class="left down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right down"></td>
+                                <td class="left down"></td>
+                                <td class="right down"></td>
+                                <td class="left right up"></td>
+                                <td class="left down"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left up down"></td>
+                                <td class="right up"></td>
+                                <td class="left up"></td>
+                                <td class="down"></td>
+                                <td class="up down"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right down"></td>
+                                <td class="left up"></td>
+                                <td class="right down"></td>
+                                <td class="left right"></td>
+                                <td class="left right up"></td>
+                                <td class="left up"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left"></td>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left right"></td>
+                                <td class="left"></td>
+                                <td class="up"></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td class="corner">
+                        <p class="caption">8x8</p>
+                        <table class="checkerboard8x8">
+                            <tr>
+                                <td class="right down"></td>
+                                <td class="left"></td>
+                                <td class="down"></td>
+                                <td class="right down"></td>
+                                <td class="left right"></td>
+                                <td class="left"></td>
+                                <td class="right down"></td>
+                                <td class="left down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right"></td>
+                                <td class="left right up"></td>
+                                <td class="left right up down"></td>
+                                <td class="left right"></td>
+                                <td class="left right"></td>
+                                <td class="left up down"></td>
+                                <td class="up"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right"></td>
+                                <td class="left down"></td>
+                                <td class="right up"></td>
+                                <td class="left down"></td>
+                                <td class="right"></td>
+                                <td class="left up down"></td>
+                                <td class="down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="right down"></td>
+                                <td class="left right up"></td>
+                                <td class="left right down"></td>
+                                <td class="left up"></td>
+                                <td class="right"></td>
+                                <td class="left right up"></td>
+                                <td class="left up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="up down"></td>
+                                <td class="up down"></td>
+                                <td class="right down"></td>
+                                <td class="left right up"></td>
+                                <td class="left right"></td>
+                                <td class="left right down"></td>
+                                <td class="left right"></td>
+                                <td class="left up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left up down"></td>
+                                <td class="up down"></td>
+                                <td class="right down"></td>
+                                <td class="left right down"></td>
+                                <td class="left up"></td>
+                                <td class="down"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="down"></td>
+                                <td class="right up"></td>
+                                <td class="left up down"></td>
+                                <td class="up down"></td>
+                                <td class="right up"></td>
+                                <td class="left"></td>
+                                <td class="up down"></td>
+                                <td class="up down"></td>
+                            </tr>
+                            <tr>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left up"></td>
+                                <td class="right up"></td>
+                                <td class="left right"></td>
+                                <td class="left right"></td>
+                                <td class="left up"></td>
+                                <td class="up"></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                </table>
+                <div id="binaryDoubleGuide">
+                    <h3>Binary Maze Guide</h3>
+                    <p>1: 3, 5<br>2: 3, 6<br>3: 1, 2, 7<br>4: 5, 6<br>5: 1, 4, 7<br>6: 2, 4, 7<br>7: 3, 5, 6</p>
+                </div>
             </div>
             <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
