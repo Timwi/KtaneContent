@@ -3840,6 +3840,35 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "rgbArithmeticDecomposed",
+		loggingTag: "Decomposed RGB Arithmetic",
+		matches: [
+			{
+				regex: /The (?:left|right|center) grid .+/,
+				handler: function (matches, module) {
+					module.push({
+						label: matches.input,
+						obj: pre(readTaggedLines(4).map(l => l.replaceAll("X", "")).join("\n"))
+					});
+					return true;
+				}
+			},
+			{
+				regex: /The check button was pressed with the middle grid displaying the following:/,
+				handler: function(_, module) {
+					module.push({ 
+						label: "The check button was pressed with the center grid displaying the following:",
+						obj: pre(readTaggedLines(4).map(l => l.replaceAll("X", "")).join("\n"))
+					})
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "derivatives",
 		loggingTag: "Derivatives",
 		matches: [
