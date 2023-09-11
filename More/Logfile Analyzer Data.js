@@ -9557,7 +9557,7 @@ let parseData = [
 						for (let col = 0; col < 6; col++) {
 							const cell = 6 * row + col;
 							let group = `<g transform='translate(${110 * col}, ${110 * row})'>`;
-							group += `<rect class='tile ${module.source == cell ? "source" : ""}' x='0' y='0' width='100' height='100' fill='${fill}' stroke='#000' stroke-width='3'/>`;
+							group += `<rect class='tile ${module.source == cell ? "source" : ""}' x='0' y='0' width='100' height='100' stroke='#000' stroke-width='3'/>`;
 
 							let shape = null;
 							if (module.sphere == cell)
