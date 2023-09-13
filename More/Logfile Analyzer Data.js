@@ -16565,6 +16565,15 @@ let parseData = [
 				}
 			},
 			{
+				regex: /Pressed \((\d+), (\d+)\)(.+)/,
+				handler: function (matches, module) {
+					const x = matches[2];
+					const y = matches[1];
+					module.push(`Pressed ${"ABCDEFGHIJ"[x - 1]}${11 - y}${matches[3]}`);
+					return true;
+				}
+			},
+			{
 				regex: /.+/,
 			}
 		]
