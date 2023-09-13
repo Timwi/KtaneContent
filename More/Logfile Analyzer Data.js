@@ -13842,6 +13842,73 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Robot Programming",
+		moduleID: "robotProgramming",
+		loggingTag: "Robot Programming",
+		matches: [
+			{
+				regex: /Top of the maze is (\d+)/,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					readTaggedLines(5).forEach(line => module.push(line));
+					module.attemptNum = 1;
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, [["R.O.B", []], ["HAL", []], ["R2D2", []], ["Fender", []]]];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /You pressed (.+)./,
+				handler: function (matches, module) {
+					const botNameLine = readTaggedLine();
+					const botName = botNameLine.match(/You are controlling (.+)./)[1];
+					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(botName);
+					let lines = [matches[0],botNameLine];
+					const finalLine = "The robot will move";
+					do {
+						lines.push(readTaggedLine());
+					} while (!lines[lines.length - 1].includes(finalLine));
+					lines = lines.filter(line => !line.includes("You are controlling"));
+					lines.forEach(line => module.currentDropdown[1][botIndex][1].push(line));
+					return true;
+				}
+			},
+			{
+				regex: /(.+) will no longer receive commands./,
+				handler: function (matches, module) {
+					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(matches[1]);
+					module.currentDropdown[1][botIndex][1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Command sequence reset|ERROR: Robots' coordinates before strike: (.+)/,
+				handler: function (matches, module) {
+					if(matches[0].includes("ERROR: Robots' coordinates before strike:")) {
+						const indicies = matches[1].split(" ");
+						const coordinates = [];
+						for(let i = 0; i < 4; i++) {
+							const number = parseInt(indicies[i]);
+							const col = Math.floor(number % 9) - 1;
+							const row = Math.floor(number / 9) + 1;
+							coordinates.push(`${['A', 'B', 'C', 'D', 'E', 'F', 'G'][col]}${row}`);
+						}
+						module.push(`ERROR: Robots' coordinates before strike: ${coordinates.join(" ")}`);
+					} else {
+						module.push(matches[0]);
+					}
+					module.attemptNum++;
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, [["R.O.B", []], ["HAL", []], ["R2D2", []], ["Fender", []]]];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Round Keypad",
 		moduleID: "KeypadV2",
 		loggingTag: "Round Keypad",
@@ -13851,7 +13918,8 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push(matches[0].replace(/,/g, " "));
 				}
-			}
+			},
+			
 		]
 	},
 	{
