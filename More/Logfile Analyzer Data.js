@@ -13933,8 +13933,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.push(matches[0].replace(/,/g, " "));
 				}
-			},
-			
+			}
 		]
 	},
 	{
