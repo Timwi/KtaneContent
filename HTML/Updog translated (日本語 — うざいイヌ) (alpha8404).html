@@ -9,40 +9,102 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            const colours = { r: "F00", o: "F80", y: "FF0", g: "080", b: "00F", p: "808", a: "888", w: "FFF" };
+            const cellLayout = [
+                [ "raaaa", "aaaya", "oagab", "aaaaa", "paaaa" ],
+                [ "aaaab", "araya", "aaaaa", "aoaga", "paaaa" ],
+                [ "raaab", "aaaaa", "aaoga", "aaaaa", "paaay" ],
+                [ "garab", "oaaaa", "aaaay", "aaaaa", "paaaa" ],
+                [ "raaaa", "yaaaa", "aaoaa", "aaaab", "gaaap" ],
+                [ "aaara", "ayaaa", "aaaoa", "agaab", "aaaap" ],
+                [ "aaaaa", "waaaa", "aaawa", "aawaa", "waaaw" ],
+                [ "waaww", "aaaaw", "awaaa", "aaaaa", "aaaaa" ],
+                [ "aaaaw", "aaaaw", "awaaa", "aaaaw", "awaaa" ],
+                [ "wawaa", "aaaww", "awaaa", "aaaaa", "aaaaa" ],
+                [ "aaaaa", "awaaa", "aaaaa", "wawaw", "waaaa" ],
+                [ "waaaa", "aaaaa", "wawaa", "aaaaa", "awawa" ],
+                [ "aaaaa", "wwaaa", "awaaa", "wawaa", "aaaaa" ],
+                [ "aawaa", "aawaa", "awaaw", "aaaaa", "aawaa" ],
+                [ "awaaa", "wwawa", "aaaaa", "aawaa", "aaaaa" ],
+            ];
+
+            let mazeClass = $(".updog-maze");
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    mazeClass.append(MakeSvgElem("rect", { class:"highlightable", x: 5 + col * 100, y: 5 + row * 100, width: 100, height: 100 }));
+                }
+            }
+            
+            let mazes = document.getElementsByClassName("updog-maze");
+            let count = 0;
+            for (let maze of mazes) {
+                for (let row = 0; row < 5; row++) {
+                    for (let col = 0; col < 5; col++) {
+                        let letter = cellLayout[count][row].charAt(col);
+                        maze.append(MakeSvgElem("circle", { cx: 55 + col * 100, cy: 55 + row * 100, r: 20, fill: `#${colours[letter]}`}));
+
+                        if (letter == "y") {
+                            maze.append(MakeSvgElem("text", { x: 55 + col * 100, y: 67 + row * 100 }, "Y"));
+                        }
+                        else if (letter != "a" && letter != "w") {
+                            maze.append(MakeSvgElem("text", { x: 55 + col * 100, y: 67 + row * 100, fill: "white" }, letter.toUpperCase()));
+                        }
+                    }
+                }
+                count += 1;
+            }
+
+            mazeClass.append(MakeSvgElem("rect", { class: "border", x: 5, y: 5, height: 500, width: 500 }));
+        });
+    </script>
     <style>
-        .repeaters-spacer {
-            border: none;
-        }
-
         .repeaters-table {
-            width: 98%;
             border: none;
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 2em;
+            text-align: center;
         }
-
-        .updogMazes {
-            width: 200px;
-            margin: 0px
-        }
-
-        .updogMazeBones {
+        .updog-maze-bones-cell {
             width: 150px;
-            margin: 0px
         }
-
-        .updogMazeTable {
+        .updog-maze-table, .dark .updog-maze-table {
             width: 100%;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
             border: none;
         }
-
-        .updogMazeCells {
+        .updog-maze-cell, .dark .updog-maze-cell {
             width: 200px;
             border: none;
+        }
+        .updog-maze :not(text) {
+            stroke: #000;
+            stroke-width: 5px;
+            margin: auto;
+        }
+        .dark .updog-maze :not(text) { stroke: #DDD; }
+        .updog-maze text {
+            text-anchor: middle;
+            font-size: 33px;
+            font-family: sans-serif;
+            font-weight: bold;
+            
+        }
+        .updog-maze .border {
+            stroke-width: 10px;
+            fill: none;
+        }
+        .updog-maze .highlightable, .dark .updog-maze .highlightable {
+            stroke: none;
+            fill: transparent;
+        }
+        .updog-maze :not(.highlightable) {
+            user-select: none;
+            pointer-events: none;
+        }
+        .updog-maze .walls {
+            fill: none;
+            stroke-width: 7px;
         }
     </style>
 </head>
@@ -77,13 +139,13 @@
                 </ul>
                 <h3>方向ボタンの順序</h3>
                 <ol>
-                    <li>モジュールには2つの方向ボタン(通常ボタンと犬のボタン)</li>
-                    <li>真ん中のボタンの単語が大文字か小文字であるかを段に、4つ目の色を列に使用して、2つの方向ボタンの雄順序を取得する。</li>
+                    <li>モジュールには2つの方向ボタン(通常ボタンと犬のボタン)がある。</li>
+                    <li>真ん中のボタンの単語が大文字か小文字であるかを段に、シークエンスの4つ目の色を列に使用して、2つの方向ボタンの押す順序を取得する。</li>
                     <li>シークエンスの最後に到達したら最初に戻る。</li>
                 </ol>
                 <table class="repeaters-table">
                     <tr>
-                        <th class="repeaters-spacer" colspan="2" rowspan="2"><p>D=犬ボタン<br>N=通常ボタン</p></th>
+                        <th class="corner" colspan="2" rowspan="2"><p>D=犬ボタン<br>N=通常ボタン</p></th>
                         <th colspan="6">シークエンスの4つ目の色</th>
                     </tr>
                     <tr>
@@ -95,7 +157,7 @@
                         <th style="color:purple;">紫</th>
                     </tr>
                     <tr>
-                        <th rowspan="2">真ん中のボタン</th>
+                        <th rowspan="2">真<span style="font-size: smaller;">ん</span>中<span style="font-size: smaller;">の</span>ボ<span style="font-size: smaller;">タ</span>ン</th>
                         <th>大文字</th>
                         <td style="text-align: center">DDDD</td>
                         <td style="text-align: center">DDDN</td>
@@ -105,7 +167,7 @@
                         <td style="text-align: center">DNND</td>
                     </tr>
                     <tr>
-                        <th>小文字</th>
+                        <th style="font-size: smaller;">小文字</th>
                         <td>NNNN</td>
                         <td style="text-align: center">NNND</td>
                         <td style="text-align: center">NNDN</td>
@@ -125,36 +187,60 @@
             <div class="page-content">
                 <h3>迷路の決定</h3>
                 <ol>
-                    <li>真ん中のボタンの単語を使用して、どの迷路が使用されているかを判断する。</li>
+                    <li>真ん中の「犬のボタン」に記された「Dog」に似た単語を使用して、どの迷路が使用されているかを判断する。</li>
                     <li>
-                        下のグリッドには色がついたドットが含まれている。嘉一一については色のシークエンスを確認する。
+                        下のグリッドには色がついたドットが含まれている。開始位置および骨の位置については「犬のボタン」上の色のシークエンスを確認する。
                         <ul>
                             <li>シークエンスの最初の色が開始位置となる。</li>
                         </ul>
                     </li>
                 </ol>
-                <table class="updogMazeTable">
-                    <tr>
-                        <th class="updogMazeCells">Dog</th>
-                        <th class="updogMazeCells">Dawg</th>
-                        <th class="updogMazeCells">Doge</th>
-                    </tr>
-                    <tr>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 1.svg" /></th>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 2.svg" /></th>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 3.svg" /></th>
-                    </tr>
-                    <tr>
-                        <th class="updogMazeCells">Dag</th>
-                        <th class="updogMazeCells">Dogg</th>
-                        <th class="updogMazeCells">Dage</th>
-                    </tr>
-                    <tr>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 4.svg" /></th>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 5.svg" /></th>
-                        <th class="updogMazeCells"><img class="updogMazes" src="img/Updog/Updog Maze 6.svg" /></th>
-                    </tr>
-                </table>
+                <table class="updog-maze-table">
+                 <tr>
+                     <th class="updog-maze-cell">Dog</th>
+                     <th class="updog-maze-cell">Dawg</th>
+                     <th class="updog-maze-cell">Doge</th>
+                 </tr>
+                 <tr>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M105 105 v300 m300 0 v-300"/>
+                         </svg>
+                     </td>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M105 205 h100 v-100 m100 0 v100 h100 m0 100 h-100 v100 m-100 0 v-100 h-100"/>
+                         </svg>
+                     </td>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M5 105 h100 m300 0 h100 m0 300 h-100 m-300 0 h-100 M205 205 v100 m100 0 v-100"/>
+                         </svg>
+                     </td>
+                 </tr>
+                 <tr>
+                     <th class="updog-maze-cell">Dag</th>
+                     <th class="updog-maze-cell">Dogg</th>
+                     <th class="updog-maze-cell">Dage</th>
+                 </tr>
+                 <tr>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M5 105 h100 v100 h100 v100 h100 v100 h100 m0 -100 h100 m0 -100 h-100 m-100 -100 v-100 m-100 0 v100 M5 405 h100"/>
+                         </svg>
+                     </td>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M5 105 h400 m0 100 h100 m0 200 h-400 m300 0 v-100 m-100 0 h-100 m-100 0 h-100 m200 -100 v-100"/>
+                         </svg>
+                     </td>
+                     <td class="updog-maze-cell nohighlight">
+                         <svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg">
+                             <path class="walls" d="M5 105 h200 v100 h-100 m-100 100 h200 v100 h-100 m200 0 h200 m0 -100 h-200 v-100 m100 0 v100 m0 -200 h-100 v-100"/>
+                         </svg>
+                     </td>
+                 </tr>
+             </table>
             </div>
             <div class="page-footer relative-footer">ページ 2/3</div>
         </div>
@@ -173,36 +259,36 @@
                         </ul>
                     </li>
                 </ul>
-                <table class="updogMazeTable">
-                    <tr>
-                        <th class="repeaters-spacer" rowspan="2" colspan="2"></th>
-                        <th colspan="3">2つ目の色</th>
-                    </tr>
-                    <tr>
-                        <th style="color:red;">赤</th>
-                        <th style="color:blue;">青</th>
-                        <th style="color:green;">緑</th>
-                    </tr>
-                    <tr>
-                        <th rowspan="3" colspan="1">3つ目の色</th>
-                        <th style="color:red;">赤</th>
-                        <td><img src="img/Updog/Updog Maze Bones 1.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 2.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 3.svg" class="updogMazeBones" /></td>
-                    </tr>
-                    <tr>
-                        <th style="color:blue;">青</th>
-                        <td><img src="img/Updog/Updog Maze Bones 4.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 5.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 6.svg" class="updogMazeBones" /></td>
-                    </tr>
-                    <tr>
-                        <th style="color:green;">緑</th>
-                        <td><img src="img/Updog/Updog Maze Bones 7.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 8.svg" class="updogMazeBones" /></td>
-                        <td><img src="img/Updog/Updog Maze Bones 9.svg" class="updogMazeBones" /></td>
-                    </tr>
-                </table>
+                <table class="updog-maze-table">
+                 <tr>
+                     <th class="corner" rowspan="2" colspan="2"></th>
+                     <th colspan="3">シークエンスの2つ目の色</th>
+                 </tr>
+                 <tr>
+                     <th style="color:red;">赤</th>
+                     <th style="color:blue;">青</th>
+                     <th style="color:green;">緑</th>
+                 </tr>
+                 <tr>
+                     <th rowspan="3">シークエンスの3つ目の色</th>
+                     <th style="color:red;">赤</th>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                 </tr>
+                 <tr>
+                     <th style="color:blue;">青</th>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                 </tr>
+                 <tr>
+                     <th style="color:green;">緑</th>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                     <td class="updog-maze-bones-cell nohighlight"><svg class="updog-maze" viewbox="0 0 510 510" xmlns="http://www.w3.org/2000/svg"></svg></td>
+                 </tr>
+             </table>
             </div>
             <div class="page-footer relative-footer">ページ 3/3</div>
         </div>
