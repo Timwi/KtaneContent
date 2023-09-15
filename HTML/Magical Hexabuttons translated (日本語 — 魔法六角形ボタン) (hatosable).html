@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>魔法六角形ボタン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const alchViewBoxSize = 300;
+        const sin60 = Math.sin(Math.PI / 3);
+        const cos60 = Math.cos(Math.PI / 3);
+        const alchCentres = { S: getCentres(60), B: getCentres(80) };
+        const alchRadii = { S: 40, B: 60 };
+        const alchColours = ["red", "green", "blue"];
+
+        function getCentres(radius) {
+            return [
+                [alchViewBoxSize / 2, alchViewBoxSize / 2 - radius], // Red
+                [alchViewBoxSize / 2 - radius * sin60, alchViewBoxSize / 2 + radius * cos60], // Green
+                [alchViewBoxSize / 2 + radius * sin60, alchViewBoxSize / 2 + radius * cos60] // Blue
+            ];
+        }
+
+        function drawAlchemicalSymbols() {
+            $(".alch-symbol").each((_, elem) => {
+                const svg = MakeSvgTag(alchViewBoxSize, alchViewBoxSize, 0, -20).appendTo(elem);
+                const rgbs = elem.dataset.rgbs.replaceAll("P", "+");
+                svg.append(MakeSvgElem("path", { d: `M${alchCentres.S[0][0]} ${alchCentres.S[0][1]} ${alchCentres.S[1][0]} ${alchCentres.S[1][1]} ${alchCentres.S[2][0]} ${alchCentres.S[2][1]}z`, class: "external" }));
+                for (let colour = 0; colour < 3; colour++) {
+                    const size = rgbs[colour * 2];
+                    const centre = alchCentres[size][colour];
+                    svg.append(MakeSvgElem("circle", { cx: centre[0], cy: centre[1], class: alchColours[colour] + " external", r: alchRadii[size] }));
+                    svg.append(MakeSvgElem("text", { x: centre[0], y: centre[1] }, rgbs[colour * 2 + 1]));
+                }
+            });
+        }
+
+        const potionColours = { R: "red", G: "green", B: "blue", Y: "yellow", M: "magenta", C: "cyan", W: "white", K: "black" };
+        const potionSymbols = {
+            P: "M80 130h40v40h40v40h-40v40h-40v-40h-40v-40h40z",
+            0: "m100,125c -29.80,-0.65-57.75,23.45-61.44,53.05-3.99,26.44 10.91,54.72 35.62,65.42 23.64,10.90 53.99,5.30 71.41,-14.31 17.27,-18.61 21.75,-48.16 9.56,-70.66-10.27,-19.96-31.91,-33.49-54.44,-33.47z m0,20c7.62,-0.03 15.24,2.09 21.77,6.05-19.24,19.24-38.48,38.48-57.72,57.72C51.38,189.41 59.26,160.24 80.04,149.99 86.15,146.72 93.07,144.97 100,145Z m35.95,20.24c12.54,19.40 4.72,48.49-16.01893,58.81148-12.82002,6.84119-29.343232,6.71271-41.69107,-1.15148 19.236667,-19.22 38.47333,-38.44 57.71,-57.66z",
+            M: "M40 170h120v40h-120z"
+        };
+
+        function drawPotions() {
+            $(".potion").each((_, elem) => {
+                const svg = MakeSvgTag(220, 300, -10, -10).appendTo(elem);
+                const info = elem.dataset.potionInfo.replaceAll("+", "P").replaceAll("-", "M");
+                svg.append(MakeSvgElem("path", { class: `external ${potionColours[info[0]]}`, d: "M80 0 h40 v100 a90 90 0 1 1 -40 0z" }));
+                svg.append(MakeSvgElem("path", { class: `white symbol`, d: potionSymbols[info[1]] }));
+            });
+        }
+
+        $(() => {
+            drawAlchemicalSymbols();
+            drawPotions();
+            $(".examples th").addClass("nohighlight");
+        });
+    </script>
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        table.alch-diagrams { width: 100%; }
+        table.alch-diagrams th { padding: 2px; }
+        th.alch-symbol { width: 12%; }
+        th.potion { width: 13%; }
+
+        th svg {
+            font-family: 'Special Elite';
+            display: block;
+            margin: auto;
+            height: 100%;
+            user-select: none;
+        }
+        svg text {
+            text-anchor: middle;
+            dominant-baseline: mathematical;
+            fill: #ddd;
+            font-size: 100px;
+        }
+        svg .external {
+            stroke: #000;
+            stroke-width: 10;
+        }
+        .dark svg .external { stroke: #ccc; }
+
+        .alch-symbol svg { fill: none; }
+        .alch-symbol svg .red { fill: #c00; }
+        .alch-symbol svg .green { fill: #0c0; }
+        .alch-symbol svg .blue { fill: #00c; }
+
+        .potion svg .red { fill: #f00d; }
+        .potion svg .green { fill: #0f0d; }
+        .potion svg .blue { fill: #00fd; }
+        .potion svg .yellow { fill: #ff0d; }
+        .potion svg .magenta { fill: #f0fd; }
+        .potion svg .cyan { fill: #0ffd; }
+        .potion svg .white { fill: #eee; }
+        .potion svg .black { fill: #000; }
+
+        .potion svg .symbol {
+            fill-rule: evenodd;
+            stroke: #000;
+            stroke-width: 6;
+        }
+
+        .examples th {
+            border: none;
+            height: 100px;
+        }
+        .examples :nth-child(2) { width: 10%; }
+        .examples :nth-child(4) { width: 20%; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">魔法六角形ボタン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Colored Hexabuttons.svg" class="diagram">
+                <h2>モジュール詳細：魔法六角形ボタン</h2>
+                <p class="flavour-text">ボタンを食べない限り、魔法のようにおいしい。</p>
+                <p>中央以外の各ボタンには錬金術記号が割り当てられている。錬金術記号を得るには、1番目の数字を段、2番目の数字を列として以下の表を使用する。</p>
+                <table class="alch-diagrams">
+                 <tr><th class="corner"><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+                 <tr><th>1</th><th class="alch-symbol" data-rgbs="SPSPSP"></th><th class="alch-symbol" data-rgbs="S-SPBP"></th><th class="alch-symbol" data-rgbs="SPB-SP"></th><th class="alch-symbol" data-rgbs="BPSPS-"></th><th class="alch-symbol" data-rgbs="BPB-S-"></th><th class="alch-symbol" data-rgbs="B-SPB-"></th><th class="alch-symbol" data-rgbs="S-B-BP"></th><th class="alch-symbol" data-rgbs="B-B-B-"></th></tr>
+                 <tr><th>2</th><th class="alch-symbol" data-rgbs="S-BPSP"></th><th class="alch-symbol" data-rgbs="BPS-SP"></th><th class="alch-symbol" data-rgbs="BPBPS-"></th><th class="alch-symbol" data-rgbs="BPS-B-"></th><th class="alch-symbol" data-rgbs="S-BPB-"></th><th class="alch-symbol" data-rgbs="B-B-BP"></th><th class="alch-symbol" data-rgbs="S-S-S-"></th><th class="alch-symbol" data-rgbs="SPSPBP"></th></tr>
+                 <tr><th>3</th><th class="alch-symbol" data-rgbs="BPB-SP"></th><th class="alch-symbol" data-rgbs="BPSPB-"></th><th class="alch-symbol" data-rgbs="SPB-B-"></th><th class="alch-symbol" data-rgbs="B-BPB-"></th><th class="alch-symbol" data-rgbs="S-S-SP"></th><th class="alch-symbol" data-rgbs="S-S-B-"></th><th class="alch-symbol" data-rgbs="SPBPSP"></th><th class="alch-symbol" data-rgbs="B-SPSP"></th></tr>
+                 <tr><th>4</th><th class="alch-symbol" data-rgbs="SPBPB-"></th><th class="alch-symbol" data-rgbs="BPB-B-"></th><th class="alch-symbol" data-rgbs="S-SPS-"></th><th class="alch-symbol" data-rgbs="S-S-BP"></th><th class="alch-symbol" data-rgbs="S-B-S-"></th><th class="alch-symbol" data-rgbs="BPSPSP"></th><th class="alch-symbol" data-rgbs="B-BPSP"></th><th class="alch-symbol" data-rgbs="BPS-BP"></th></tr>
+                 <tr><th>5</th><th class="alch-symbol" data-rgbs="SPS-B-"></th><th class="alch-symbol" data-rgbs="S-BPS-"></th><th class="alch-symbol" data-rgbs="B-S-SP"></th><th class="alch-symbol" data-rgbs="B-B-S-"></th><th class="alch-symbol" data-rgbs="BPSPBP"></th><th class="alch-symbol" data-rgbs="S-BPBP"></th><th class="alch-symbol" data-rgbs="BPB-BP"></th><th class="alch-symbol" data-rgbs="SPSPS-"></th></tr>
+                 <tr><th>6</th><th class="alch-symbol" data-rgbs="B-SPS-"></th><th class="alch-symbol" data-rgbs="B-B-SP"></th><th class="alch-symbol" data-rgbs="B-S-B-"></th><th class="alch-symbol" data-rgbs="SPBPBP"></th><th class="alch-symbol" data-rgbs="B-BPBP"></th><th class="alch-symbol" data-rgbs="SPS-SP"></th><th class="alch-symbol" data-rgbs="SPSPB-"></th><th class="alch-symbol" data-rgbs="SPB-S-"></th></tr>
+                 <tr><th>7</th><th class="alch-symbol" data-rgbs="B-S-BP"></th><th class="alch-symbol" data-rgbs="S-B-B-"></th><th class="alch-symbol" data-rgbs="BPBPBP"></th><th class="alch-symbol" data-rgbs="S-SPSP"></th><th class="alch-symbol" data-rgbs="SPS-BP"></th><th class="alch-symbol" data-rgbs="SPBPS-"></th><th class="alch-symbol" data-rgbs="BPS-S-"></th><th class="alch-symbol" data-rgbs="B-BPS-"></th></tr>
+                 <tr><th>8</th><th class="alch-symbol" data-rgbs="BPBPB-"></th><th class="alch-symbol" data-rgbs="SPS-S-"></th><th class="alch-symbol" data-rgbs="S-SPB-"></th><th class="alch-symbol" data-rgbs="S-B-SP"></th><th class="alch-symbol" data-rgbs="B-S-S-"></th><th class="alch-symbol" data-rgbs="BPBPSP"></th><th class="alch-symbol" data-rgbs="B-SPBP"></th><th class="alch-symbol" data-rgbs="SPB-BP"></th></tr>
+             </table>
+                <p>中央のボタンにあるテキストは、開始位置を示す。中央のボタンを押すと6つの英字を含む音声メッセージが再生される。各英字は作る必要のあるポーションを示しているが、順番通りとは限らない。次ページの表にある英字を使用して、ポーションを見つける。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">魔法六角形ボタン</span>
+            </div>
+            <div class="page-content">
+             <table class="alch-diagrams">
+              <tr><th>A</th><th class="potion" data-potion-info="R-"></th><th>E</th><th class="potion" data-potion-info="R0"></th><th>I</th><th class="potion" data-potion-info="RP"></th><th>M</th><th class="potion" data-potion-info="G-"></th><th>Q</th><th class="potion" data-potion-info="G0"></th><th>U</th><th class="potion" data-potion-info="GP"></th></tr>
+              <tr><th>B</th><th class="potion" data-potion-info="B-"></th><th>F</th><th class="potion" data-potion-info="B0"></th><th>J</th><th class="potion" data-potion-info="BP"></th><th>N</th><th class="potion" data-potion-info="C-"></th><th>R</th><th class="potion" data-potion-info="C0"></th><th>V</th><th class="potion" data-potion-info="CP"></th></tr>
+              <tr><th>C</th><th class="potion" data-potion-info="M-"></th><th>G</th><th class="potion" data-potion-info="M0"></th><th>K</th><th class="potion" data-potion-info="MP"></th><th>O</th><th class="potion" data-potion-info="Y-"></th><th>S</th><th class="potion" data-potion-info="Y0"></th><th>W</th><th class="potion" data-potion-info="YP"></th></tr>
+              <tr><th>D</th><th class="potion" data-potion-info="K-"></th><th>H</th><th class="potion" data-potion-info="K0"></th><th>L</th><th class="potion" data-potion-info="KP"></th><th>P</th><th class="potion" data-potion-info="W-"></th><th>T</th><th class="potion" data-potion-info="W0"></th><th>X</th><th class="potion" data-potion-info="WP"></th></tr>
+              </table>
+                <p>中央以外のボタンを押すと、そのボタンに割り当てられた錬金物質が現在のポーションに混ぜ合わされる。これにより、現在のポーションは、調合ルールに基づき別のポーションになる。</p>
+                <p>開始ポーションから始めて、6つすべてのポーションを作るように中央以外のボタンを押してモジュールを解除する。6つすべてのボタンが押されると、モジュールは6つすべてのポーションが作られたか確認する。そうでない場合、モジュールにはミスが記録されすべての入力がリセットされる。中央のボタンを押すことでも、今までの入力をリセットできる。</p>
+
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">魔法六角形ボタン</span>
+            </div>
+            <div class="page-content">
+                <h4>調合ルール</h4>
+                <p>各ポーションはその色に応じてR、G、Bの値を持つ。錬金 物質が混ぜ合わされた際、大きな色を1、小さな色を0としてポーションのR、G、Bの値と錬金物質の色によるXOR演算が行われる。結果のR、G、Bの値が新たなポーションの色となる。</p>
+                <h4 class="centered">RGB表</h4>
+                <table>
+                    <tr><th>赤(R)</th><th>緑(G)</th><th>青(B)</th><th>シアン</th><th>マゼンタ</th><th>黄</th><th>白</th><th>黒</th></tr>
+                    <tr><th>(1, 0, 0)</th><th>(0, 1, 0)</th><th>(0, 0, 1)</th><th>(0, 1, 1)</th><th>(1, 0, 1)</th><th>(1, 1, 0)</th><th>(1, 1, 1)</th><th>(0, 0, 0)</th></tr>
+                </table>
+                <p>ポーションの電荷は混ぜ合わされた錬金物質とポーション自身の電荷の正負の和に基づく。</p>
+                <ul>
+                    <li>正の電荷の総数が負の電荷の総数より多い場合、ポーションは正の電荷ポーションとなる。</li>
+                    <li>そうでなければ、負の電荷の総数が正の電荷の総数より多い場合、ポーションは正の電荷ポーションとなる。</li>
+                    <li>そうでなければ、ポーションは中性の電荷ポーションとなる。</li>
+                </ul>
+                <h4 class="centered">例</h4>
+                <table class="examples">
+                 <tr>
+                     <th class="potion" data-potion-info="B+"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                     <th class="alch-symbol" data-rgbs="B-S-S-"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                     <th class="potion" data-potion-info="M-"></th>
+                 </tr>
+                 <tr>
+                     <th class="potion" data-potion-info="M-"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                     <th class="alch-symbol" data-rgbs="BPB-SP"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                     <th class="potion" data-potion-info="C0"></th>
+                 </tr>
+                 <tr>
+                     <th class="potion" data-potion-info="C0"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown plus.svg"></th>
+                     <th class="alch-symbol" data-rgbs="BPBPB-"></th>
+                     <th><img class="invertible" src="img/Colored Hexabuttons 2/Brown arrow.svg"></th>
+                     <th class="potion" data-potion-info="R+"></th>
+                 </tr>
+             </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

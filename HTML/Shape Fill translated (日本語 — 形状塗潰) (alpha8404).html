@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+    <title>形状塗潰 — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <script src="js/jquery.3.7.0.min.js"></script>
+		<svg style='position: fixed'>
+		<defs>
+			<pattern id='cross' width='100' height='100' patternUnits='userSpaceOnUse'>
+				<line x1='50' x2='50' y1='0' y2='100' stroke='#000' stroke-width='15'/>
+				<line x1='0' x2='100' y1='50' y2='50' stroke='#000' stroke-width='15'/>
+			</pattern>
+			
+			<pattern id='diagonal' width='25' height='25' patternUnits='userSpaceOnUse'>
+				  <line x1='0' x2='25' y1='25' y2='0' stroke='#000' stroke-width='8'/>
+				  <path d='M0 5.6569 5.6569 0 0 0Z' fill='#000'/> 
+				  <path d='M19.3431 25 25 19.3431 25 25Z' fill='#000'/> 
+			</pattern>
+			
+			<pattern id='dots' width='50' height='50' patternUnits='userSpaceOnUse'>
+				<circle r='12.5' cx='12.5' cy='12.5' fill='#000'/>
+				<circle r='12.5' cx='37.5' cy='37.5' fill='#000'/>
+			</pattern>
+			
+			<pattern id='empty' width='100' height='100' patternUnits='userSpaceOnUse'>
+			</pattern>
+			
+			<pattern id='filled' width='100' height='100' patternUnits='userSpaceOnUse'>
+				<rect x='0' y='0' width='100' height='100' fill='#000'/>
+			</pattern>
+			
+			<pattern id='horizontal' width='100' height='20' patternUnits='userSpaceOnUse'>
+				<rect x='0' y='6' width='100' height='8' fill='#000'/>
+			</pattern>
+			
+			<pattern id='vertical' width='20' height='100' patternUnits='userSpaceOnUse'>
+				<rect x='6' y='0' width='8' height='100' fill='#000'/>
+			</pattern>
+			
+			<pattern id='x' width='100' height='100' patternUnits='userSpaceOnUse'>
+				<line x1='0' x2='100' y1='0' y2='100' stroke='#000' stroke-width='15'/>
+				<line x1='0' x2='100' y1='100' y2='0' stroke='#000' stroke-width='15'/>
+			</pattern>
+			
+			<path id='circle' d='M0 50A50 50 0 00100 50 50 50 0 000 50'/>	
+			<path id='diamond' d='m5 45 40-40a7 7 0 0110 0l40 40a7 7 0 010 10l-40 40a7 7 0 01-10 0l-40-40a7 7 0 010-10'/>
+			<path id='heart' d='M50 100Q-5 65 0 25T50 20Q95-15 100 25T50 100Z'/>
+			<path id='octagon' d='M96.2 69.1 69.1 96.2 30.9 96.2 3.8 69.1 3.8 30.9 30.9 3.8 69.1 3.8 96.2 30.9Z'/>
+			<path id='square' d='M0 0H100V100H0Z'/>
+			<path id='star' d='M50 0 61.8 38.2 100 38.2 69.1 61.8 80.9 100 50 76.4 19.1 100 30.9 61.8 0 38.2 38.2 38.2Z'/>
+			<path id='trapezoid' d='M0 80 25 20 75 20 100 80z'/>
+			<path id='triangle' d='M0 100 100 100 50 0z'/>
+		</defs>
+		</svg>
+		<script>
+			function load(){
+				setDynamicSvg();
+				setTableShapes();
+			}
+			function setTableShapes(){
+				let shapes = $('.shape');
+				for (let shape of shapes){
+					let jqShape = $(shape);
+					
+					let pathId = jqShape.attr('value') ?? 'circle';
+					let fill = 'transparent';
+					if (jqShape.attr('pattern')){
+						fill = `url(#${jqShape.attr('pattern')})`;
+					}
+					
+					jqShape.html($(`<svg viewbox='-2 -2 104 104'><use href='#${pathId}' fill='${fill}'/></svg>`));
+				}
+			}
+			function setDynamicSvg(){
+				let shapes = [ 'circle', 'diamond', 'heart', 'octagon', 'square', 'star', 'trapezoid', 'triangle' ];
+				let fills = [ 'cross', 'diagonal', 'dots', 'empty', 'filled', 'horizontal', 'vertical', 'x' ];
+				let svg = `<svg class='diagram' viewbox='0 0 348 348'> <image xlink:href="img/Component/Shape Fill.svg" height="348" width="348"/>`;
+				for (let i = 0; i < 25; i++) {
+					let shape = shapes[rand(8)];
+					const fill = fills[rand(8)];
+					const x = 30.5 + 51 * (i % 5);
+					const y = 80 + 51 * Math.floor(i / 5);
+					svg += `<g transform='translate(${x}, ${y})'><use href='#${shape}' fill='url(#${fill})' stroke='#000' stroke-width='3' transform='scale(0.4)'/></g>`;
+				}
+				svg += '</svg>';
+				$('.svg').html(svg);
+			}
+			function rand(min){
+				return Math.floor(Math.random() * min)
+			}
+		</script>
+        <style>
+        .shape-fill-list {
+            margin: 0em auto;
+            text-align: center;
+        }
+		.shape-fill-list svg {
+			width: 1.25cm;
+		}
+		.rules-list svg {
+			width: 1.5cm;
+		}
+		.shape svg {
+			margin: 0;
+			vertical-align: top;
+		}
+		.shape svg *, .diagram use * {
+			stroke: black;
+			stroke-width: 3;
+		}
+		.dark .shape {
+			filter: invert(87%);
+		}
+        .shape-fill-restrictions {
+            margin: 0em auto;
+        }
+        .dark table, table {
+            border: none;
+        }
+        .hstack {
+            align-items: center;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+        .hstack table {
+            width: 47%;
+            margin: 0.5em;
+        }
+        .hstack td {
+            font-size: 9pt;
+        }	
+        .dark td img {
+            filter: invert(90%);
+        }
+        </style>
+    </head>
+<body onload='load()'>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">形状塗潰</span>
+            </div>
+            <div class="page-content">
+				<div class='svg'> </div>
+                <h2>モジュール詳細：形状塗潰</h2>
+                <p class="flavour-text">不規則な中に規則性を、馴染みがない物の中に親しみやすさを確立する。</p>
+                <p>このモジュールには、さまざまな形状と塗りつぶしで満たされた5×5グリッドと、現在のステージを示すディスプレーがある。</p>
+                <p>モジュールに表示できる様々な形状と塗りつぶしを以下に示す。:</p>
+					
+				
+                <table class="shape-fill-list empty">
+                    <tr>
+                        <th>円形</th>
+                        <td><div class='shape' value='circle'></div></td>
+                        <td class="empty" rowspan='8' style="width:50px;"></td>
+                        <th>十字</th>
+                        <td><div class='shape' pattern='cross'></div></td>
+                    </tr>
+                    <tr>
+                        <th>菱形</th>
+                        <td><div class='shape' value='diamond'></div></td>
+                        <th>斜線</th>
+                        <td><div class='shape' pattern='diagonal'></div></td>
+                    </tr>
+                    <tr>
+                        <th>ハート</th>
+                        <td><div class='shape' value='heart'></div></td>
+                        <th>水玉</th>
+                        <td><div class='shape' pattern='dots'></div></td>
+                    </tr>
+                    <tr>
+                        <th>八角形</th>
+                        <td><div class='shape' value='octagon'></div></td>
+                        <th>空白</th>
+                        <td><div class='shape' pattern='empty'></div></td>
+                    </tr>
+                    <tr>
+                        <th>正方形</th>
+                        <td><div class='shape' value='square'></div></td>
+                        <th>塗潰し</th>
+                        <td><div class='shape' pattern='filled'></div></td>
+                    </tr>
+                    <tr>
+                        <th>星形</th>
+                        <td><div class='shape' value='star'></div></td>
+                        <th>水平</th>
+                        <td><div class='shape' pattern='horizontal'></div></td>
+                    </tr>
+                    <tr>
+                        <th>台形</th>
+                        <td><div class='shape' value='trapezoid'></div></td>
+                        <th>垂直</th>
+                        <td><div class='shape' pattern='vertical'></div></td>
+                    </tr>
+                    <tr>
+                        <th>三角形</th>
+                        <td><div class='shape' value='triangle'></div></td>
+                        <th>バツ</th>
+                        <td><div class='shape' pattern='x'></div></td>
+                    </tr>
+                </table>
+                <p>モジュールの各ステージにおいて、各形状と塗り潰ぶしに3つのルールが割り当てられる。</p>
+                <p>最初のステージでは、1つを除く全ての形状及び1つを除く全ての塗潰しがグリッド内に存在する。不足している形状を使用し、段または列を塗り潰ぶす。</p>
+                <p>形状ルールは常に段を参照し、塗潰しルールは常に列を参照する。</p>
+                <p>検出されたルールに従うのはちょうど1つの段または列である。特定の段/列の交点にあるセルを押す。</p>
+                <p><em>次の2つのステージにおいて使用するルールは、前のステージで押した形状によって決定される。</em></p>
+                <p>3つのステージを完了するとモジュールが解除される。</p>
+                </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+            </div>
+
+            <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">形状塗潰</span>
+            </div>
+            <div class="page-content">
+            <h3>形状</h3>
+            <p>決定された形状に基づき、これらの表のルールを参照する。1段目はステージ1のルール、2段目はステージ2、3段目はステージ3のルールを示す。</p>
+                <div class="hstack rules-list">
+
+                <table>
+                <tr><th colspan='2'>円形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='circle'></div></td>
+                <td>段には正方形を含めることができない。</td></tr>
+                <tr><td>段には正確に3つの異なる形状が含まれている必要がある。</td></tr>
+                <tr><td style='padding: 1mm'>この段の上と下の段(ループあり)は、正確に4つまたは6つの異なる形状が含まれている必要がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>菱形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='diamond'></div></td>
+                <td>段には正確に1つのハートが含まれている必要がある。</td></tr>
+                <tr><td>段には菱形または八角形のいずれかを含む必要があるが、両方を含めることはできない。</td></tr>
+                <tr><td>この段とその上の段(ループあり)は同じ形状の数が含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>ハート</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='heart'></div></td>
+                <td>段には正確に2つの台形が含まれている必要がある。</td></tr>
+                <tr><td>段には同じ数の正方形と菱形が含まれている。</td></tr>
+                <tr><td>この段とそこから2つ下の段(ループ)には、合計7つの異なる形状がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>八角形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='octagon'></div></td>
+                <td>段には台形や星を含めることはできない。</td></tr>
+                <tr><td>段にはハートと三角形が両方とも含まれているか両方とも含まれていない必要がある。</td></tr>
+                <tr><td>この段には円、正方形、菱形のうち正確に2つが含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>正方形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='square'></div></td>
+                <td>段には菱形と三角形の両方が含まれてる必要がある。</td></tr>
+                <tr><td>段には偶数の異なる形状が含まれている必要がある。</td></tr>
+                <tr><td>この段には、その下の段(ループあり)よりも2つ多くの形状が含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>星形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='star'></div></td>
+                <td>段には正確に1つの円形が含まれている必要がある。</td></tr>
+                <tr><td>段には5つの異なる形状が含まれている必要がある。</td></tr>
+                <tr><td>この段の正方形、菱形、台形の合計の数は3または5である必要がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>台形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='trapezoid'></div></td>
+                <td>段には八角形を含めることはできない。</td></tr>
+                <tr><td>段には円形と八角形の両方が含まれているか両方が含まれていない必要がある。</td></tr>
+                <tr><td>この段とその2つ上の段(ループあり)には合計6つの異なる形状が含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>三角形</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' value='triangle'></div></td>
+                <td>段には正確に2つの正方形が含まれている必要がある。</td></tr>
+                <tr><td>段には菱形と三角形の両方が含まれているか両方とも含まれていない必要がある。</td></tr>
+                <tr><td>この段の2つ上と2つ下(ループあり)には同じ数の形状が含まれている。</td></tr>
+                </table>
+
+                </div>
+            </div>
+
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">形状塗潰</span>
+            </div>
+            <div class="page-content">
+            <h3>塗潰し</h3>
+            <p>決定された塗り潰ぶしに基づき、これらの表のルールを参照する。1段目はステージ1のルール、2段目はステージ2、3段目はステージ3のルールを示す。</p>
+                <div class="hstack rules-list">
+
+                <table>
+                <tr><th colspan='2'>十字</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='cross'></div></td>
+                <td>列には塗潰しが含まれていない必要がある。</td></tr>
+                <tr><td>列には正確に3つの異なる塗り潰ぶしが含まれている必要がある。</td></tr>
+                <tr><td>この列に隣接している列(ループあり)は、正確に4つまたは6つの異なる塗りつぶしが含まれている必要がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>斜線</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='diagonal'></div></td>
+                <td>列には水玉が1つだけ含まれている必要がある。</td></tr>
+                <tr><td>列には斜線または空白のいずれかが含まれている必要があるが、両方を含めてはならない。</td></tr>
+                <tr><td>この列とその左の列(ループあり)の塗りつぶしの数は同じである。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>水玉</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='dots'></div></td>
+                <td>列には正確に2つの垂直が含まれている必要がある。</td></tr>
+                <tr><td>列には、斜線と塗潰しが同じ数含まれている。</td></tr>
+                <tr><td>この列とその2つ右の列(ループあり)には、合計7つの異なる塗り潰ぶしがある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>空白</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='empty'></div></td>
+                <td>列には水平または垂直を含めることはできない。</td></tr>
+                <tr><td>この列には水玉とバツの両方が含まれているか、両方とも含まれていない必要がある。</td></tr>
+                <tr><td>この列には十字、斜線、及び塗潰しのうち正確に2つが含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>塗潰し</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='filled'></div></td>
+                <td>列には斜線とバツの両方が含まれている必要がある。</td></tr>
+                <tr><td>列には偶数の異なる塗り潰ぶしが必要である。</td></tr>
+                <tr><td>この列には、そのすぐ右の列(ループあり)よりも2つ多くの塗り潰ぶしが含まれている。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>水平</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='horizontal'></div></td>
+                <td>列には十字が1つだけ含まれている必要がある。</td></tr>
+                <tr><td>列には5つの異なる塗り潰ぶしが含まれている必要がある。</td></tr>
+                <tr><td>この列の塗潰し、斜線、及び垂直の合計は3または5である必要がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>垂直</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='vertical'></div></td>
+                <td>列には空白が含まれてはならない。</td></tr>
+                <tr><td>列には十字と空白が両方とも含まれているか、両方とも含まれていない必要がある。</td></tr>
+                <tr><td>この列とその2つ左の列(ループあり)には、合計6つの異なる塗りつぶしが含まれている必要がある。</td></tr>
+                </table>
+
+                <table>
+                <tr><th colspan='2'>バツ</th></tr>
+                <tr>
+                <td rowspan='3'><div class='shape' pattern='x'></div></td>
+                <td>列には、正確に2つの塗潰しが含まれている必要がある。</td></tr>
+                <tr><td>列には、斜線とバツの両方が含まれているか、両方とも含まれていない必要がある。</td></tr>
+                <tr><td>この列から右に2つの列と左に2つの列(ループあり)には同じ数の塗りつぶしがある。</td></tr>
+                </table>
+
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+        </div>
+    </body>
+
+</html>

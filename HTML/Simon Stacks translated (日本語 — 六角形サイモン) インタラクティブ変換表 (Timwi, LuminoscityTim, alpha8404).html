@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>六角形サイモン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .hstack {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .vstack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        table.table-1 {
+            margin: 0 .5cm 0 0;
+            font-size: 7pt;
+            width: 100%;
+            border: none;
+        }
+        table.table-1 th, table.table-1 td {
+            padding: .05cm .05cm 0;
+            text-align: left;
+        }
+        table.table-2 {
+            margin: 0 auto;
+            border: none;
+        }
+        .dark table.table-2 tr td {
+            background-color: gray;
+        }
+        svg.hexagons {
+            height: 95px;
+            width: 95px;
+            fill-rule: evenodd;
+        }
+        svg.hexagons path {
+            stroke: black;
+            stroke-width: 5px;
+        }
+        td svg {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        svg path.hexagon:not(.black) { fill: #FFF; }
+        svg path.hexagon.black { fill: #000; }
+        svg path.hexbg {
+            stroke: none;
+            fill: none;
+        }
+        .dark svg path.hexbg { fill: rgba(200,200,200,0.4); }
+
+        .hexgrids svg.hexagons {
+            height: 300px;
+            width: 300px;
+        }
+        .hexgrids svg.hexagons path {
+            stroke-width: 2px;
+        }
+        .page-bg-02 .page-content {
+            margin: 0;
+        }
+        .grid1, .grid0 {
+            padding: 3mm;
+            width: 84mm;
+        }
+
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+            font-family: "Special Elite";
+            padding-top: 3px;
+        }
+        button.reset-board, button.reset-all, button.reset-saves, button.save {
+            padding-left: 2px;
+            padding-bottom: 0px;
+            padding-right: 2px;
+        }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 30px;
+        }
+        button.colorblind {
+            font-size: 13px;
+            padding: 2px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+    </style>
+    <script>
+        $(function() {
+            let hexes = [
+                [1,3,8,12,17,19],
+                [1,2,6,8,9,11,12,14,18,19],
+                [1,3,4,5,6,8,10,11,12,13,14,15,17,19],
+                [1,2,11,12,13,14],
+
+                [2,5,6,8,10,12,14,15,18],
+                [1,2,5,10,11,12,13,14,16,17],
+                [1,2,3,6,7,10,12,14,17],
+                [1,4,5,8,9,10,11,12,13,14,17],
+
+                [2,6,9,10,13,15,16],
+                [1,2,3,8,9,11,12,17,18,19],
+                [2,3,4,8,12,16,17,18],
+                [3,5,7,8,10,14,16,19],
+
+                [3,4,5,6,7,13,14,15,16,17],
+                [6,7,9,11,13,14],
+                [5,6,9,10,11,14,15],
+                [1,3,5,6,10,14,15,17,19],
+
+                [1,2,3,5,7,8,9,10,11,12,14,16,17,18,19],
+                [3,6,10,14,17],
+                [2,6,8,9,15,18],
+                [1,2,3,4,6,7,8,10,12,13,14,16,17,18,19],
+
+                [1,2,3,5,8,11,12,14,17,18,19],
+                [1,3,5,6,14,15,17,19],
+                [2,5,7,8,11,14,17,19],
+                [2,3,7,10,13,17,18],
+
+                [3,6,7,10,11,12],
+                [5,10,11,14,15],
+                [1,2,4,5,7,11,12,13,14,16,17,18],
+                [1,7,10,13,19],
+
+                [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19],
+                [2,3,6,7,11,12,15,16,18,19],
+                [1,3,5,7,9,11,13,15,17,19],
+                [2,3,4,7,10,13,16,17,18]
+            ];
+            let rows = [3,4,5,4,3];
+            let rowStart = [47,25,5,25,47];
+            let hexSVGs = $(".table-2 tr td");
+
+            for (var h = 0; h < hexes.length; h++) {
+                hexSVGs[h].innerHTML = `<svg class='hexagons hex${h}' viewbox='0 0 205 205' xmlns='http://www.w3.org/2000/svg'></svg>`;
+                var svg = $(`.hexagons.hex${h}`);
+                var i = 1;
+                for (var c = 0; c < 5; c++) {
+                    for (var r = 0; r < rows[c]; r++) {
+                        let x1 = 16 + c*38.5;
+                        let y1 = rowStart[c] + r*41;
+                        let x2 = 35 + c*38.5;
+                        let x3 = 46 + c*38.5;
+                        let y3 = rowStart[c] + r*41 + 16;
+                        let y4 = rowStart[c] + r*41 + 32;
+                        let x6 = 5 + c*38.5;
+                        svg[0].appendChild(MakeSvgElem("path", {
+                            d:`M ${x1},${y1}, ${x2},${y1}, ${x3},${y3}, ${x2},${y4}, ${x1},${y4}, ${x6},${y3} z`,
+                            fill:(hexes[h].includes(i) ? "black" : "white")
+                        }));
+                        i++;
+                    }
+                }
+            }
+
+            $(".grid0, .grid1").each(function(i) {
+                let grid = $(this);
+                let svg = $(
+                    '<svg class="hexagons" viewbox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">' +
+                    '<defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs>' +
+                    '<path filter="url(#blur)" class="hexbg" d="M18 60l91-50l91 50v100l-91 50l-91-50Z">'
+                );
+                let rowStart2 = [55,36,17,36,55];
+                for (var c = 0; c < 5; c++) {
+                    for (var r = 0; r < rows[c]; r++) {
+                        let x1 = 34 + c*33;
+                        let y1 = rowStart2[c] + r*38;
+                        let x2 = 53 + c*33;
+                        let x3 = 64 + c*33;
+                        let y3 = rowStart2[c] + r*38 + 17;
+                        let y4 = rowStart2[c] + r*38 + 34;
+                        let x6 = 23 + c*33;
+                        let hex = MakeSvgElem("path", {
+                            d:`M ${x1},${y1}, ${x2},${y1}, ${x3},${y3}, ${x2},${y4}, ${x1},${y4}, ${x6},${y3} z`,
+                            class:"hexagon"
+                        });
+                        svg.append(hex);
+                    }
+                }
+                grid.append(svg);
+
+                $("<div>").css("height", "4mm").appendTo(grid);
+                let saves = $("<div>").addClass("saves buttons").appendTo(grid);
+                $("<button>").addClass("save").text("保存").appendTo(saves);
+                $("<div>").css("height", "4mm").appendTo(grid);
+                let btns = $("<div>").addClass("buttons").appendTo(grid);
+                $("<button>").addClass("reset-grid").text("グリッドリセット").appendTo(btns);
+                $("<button>").addClass("reset-saves").text("保存リセット").appendTo(btns);
+                $("<button>").addClass("reset-all").text("全てリセット").appendTo(btns);
+            });
+            $("svg path.hexagon").click(function() {
+                $(this).toggleClass("black");
+            });
+
+            let saveStates = [ [],[] ];
+            let currentState = [0,0];
+
+            function removeFutureSaves(t) {
+                if (currentState[t] < saveStates[t].length - 1) {
+                    for (let i = currentState[t] + 1; i < saveStates[t].length; i++) {
+                        saveStates[t][i].remove();
+                    }
+
+                    saveStates[t].splice(currentState[t] + 1, saveStates[t].length - currentState[t]);
+                }
+            }
+
+            let resetButton = $("button.reset-all");
+            for (let t = 0; t < resetButton.length; t++) {
+                resetButton[t].addEventListener("click", function() {
+                    $(`.grid${t} .hexagon`).removeClass("black");
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetSavesButton = $("button.reset-saves");
+            for (let t = 0; t < resetSavesButton.length; t++) {
+                resetSavesButton[t].addEventListener("click", function() {
+                    saveStates[t].forEach(x => x.remove());
+                    saveStates[t] = [];
+                    currentState[t] = 0;
+                });
+            }
+
+            let resetGridButton = $("button.reset-grid");
+            for (let t = 0; t < resetGridButton.length; t++) {
+                resetGridButton[t].addEventListener("click", function() {
+                    $(`.grid${t} .hexagon`).removeClass("black");
+                });
+            }
+
+            let saveButton = $("button.save");
+            for (let t = 0; t < saveButton.length; t++) {
+                saveButton[t].addEventListener("click", function() {
+                    removeFutureSaves(t);
+
+                    let saveState = Array.from($(`.grid${t} .hexagon`)).map(x => $(x)).map(x => x.attr("class") || "");
+                    console.log(saveStates[t]);
+                    let stateNumber = saveStates[t].length;
+                    currentState[t] = stateNumber;
+
+                    let button = $("<button>").text(stateNumber + 1).click(function() {
+                        $(`.grid${t} .hexagon`).each((i, x) => $(x).attr("class", saveState[i]));
+                        currentState[t] = stateNumber;
+                    }).addClass("flash").appendTo(`.grid${t} .saves`);
+                    setTimeout(() => {
+                        button.removeClass("flash");
+                    }, 100);
+
+                    saveStates[t].push(button);
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">六角形サイモン</span>
+            </div>
+            <div class="page-content">
+                <svg class='diagram' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 348 348" fill="none" stroke="#000" stroke-width="2">
+                  <path d="M94.8 105.8h-26l-13 22.5 13 22.5h26l13-22.5zm90.7 0h-25.9l-13 22.5 13 22.5h25.9l13-22.5zm90 0h-25.9l-13 22.5 13 22.5h25.9l13-22.5zM94.8 158.4h-26l-13 22.5 13 22.5h26l13-22.5zm90.7 0h-25.9l-13 22.5 13 22.5h25.9l13-22.5zm90 0h-25.9l-13 22.5 13 22.5h25.9l13-22.5zM94.8 211h-26l-13 22.5 13 22.5h26l13-22.5zm90.7 0h-25.9l-13 22.5 13 22.5h25.9l13-22.5zm0-157.8h-25.9l-13 22.5 13 22.5h25.9l13-22.5zm0 208.9h-25.9l-13 22.4 13 22.5h25.9l13-22.5zm90-51.1h-25.9l-13 22.5 13 22.5h25.9l13-22.5zM230.8 79.3h-26l-13 22.5 13 22.5h26l12.9-22.5zm0 52.6h-26l-13 22.5 13 22.5h26l12.9-22.5zm0 52.6h-26l-13 22.5 13 22.5h26l12.9-22.5zm0 52.6h-26l-13 22.5 13 22.5h26l12.9-22.5zm-90.6 0h-26l-13 22.5 13 22.5h26l12.9-22.5zm0-157.8h-26l-13 22.5 13 22.5h26l12.9-22.5zm0 52.6h-26l-13 22.5 13 22.5h26l12.9-22.5zm0 52.6h-26l-13 22.5 13 22.5h26l12.9-22.5zM5.1 5.8H342v337.7H5.1V5.8zM282.7 40.6c0-8.4 7-15.2 15.6-15.2 4.1 0 8.1 1.6 11 4.4a15 15 0 014.6 10.7c0 8.4-7 15.2-15.6 15.2s-15.6-6.8-15.6-15.1z"/>
+                  <path fill='black' stroke='none' d="M118.04 87.72v28.16h9.1c8.82 0 14.16-5.03 14.16-14.08 0-9.04-5.34-14.08-14.17-14.08h-9.09zm3.42 3.2h6.01c6.45 0 10.24 4.05 10.24 10.88 0 6.83-3.8 10.88-10.24 10.88h-6.01V90.92zm50.66 22.87c-7.9 0-13.14 5.6-13.14 14.51 0 8.92 5.03 14.5 13.06 14.5 4.3 0 7.25-1.57 8.87-4.22l.13 3.8h2.56v-14.2h-12.08v3.2h8.96v.97c0 4.87-3.62 7.26-8.32 7.26-6.27 0-9.6-4.23-9.6-11.3 0-7.1 3.84-11.32 9.56-11.32 3.93 0 6.91 1.71 8.15 4.95l3.11-1.7c-2.17-4.36-5.67-6.45-11.26-6.45zm-92.33.43l-10.96 28.16h3.58l2.99-7.8h12.76l2.98 7.8h3.63l-10.92-28.16h-4.06zm1.92 3.24h.1l1.31 3.93 3.8 9.98H76.64l3.84-10.11 1.23-3.8zm35.87 22.86v28.16h20.4v-3.2H121v-9.47h12.71v-3.2H121v-9.09h16.34v-3.2h-19.76zm-44.7 26.5v28.16h9.99c6.66 0 10.37-3.12 10.37-7.9a6.5 6.5 0 00-5.46-6.4v-.04c3.02-.6 4.73-3.2 4.73-6.05 0-4.78-2.94-7.77-9.6-7.77H72.88zm88.62 0v28.16h3.41v-12.67h15.28v12.67h3.41v-28.16h-3.41v12.29H164.9v-12.29h-3.41zm-85.2 3.2h6.66c4 0 5.97 1.5 5.97 4.57 0 3.11-1.96 4.6-5.97 4.6H76.3v-9.17zm0 12.37h7.38c4.01 0 5.97 1.7 5.97 4.7 0 2.98-1.96 4.69-5.97 4.69H76.3v-9.39zm42.25 10.53v28.16h3.42v-12.67h12.71v-3.2h-12.71v-9.1h16.3v-3.19h-19.72zm-35.98 26.07c-7.85 0-12.97 5.6-12.97 14.51 0 8.92 5.03 14.5 13.05 14.5 5.3 0 9.56-2.81 11.35-7.63l-3.41-1.28c-1.24 3.8-4.18 5.72-7.94 5.72-5.84 0-9.47-4.23-9.47-11.31 0-7.13 3.88-11.3 9.64-11.3 3.76 0 6.06 1.7 7.3 4.94l3.37-1.58c-1.8-4.26-5.46-6.57-10.92-6.57z"/>
+                </svg>
+                <h2>モジュール詳細：六角形サイモン</h2>
+                <p class="flavour-text">心配するな、サイモン！君の税金じゃないから！</p>
+
+                <p>図でA~Hのラベルが付いた六角形が点滅していることに注目する。表1を使用し、A~Hの組み合わせを数字1~8の組み合わせに変換する。これを表2の<em>段</em>に、点滅した色を<em>列</em>に使用する。</p>
+                <p>取得した各パターンをXOR演算で出力する。背景を押してパターンを入力し、もう一度背景を押して送信する。</p>
+                <p>後続の各ステージでは、前のステージで送信されたパターンから開始して、新しく追加された点滅を使用して同じ手順を繰り返す。</p>
+
+                <h4>表1</h4>
+                <table class='table-1'>
+                    <tr><td class='corner'></td><td class='corner'></td><th>ABCG</th><td>123478</td><th>ABGH</th><td>12346</td><th>ACGH</th><td>134568</td><th>AH</th><td>123457</td><th>BCGH</th><td>58</td><th>BH</th><td>2567</td><th>CH</th><td>678</td></tr>
+                    <tr><th>A</th><td>12457</td><th>ABCGH</th><td>12478</td><th>ABH</th><td>146</td><th>ACH</th><td>124568</td><th>B</th><td>23567</td><th>BCH</th><td>2358</td><th>C</th><td>3678</td><th>D</th><td>148</td></tr>
+                    <tr><th>AB</th><td>1346</td><th>ABCH</th><td>13478</td><th>AC</th><td>1234568</td><th>AD</th><td>2578</td><th>BC</th><td>258</td><th>BD</th><td>12345678</td><th>CD</th><td>13467</td><th>DE</th><td>12</td></tr>
+                    <tr><th>ABC</th><td>1478</td><th>ABD</th><td>368</td><th>ACD</th><td>2356</td><th>ADE</th><td>457</td><th>BCD</th><td>1245</td><th>BDE</th><td>13567</td><th>CDE</th><td>123678</td><th>DEF</th><td>1234</td></tr>
+                    <tr><th>ABCD</th><td>7</td><th>ABDE</th><td>2346</td><th>ACDE</th><td>34568</td><th>ADEF</th><td>357</td><th>BCDE</th><td>158</td><th>BDEF</th><td>14567</td><th>CDEF</th><td>124678</td><th>DEFG</th><td>14</td></tr>
+                    <tr><th>ABCDE</th><td>2478</td><th>ABDEF</th><td>26</td><th>ACDEF</th><td>568</td><th>ADEFG</th><td>257</td><th>BCDEF</th><td>13458</td><th>BDEFG</th><td>1234567</td><th>CDEFG</th><td>134678</td><th>DEFGH</th><td>134</td></tr>
+                    <tr><th>ABCDEF</th><td>2378</td><th>ABDEFG</th><td>36</td><th>ACDEFG</th><td>23568</td><th>ADEFGH</th><td>2357</td><th>BCDEFG</th><td>12458</td><th>BDEFGH</th><td>124567</td><th>CDEFGH</th><td>14678</td><th>DEFH</th><td>124</td></tr>
+                    <tr><th>ABCDEFG</th><td>78</td><th>ABDEFGH</th><td>6</td><th>ACDEFGH</th><td>2568</td><th>ADEFH</th><td>57</td><th>BCDEFGH</th><td>123458</td><th>BDEFH</th><td>134567</td><th>CDEFH</th><td>1234678</td><th>DEG</th><td>13</td></tr>
+                    <tr><th>ABCDEFGH</th><td>378</td><th>ABDEFH</th><td>236</td><th>ACDEFH</th><td>3568</td><th>ADEG</th><td>23457</td><th>BCDEFH</th><td>1458</td><th>BDEG</th><td>12567</td><th>CDEG</th><td>1678</td><th>DEGH</th><td>1</td></tr>
+                    <tr><th>ABCDEFH</th><td>278</td><th>ABDEG</th><td>46</td><th>ACDEG</th><td>24568</td><th>ADEGH</th><td>2457</td><th>BCDEG</th><td>12358</td><th>BDEGH</th><td>123567</td><th>CDEGH</th><td>13678</td><th>DEH</th><td>123</td></tr>
+                    <tr><th>ABCDEG</th><td>3478</td><th>ABDEGH</th><td>346</td><th>ACDEGH</th><td>234568</td><th>ADEH</th><td>3457</td><th>BCDEGH</th><td>1258</td><th>BDEH</th><td>1567</td><th>CDEH</th><td>12678</td><th>DF</th><td>138</td></tr>
+                    <tr><th>ABCDEGH</th><td>478</td><th>ABDEH</th><td>246</td><th>ACDEH</th><td>4568</td><th>ADF</th><td>234578</td><th>BCDEH</th><td>1358</td><th>BDF</th><td>125678</td><th>CDF</th><td>167</td><th>DFG</th><td>128</td></tr>
+                    <tr><th>ABCDEH</th><td>23478</td><th>ABDF</th><td>468</td><th>ACDF</th><td>2456</td><th>ADFG</th><td>4578</td><th>BCDF</th><td>1235</td><th>BDFG</th><td>135678</td><th>CDFG</th><td>12367</td><th>DFGH</th><td>1238</td></tr>
+                    <tr><th>ABCDF</th><td>347</td><th>ABDFG</th><td>23468</td><th>ACDFG</th><td>3456</td><th>ADFGH</th><td>34578</td><th>BCDFG</th><td>15</td><th>BDFGH</th><td>15678</td><th>CDFGH</th><td>1267</td><th>DFH</th><td>18</td></tr>
+                    <tr><th>ABCDFG</th><td>247</td><th>ABDFGH</th><td>2468</td><th>ACDFGH</th><td>456</td><th>ADFH</th><td>24578</td><th>BCDFGH</th><td>135</td><th>BDFH</th><td>1235678</td><th>CDFH</th><td>1367</td><th>DG</th><td>12348</td></tr>
+                    <tr><th>ABCDFGH</th><td>2347</td><th>ABDFH</th><td>3468</td><th>ACDFH</th><td>23456</td><th>ADG</th><td>3578</td><th>BCDFH</th><td>125</td><th>BDG</th><td>145678</td><th>CDG</th><td>12467</td><th>DGH</th><td>1248</td></tr>
+                    <tr><th>ABCDFH</th><td>47</td><th>ABDG</th><td>268</td><th>ACDG</th><td>56</td><th>ADGH</th><td>578</td><th>BCDG</th><td>1345</td><th>BDGH</th><td>1345678</td><th>CDGH</th><td>123467</td><th>DH</th><td>1348</td></tr>
+                    <tr><th>ABCDG</th><td>237</td><th>ABDGH</th><td>2368</td><th>ACDGH</th><td>356</td><th>ADH</th><td>23578</td><th>BCDGH</th><td>145</td><th>BDH</th><td>1245678</td><th>CDH</th><td>1467</td><th>E</th><td>248</td></tr>
+                    <tr><th>ABCDGH</th><td>27</td><th>ABDH</th><td>68</td><th>ACDH</th><td>256</td><th>AE</th><td>1578</td><th>BCDH</th><td>12345</td><th>BE</th><td>345678</td><th>CE</th><td>23467</td><th>EF</th><td>238</td></tr>
+                    <tr><th>ABCDH</th><td>37</td><th>ABE</th><td>12368</td><th>ACE</th><td>1356</td><th>AEF</th><td>134578</td><th>BCE</th><td>45</td><th>BEF</th><td>5678</td><th>CEF</th><td>267</td><th>EFG</th><td>8</td></tr>
+                    <tr><th>ABCE</th><td>127</td><th>ABEF</th><td>12468</td><th>ACEF</th><td>1456</td><th>AEFG</th><td>124578</td><th>BCEF</th><td>35</td><th>BEFG</th><td>235678</td><th>CEFG</th><td>367</td><th>EFGH</th><td>38</td></tr>
+                    <tr><th>ABCEF</th><td>12347</td><th>ABEFG</th><td>13468</td><th>ACEFG</th><td>123456</td><th>AEFGH</th><td>1234578</td><th>BCEFG</th><td>25</td><th>BEFGH</th><td>25678</td><th>CEFGH</th><td>67</td><th>EFH</th><td>28</td></tr>
+                    <tr><th>ABCEFG</th><td>147</td><th>ABEFGH</th><td>1468</td><th>ACEFGH</th><td>12456</td><th>AEFH</th><td>14578</td><th>BCEFGH</th><td>235</td><th>BEFH</th><td>35678</td><th>CEFH</th><td>2367</td><th>EG</th><td>348</td></tr>
+                    <tr><th>ABCEFGH</th><td>1347</td><th>ABEFH</th><td>123468</td><th>ACEFH</th><td>13456</td><th>AEG</th><td>123578</td><th>BCEFH</th><td>5</td><th>BEG</th><td>245678</td><th>CEG</th><td>467</td><th>EGH</th><td>48</td></tr>
+                    <tr><th>ABCEFH</th><td>1247</td><th>ABEG</th><td>168</td><th>ACEG</th><td>1256</td><th>AEGH</th><td>12578</td><th>BCEG</th><td>2345</td><th>BEGH</th><td>2345678</td><th>CEGH</th><td>3467</td><th>EH</th><td>2348</td></tr>
+                    <tr><th>ABCEG</th><td>137</td><th>ABEGH</th><td>1368</td><th>ACEGH</th><td>12356</td><th>AEH</th><td>13578</td><th>BCEGH</th><td>245</td><th>BEH</th><td>45678</td><th>CEH</th><td>2467</td><th>F</th><td>34</td></tr>
+                    <tr><th>ABCEGH</th><td>17</td><th>ABEH</th><td>1268</td><th>ACEH</th><td>156</td><th>AF</th><td>12357</td><th>BCEH</th><td>345</td><th>BF</th><td>24567</td><th>CF</th><td>4678</td><th>FG</th><td>24</td></tr>
+                    <tr><th>ABCEH</th><td>1237</td><th>ABF</th><td>16</td><th>ACF</th><td>12568</td><th>AFG</th><td>157</td><th>BCF</th><td>23458</td><th>BFG</th><td>34567</td><th>CFG</th><td>234678</td><th>FGH</th><td>234</td></tr>
+                    <tr><th>ABCF</th><td>1378</td><th>ABFG</th><td>1236</td><th>ACFG</th><td>13568</td><th>AFGH</th><td>1357</td><th>BCFG</th><td>458</td><th>BFGH</th><td>4567</td><th>CFGH</th><td>24678</td><th>FH</th><td>4</td></tr>
+                    <tr><th>ABCFG</th><td>1278</td><th>ABFGH</th><td>126</td><th>ACFGH</th><td>1568</td><th>AFH</th><td>1257</td><th>BCFGH</th><td>3458</td><th>BFH</th><td>234567</td><th>CFH</th><td>34678</td><th>G</th><td>23</td></tr>
+                    <tr><th>ABCFGH</th><td>12378</td><th>ABFH</th><td>136</td><th>ACFH</th><td>123568</td><th>AG</th><td>13457</td><th>BCFH</th><td>2458</td><th>BG</th><td>567</td><th>CG</th><td>2678</td><th>GH</th><td>2</td></tr>
+                    <tr><th>ABCFH</th><td>178</td><th>ABG</th><td>1246</td><th>ACG</th><td>14568</td><th>AGH</th><td>1457</td><th>BCG</th><td>358</td><th>BGH</th><td>3567</td><th>CGH</th><td>23678</td><th>H</th><td>3</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">六角形サイモン</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap hexgrids">
+                    <div class="grid0"></div>
+                    <div class="grid1"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">六角形サイモン</span>
+            </div>
+            <div class="page-content">
+                <h4>表2</h4>
+
+                <table class="table-2">
+                    <tr>
+                        <th class='corner'></th>
+                        <th>赤</th>
+                        <th>緑</th>
+                        <th>青</th>
+                        <th>黄</th>
+                    </tr>
+                    <tr> <th>1</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>2</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>3</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>4</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>5</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>6</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>7</th> <td></td><td></td><td></td><td></td> </tr>
+                    <tr> <th>8</th> <td></td><td></td><td></td><td></td> </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>
