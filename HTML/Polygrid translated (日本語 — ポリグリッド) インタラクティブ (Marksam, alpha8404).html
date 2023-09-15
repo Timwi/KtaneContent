@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ポリグリッド — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script>
+        let origPages = [];
+        let pages = [];
+        let currentPage = 0;
+        const symbols = [
+            "Circle", "Diamond", "DownTriangle", "Heart", "Plus", "Square", "Triangle", "X"
+        ];
+        $(function() {
+            let interactive = $(".interactive");
+            let interactiveSelector = $(".interactiveSelector");
+            let arrowIndex = 0;
+            let gridItemIndex = 0;
+            
+            //Create interactive:
+            for(let i = 0; i < 7; i++) {
+                interactive.append(`<div class="inner"></div>`);
+                for(let j = 0; j < 7; j++)
+                {
+                    if((j === 0 || j === 6) && (i === 0 || i === 6)) {
+                        $(".inner").last().append(`<div class="corner"></div>`);
+                        continue;
+                    }
+                    switch(i) {
+                        case 0:
+                            $(".inner").last().append(`<div class="arrow down" id="${arrowIndex++}"></div>`);
+                            continue;
+                        case 6:
+                            $(".inner").last().append(`<div class="arrow up" id="${arrowIndex++}"></div>`);
+                            continue;
+                    }
+                    switch(j) {
+                        case 0:
+                            $(".inner").last().append(`<div class="arrow right" id="${arrowIndex++}"></div>`);
+                            continue;
+                        case 6:
+                            $(".inner").last().append(`<div class="arrow left" id="${arrowIndex++}"></div>`);
+                            continue;
+                    }     
+                    $(".inner").last().append(`<div class="gridItem empty" id="${gridItemIndex++}"></div>`);
+                }
+            }
+            interactiveSelector.append(`<div class="selectorInner"></div>`)
+            for(let i = 0; i < 7; i++) {
+                switch(i){
+                    case 0:
+                        $(".selectorInner").last().append(`<div class="selectorArrow left"></div>`)
+                        continue;
+                    case 6:
+                        $(".selectorInner").last().append(`<div class="selectorArrow right"></div>`)
+                        continue;
+                    default:
+                        $(".selectorInner").last().append(`<div class="selectors${i - 1}"></div>`);
+                }
+            }
+
+            for(let i = 0; i < 8; i++) {
+                $(".symbolSelector").append(`<div class="symbolSelector${i}"style="background-image: url('img/Polygrid Interactive/${symbols[i]}.png');"></div>`)
+            }
+            //init interactive:
+            $("button.reset").click(function() {
+                $(".gridItem").removeClass().addClass("gridItem").addClass("empty").css("background-image", "");
+                $(".arrow.filled").removeClass("filled");
+                pages = [...origPages];
+                UpdateVisuals();
+            });
+
+            $("button.fullReset").click(function() {
+                location.reload();
+            });
+
+            for(let i = 0; i < 10; i++) {
+                pages.push(["", "", "", "", ""]);
+            }
+            origPages = [...pages];
+
+            for(let i = 0; i < 5; i++) {
+                $(`.selectors${i}`).click(function() {
+                    if(pages.length != 10) {
+                        return;
+                    }
+                    for(let j = 0; j < 8; j++) {
+                        if($(`.symbolSelector${j}`).hasClass("selected")) {
+                            $(`.selectors${i}`).css("background-image", `url('img/Polygrid Interactive/${symbols[j]}.png')`)
+                            pages[currentPage][i] = symbols[j];
+                            $(`.selectors${i}`).addClass("filled");
+                            origPages = [...pages];
+                            return;
+                        }
+                    }
+                    if($(`.selectors${i}`).hasClass("filled")) {
+                        $(`.selectors${i}`).removeClass("filled")
+                        pages[currentPage][i] = "";
+                        $(`.selectors${i}`).css("background-image", "");
+                        origPages = [...pages];
+                    }
+                })
+            }
+
+            for(let i = 0; i < 8; i++) {
+                $(`.symbolSelector${i}`).click(function() {
+                    for(let j = 0; j < 8; j++) {
+                        if($(`.symbolSelector${j}`).hasClass("selected")) {
+                            $(`.symbolSelector${j}`).removeClass("selected")
+                            if(j == i)
+                                return;
+                        }
+                    }
+                    $(`.symbolSelector${i}`).addClass("selected");
+                })
+            }
+
+            $(".selectorArrow.left").click(function() {
+                HandleSelectorArrowPress(false);
+            })
+
+            $(".selectorArrow.right").click(function() {
+                HandleSelectorArrowPress(true);
+            })
+
+            for(let i = 0; i < 20; i++) {
+                let type;
+                let index;
+                let direction;
+                if(i >= 5 && i <= 14) {
+                    //The Arrow is connected to a row
+                    type = ArrowType.Row;
+                    switch(i){
+                        case 5:
+                        case 6:
+                            index = 0;
+                            break;
+                        case 7:
+                        case 8:
+                            index = 1;
+                            break;
+                        case 9:
+                        case 10:
+                            index = 2;
+                            break;
+                        case 11:
+                        case 12:
+                            index = 3;
+                            break; 
+                        case 13:
+                        case 14:
+                            index = 4;
+                            break;
+                    }
+                    direction = i % 2 == 0 ? ArrowType.Left : ArrowType.Right;
+                }
+                else {
+                    //The arrow is connected to a column
+                    type = ArrowType.Column;
+                    index = i % 15;
+                    direction = Math.floor(i / 15) < 1 ? ArrowType.Down : ArrowType.Up;
+                }
+
+                let arrowType = new ArrowType(type, index, direction);
+                $(`#${i}.arrow`).click(function() {
+                    if($(`#${i}.arrow`).hasClass("filled") || pages[currentPage].every(x => x == "")) {
+                        return;
+                    }
+                    let arrow = arrowType;
+                    let page = pages[currentPage];
+                    switch(arrow.type){
+                        case "row":
+                            for(let j = 0; j < 5; j++) {
+                                if($(`#${j + (5 * arrow.number)}.gridItem`).hasClass('empty') || $(`#${j + (5 * arrow.number)}.gridItem`).hasClass(page[arrow.direction == "right" ? j : 4 - j]) || page[arrow.direction == "right" ? j : 4 - j] == ""){
+                                    continue;
+                                }
+                                return;
+                            }
+                            for(let j = 0; j < 5; j++) {
+                                if(page[arrow.direction == "right" ? j : 4 - j] != "") {
+                                    $(`#${j + (5 * arrow.number)}.gridItem`).css("background-image", `url('img/Polygrid Interactive/${page[arrow.direction == "right" ? j : 4 - j]}.png')`);
+                                    $(`#${j + (5 * arrow.number)}.gridItem`).removeClass("empty").addClass(page[arrow.direction == "right" ? j : 4 - j]);
+                                    if(!$(`#${i}.arrow`).hasClass('filled')){
+                                        $(`#${i}.arrow`).addClass("filled");
+                                    }
+                                    $(`#${arrow.direction == "right" ? i + 1 : i - 1}.arrow`).addClass("filled");
+                                }
+                            }
+                            break;
+                        case "col":
+                            for(let j = 0; j < 5; j++) {
+                                if($(`#${(arrow.number % 15) + (5 * j)}.gridItem`).hasClass('empty') || $(`#${(arrow.number % 15) + (5 * j)}.gridItem`).hasClass(page[arrow.direction == "down" ? j : 4 - j]) || page[arrow.direction == "down" ? j : 4 - j] == "") {
+                                    continue;
+                                }
+                                return;
+                            }
+                            for(let j = 0; j < 5; j++) {
+                                if(page[arrow.direction == "down" ? j : 4 - j] != "") {
+                                    $(`#${(arrow.number % 15) + (5 * j)}.gridItem`).css("background-image", `url('img/Polygrid Interactive/${page[arrow.direction == "down" ? j : 4 - j]}.png')`);
+                                    $(`#${(arrow.number % 15) + (5 * j)}.gridItem`).removeClass("empty").addClass(page[arrow.direction == "down" ? j : 4 - j]);
+                                    if(!$(`#${i}.arrow`).hasClass('filled')){
+                                        $(`#${i}.arrow`).addClass("filled");
+                                    }
+                                    $(`#${arrow.direction == "down" ? i + 15 : i - 15}.arrow`).addClass("filled");
+                                }
+                            }
+                            break;
+                    }   
+                    pages.splice(currentPage, 1);
+                    currentPage = 0;
+                    if(pages.length == 0) {
+                        for(let i = 0; i < 5; i++) {
+                            $(`.selectors${i}`).removeClass("filled");
+                            $(`.selectors${i}`).css("background-image", "")
+                            $(`.selectors${i}`).css("background-color", "green")
+                        }
+                    }
+                    else {
+                        UpdateVisuals();
+                    }
+                })
+            }
+        });
+
+        function UpdateVisuals() {
+            for(let i = 0; i < 5; i++) {
+                $(`.selectors${i}`).removeClass("filled");
+                $(`.selectors${i}`).css("background-image", "")
+                $(`.selectors${i}`).css("background-color", "")
+                if(pages[currentPage][i] != "") {
+                    $(`.selectors${i}`).css("background-image", `url('img/Polygrid Interactive/${pages[currentPage][i]}.png')`)
+                    $(`.selectors${i}`).addClass("filled");
+                }
+            }
+        }
+
+        function HandleSelectorArrowPress(increase) {
+            if(pages.length == 0) {
+                return;
+            }
+            if(increase) {
+                if(currentPage == pages.length - 1) {
+                    currentPage = 0
+                }
+                else {
+                    currentPage++;
+                }
+            }
+            else {
+                if(currentPage == 0) {
+                    currentPage = pages.length - 1;
+                }
+                else {
+                    currentPage--;
+                }
+            }
+            UpdateVisuals();
+        }
+
+        function GetRow(index) {
+            let shapes = [];
+            let row = $(".gridItem").toArray().slice(index * 5, (index * 5) + 5);
+            for(let i = 0; i < 5; i++) {
+                if(row[i].classList.length != 2) {
+                    shapes.push("");
+                    continue;
+                }
+                shapes.push(row[i].classList[1])
+            }
+        }
+
+        function GetCol(index) {
+            let shapes = [];
+            let col = $(".gridItem").toArray().filter(function(value, ind, Arr) {
+                return ind % 5 == index;
+            });
+            for(let i = 0; i < 5; i++) {
+                if(col[i].classList.length != 2) {
+                    shapes.push("");
+                    continue;
+                }
+                shapes.push(col[i].classList[1])
+            }
+        }
+
+        class ArrowType {
+            static Up = "up";
+            static Down = "down";
+            static Left = "left";
+            static Right = "right";
+            static Row = "row";
+            static Column = "col";
+            constructor(type, number, direction) {
+                this.type = type;
+                this.number = number;
+                this.direction = direction;
+            }
+        }
+    </script>
+    <style>
+        .interactive {
+            margin: 0 auto;
+            background: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            padding-top: 50px;
+            display: table;
+            border-spacing: 5px;
+        }
+        
+        .interactive div {
+            display: table-row;
+        }
+
+        .interactive div div {
+            width: 30px;
+            height: 30px;
+            border: 3pt solid;
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .interactive div div.corner {
+            border: none;
+        }
+
+        .interactive div div.arrow {
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .interactiveSelector div div.selectorArrow {
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .arrow.down, .selectorArrow.down {
+            border-color: #005BC1 transparent transparent transparent;
+            border-width: 32.9px 19px 0 19px;  
+        }
+        .arrow.up, .selectorArrow.up {
+            border-color: transparent transparent #005BC1 transparent;
+            border-width: 0 19px 32.9px 19px;
+        }
+        .arrow.left, .selectorArrow.left {
+            border-color: transparent #005BC1 transparent transparent;
+            border-width: 19px 32.9px 19px 0;
+        }
+        .arrow.right, .selectorArrow.right {
+            border-color: transparent transparent transparent #005BC1;
+            border-width: 19px 0 19px 32.9px;
+        }
+        .arrow.down.filled {
+            border-color: #000 transparent transparent transparent;
+        }
+        .arrow.up.filled {
+            border-color: transparent transparent #000 transparent;
+        }
+        .arrow.left.filled {
+            border-color: transparent #000 transparent transparent;
+        }
+        .arrow.right.filled {
+            border-color: transparent transparent transparent #000;
+        }
+        .arrow.down:hover:not(.filled), .selectorArrow.down:hover {
+            border-color: #00317B transparent transparent transparent;
+        }
+        .up.arrow:hover:not(.filled), .selectorArrow.up:hover {
+            border-color: transparent transparent #00317B transparent;
+        }
+        .left.arrow:hover:not(.filled), .selectorArrow.left:hover {
+            border-color: transparent #00317B transparent transparent;
+        }
+        .right.arrow:hover:not(.filled), .selectorArrow.right:hover {
+            border-color: transparent transparent transparent #00317B;
+        }
+
+        .interactiveSelector {
+            margin: 0 auto;
+            background: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            padding-top: 50px;
+            display: table;
+            border-spacing: 5px;
+        }
+
+        .interactiveSelector div {
+            display: row;
+        }
+
+        .interactiveSelector div div {
+            margin: 0 auto;
+            width: 30px;
+            height: 30px;
+            border: 3pt solid;
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .interactiveSelector div div:hover:not(.arrow, .selectorArrow) {
+            background: gray;
+        }
+
+        .container {
+            display: table;
+            table-layout: fixed;
+            border-spacing: 10px;
+        }
+
+        .container button {
+            display: table-cell;
+            width: 100px;
+            height: 50px;
+            margin: 5px;
+        }
+
+        .container.symbolSelector div {
+            display: table-cell;
+            border: 3pt solid;
+            text-align: center;
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+        }
+
+        .container.symbolSelector div:hover:not(.selected) {
+            background-color: gray;
+        }
+        .container.symbolSelector div.selected {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ポリグリッド</span>
+            </div>
+            <div class="page-content">
+                <h2>モジュール詳細：ポリグリッド</h2>
+                <p class="flavour-text">繰り返しになるが、あなたの人生は、カジュアルなパズルを解く能力にかかっている。</p>
+                    <div class="interactive"></div>
+                    <div class="interactiveSelector"></div>
+                    <div class="container symbolSelector"></div>
+                    <div class="container">
+                        <button class="reset">グリッドリセット</button>
+                        <button class="fullReset">全てリセット</button>
+                    </div>
+                    <ul>
+                        <li>
+                            8つの記号のいずれかのボタンを押して選択する。
+                        </li>
+                        <li>
+                            左矢印と右矢印を使用して、シンボルのページをスクロールする。
+                        </li>
+                        <li>
+                            セルを押して、選択した記号を配置する。
+                        </li>
+                        <li>
+                            記号を押して選択を解除する。何も選択されていないセルを押すとそのセルがクリアされる。ページをグリッドに挿入し始めたら、ページを変更することはできない。
+                        </li>
+                        <li>
+                            5×5表の矢印を押して、その段/列を下のセレクターに現在表示されているシンボルで塗りつぶすと、セレクターのそのページが塗りつぶされる。
+                        </li>
+                        <li>
+                            「グリッドリセット」を押すと、全てのページが復元ざれ、グリッドがクリアされる。「全てリセット」を押すとページとグリッドがクリアされる。
+                        </li>
+                    </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>

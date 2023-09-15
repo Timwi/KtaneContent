@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>パターンロック — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.1.1.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        let gridRotation = 0;
+        let holder = $(".gridholder");
+
+        let svgNG = $("svg.numgrid");
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                let svg = MakeSvgTag(10,10,0,0, {class:'floating-text', 'text-anchor':'middle'}).appendTo(holder);
+                svg.css("top", `${c*33 + 4}%`);
+                svg.css("left", `${r*33 + 5}%`);
+                let box = MakeSvgElem("rect", {
+                    class:"highlightable", width:100, height:100, x:(r*100), y:(c*100), fill:"transparent"
+                });
+                let num = MakeSvgElem("text", { x:5, y:8 });
+                num.innerHTML = (c*3 + r + 1);
+                svg.append(num);
+                svgNG.append(box);
+            }
+        }
+
+        let pattern = [
+            [0,1,11,10,3],[1,2,12,11,3],[11,12,22,21,3],[10,11,21,20,3],[0,2,22,20,3],[0,1,11,10,0,11],[1,2,12,11,1,12],
+            [11,12,22,21,11,22],[10,11,21,20,10,21],[0,2,22,20,0,22],[],[0,1,21,20,3],[0,2,12,10,3],[1,2,22,21,3],
+            [10,12,22,20,3],[0,2,11,22,20,3],[0,2,22,11,20,3],[0,2,22,20,11,3],[0,11,2,22,20,3],[0,11,20,3],[0,2,11,3],
+            [2,22,11,3],[20,11,22,3],[0,1,12,21,20,11,3],[0,11,2,12,21,10,3],[1,2,11,22,21,10,3],[10,1,2,11,22,21,3],[0,1,21,20,0,11,20],
+            [0,2,12,10,0,11,2],[2,22,21,1,2,11,22],[20,10,12,22,20,11,22],[0,11,10,21,20,3],[0,2,11,1,10,3],[1,12,11,22,21,3],[10,12,22,11,21,3],
+            [1,12,11,22,21,3],[10,1,11,2,12,3],[2,22,21,12,11,3],[0,2,12,1,11,3],[0,10,11,21,22,3],[20,10,11,1,2,3],[0,1,11,12,22,3],
+            [20,2,12,11,21,3],[0,11,1,10,3],[1,12,2,11,3],[11,22,12,21,3],[10,21,11,20,3],[0,1,10,11,3],[1,2,11,12,3],
+            [11,22,21,12,3],[10,11,20,21,3],[0,22,20,2,3],[10,0,1,21,20,10,11],[1,2,12,10,0,1,11],[11,1,2,22,21,11,12],[11,12,22,20,10,11,21]
+        ];
+        let p = 0;
+        let table = $("table.patterns");
+        function pX(coord) {
+            return coord % 10 * 10 + 2;
+        }
+        function pY(coord) {
+            return Math.floor(coord / 10) * 10 + 2;
+        }
+
+        for (let r = 2; r <= 9; r++) {
+            let tr = $("<tr>").appendTo(table);
+            $("<th>").html(r).appendTo(tr);
+            for (let c = 2; c <= 9; c++) {
+                if (c == r)
+                    $("<td>").addClass("black").appendTo(tr);
+                else {
+                    let td = $("<td>").appendTo(tr);
+                    let svg = MakeSvgTag(24,24).appendTo(td);
+                    for (var xx = 2; xx < 24; xx += 10) {
+                        for (var yy = 2; yy < 24; yy += 10) {
+                            let circ = MakeSvgElem("circle", {
+                                cx:xx, cy:yy, r:2
+                            });
+                            svg.append(circ);
+                        }
+                    }
+                    if (p < pattern.length && pattern[p].length > 0) {
+                        let pat = pattern[p];
+                        pathStr = `M${pX(pat[0])} ${pY(pat[0])}`;
+                        pat.forEach((coord, i) => {
+                            if (i > 0) {
+                                if (coord == 3)
+                                    pathStr += "z";
+                                else
+                                    pathStr += `L${pX(coord)} ${pY(coord)}`;
+                            }
+                        });
+
+                        let path = MakeSvgElem("path", {
+                            d:`${pathStr}`, "stroke-linejoin":"round"
+                        });
+                        svg.append(path);
+                    }
+                    p++;
+                }
+            }
+        }
+        let text = $("svg.floating-text");
+        let allPatterns = $(".patterns td svg");
+
+        $("button.rotate-cc").click(function() {
+            rotateGrid(false, false);
+        });
+        $("button.rotate-cw").click(function() {
+            rotateGrid(true, false);
+        });
+        $("button.reset").click(function() {
+            gridRotation
+            rotateGrid(false, true);
+        });
+
+        function rotateGrid(clockwise, reset) {
+            if (clockwise) {
+                gridRotation += 1;
+            } else if (!reset) {
+                gridRotation -= 1;
+            } else {
+                gridRotation = 0;
+            }
+
+            holder.css("transform", `rotate(${gridRotation * 90}deg)`);
+            allPatterns.css("transform", `rotate(${gridRotation * 90}deg)`);
+            text.css("transform", `rotate(${gridRotation * -90}deg)`);
+        }
+    });
+    </script>
+    <style>
+        .rotate-cc, .rotate-cw, .reset {
+            font-size: 15px;
+            height: 28.5px;
+            width: 51px;
+            background-position: 1px 0;
+            background-repeat: no-repeat;
+        }
+        .rotate-cc {
+            background-image: url('img/Common/ccw-arrow.svg');
+        }
+        .rotate-cw {
+            background-image: url('img/Common/cw-arrow.svg');
+        }
+        .gridholder {
+            position: relative;
+            width: 30%;
+            margin: auto;
+        }
+        svg.floating-text {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            font-size: 8px;
+            user-select: none;
+            pointer-events: none;
+        }
+        .gridholder, svg.floating-text, td svg {
+            transition: transform 0.6s;
+        }
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+            width: 90%;
+        }
+        .patterns td {
+            padding: 8px 0px 8px 0px;
+            line-height: 4px;
+            text-align: center;
+        }
+        .patterns th, .dark .patterns th {
+            border: none;
+            font-size: 20px;
+        }
+        svg.numgrid { width: 100%; }
+        td svg { width: 70%; }
+        td svg path {
+            stroke: #000;
+            stroke-width: 1.5;
+            fill: none;
+        }
+        td svg circle { fill: #BBB; }
+        .dark td svg path { stroke: #DDD; }
+        .dark td svg circle { fill: #444; }
+        svg.numgrid path {
+            stroke: #888;
+            stroke-width: 2;
+        }
+        td.black { background-color: black; }
+        .dark svg text { fill: #DDD; }
+
+        .dark svg.gridsvg line { stroke: #CCC; }
+        .dark svg.floating-text text { fill: #CCC; }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding: 2px;
+            height: 20px;
+            position: relative;
+            top: -15px;
+        }
+        .dark table, table { border: none; }
+        .bigimage {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">パターンロック</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Pattern Lock.svg">
+                <h2>モジュール詳細：パターンロック</h2>
+                <p class="flavour-text">人々がスマホに登録している奇妙なロックを知っているかい？それはそれらの1つに似ているけど、結構面倒なんだ。</p>
+                <ul>
+                    <li>９つの丸があり、そのうちの３つがそれぞれ赤、緑、青である。</li>
+                    <li>赤は必ず以下のグリッドの「１」番にあるが、モジュールが回転する場合がある。赤の位置を使用し、「１」が赤の位置になるようにグリッドを回転させる。赤が左上の状態で、残りの丸は以下のグリッドに従う。</li>
+                </ul>
+                <div class="buttons">
+                    <button class="rotate-cc floating"></button>
+                    <button class="reset">0</button>
+                    <button class="rotate-cw floating"></button>
+                </div>
+                <div class="gridholder">
+                    <svg class="centered-img numgrid" viewbox="0 0 300 300" text-anchor="middle" font-size="50">
+                        <path d="M100 0v300 M200 0v300 M0 100h300 M0 200h300"/>
+                    </svg>
+                </div>
+                <ul>
+                    <li>緑と青の丸は、入力する必要のあるパターンを示す。次のページの表において、緑の数字を段に、青の数字を列に使用する。</li>
+                    <li>表で得られた画像は、数字の並びが上のグリッドの向きの場合であるため、<b>モジュールの向きになるようにパターン自体も向きを変える必要がある。</b></li>
+                    <li>上下左右または斜めに隣接した２つの円をクリックすると、それらが接続される。その後は、接続された丸から別の丸へと一筆書きでパターンを描く必要がある。<b>別の線と交差したり、隣接していない丸同士を接続してはいけない。</b></li>
+                    <li>間違えた場合は「CLR」を押して削除できる。</li>
+                    <li>完成したら、「SUB」を押してモジュールを解除する。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">パターンロック</span>
+            </div>
+            <div class="page-content">
+                <table class="patterns">
+                    <tr><th class="corner"></th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

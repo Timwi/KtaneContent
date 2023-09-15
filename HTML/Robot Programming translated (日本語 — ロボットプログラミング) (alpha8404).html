@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ロボットプログラミング — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        const topGridLayout = ["___W___WW_W_W____W_W__WWWWW________",
+                               "________WW_WW__W___W_WW_W_WW___W___",
+                               "_______WW_WWW__W___W__WWW_WW_______",
+                               "________W_WWW__W_____WW_W_WW___W___",
+                               "___W____WWW_WW_W______W_WWW______W_",
+                               "_____W__WWW_W__W___W_WW_WWW________",
+                               "_W_W_W__W_W_W_________WWWWW______W_",
+                               "_W___W__W_WWW_________W_W_W__W_W_W_",
+                               "_W___W__W_W_W____W____WWWWW________",
+                               "_W___W__WWW_W________WW_WWWW_______",
+                               "___W____W_W_W__W___W__W_WWW____W___",
+                               "_W___W__W_W_W____W____WWWWW____W___",
+                               "___W_W__WWW_W________WW_W_WW___W___",
+                               "_______W_WWW_W___W____W_W_W__W___W_",
+                               "_W______W_WWW____W____WWWWW__W_____",
+                               "_____W__WWW_W__W___W__W_WWW__W_____"];
+
+        const bottomGridLayout = ["_W_WWW__W_W___",
+                                  "_WWWWW________",
+                                  "_W_WWW__W_____",
+                                  "_W_WWWW_______",
+                                  "_W_W_WW_______",
+                                  "_W_W_W____W___",
+                                  "WW_WWW________",
+                                  "_WWW_WW_W_____",
+                                  "_WWW_W________",
+                                  "_WWW_WW_______",
+                                  "_W_WWW__W___W_"];
+
+        const bottomGridNumbers = [[1], [2], [3, 9], [4, 5], [6, 7], [8, 12, 16], [10], [11], [13], [14], [15]];
+
+        const colourDict = { W: "FFFA", _: "000", R: "F00A", Y: "FF0A", G: "0F0A", B: "00FA"};
+
+        $(function() {
+            let topMazeGrids = $(".top-maze-grids");
+            for (let rowNum = 0; rowNum < 4; rowNum++) {
+                let row = $("<tr>").appendTo(topMazeGrids);
+                for (let colNum = 0; colNum < 4; colNum++) {
+                    let cell = $("<td style='padding:0.2em'>").appendTo(row);
+                    cell.append(DrawTopSvg(rowNum*4 + colNum));
+                }
+            }
+
+            let bottomMazeGrids = $(".bottom-maze-grids");
+            for (let rowNum = 0; rowNum < 4; rowNum++) {
+                let row = $("<tr>").appendTo(bottomMazeGrids);
+                for (let colNum = 0; colNum < 3; colNum++) {
+                    if (!(rowNum == 3 && colNum == 2)) {
+                        let cell = $("<td style='padding:0.2em'>").appendTo(row);
+                        cell.append(DrawBottomSvg(rowNum*3 + colNum));
+                    }
+                }
+            }
+        });
+
+        function DrawTopSvg(gridNum) {
+            let div = $("<div width='100%'>");
+            let svg = $('<svg viewbox="0 0 1110 610" width="100%" style="display:block" xmlns="http://www.w3.org/2000/svg">').appendTo(div);
+            let topRowColours = "WRWYWGWBW" ;
+            
+            svg.append(MakeSvgElem("rect", { x: 5, y: 210, width: 180, height: 180, stroke: "#000", fill: "#FFFA" }))
+            svg.append(MakeSvgElem("text", { x: 95, y: 350 }, gridNum+1));
+
+            for (let col = 0; col < 9; col++) {
+                svg.append(MakeSvgElem("rect", {x: 205+100*col, y: 5, width: 100, height: 100, fill: `#${colourDict[topRowColours[col]]}`}));
+                for (let row = 1; row < 6; row++) {
+                    if (col==0 || col==8) {
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                    } else {
+                        let letter = topGridLayout[gridNum].charAt((row-1)*7 + col-1);
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict[letter]}` }));
+                    }
+                }
+            }
+            return div;
+        }
+
+        function DrawBottomSvg(gridNum) {
+            let div = $("<div width='100%'>");
+            let svg = $('<svg viewbox="0 0 1110 310" width="100%" style="display:block" xmlns="http://www.w3.org/2000/svg">').appendTo(div);
+
+            DrawNumberSquare(svg, bottomGridNumbers[gridNum]);
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (row < 2) {
+                        if (col==0 || col==8) {
+                            svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                        } else {
+                            let letter = bottomGridLayout[gridNum].charAt(row*7 + col-1)
+                            svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict[letter]}` }));
+                        }
+                    } else {
+                        svg.append(MakeSvgElem("rect", { x: 205+100*col, y: 5+100*row, width: 100, height: 100, fill: `#${colourDict["W"]}` }));
+                    }
+                }
+            }
+
+            return div;
+        }
+
+        function DrawNumberSquare(svg, nums) {
+            if (nums.length == 1) {
+                svg.append(MakeSvgElem("rect", { x: 5, y: 50, width: 180, height: 180, fill: "#FFFA" }));
+                svg.append(MakeSvgElem("text", { x: 95, y: 190 }, nums[0]));
+            } else if (nums.length == 2) {
+                for (let i = 0; i < 2; i++) {
+                    svg.append(MakeSvgElem("rect", { x: 40, y: i*160, width: 140, height: 140, fill: "#FFFA" }));
+                    svg.append(MakeSvgElem("text", { x: 110, y: 120 + 160*i }, nums[i]));
+                }
+            } else if (nums.length == 3) {
+                for (let i = 0; i < 3; i++) {
+                    svg.append(MakeSvgElem("rect", { x: 95, y: 8 + 100 * i, width: 95, height: 95, fill: "#FFFA" }));
+                    svg.append(MakeSvgElem("text", { x: 142.5, y: 80 + 100*i, class: "small-text" }, nums[i]));
+                }
+            }
+        }
+    </script>
+    <style>
+        .robot-order-chart text {
+            user-select: none;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+        .dark .robot-order-chart text, .dark #arrow path { fill: #DDD; }
+        .robot-order-chart path {
+            stroke: black;
+            stroke-width: 3;
+            marker-end: url("#arrow");
+        }
+        .dark .robot-order-chart path, .dark .robot-order-chart rect { stroke: #DDD; }
+        .robot-order-chart rect {
+            fill: transparent;
+            stroke: black;
+            stroke-width: 3;
+        }
+        .robot-order-chart rect.end-highlights { stroke: none; }
+        .robot-order-chart text.rank-one { font-size: 35px; }
+        .robot-order-chart text.rank-two { font-size: 25px; }
+        .robot-order-chart text.rank-three { font-size: 16px; }
+        .robot-order-chart text.rank-four { font-size: 14px; }
+
+        .maze-grids text{
+            text-anchor: middle;
+            font-size: 140px;
+        }
+        .maze-grids :not(text) {
+            stroke: #000;
+            stroke-width: 3px;
+            margin: auto;
+        }
+        .maze-grids, .maze-grids table, .maze-grids table td, .dark .maze-grids{ border: none; }
+        .maze-grids table { margin-bottom: 30px; }
+        .maze-grids text.small-text { font-size: 70px }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロボットプログラミング</span>
+            </div>
+            <div class="page-content">
+                <img src= "img/Component/Robot Programming.svg" class="diagram">
+                <h2>モジュール詳細：ロボットプログラミング</h2>
+                <p class="flavour-text">すべての子供の夢の仕事は、大人にとっては悪夢でしかない。プログラムが「クラッシュ」されないように注意しよう。</p>
+                
+                <p>このモジュールには4つの方向矢印、大小のディスプレー、及び迷路がある。小さなディスプレーには2つの数字が表示される。左側の数字は上6段の迷路を決定し、もう一方の数字は下3段の迷路を決定する。分析担当としてのあなたの仕事は、各ロボットがどのような動作をするかを判断することである。これは、以下のオプションツリーを使用して行われる。</p>
+                <p>ロボットの名前は、名前リストの上から下の順に、モジュールに表示されているロボットの左から右に名前がつけられている。</p>
+                <svg class="robot-order-chart centered-img" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg">
+                    <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path style="stroke:none;" d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+                    <rect class="highlightable" x="170" y="10" width="260" height="100"/><rect class="highlightable" x="75" y="180" width="200" height="80"/><rect class="highlightable" x="325" y="180" width="200" height="80"/><rect class="highlightable" x="25" y="300" width="120" height="50"/><rect class="highlightable" x="170" y="300" width="120" height="50"/><rect class="highlightable" x="310" y="300" width="120" height="50"/><rect class="highlightable" x="455" y="300" width="120" height="50"/>
+                    <rect class="end-highlights highlightable" x="25" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="85" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="170" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="230" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="310" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="370" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="455" y="403" width="60" height="73"/><rect class="end-highlights highlightable" x="515" y="403" width="60" height="73"/>
+                    <path d="M235 110 L175 180"/><path d="M365 110 L425 180"/><path d="M125 260 L85 300"/><path d="M225 260 L230 300"/><path d="M375 260 L370 300"/><path d="M475 260 L515 300"/><path d="M55 350 v50"/><path d="M115 350 v50"/><path d="M200 350 v50"/><path d="M260 350 v50"/><path d="M340 350 v50"/><path d="M400 350 v50"/><path d="M485 350 v50"/><path d="M545 350 v50"/>
+                    <text x="180" y="145">いいえ</text><text x="75" y="280">いいえ</text><text x="350" y="280">いいえ</text><text x="40" y="375">いいえ</text><text x="185" y="375">いいえ</text><text x="325" y="375">いいえ</text><text x="470" y="375">いいえ</text>
+                    <text x="420" y="145">はい</text><text x="250" y="280">はい</text><text x="525" y="280">はい</text><text x="135" y="375">はい</text><text x="280" y="375">はい</text><text x="420" y="375">はい</text><text x="565" y="375">はい</text>
+                    <text x="300" y="50" class="rank-one"><tspan>赤/緑は</tspan><tspan x="300" dy="40">1番目</tspan></text>
+                    <text x="175" y="210" class="rank-two"><tspan>六角形の</tspan><tspan x="175" dy="30">色は黄</tspan></text><text x="425" y="210" class="rank-two"><tspan>六角形の</tspan><tspan x="425" dy="30">色は黄</tspan></text>
+                    <text x="85" y="320" class="rank-three"><tspan>三角形は</tspan><tspan x="85" dy="20">3番目</tspan></text><text x="230" y="320" class="rank-three"><tspan>三角形は</tspan><tspan x="230" dy="20">3番目</tspan></text><text x="370" y="320" class="rank-three"><tspan>三角形は</tspan><tspan x="370" dy="20">3番目</tspan></text><text x="515" y="320" class="rank-three"><tspan>三角形は</tspan><tspan x="515" dy="20">3番目</tspan></text>
+                    <text x="55" y="420" class="rank-four"><tspan>R.O.B</tspan><tspan x="55" dy="16">HAL</tspan><tspan x="55" dy="16">R2D2</tspan><tspan x="55" dy="16">Fender</tspan></text>
+                    <text x="115" y="420" class="rank-four"><tspan>HAL</tspan><tspan x="115" dy="16">Fender</tspan><tspan x="115" dy="16">R.O.B</tspan><tspan x="115" dy="16">R2D2</tspan></text>
+                    <text x="200" y="420" class="rank-four"><tspan>HAL</tspan><tspan x="200" dy="16">R.O.B</tspan><tspan x="200" dy="16">Fender</tspan><tspan x="200" dy="16">R2D2</tspan></text>
+                    <text x="260" y="420" class="rank-four"><tspan>R2D2</tspan><tspan x="260" dy="16">Fender</tspan><tspan x="260" dy="16">HAL</tspan><tspan x="260" dy="16">R.O.B</tspan></text>
+                    <text x="340" y="420" class="rank-four"><tspan>Fender</tspan><tspan x="340" dy="16">R.O.B</tspan><tspan x="340" dy="16">HAL</tspan><tspan x="340" dy="16">R2D2</tspan></text>
+                    <text x="400" y="420" class="rank-four"><tspan>HAL</tspan><tspan x="400" dy="16">R2D2</tspan><tspan x="400" dy="16">Fender</tspan><tspan x="400" dy="16">R.O.B</tspan></text>
+                    <text x="485" y="420" class="rank-four"><tspan>Fender</tspan><tspan x="485" dy="16">HAL</tspan><tspan x="485" dy="16">R2D2</tspan><tspan x="485" dy="16">R.O.B</tspan></text>
+                    <text x="545" y="420" class="rank-four"><tspan>R2D2</tspan><tspan x="545" dy="16">R.O.B</tspan><tspan x="545" dy="16">Fender</tspan><tspan x="545" dy="16">HAL</tspan></text>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロボットプログラミング</span>
+            </div>
+            <div class="page-content">
+                <p>R.O.Bはコマンドをそのまま実行することができる。</p>
+                <p>HALはコマンドと正反対の行動を実行する。</p>
+                <p>R2D2はR.O.Bから始めてR.O.BとHALの行動を交互に切り替えて実行する。</p>
+                <p>Fenderはシリアルナンバーに応じて行動を実行する。まずFenderはシリアルナンバーの最初の文字を調べる。それが数字の場合、FenderはそのターンR.O.Bの行動を実行する。それが英字の場合、FenderはそのターンHALの行動を実行する。次のターンでは、Fenderはシリアルナンバーの次の文字を調べる。</p>
+                <p>どのロボットが何の名前であるかを決定したら、コマンドの入力を開始することができる。ただし、実行する前にいくつか注意する点がある。</p>
+                <p>スタートボタンが押されるまで、コマンドはロボットに対して影響を与えない。ディスプレーは非常に小さいため、最後に入力された3つのコマンドのみが表示される。</p>
+                <p>コマンドを入力するたびにLEDが変化する。このLEDはロボットの色になる。LEDは一定のパターンで変化し、パターンは青、緑、赤、黄、そして青に戻る。コマンドを入力するとその時点灯していたLEDの色のロボットにコマンドが送信される。ディスプレーの南にあるロボットの色のボタンを押すと、ロボットはそれ以上コマンドを受信できなくなる。スタートを押すかコマンドシークエンス全体をリセットするまで、ロボットのロックを解除できなくなるため注意する必要がある。</p>
+                <p>コマンド全体を入力したら、「S」というラベルが付いたボタンを押して開始する。ロボットが迷路の上部にある色付きのセルに到達できない場合、または壁や別のロボットに衝突した場合、ミスが記録される。「R」というラベルのボタンを押して、コマンドシークエンスをリセットする(座標はリセットされない)。</p>
+                <p>衝突したロボットは衝突する前のセルに戻るが、ロボットの座標自体はリセットされない。小さなディスプレーにはクラッシュの理由が表示され(OCC…指令外/OOB…境界外)、その後ロボットが開始位置にいるかのように読み順でロボットの色が表示される。クラッシュが発生する前にFenderが調べたシリアルナンバーの位置、R2D2が実行していた行動も表示される。FenderまたはR2D2がクラッシュした場合、クラッシュ前と同じように行動する(これは、シークエンスの終了時にゴールに到達していない場合には当てはまらない)。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ロボットプログラミング</span>
+            </div>
+            <div class="page-content">
+                <p>もしロボットがストライクを起こさずに動くために選ばれたターンに動けない場合、モジュールはロボットが動かなくなるまで次のロボットにスキップする。</p>
+                <div class="maze-grids centered">
+                    <p>上6段:</p>
+                    <table class="top-maze-grids"></table>
+                    <p>下3段:</p>
+                    <table class="bottom-maze-grids"></table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

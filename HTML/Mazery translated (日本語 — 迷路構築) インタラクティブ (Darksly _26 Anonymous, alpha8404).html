@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>迷路構築 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        #table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 200mm;
+            width: 180mm;
+        }
+        .dark .appendix-table, .appendix-table {
+            margin: auto;
+            border: 0;
+        }
+        .dark .appendix-cell, .appendix-cell {
+            border: 0;
+        }
+        .appendix-cell {
+            user-select: none;
+            padding: 0;
+            min-width: 2.5em;
+            height: 2.5em;
+            font-weight: bold;
+            color: #999;
+        }
+        .dark .appendix-cell {
+            color: #FFF;
+        }
+        .painted {
+            color: #000;
+        }
+        td {
+            text-align: center;
+        }
+        .border {
+           padding: 0;
+        }
+        .vb {
+           min-width: 3px;
+           width: 3px;
+        }
+
+        .hb {
+           min-height: 3px;
+           height: 3px;
+        }
+
+        .inactive_color { background-color: #00000000; }
+        .primary_color { background-color: #CABAFF99; }
+        .painted_color { background-color: #27F55099; }
+        .seen_color { background-color: #BEDDF799; }
+        .inactive_border_color { background-color: #BBBBBB; }
+        .active_border_color { background-color: #000; }
+
+        .dark .seen_color { background-color: #2B74B18F; }
+        .dark .inactive_border_color { background-color: #555; }
+        .dark .active_border_color { background-color: #FFF; }
+
+        @media screen and (min-width: 900px) {
+            .short-page {
+                margin: 1em auto;
+                padding: 0;
+                border: 1px solid #222; /* Safely using px because exists outside layout of page content */
+                box-shadow: #222 0.0em 0em 0.6em;
+                clear: both;
+                background-color: #FFF;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 100%;
+                width: 8.5in; /* = 8.5in at 12pt (1em) */
+                max-height: 5.7in; /* = 11in at 12pt (1em) */
+            }
+            .dark .short-page {
+                background-color: #232323;
+            }
+        }
+
+        @media print {
+            .short-page {
+                margin: 0;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+                max-width: none;
+                min-height: initial;
+                background-color: #FFF;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 100%;
+                width: 8.5in; /* = 8.5in at 12pt (1em) */
+                height: 5.7in; /* = 11in at 12pt (1em) */
+                page-break-before: always;
+            }
+        }
+    </style>
+    <script>
+        // Setup Code (Based on DarkSly’s FMazeNot interactive)
+        //#region - Parameters
+        const DEFAULT_TABLE_SIZE = 5;
+        const GRID_SIZE_LIMIT = 100;
+
+        const INACTIVE_COLOR = "inactive_color";
+        const PRIMARY_COLOR = "primary_color";
+        const PAINTED_COLOR = "painted_color";
+        const SEEN_COLOR = "seen_color";
+
+        const INACTIVE_BORDER_COLOR = "inactive_border_color";
+        const ACTIVE_BORDER_COLOR = "active_border_color";
+
+        var TABLE_ROWS = DEFAULT_TABLE_SIZE;
+        var TABLE_COLS = DEFAULT_TABLE_SIZE;
+
+        var seenState = true;
+        var selectedCell;
+        var arrowsBehavior = "arrowBorder";
+
+        var solvedCells = [];
+        var seenCells = [];
+        var activeBorders = [];
+
+        var undos = [];
+        var redos = [];
+        //#endregion
+
+        //#region - Table/Grid Management
+        function createTable() {
+          var container = document.getElementById('table-container');
+          var tbl = document.createElement('table');
+          tbl.className = "appendix-table";
+
+          var isBorderRow = true;
+          for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
+            //Rows
+            let tr = document.createElement('tr');
+
+            if(isBorderRow){
+                //First Border Corner
+                let borderFirstCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                let borderFirstCornerCol = -0.5;
+                tr.appendChild(createBorder(borderFirstCornerRow, borderFirstCornerCol, "vb hb"));
+
+            } else {
+                //First Vertical border
+                let borderFirstVRow = Math.ceil(i/2 - 1);
+                let borderFirstVCol = -0.5;
+                tr.appendChild(createBorder(borderFirstVRow, borderFirstVCol, "vb"));
+            }
+
+            for (var j = 0; j < TABLE_COLS; j++) {
+                if(isBorderRow) {
+                    //Horizontal Corners
+                    let borderHRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderHCol = j;
+                    tr.appendChild(createBorder(borderHRow, borderHCol, "hb"));
+
+                    //Border Corners
+                    let borderCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderCornerCol = j + 0.5;
+                    tr.appendChild(createBorder(borderCornerRow, borderCornerCol, "vb hb"));
+                } else {
+                    //Actual Cells
+                    let borderRow = Math.ceil(i/2 - 1);
+                    let borderCol = j;
+                    tr.appendChild(createCell(borderRow, borderCol));
+
+                    //Vertical Borders
+                    let borderVRow = Math.ceil(i/2 - 1);
+                    let borderVCol = j + 0.5;
+                    tr.appendChild(createBorder(borderVRow, borderVCol, "vb"));
+                }
+            }
+            isBorderRow = !isBorderRow;
+            tbl.appendChild(tr);
+          }
+          container.appendChild(tbl)
+        }
+
+        function resetTable() {
+            if(!confirm("Are you sure you want to clean the grid?")) return;
+
+            var container = document.getElementById('table-container');
+            container.innerHTML = "";
+            selectedCell = null;
+
+            undos = [];
+            redos = [];
+
+            solvedCells = [];
+            seenCells = [];
+            activeBorders = [];
+
+            createTable();
+        }
+
+        function createBorder(row, col, classAdds) {
+            let border = document.createElement('td');
+            border.row = row;
+            border.col = col;
+            border.id = "border_" + border.row + "_" + border.col;
+            border.className = "appendix-cell border inactive_border_color " + classAdds;
+            return border;
+        }
+
+        function createCell(row, col) {
+                let cell = document.createElement('td');
+                cell.row = row;
+                cell.col = col;
+                cell.id = "cell_" + cell.row + "_" + cell.col;
+                cell.className = "appendix-cell";
+                cell.onclick = () => onCellClick(cell);
+                cell.ondblclick = () => toggleCellSeen(cell);
+                cell.addEventListener('contextmenu', function(ev) {
+                    ev.preventDefault();
+                    toggleCellSolved(cell);
+                    return false;
+                }, false);
+                let secondLetter = cell.col >= 26 ? String.fromCharCode(65 + Math.floor(cell.col / 26) - 1) : "";
+                cell.pos = secondLetter + String.fromCharCode(65 + (cell.col % 26)) + "" + (cell.row + 1);
+                cell.innerHTML = cell.pos;
+                return cell;
+        }
+
+        function applyGridState() {
+            let seenCellsState = seenCells;
+            let solvedCellsState = solvedCells;
+            let activeBordersState = activeBorders;
+
+            seenCells = [];
+            solvedCells = [];
+            activeBorders = [];
+
+            seenCellsState.forEach(cell => toggleCellSeen(getCell(cell.row, cell.col), true));
+            solvedCellsState.forEach(cell => toggleCellSolved(getCell(cell.row, cell.col), true));
+            activeBordersState.forEach(border => toggleBorder(getBorder(border.row, border.col)));
+        }
+
+        //#endregion
+
+        //#region - Border Management
+        function toggleBorder(border) {
+          setBorder(border, !($(border).hasClass(ACTIVE_BORDER_COLOR)));
+
+          if($(border).hasClass(ACTIVE_BORDER_COLOR)) activeBorders.push(border);
+          else activeBorders.splice(activeBorders.findIndex(c => c.id == border.id), 1);
+
+          if(!selectedCell.seen && !selectedCell.painted) toggleCellSeen(selectedCell);
+        }
+
+        function getBorder(row, col) {
+            return document.getElementById("border_" + row + "_" + col);
+        }
+
+        function setBorder(border, active) {
+            let isHorizontal = border.row % 1 != 0;
+
+            removeColorClass(border);
+            $(border).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+            if(isHorizontal) {
+              let lastCorner = getBorder(border.row, border.col - 0.5);
+              let nextCorner = getBorder(border.row, border.col + 0.5);
+
+              if(lastCorner) {
+                  removeColorClass(lastCorner);
+                  $(lastCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+              if(nextCorner) {
+                  removeColorClass(nextCorner);
+                  $(nextCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+            }
+        }
+        //#endregion
+
+        //#region - Cell Management
+        function toggleCell(cell) {
+            if(!cell) return;
+            setInactiveColor();
+            selectedCell = cell;
+            removeColorClass(selectedCell);
+            $(selectedCell).addClass(PRIMARY_COLOR);
+        }
+
+        function getCell(row, col) {
+            return document.getElementById("cell_" + row + "_" + col);
+        }
+
+        function applyOnCells(condition, predicate) {
+            for (var i = 0; i < TABLE_ROWS; i++) {
+                for (var j = 0; j < TABLE_COLS; j++) {
+                        let cell = getCell(i, j);
+                        if(condition(cell))
+                            predicate(cell);
+                }
+            }
+        }
+        //#endregion
+
+        //#region - Color Management
+        function isCellColor(cell, color) {
+            return $(cell).hasClass(color);
+        }
+
+        function removeColorClass(cell) {
+            $(cell).removeClass("inactive_color primary_color painted_color seen_color inactive_border_color active_border_color")
+        }
+
+        function paintCell(cell, color) {
+            if($(cell).hasClass(color)) {
+                removeColorClass(cell);
+                $(cell).addClass(PRIMARY_COLOR);
+            }
+            else {
+                removeColorClass(cell);
+                $(cell).addClass(color);
+            }
+        }
+
+        function setInactiveColor() {
+            if(selectedCell) {
+                removeColorClass(selectedCell);
+                if(selectedCell.painted) $(selectedCell).addClass(PAINTED_COLOR);
+                else if(selectedCell.seen) $(selectedCell).addClass(SEEN_COLOR);
+                else $(selectedCell).addClass(INACTIVE_COLOR);
+            }
+        }
+        //#endregion
+
+        //#region - Cell States Management
+        function toggleCellSolved(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.painted) {
+                solvedCells.splice(solvedCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell,cell == selectedCell ? PRIMARY_COLOR : INACTIVE_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.painted = false;
+                updateSolvedCells();
+            } else {
+                if(cell.seen) toggleCellSeen(cell);
+                solvedCells.push(cell);
+                paintCell(cell, PAINTED_COLOR);
+                $(cell).addClass("painted");
+                cell.innerHTML = solvedCells.length;
+                cell.painted = true;
+            }
+            if(!undoForced) saveAction({ event: { cell, action: "solved" }, action: "keycolor" });
+        }
+
+        function updateSolvedCells() {
+            solvedCells.forEach((cell, i) => {
+                cell.innerHTML = (i + 1);
+            })
+        }
+
+        function toggleCellSeen(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.seen) {
+                seenCells.splice(seenCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell, PRIMARY_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.seen = false;
+                updateSolvedCells();
+            } else {
+                seenCells.push(cell);
+                if(cell.painted) toggleCellSolved(cell);
+                paintCell(cell, SEEN_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = seenState ? cell.pos : "";
+                cell.seen = true;
+            }
+
+            if(!undoForced) saveAction({ event: { cell, action: "seen" }, action: "keycolor" });
+        }
+        //#endregion
+
+        //#region - Undo & Redo Management
+        function performUndoRedo(e) {
+            let isUndo = e.keyCode == 90 && !e.altKey;
+                let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
+
+                e.preventDefault();
+
+                if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
+
+                var undoEvent;
+
+                if(isUndo) {
+                    undoEvent = undos.pop();
+                    redos.push(undoEvent);
+                }
+
+                if(isRedo) {
+                    undoEvent = redos.pop();
+                    undos.push(undoEvent);
+                }
+
+                if(undoEvent.action == "keymove") {
+                    onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
+                    toggleCell(isUndo ? getCell(undoEvent.event.row, undoEvent.event.col) : getCell(undoEvent.eventRedo.row, undoEvent.eventRedo.col));
+
+                } else if(undoEvent.action == "keydown") {
+                    arrowsBehavior = undoEvent.arrowsBehavior;
+                    onKeyDown(undoEvent.event, true);
+                    setArrowsBehavior();
+
+                } else if(undoEvent.action == "keycolor") {
+                    if(undoEvent.event.action == "solved")
+                        toggleCellSolved(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+                    if(undoEvent.event.action == "seen")
+                        toggleCellSeen(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+
+                }  else if(undoEvent.action == "cellclick") {
+                    if(undoEvent.event || !isUndo)
+                    onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
+                    else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
+
+                }
+        }
+
+        function saveAction(event) {
+            if(redos.length != 0) redos = [];
+            undos.push(event);
+        }
+
+        function setArrowsBehavior() {
+            arrowsBehavior = document.getElementById("arrowBehavior").value;
+        }
+        //#endregion
+
+        //#region - Listener Management
+        function setupEventListeners() {
+            if (document.addEventListener) {
+                document.addEventListener('keydown', onKeyDown, false);
+            }
+            else if (document.attachEvent) {
+                document.attachEvent('onkeydown', onKeyDown);
+            }
+
+            var seenMark = document.getElementById("seenMark");
+            seenMark.onchange = () => onSeenSelectChanged(seenMark);
+        }
+
+        function onCellClick(cell, undoForced) {
+            if(selectedCell == cell) return;
+
+            let tempCurCell = selectedCell;
+            if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
+
+            toggleCell(cell);
+        }
+
+        function onSeenSelectChanged (seenMark) {
+            seenState = seenMark.value == "keep";
+
+            applyOnCells((cell) => cell.seen, (cell) => {
+                cell.innerHTML = seenState ? cell.pos : "";
+            });
+        }
+
+        function onKeyDown(e, undoForced) {
+            switch (e.keyCode) {
+                case 13: //Enter
+                    e.preventDefault();
+                    setInactiveColor();
+                    selectedCell = null;
+                    if(!undoForced && selectedCell) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 9: //Tab
+                    e.preventDefault();
+                    if(selectedCell)
+                        toggleCell(getCell(
+                            e.shiftKey ? selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1 : selectedCell.row,
+                            e.shiftKey ? selectedCell.col : selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                    else toggleCell(getCell(0, 0));
+                    if(!undoForced) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 38: //Arrow Up
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row - 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row <= 0 ? (TABLE_ROWS - 1) : selectedCell.row - 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 40: //Arrow Down
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { //Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row + 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 39: //Arrow Right
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col + 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 37: //Arrow Left
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col - 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col <= 0 ? (TABLE_COLS - 1) : selectedCell.col - 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 90: // Undo (Redo with Shift)
+                case 89: // Redo
+                    if(e.ctrlKey) performUndoRedo(e);
+                    return;
+
+                case 65: // Seen cell
+                    toggleCellSeen(selectedCell);
+                    return;
+
+                case 83: // Solving cell
+                    toggleCellSolved(selectedCell);
+                    return;
+            }
+        }
+        //#endregion
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路構築</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Mazery.svg" class="diagram">
+                <h2>モジュール詳細：迷路構築</h2>
+                <p class="flavour-text">ピンクのタイルは何もせず、緑のタイルはモンスターとの戦闘になり、オレンジのタイルは自分の香りをオレンジの香りに変える…「間違ったゲーム」とはどういう事だ？</p>
+
+                <ul>
+                    <li>モジュール上の各タイルの色は、そのタイルを囲む壁に基づいて色付けされている。</li>
+                    <li>色は以下の弁図を使用して確認することができる。</li>
+                </ul>
+                <svg style="width:100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+                    <pattern id="a" width="57.6" height="43.2" y="700" overflow="visible" patternUnits="userSpaceOnUse" viewBox="57.8 -44.2 57.6 43.2">
+                      <g fill="none">
+                        <path stroke="#231F20" stroke-linecap="square" stroke-width=".3" d="M115.4-43.4H173m-57.6 7.2H173M115.4-29H173m-57.6 7.2H173m-57.6 7.2H173m-57.6 7.2H173"/>
+                        <g stroke="#231F20">
+                          <path stroke-width=".3" d="M111.7-36.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m43.2 7.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m43.2 7.2V0M97.3-7.4V0M82.9-7.4V0M68.5-7.4V0m36-14.6v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2M104.5-29v7.2M90.1-29v7.2M75.7-29v7.2M61.3-29v7.2m43.2-21.6v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2m-14.4-7.2v7.2"/>
+                          <path stroke-linecap="square" stroke-width=".3" d="M57.8-43.4h57.6m-57.6 7.2h57.6M57.8-29h57.6m-57.6 7.2h57.6m-57.6 7.2h57.6M57.8-7.4h57.6"/>
+                        </g>
+                      </g>
+                    </pattern>
+                    <path fill="#7F0000" d="M0 0h1000v700H0z"/>
+                    <path fill="#AAA" d="M380.8 350h260.5v243.5H380.8z"/>
+                    <path fill="#7F3300" d="M875.3 214.7C939.7 279 894.1 429 773.5 549.8 686 637.2 583.3 685.2 508.7 680.6c23.1-3.2 43-12 58-27 18.4-18.5 27.5-44.2 28.2-74.5 30.2-.7 56-9.8 74.5-28.3 28.2-28.3 34.7-73.6 22.3-126 72.9-80.9 112.7-171.3 110-239.2 29.7 1.2 55 10.7 73.5 29z"/>
+                    <path fill="#0026FF" d="M801.7 185.6c2.8 67.9-37 158.3-109.9 239.2-12-51.2-42-109-87-164 69-50.7 140.7-77.6 197-75.2z"/>
+                    <path fill="#0FF" d="M801.7 185.6c-56.2-2.4-128 24.5-196.9 75.2a584.4 584.4 0 0 0-105.5-100.3C605.5 81.2 719 58.3 772.7 112.1c18.4 18.4 27.8 43.8 29 73.5z"/>
+                    <path fill="#B200FF" d="M691.8 424.8c12.4 52.4 6 97.7-22.3 126-18.5 18.5-44.2 27.6-74.5 28.3a215 215 0 0 0-8.7-62.5 554.3 554.3 0 0 0 105.5-91.8z"/>
+                    <path fill="gray" d="M691.8 424.8a576.2 576.2 0 0 1-105.5 91.8C572.5 467.4 542.9 412.8 500 361a575.7 575.7 0 0 1 104.8-100.2c45 55 75 112.8 87 164z"/>
+                    <path fill="red" d="M586.3 516.6a215 215 0 0 1 8.7 62.5 243 243 0 0 1-92.3-18.7c27.2-10.4 55.5-25 83.6-43.8z"/>
+                    <path fill="#FF8F00" d="M502.7 560.4A243 243 0 0 0 595 579c-.7 30.3-9.8 56-28.3 74.5a98.8 98.8 0 0 1-58 27c-28.3-1.8-52.6-11.2-70.4-29-18.4-18.4-27.9-43.8-29-73.5 28 1.2 60-5 93.4-17.7z"/>
+                    <path fill="#0F0" d="M565.7 217.6c14 14 27.1 28.5 39.1 43.2A565.4 565.4 0 0 0 500 361a590.2 590.2 0 0 0-105.2-99.1 573.8 573.8 0 0 1 104.5-101.4c22.6 16.6 45 35.7 66.4 57.1z"/>
+                    <path fill="url(#a)" d="M500 361c43 51.8 72.5 106.4 86.3 155.6a424.4 424.4 0 0 1-83.6 43.8 433.8 433.8 0 0 1-85.5-46c13-48.5 41.4-102.3 82.8-153.4z"/>
+                    <path fill="#FFC6C6" d="M508.8 680.6c-74.5 10.2-183.2-38.7-275.3-130.8C112.8 429.2 66.4 280 129.7 216.6c18.5-18.5 44.3-27.6 74.5-28.3-1.6 66.2 37.5 154 108 233.3-12 52.7-5.3 98.7 23.5 127.4 18.4 18.4 43.8 27.9 73.5 29 1.3 29.8 10.7 55.2 29.1 73.7 17.8 17.7 42 27.1 70.5 28.9z"/>
+                    <path fill="#007F0E" d="M463 320.3a590.2 590.2 0 0 1 37 40.7c-41.4 51.1-69.8 104.9-82.8 153.5a565.2 565.2 0 0 1-105-92.9c11.4-50 39.9-106.2 82.6-159.7a572.2 572.2 0 0 1 68.2 58.4z"/>
+                    <path d="M499.3 160.5a566.5 566.5 0 0 0-104.5 101.4c-67-48.6-136-74.9-190.6-73.6.7-30.2 9.8-56 28.3-74.5 52-52 162.2-30 266.8 46.7z"/>
+                    <path fill="#FF0" d="M502.7 560.4a239.8 239.8 0 0 1-93.5 17.7c-.8-19.6 2-41 8-63.6 28.7 19.6 57.7 35 85.5 45.9z"/>
+                    <path fill="#FFD893" d="M417.2 514.5c-6 22.5-8.8 44-8 63.6-29.7-1.2-55.1-10.6-73.5-29-28.8-28.8-35.6-74.7-23.5-127.5a587.5 587.5 0 0 0 105 92.9z"/>
+                    <path fill="#FFF" d="M394.8 261.9c-42.7 53.5-71.2 109.7-82.6 159.7-70.5-79.3-109.6-167-108-233.3 54.5-1.3 123.6 25 190.6 73.6z"/>
+                    <g fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="8">
+                      <path d="M204.2 188.3c.7-30.2 9.8-56 28.3-74.5 52-52 162.2-30 266.8 46.7a572.3 572.3 0 0 1 105.5 100.3c45 55 75 112.8 87 164 12.4 52.4 6 97.7-22.3 126-18.5 18.5-44.3 27.6-74.5 28.3a243 243 0 0 1-92.3-18.7 433.8 433.8 0 0 1-85.5-46 565.2 565.2 0 0 1-105-92.8c-70.5-79.3-109.6-167-108-233.3z"/>
+                      <path d="M508.8 680.6c-74.5 10.2-183.2-38.7-275.3-130.8C112.8 429.2 66.4 280 129.7 216.6c18.5-18.5 44.3-27.6 74.5-28.3 54.5-1.3 123.6 25 190.6 73.6a572.2 572.2 0 0 1 105.2 99c43 52 72.5 106.5 86.3 155.7a215 215 0 0 1 8.7 62.5c-.7 30.3-9.8 56-28.3 74.5a98.8 98.8 0 0 1-58 27z"/>
+                      <path d="M394.8 261.9a573.8 573.8 0 0 1 104.5-101.4C605.5 81.2 719 58.3 772.7 112c18.4 18.5 27.8 43.9 29 73.6 2.8 67.9-37 158.3-109.9 239.2a576.2 576.2 0 0 1-105.5 91.8 424.4 424.4 0 0 1-83.6 43.8 239.8 239.8 0 0 1-93.5 17.7c-29.7-1.2-55.1-10.6-73.5-29-28.8-28.8-35.6-74.7-23.5-127.5 11.4-50 39.9-106.2 82.6-159.7z"/>
+                      <path d="M500 361a575.7 575.7 0 0 1 104.8-100.2c69-50.7 140.7-77.6 197-75.2 29.7 1.2 55 10.6 73.5 29 64.4 64.5 18.8 214.5-101.8 335.2-87.4 87.4-190.2 135.4-264.7 130.8-28.4-1.8-52.7-11.2-70.5-29-18.4-18.4-27.9-43.8-29-73.5a206 206 0 0 1 7.9-63.6c13-48.6 41.4-102.4 82.8-153.5z"/>
+                    </g>
+                    <text font-size="90" x="67.5" y="206.5">U</text>
+                    <text font-size="90" x="193.1" y="83.4">L</text>
+                    <text font-size="90" x="767" y="83.4">R</text>
+                    <text font-size="90" x="900.4" y="207">D</text>
+                    <text font-size="36" x="330.8" y="167.7" fill="#FFF">k</text>
+                    <text font-size="36" x="656.8" y="167.7">c</text>
+                    <text font-size="36" x="282.8" y="285.4">w</text>
+                    <text font-size="36" x="491" y="260.8">l</text>
+                    <text font-size="36" x="709.6" y="286.4">b</text>
+                    <text font-size="36" x="203.3" y="410.8">i</text>
+                    <text font-size="36" x="785.5" y="411.8">n</text>
+                    <text font-size="36" x="390" y="393.4">g</text>
+                    <text font-size="36" x="591.7" y="393.4">a</text>
+                    <text font-size="36" x="421" y="559">y</text>
+                    <text font-size="36" x="557.7" y="559">r</text>
+                    <text font-size="36" x="636.3" y="525.8">p</text>
+                    <text font-size="36" x="352.3" y="525.8">t</text>
+                    <text font-size="36" x="491.5" y="625.5">o</text>
+                    <text font-size="36" x="493" y="59.4" fill="#FFF">m</text>
+                  </svg>
+                <ul>
+                    <li>迷路を構築したら、いずれかの矢印ボタンを押して開始する。</li>
+                    <li>シアンのタイルが3つ存在する。これらのタイルに到達する必要がある。迷路内の現在の位置はオレンジ色で表示され、シアンのタイルを超えると紫色に変化する。</li>
+                    <li>壁にぶつかるとミスが記録され、モジュールがリセットされる。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="short-page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路構築</span>
+            </div>
+            <div class="page-content">
+                <h2>付録：インタラクティブ迷路</h2>
+
+                <br>
+                <label for="seenMark">既に訪れた座標のマークを保持:</label>
+                <select name="seenMark" id="seenMark">
+                    <option value="keep">はい</option>
+                    <option value="delete">いいえ</option>
+                </select>
+
+                <br>
+                <label for="arrowBehavior">矢印の動作:</label>
+                <select name="arrow" id="arrowBehavior" onchange="setArrowsBehavior()">
+                    <option value="arrowBorder">壁配置</option>
+                    <option value="arrowMove">移動</option>
+                </select>
+                <br>
+
+                <button onclick="resetTable()">リセット</button>
+                <br>
+
+                <div id="table-container" ></div>
+                <div style="height: 10mm"></div>
+                <div style="text-align: center">Page 2 of 3</div>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">迷路構築</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <p></p>
+                    <table style="width: 100%">
+                        <tr><th style="width: 10%">表の操作方法</th><th style="width: 30%">コマンド:</th><th style="width: 60%">結果:</th></tr>
+                        <tr><th rowspan="5">セルの操作</th><td>(セルを)クリック</td><td>セルの選択</td></tr>
+                        <tr><td><span style="color: #33F">[移動]:</span><br>矢印キー<br> <span style="color: #33F">[壁配置]:</span> <span style="color: #990000">無効</span></td><td>隣接するセルを選択(何も選択されていない場合は左上)</td></tr>
+                        <tr><td>Tabキー</td><td>右側のセルを選択(何も選択されていない場合は左上)</td></tr>
+                        <tr><td>Shiftキー + Tabキー</td><td>下側のセルを選択(何も選択されていない場合は左上</td></tr>
+                        <tr><td>Enterキー</td><td>現在のセルの選択を解除</td></tr>
+                        <tr><th rowspan="2">セル内容</th><td>(セルを)右クリック<br>または<b>S</b>キー</td><td>送信するセルとして選択する</td></tr>
+                        <tr><td>(セルを)ダブルクリック<br>または<b>A</b>キー</td><td>既に訪れたセルとして選択</td></tr>
+                        <tr><th rowspan="1">壁</th><td><span style="color: #33F">[移動]:</span> Altキー/Ctrlキー/Shiftキー + 矢印キー<br><span style="color: #33F">[壁配置]:</span>矢印キー</td><td>選択したセルに隣接する壁を切り替える</td></tr>
+                        <tr><th rowspan="2">ショートカット</th><td>Ctrlキー + Zキー</td><td>最後のコマンドを元に戻す<span style="color: #990000">(リセットボタンを押すとクリアされる)</span></td></tr>
+                        <tr><td>Ctrlキー + Yキー/<br>Ctrlキー + Shiftキー + Zキー</td><td>最後に元に戻したコマンドをやり直す(他のコマンドを実行した場合はクリアされる)</td></tr>
+                    </table>
+                    <p>D4rkSlyの「迷路忘る勿かれ」開発に基づいたマニュアル</p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+    <script>
+        // Trigger code
+        createTable();
+        setupEventListeners();
+    </script>
+</body>
+</html>
