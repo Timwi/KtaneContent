@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Varicolour Flash Cheat Sheet — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+
+            let colorAbbrev = [ "R", "G", "B", "M", "Y", "W"];
+            let colorNamesLower = [ "red", "green", "blue", "magenta", "yellow", "white"];
+            let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let dirAbbrev = [ "u", "d", "l", "r"];
+            let varicolourTable = [
+                [33,18,3,30,29,19,0,16,11,13,10,1],
+                [21,13,25,4,34,24,5,2,15,23,35,22],
+                [27,31,17,35,22,28,20,7,30,24,3,32],
+                [14,8,11,15,1,10,9,21,34,4,31,6],
+                [2,16,20,7,26,32,25,19,27,33,12,8],
+                [0,5,9,23,6,12,14,29,18,28,26,17],
+                [17,34,4,21,27,0,8,11,35,7,1,10],
+                [32,29,30,18,28,5,17,15,9,22,13,24],
+                [7,20,26,31,24,1,30,3,25,0,27,5],
+                [12,33,16,25,35,22,34,6,23,14,4,31],
+                [3,11,15,2,14,8,21,18,33,20,19,28],
+                [9,19,23,6,10,13,16,32,12,2,29,26]
+            ]; // The idxes obtained from the source code of Varicolour Flash.
+            // Section divider for calculating some crucial information.
+            let nonCorner4x4DRowIdxes = [0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3];
+            let nonCorner4x4DColIdxes = [1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 1, 2];
+            let cornerIdxes = [];
+            let coordRef = [];
+            for (let p = 0; p < 9; p++)
+                {
+                    for (let x = 0; x < 9; x++)
+                    {
+                        let nextSquare = [];
+                        nextSquare.push(varicolourTable[p][x],varicolourTable[p][x + 3],varicolourTable[p + 3][x],varicolourTable[p + 3][x + 3]);
+                        nextSquare.sort();
+                        cornerIdxes.push(nextSquare);
+                        coordRef.push(alphabet.charAt(x) + (p + 1).toString() + "<br>-<br>" + alphabet.charAt(x + 3) + (p + 4).toString());
+                    }
+                }
+            let rowColorIdxesAll = [];
+            let colColorIdxesAll = [];
+            for (let p = 0; p < 36; p++)
+            {
+                let curDetectedCols = [];
+                let curDetectedRows = [];
+                for (let x = 0; x < 12; x++)
+                    for (let y = 0; y < 12; y++)
+                        {
+                            if (varicolourTable[y][x] == p)
+                                {
+                                    curDetectedCols.push(x);
+                                    curDetectedRows.push(y);
+                                }
+                        }
+                rowColorIdxesAll.push(curDetectedRows);
+                colColorIdxesAll.push(curDetectedCols);
+            }
+            // Optimal Directions for ALL tiles
+            let idxesOptimalDirectionsAll = [];
+            for (let p = 0; p < 9; p++)
+                {
+                    for (let x = 0; x < 9; x++)
+                    {
+                        let nextOptimalDirectionsAll = [[],[],[],[],[]];
+                        for (let curComboIdx = 0; curComboIdx < 36; curComboIdx++)
+                        {
+                            let curColIdxes = colColorIdxesAll[curComboIdx];
+                            let curRowIdxes = rowColorIdxesAll[curComboIdx];
+                            let distancesCurComboAll = [p - Math.min(...curRowIdxes), Math.max(...curRowIdxes) - p - 3, x - Math.min(...curColIdxes), Math.max(...curColIdxes) - x - 3];
+                            let maxDistance = Math.max(...distancesCurComboAll);
+                            let idxesMax = [];
+                            for (let z = 0; z < 4; z++)
+                                if (distancesCurComboAll[z] >= maxDistance)
+                                    idxesMax.push(z);
+                            if (idxesMax.length > 1)
+                                nextOptimalDirectionsAll[4].push(curComboIdx);
+                            else
+                                nextOptimalDirectionsAll[idxesMax[0]].push(curComboIdx);
+                        }
+                        idxesOptimalDirectionsAll.push(nextOptimalDirectionsAll);
+                    }
+                }
+            // console.log(cornerIdxes);
+            // console.log(coordRef);
+            // console.log(rowColorIdxesAll);
+            // console.log(colColorIdxesAll);
+            // console.log(idxesOptimalDirectionsAll);
+            // Section divider for setting up the semi-interactive portion of the manual.
+            // Generate more pages for this
+            let body = $("div.section");
+                let curPageNum = 2;
+                let extraPagesToCreate = 17;
+                for (let x = 0; x < extraPagesToCreate; x++)
+                    {
+                        let page = $("<div>").addClass(`page page-bg-0${curPageNum % 7 + 1}`).appendTo(body);
+                        $('<div class="page-header"><span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span><span class="page-header-section-title">Varicolour Flash</span></div>').appendTo(page);
+                        let content = $("<div>").addClass(`page-content page-0${curPageNum - 1}`).appendTo(page);
+                        // Page content begins here.
+                        // Add a table corresponding to this.
+                        let nextP = $("<p>").addClass("centered");
+                        nextP.append($("<button>").addClass("switchSearchable"));
+                        nextP.appendTo(content);
+                        if (x == 0)
+                        {
+                            content.append($("<h3>").text("Combo Reference").addClass("centered"));
+                            let tableRef = $("<table>").addClass('centered small');
+                            for (let r = 0; r < 6; r++)
+                            {
+                                let nextRow = $("<tr>");
+                                for (let c = 0; c < 6; c++)
+                                {
+                                    let nextRowInCell = $("<td>");
+                                        nextRowInCell.addClass("cellRef");
+                                    nextRowInCell.appendTo(nextRow);
+                                }
+                                nextRow.appendTo(tableRef);
+                            }
+                            content.append(tableRef);
+                        }
+                        let divSplit = $("<div>").addClass("hstack");
+                        // for (let p = 0; p < 2; p++)
+                            divSplit.append($("<table>").addClass('squareOptions centered small'));
+                        divSplit.appendTo(content);
+                        $("<div>").addClass("page-footer relative-footer").text(curPageNum).appendTo(page);
+                        curPageNum++;
+                    }
+
+            let useSearchableCellsInstead = false;
+            let lookupTable = $(".lookup");
+            // Generate the cells needed for the original table of that manual.
+            let variTableBase = $(".variTableBase");
+            for (let p = 0; p < 12; p++)
+                {
+                    let nextRow = $("<tr>");
+                    for (let x = 0; x < 12; x++)
+                    {
+                        let colorIdx = varicolourTable[p][x] % 6;
+                        let wordIdx = Math.floor(varicolourTable[p][x] / 6);
+                        let nextCell = $("<td>");
+                        nextCell.addClass("varicolourCell");
+                        nextCell.text(colorAbbrev[wordIdx]);
+                        nextCell.appendTo(nextRow);
+                    }
+                    nextRow.appendTo(variTableBase);
+                }            
+            let btnSwitchSearchable = $(".switchSearchable");
+            // Generate the cells needed for looking up the squares of the module.
+            let lookupSquareTable = $(".squareOptions");
+            let curIdx = 0;
+            let rowLimit = [4, 5];
+                for (let p = 0; p < lookupSquareTable.length; p++)
+                {
+                    let headerRow = $("<tr>");
+                    headerRow.append($("<th>").html("Corner<br>Cells"));
+                    headerRow.append($("<th>").text("X#s"));
+                    headerRow.append($("<th>").text("Cells To Move"));
+                    headerRow.append($("<th>").text("Other Tiles"));
+                    headerRow.appendTo(lookupSquareTable[p]);
+                    let curRowLimit = rowLimit[p];
+                    if (p >= rowLimit.length)
+                        curRowLimit = rowLimit[rowLimit.length - 1];
+                    for (let x = 0; x < curRowLimit && curIdx < coordRef.length; x++, curIdx++)
+                    {
+                        let curSquareRow = $("<tr>");
+                        let cellSquare = $("<td>");
+                        cellSquare.addClass("varicolourSquareCell");
+                        let curSquareIdxes = cornerIdxes[curIdx];
+                        cellSquare.appendTo(curSquareRow);
+                        curSquareRow.append($("<td>").html(coordRef[curIdx]));
+                        curSquareRow.appendTo(lookupSquareTable[p]);
+                        let cellIdx = $("<td>");
+                        let newTable = $("<table>");
+                        for (let r = 0; r < 6; r++)
+                        {
+                            let nextRow = $("<tr>");
+                            for (let c = 0; c < 6; c++)
+                            {
+                                let nextRowInCell = $("<td>");
+                                    nextRowInCell.addClass("cheatsheetDirOption");
+                                nextRowInCell.appendTo(nextRow);
+                            }
+                            nextRow.appendTo(newTable);
+                        }
+                        cellIdx.append(newTable);
+                        cellIdx.appendTo(curSquareRow);
+                        let cellIdxMisc = $("<td>");
+                        cellIdxMisc.addClass("otherCellRef");
+                        cellIdxMisc.appendTo(curSquareRow);
+                    }
+                }
+            function UpdateAllTables()
+            {
+                if (useSearchableCellsInstead)
+                    btnSwitchSearchable.text("View Original Cells");
+                else
+                    btnSwitchSearchable.text("View Searchable Cells");
+                // Base Varicolour Flash Table, searchable version + original table.
+                let variTableBaseCells = $(".varicolourCell");
+                for (let x = 0; x < variTableBaseCells.length; x++)
+                {
+                    let curCellBase = variTableBaseCells[x];
+                    let rowIdx = Math.floor(x / 12);
+                    let colIdx = x % 12;
+                    let colorIdx = varicolourTable[rowIdx][colIdx] % 6;
+                    let wordIdx = Math.floor(varicolourTable[rowIdx][colIdx] / 6);
+                    variTableBaseCells[x].innerText = colorAbbrev[wordIdx];
+                    if (useSearchableCellsInstead) {
+                        variTableBaseCells[x].innerText += colorAbbrev[colorIdx];
+                        variTableBaseCells[x].className = "varicolourCell";
+                    }
+                    else {
+                        variTableBaseCells[x].className = "varicolourCell " + colorNamesLower[colorIdx];
+                    }
+                }
+                // Reference table used for determining directions,
+                let allRefCells = $(".cellRef");
+                for (let p = 0; p < allRefCells.length; p++)
+                {
+                    let r = Math.floor(p % 6);
+                    let c = Math.floor(p / 6);
+                    if (useSearchableCellsInstead)
+                    {
+                        allRefCells[p].innerText = colorAbbrev[r] + colorAbbrev[c];
+                        allRefCells[p].className = "cellRef";
+                    }
+                    else
+                    {
+                        allRefCells[p].className = "cellRef " + colorNamesLower[c];
+                        allRefCells[p].innerText = colorAbbrev[r];
+                    }
+                }
+                // Square table for determining square coordinates.
+                let allCellsSquare = $(".varicolourSquareCell");
+                allCellsSquare.text("");
+                for (let p = 0; p < allCellsSquare.length && p < coordRef.length; p++)
+                {
+                    let curSquareCell = allCellsSquare[p];
+                    let curSquareIdxes = cornerIdxes[p];
+                    if (useSearchableCellsInstead)
+                    {
+                        
+                        let squareTxt = [];
+                        curSquareIdxes.forEach(n => {
+                            let colorIdx = n % 6;
+                            let wordIdx = Math.floor(n / 6);
+                            squareTxt.push(colorAbbrev[wordIdx] + colorAbbrev[colorIdx]);
+                        });
+                        allCellsSquare[p].innerText = squareTxt.join("\n");
+                    }
+                    else
+                    {
+                        let miniTable = $("<table>");
+                            miniTable.addClass("centered")
+                            curSquareIdxes.forEach(n => {
+                                let rowCell = $("<tr>");
+                            let colorIdx = n % 6;
+                            let wordIdx = Math.floor(n / 6);
+                            let nxtCellSquare = $("<td>");
+                                nxtCellSquare.addClass(colorNamesLower[colorIdx] + " nohighlight");
+                            rowCell.append(nxtCellSquare.text(colorAbbrev[wordIdx]));
+                            miniTable.append(rowCell);
+                        });
+                        
+                        miniTable.appendTo(curSquareCell);
+                    }
+                }
+                // Direction cheatsheet for all directions.
+                let allCheatsheetCells = $(".cheatsheetDirOption");
+                allCheatsheetCells.text("");
+                for (let x = 0; x < allCheatsheetCells.length; x++)
+                {
+                    let curSquareIdx = Math.floor(x / 36);
+                    let curComboIdx = x % 36;
+
+                    let r = Math.floor(curComboIdx % 6);
+                    let c = Math.floor(curComboIdx / 6);
+
+                    let focusedCombos = idxesOptimalDirectionsAll[curSquareIdx];
+                    let idxFound = 4;
+                    for (let n = 0; n < focusedCombos.length; n++)
+                    {
+                        if (focusedCombos[n].indexOf(curComboIdx) != -1)
+                        {
+                            idxFound = n;
+                            break;
+                        }
+                    }
+                    if (useSearchableCellsInstead)
+                    {
+                        if (idxFound != 4)
+                        {
+                            allCheatsheetCells[x].innerText = colorAbbrev[r] + colorAbbrev[c] + " " + dirAbbrev[idxFound];
+                            allCheatsheetCells[x].className = "cheatsheetDirOption";
+                        }
+                        else
+                            allCheatsheetCells[x].innerText = "—";
+                    }
+                    else
+                    {
+                        if (idxFound != 4)
+                        {
+                            allCheatsheetCells[x].className = "cheatsheetDirOption " + colorNamesLower[c];
+                            allCheatsheetCells[x].innerText = colorAbbrev[r] + " " + dirAbbrev[idxFound];
+                        }
+                        else
+                            allCheatsheetCells[x].innerText = ("-");
+                    }
+                }
+                // For all misc tiles that are part of the square.
+                let allMiscCells = $(".otherCellRef");
+                allMiscCells.text("");
+                for (let p = 0; p < allMiscCells.length; p++)
+                {
+                    let idxCol4x4 = p % 9;
+                    let idxRow4x4 = Math.floor(p / 9);
+                    if (useSearchableCellsInstead)
+                    {
+                        let outingText = [];
+                        for (let x = 0;x < 4;x++)
+                        {
+                            let nxtOuting = [];
+                            for (let y = 0; y < 3; y++)
+                            {
+                                let idxCur = 3 * x + y;
+                                let n = varicolourTable[idxRow4x4 + nonCorner4x4DRowIdxes[idxCur]][idxCol4x4 + nonCorner4x4DColIdxes[idxCur]];
+                                let colorIdx = n % 6;
+                                let wordIdx = Math.floor(n / 6);
+                                nxtOuting.push(colorAbbrev[wordIdx] + colorAbbrev[colorIdx]);
+                            }
+                            outingText.push(nxtOuting.join(" "));
+                        }
+                        allMiscCells[p].innerHTML = outingText.join("<br>");
+                    }
+                    else
+                    {
+                        let tableMisc = $("<table>").addClass("centered");
+                        for (let x = 0; x < 4; x++)
+                        {
+                            let nextRow = $("<tr>");
+                            for (let y = 0; y < 3; y++)
+                            {
+                                let idxCur = 3 * x + y;
+                                let miscCellNxt = $("<td>");
+                                let n = varicolourTable[idxRow4x4 + nonCorner4x4DRowIdxes[idxCur]][idxCol4x4 + nonCorner4x4DColIdxes[idxCur]];
+                                let colorIdx = n % 6;
+                                let wordIdx = Math.floor(n / 6);
+
+                                miscCellNxt.text(colorAbbrev[wordIdx]);
+                                miscCellNxt.addClass(colorNamesLower[colorIdx] + " nohighlight");
+                                miscCellNxt.appendTo(nextRow);
+                            }
+                            nextRow.appendTo(tableMisc);
+                        }
+                        tableMisc.appendTo(allMiscCells[p]);
+                    }
+                }
+            }
+            function ToggleSearchableCellTable()
+            {
+                useSearchableCellsInstead ^= true;
+                UpdateAllTables();
+            }
+            UpdateAllTables();
+            btnSwitchSearchable.on("click", function() { ToggleSearchableCellTable(); });
+        });
+    </script>
+    <style>
+        .magenta { background-color:#F8F; color: black; }
+        .red { background-color:#F88; color: black; }
+        .green { background-color:#8F8; color: black; }
+        .white { background-color:#FFF; color: black; }
+        .blue { background-color:#88F; color: black; }
+        .yellow { background-color:#FF8; color: black; }
+        td { text-align: center; }
+        .dark .invert, .dark th { background-color: #ddd; color: black;}
+        .invert, th { background-color: black; color: #ddd;}
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 18"; }
+        .smaller { font-size: 60%; }
+        .small { font-size: 80%; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Varicolour Flash</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Not Colour Flash.svg" class="diagram">
+                <h2>On the Cheat Sheeting of Varicolour Flash</h2>
+                <p class="flavour-text">“Welcome to the test. How much will you break your way to the top?”</p>
+                <p><a href="Varicolour Flash.html">Original Manual</a> <a href="Varicolour Flash optimized (VFlyer).html">Optimized Manual</a></p>
+                <p>Press the button provided to <button class="switchSearchable centered">View Searchable Cells</button> instead.<br>This toggles between viewing cells of the original manual and the searchable cells in the alternative manual.</p>
+                <p>Searchable cells are always in the format <code>&lt;word&gt;&lt;colour&gt;</code> for this manual provided.</p>
+                <p>The original/searchable table is provided here. <strong>The next set of pages will contain the cheat sheeted tables.</strong></p>
+                <table class="centered variTableBase"></table>
+                <p>Directions are lowercased to distinguish between moving right and the color red. In the case that any square moves out of the edge of the grid, use the closest coordinate provided in the table in terms of absolute distance and exclude cells that are furthest away from the square touching outside.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+    </div>
+</body>
+</html>
