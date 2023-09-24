@@ -13294,11 +13294,11 @@ let parseData = [
 				handler: function (matches, module) {
 					var arr = [0, 1, 2, 3, 4];
 					var bgColours = {
-						'red': '#f88',
-						'blue': '#88f',
-						'orange': '#f80',
-						'green': '#8f8',
-						'pink': '#fae'
+						'red': '#f88b',
+						'blue': '#88fb',
+						'orange': '#f80b',
+						'green': '#8f8b',
+						'pink': '#faeb'
 					};
 					var txColours = {
 						'red': '#a00',
