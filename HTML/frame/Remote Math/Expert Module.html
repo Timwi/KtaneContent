@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <script src="../../js/jquery.3.7.0.min.js"></script>
+    <script async src="expert-module.js"></script>
+    <link rel="stylesheet" href="expert-module.css" />
+    <style id="fruit-names"></style>
+    <script>
+      window.addEventListener("load", function() {
+        var query = new URLSearchParams(location.search);
+        if (query.get("theme") == "dark") document.body.classList.add("dark");
+
+        i18n(query.get("lang"));
+      });
+
+      function i18n(lang) {
+        fetch("i18n/" + lang + ".json")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+          }
+          return response.json();
+        })
+        .then(strings => {
+          $("[lang-key]").each((_, el) => {
+            $(el).text(strings[$(el).attr("lang-key")]);
+          });
+
+          let fruits = ["apple","melon","orange","pear","pineapple","strawberry"]
+            .map((x,i)=>"module fruits fruit[t=\""+i+"\"]::after {content: \""+strings["fruit-"+x]+"\";}").join("");
+          $("#fruit-names").html(fruits);
+
+          $("i18n-error").hide(0);
+        })
+        .catch(x => {
+          $("i18n-error").show(0);
+          $("connecting").hide(0);
+          console.error(x);
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <i18n-error>
+      <center><span>Failed to load language translation</span></center>
+    </i18n-error>
+    <connecting>
+      <center><span lang-key="enter-code"></span><br /><input id="inputcode" /></center>
+    </connecting>
+    <disconnected>
+      <center lang-key="disconnected"></center>
+      <center lang-key="refresh-try-again"></center>
+      <center lang-key="check-internet"></center>
+      <center lang-key="contact-melon"></center>
+    </disconnected>
+    <puzzleinvalid>
+      <center lang-key="invalid-code"></center>
+      <center lang-key="refresh-try-again"></center>
+    </puzzleinvalid>
+    <puzzledisconnected>
+      <center lang-key="bomb-disconnect"></center>
+      <center lang-key="check-defuser-internet"></center>
+      <center lang-key="contact-melon"></center>
+    </puzzledisconnected>
+    <puzzlecomplete>
+      <center lang-key="bomb-orange-light"></center>
+      <center lang-key="defuser-click-button"></center>
+    </puzzlecomplete>
+    <twitchplays>
+      <center lang-key="tp-locked"></center>
+      <center><span lang-key="tp-command"></span> !<span id="twitchid"></span> check <span id="twitchcode"></span></center>
+    </twitchplays>
+    <module>
+      <backing></backing>
+      <led></led>
+      <fruits>
+        <fruit p="1"></fruit>
+        <fruit p="2"></fruit>
+      </fruits>
+      <screen></screen>
+      <buttons>
+        <button b="1">1</button>
+        <button b="4">4</button>
+        <button b="7">7</button>
+        <button b="<">&lt;</button>
+        <button b="2">2</button>
+        <button b="5">5</button>
+        <button b="8">8</button>
+        <button b="0">0</button>
+        <button b="3">3</button>
+        <button b="6">6</button>
+        <button b="9">9</button>
+        <button b="=">=</button>
+        <button b="+">+</button>
+        <button b="-">−</button>
+        <button b="*">×</button>
+        <button b="/">÷</button>
+      </buttons>
+    </module>
+  </body>
+</html>
