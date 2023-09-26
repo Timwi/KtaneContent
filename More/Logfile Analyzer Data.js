@@ -16626,32 +16626,47 @@ let parseData = [
 		loggingTag: "Tip Toe",
 		matches: [
 			{
-				regex: /Grid (?:before|after) reaching row 6:/,
+				regex: /Grid (before|after) reaching row 6:/,
 				handler: function (matches, module) {
+					if (!module.markPress) {
+						module.markPress = function (press) {
+							$SVG(`<circle cx="${25 + (press.pos.x + 9) % 10 * 50}" cy="${25 + (10 - press.pos.y) * 50}" r="15">`).addClass((!press.wasStrike ? "filled " : "") + "dot").appendTo(module.gridSvg);
+						}
+					}
 					const letters = readLines(10).join("");
-					const gridSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 520 520'>").addClass("tip-toe-grid");
+					module.gridSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 520 520'>").addClass("tip-toe-grid");
 					for (let row = 0; row < 10; row++) {
 						for (let col = 0; col < 10; col++) {
 							$SVG(`<rect x="${col * 50}" y="${row * 50}" width="50" height="50">`)
 								.addClass(`tip-toe-${(letters[2 * (10 * row + col)] == 'T' ? "allowed" : "blocked")}`)
-								.appendTo(gridSvg);
+								.appendTo(module.gridSvg);
 						}
 					}
 					for (let line = 1; line <= 9; line++) {
-						$SVG(`<path d="M${line * 50} -5 v510">`).addClass("tip-toe-line").appendTo(gridSvg);
-						$SVG(`<path d="M-5 ${line * 50} h510">`).addClass("tip-toe-line").appendTo(gridSvg);
+						$SVG(`<path d="M${line * 50} -5 v510">`).addClass("tip-toe-line").appendTo(module.gridSvg);
+						$SVG(`<path d="M-5 ${line * 50} h510">`).addClass("tip-toe-line").appendTo(module.gridSvg);
 					}
-					$SVG("<path d='M-5 -5 h510 v510 h-510z'>").addClass("tip-toe-line tip-toe-border").appendTo(gridSvg);
-					module.push([matches[0], [{ nobullet: true, obj: gridSvg }]]);
+					$SVG("<path d='M-3 -3 h506 v506 h-506z'>").addClass("tip-toe-line tip-toe-border").appendTo(module.gridSvg);
+					module.push([matches[0], [{ nobullet: true, obj: module.gridSvg }]]);
+
+					if (matches[1] === "before")
+						module.presses = [];
+					else {
+						for (const press of module.presses)
+							module.markPress(press);
+					}
 					return true;
 				}
 			},
 			{
 				regex: /Pressed \((\d+), (\d+)\)(.+)/,
 				handler: function (matches, module) {
-					const x = matches[2];
-					const y = matches[1];
-					module.push(`Pressed ${"JABCDEFGHI"[x]}${11 - y}${matches[3]}`);
+					const x = parseInt(matches[2]);
+					const y = parseInt(matches[1]);
+					module.push(`Pressed the square in row ${y}, column ${x}${matches[3]}`);
+					const press = { pos: { x: x, y: y }, wasStrike: matches[3].includes("Strike") };
+					module.presses.push(press);
+					module.markPress(press);
 					return true;
 				}
 			},
