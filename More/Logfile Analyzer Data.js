@@ -5403,7 +5403,7 @@ let parseData = [
 						three += nums[i];
 						five += nums[i];
 					}
-					module.push([ matches[1] + ": (in different group sizes)", [ pre(full), three, five ]]);
+					module.push([ matches[1] + ": (in different group sizes)", [ pre(full), pre(three), pre(five) ]]);
 					return true;
 				}
 			},
