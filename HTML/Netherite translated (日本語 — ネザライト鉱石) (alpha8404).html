@@ -10,24 +10,163 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
-        li {
-            margin-bottom: 3%;
-        }
+     li {
+         margin-bottom: 3%;
+     }
 
-        table {
-            margin: auto;
-            margin-bottom: 9%;
-        }
+     table {
+         margin: auto;
+         margin-bottom: 9%;
+     }
 
-        .rule-table {
-            font-size: 36px;
-        }
+     .rule-table {
+         font-size: 36px;
+     }
 
-        .number-table {
-            font-size: 24px;
-        }
-    </style>
+     .number-table {
+         font-size: 24px;
+     }
+
+     .ruleseeded {
+         text-decoration: underline;
+         font-weight: bold;
+     }
+
+     .ruleseeded-table {
+         background-color: rgba(199, 140, 140, 0.1);
+     }
+ </style>
+ <script>
+     const default_rules = {
+         "#addend": "1",
+         "#sn-direction": "左から右",
+         "#modded-widget-pos": "<a href='Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html'>電圧計ウィジェット</a>がある",
+         "#modded-widget-neg": "<a href='Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html'>電圧計ウィジェット</a>がない",
+         "#modded-1": "電圧の小数点以下が.5",
+         "#modded-2": "電圧が5より大きい",
+         "#vanilla-1": "点灯しているインジケーターの個数",
+         "#vanilla-2": "点灯していないインジケーターの個数",
+         "#asterisk": "",
+         tables: [
+             [1, 2, 3, 4, 5, 6, 7, 8, 9],
+             [7, 8, 9, 4, 5, 6, 1, 2, 3],
+             [3, 2, 1, 6, 5, 4, 9, 8, 7],
+             [9, 8, 7, 6, 5, 4, 3, 2, 1],
+             [1, 4, 7, 2, 5, 8, 3, 6, 9],
+             [7, 4, 1, 8, 5, 2, 9, 6, 3],
+             [3, 6, 9, 2, 5, 8, 1, 4, 7],
+             [9, 6, 3, 8, 5, 2, 7, 4, 1]
+         ]
+     };
+     const possible_rules = {
+         "#sn-direction": ["左から右", "右から左"],
+         modded_widget: [
+             {
+              "#modded-widget-pos": "<a href='Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html'>電圧計ウィジェット</a>がある",
+              "#modded-widget-neg": "<a href='Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html'>電圧計ウィジェット</a>がない",
+                 "#asterisk": "",
+                 query: [
+                     "電圧の小数部分が.0である",
+                     "電圧の小数部分が.5である",
+                     "電圧が5より大きい",
+                     "電圧が6より小さい",
+                     "電圧の整数部分が偶数である",
+                     "電圧の整数部分が奇数である"
+                 ]
+             },
+             {
+                 "#modded-widget-pos": "少なくとも一つの<a href='Modded Ports translated (日本語 — 改造ポート) (Matsuda Industry Co Ltd).html'>改造ポート</a>がある",
+                 "#modded-widget-neg": "一つも<a href='Modded Ports translated (日本語 — 改造ポート) (Matsuda Industry Co Ltd).html'>改造ポート</a>がない",
+                 "#asterisk": "",
+                 query: [
+                     "少なくとも一つのACポートがある",
+                     "少なくとも一つのコンポーネントビデオポートがある",
+                     "少なくとも一つのHDMIポートがある",
+                     "少なくとも一つのコンポジットビデオポートがある",
+                     "少なくとも一つのVGAポートがある",
+                     "少なくとも一つのUSBポートがある",
+                     "少なくとも一つのPCMCIAポートがある"
+                 ]
+             },
+             {
+                 "#modded-widget-pos": "<a href='Two Factor translated (日本語 — 2ファクタ) (tchen).html'>2ファクタウィジェット</a>がある",
+                 "#modded-widget-neg": "<a href='Two Factor translated (日本語 — 2ファクタ) (tchen).html'>2ファクタウィジェット</a>がない",
+                 "#asterisk": "*入力時点の値で処理される",
+                 query: [
+                     "いずれかの2ファクタコードの末尾が奇数である*",
+                     "いずれかの2ファクタコードの末尾が偶数である*",
+                     "いずれかの2ファクタコードの先頭が奇数である*",
+                     "いずれかの2ファクタコードの先頭が奇数である*"
+                 ]
+             }
+         ],
+         vanilla_widget: [
+             "点灯しているインジケーターの個数",
+             "点灯していないインジケーターの個数",
+             "バッテリーの個数",
+             "バッテリーホルダーの個数",
+             "ポートの個数",
+             "ポートプレートの個数",
+             "モジュールの総数を10で割った商(小数点以下切り捨て)",
+             "モジュールの総数を10で割った商(小数点以下切り上げ)"
+         ]
+     };
+     const simple_rules = [
+         "#addend",
+         "#sn-direction",
+         "#modded-widget-pos",
+         "#modded-widget-neg",
+         "#modded-1",
+         "#modded-2",
+         "#vanilla-1",
+         "#vanilla-2",
+         "#asterisk"
+     ];
+     function setDefaultRules() {
+         for (const e of document.querySelectorAll(".number-table"))
+             if (e.classList.contains("ruleseeded-table"))
+                 e.classList.remove("ruleseeded-table");
+         setAllRules(default_rules);
+     }
+     function setRules(seed) {
+         let rules = {};
+
+         rules["#addend"] = seed.nextMax(10);
+         rules["#sn-direction"] = possible_rules["#sn-direction"][seed.nextMax(2)];
+         let modded = possible_rules.modded_widget[seed.nextMax(possible_rules.modded_widget.length)];
+         rules["#modded-widget-pos"] = modded["#modded-widget-pos"];
+         rules["#modded-widget-neg"] = modded["#modded-widget-neg"];
+         rules["#asterisk"] = modded["#asterisk"];
+         let queries = seed.shuffleArray(modded.query);
+         rules["#modded-1"] = queries[0];
+         rules["#modded-2"] = queries[1];
+         queries = seed.shuffleArray(possible_rules.vanilla_widget);
+         rules["#vanilla-1"] = queries[0];
+         rules["#vanilla-2"] = queries[1];
+         rules.tables = seed.shuffleArray(default_rules.tables);
+
+         for (const key of simple_rules)
+             rules[key] = `<span class="ruleseeded">${rules[key]}</span>`;
+         for (const e of document.querySelectorAll(".number-table"))
+             if (!e.classList.contains("ruleseeded-table"))
+                 e.classList.add("ruleseeded-table");
+         setAllRules(rules);
+     }
+     function setAllRules(rules) {
+         for (const key of simple_rules) {
+             for (const e of document.querySelectorAll(key)) {
+                 e.innerHTML = rules[key];
+             }
+         }
+         for (const i of [0, 1, 2, 3]) {
+             document.querySelector(`#number-table-${i}`).innerHTML = [0, 1, 2]
+                 .map(r => `<tr>${[0, 1, 2].map(c => `<td>${rules.tables[i][3 * r + c]}</td>`).join("")
+                     }</tr>`).join("");
+         }
+     }
+ </script>
 </head>
 
 <body>
@@ -49,10 +188,11 @@
 
                 <h3>ステップ1：シークエンスの決定</h3>
                 <ul>
-                    <li>数字のシークエンスを作成する
+                    <li>数字のシークエンスを作成する。
                         <ol>
-                            <li>最初の数字は他の解除されたモジュール「ネザライト鉱石」の数＋1である。</li>
-                            <li>次にシリアルナンバーの数字を左から順に取得する。</li>
+                            <li>最初の数字は他の解除されたモジュール「ネザライト鉱石」の数+<span id="addend">1</span>である。</li>
+                            <li>次にシリアルナンバーの数字を<span
+                             id="sn-direction">左から右</span>に取得する。</li>
                         </ol>
                     </li>
                     <li>11桁になるまで作成したシークエンスを繰り返す。</li>
@@ -62,21 +202,22 @@
                 <ul>
                     <li>ブロックは3×3のグリッドである。そのグリッドのセルを押すと、数字が送信される。</li>
                     <li>この数字は、2つの異なるルールの真偽によって基づいている。</li>
-                    <li>爆弾に<a href="https://ktane.timwi.de/HTML/Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html">電圧ウィジェット</a>がある場合：
+                    <li>爆弾に<span id="modded-widget-pos"><a href="Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html">電圧計ウィジェット</a>がある</span>場合：
                         <ol>
-                            <li>電圧の小数が5の場合、最初のルールは真である。</li>
-                            <li>電圧が5より大きい場合、2番目のルールは真である。</li>
+                            <li><span id="modded-1">電圧の小数点以下が.5である</span>場合、 1番目のルールは真である。</li>
+                            <li><span id="modded-2">電圧が5より大きい</span>場合、2番目のルールは真である。</li>
                         </ol>
                     </li>
                     <li>
-                        爆弾に<a href="https://ktane.timwi.de/HTML/Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html">電圧ウィジェット</a>がない場合：
+                        爆弾に<span id="modded-widget-neg"><a href="Voltage Meter translated (日本語 — 電圧計) (Matsuda Industry Co Ltd).html">電圧計ウィジェット</a>がない</span>場合：
                         <ol>
-                            <li>シリアルナンバーの数字<strong>または</strong>シリアルナンバーの数字の合計に、点灯しているインジケーターの個数と一致する桁が含まれている場合、最初のルールは真である。</li>
-                            <li>シリアルナンバーの数字<strong>または</strong>シリアルナンバーの数字の合計に、点灯していないインジケーターの個数と一致する桁が含まれている場合、2番目のルールは真である。</li>
+                            <li>シリアルナンバーの数字<strong>または</strong>シリアルナンバーの数字の合計に、<span id="vanilla-1">点灯しているインジケーターの個数</span>と一致する桁が含まれている場合、 1番目のルールは真である。</li>
+                            <li>シリアルナンバーの数字<strong>または</strong>シリアルナンバーの数字の合計に、<span id="vanilla-2">点灯していないインジケーターの個数</span>と一致する桁が含まれている場合、2番目のルールは真である。</li>
                         </ol>
                     </li>
                     <li>2つの真偽を次のページの表に使用し、ブロックの各セルに対応する数字を決定する。</li>
                 </ul>
+                <div id="asterisk"></div>
             </div>
             <div class="page-footer relative-footer">ページ 1/2</div>
         </div>
@@ -88,14 +229,14 @@
             <div class="page-content">
                 <table class="rule-table">
                     <tr>
-                        <th><sub>最<sup></sup>初</sub>\<sup>2<sup>番目</sup></sup></th>
+                        <th><sub>1<sup>番目</sup></sub>\<sup>2<sup>番目</sup></sup></th>
                         <th>偽</th>
                         <th>真</th>
                     </tr>
                     <tr>
                         <th>偽</th>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-0">
                                 <tr>
                                     <td>1</td>
                                     <td>2</td>
@@ -114,7 +255,7 @@
                             </table>
                         </td>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-1">
                                 <tr>
                                     <td>7</td>
                                     <td>8</td>
@@ -136,7 +277,7 @@
                     <tr>
                         <th>真</th>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-2">
                                 <tr>
                                     <td>3</td>
                                     <td>2</td>
@@ -155,7 +296,7 @@
                             </table>
                         </td>
                         <td>
-                            <table class="number-table">
+                            <table class="number-table" id="number-table-3">
                                 <tr>
                                     <td>9</td>
                                     <td>8</td>
