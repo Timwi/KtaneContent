@@ -45,7 +45,8 @@
             float: right;
             clear: right;
             margin-left: .5cm;
-            line-height: 1.2;
+            line-height: 1;
+            font-size: 10.5pt;
         }
         div.diagram {
             margin-left: 1cm;
@@ -108,6 +109,7 @@
             #variety-order {
                 float: none;
                 margin: 0;
+                line-height: unset;
             }
 
             .layout {
@@ -127,6 +129,17 @@
             table.width-4 .maze-td svg {
                 width: 1.8cm;
             }
+        }
+
+        .knobs-table, .bulbs-table {
+            float: right;
+            margin-left: .5cm;
+            margin-bottom: .5cm;
+            margin-top: .25cm;
+        }
+        .knobs-table td, .knobs-table th {
+            padding: .1em .6em .05em;
+            text-align: left;
         }
     </style>
     <script>
@@ -167,6 +180,19 @@
             }
             document.getElementById('led-color-rules').innerHTML = table;
 
+            // BULBS
+            let bulbTds = Array.from(document.getElementsByClassName('base-letter'));
+            let aFirst = rnd.next(0, 2);
+            bulbTds[0].innerText = aFirst ? 'A' : 'N';
+            bulbTds[1].innerText = aFirst ? 'N' : 'A';
+
+            // COLORED KNOBS
+            let coloredKnobTds = Array.from(document.getElementsByClassName('cardinal-direction'));
+            let coloredKnobOrder = [0, 1, 2, 3];
+            rnd.shuffleFisherYates(coloredKnobOrder);
+            for (let cko = 0; cko < coloredKnobOrder.length; cko++)
+                coloredKnobTds[cko].innerText = ["北", "東", "南", "西"][coloredKnobOrder[cko]];
+
             // BUTTONS
             let buttons = Array.from(document.getElementsByClassName('button-color-rule'));
             let buttonValues = buttons.map((_, c) => c);
@@ -196,13 +222,23 @@
                 '赤色ワイヤ',
                 '黄色ワイヤ',
                 '白色ワイヤ',
+                'サイコロ(暗色地に明色点)',
+                'サイコロ(明色地に暗色点)',
                 '鍵',
                 'LED',
                 '青色スイッチ',
                 '赤色スイッチ',
                 '黄色スイッチ',
                 '白色スイッチ',
-                'ダイヤル',
+                'タイマー(カウントアップ)',
+                'タイマー(カウントダウン)',
+                '赤色電球',
+                '黄色電球',
+                '赤色ダイヤル',
+                '黒色ダイヤル',
+                '青色ダイヤル',
+                '黄色ダイヤル',
+                '白色ダイヤル',
                 '赤色ボタン',
                 '黄色ボタン',
                 '青色ボタン',
@@ -212,18 +248,18 @@
                 '水平スライダー',
                 '垂直スライダー',
                 '2×2白色キーパッド',
-                '1×3白色キーパッド(縦長)',
-                '1×4白色キーパッド(縦長)',
-                '3×1白色キーパッド(横長)',
-                '4×1白色キーパッド(横長)',
+                '1×3白色キーパッド (縦長)',
+                '1×4白色キーパッド (縦長)',
+                '3×1白色キーパッド (横長)',
+                '4×1白色キーパッド (横長)',
                 '赤色キーパッド',
                 '黄色キーパッド',
                 '青色キーパッド',
                 '3×3迷路',
-                '3×4迷路(縦長)',
-                '4×3迷路(横長)',
+                '3×4迷路 (縦長)',
+                '4×3迷路 (横長)',
                 '4×4迷路',
-                '英字ディスプレー'
+                '文字ディスプレー'
             ];
             rnd.shuffleFisherYates(flavors);
             rnd.shuffleFisherYates(flavors);
@@ -574,7 +610,6 @@
                         <path d='M .4 -1.5 v -.2 h -.8 v .2 z' />
                     <${''}/g>
                 `;
-                return new Switch(module, cell, color);
             }
         }
 
@@ -819,7 +854,7 @@
             NumShapes = 3*3;
             ShapeColors = [ '#FF3D3D', '#EBEE0B', '#3D94FF' ];
             Shapes = [
-                'M 0,-5 1.116792,-1.5371323 4.7552826,-1.5450848 1.8070074,0.58713227 2.9389262,4.0450851 0,1.9 l -2.9389264,2.1450849 1.131919,-3.45795261 -2.9482751,-2.13221739 3.6384905,0.00795 z',
+                'M 0,-5 1.116792,-1.5371323 4.7552826,-1.5450848 1.8070074,0.58713227 2.9389262,4.0450851 0,1.9 l -2.9389264,2.2550849 1.131919,-3.45795261 -2.9482751,-2.13221739 3.6384905,0.00795 z',
                 'M 0,-5 4.330127,2.5 l -8.6602541,0 z',
                 'm -1.5,-4 v 2.5 H -4 v 3 h 2.5 V 4 h 3 V 1.5 H 4 v -3 H 1.5 V -4 Z'
             ];
@@ -883,7 +918,7 @@
                 "M32.408 5.25L22.75 26.174v3.885l-2.193 4.384 4.384-2.193h-.04l9.849-21.34V5.25h-2.342z",
                 "M37.5 2.855l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V5.104L37.5 2.855z",
                 "M5.104 32.75L2.855 35l2.249 2.25h9.837L19.443 35l-4.502-2.25H5.104z",
-                "M25.059 32.75L20.557 35l4.5 2.25h9.84L37.144 35l-2.249-2.25H25.06z",
+                "M25.059 32.75L20.557 35l4.5 2.25h9.84L37.254 35l-2.249-2.25H25.06z",
                 "M2.5 35.355L.25 37.604v27.292l2.25 2.249 2.25-2.249V37.604L2.5 35.355z",
                 "M19.443 35.557L15.06 37.75h.04L5.25 59.09v5.66h2.342l9.658-20.924v-3.885l2.193-4.384z",
                 "M20 35.557l-2.25 4.502V64.75h4.5V40.059L20 35.557z",
@@ -926,13 +961,192 @@
             }
         }
 
+        class DieFactory extends ItemFactory
+        {
+            Pips = [
+                "",
+                "<circle cx='0' cy='0' r='.1'/>",
+                "<circle cx='.25' cy='.25' r='.1'/><circle cx='-.25' cy='-.25' r='.1'/>",
+                "<circle cx='0' cy='0' r='.1'/><circle cx='.25' cy='.25' r='.1'/><circle cx='-.25' cy='-.25' r='.1'/>",
+                "<circle cx='.25' cy='.25' r='.1'/><circle cx='-.25' cy='-.25' r='.1'/><circle cx='-.25' cy='.25' r='.1'/><circle cx='.25' cy='-.25' r='.1'/>",
+                "<circle cx='0' cy='0' r='.1'/><circle cx='.25' cy='.25' r='.1'/><circle cx='-.25' cy='-.25' r='.1'/><circle cx='-.25' cy='.25' r='.1'/><circle cx='.25' cy='-.25' r='.1'/>",
+            ];
+
+            Generate(taken)
+            {
+                let avail = ["DieLOD", "DieDOL"].filter(s => !taken.has(s));
+                if (avail.length == 0)
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 2));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                let style = avail[(Math.random() * avail.length) | 0];
+                this.claimRect(taken, location, 2, 2);
+                taken.add(style);
+
+                let pips = this.Pips[(Math.random() * 6) | 0];
+                let rot = (Math.random() * 4) | 0;
+
+                let c1 = `hsl(${360*Math.random()}, ${10 + 10*Math.random()}%, ${80 + 10*Math.random()}%)`;
+                let c2 = `hsl(${360*Math.random()}, ${50 + 10*Math.random()}%, ${10 + 10*Math.random()}%)`;
+                if(style === "DieLOD")
+                    [c1, c2] = [c2, c1];
+
+                return `
+                    <g transform='translate(${location % W + .5}, ${((location / W) | 0) + .5}) rotate(${Math.atan2(2.54 + location / W, 8.38 - location % W) / Math.PI * -180 + 90 * rot})'>
+                        <path d='M -.3 -.55 0 -.83 .3 -.55 z' fill='#EBB16A' />
+                        <path d='M -.3 -.55 0 -.83 .3 -.55 z' fill='#EBB16A' transform='rotate(90)'/>
+                        <path d='M -.3 -.55 0 -.83 .3 -.55 z' fill='#EBB16A' transform='rotate(180)'/>
+                        <path d='M -.3 -.55 0 -.83 .3 -.55 z' fill='#EBB16A' transform='rotate(270)'/>
+                        <rect x='-.5' y='-.5' width='1' height='1' rx='.2' fill='${c1}'/>
+                        <g fill='${c2}'>
+                            ${pips}
+                        <${''}/g>
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class TimerFactory extends ItemFactory
+        {
+            Segments = [
+                "<path d='M .08 0.07m.07-.07 .26 0 .07 .07-.07 .07-.26 0-.07-.07z' fill='#{}'/>",
+                "<path d='M .07 0.08m-.07 .07 0 .26 .07 .07 .07-.07 0-.26-.07-.07z' fill='#{}'/>",
+                "<path d='M .49 0.08m-.07 .07 0 .26 .07 .07 .07-.07 0-.26-.07-.07z' fill='#{}'/>",
+                "<path d='M .08 0.49m.07-.07 .26 0 .07 .07-.07 .07-.26 0-.07-.07z' fill='#{}'/>",
+                "<path d='M .07 0.50m-.07 .07 0 .26 .07 .07 .07-.07 0-.26-.07-.07z' fill='#{}'/>",
+                "<path d='M .49 0.50m-.07 .07 0 .26 .07 .07 .07-.07 0-.26-.07-.07z' fill='#{}'/>",
+                "<path d='M .08 0.91m.07-.07 .26 0 .07 .07-.07 .07-.26 0-.07-.07z' fill='#{}'/>"
+            ];
+
+            SegmentMapping = [
+                [true, true, true, false, true, true, true],
+                [false, false, true, false, false, true, false],
+                [true, false, true, true, true, false, true],
+                [true, false, true, true, false, true, true],
+                [false, true, true, true, false, true, false],
+                [true, true, false, true, false, true, true],
+                [true, true, false, true, true, true, true]
+            ];
+
+            Generate(taken)
+            {
+                let avail = ["TimerA", "TimerD"].filter(s => !taken.has(s));
+                if (avail.length == 0)
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 2));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                let style = avail[(Math.random() * avail.length) | 0];
+                this.claimRect(taken, location, 2, 2);
+                taken.add(style);
+
+                let i = (Math.random() * 4) | 0;
+                let maxs = [[2, 3, 5, 7], [2, 3, 5], [2, 3], [7]];
+                let maxA = maxs[0][i];
+                let maxB = maxs[i][(Math.random() * maxs[i].length) | 0];
+                let A = (Math.random() * maxA) | 0;
+                let B = (Math.random() * maxB) | 0;
+
+                return `
+                    <g transform='translate(${location % W - .5}, ${((location / W) | 0) - .5})'>
+                        <rect x='.3' y='.3' width='1.4' height='1.4' fill='#17144E' stroke='#aaa' stroke-width='.2' rx='.1'/>
+                        <g fill='#${["DFF3FF", "292E31"][(Math.random() * 2) | 0]}'>
+                            <path d='M 1 .8m-.07-.07 0-.07 .07-.07 .07 .07 0 .07-.07 .07z'/>
+                            <path d='M 1 1.2m-.07 .07 0 .07 .07 .07 .07-.07 0-.07-.07-.07z'/>
+                        <${''}/g>
+                        <g transform='translate(.5 .5) scale(.7 1)'>${range(0,7).map(i => this.Segments[i].replace("{}", this.SegmentMapping[A][i] ? "DFF3FF" : "292E31")).join("")}<${''}/g>
+                        <g transform='translate(1.108 .5) scale(.7 1)'>${range(0,7).map(i => this.Segments[i].replace("{}", this.SegmentMapping[B][i] ? "DFF3FF" : "292E31")).join("")}<${''}/g>
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class BulbFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                let avail = ["BulbY", "BulbW", "BulbR"].filter(s => !taken.has(s));
+                if (avail.length == 0)
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 2));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                let style = avail[(Math.random() * avail.length) | 0];
+                this.claimRect(taken, location, 2, 2);
+                taken.add(style);
+
+                let color =
+                    style == "BulbY" ? ["806A00", "FFD500"] :
+                    style == "BulbW" ? ["808080", "FFF"] :
+                    ["800000", "F00"];
+
+                return `
+                    <g transform='translate(${location % W + .5}, ${((location / W) | 0) + .5}) rotate(${Math.random()*360})'>
+                        <circle cx='0' cy='0' r='.6' fill='#EBB16A'/>
+                        <path fill='#${color[(Math.random() * 2) | 0]}' transform='scale(0.03)' d='M.4422 19.0468c5.432-.1402 10.4722-2.8575 13.9304-6.7124 1.7727-1.9791 3.1538-4.334 3.646-7.0433a10.8982 10.8982 0 0 0-1.9183-8.2946C13.629-6.3823 9.9805-8.4936 6.263-8.1444 2.5483-7.7951-.4653-5.4721-2.9577-2.395l5.924 4.7942C4.6942.2641 6.2208-.4848 6.9775-.556c.7541-.0715 1.5055.0476 2.9713 2.0505.6562.8996.7409 1.5081.5715 2.4341-.1693.9287-.7726 2.1485-1.823 3.318C6.705 9.4688 3.194 11.2468.4317 11.4161m-.4297 7.631a19.1 19.1 0 0 0 19.05-19.05 19.1 19.1 0 0 0-19.05-19.05c-5.6 0-10.81 2.76-14.36 6.72a14.5 14.5 0 0 0-3.65 7.04c-.5 2.71.1 5.8 1.92 8.3 2.47 3.38 6.12 5.49 9.83 5.14 3.72-.35 6.73-2.67 9.22-5.75l-5.92-4.8c-1.73 2.14-3.26 2.89-4.01 2.96-.75.07-1.5-.05-2.97-2.05a2.73 2.73 0 0 1-.57-2.44 7.3 7.3 0 0 1 1.82-3.31c2.1-2.34 5.87-4.19 8.7-4.19 6.35 0 11.42 5.08 11.42 11.43 0 6.36-5.07 11.43-11.43 11.43m.4297-.011A11.3718 11.3718 0 0 1-11.4217-.0005a11.3718 11.3718 0 0 1 11.4274-11.43v-7.62c-10.4775 0-19.05 8.5751-19.05 19.05 0 10.4775 8.5725 19.05 19.05 19.05l.4365-.0026'/>
+                        <path stroke='#000' transform='scale(0.03)' fill='none' stroke-width='1.6' d='M.4422 19.0468c5.432-.1402 10.4722-2.8575 13.9304-6.7124 1.7727-1.9791 3.1538-4.334 3.646-7.0433a10.8982 10.8982 0 0 0-1.9183-8.2946C13.629-6.3823 9.9805-8.4936 6.263-8.1444 2.5483-7.7951-.4653-5.4721-2.9577-2.395m5.924 4.7942C4.6942.2641 6.2208-.4848 6.9775-.556c.7541-.0715 1.5055.0476 2.9713 2.0505.6562.8996.7409 1.5081.5715 2.4341-.1693.9287-.7726 2.1485-1.823 3.318C6.705 9.4688 3.194 11.2468.4317 11.4161m-.4253 7.633a19.195 19.195 0 0 0 .473-.007m0 0c10.3217-.2828 18.55-8.7174 18.577-19.043-.0275-10.5096-8.5404-19.0225-19.05-19.05-5.6 0-10.81 2.76-14.36 6.72a14.5 14.5 0 0 0-3.65 7.04c-.5 2.71.1 5.8 1.92 8.3 2.47 3.38 6.12 5.49 9.83 5.14 3.72-.35 6.73-2.67 9.22-5.75m-5.918-4.7982-.002-.0018c-1.73 2.14-3.26 2.89-4.01 2.96-.75.07-1.5-.05-2.97-2.05a2.73 2.73 0 0 1-.57-2.44 7.3 7.3 0 0 1 1.82-3.31c2.1-2.34 5.87-4.19 8.7-4.19 3.2092 0 6.0914 1.2976 8.1576 3.4008M1.2252 11.3664a11.805 11.805 0 0 1-1.2188.0628m.4209-.015a11.4057 11.4057 0 0 1-.4135.01m0 0A11.3718 11.3718 0 0 1-8.1684 8.02m-8.917-16.4195-.0046.0094c-1.2533 2.5345-1.9586 5.3828-1.9586 8.3874 0 10.4775 8.5725 19.05 19.05 19.05l.4365-.0026'/>
+                    <${''}/g>
+                `;
+            }
+        }
+
+        class ColoredKnobFactory extends ItemFactory
+        {
+            Generate(taken)
+            {
+                let avail = ["KnobR", "KnobY", "KnobB", "KnobK"].filter(s => !taken.has(s));
+                if (avail.length == 0)
+                    return null;
+
+                let locations = range(0, W * H).filter(tlc => this.isRectAvailable(taken, tlc, 2, 2));
+                if (locations.length === 0)
+                    return null;
+
+                let location = locations[(Math.random() * locations.length) | 0];
+                let style = avail[(Math.random() * avail.length) | 0];
+                this.claimRect(taken, location, 2, 2);
+                taken.add(style);
+
+                let color =
+                    style == "KnobY" ? "CACA42" :
+                    style == "KnobR" ? "FF5A5A" :
+                    style == "KnobB" ? "5E72FF" :
+                    "4F4F4F";
+
+                return `
+                    <g transform='translate(${location % W + .5}, ${((location / W) | 0) + .5}) rotate(${((Math.random()*8) | 0) * 45})' stroke='#000' stroke-width='.1'>
+                        <circle cx='0' cy='0' r='.7' fill='#${color}' stroke='none'/>
+                        <path d='M.2-.7 .2 .7'/>
+                        <path d='M-.2-.7-.2 .7'/>
+                        <path d='M0 .7 0 .3' stroke='#fff'/>
+                        <!-- Need the knob outline to overpaint the tick-mark -->
+                        <circle cx='0' cy='0' r='.7' fill='none'/>
+                    <${''}/g>
+                `;
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () =>
         {
             let factories = [
                 { weight: 1, factory: new WireFactory() },
+                { weight: 1, factory: new DieFactory() },
                 { weight: 2, factory: new KeyFactory() },
                 { weight: 2, factory: new LedFactory() },
                 { weight: 2, factory: new SwitchFactory() },
+                { weight: 2, factory: new TimerFactory() },
+                { weight: 2, factory: new BulbFactory() },
+                { weight: 2, factory: new ColoredKnobFactory() },
                 { weight: 3, factory: new KnobFactory() },
                 { weight: 4, factory: new ButtonFactory() },
                 { weight: 5, factory: new BrailleDisplayFactory() },
@@ -979,26 +1193,32 @@
             rndNumber %= 1000000000000n;
             document.getElementById('dynamic-number').textContent = rndNumber;
 
+            let componentTypes = arrayShuffle(["ダイヤル", "スライダー", "英字ディスプレー", "タイマー", "サイコロ", "電球", "ボタン", "キーパッド", "迷路", "ワイヤ", "スイッチ", "LED", "点字ディスプレー", "鍵", "7セグメントディスプレー"]);
+            // The extra space in " LED" will get collapsed when we do x.slice(1) later.
+            let componentTypesSingular = arrayShuffle([" ダイヤル", " スライダー", " 英字ディスプレー", " タイマー", " サイコロ", " 電球", " ボタン", " キーパッド", " 迷路", " ワイヤ", " スイッチ", " LED", " 点字ディスプレー", " 鍵", " 7セグメントディスプレー"]);
+            // Extra spaces will get collapsed.
+            let colors = arrayShuffle(["赤", "黄", "青", "白", "黒", "マゼンタ", "紫", "緑", "シアン", "橙"]);
+
             let flavourTexts = [
                 '今、私に何を求めているのだろうか？',
                 '野生の多様性には、規則や秩序を超える美しさがある。',
                 'このモジュールに出くわすたびに、私はどれだけ長い間不在だったのだろうと思う。',
                 'あなたは爆弾のある部屋にただ一人でいる。友人達は爆弾の解除に必要な情報を持っている。しかし、1つ問題がある。彼らは爆弾を見ることができない。だから、みんなは急いで話し合う必要があるんだ！',
                 'あなたは物質だ。光速の2乗に自分を乗せない限り、あなたはエネルギーなのだ。',
-                '変化 差異 多様性 異質性 多面性 変形性',
-                '黄色のスイッチを持ち、LEDがキーパッドのスライダーの青色の数字と一致したらボタンを回す。',
+                arrayShuffle(['変化', '差異', '多様化 ', '多様性', '異質性', '多面性', '多角化', '変形性']).join(" "),
+                `${colors[0]}色の${componentTypesSingular[0].slice(1)}を使用し、${colors[2]}色の${componentTypesSingular[2].slice(1)}が${colors[4]}色の${componentTypesSingular[4].slice(1)}の${colors[5]}色の${componentTypesSingular[5].slice(1)}の${[`${colors[3]}色の数字と一致した`, `${colors[3]}色の英字と一致した`, `向きと一致した`, `${colors[3]}の位置の`, `再生された音と一致した`, `${colors[3]}の点の`, `${colors[3]}色のインジケーターと一致した`, `${colors[3]}色の${componentTypesSingular[3].slice(1)}と一致した`][(Math.random() * 8) | 0]}時に${colors[1]}色の${componentTypesSingular[1].slice(1)}を${["回す", "押す", "ひねる", "スライドする", "外す", "上げる", "切り替える", "切る", "設定する", "連打する", "押し続ける", "離す"][(Math.random() * 12) | 0]}。`,
                 '人生はチョコレートの箱のようなものだ。何が出てくるかわからない。',
                 'このモジュールは、 KTaNE製作委員会™ により設計されました',
                 '注:このマニュアルのコピーは、1部ごとに異なります。必ず正規のコピーをお持ちください。',
                 'これはおかしい...間違いなくおかしいぞ。',
-                'あなたは、曲がりくねった...ダイヤルの迷路の中にいる？それと同じものなんてない。',
+                `あなたは${["曲がりくねった", "動いている", "ややこしい", "チクタク鳴った", "グルグル回った", "光り輝いた", "カチカチ鳴った", "正方形の", "とても小さな", "帯電した", "flicky", "点滅した", "持ち上がった", "切り替わる", "数字の"][(Math.random() * 15) | 0]}…${["ダイヤル", "スライダー", "文字", "タイマー", "サイコロ", "電球", "ボタン", "キーパッド", "迷路", "ワイヤ", "スイッチ", "LED", "点字", "鍵", "ディスプレー"][(Math.random() * 15) | 0]}の迷路の中にいる？それと同じものなんてない。`,
                 `${rndNumber}分の1の確率。`,
                 'そこで、母音の違いを見分けられないプログラマーに出会った。 彼は『var i』を指さして、「it E?」と尋ねた。',
-                '10種類の人間がいます。スライダーが好きな人、ボタンが好きな人、キーパッドが好きな人、迷路が好きな人、ワイヤが好きな人、スイッチが好きな人、LEDが好きな人、点字が好きな人、鍵が好きな人、7セグメントディスプレーが好きな人です。',
+                `10種類の人間がいます。${range(0, 9).map(i => componentTypes[i]).join("が好きな人、")}が好きな人、そして${componentTypes[9]}が好きな人。`,
                 'このモジュールが変わり続けるという事実が、目に飛び込んできたのでしょうか。',
                 'F5を押す。何回も。ご自由にどうぞ。',
                 'ワンポイントアドバイス:可能な限りアイテムの配置を書き出しておくと、次回に備えることができます！',
-                'あのモジュールには前回迷路はなかったはずだが…。',
+                `あのモジュールには前回${componentTypes[0]}はなかったはずだが…。`,
                 '『三度目の正直』って言うけど、これはもう…10度目？',
                 `僕の好きな数字は何だと思う？ ${rndNumber}。`,
                 'このモジュールは、自制心や規律を持たない強迫症の電子機器好きな人たちが製造したものである。',
@@ -1015,7 +1235,34 @@
                 'バラエティの裏技…それはバラエティ！',
                 'スクラブルなら13点…日本語版があったとしたら何点なんだ？',
                 '不安を煽るモジュールが社会に解き放たれた。スライダーとダイヤル、そしていくつかの部品で構成されたこのモジュールは、急速に有名になっていった。',
-                'こんなの誰が読むんだよ？'
+                'こんなの誰が読むんだよ？',
+                'スーという名前の若い女性がいました。古いものから新しいものまで、彼女は何でも好きでした。彼女は大きなものから小さなものまで、それらすべてを楽しみました。バラエティは彼女を興奮させました。',
+                'で、誰がAIにモジュールの設計を頼んだんだ？',
+                '世界はかなり広い。一つのフレーバーに限定しないようにしよう。',
+                '人生は旅であり、目的地じゃないんだ。だから、道中のさまざまなことを楽しもう。',
+                arrayShuffle(['ケーキ', 'パイ', 'シナモンロール', 'チーズケーキ', 'ティラミス', 'ブラウニー', 'クッキー']).map(s => `${s}は嘘だ。`).join(" "),
+                `今はこれよりもっといいものが${rndNumber}個ほどある。`,
+                '世界は舞台だ。だから、いろいろな役を演じることを恐れてはいけない。',
+                '人生において変わらないのは変化だけだ。',
+                '人生はジェットコースターだ。だから浮き沈みを楽しもう。',
+                '01010110010000010101001001001001010001010101010001011001',
+                `${componentTypesSingular[0].slice(1)}を 中に ${componentTypesSingular[0].slice(1)}を 外に ${componentTypesSingular[0].slice(1)}を 中に ぶらぶら揺らし オー ホーキー・ポーキー くるりと回るんだ これで おしまい！`,
+                'なんかないか、なんかないか、なんかないか、なんかないか…！',
+                'バラエティは秩序の敵ではない。不可欠な要素なのだ。',
+                'カオスは秩序が崩壊したときに起こるものだ。しかし、カオスは新しいことを可能にするものでもある。',
+                '物事の変化を実感するための唯一の方法は、そのものに飛び込んで、ダンスに加わることだ。',
+                '人生はチャンスのゲームだ。チャンスが多ければ多いほど、勝つ確率は高くなる。',
+                '未来は必然ではない。可能性なのだ。',
+                '創造性とは、自然の無作為性に秩序を導入する能力である。',
+                '変化は避けられないが、成長は自分次第だ。成長を選ぼう。',
+                '変化とは人生の法則である。 過去と現在しか見ない人は、確実に未来を見失う。',
+                '知能の尺度は、変化する能力である。',
+                `${rndNumber + 3n}… ${rndNumber + 2n}… ${rndNumber + 1n}… ${rndNumber}…`,
+                `${capitalize(componentTypes[0])}とは電気回路を流れる生き血のような存在！いや、${componentTypes[1]}のほうが血液か？そうなると${componentTypes[2]}は動脈…いや、${capitalize(componentTypes[3])}か、はて…`,
+                `...- .- .-. .. . - -.--`,
+                `${(Math.random() * 3 + 1) | 0}歳の${["息子", "娘", "子供"][(Math.random() * 3) | 0]}でさえ、これより奇妙なものは作れない。`,
+                range(0, 8).map(i => capitalize(arrayShuffle(['よ', 'せ', 'あ', 'つ', 'め']).join(""))).join("、") + "…",
+                '本当に、変化とは美しいものだ。',
             ];
             document.getElementsByClassName('flavour-text')[0].innerText = flavourTexts[(Math.random() * flavourTexts.length) | 0];
 
@@ -1023,6 +1270,23 @@
             for (let pIx = 0; pIx < pages.length; pIx++)
                 pages[pIx].className = `page page-bg-0${(Math.random() * 7 + 1) | 0}`;
         });
+
+        function arrayShuffle(list) {
+            var i = list.length;
+            while (i > 1)
+            {
+                var index = (Math.random() * i) | 0;
+                i--;
+                var value = list[index];
+                list[index] = list[i];
+                list[i] = value;
+            }
+            return list;
+        }
+
+        function capitalize(s) {
+            return s.slice(0, 1).toUpperCase() + s.slice(1);
+        }
     </script>
 </head>
 <body>
@@ -1040,17 +1304,88 @@
                             <circle cx="305" cy="43" r="15"></circle>
                         </g>
                         <rect x="30" y="30" width="230" height="50"></rect>
-                        <text id="dynamic-number" x="0" y="69" fill="white" text-anchor="end" font-size="35" font-family="LCDClock" transform="translate(255, 0) scale(.65, 1)"></text>
-                        <g id="dynamic-svg" transform="translate(39, 105) scale(30)"></g>
+                        <text id="dynamic-number" x="0" y="69" fill="white" text-anchor="end" font-size="35" font-family="LCDClock" transform="translate(255, 0) scale(.65, 1)">996322323919</text>
+                        <g id="dynamic-svg" transform="translate(39, 105) scale(30)"><rect fill="#581502" stroke="#C46058" stroke-width=".2" x="4.7" y="3.8" width="1.6" height="2.4"></rect><g fill="#471C12"><circle cx="5.2" cy="4.4" r=".2"></circle><circle cx="5.8" cy="4.4" r=".2"></circle><circle cx="5.2" cy="5" r=".2"></circle><circle cx="5.8" cy="5" r=".2"></circle><circle cx="5.2" cy="5.6" r=".2"></circle><circle cx="5.8" cy="5.6" r=".2"></circle></g>
+                    <g transform="translate(8.5, 3.5) rotate(90) translate(-.5, -.5)">
+                        <path d="M-.3 .35 h 4.6 v .3 h -4.6 z" fill="none" stroke="black" stroke-width=".1"></path>
+                        <path d="M0 .2 v -.4M2 .2 v -.4M4 .2 v -.4" fill="none" stroke="black" stroke-width=".1"></path>
+                        <path d="M3.75 -.2 h .5 v 1.4 h -.5 z" fill="#ccc" stroke="black" stroke-width=".05"></path>
+                    </g>
+
+                    <g transform="translate(2.5, 5)">
+                        <rect fill="#227B04" stroke="#56D661" stroke-width=".2" x="-1.8" y="-1" width="3.6" height="2"></rect>
+                        <path d="M -.5 1.1 .5 1.1 0 1.4 z" fill="#EBB16A" transform="translate(-1.035, 0)"></path>
+                        <path d="M -.5 1.1 .5 1.1 0 1.4 z" fill="#EBB16A"></path>
+                        <path d="M -.5 1.1 .5 1.1 0 1.4 z" fill="#EBB16A" transform="translate(1.035, 0)"></path>
+                    </g>
+                    <g transform="translate(1.02, 4.2) scale(.023)"><path transform="translate(0, 0)" d="M5.104.25L2.855 2.5l2.249 2.25h29.792l2.249-2.25L34.896.25H5.104z" fill="#28580D"></path><path transform="translate(0, 0)" d="M2.5 2.855L.25 5.104v27.292l2.25 2.249 2.25-2.249V5.104L2.5 2.855z" fill="#FBFFD4"></path><path transform="translate(0, 0)" d="M5.25 5.25v5.66l9.85 21.34h-.041l4.384 2.193-2.193-4.384v-3.885L7.592 5.25H5.25z" fill="#28580D"></path><path transform="translate(0, 0)" d="M17.75 5.25v24.691L20 34.443l2.25-4.502V5.25h-4.5z" fill="#28580D"></path><path transform="translate(0, 0)" d="M32.408 5.25L22.75 26.174v3.885l-2.193 4.384 4.384-2.193h-.04l9.849-21.34V5.25h-2.342z" fill="#FBFFD4"></path><path transform="translate(0, 0)" d="M37.5 2.855l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V5.104L37.5 2.855z" fill="#28580D"></path><path transform="translate(0, 0)" d="M5.104 32.75L2.855 35l2.249 2.25h9.837L19.443 35l-4.502-2.25H5.104z" fill="#28580D"></path><path transform="translate(0, 0)" d="M25.059 32.75L20.557 35l4.5 2.25h9.84L37.254 35l-2.249-2.25H25.06z" fill="#28580D"></path><path transform="translate(0, 0)" d="M2.5 35.355L.25 37.604v27.292l2.25 2.249 2.25-2.249V37.604L2.5 35.355z" fill="#FBFFD4"></path><path transform="translate(0, 0)" d="M19.443 35.557L15.06 37.75h.04L5.25 59.09v5.66h2.342l9.658-20.924v-3.885l2.193-4.384z" fill="#FBFFD4"></path><path transform="translate(0, 0)" d="M20 35.557l-2.25 4.502V64.75h4.5V40.059L20 35.557z" fill="#28580D"></path><path transform="translate(0, 0)" d="M20.557 35.557l2.193 4.384v3.885l9.658 20.924h2.342v-5.66L24.9 37.75h.041l-4.384-2.193z" fill="#28580D"></path><path transform="translate(0, 0)" d="M37.5 35.355l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V37.604l-2.25-2.249z" fill="#28580D"></path><path transform="translate(0, 0)" d="M5.104 65.25L2.855 67.5l2.249 2.25h29.792l2.249-2.25-2.249-2.25H5.104z" fill="#28580D"></path><path transform="translate(45, 0)" d="M5.104.25L2.855 2.5l2.249 2.25h29.792l2.249-2.25L34.896.25H5.104z" fill="#FBFFD4"></path><path transform="translate(45, 0)" d="M2.5 2.855L.25 5.104v27.292l2.25 2.249 2.25-2.249V5.104L2.5 2.855z" fill="#28580D"></path><path transform="translate(45, 0)" d="M5.25 5.25v5.66l9.85 21.34h-.041l4.384 2.193-2.193-4.384v-3.885L7.592 5.25H5.25z" fill="#28580D"></path><path transform="translate(45, 0)" d="M17.75 5.25v24.691L20 34.443l2.25-4.502V5.25h-4.5z" fill="#28580D"></path><path transform="translate(45, 0)" d="M32.408 5.25L22.75 26.174v3.885l-2.193 4.384 4.384-2.193h-.04l9.849-21.34V5.25h-2.342z" fill="#FBFFD4"></path><path transform="translate(45, 0)" d="M37.5 2.855l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V5.104L37.5 2.855z" fill="#28580D"></path><path transform="translate(45, 0)" d="M5.104 32.75L2.855 35l2.249 2.25h9.837L19.443 35l-4.502-2.25H5.104z" fill="#28580D"></path><path transform="translate(45, 0)" d="M25.059 32.75L20.557 35l4.5 2.25h9.84L37.254 35l-2.249-2.25H25.06z" fill="#28580D"></path><path transform="translate(45, 0)" d="M2.5 35.355L.25 37.604v27.292l2.25 2.249 2.25-2.249V37.604L2.5 35.355z" fill="#28580D"></path><path transform="translate(45, 0)" d="M19.443 35.557L15.06 37.75h.04L5.25 59.09v5.66h2.342l9.658-20.924v-3.885l2.193-4.384z" fill="#FBFFD4"></path><path transform="translate(45, 0)" d="M20 35.557l-2.25 4.502V64.75h4.5V40.059L20 35.557z" fill="#28580D"></path><path transform="translate(45, 0)" d="M20.557 35.557l2.193 4.384v3.885l9.658 20.924h2.342v-5.66L24.9 37.75h.041l-4.384-2.193z" fill="#28580D"></path><path transform="translate(45, 0)" d="M37.5 35.355l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V37.604l-2.25-2.249z" fill="#28580D"></path><path transform="translate(45, 0)" d="M5.104 65.25L2.855 67.5l2.249 2.25h29.792l2.249-2.25-2.249-2.25H5.104z" fill="#FBFFD4"></path><path transform="translate(90, 0)" d="M5.104.25L2.855 2.5l2.249 2.25h29.792l2.249-2.25L34.896.25H5.104z" fill="#FBFFD4"></path><path transform="translate(90, 0)" d="M2.5 2.855L.25 5.104v27.292l2.25 2.249 2.25-2.249V5.104L2.5 2.855z" fill="#28580D"></path><path transform="translate(90, 0)" d="M5.25 5.25v5.66l9.85 21.34h-.041l4.384 2.193-2.193-4.384v-3.885L7.592 5.25H5.25z" fill="#28580D"></path><path transform="translate(90, 0)" d="M17.75 5.25v24.691L20 34.443l2.25-4.502V5.25h-4.5z" fill="#FBFFD4"></path><path transform="translate(90, 0)" d="M32.408 5.25L22.75 26.174v3.885l-2.193 4.384 4.384-2.193h-.04l9.849-21.34V5.25h-2.342z" fill="#28580D"></path><path transform="translate(90, 0)" d="M37.5 2.855l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V5.104L37.5 2.855z" fill="#28580D"></path><path transform="translate(90, 0)" d="M5.104 32.75L2.855 35l2.249 2.25h9.837L19.443 35l-4.502-2.25H5.104z" fill="#28580D"></path><path transform="translate(90, 0)" d="M25.059 32.75L20.557 35l4.5 2.25h9.84L37.254 35l-2.249-2.25H25.06z" fill="#28580D"></path><path transform="translate(90, 0)" d="M2.5 35.355L.25 37.604v27.292l2.25 2.249 2.25-2.249V37.604L2.5 35.355z" fill="#28580D"></path><path transform="translate(90, 0)" d="M19.443 35.557L15.06 37.75h.04L5.25 59.09v5.66h2.342l9.658-20.924v-3.885l2.193-4.384z" fill="#28580D"></path><path transform="translate(90, 0)" d="M20 35.557l-2.25 4.502V64.75h4.5V40.059L20 35.557z" fill="#FBFFD4"></path><path transform="translate(90, 0)" d="M20.557 35.557l2.193 4.384v3.885l9.658 20.924h2.342v-5.66L24.9 37.75h.041l-4.384-2.193z" fill="#28580D"></path><path transform="translate(90, 0)" d="M37.5 35.355l-2.25 2.249v27.292l2.25 2.249 2.25-2.249V37.604l-2.25-2.249z" fill="#28580D"></path><path transform="translate(90, 0)" d="M5.104 65.25L2.855 67.5l2.249 2.25h29.792l2.249-2.25-2.249-2.25H5.104z" fill="#28580D"></path></g>
+                <path fill="#FF5656" stroke="black" stroke-width=".05" d="M1.25 0 0.6250000000000001 1.0825317547305482 -0.6249999999999998 1.0825317547305484 -1.25 1.5308084989341916e-16 -0.6250000000000006 -1.0825317547305482 0.6250000000000001 -1.0825317547305482z" transform="translate(8, 1) rotate(307.7245109517924)"></path><g transform="translate(3.5, 1)">
+                            <rect x="-1.875" y="-1.25" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M-0.625 -1.25 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M-1.875 0 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M-1.47 -0.99 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+
+                            <rect x="-1.875" y="0" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M-0.625 0 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M-1.875 1.25 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M-1.47 0.26 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+
+                            <rect x="-0.625" y="-1.25" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M0.625 -1.25 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M-0.625 0 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M-0.22 -0.99 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+
+                            <rect x="-0.625" y="0" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M0.625 0 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M-0.625 1.25 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M-0.22 0.26 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+
+                            <rect x="0.625" y="-1.25" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M1.875 -1.25 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M0.625 0 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M1.03 -0.99 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+
+                            <rect x="0.625" y="0" width="1.25" height="1.25" fill="#F96668" stroke="black" stroke-width=".1"></rect>
+                            <path d="M1.875 0 v 1.25 h -1.25 l 0.15 -0.15 h 0.95 v -0.95 z" fill="black" opacity=".5"></path>
+                            <path d="M0.625 1.25 v -1.25 h 1.25 l -0.15 0.15 h -0.95 v 0.95 z" fill="white" opacity=".5"></path>
+                            <path d="M1.03 0.26 h 0.44 v 0.15 h -0.44 z" fill="#292929"></path>
+                        </g><circle transform="translate(0.5, 1.5)" cx="0" cy="0" r=".5" fill="#F5FF4F" stroke="black" stroke-width=".05"></circle>
+                    <g fill="#5E4000" stroke="none">
+                        <rect x="6.6" y="4.6" width=".8" height=".8"></rect>
+                        <rect x="6.6" y="6.6" width=".8" height=".8"></rect>
+                    </g>
+                    <path stroke-linecap="round" d="M7 5 7 7" fill="none" stroke="#2244dd" stroke-width=".25"></path>
+
+                    <g fill="#5E4000" stroke="none">
+                        <rect x="0.6" y="2.6" width=".8" height=".8"></rect>
+                        <rect x="2.6" y="2.6" width=".8" height=".8"></rect>
+                    </g>
+                    <path stroke-linecap="round" d="M1 3 3 3" fill="none" stroke="#dd2222" stroke-width=".25"></path>
+
+                    <g transform="translate(0, 5.5)" fill="#FFFFFF" stroke="black" stroke-width=".05">
+                        <circle cx="0" cy="0" r=".4" fill="#ccc"></circle>
+                        <path d="M-.2 0 h .4 L .4 -1.5 h -.8 z"></path>
+                        <path d="M .4 -1.5 v -.2 h -.8 v .2 z"></path>
+                    </g>
+
+                    <g transform="translate(6, 1.5)" fill="#F23E3E" stroke="black" stroke-width=".05">
+                        <circle cx="0" cy="0" r=".4" fill="#ccc"></circle>
+                        <path d="M-.2 0 h .4 L .4 -1.5 h -.8 z"></path>
+                        <path d="M .4 -1.5 v -.2 h -.8 v .2 z"></path>
+                    </g>
+                </g>
                     </svg>
                 </div>
                 <h2>モジュール詳細：寄せ集め</h2>
 
                 <p class="flavour-text">今、私に何を求めているのだろうか？</p>
 
-                <p>最初に、モジュールにあるアイテムのリストを、<span class='wide'>右</span><span class='narrow'>下</span>にあるリストと同じ順番で並べて作成する。</p>
+                <p class="narrow">最初に、モジュールにあるアイテムのリストを、以下にあるリストと同じ順番で並べて作成する。</p>
 
-                <ul id="variety-order"><li>黄色ワイヤ</li><li>青色スイッチ</li><li>LED</li><li>4×4迷路</li><li>垂直スライダー</li><li>青色ワイヤ</li><li>ダイヤル</li><li>赤色スイッチ</li><li>3×4迷路(縦長)</li><li>青色ボタン</li><li>黄色スイッチ</li><li>赤色キーパッド</li><li>黄色ボタン</li><li>鍵</li><li>4×1白色キーパッド(横長)</li><li>青色キーパッド</li><li>4×3迷路(横長)</li><li>1×4白色キーパッド(縦長)</li><li>2×2白色キーパッド</li><li>黒色ワイヤ</li><li>水平スライダー</li><li>白色スイッチ</li><li>赤色ワイヤ</li><li>白色ワイヤ</li><li>黄色キーパッド</li><li>赤色ボタン</li><li>英字ディスプレー</li><li>白色ボタン</li><li>3×3迷路</li><li>数字ディスプレー</li><li>点字ディスプレー</li><li>3×1白色キーパッド(横長)</li><li>1×3白色キーパッド(縦長)</li></ul>
+                <ul id="variety-order"><li>赤色キーパッド</li><li>白色スイッチ</li><li>青色スイッチ</li><li>4×3迷路(横長)</li><li>鍵</li><li>LED</li><li>3×1白色キーパッド(横長)</li><li>黄色スイッチ</li><li>赤色ダイヤル</li><li>サイコロ(明色地に暗色点)</li><li>青色ダイヤル</li><li>タイマー(カウントダウン)</li><li>4×4迷路</li><li>赤色スイッチ</li><li>赤色ワイヤ</li><li>垂直スライダー</li><li>白色ダイヤル</li><li>赤色ボタン</li><li>青色ボタン</li><li>1×4白色キーパッド(縦長)</li><li>黒色ダイヤル</li><li>2×2白色キーパッド</li><li>サイコロ(暗色地に明色点)</li><li>白色ボタン</li><li>白色ワイヤ</li><li>黄色ボタン</li><li>黄色電球</li><li>黒色ワイヤ</li><li>水平スライダー</li><li>4×1白色キーパッド(横長)</li><li>赤色電球</li><li>青色ワイヤ</li><li>英字ディスプレー</li><li>3×3迷路</li><li>3×4迷路(縦長)</li><li>黄色ワイヤ</li><li>青色キーパッド</li><li>1×3白色キーパッド(縦長)</li><li>点字ディスプレー</li><li>黄色キーパッド</li><li>タイマー(カウントアップ)</li><li>数字ディスプレー</li><li>黄色ダイヤル</li></ul>
+
+                <!-- With the longest flavor text, #variety-order would be moved slightly down, which breaks the formatting. -->
+                <p class="wide">最初に、モジュールにあるアイテムのリストを、右にあるリストと同じ順番で並べて作成する。</p>
 
                 <p>モジュールの上部に表示されている数字を見る。この数字を解読するには、反復処理を行う必要がある。それぞれの反復処理では、数<var>N</var> が関連する。反復処理を行うにはこれらの計算を実行する:</p>
 
@@ -1070,9 +1405,9 @@
                 <p>特殊なケースとして、最後のアイテムが正しい状態に設定されているが、ワイヤーが誤って切断されたため、ミスが記録された場合、モジュールを解除するためにアイテムの状態を一度変更し、元に戻す作業を行う必要がある。</p>
 
             </div>
-            <div class="page-footer relative-footer">ページ 1/5</div>
+            <div class="page-footer relative-footer">ページ 1/6</div>
         </div>
-        <div class="page">
+        <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">寄せ集め</span>
@@ -1080,7 +1415,7 @@
             <div class="page-content">
                 <div class='layout'>
                     <div>
-                        <h3>ダイヤル</h3>
+                        <h3>白色ダイヤル</h3>
                         <p><var>N</var> は目盛りの数である。状態は0から時計回りに番号が振られている。どの目盛りが状態0であるかを確認するには、上向きの目盛りから始めて、シリアルナンバーの最初の文字と同じ数だけ目盛りを時計回りに移動する (英字の場合、A=1～Z=26)。</p>
                     </div>
                     <div>
@@ -1107,20 +1442,20 @@
                     <div>
                         <h3>LED</h3>
                         <p>LEDは最初、2色の間で点滅する。その色の組み合わせを以下の表で調べると、新しい色のリストが得られる。<var>N</var> はそのリストの中の色の数である。色は読み順で0から始まる番号が振られている。値は、そのリストの中から、送信すべき色を特定する。</p>
-                        <p>LEDを1回タップすると、入力モードに切り替わる。LEDは、5つの色すべてが循環して表示される。正しい色が表示された時に、もう一度LEDをタップして送信する。</p>
+						<p>LEDを1回タップすると、入力モードに切り替わる。LEDは、5つの色すべてが循環して表示される。正しい色が表示された時に、もう一度LEDをタップして送信する。</p>
                         <table id="led-color-rules"><tr><th>R</th><th>Y</th><th>B</th><th>W</th><td class="corner"></td></tr><tr><td>K B Y R W</td><td>K Y W B R</td><td>K Y R W</td><td>B R W K</td><th>K</th></tr><tr><td class="corner"></td><td>Y W K B R</td><td>W B</td><td>B K Y</td><th>R</th></tr><tr><td class="corner"></td><td class="corner"></td><td>R Y K B</td><td>Y W B K</td><th>Y</th></tr><tr><td class="corner"></td><td class="corner"></td><td class="corner"></td><td>R W</td><th>B</th></tr></table>
-                        <p style="font-size: 9pt">B = 青, K = 黒, R = 赤, W = 白, Y = 黄</p>
+                        <p style="font-size: 9pt">B = 青、 K = 黒、 R = 赤、 W = 白、 Y = 黄</p>
                     </div>
                     <div>
-                        <h3>数字ディスプレー</h3>
+                       <h3>数字ディスプレー</h3>
                         <p><var>N</var> は、ワイヤを除く、先に操作された項目の数である。最初に操作された項目から順番に、0から始まる番号が振られている。</p>
                         <p>その項目が操作されたときに青色で表示されていた数字に設定する。入力された数字は黄色で表示される。</p>
                     </div>
                 </div>
             </div>
-            <div class="page-footer relative-footer">ページ 2/5</div>
+            <div class="page-footer relative-footer">ページ 2/6</div>
         </div>
-        <div class="page">
+        <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">寄せ集め</span>
@@ -1142,10 +1477,10 @@
                     <div>
                         <h3>ボタン</h3>
                         <table class="button-table">
-                            <tr><th>色</th><th><var>K</var></th></tr>
-                            <tr><td>赤</td><td class="button-color-rule">2</td></tr>
-                            <tr><td>黄</td><td class="button-color-rule">1</td></tr>
-                            <tr><td>青</td><td class="button-color-rule">0</td></tr>
+                            <tr><th>色</th><th><var>k</var></th></tr>
+                            <tr><td>赤</td><td class="button-color-rule">0</td></tr>
+                            <tr><td>黄</td><td class="button-color-rule">2</td></tr>
+                            <tr><td>青</td><td class="button-color-rule">1</td></tr>
                             <tr><td>白</td><td class="button-color-rule">3</td></tr>
                         </table>
                         <p><var>N</var> は<var>K</var> ＋<var>P</var> であり、<var>K</var> はボタンの色を右の表から求め、<var>P</var> はボタンの形状が持つ角の数である。</p>
@@ -1162,13 +1497,64 @@
                     </div>
                     <div>
                         <h3>点字ディスプレー</h3>
-                        <p><var>N</var> は、シリアルナンバー内の個別の文字の数である。この値は、これらの文字のうち、どの文字を<a href='https://ktane.timwi.de/HTML/HTML/Braille translated (日本語 — 点字) (hatosable).html'>点字</a>で入力するかを特定するもので、最初に出現した文字から順番に0から始まる番号が振られている。入力すべき文字が数字である場合、1=A、2=B…9=I、0=Jとし、それを一段下にシフトして入力する。</p>
+                        <p><var>N</var> は、シリアルナンバー内の個別の文字の数である。この値は、これらの文字のうち、どの文字を<a href='Braille translated (日本語 — 点字) (hatosable).html'>点字</a>で入力するかを特定するもので、最初に出現した文字から順番に0から始まる番号が振られている。入力すべき文字が数字である場合、1=A、2=B…9=I、0=Jとし、それを一段下にシフトして入力する。</p>
                     </div>
                 </div>
             </div>
-            <div class="page-footer relative-footer">ページ 3/5</div>
+            <div class="page-footer relative-footer">ページ 3/6</div>
         </div>
-        <div class="page">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">寄せ集め</span>
+            </div>
+            <div class="page-content">
+                <div class='layout'>
+                    <div>
+
+                        <h3>鍵</h3>
+                    <p><var>N</var> は10である。爆弾のカウントダウンタイマーの秒数一の位がその値に等しくなった時に、鍵を時計回りに回す。</p>
+                    </div>
+                    <div>
+                        <h3>スイッチ</h3>
+                    <p><var>N</var> は、スイッチが切り替えられる位置の数である（2～4段階）。これらの位置は、完全な「上」位置から順番に、0から始まる番号が振られている。</p>
+                    </div>
+                    <div>
+                        <h3>タイマー</h3>
+                        <p><var>N</var> はタイマーが表示可能である最大の時間である。表示可能な時間は0:0から順番に、0から始まる番号が振られている。タイマーを停止させるにはタイマーを押す。もう一度押すと、タイマーが再開される。</p>
+                    </div>
+                    <div>
+                        <h3>サイコロ</h3>
+                        <p><var>N</var> は24である。得られた値を6で割った余りを<var>V</var> とし、得られた値を6で割った値(小数点以下は切り捨てる)を<var>S</var> とする。</p>
+                        <p><var>V</var> と書かれた面が前に見えるように立方体を回転させる。(サイコロには0-5と書かれた面がある。)</p>
+                        <p>その面に隣接する面を昇順に並べる。このうち、どの面がステータスライトの方を向くべきかを<var>S</var> で選択し、それに従い立方体を回転させる。</p>
+                    </div>
+                    <div>
+                        <h3>色付きダイヤル</h3>
+                        <table class="knobs-table">
+                            <tr><th>色</th><th>方向</th></tr>
+                            <tr><td>赤</td><td class='cardinal-direction'>西</td></tr>
+                            <tr><td>黒</td><td class='cardinal-direction'>東</td></tr>
+                            <tr><td>青</td><td class='cardinal-direction'>南</td></tr>
+                            <tr><td>黄</td><td class='cardinal-direction'>北</td></tr>
+                        </table>
+                        <p>ダイヤルを回すと「カチッ」という音がする。 <var>N</var> はこの音が大きくなる場所の数である。これらの大きな音の場所には、表で示された位置から開始する、0から始まる番号が時計回りの順番で振られている。</p>
+                    </div>
+                    <div>
+                        <h3>電球</h3>
+                        <table class="bulbs-table">
+                            <tr><th>色</th><th>英字</th></tr>
+                            <tr><td>赤</td><td class='base-letter'>A</td></tr>
+                            <tr><td>黄</td><td class='base-letter'>N</td></tr>
+                        </table>
+                        <p>電球は<a href="Morse Code translated (日本語 — モールス信号).html">モールス信号</a>で<var>N</var>を発信している。電球の色に基づいて表で示された英字から開始し、得られた値の数だけその英字をカエサル暗号で前に進める。その結果の英字をモールス信号で送信する。</p>
+                        <p>送信されたモールスは電球を押し続けている間の間隔に基づいて解釈される。 平均的な間隔の2倍以上の長さを保持するとダッシュとみなされ、それよりも短いものはドットとみなされる。例えば、E は1/2秒より短く、 T は1/2秒より長くなければならない。モールス信号を送信した後、一定時間待つと、電球は<var>N</var>を発信するモードに戻る。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/6</div>
+        </div>
+        <div class="page page-bg-04">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">寄せ集め</span>
@@ -1178,10 +1564,6 @@
                     <h3>迷路</h3>
                     <p><var>N</var> は迷路全体の位置の数（縦×横）である。</p>
                     <p>矢印ボタンを使用して、値で特定されたゴール位置にシンボルを移動させることができる。これらの位置は、左上から読み順で、0から始まる番号が振られている。</p>
-                    <h3>鍵</h3>
-                    <p><var>N</var> は10である。爆弾のカウントダウンタイマーの秒数一の位がその値に等しくなった時に、鍵を時計回りに回す。</p>
-                    <h3>スイッチ</h3>
-                    <p><var>N</var> は、スイッチが切り替えられる位置の数である（2～4段階）。これらの位置は、完全な「上」位置から順番に、0から始まる番号が振られている。</p>
                 </div>
                 <h3>3×3迷路</h3>
                 <table class="mazes width-3">
@@ -1195,21 +1577,21 @@
                         <th><div class="maze-symbol plus"></div></th>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M1 1 1 2 2 2 2 3M2 1 3 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M1 0 1 2 2 2M1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 1 2 3M0 2 1 2M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 0 2 2M0 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 2 3 2M2 1 3 1M1 1 1 3" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 2 3 2M2 1 3 1M1 1 1 2 0 2" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
@@ -1219,21 +1601,21 @@
                         <th><div class="maze-symbol star"></div></th>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 2 2 3M2 0 2 1M1 2 1 3M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 1 2 3M1 1 1 3" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M0 2 2 2M1 0 1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 0 2 1M1 0 1 2 2 2" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 0 2 1M0 1 1 1 1 2 2 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 2 3 2M1 3 1 1 2 1" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
@@ -1243,21 +1625,21 @@
                         <th><div class="maze-symbol triangle"></div></th>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 2 3 2M2 1 3 1M0 2 1 2M0 1 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 2 3 2M2 1 3 1M1 1 1 2 0 2" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M2 2 3 2M3 1 1 1 1 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 2 3 2M2 1 3 1M1 0 1 1M0 2 1 2" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 3.2">
-                    <path d="M1 2 3 2M2 1 3 1M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M1 2 2 2 2 3M1 1 3 1" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v3H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect>
                 </svg>
@@ -1276,14 +1658,14 @@
                         <th><div class="maze-symbol plus"></div></th>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 4.2">
-                    <path d="M2 2 2 3 3 3M2 1 3 1M1 3 1 4M1 1 1 2 0 2" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 1 3 1M1 4 1 3 2 3M0 2 2 2M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
                 </svg>
             </td>
                         <td class="maze-td nohighlight">
                 <svg viewBox="-.1 -.1 3.2 4.2">
-                    <path d="M3 3 2 3 2 2 1 2 1 3M2 0 2 1M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
+                    <path d="M2 1 3 1M0 3 2 3M1 3 1 2 2 2M1 0 1 1" fill="none" stroke="black" stroke-width=".05"></path>
                     <path d="M0 0h3v4H0z" fill="none" stroke="black" stroke-width=".1"></path>
                     <rect class="highlightable" x="0" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="0" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="1" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="2" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="0" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="1" y="3" width="1" height="1" fill="transparent"></rect><rect class="highlightable" x="2" y="3" width="1" height="1" fill="transparent"></rect>
                 </svg>
@@ -1346,9 +1728,9 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">ページ 4/5</div>
+            <div class="page-footer relative-footer">ページ 5/6</div>
         </div>
-        <div class="page">
+        <div class="page page-bg-07">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">寄せ集め</span>
@@ -1517,7 +1899,7 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">ページ 5/5</div>
+            <div class="page-footer relative-footer">ページ 6/6</div>
         </div>
     </div>
 </body>
