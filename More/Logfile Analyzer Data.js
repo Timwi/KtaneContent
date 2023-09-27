@@ -3865,7 +3865,7 @@ let parseData = [
 			{
 				regex: /The check button was pressed with the middle grid displaying the following:/,
 				handler: function(_, module) {
-					module.push({ 
+					module.push({
 						label: "The check button was pressed with the center grid displaying the following:",
 						obj: pre(readTaggedLines(4).map(l => l.replaceAll("X", "")).join("\n"))
 					});
@@ -16039,6 +16039,54 @@ let parseData = [
 				handler: function(matches, module) {
 					module.toPush.push(matches[0]);
 				}
+			}
+		]
+	},
+	{
+		moduleID: "swish",
+		loggingTag: "Swish",
+		matches: [
+			{
+				regex: /^Cards:((?:\s(?:\d|1[0-5]),(?:\d|1[0-5])){4})$/,
+				handler: function (matches, module) {
+					if (!module.getDrawnCard) {
+						module.getDrawnCard = function (cardInfo, x, y) {
+							const cardObj = $SVG(`<g transform="translate(${x}, ${y})">`);
+							$SVG('<rect x="-3" y="-3" width="206" height="206" rx="20">').addClass("card-border").appendTo(cardObj);
+							$SVG(`<circle r="9" cx="${25 + (cardInfo.ball % 4) * 50}" cy="${25 + Math.floor(cardInfo.ball / 4) * 50}">`).addClass("ball").appendTo(cardObj);
+							$SVG(`<circle r="16" cx="${25 + (cardInfo.hoop % 4) * 50}" cy="${25 + Math.floor(cardInfo.hoop / 4) * 50}">`).addClass("hoop").appendTo(cardObj);
+							return cardObj;
+						}
+						module.positions = ["    Top-left", "   Top-right", " Bottom-left", "Bottom-right"];
+					}
+					const cards = matches[1].split(" ").slice(1).map(raw => { return { ball: raw.split(",")[0], hoop: raw.split(",")[1] } });
+					const cardsSvg = $('<svg viewBox="-10 -10 450 450" xmlns="http://www.w3.org/2000/svg">').addClass("swish-cards");
+					for (const cardIx in cards)
+						module.getDrawnCard(cards[cardIx], (cardIx % 2) * 230, Math.floor(cardIx / 2) * 230).appendTo(cardsSvg);
+
+					module.push({ label: `The ${module.shownInitialCards ? "new " : ""}cards are as below:`, obj: cardsSvg });
+					module.shownInitialCards = true;
+					return true;
+				}
+			},
+			{
+				regex: /^(Possible|Given) Swish: ((?:[^;]+;\s){3}[^;]+)$/,
+				handler: function (matches, module) {
+					const actions = matches[2].toLowerCase().split("; ").map(raw => raw.replaceAll(", ", ", then ").replace(/(horizont|vertic)al/g, "$1ally").replace("none", "leave as is"));
+					let label;
+					let preText = "";
+					if (matches[1] === "Possible")
+						label = "One possible Swish is:";
+					else
+						label = "You submitted:";
+					for (const posIx in module.positions)
+						preText += `${module.positions[posIx]}: ${actions[posIx]}\n`;
+					module.push({ label: label, obj: pre(preText) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
