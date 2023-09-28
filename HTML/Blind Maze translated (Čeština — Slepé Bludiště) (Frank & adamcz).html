@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Slepé Bludiště — Keep Talking and Nobody Explodes Module</title>
+    <title>Slepé bludiště — Keep Talking and Nobody Explodes module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
@@ -18,7 +18,7 @@
         var rules = document.getElementsByClassName("rules");
         var colorNames = [ "red", "green", "blue", "gray", "yellow" ];
         var indicatorNames = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
-        var rulesCount = [ "red buttons", "batteries", "yellow buttons", "red buttons", "other distinct maze-based modules present on the bomb", "port types", "green buttons", "blue buttons", "gray buttons", "AA batteries", "D batteries", "battery holders", "ports", "port plates", "indicators", "lit indicators", "unlit indicators" ];
+        var rulesCount = [ "červená tlačítka", "baterie", "žlutá tlačítka", "červená tlačítka", "moduly se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště,”", "typy portů", "zelená tlačítka", "modrá tlačítka", "šedá tlačítka", "AA baterie", "D baterie", "držáky na baterie", "porty", "držáky na porty", "indikátory", "rozsvícené indikátory", "nerozsvícené indikátory" ];
         var rulesCountCopy;
         var conditionCount = [ 2, 5, 1, 1, 1 ];
         var conditionCountCopy;
@@ -205,47 +205,78 @@
             }
 
             var ruleTemplates = [
-                "If there are at least {c} {r}, {m}.",
-                "Otherwise, if there are at least {c} {r}, {m}.",
-                "Otherwise, if there is an {i} indicator, {m}.",
-                "Otherwise, if there are no {r1} and at least {c} {r2}, {m}.",
-                "Otherwise, if there is at least {c} {r}, {m}.",
-                "Otherwise, if there is at most {c} {r}, {m}.",
-                "Otherwise, keep the maze as it is."];
+                "Pokud jsou na bombě alespoň {c} {r}, {m}.",
+                "Jinak, pokud jsou na bombě alespoň {c} {r}, {m}.",
+                "Jinak, pokud je na bombě indikátor {i}, {m}.",
+                "Jinak, pokud na bombě nejsou žádné {r1} a alespoň {c} {r2}, {m}.",
+                "Jinak, pokud je na bombě alespoň {c} {r}, {m}.",
+                "Jinak, pokud je na bombě maximálně {c} {r}, {m}.",
+                "Jinak, nechte bludiště tak, jak je."];
 
+            var countCurrentRule = 0;
             for (var i = 0; i < rules.length; i++) {
                 var ruleText = ruleTemplates[i];
                 if (i != 2) {
-                    if (conditionCount[countCondition] == 1) {
-                        if (countCondition != 2) {
-                            ruleText = ruleText.replace("there are", "there is");
-                            rulesCountCopy[countRule] = makeSingular(rulesCountCopy[countRule]);
-                        } else {
-                            rulesCountCopy[countRule + 1] = makeSingular(rulesCountCopy[countRule + 1]);
+                    if (conditionCountCopy[countCondition] == 1 || conditionCountCopy[countCondition] == 5) {
+                        if (countCondition != 2) { 
+                            ruleText = ruleText.replace("jsou na bombě", "je na bombě");
                         }
                     } else {
-                        ruleText = ruleText.replace("there is", "there are");
+                        ruleText = ruleText.replace("je na bombě", "jsou na bombě");
                     }
 
                     if (i == 3) ruleText = ruleText.replace("{r1}", rulesCountCopy[countRule++]).replace("{c}", conditionCountCopy[countCondition++]).replace("{r2}", rulesCountCopy[countRule++]);
                     else ruleText = ruleText.replace("{c}", conditionCountCopy[countCondition++]).replace("{r}", rulesCountCopy[countRule++]);
                 } else {
-                    if (conditionIndicator != 3) ruleText = ruleText.replace("an", "a");
-
                     ruleText = ruleText.replace("{i}", indicatorNames[conditionIndicator]);
                 }
 
-                if (calculateCopy[i]) ruleText = ruleText.replace("{m}", `calculate the starting position, then rotate the maze ${mazeRotationCopy[i] * 90} degrees ${clockwiseCopy[i] ? "clockwise": "counter-clockwise"}`);
-                else ruleText = ruleText.replace("{m}", `rotate the maze ${mazeRotationCopy[i] * 90} degrees ${clockwiseCopy[i] ? "clockwise": "counter-clockwise"}, then calculate the starting position`);
-                rules[i].innerHTML = ruleText;
-            }
-        }
+                if (calculateCopy[i]) ruleText = ruleText.replace("{m}", `vypočítejte počáteční pozici, poté otočte bludiště o ${mazeRotationCopy[i] * 90} stupňů ${clockwiseCopy[i] ? "po směru hodinových ručiček": "proti směru hodinových ručiček"}`);
+                else ruleText = ruleText.replace("{m}", `otočte bludiště o ${mazeRotationCopy[i] * 90} stupňů ${clockwiseCopy[i] ? "po směru hodinových ručiček" : "proti směru hodinových ručiček"}, poté vypočítejte počáteční pozici`);
 
-        function makeSingular(text) {
-            if (text.includes("batteries")) text = text.replace("batteries", "battery");
-            else if (text.includes("modules")) text = text.replace("modules", "module");
-            else text = text.substring(0, text.length - 1);
-            return text;
+                if (conditionCountCopy[countCurrentRule] == 5) {
+                    replaceText("červená tlačítka", "červených tlačítek", "žádná");
+                    replaceText("moduly se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště,”", "modulů se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště,”", "žádné");
+                    replaceText("typy portů", "typů portů", "žádné");
+                    replaceText("držáky na baterie", "držáků na baterie", "žádné");
+                    replaceText("nerozsvícené indikátory", "nerozsvícených indikátorů", "žádné");
+                    replaceText("rozsvícené indikátory", "rozsvícených indikátorů", "žádné");
+                    replaceText("indikátory", "indikátorů", "žádné");
+                    replaceText("baterie", "baterií", "žádné");
+                    replaceText("porty", "portů", "žádné");
+                    replaceText("žlutá tlačítka", "žlutých tlačítek", "žádná");
+                    replaceText("zelená tlačítka", "zelených tlačítek", "žádná");
+                    replaceText("modrá tlačítka", "modrých tlačítek", "žádná");
+                    replaceText("šedá tlačítka", "šedých tlačítek", "žádná");
+                }
+
+                if (conditionCountCopy[countCurrentRule] == 1) {
+                    replaceText("červená tlačítka", "červené tlačítko", "žádná");
+                    replaceText("moduly se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště,”", "modul se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště,”", "žádné");
+                    replaceText("typy portů", "typ portů", "žádné");
+                    replaceText("držáky na baterie", "držák na baterie", "žádné");
+                    replaceText("nerozsvícené indikátory", "nerozsvícený indikátor", "žádné");
+                    replaceText("rozsvícené indikátory", "rozsvícený indikátor", "žádné");
+                    replaceText("indikátory", "indikátor", "žádné");
+                    replaceText("porty", "port", "žádné");
+                    replaceText("žlutá tlačítka", "žluté tlačítko", "žádná");
+                    replaceText("zelená tlačítka", "zelené tlačítko", "žádná");
+                    replaceText("modrá tlačítka", "modré tlačítko", "žádná");
+                    replaceText("šedá tlačítka", "šedé tlačítko", "žádná");
+                }
+
+                replaceText("“Slepého bludiště,”,", "“Slepého bludiště,”", "žádné");
+
+                function replaceText(fromWhat, toWhat, zadne) {
+                    ruleText = ruleText.replace(fromWhat, toWhat);
+
+                    ruleText = ruleText.replace("žádné " + toWhat, zadne + " " + fromWhat);
+                }
+
+                rules[i].innerHTML = ruleText;
+
+                if (i != 2) countCurrentRule++;
+            }
         }
 
         function generateSVG() {
@@ -357,22 +388,21 @@
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Slepé Bludiště (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Slepé bludiště</span>
             </div>
             <div class="page-content">
                 <img src="img/Component/Blind Maze.svg" class="diagram">
-                <h2>Na téma Slepého Bludiště (čeština)</h2>
-                <p class="flavour-text">Ne jenom že potřebuješ najít cíl, ty potřebuješ najít začátek!</p>
+                <h2>Na téma Slepého bludiště</h2>
+                <p class="flavour-text">Ne jenom, že potřebujete najít cíl, potřebujete najít i začátek!</p>
                 <p>
-                  Tento modul obsahuje 4 tlačítka N = Sever E = Východ W = Západ S = Jih.
+                  Tento modul obsahuje čtyři tlačítka popsané N pro sever, E pro východ, S pro jih a W pro západ. Defuser musí využít tyto tlačítko pro navigaci bludištěm, které nevidí. Použijte následující kroky pro odhalení, jak bludiště vypadá, kde v něm jste a na jaké straně bludiště je východ.
                 </p>
-                <h3>Krok 1: Najdi správné bludiště</h3>
+                <h3>Krok 1: Najděte správné bludiště</h3>
                 <ul>
-                    <li> Vezmi poslední číslo sériového čísla a přičti počet vyřešených modulů. </li>
-                    <li> Pokud je číslo větší jak 9 tak odečti 10 aby bylo výsledné číslo v rozmezí 0–9.
-                    <li> Výsledné číslo = Vaše bludiště.
-                    <li> Vaše bludiště může být ale otáčeno.
+                    <li>Vezměte poslední cifru sériového čísla a přičtěte počet vyřešených modulů.
+                    <li>Pokud je číslo větší, jak 9, odečítejte 10, dokud není mezi 0 a 9.
+                    <li>Najděte bludiště níže se stejným číslem, jako je výsledek. To je vaše bludiště, ale může být otočeno.
                 </ul>
                 <div class="mazes">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 1.5 725 300"></svg>
@@ -382,84 +412,79 @@
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Slepé Bludiště (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Slepé bludiště</span>
             </div>
             <div class="page-content">
-                <h3>Krok 2: Najdi správné otočení </h3>
+                <h3>Krok 2: Najděte správné otočení </h3>
                 <p>
-                    Použijte první podmínku, která platí, abyste zjistili jak správně otočit bludiště.
+                    Použijte první podmínku, která platí z následujícího seznamu pro zjištění rotace bludiště.
                 </p>
                 <ul>
-                    <li> Pokud jsou alespoň 2 červená tlačítka, otočte bludiště o 90° ve směru hodinových ručiček a pak vypočítejte počáteční pozici. </li>
-                    <li> Jinak pokud je na bombě alespoň 5 baterií, vypočítejte počáteční pozici a pak otočte bludiště o 90° ve směru hodinových ručiček. </li>
-                    <li> Jinak pokud je na bombě indikátor IND, otočte bludiště o 180° ve směru hodinových ručiček a pak vypočítejte počáteční pozici. </li>
-                    <li> Jinak pokud nejsou žádná žlutá tlačítka a je 1 červené tlačítko, otočte bludiště o 90° proti směru hodinových ručiček a pak vypočítejte počáteční pozici. </li>
-                    <li> Jinak pokud je na bombě alespoň 1 Modul se slovem “Bludiště” v jeho jméně kromě “Slepého bludiště”, vypočítejte počáteční pozici a pak otočte bludiště o 180° ve směru hodinových ručiček. </li>
-                    <li> Jinak pokud je na bombě více jak 1 typ portů na bombě, vypočítejte počáteční pozici a pak otočte bludiště o 90° proti směru hodinových ručiček. </li>
-                    <li> Jinak, nechte bludiště tak jak je. </li>
+                    <li class="rules">Pokud jsou alespoň {c} {r}, {m}.
+                    <li class="rules">Jinak, pokud je na bombě alespoň {c} {r}, {m}.
+                    <li class="rules">Jinak, pokud je na bombě indikátor {i}, {m}.
+                    <li class="rules">Jinak, pokud nejsou žádné {r1} a alespoň {c} {r2}, {m}.
+                    <li class="rules">Jinak, pokud je na bombě alespoň {c} {r}, {m}.
+                    <li class="rules">Jinak, pokud je na bombě maximálně {c} {r}, {m}.
+                    <li class="rules">Jinak, nechte bludiště tak, jak je.
                 </ul>
-                <h3>Krok 3: Najdi počáteční pozici </h3>
+                <h3>Krok 3: Najděte počáteční pozici </h3>
                 <p>
-                  Podívej se na každé tlačítko a použij tabulku aby jsi zjistil jeho hodnotu.
-                  Dále použij pravidla aby jsi zjistil počáteční pozici v bludišti.
-                 </p>
+                  Podívejte se na každé tlačítko a použijte tabulku níže pro zjištění jeho hodnoty. Dále použijte pravidla pro zjištění počáteční pozice v bludišti:
+                </p>
                 <ul>
-                    <li> X pozice : Sečtěte hodnoty Severu a Jihu dohromady.
-                    <li> Y pozice : Sečtěte hodnoty Východu a Západu dohromady.
-                    <li> Pokud je součet větší než 5 tak odečtěte 5 aby číslo bylo v rozmezí 1–5.
-                    <li> Sloupec X je zleva doprava.
-                    <li> Řádka Y je ze shora dolů.
-                    <li> Souřadnice vlevo nahoře jsou [1,1].
+                    <li>X pozice: Sečtěte hodnoty tlačítek severu a jihu dohromady.
+                    <li>Y pozice: Sečtěte hodnoty tlačítek východu a západu dohromady.
+                    <li>Pokud je součet větší, než 5, odečítejte 5, dokud není číslo mezi 1 a 5.
+                    <li>Sloupec X je zleva doprava a řádek Y je shora dolů. Levá horní souřadnice v bludišti je [1,1].
                 </ul>
                 <table>
-                    <colgroup>
-                        <col style="width: 80px">
-                        <col style="width: 80px">
-                        <col style="width: 80px">
-                        <col style="width: 80px">
-                        <col style="width: 80px">
-                        <col style="width: 80px">
-                    </colgroup>
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
+                    <col style="width: 80px">
                     <tr>
                         <td class="corner"></td>
                         <th>Červená</th>
                         <th>Zelená</th>
                         <th>Modrá</th>
-                        <th>Šedivá</th>
+                        <th>Šedá</th>
                         <th>Žlutá</th>
                     </tr>
                     <tr>
                         <th>Sever</th>
-                        <td>1</td>
-                        <td>5</td>
-                        <td>2</td>
-                        <td>2</td>
-                        <td>3</td>
+                        <td class="colorTable1">1</td>
+                        <td class="colorTable1">5</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">2</td>
+                        <td class="colorTable1">3</td>
                     </tr>
                     <tr>
                         <th>Východ</th>
-                        <td>3</td>
-                        <td>1</td>
-                        <td>5</td>
-                        <td>5</td>
-                        <td>2</td>
+                        <td class="colorTable2">3</td>
+                        <td class="colorTable2">1</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">5</td>
+                        <td class="colorTable2">2</td>
                     </tr>
                     <tr>
                         <th>Západ</th>
-                        <td>2</td>
-                        <td>5</td>
-                        <td>3</td>
-                        <td>1</td>
-                        <td>4</td>
+                        <td class="colorTable4">2</td>
+                        <td class="colorTable4">5</td>
+                        <td class="colorTable4">3</td>
+                        <td class="colorTable4">1</td>
+                        <td class="colorTable4">4</td>
                     </tr>
                     <tr>
                         <th>Jih</th>
-                        <td>3</td>
-                        <td>2</td>
-                        <td>4</td>
-                        <td>3</td>
-                        <td>2</td>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
+                        <td class="colorTable3">4</td>
+                        <td class="colorTable3">3</td>
+                        <td class="colorTable3">2</td>
                     </tr>
                 </table>
             </div>

@@ -3,85 +3,225 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Barevná Morseovka — Keep Talking and Nobody Explodes Module</title>
+    <title>Barevná morseovka — Keep Talking and Nobody Explodes modul</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                'Pokud je číslo liché, zdvojnásobte ho. Jinak ho vydělta dvěma.',
+                'Pokud je číslo dělitelné 3, vydělte ho 3. Jinak, přičtěte počet světel, které blikají buď, červené, žlutě, nebo modře.',
+                'Umocněte číslo na druhou.',
+                'Vyměňte pozice závorek. Pokud jsou závorky mezi prvním a druhým číslem, budou mezi druhým a třetím a naopak.',
+                'Ztrojnásobte číslo a vezměte si jeho ciferaci, dokud číslo nebude mít 1 cifru.',
+                'Odečtěte toto číslo od 10.'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `Pokud je číslo dělitelné ${m}, vydělte ho ${m}. Jinak ho vynásobte ${m}.`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "červené", "oranžové", "žluté", "zelené", "modré", "purpurové", "bílé" ];
+                    return `Pokud je číslo dělitelné ${m}, vydělte ho ${m}. Jinak, přičtěte počet světel, které blikají buď ${colorNames[colors[0]]}, ${colorNames[colors[1]]}, nebo ${colorNames[colors[2]]}.`;
+                },
+                rnd => `Umocněte číslo na druhou.`,
+                rnd => `Vyměňte pozice závorek. Pokud jsou závorky mezi prvním a druhým číslem, budou mezi druhým a třetím a naopak.`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `Vyměňte ${which === 1
+                        ? '+ za − (a naopak) a × za / (a naopak)'
+                        : '+ za × (a naopak) a − za / (a naopak)'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `Vynásote číslo ${m} a vezměte jeho ciferaci.`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `Subtract the number from ${m}.`;
+                },
+                rnd => `Vynásobte číslo <var>n<${''}/var> + 1, kde <var>n<${''}/var> je rovno počtu portů, které tento znak obsahují.`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `Vymodulujte číslo ${m} a vezměte jeho faktoriál.`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `Vyměnte číslo za počet ${['rozsvícených ', 'nerozsvícených ', ''][indMode]}indikátorů, které tento znak obsahují`;
+                },
+                rnd => `Vynásobte číslo <var>n<${''}/var>, kde <var>n<${''}/var> je počet různých znaků v sériovém čísle.`,
+                rnd => `Vyměnte číslo za počet jedniček, které se vyskytují v tomhle čísle ve dvojkové soustavě.`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `Vyměntě číslo za počet ${['jedniček', 'dvojek', 'jedniček a dvojek'][whichDigits]}, které se vyskytují v tomhle čísle ve trojkové soustavě.`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${[`Vynásobte číslo <var>n<${''}/var> + 1, kde <var>n<${''}/var> je`, 'Přičtěte'][op]} počet ${['držáků na porty', 'různých typů portů', 'držáků na baterie'][whichEdgework]} na bombě.`;
+                },
+                rnd => `Vyměňte znak za počet teček, které se vyskytují v tomhle znaku v <a href='https://ktane.timwi.de/HTML/Braille%20translated%20(Čeština%20—%20Braillovo%20Písmo)%20(Frank%20%26%20adamcz).html'>Braille<${''}/a>. (1..9 = A..H, 0 = J)`,
+                rnd => `Vyměňte znak za počet barevných částí v <a href='https://ktane.timwi.de/HTML/Maritime Flags.html'>námořní vlajkové abecedě<${''}/a> pro tento znak.`,
+                rnd => `Vyměňte znak za počet tvarů, které se vyskytují v <a href='https://ktane.timwi.de/HTML/Zoni.html'>zoni<${''}/a> symbolu tohoto znaku.`,
+                rnd => `Vyměňte znak za <var>d<${''}/var> + 3×<var>s<${''}/var>, kde <var>d<${''}/var> je počet teček a <var>s<${''}/var> je počet čárek v tomto znaku v morseově abecedě.`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `Vyměntě znak za počet segemntů, které by byly ${['vypnuté', 'zapnuté'][useOn]} v tomto znaku na <a href='https://ktane.timwi.de/HTML/14.html'>14-segmentovém displeji<${''}/a>.`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `${['Přidejte před znak', 'Přidejte za znak'][append]} ${['6.', '3.'][snValue]} znak sériového čísla.`;
+                },
+                rnd => `Přičtěte číslo k celkovému počtu písmen přes všechny zobrazené barvy anglicky.`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `Pokud se znak objevuje v sériovém čísle, vydělte ho <var>n<${''}/var> + 1, kde <var>n<${''}/var> je počet toho, kolikrát se tam objevuje. Jinak ho vynásobte ${m}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `Pokud je znak v morseově abecedě otečený (..- -> -..) číslo od 0 do 9, nebo znak od A do Z, použijte místo toho hodnotu tohoto znaku v šestatřicítkové soustavě. Jinak, použijte toto číslo plus počet ${['portů', 'držáků na porty', 'baterií', 'držáků na baterie', 'indikátorů', 'rozsvícených indikátorů', 'nerozsvícených indikátorů'][which]}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `Pokud je znak cifra, přičtěte počet ${['portů', 'držáků na porty', 'baterií', 'držáků na baterie', 'indikátorů', 'rozsvícených indikátorů', 'nerozsvícených indikátorů'][which]}. Jinak, vyměnte znak za <var>d<${''}/var> + 3×<var>s<${''}/var>, kde <var>d<${''}/var> je počet teček <var>s<${''}/var> je počet čár ve znaku v jeho pigpen reprezentaci.`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `Vynásobte číslo počtem ${['cifer', 'písmen'][letters]} v sériovém čísle.`;
+                },
+                rnd => `Přičtěte poslední cifru rule seedu.`,
+                rnd => `Vyměňte hodnotu za 1 + počet toho, kolikrát se znak objevuje ve jménu barev LED diod anglicky.`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `Přičtěte momentální ${['den', 'měsíc', 'rok'][which]}, ve kterém je bomba aktivována.`;
+                },
+                rnd => `Vyměňte hodnotu s pozicí, kde se znak prvně vyskytuje v textu “0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9” (nepočítejte mezery).`,
+                rnd => `Pokud je znak písmeno, vyměňte ho za jeho skóre v <a href='http://ktane.timwi.de/HTML/Scrabble Scramble.html'>anglickém Scrabble<${''}/a>.`,
+                rnd => `Vyměňte číslo za <a href='https://ktane.timwi.de/HTML/Übermodule.html'>rozšířený tap kód<${''}/a> pro znak, přečtený jako dvouciferné číslo.`,
+                rnd => `Vyměňte znak za počet modulů na bombě, jejichž názvy obsahují tento znak.`,
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            let showEnglishNames = false;
+            for (let i = 0; i <= 5; i++) {
+                tds[i].innerHTML = shuffledRules[i];
+                if (shuffledRules[i].includes("anglicky"))
+                    showEnglishNames = true;
+            }
+
+            document.getElementById("englishColorNamesTable").style.visibility = showEnglishNames ? 'visible' : 'hidden';
+        }
+    </script>
+    <style>
+        .small-font {
+            font-size: 11pt;
+        }
+        .dark .ondark { filter: invert(85%); }
+        th { text-align: left; }
+    </style>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Barevná Morseovka (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Barevná morseovka</span>
             </div>
             <div class="page-content">
                 <img src="img/Component/Color Morse.svg" class="diagram">
-                <h2>Na téma Barevné Morseovky (čeština)</h2>
-                <p class="flavour-text">--&nbsp;.-&nbsp;-&nbsp;..&nbsp;-.-&nbsp;.- / .---&nbsp;. / --..&nbsp;.--.-&nbsp;-...&nbsp;.-&nbsp;...-&nbsp;.-&nbsp;!</p>
-                <ul>
-                    <li>Tento modul obsahuje tři blikající světla různých barev, závorky okolo dvou z nich a operace.</li>
-                    <li>Každé světlo ukazuje nějaké číslo/písmeno v Morseově abecedě. Pokud ukazuje písmeno, tak ho převeďte na číslo a přičtěte 9 (A=10, B=11, atd.).</li>
-                    <li>Pro každé číslo, použijte speciální operaci pro danou barvu nalezenou v tabulce níže. Pokud je světlo bílé, tak nedělejte nic s číslem.</li>
-                    <li>Použijte (potencionální) nová čísla a vyřešte rovnici.
-                        <ul>
-                            <li>Pokud výsledek není celé číslo, vemte v úvahu pouze celočíselnou část čísla. </li>
-                            <li>Pokud je výsledek záporný, nezapomeňte před zbytek čísla dát mínus. (-0 se stane 0).</li>
-                            <li>Pokud absolutní hodnota výsledku je větší než 999, vemte v úvahu jen poslední tři cifry.</li>
-                            <li>Pokud platí více než jedna z předchozích podmínek, úkony proveďte v pořadí.
-                            <li>Ignorujte nuly na začátku.</li>
-                        </ul>
-                    </li>
-                    <li>Použitím tlačítek, zadejte výsledek v morseovce a použitím prázdného tlačítka zadáte mezeru mezi čísly.</li>
-                    <li>Jakmile uděláte chybu, tak všechny zadané znaky budou zresetovány.</li>
-                </ul>
-                <table>
-                    <thead><tr>
-                        <td><b>Barva</b></td>
-                        <td><b>Akce</b></td>
-                    </tr></thead>
-                    <tr>
-                        <td>Červená</td>
-                        <td>Pokud je číslo liché, zdvojnásob ho. Jinak z něj udělej polovinu.</td>
-                    </tr>
-                    <tr>
-                        <td>Oranžová</td>
-                        <td>Pokud je číslo dělitelné 3, vyděl ho 3. Jinak přičti počet světel které blikají v základních barvách*.</td>
-                    </tr>
-                    <tr>
-                        <td>Žlutá</td>
-                        <td>Umocněte číslo.</td>
-                    </tr>
-                    <tr>
-                        <td>Zelená</td>
-                        <td>Vyměňte pozice závorek. Pokud jsou závorky mezi prvním a druhým číslem, tak budou mezi druhým a třetím a naopak.</td>
-                    </tr>
-                    <tr>
-                        <td>Modrá</td>
-                        <td>Ztrojnásob číslo a vezmi si jeho ciferný součet, dokud číslo nebude mít 1 cifru**.</td>
-                    </tr>
-                    <tr>
-                        <td>Fialová</td>
-                        <td>Odečtěte toto číslo od 10.</td>
-                    </tr>
-                </table>
-                <br>
-                <p>* Základní barvy jsou červená, modrá a žlutá.</p>
-                <p>** Ciferný součet čísla je součet všech cifer.</p>
+                <h2>Na téma Barevné morseovky</h2>
+                <p class="flavour-text">--&nbsp;.-&nbsp;-&nbsp;.&nbsp;--&nbsp;.-&nbsp;-&nbsp;..&nbsp;-.-&nbsp;.- / .---&nbsp;. / --..&nbsp;.--.-&nbsp;-...&nbsp;.-&nbsp;...-&nbsp;.-&nbsp;!</p>
+                <div class="small-font">
+                    <ul>
+                        <li>Tento modul obsahuje tři blikající světla různých barev a operace, které svírají závorky.</li>
+                        <li>Každé blikající světlo zobrazuje jedno číslo/písmeno v morseově abecedě. Pokud ukazuje písmeno, převeďte ho na číslo s hodnotou rovnou jeho pozici v abecedě plus 9 (A=10, B=11, atd.).</li>
+                        <li>Pro každé číslo použijte speciální operaci pro jeho barvu nalezenou v tabulce níže. Pokud je světlo bílé, nedělejte nic s číslem.</li>
+                        <li>Použijte (potencionální) nová čísla a vyřešte výraz.
+                            <ul>
+                                <li>Pokud není výsledek celé číslo, vezměte pouze celočíselnou část čísla. </li>
+                                <li>Pokud je výsledek záporný, nezapomeňte před zbytek čísla dát mínus. (-0 bude 0).</li>
+                                <li>Pokud je absolutní hodnota výsledku větší, než 999, vezměte v úvahu jen tři nejméně významné cifry.</li>
+                                <li>Pokud platí více než jedna z předchozích podmínek, proveďte je v pořadí.</li>
+                                <li>Ignorujte nuly před číslem.</li>
+                            </ul>
+                        </li>
+                        <li>Použitím tlačítek zadejte výsledek v morseově abecedě. Prázdné tlačítko je oddělovač cifer.</li>
+                        <li>Jakmile uděláte chybu, všechny zadané znaky budou resetovány.</li>
+                    </ul>
+                    <p id='rule-seeded-explanation'>Pokud odkazuje pravidlo na <em>číslo</em>, odkazuje na jeho hodnotu v šestatřicítkové soustavě (A=10, ..., Z=35).
+                        Pokud odkazuje pravidlo na <em>písmeno/znak</em>, odkazuje na cifru nebo písmeno v morseově abecedě.</p>
+                    <table class="color-morse">
+                        <thead><tr>
+                            <td>Barva</td>
+                            <td>Akce</td>
+                        </tr></thead>
+                        <tbody><tr>
+                            <td>Červená</td>
+                            <td class="color-morse-rules">Pokud je číslo liché, zdvojnásobte ho. Jinak ho vydělte dvěma.</td>
+                        </tr>
+                        <tr>
+                            <td>Oranžová</td>
+                            <td class="color-morse-rules">Pokud je číslo dělitelné 3, vydělte ho 3. Jinak, přičti počet světel, které blikají v základních barvách.</td>
+                        </tr>
+                        <tr>
+                            <td>Žlutá</td>
+                            <td class="color-morse-rules">Umocněte číslo na druhou.</td>
+                        </tr>
+                        <tr>
+                            <td>Zelená</td>
+                            <td class="color-morse-rules">Vyměňte pozice závorek. Pokud jsou závorky mezi prvním a druhým číslem, budou mezi druhým a třetím a naopak.</td>
+                        </tr>
+                        <tr>
+                            <td>Modrá</td>
+                            <td class="color-morse-rules">Ztrojnásobte číslo a vezměte si jeho ciferaci, dokud číslo nebude mít 1 cifru.</td>
+                        </tr>
+                        <tr>
+                            <td>Purpurová</td>
+                            <td class="color-morse-rules">Odečtěte toto číslo od 10.</td>
+                        </tr>
+                    </tbody></table>
+                </div>
             </div>
            <div class="page-footer relative-footer">Strana 1 ze 2</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Barevná Morseovka (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Barevná morseovka</span>
             </div>
             <div class="page-content">
-                <h3><b>Jak používat Morseovu abecedu</b></h3>
-                <p style="text-align:center">
-                    <img style="width:75%" src="img/Color Morse/Morse Reference.svg">
-                </p>
+                <h3><b>Odkaz na morseovu abecedu</b></h3>
+                <img style="width:75%" class="centered-img ondark" src="img/Color Morse/Morse Reference.svg">
+
+                <div id="englishColorNamesTable" style="visibility: hidden;">
+                    <hr />
+                    <table class="centered" style="text-align: center;">
+                        <tr><th colspan="7">Anglické názvy barev</th></tr>
+                        <tr><th>Červená</th><th>Oranžová</th><th>Žlutá</th><th>Zelená</th><th>Modrá</th><th>Purpurová</th><th>Bílá</th></tr>
+                        <tr><td>Red</td><td>Orange</td><td>Yellow</td><td>Green</td><td>Blue</td><td>Purple</td><td>White</td></tr>
+                    </table>
+                </div>
             </div>
            <div class="page-footer relative-footer">Strana 2 ze 2</div>
         </div>

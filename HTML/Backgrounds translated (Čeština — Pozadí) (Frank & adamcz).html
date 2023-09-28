@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Pozadí — Keep Talking and Nobody Explodes Modul</title>
+    <title>Pozadí — Keep Talking and Nobody Explodes modul</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
     <style>
         p.note {
             font-size: 12pt;
@@ -21,162 +22,493 @@
             width: 90%;
         }
     </style>
+    <script>
+        var options1;
+        var options2;
+        var options3;
+        var possibilities;
+        var ports =
+            [
+                "DVI", "Parallel", "PS/2", "RJ-45", "Serial", "Stereo RCA", "Component Video",
+                "Composite Video", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+            ];
+        var indicators =
+            [
+                "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"
+            ];
+        var indicatorColors =
+            [
+                "Blue", "Gray", "Green", "Magenta", "Orange", "Purple", "Red", "Yellow"
+            ];
+        var coordX =
+            [
+                "A", "D", "C", "D", "B", "F", "E", "B", "C", "E"
+            ];
+        var coordXCopy;
+        var coordY =
+            [
+                "C", "B", "E", "D", "F", "E", "B", "C", "D", "A"
+            ];
+        var coordYCopy;
+        var ManualTable =
+            [
+                3, 2, 9, 1, 7, 4,
+                7, 9, 8, 8, 2, 3,
+                5, 1, 7, 4, 4, 6,
+                6, 4, 2, 6, 8, 5,
+                5, 1, 5, 3, 9, 9,
+                1, 2, 3, 6, 7, 8
+            ];
+        var ManualTableCopy;
+        function setRules(rnd)
+        {
+            //Make clones of the lists to avoid randomization issues when changing seeds
+            coordXCopy = coordX.slice();
+            coordYCopy = coordY.slice();
+            ManualTableCopy = ManualTable.slice();
+            if (rnd.seed != 1)
+            {
+                rnd.shuffleFisherYates(coordXCopy);
+                rnd.shuffleFisherYates(coordYCopy);
+                rnd.shuffleFisherYates(ManualTableCopy);
+            }
+            for (var j = 0; j < coordXCopy.length; j++)
+                document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
+            for (var j = 0; j < coordYCopy.length; j++)
+                document.getElementById('background-r-' + j).innerHTML = coordYCopy[j];
+            for (var j = 0; j < ManualTableCopy.length; j++)
+                document.getElementById('background-tbl-' + j).innerHTML = ManualTableCopy[j];
+            //Primaries randomization
+            var i = rnd.next(0, 2);
+            //Initialize lists for current randomization
+            options1 = [];
+            options2 = [];
+            options3 = [];
+            possibilities = [];
+            chosen = [];
+            //Create possible options for Possibilities
+            AddToOptions(i, rnd.seed == 1);
+            //Generate all possible rules
+            Possibilities();
+            //Variable for holding the chosen Possibilty indicies
+            var RuleIndicies = []
+            //Function for generating the original manual for rule seed 1
+            Swap();
+            //Choose the rules for the manual
+            for (var j = 0; j < 9; j++)
+            {
+                var value = rnd.next(0, possibilities.length);
+                while (RuleIndicies.includes(value))
+                    value = rnd.next(0, possibilities.length);
+                RuleIndicies.push(value);
+                chosen.push(possibilities[RuleIndicies[j]]);
+            }
+            //Apply the chosen rules
+            for (var j = 0; j < chosen.length; j++)
+            {
+                var hold = "";
+                //Add if to all of the rules
+                chosen[j] = "if " + chosen[j];
+                //Set the first letter to uppercase
+                if (j == 0) hold = chosen[0].substr(0, 1).toUpperCase() + chosen[0].substr(1);
+                else hold = "Otherwise, " + chosen[j];
+                document.getElementById('background-rule-' + j).innerHTML = hold;
+            }
+            console.log(options1);
+            console.log(options2);
+            console.log(options3);
+            console.log(possibilities);
+            console.log(chosen);
+        }
+        function Swap()
+        {
+            var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+            var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+            for (var i = 0; i < values.length; i++)
+            {
+                var hold = possibilities[values[i]];
+                possibilities[values[i]] = possibilities[newValues[i]];
+                possibilities[newValues[i]] = hold;
+            }
+        }
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+        function AddToOptions(i, r)
+        {
+            options1.push("backing");
+            options1.push("button");
+            options1.push("submit button");
+            options1.push("screen");
+            DetermineColors(i, r);
+            for (var j = 0; j < ports.length; j++)
+                options3.push(ports[j]);
+            for (var j = 0; j < indicators.length; j++)
+                options3.push(indicators[j]);
+            var listSize = 1;
+            while (listSize < 4)
+            {
+                var coloredArray = ["red", i == 0 ? "orange" : "cyan", "yellow", "green", "blue",
+                    i == 0 ? "purple" : "magenta", "white", "gray", "black"];
+                var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+                var intList = [[]];
+                var current = -1;
+                for (var j = 0; j < orderedArray.length; j++)
+                {
+                    if (current != -1)
+                        intList.push([]);
+                    current++;
+                    intList[current].push(coloredArray[j]);
+                    if (listSize > 1)
+                    {
+                        var list = orderedArray.slice(j + 1);
+                        for (var k = 0; k < list.length; k++)
+                        {
+                            intList[current].push(" or " + coloredArray[list[k]]);
+                            if (listSize > 2)
+                            {
+                                intList[current].pop();
+                                intList[current].push(" " + coloredArray[list[k]]);
+                                var list2 = orderedArray.slice(list[k] + 1);
+                                for (var l = 0; l < list2.length; l++)
+                                {
+                                    intList[current].push(" or " + coloredArray[list2[l]]);
+                                    current++;
+                                    intList.push([]);
+                                    intList[current].push(coloredArray[j]);
+                                    intList[current].push(" " + coloredArray[list[k]]);
+                                }
+                                intList.pop();
+                                current--;
+                            }
+                            current++;
+                            intList.push([]);
+                            intList[current].push(coloredArray[j]);
+                        }
+                        intList.pop();
+                        current--;
+                    }
+                }
+                for (var j = 0; j < intList.length; j++)
+                {
+                    //Check if options already has the sequences created
+                    var check = [false, false, false];
+                    var check2 = [false, false, false];
+                    for (var k = 0; k < options2[0].length; k++)
+                    {
+                        check[k] = options2[0][k] == intList[j][k];
+                        check2[k] = options2[1][k] == intList[j][k];
+                    }
+                    if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                    options2.push(intList[j]);
+                }
+                listSize++;
+            }
+        }
+        //Checking the primary colors chosen
+        function DetermineColors(i, r) {
+            if (i == 0)
+            {
+                options2.push(["red", " yellow", " or blue"]);
+                options2.push(["orange", " green", " or purple"]);
+                options2.push(" mixed with red ");
+                options2.push(" mixed with yellow ");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("Green", "Yellow");
+                foot1.innerHTML = foot1.innerHTML.replace("Cyan, Yellow, and Magenta", "Orange, Green, and Purple");
+                if (r){
+                    document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.";
+                }
+                else
+                    document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing any color with White will <strong>not</strong> make the original color";
+            }
+            else
+            {
+                options2.push(["red", " green", " or blue"]);
+                options2.push(["cyan", " yellow", " or magenta"]);
+                options2.push(" mixed with red ");
+                options2.push(" mixed with green ");
+                var foot0 = document.getElementById('background-foot-0');
+                var foot1 = document.getElementById('background-foot-1');
+                foot0.innerHTML = foot0.innerHTML.replace("Yellow", "Green");
+                foot1.innerHTML = foot1.innerHTML.replace("Orange, Green, and Purple", "Cyan, Yellow, and Magenta");
+                document.getElementById('background-foot-2').innerHTML = "****: Mixing Red and Green will make Yellow, Blue and Green will make Cyan, and Red and Blue will make Magenta. Mixing any color with White will <strong>not</strong> make the original color."
+            }
+            options2.push(" mixed with blue ");
+        }
+        function Possibilities() {
+            var check = false;
+
+            possibilities.push("the color of the " + options1[0] + " matches the color of the " + options1[1]);
+            possibilities.push("the color of the " + options1[0] + " does not match the color of the " + options1[1]);
+            possibilities.push("the submit button contains a digit");
+            possibilities.push("the submit button does not contain a digit");
+            for (var i = 0; i < options2.length; i++) {
+                if (options2[i].length == 2)
+                    options2[i] = ("" + options2[i]).replace(",", "");
+                if (i < 2) {
+                    var word = i == 0 ? "primary color **" : "secondary color ***";
+                    possibilities.push("the button or the backing (or both) are a " + word);
+                    possibilities.push("only the button is a " + word);
+                    possibilities.push("only the backing is a " + word);
+                    possibilities.push("the button or the backing (but not both) is a " + word);
+                    var word2 = i == 0 ? "primary colors **" : "secondary colors ***";
+                    possibilities.push("the button and the backing are " + word2);
+                    possibilities.push("neither the button or the backing are " + word2);
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push("the color of the " + options1[j] + " is a " + word);
+                        possibilities.push("the color of the " + options1[j] + " is not a " + word);
+                    }
+                }
+                else if (i < 5) {
+                    for (var j = 0; j < 2; j++)
+                        possibilities.push("the " + options1[j] + "'s color" + options2[i] + "creates the " + (j == 0 ? "button’s" : "backing’s") + " color ****");
+                }
+                else {
+                    var word = i < 16 ? "is " : "is either ";
+                    var word2 = "are ";
+                    possibilities.push("the button or the backing (or both) " + word2 + options2[i]);
+                    possibilities.push("only the button " + word + options2[i]);
+                    possibilities.push("only the backing " + word + options2[i]);
+                    possibilities.push("the button or the backing (but not both) " + word2 + options2[i]);
+                    possibilities.push("the button and the backing " + word + options2[i]);
+                    possibilities.push("neither the button or the backing " + word + options2[i]);
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push("the color of the " + options1[j] + " " + word + options2[i]);
+                        possibilities.push("the color of the " + options1[j] + " " + word.replace("is", "is not") + options2[i]);
+                    }
+                }
+            }
+            possibilities.push("there are no ports present on the bomb");
+            possibilities.push("there is an empty port plate present on the bomb");
+            possibilities.push("there is one port present on the bomb");
+            possibilities.push("there are more than two ports present on the bomb");
+            possibilities.push("there is more than one port plate present on the bomb");
+            possibilities.push("there are no batteries present on the bomb");
+            possibilities.push("there are an odd amount of batteries present on the bomb");
+            possibilities.push("there are an even amount of batteries present on the bomb");
+            possibilities.push("there are no D batteries present on the bomb *");
+            possibilities.push("there is a D battery present on the bomb *");
+            possibilities.push("there is more than one D battery present on the bomb *");
+            possibilities.push("there are no AA batteries present on the bomb");
+            possibilities.push("there are two AA batteries present on the bomb");
+            possibilities.push("there are exactly three AA batteries present on the bomb");
+            possibilities.push("there are four AA batteries present on the bomb");
+            possibilities.push("there are more than four AA batteries present on the bomb");
+            possibilities.push("there are no battery holders present on the bomb");
+            possibilities.push("there is exactly one battery holder present on the bomb");
+            possibilities.push("there is more than one battery holder present on the bomb");
+            possibilities.push("there is a battery holder with no batteries present on the bomb");
+            possibilities.push("there is a battery holder with two batteries present on the bomb");
+            possibilities.push("there is a battery holder with three batteries present on the bomb");
+            possibilities.push("there are multiple battery holders with an odd amount of batteries present on the bomb");
+            possibilities.push("there is a battery holder with four batteries present on the bomb");
+            possibilities.push("there are multiple holders with an even amount of batteries present on the bomb");
+            possibilities.push("there are no indicators present on the bomb");
+            possibilities.push("there is exactly one indicator present on the bomb");
+            possibilities.push("there is more than one indicator present on the bomb");
+            possibilities.push("there are no lit indicators present on the bomb");
+            possibilities.push("there is exactly one lit indicator present on the bomb");
+            possibilities.push("there is more than one lit indicator present on the bomb");
+            possibilities.push("there are no unlit indicators present on the bomb");
+            possibilities.push("there is exactly one unlit indicator present on the bomb");
+            possibilities.push("there is more than one unlit indicator present on the bomb");
+            for (var i = 0; i < options3.length; i++) {
+                if (i < 13) {
+                    possibilities.push("the bomb contains a " + options3[i] + " port");
+                    possibilities.push("the bomb contains more than one " + options3[i] + " port");
+                    possibilities.push("the bomb contains exactly one " + options3[i] + " port");
+                    possibilities.push("the bomb does not contain a " + options3[i] + " port");
+                    continue;
+                }
+                else {
+                    possibilities.push("there is a " + options3[i] + " indicator present on the bomb");
+                    possibilities.push("there is not a " + options3[i] + " indicator present on the bomb");
+                    possibilities.push("there is a lit " + options3[i] + " indicator present on the bomb");
+                    possibilities.push("there is not a lit " + options3[i] + " indicator present on the bomb");
+                    possibilities.push("there is an unlit " + options3[i] + " indicator present on the bomb");
+                    possibilities.push("there is not an unlit " + options3[i] + " indicator present on the bomb");
+                    for (var j = 0; j < indicatorColors.length; j++) {
+                        if (!check)
+                            possibilities.push("there is a " + indicatorColors[j] + " indicator present");
+                        possibilities.push("there is a " + indicatorColors[j] + " " + options3[i] + " indicator present");
+                    }
+                    check = true;
+                }
+            }
+            possibilities.push("there are no two factors present on the bomb");
+            possibilities.push("there is exactly one two factor present on the bomb");
+            possibilities.push("there is more than one two factor present on the bomb");
+            possibilities.push("there is not a Date of Manufacture widget present on the bomb");
+            possibilities.push("there is a Date of Manufacture widget present on the bomb");
+            possibilities.push("there is not a Day of Week widget present on the bomb");
+            possibilities.push("there is a Day of Week widget present on the bomb");
+            possibilities.push("there is a Day of Week and Date of Manufacture widget present on the bomb");
+            possibilities.push("there is not a Random Time widget present on the bomb");
+            possibilities.push("there are less than two Random Time widgets present on the bomb");
+            possibilities.push("there are exactly two Random Time widgets present on the bomb");
+            possibilities.push("there are more than two Random Time widgets present on the bomb");
+        }
+    </script>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Pozadí (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Pozadí</span>
             </div>
             <div class="page-content">
                 <img class="diagram" src="img/Component/Backgrounds.svg">
-                <h2>Na téma Pozadí (čeština)</h2>
-                <p class="flavour-text">Pro jednou se nesoustřeď pouze na to co je před tebou. Dávej pozor i na to co se děje za tím hlavním. Všichni víme že myslíš na explozi.</p>
-                <p>Tento modul má barevné tlačítko, barevné pozadí, počítadlo a tlačítko na odeslání. Pomocí barvy pozadí a barvy tlačítka, zjistěte číslo v následujících tabulkách a tolikrát zmáčkněte tlačítko. Následně zmáčkněte SUBMIT.</p>
+                <h2>Na téma Pozadí</h2>
+                <p class="flavour-text">Pro jednou se nesoustředíte pouze na to, co je před vámi. Dávejte pozor i na to, co se děje v pozadí. Všichni víme, jak se cítíte při výbuchu.</p>
+                <p>Tento modul má barevné tlačítko, barevné pozadí, počítadlo a tlačítko na potvrzení. Pozadí může být nějaké barvy. Pomocí barvy pozadí a barvy tlačítka, stiskněte tlačítko, dokud se počítadlo nerovná určitému číslu a stiskněte tlačítko potvrdit.</p>
                 <h3>Krok 1:</h3>
-                <p>Použijte tabulku B abyste zjistili váš pár písmen, najděte první dvě podmínky, které platí. Použijte první písmeno pro první pravidlo a druhé písmeno pro druhé pravidlo.</p>
+                <p>Použijte pravidla v tabulce B, abyste zjistili váš pár písmen, pomocí kterých najděte první dvě podmínky, které platí. Použijte první písmeno pro první pravidlo a druhé písmeno pro druhé pravidlo.</p>
                 <h3>Krok 2:</h3>
-                <p>Použijte pár písmen z kroku 1 a Tabulku A, první písmeno použijte podél šířky a druhé písmeno podél výšky, abyste zjistili správný počet stisknutí tlačítka. Následně zmáčkněte tlačítko SUBMIT. </p>
+                <p>Použijte pár písmen z kroku 1 a Tabulky A, použijte první písmeno vlevo a druhé písmeno nahoře, abyste zjistili správný počet stisknutí tlačítka. Následně zmáčkněte tlačítko potvrdit. </p>
 
                 <p class="caption">TABULKA A:</p>
                 <table>
                     <tr>
                         <td class="corner"></td>
-                        <td><b>A</b></td>
-                        <td><b>B</b></td>
-                        <td><b>C</b></td>
-                        <td><b>D</b></td>
-                        <td><b>E</b></td>
-                        <td><b>F</b></td>
+                        <td><strong>A</strong></td>
+                        <td><strong>B</strong></td>
+                        <td><strong>C</strong></td>
+                        <td><strong>D</strong></td>
+                        <td><strong>E</strong></td>
+                        <td><strong>F</strong></td>
                     </tr>
                     <tr>
-                        <td><b>A</b></td>
-                        <td>3</td>
-                        <td>2</td>
-                        <td>9</td>
-                        <td>1</td>
-                        <td>7</td>
-                        <td>4</td>
+                        <td><strong>A</strong></td>
+                        <td><div id="background-tbl-0"></div></td>
+                        <td><div id="background-tbl-1"></div></td>
+                        <td><div id="background-tbl-2"></div></td>
+                        <td><div id="background-tbl-3"></div></td>
+                        <td><div id="background-tbl-4"></div></td>
+                        <td><div id="background-tbl-5"></div></td>
                     </tr>
                     <tr>
-                        <td><b>B</b></td>
-                        <td>7</td>
-                        <td>9</td>
-                        <td>8</td>
-                        <td>8</td>
-                        <td>2</td>
-                        <td>3</td>
+                        <td><strong>B</strong></td>
+                        <td><div id="background-tbl-6"></div></td>
+                        <td><div id="background-tbl-7"></div></td>
+                        <td><div id="background-tbl-8"></div></td>
+                        <td><div id="background-tbl-9"></div></td>
+                        <td><div id="background-tbl-10"></div></td>
+                        <td><div id="background-tbl-11"></div></td>
                     </tr>
                     <tr>
-                        <td><b>C</b></td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td>7</td>
-                        <td>4</td>
-                        <td>4</td>
-                        <td>6</td>
+                        <td><strong>C</strong></td>
+                        <td><div id="background-tbl-12"></div></td>
+                        <td><div id="background-tbl-13"></div></td>
+                        <td><div id="background-tbl-14"></div></td>
+                        <td><div id="background-tbl-15"></div></td>
+                        <td><div id="background-tbl-16"></div></td>
+                        <td><div id="background-tbl-17"></div></td>
                     </tr>
                     <tr>
-                        <td><b>D</b></td>
-                        <td>6</td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>6</td>
-                        <td>8</td>
-                        <td>5</td>
+                        <td><strong>D</strong></td>
+                        <td><div id="background-tbl-18"></div></td>
+                        <td><div id="background-tbl-19"></div></td>
+                        <td><div id="background-tbl-20"></div></td>
+                        <td><div id="background-tbl-21"></div></td>
+                        <td><div id="background-tbl-22"></div></td>
+                        <td><div id="background-tbl-23"></div></td>
                     </tr>
                     <tr>
-                        <td><b>E</b></td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td>5</td>
-                        <td>3</td>
-                        <td>9</td>
-                        <td>9</td>
+                        <td><strong>E</strong></td>
+                        <td><div id="background-tbl-24"></div></td>
+                        <td><div id="background-tbl-25"></div></td>
+                        <td><div id="background-tbl-26"></div></td>
+                        <td><div id="background-tbl-27"></div></td>
+                        <td><div id="background-tbl-28"></div></td>
+                        <td><div id="background-tbl-29"></div></td>
                     </tr>
                     <tr>
-                        <td><b>F</b></td>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>3</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>8</td>
+                        <td><strong>F</strong></td>
+                        <td><div id="background-tbl-30"></div></td>
+                        <td><div id="background-tbl-31"></div></td>
+                        <td><div id="background-tbl-32"></div></td>
+                        <td><div id="background-tbl-33"></div></td>
+                        <td><div id="background-tbl-34"></div></td>
+                        <td><div id="background-tbl-35"></div></td>
                     </tr>
                 </table>
-                <p class="note">(Poznámka: Pokud zmáčknete tlačítko, když na displeji je 9, displej se zresetuje na 0.)</p>
+                <p class="note">Pokud stistknete tlačítko, když je počítadlo na 9, resetuje se na 0.</p>
             </div>
             <div class="page-footer relative-footer">Strana 1 ze 2</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Barevné Pozadí (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Pozadí</span>
             </div>
             <div class="page-content">
-                <p class="caption">TABULKA B: Podmínky</p>
+                <p class="caption">TABULKA B: Přednostní pravidla</p>
                 <table>
                     <tr>
-                        <td style="width:50%"><b>PODMÍNKA</b></td>
-                        <td><b>PRVNÍ PÍSMENO</b></td>
-                        <td><b>DRUHÉ PÍSMENO</b></td>
+                        <td style="width:50%"><strong>PODMÍNKA</strong></td>
+                        <td><strong>PRVNÍ PÍSMENO</strong></td>
+                        <td><strong>DRUHÉ PÍSMENO</strong></td>
                     </tr>
                     <tr>
-                        <td>Pokud se barva pozadí shoduje s barvou tlačítka</td>
-                        <td>A</td>
-                        <td>C</td>
+                        <td id="background-rule-0">Pokud se barva pozadí shoduje s barvou tlačítka</td>
+                        <td><div id="background-l-0"></div></td>
+                        <td><div id="background-r-0"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud je tlačítko <b>NEBO</b> pozadí (ale ne obojí) černé nebo bílé</td>
-                        <td>D</td>
-                        <td>B</td>
+                        <td id="background-rule-1">Jinak pokud je tlačítko nebo pozadí (ale ne obojí) černé, nebo bílé</td>
+                        <td><div id="background-l-1"></div></td>
+                        <td><div id="background-r-1"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud na bombě nejsou D baterie</td>
-                        <td>C</td>
-                        <td>E</td>
+                        <td id="background-rule-2">Jinak, pokud na bombě nejsou žádné D baterie *</td>
+                        <td><div id="background-l-2"></div></td>
+                        <td><div id="background-r-2"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud na bombě nejsou AA baterie</td>
-                        <td>D</td>
-                        <td>D</td>
+                        <td id="background-rule-3">Jinak, pokud na bombě nejsou žádné AA baterie</td>
+                        <td><div id="background-l-3"></div></td>
+                        <td><div id="background-r-3"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud tlačítko <b>A ZÁROVEŇ I</b> pozadí mají primární barvu*</td>
-                        <td>B</td>
-                        <td>F</td>
+                        <td id="background-rule-4">Jinak, pokud tlačítko a pozadí mají primární barvu **</td>
+                        <td><div id="background-l-4"></div></td>
+                        <td><div id="background-r-4"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud má tlačítko vedlejší barvu**</td>
-                        <td>F</td>
-                        <td>E</td>
+                        <td id="background-rule-5">Jinak, pokud má tlačítko vedlejší barvu ***</td>
+                        <td><div id="background-l-5"></div></td>
+                        <td><div id="background-r-5"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud je na bombě nerozsvícený indikátor "SND"</td>
-                        <td>E</td>
-                        <td>B</td>
+                        <td id="background-rule-6">Jinak, pokud je na bombě nerozsvícený indikátor "SND"</td>
+                        <td><div id="background-l-6"></div></td>
+                        <td><div id="background-r-6"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud je na bombě sériový port</td>
-                        <td>B</td>
-                        <td>C</td>
+                        <td id="background-rule-7">Jinak, pokud je na bombě sériový port</td>
+                        <td><div id="background-l-7"></div></td>
+                        <td><div id="background-r-7"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak pokud barva pozadí smíchaná s modrou vytvoří barvu tlačítka***</td>
-                        <td>C</td>
-                        <td>D</td>
+                        <td id="background-rule-8">Jinak, pokud barva pozadí smíchaná s modrou vytvoří barvu tlačítka ****</td>
+                        <td><div id="background-l-8"></div></td>
+                        <td><div id="background-r-8"></div></td>
                     </tr>
                     <tr>
-                        <td>Jinak použijte toto pravidlo (Toto pravidlo jako jediné smí být použito 2x)</td>
-                        <td>E</td>
-                        <td>A</td>
+                        <td>Jinak, použijte toto pravidlo (Toto pravidlo smí být použito dvakrát)</td>
+                        <td><div id="background-l-9"></div></td>
+                        <td><div id="background-r-9"></div></td>
                     </tr>
                 </table>
-                <p class="comment">
-                    *:   Primární barvy jsou Červená, Žlutá a Modrá.<br>
-                    **:  Vedlejší barvy jsou Oranžová, Zelená a Fialová.<br>
-                    ***: Smícháním Červené a Žluté dostaneš Oranžovou, Modrá a Žlutá udělá Zelenou, a Červená s Modrou udělá Fialovou. Smícháním Modré a Bílé <b>NEDOSTANEŠ</b> Modrou.
+                <p>
+                    <span id="background-foot-3" class="comment">*: D baterie jsou brány jako jakýkoliv držák na baterie s přesně jednou baterií.</span>
+                    <span id="background-foot-0" class="comment">**: Primární barvy jsou červená, žlutá a modrá</span>
+                    <span id="background-foot-1" class="comment">***: Vedlejší barvy jsou oranžová, zelená a fialová</span>
+                    <span id="background-foot-2" class="comment">****: Smícháním červené a žluté získáte oranžovou, smícháním modré a červené získáte zelenou a smícháním červené a modré získáte fialovou. Smícháním modré a bílé nezískáte modrou.</span>
                 </p>
             </div>
             <div class="page-footer relative-footer">Strana 2 ze 2</div>

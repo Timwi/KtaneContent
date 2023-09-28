@@ -3,39 +3,451 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Tlačítko — Keep Talking and Nobody Explodes Module</title>
+    <title>Tlačítko — Keep Talking and Nobody Explodes modul</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+    var MaxInitialRules = 6;
+    var MaxHoldRules = 3;
+    var LOGGING = false;
+
+    var IndicatorLabels = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+    var ButtonColor = ["červené", "modré","žluté","bílé"];
+    var BigButtonLEDColor = ["Červený", "Modrý","Žlutý","Bílý"];
+    var ButtonInstruction = ["Press","Hold","Abort","Detonate"];
+    var PortList = [ "DVI-D", "PS/2", "RJ-45", "Stereo RCA", "paralelní", "sériový" ];
+
+    // Main conditions (“queries”)
+    function IsButtonColor(color) { return { id: "isButtonColor", text: `je tlačítko ${color}`, text2: `tlačítko je ${color}` }; }
+    function IsButtonInstruction(label) { return { id: "isButtonLabel", text: `má tlačítko nápis “${label},”`, text2: `tlačítko má nápis “${label},”` }; }
+    function IndicatorXLit(indicator) { return { id: "indicatorXLit", text: `má bomba rozsvícený indikátor s nápisem ${indicator}`, text2: `bomba má rozsvícený indikátor s nápisem ${indicator}` }; }
+    function IsPortPresent(port) { return { id: "portPresent", text: `má bomba ${port} port`, text2: `bomba má ${port} port` }; }
+    function MoreThanXBatteries(n) {
+        return {
+            id: "moreThanXBatteries",
+            text: n === 1
+                ? "má bomba více než 1 baterii"
+                : (
+                    n < 5
+                    ? `má bomba více než ${n} baterie`
+                    : `má bomba více než ${n} baterií`
+                  ),
+            test2: n === 1
+                ? "bomba má více než 1 baterii"
+                : (
+                    n < 5
+                    ? `bomba má více než ${n} baterie`
+                    : `bombá má více než ${n} baterií`
+                  )
+        };
+    }
+    var EmptyPortPlate = { id: 'emptyportplate', text: "má bomba prázdný držák na porty", text2: "bomba má prázdný držák na porty" };
+    var DoesSerialNumberStartWithLetter = { id: 'serial_letter', text: "začíná sériové číslo písmenem", text2: "sériové číslo začíná písmenem" };
+    var IsSerialNumberOdd = { id: 'serial_odd', text: "je poslední cifra sériového čísla lichá", text2: "poslední cifra sériového čísla je lichá" };
+
+    // Main rules
+    var Hold = { id: 'hold', text: "držte tlačítko a hleďte na “uvolnění přidrženého tlačítka.”" };
+    var Press = { id: 'tap', text: "stlačte a okamžitě uvolněte tlačítko." };
+    var TapWhenSecondsMatch = { id: 'tap11n', text: "stlačte a okamžitě uvolněte tlačítko, když se dvě sekundové cifry na časovači rovnají." };
+
+    // Conditions for releasing held buttons
+    function IsIndicatorColor(color) { return { id: "isButtonColor", text: `${color} proužek:` }; }
+
+    // Rules for releasing held buttons
+    function ReleaseOnTimerText(digit) { return { id: `rel_${digit}`, text: `uvolněte tlačítko, když je na jakékoliv pozici časovače ${digit}.` }; }
+    var ReleaseWhenSecondsDigitsAddToSeven = { id: 'add7', text: "uvolněte tlačítko, když je součet dvou sekundových cifer 7." };
+    var ReleaseWhenSecondsDigitsAddToThreeOrThirteen = { id: 'add3_13', text: "uvolněte tlačítko, když je součet dvou sekundových cifer 3, nebo 13." };
+    var ReleaseWhenSecondsDigitsAddToFive = { id: 'add5', text: "uvolněte tlačítko, když je součet dvou sekundových cifer 5." };
+    var ReleaseWhenSecondsPrimeOrZero = { id: 'prime_0', text: "uvolněte tlačítko, když je počet zobrazených sekund prvočíslo, nebo 0." };
+    var ReleaseWhenSecondsAddToMultipleOfFour = { id: 'add4n', text: "uvolněte tlačítko, když je součet dvou sekundových cifer násobek 4." };
+    function ReleaseWhenLeastSignificantSecondIs(digit) { return { id: `lsd_${digit}`, text: `uvolněte tlačítko, když je pravá sekundová cifra ${digit}.` }; }
+    var ReleaseAtAnyTime = { id: 'any', text: "uvolněte kdykoliv." };
+
+    class Rule
+    {
+        constructor(queries, solution)
+        {
+            this.Queries = queries;
+            this.Solution = solution;
+        }
+
+        GetQueryString()
+        {
+            if (this.Queries.length === 0)
+                return '';
+
+            return this.Queries.length === 1 ? this.Queries[0].text :
+                `${this.Queries[0].text} a ${this.Queries[1].text2}`;
+        }
+
+        GetLastQuery()
+        {
+            if (this.Queries.length === 0) return '';
+            return this.Queries.length === 2 ? this.Queries[1].id : this.Queries[0].id;
+        }
+
+        GetSolutionString()
+        {
+            return this.Solution.text;
+        }
+
+        GetString(isOtherwise)
+        {
+            return `Pokud ${this.Queries.length ? this.GetQueryString() : 'žádné z výše uvedených neplatí'}${this.GetLastQuery() === "isButtonLabel" ? "," : ""} ${this.Solution.text}`;
+        }
+
+        AppendHoldHtml(elem)
+        {
+            var em = document.createElement('em');
+            em.innerText = this.Queries.length ? this.GetQueryString() : 'Jakýkoliv jiný barevný proužek:';
+            elem.appendChild(em);
+            elem.appendChild(document.createTextNode(' ' + this.GetSolutionString()));
+        }
+    }
+
+    function SelectSolution(rnd, weights, list)
+    {
+        var result = null;
+
+        var num = 0;
+        for (var i = 0; i < list.length; i++)
+            num += weights[list[i].id];
+        var num2 = rnd.nextDouble() * num;
+        for (var i = 0; i < list.length; i++)
+        {
+            if (num2 < weights[list[i].id])
+            {
+                weights[list[i].id] = weights[list[i].id] * .05;
+                result = list[i];
+                break;
+            }
+            num2 -= weights[list[i].id];
+        }
+        if (result === null)
+            result = list[rnd.next(0, list.length)];
+        if (LOGGING) {
+            console.log(`SelectSolution(list[${list.length}]) = #${list.indexOf(result)} (${result.id})`);
+            console.log(`weights:`);
+            for (var k in weights)
+                console.log(`  -- ${k} = ${weights[k]}`);
+        }
+        return result;
+    }
+
+    function RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList)
+    {
+        var remainder = ruleList;
+        if (remainder[remainder.length - 2].Solution.id == 'hold')
+            remainder[remainder.length - 2].Solution = SelectSolution(rnd, weights, CreateSolutionsList(rnd, weights, false));
+
+        var twobattery = -1;
+        var onebattery = -1;
+        var solution = '';
+        var samesolution = true;
+
+        for (var i = remainder.length - 1; i >= 0; i--)
+        {
+            if (remainder[i].GetQueryString().indexOf("more than 2 batteries") !== -1)
+            {
+                twobattery = i;
+                if (onebattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            else if (remainder[i].GetQueryString().indexOf("more than 1 battery") !== -1)
+            {
+                onebattery = i;
+                if (twobattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            if (solution === '')
+                continue;
+            samesolution &= remainder[i].GetSolutionString() === solution;
+        }
+        if (onebattery == -1 || twobattery == -1)
+            return;
+
+        if (onebattery < twobattery && remainder[onebattery].Queries.length == 1)
+        {
+            if (rnd.next(0, 2, LOGGING) === 0)
+                remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+            else
+                remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+        }
+        else if (remainder[onebattery].Queries.length === 1 && remainder[twobattery].Queries.length === 1 && samesolution)
+        {
+            switch (rnd.next(0, 7, LOGGING))
+            {
+                // push a secondary query to one or both of the battery rules
+                case 2:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                // fall through to case 0
+                case 0:
+                    remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+                case 1:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+
+                // Replace one or both of the battery rules with a new primary query
+                case 5:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                // fall through to case 3
+                case 3:
+                    remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+                case 4:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+
+                // Replace one of the solutions in between the minimum and maximum battery.
+                default:
+                    var replacementsolution = remainder[onebattery].Solution.id === 'tap' ? Hold : Press;
+                    if (Math.abs(onebattery - twobattery) === 1)
+                        remainder[Math.min(onebattery, twobattery)].Solution = replacementsolution;
+                    else
+                        remainder[rnd.next(Math.min(onebattery, twobattery), Math.max(onebattery, twobattery), LOGGING)].Solution = replacementsolution;
+                    break;
+            }
+        }
+    }
+
+    var defaultPrimaryRules = null;
+    var defaultHoldRules = null;
+    var defaultAppendixReference = null;
+    function setDefaultRules(rnd) { setRules(rnd); }
+
+    function setRules(rnd)
+    {
+        if (defaultPrimaryRules === null) {
+            defaultPrimaryRules = document.getElementById('primary-rules').innerHTML;
+            defaultHoldRules = document.getElementById('hold-rules').innerHTML;
+            defaultAppendixReference = document.getElementById('appendix-reference').innerHTML;
+        }
+
+        if (rnd.seed === 1) {
+            document.getElementById('primary-rules').innerHTML = defaultPrimaryRules;
+            document.getElementById('hold-rules').innerHTML = defaultHoldRules;
+            document.getElementById('appendix-reference').innerHTML = defaultAppendixReference;
+            return;
+        }
+
+        var q = BuildQueryLists(rnd);
+        var weights = {};
+
+        var ruleList = [];
+        while (ruleList.length < MaxInitialRules && q.PrimaryQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.PrimaryQueryList);
+            var num = rnd.next(0, 2, LOGGING);
+            if (num === 0)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery], false));
+            for (var i = 0; i < num; i++)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery, PopQueryFromList(rnd, q.SecondaryQueryList)], false));
+        }
+        // Otherwise: hold the button.
+        ruleList.push(new Rule([], Hold));
+
+        var holdRuleList = [];
+        while (holdRuleList.length < MaxHoldRules && q.IndicatorColorQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.IndicatorColorQueryList);
+            holdRuleList.push(CreateRule(rnd, weights, [baseQuery], true));
+        }
+        // Otherwise
+        holdRuleList.push(CreateRule(rnd, weights, [], true));
+
+        if (rnd.seed !== 1)
+            RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList);
+
+        var rulesOl = document.getElementById('primary-rules');
+        while (rulesOl.firstChild != null)
+            rulesOl.removeChild(rulesOl.firstChild);
+        for (var i = 0; i < ruleList.length; i++)
+        {
+            var li = document.createElement('li');
+            rulesOl.appendChild(li);
+            li.innerText = ruleList[i].GetString(i !== 0);
+        }
+
+        var holdRulesUl = document.getElementById('hold-rules');
+        while (holdRulesUl.firstChild != null)
+            holdRulesUl.removeChild(holdRulesUl.firstChild);
+        for (var i = 0; i < holdRuleList.length; i++)
+        {
+            var li = document.createElement('li');
+            holdRulesUl.appendChild(li);
+            holdRuleList[i].AppendHoldHtml(li);
+        }
+
+        var needsIndicatorAppendix = false, needsBatteryAppendix = false, needsPortAppendix = false;
+        var allRules = ruleList.concat(holdRuleList);
+        for (var i = 0; i < allRules.length; i++)
+            for (var j = 0; j < allRules[i].Queries.length; j++)
+            {
+                if (allRules[i].Queries[j].id === 'indicatorXLit')
+                    needsIndicatorAppendix = true;
+                if (allRules[i].Queries[j].id === 'moreThanXBatteries')
+                    needsBatteryAppendix = true;
+                if (allRules[i].Queries[j].id === 'portPresent')
+                    needsPortAppendix = true;
+            }
+        var references = [];
+        if (needsIndicatorAppendix)
+            references.push("Hleďte na přílohu A pro odkaz na identifikaci indikátorů.");
+        if (needsBatteryAppendix)
+            references.push("Hleďte na přílohu B pro odkaz na identifikaci baterií.");
+        if (needsPortAppendix)
+            references.push("Hleďte na přílohu C pro odkaz na identifikaci portů.");
+
+        var p = document.getElementById('appendix-reference');
+        p.innerHTML = '';
+        for (var i = 0; i < references.length; i++) {
+            if (i > 0)
+                p.appendChild(document.createElement('br'));
+            p.appendChild(document.createTextNode(references[i]));
+        }
+    }
+
+    function PopQueryFromList(rnd, queries)
+    {
+        var index = rnd.next(0, queries.length, LOGGING);
+        var query = queries[index];
+        queries.splice(index, 1);
+        return query;
+    }
+
+    function BuildQueryLists(rnd)
+    {
+        PrimaryQueryList = ButtonColor.map(c => IsButtonColor(c));
+        IndicatorColorQueryList = BigButtonLEDColor.map(c => IsIndicatorColor(c));
+        SecondaryQueryList = ButtonInstruction.map(i => IsButtonInstruction(i));
+        SecondaryHoldQueryList = SecondaryQueryList.slice(0);
+
+        for (var i = 1; i < 3; i++)
+            PrimaryQueryList.push(MoreThanXBatteries(i));
+
+        for (var m = 0; m < 3; m++)
+            SecondaryQueryList.push(IndicatorXLit(IndicatorLabels[rnd.next(0, IndicatorLabels.length, LOGGING)]));
+
+        if (rnd.seed !== 1)
+        {
+            var list = PortList.slice(0);
+                for (var i = 0; i < 3; i++)
+                {
+                var ix = rnd.next(0, list.length, LOGGING);
+                var port = list[ix];
+                list.splice(ix, 1);
+                SecondaryQueryList.push(IsPortPresent(port));
+            }
+            for (var i = 0; i < list.length; i++)
+                PrimaryQueryList.push(IsPortPresent(list[i]));
+
+            PrimaryQueryList.push(EmptyPortPlate);
+            SecondaryQueryList.push(DoesSerialNumberStartWithLetter);
+            SecondaryQueryList.push(IsSerialNumberOdd);
+        }
+
+        return {
+            PrimaryQueryList: PrimaryQueryList,
+            IndicatorColorQueryList: IndicatorColorQueryList,
+            SecondaryQueryList: SecondaryQueryList,
+            SecondaryHoldQueryList: SecondaryHoldQueryList
+        };
+    }
+
+    function CreateRule(rnd, weights, queries, isHoldRule)
+    {
+        return new Rule(queries, SelectSolution(rnd, weights, !isHoldRule ? CreateSolutionsList(rnd, weights, true) : CreateHoldSolutionsList(rnd, weights)));
+    }
+
+    function CreateSolutionsList(rnd, weights, holdAllowed)
+    {
+        var list = [ Hold, Press ];
+        if (!holdAllowed)
+            list.splice(0, 1);
+
+        if (rnd.seed !== 1)
+        {
+            list.push(TapWhenSecondsMatch);
+            if (!(TapWhenSecondsMatch.id in weights))
+                weights[TapWhenSecondsMatch.id] = 0.05;
+        }
+        if (!(Press.id in weights))
+            weights[Press.id] = 0.1;
+
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+
+    function CreateHoldSolutionsList(rnd, weights)
+    {
+        var list = [ ReleaseOnTimerText("5"), ReleaseOnTimerText("1"), ReleaseOnTimerText("2"), ReleaseOnTimerText("3"), ReleaseOnTimerText("4") ];
+        if (rnd.seed !== 1)
+        {
+            list.push(ReleaseOnTimerText("6"));
+            list.push(ReleaseOnTimerText("7"));
+            list.push(ReleaseOnTimerText("8"));
+            list.push(ReleaseOnTimerText("9"));
+            list.push(ReleaseOnTimerText("0"));
+
+            for (var i = 0; i < 10; i++)
+                list.push(ReleaseWhenLeastSignificantSecondIs(i));
+
+            list.push(ReleaseAtAnyTime);
+            list.push(ReleaseWhenSecondsAddToMultipleOfFour);
+            list.push(ReleaseWhenSecondsDigitsAddToFive);
+            list.push(ReleaseWhenSecondsDigitsAddToSeven);
+            list.push(ReleaseWhenSecondsDigitsAddToThreeOrThirteen);
+            list.push(ReleaseWhenSecondsPrimeOrZero);
+        }
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+    </script>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-03">
-            <div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Tlačítko (čeština) v1.4</span> </div>
+            <div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Tlačítko</span> </div>
             <div class="page-footer absolute-footer"></div>
-            <div class="page-content">
-                <img src="img/Component/The Button.svg" class="diagram">
-                <h2>Na téma Tlačítka (čeština) </h2>
-                <p class="flavour-text">Možná si myslíte, že tlačítko, které vám říká, abyste ho stiskli, bude jednoduché. To je ten druh myšlení, díky němuž lidé explodují.</p>
-                <p class="appendix-reference" id="appendix-reference">Navštivte Dodatek A kvůli rozpoznání indikátorů.<br>Navštivte Dodatek B kvůli rozpoznání baterií.</p>
-                <p>Řiďte se pravidly v následujícím seznamu. Řiďte se prvním pravidlem, které bude platit:</p>
-                <ol>
-                    <li>Pokud je tlačítko modré s nápisem "Abort", tak držte tlačítko a pokračujte na "Kdy pustit tlačítko".</li>
-                    <li>Pokud je tlačítko s nápisem "Detonate" a bomba má více než 1 baterii, tak okamžitě pusťte tlačítko.</li>
-                    <li>Pokud je tlačítko bílé a bomba má rozsvícený indikátor s nápisem CAR, tak držte tlačítko a pokračujte na "Kdy pustit tlačítko".</li>
-                    <li>Pokud jsou na bombě více než 2 baterie a bomba má rozsvícený indikátor s nápisem FRK, tak okamžitě pusťte tlačítko.</li>
-                    <li>Pokud je tlačítko žluté, tak držte tlačítko a pokračujte na "Kdy pustit tlačítko".</li>
-                    <li>Pokud je tlačítko červené s nápisem "Hold", tak okamžitě pusťte tlačítko.</li>
-                    <li>Pokud žádné z výše uvedených pravidel neplatí, tak držte tlačítko a pokračujte na "Kdy pustit tlačítko".</li>
+            <div class="page-content"> <img src="img/Component/The Button.svg" class="diagram">
+                <h2>Na téma Tlačítka</h2>
+                <p class="flavour-text">Možná si myslíte, že tlačítko, které vám říká, abyste ho stiskli, bude jednoduché. To je ten typ myšlení, které lidi exploduje.</p>
+                <p class="appendix-reference" id="appendix-reference">Hleďte na přílohu A pro odkaz na identifikaci indikátorů.<br>Hleďte na přílohu B pro odkaz na indentifikaci baterií.</p>
+                <p>Řiďte se pravidly v následujícím seznamu. Proveďte první pravidlo, které platí:</p>
+                <ol id='primary-rules'>
+                    <li>Pokud je tlačítko modré a má nápis "Abort," držte tlačítko a hleďte na "uvolnění přidrženého tlačítka."</li>
+                    <li>Pokud má bomba více než 1 baterii a tlačítko má nápis "Detonate," stlačte a okamžitě uvolněte tlačítko.</li>
+                    <li>Pokud je tlačítko bílé a bomba má rozsvícený indikátor s nápisem CAR, držte tlačítko a hleďte na "uvolnění přidrženého tlačítka."</li>
+                    <li>Pokud jsou na bombě více než 2 baterie a bomba má rozsvícený indikátor s nápisem FRK, stlačte a okamžitě uvolněte tlačítko.</li>
+                    <li>Pokud je tlačítko žluté, držte tlačítko a hleďte na "uvolnění přidrženého tlačítka."</li>
+                    <li>Pokud je tlačítko červené a má nápis "Hold," stlačte a okamžitě uvolněte tlačítko.</li>
+                    <li>Pokud žádné z výše uvedených neplatí, držte tlačítko a hleďte na "uvolnění přidrženého tlačítka."</li>
                 </ol>
-                <h3>Kdy pustit tlačítko:</h3>
-                <p>Pokud držíte tlačítko, barevný proužek se rozsvítí vedle tlačítka. Na základě jeho barvy musíte pustit tlačítko ve správnou chvíli:</p>
-                <ul id="primary-rules">
-                    <li><em>Modrý proužek:</em> Pusťte tlačítko, když je na jakékoliv pozici odpočtu 4.</li>
-                    <li><em>Bílý proužek:</em> Pusťte tlačítko, když je na jakékoliv pozici odpočtu 1.</li>
-                    <li><em>Žlutý proužek:</em> Pusťte tlačítko, když je na jakékoliv pozici odpočtu 5.</li>
-                    <li><em>Jakýkoliv jiný proužek:</em> Pusťte tlačítko, když je na jakékoliv pozici odpočtu 1.</li>
+                <h3>Uvolnění přidrženého tlačítka</h3>
+                <p>Pokud držíte tlačítko, vedle tlačítka se rozsvítí barevný proužek. Na základě jeho barvy musíte pustit tlačítko ve správnou chvíli:</p>
+                <ul id='hold-rules'>
+                    <li><em>Modrý proužek:</em> uvolněte tlačítko, když je na jakékoliv pozici časovače 4.</li>
+                    <li><em>Bílý proužek:</em> uvolněte tlačítko, když je na jakékoliv pozici časovače 1.</li>
+                    <li><em>Žlutý proužek:</em> uvolněte tlačítko, když je na jakékoliv pozici časovače 5.</li>
+                    <li><em>Jakýkoliv jiný barevný proužek:</em> uvolněte tlačítko, když je na jakékoliv pozici časovače 1.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Strana 1 z 1</div>

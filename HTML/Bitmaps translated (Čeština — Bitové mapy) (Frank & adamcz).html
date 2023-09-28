@@ -3,43 +3,303 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Bitové Mapy — Keep Talking and Nobody Explodes Module</title>
+    <title>Bitové mapy — Keep Talking and Nobody Explodes modul</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        var defaultRules = null;
+        var defaultStartingRule = null;
+
+        function ensureDefaultsKnown()
+        {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = [];
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                defaultRules.push(list[i].innerText);
+            defaultStartingRule = document.getElementById('start-rule').innerText;
+        }
+
+        function setDefaultRules()
+        {
+            ensureDefaultsKnown();
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < list.length; i++)
+                list[i].innerText = defaultRules[i];
+            document.getElementById('start-rule').innerText = defaultStartingRule;
+        }
+
+        function setRules(rnd)
+        {
+            ensureDefaultsKnown();
+
+            // Add extra randomness
+            var skip = rnd.next(0, 100);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            // Extra possible answer values:
+            //  Q = one quadrant is mentioned
+            //  L = a line (row/column) is mentioned
+            //  R = a row is mentioned
+            //  C = a column is mentioned
+            //  T = a 2×2 square is mentioned
+            //  S = a 3×3 square is mentioned
+
+            var edgeworkVariables = [
+                'indikátorů', 'rozsvícených indikátorů', 'nerozsvícených indikátorů', 'indikátorů se samohláskou', 'indikátorů bez samohlásky',
+                'portů', 'držáků na porty', 'neprázdných drážků na porty', 'typů portů', 'typů portů, kterých má bomba pouze jeden', 'duplikátních typů portů',
+                'baterií', 'držáků na baterie', 'AA baterií', 'D baterií',
+                'písmen v sériovém čísle', 'souhlásek v sériovém čísle', 'samohlásek v sériovém čísle',
+                'cifer v sériovém čísle', 'lichých cifer v sériovém čísle', 'sudých cifer v sériovém čísle',
+                'modulů na bombě (včetně hlídacích)', 'nehlídacích modulů na bombě',
+                'vyřešených modulů na bombě', 'nevyřešených nehlídacích modulů na bombě',
+
+                // Speciální:
+                'první cifra v sériovém čísle', 'předposlední cifra v sériovém čísle',
+                'poslední cifra v sériovém čísle', 'součet cifer v sériovém čísle',
+                'jednotky sekund na časovači',
+                'desítky sekund na časovači',
+                'jednotky minut na časovači',
+                'desítky minut na časovači'
+            ];
+            rnd.shuffleFisherYates(edgeworkVariables);
+            var edgeworkVariableIx = 0;
+            var type2x2 = ['kompletně bílý, nebo černý', 'kompletně bílý', 'kompletně černý'][rnd.next(0, 3)];
+
+            // Optional conditions
+            var conditions = [
+                { extra: 'L', name: 'Pokud je přesně jeden řádek, nebo sloupec kompletně bílý, nebo černý' },
+                { extra: 'R', name: 'Pokud je přesně jeden řádek kompletně bílý, nebo černý' },
+                { extra: 'C', name: 'Pokud je přesně jeden sloupec kompletně bílý, nebo černý' },
+                { extra: 'S', name: 'Pokud je na bitové mapě 3×3 čtverec, který je kompletně bílý, nebo černý' },
+                { extra: 'T', name: `Pokud je na bitové mapě 2×2 čtverec, který je ${type2x2}` },
+                { extra: '', name: `Pokud je stejný počet převážně bílých kvadrantů jako ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Pokud je více převážně bílých kvadrantů, než ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Pokud je méně převážně bílých kvadrantů, než ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Pokud je stejný počet převážně černých kvadrantů jako ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Pokud je více počet převážně černých kvadrantů jako ${edgeworkVariables[edgeworkVariableIx++]}` },
+                { extra: '', name: `Pokud je méně počet převážně černých kvadrantů jako ${edgeworkVariables[edgeworkVariableIx++]}` }
+            ];
+
+            // We will make sure that all three conditions from one of these triplets are present so that there is always one rule that matches.
+            var pixelCount1 = rnd.next(3, 8);
+            var moreOrLess = rnd.next(0, 2) === 0 ? `${pixelCount1}, nebo méně` : `${16 - pixelCount1}, nebo více`;
+            var blackWhite = rnd.next(0, 2) === 0 ? 'bílých' : 'černých';
+            var pixelCount2 = rnd.next(26, 30);
+            var blackWhite2 = rnd.next(0, 2) === 0 ? 'bílých' : 'černých';
+            var tripletConditions = [
+                [
+                    { extra: '', name: `Pokud nemá žádný kvadrant ${moreOrLess} ${blackWhite} pixelů` },
+                    { extra: 'Q', name: `Pokud má právě jeden kvadrant ${moreOrLess} ${blackWhite} pixelů` },
+                    { extra: '', name: `Pokud má více než jeden kvadrant ${moreOrLess} ${blackWhite} pixelů` },
+                ],
+                [
+                    { name: 'Pokud je méně převážně bílých kvadrantů, než převážně černých kvadrantů', extra: '' },
+                    { name: 'Pokud je více převážně bílých kvadrantů, než převážně černých kvadrantů', extra: '' },
+                    { name: 'Pokud je stejně převážně bílých kvadrantů jako převážně černých kvadrantů', extra: '' },
+                ],
+                [
+                    { name: `Pokud má celá bitová mapa ${64 - pixelCount2}, nebo více ${blackWhite2} pixelů`, extra: '' },
+                    { name: `Pokud má celá bitová mapa ${pixelCount2}, nebo méně ${blackWhite2} pixelů`, extra: '' },
+                    { name: `Pokud má celá bitová mapa mezi ${pixelCount2 + 1} a ${63 - pixelCount2} ${blackWhite2} pixelů`, extra: '' },
+                ],
+                [
+                    { name: 'Pokud nemá žádný kvadrant 8 bílých a 8 černých pixelů', extra: '' },
+                    { name: 'Pokud je přesně jeden kvadrant, který má 8 bílých a 8 černých pixelů', extra: 'Q' },
+                    { name: 'Pokud je více než jeden kvadrant, který má 8 bílých a 8 černých pixelů', extra: '' },
+                ]
+            ];
+            var tripletIx = rnd.next(0, tripletConditions.length);
+            var triplet = tripletConditions[tripletIx];
+
+            for (var i = 0; i < tripletConditions.length; i++)
+                if (i !== tripletIx)
+                    for (var j = 0; j < tripletConditions[i].length; j++)
+                        conditions.push(tripletConditions[i][j]);
+
+            rnd.shuffleFisherYates(conditions);
+            conditions.splice(7);
+            for (var i = 0; i < triplet.length; i++)
+                conditions.push(triplet[i]);
+            rnd.shuffleFisherYates(conditions);
+
+            var startRule = edgeworkVariables[edgeworkVariableIx++];
+            document.getElementById('start-rule').innerText = (
+                startRule.startsWith("první ") ||
+                startRule.startsWith("předposlední ") ||
+                startRule.startsWith("poslední ") ||
+                startRule.startsWith("součet ") ||
+                startRule.startsWith("jednotky ") ||
+                startRule.startsWith("desítky ")
+            ) ? startRule : `počet ${startRule}`;
+
+            var solutions = [
+                'převážně černých kvadrantů',
+                'převážně bílých kvadrantů',
+                'kvadrantů s 8 bílými a 8 černými pixely',
+                'celkový počet bílých pixelů',
+                'celkový počet černých pixelů',
+                'nejmenší počet černých pixelů v jakémkoliv kvadrantu',
+                'největší počet černých pixelů v jakémkoliv kvadrantu',
+                'nejmenší počet bílých pixelů v jakémkoliv kvadrantu',
+                'největší počet bílých pixelů v jakémkoliv kvadrantu',
+            ];
+            for (var i = edgeworkVariableIx; i < edgeworkVariables.length; i++)
+                solutions.push(edgeworkVariables[i]);
+            var extraSolutions = {
+                'Q': [
+                    'bílých pixelů ve 3 ostatních kvadrantech',
+                    'černých pixelů ve 3 ostatních kvadrantech',
+                    'bílých pixelů v kvadrantu diagonálně naproti',
+                    'černých pixelů v kvadrantu diagonálně naproti',
+                    'bílých pixelů ve vodorovně sousedícím kvadrantu',
+                    'černých pixelů ve vodorovně sousedícím kvadrantu',
+                    'bílých pixelů ve vertikálně sousedícím kvadrantu',
+                    'černých pixelů ve vertikálně sousedícím kvadrantu'
+                ],
+                'R': [
+                    'jeho souřadnice y, počítána od 1 shora dolů',
+                    'jeho souřadnice y, počítána od 1 zdola nahoru'
+                ],
+                'C': [
+                    'jeho souřadnice x, počítána od 1 zleva doprava',
+                    'jeho souřadnice x, počítána od 1 zprava doleva'
+                ],
+                'L': [
+                    'jeho x/y součadnice, počítáno od 1 z levého horního rohu do pravého dolního rohu',
+                    'jeho x/y součadnice, počítáno od 1 z pravého dolního rohu do levého horního rohu'
+                ],
+                'S': [
+                    'souřadnice x (začíná se od 1 zleva doprava) středu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    středu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) středu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    středu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého dolního rohu posledního takového čtverce v pořadí čtení'
+                ],
+                'T': [
+                    'souřadnice x (začíná se od 1 zleva doprava) levého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého horního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého horního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) levého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    levého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého dolního rohu prvního takového čtverce v pořadí čtení',
+                    'souřadnice x (začíná se od 1 zleva doprava) pravého dolního rohu posledního takového čtverce v pořadí čtení',
+                    'souřadnice y (začíná se od 1 shora dolů)    pravého dolního rohu posledního takového čtverce v pořadí čtení'
+                ]
+            };
+
+            var list = document.getElementsByClassName('rule');
+            for (var i = 0; i < conditions.length; i++)
+            {
+                var numSol = solutions.length;
+                if (conditions[i].extra in extraSolutions)
+                    numSol += extraSolutions[conditions[i].extra].length;
+                var ix = rnd.next(0, numSol);
+                var solution;
+                if (ix < solutions.length)
+                {
+                    solution = solutions[ix];
+                    solutions.splice(ix, 1);
+                }
+                else
+                {
+                    ix -= solutions.length;
+                    solution = extraSolutions[conditions[i].extra][ix];
+                    extraSolutions[conditions[i].extra].splice(ix, 1);
+                }
+
+                list[i].innerText = `${conditions[i].name}, odpovědí ${(
+                    solution.startsWith("desítky ")
+                ) ? `jsou` : `je`} ${(
+                    solution.startsWith("první ") ||
+                    solution.startsWith("předposlední ") ||
+                    solution.startsWith("poslední ") ||
+                    solution.startsWith("součet ") ||
+                    solution.startsWith("jednotky ") ||
+                    solution.startsWith("desítky ") ||
+                    solution.startsWith("celkový ") ||
+                    solution.startsWith("nejmenší ") ||
+                    solution.startsWith("největší ") ||
+                    solution.startsWith("jeho ") ||
+                    solution.startsWith("souřadnice ")
+                ) ? solution : `počet ${solution}`}.`;
+            }
+        }
+    </script>
+    <style>
+        .ruleseed-active #start-rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #start-rule-modulo {
+            display: none;
+        }
+
+        .ruleseed-active #start-rule-modulo {
+            display: inline;
+        }
+    </style>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-04">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Bitové Mapy (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Bitové mapy</span>
             </div>
             <div class="page-content">
                 <img class="diagram" src="img/Component/Bitmaps.svg">
-                <h2>Na téma Bitových Map (čeština)</h2>
-                <p class="flavour-text">Přes 18 Trilionů kombinací, no to se snad zblázním.</p>
+                <h2>Na téma Bitových map</h2>
+                <p class="flavour-text">Přes 18 kvintilionů kombinací, pouze některé jsou podstatné.</p>
                 <ul>
-                    <li>Tento modul obsahuje displej se 64 pixely, které jsou rozděleny na 4 "kvadranty".</li>
-                    <li>Každý pixel je buď bílý (světlý) nebo černý (tmavý).</li>
-                    <li>Modul také obsahuje 4 tlačítka s popisky 1, 2, 3 a 4.</li>
-                    <li>V následující tabulce začněte pravidlem, jehož číslo je shodné s <b><span id='start-rule'>posledním číslem sériového čísla.</span></b></li>
-                    <li>Pokračujte přes pravidla, dokud nenarazíte na pravidlo s podmínkou, které platí. Výpočítejte odpoveď platného pravidla.</li>
-                    <li>Opakovaně přičítejte/odečítejte 4 do doby, dokud odpověď nebude v rozmezí 1–4 a stiskněte odpovídající tlačítko k zneškodnění modulu.</li>
+                    <li>Tento modul obsahuje bitovou mapu se 64 pixely, rozděleny na 4 “kvadranty.” Každý pixel je buď světlý (kterému říkáme “bílý,” i když může být jiné barvy), nebo tmavý (“černý”)</li>
+                    <li>Pod displejem jsou 4 tlačítka s popisky 1, 2, 3 a 4.</li>
+                    <li>V následující tabulce začněte pravidlem, jehož číslo je rovno <span id='start-rule'>poslednímu číslu sériového čísla</span><span> (přičítejte/odečítejte&nbsp;10,&nbsp;aby&nbsp;bylo&nbsp;v&nbsp;rozsahu&nbsp;0-9)</span>.</li>
+                    <li>Pokračujte přes pravidla (se smyčkou, pokud je třeba), dokud nenarazíte na pravidlo s podmínkou, které platí.</li>
+                    <li>Vypočítejte odpověď k pravidlu, které platí. Opakovaně přičítejte, nebo odečítejte 4, dokud odpověď nebude v rozmezí 1 a 4 a stiskněte odpovídající tlačítko k zneškodnění modulu.</li>
                 </ul>
                 <table>
-                    <tr><th>Číslo Pravidla</th><th>Pravidlo</th></tr>
-                    <tr><th>0</th><td class="rule">Pokud přesně 1 kvadrant má 5 nebo méně bílých pixelů tak odpovědí je počet bílých pixelů v ostatních 3 kvadrantech.</td></tr>
-                    <tr><th>1</th><td class="rule">Pokud je stejné množství převážně-bílých kvadrantů jako rozsvícených indikátorů, tak odpovědí je počet baterií.</td></tr>
-                    <tr><th>2</th><td class="rule">Pokud přesně jedna řada nebo sloupec je kompletně bílý nebo černý, tak odpovědí je jeho souřadnice x nebo y (začíná se od 1 nahoře nebo vlevo).</td></tr>
-                    <tr><th>3</th><td class="rule">Pokud je méně převážně-bílých kvadrantů než převážně-černých kvadrantů, tak odpovědí je počet převážně-černých kvadrantů.</td></tr>
-                    <tr><th>4</th><td class="rule">Pokud celá bitová mapa má 36 nebo více bílých pixelů, tak odpovědí je celkový počet bílých pixelů.</td></tr>
-                    <tr><th>5</th><td class="rule">Pokud je více převážně-bílých kvadrantů než převážně-černých kvadrantů, tak odpovědí je nejmenší počet černých pixelů v jakémkoliv kvadrantu.</td></tr>
-                    <tr><th>6</th><td class="rule">Pokud přesně 1 kvadrant má 5 nebo méně černých pixelů, tak odpovědí je počet černých pixelů v ostatních 3 kvadrantech.</td></tr>
-                    <tr><th>7</th><td class="rule">Pokud je stejné množství převážně-černých kvadrantů jako nerozsvícených indikátorů, tak odpovědí je počet portů.</td></tr>
-                    <tr><th>8</th><td class="rule">Pokud je na bitmapě 3×3 čtverec, který je kompletně bílý nebo černý, tak odpovědí je x-souřadnice (začíná se od 1) středu prvního takového čtverce (začíná se nahoře vlevo).</td></tr>
-                    <tr><th>9</th><td class="rule">Pokud je stejný počet převážně-bílých kvadrantů jako převážně-černých kvadrantů, tak odpovědí je první číslo v sériovém čísle.</td></tr>
+                    <tr><th>#</th><th>Pravidlo</th></tr>
+                    <tr><th>0</th><td class="rule">Pokud přesně 1 kvadrant má 5, nebo méně bílých pixelů, odpovědí je počet bílých pixelů v ostatních 3 kvadrantech.</td></tr>
+                    <tr><th>1</th><td class="rule">Pokud je stejné množství převážně bílých kvadrantů jako rozsvícených indikátorů, odpovědí je počet baterií.</td></tr>
+                    <tr><th>2</th><td class="rule">Pokud je přesně jeden řádek, nebo sloupec kompletně bílý, nebo černý, odpovědí je jeho x/y souřadnice (začíná se od 1 vlevo nahoře).</td></tr>
+                    <tr><th>3</th><td class="rule">Pokud je méně převážně bílých kvadrantů, než převážně černých kvadrantů, odpovědí je počet převážně černých kvadrantů.</td></tr>
+                    <tr><th>4</th><td class="rule">Pokud má celá bitová mapa 36, nebo více bílých pixelů, odpovědí je celkový počet bílých pixelů.</td></tr>
+                    <tr><th>5</th><td class="rule">Pokud je více převážně bílých kvadrantů, než převážně černých kvadrantů, odpovědí je nejmenší počet černých pixelů v jakémkoliv kvadrantu.</td></tr>
+                    <tr><th>6</th><td class="rule">Pokud přesně jeden kvadrant má 5, nebo méně černých pixelů, odpovědí je počet černých pixelů v ostatních 3 kvadrantech.</td></tr>
+                    <tr><th>7</th><td class="rule">Pokud je stejné množství převážně černých kvadrantů, jako nerozsvícených indikátorů, odpovědí je počet portů.</td></tr>
+                    <tr><th>8</th><td class="rule">Pokud je na bitové mapě 3×3 čtverec, který je kompletně bílý, nebo černý, odpovědí je souřadnice x (začíná se od 1) středu prvního takového čtverce v pořadí čtení.</td></tr>
+                    <tr><th>9</th><td class="rule">Pokud je stejný počet převážně bílých kvadrantů jako převážně černých kvadrantů, odpovědí je první cifra v sériovém čísle.</td></tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">Strana 1 z 1</div>
