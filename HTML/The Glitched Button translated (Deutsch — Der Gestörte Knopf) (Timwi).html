@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Der Gestörte Knopf — Keep Talking and Nobody Explodes-Modul</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let tds = document.querySelectorAll('.bitseq');
+            let num0s = document.querySelectorAll('.num0s');
+
+            let bitLength = 16;
+            let results = [];
+            while (results.length < tds.length)
+            {
+                let all = Array(1 << bitLength).fill(null).map((_, c) => c)
+                    .filter(v =>
+                    {
+                        for (let cycle = 1; cycle < bitLength; cycle++)
+                        {
+                            let cycled = ((v << cycle) & ((1 << bitLength) - 1)) | (v >> (bitLength - cycle));
+                            let nb = countBits(cycled ^ v);
+                            if (nb === 0 || nb === 2)
+                                return false;
+                        }
+                        return true;
+                    });
+                results = [];
+                while (all.length > 0 && results.length < tds.length)
+                {
+                    let rndIx = rnd.next(0, all.length);
+                    let bits = all[rndIx];
+                    for (let cycle = 0; cycle < bitLength; cycle++)
+                    {
+                        let compare = ((bits << cycle) & ((1 << bitLength) - 1)) | (bits >> (bitLength - cycle));
+                        all = all.filter(v => { let nb = countBits(compare ^ v); return nb != 0 && nb != 2; });
+                    }
+                    results.push(bits);
+                }
+            }
+
+            for (let i = 0; i < tds.length; i++)
+            {
+                let bits = results[i].toString(2).padStart(bitLength, '0');
+                tds[i].innerText = bits;
+                num0s[i].innerText = `(enhält ${(bits.match(/0/g) || []).length} 0-Bits und ${(bits.match(/1/g) || []).length} 1-Bits)`;
+            }
+        }
+
+        function countBits(v)
+        {
+            let n = 0;
+            while (v > 0)
+            {
+                n++;
+                v &= (v - 1);
+            }
+            return n;
+        }
+    </script>
+    <style>
+        td, th {
+            padding: .3em 1em .2em;
+        }
+        .bitseq {
+            font-size: 14pt;
+        }
+        .num0s {
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Der Gestörte Knopf</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Glitched Button.svg" class="diagram">
+                <h2>Betrifft: Der Gestörte Knopf</h2>
+                <p class="flavour-text">Das Gefühl, wenn man den Musikantenknochen trifft, während man bei McDonald’s Sprite trinkt... dargestellt in einem Knopf.</p>
+                <p>Das Modul besteht aus einem gestörten Knopf und einem Bildschirm mit einer zyklischen Folge von Nullen und Einsen.</p>
+                <p>Die angezeigte Folge ist in der folgenden Tabelle zu finden. Allerdings ist ein Bit verkehrt.</p>
+                <p>Es gilt, den Knopf zu gedrückt zu halten, wenn das verkehrte Bit hervorgehoben ist, und loszulassen, wenn
+                    das <var>n</var>-te Bit hervorgehoben ist. <var>n</var> ist hier die mit der Bitfolge verbundene Nummer.</p>
+                <table>
+                    <tr> <th>1</th><td class="bitseq">0101111000010100</td><td class="num0s">(enhält 9 0-Bits und 7 1-Bits)</td></tr>
+                    <tr> <th>2</th><td class="bitseq">0011010111101001</td><td class="num0s">(enhält 7 0-Bits und 9 1-Bits)</td></tr>
+                    <tr> <th>3</th><td class="bitseq">1111001110110000</td><td class="num0s">(enhält 7 0-Bits und 9 1-Bits)</td></tr>
+                    <tr> <th>4</th><td class="bitseq">0100000001101100</td><td class="num0s">(enhält 11 0-Bits und 5 1-Bits)</td></tr>
+                    <tr> <th>5</th><td class="bitseq">1110100001000001</td><td class="num0s">(enhält 10 0-Bits und 6 1-Bits)</td></tr>
+                    <tr> <th>6</th><td class="bitseq">0101111100110010</td><td class="num0s">(enhält 7 0-Bits und 9 1-Bits)</td></tr>
+                    <tr> <th>7</th><td class="bitseq">1100000101111010</td><td class="num0s">(enhält 8 0-Bits und 8 1-Bits)</td></tr>
+                    <tr> <th>8</th><td class="bitseq">1001101110110111</td><td class="num0s">(enhält 5 0-Bits und 11 1-Bits)</td></tr>
+                    <tr> <th>9</th><td class="bitseq">1101010111000111</td><td class="num0s">(enhält 6 0-Bits und 10 1-Bits)</td></tr>
+                    <tr><th>10</th><td class="bitseq">0101101001000111</td><td class="num0s">(enhält 8 0-Bits und 8 1-Bits)</td></tr>
+                    <tr><th>11</th><td class="bitseq">1101101010000000</td><td class="num0s">(enhält 10 0-Bits und 6 1-Bits)</td></tr>
+                    <tr><th>12</th><td class="bitseq">1000110001110000</td><td class="num0s">(enhält 10 0-Bits und 6 1-Bits)</td></tr>
+                    <tr><th>13</th><td class="bitseq">1010011010000111</td><td class="num0s">(enhält 8 0-Bits und 8 1-Bits)</td></tr>
+                    <tr><th>14</th><td class="bitseq">1100010010111101</td><td class="num0s">(enhält 7 0-Bits und 9 1-Bits)</td></tr>
+                    <tr><th>15</th><td class="bitseq">1010110011001111</td><td class="num0s">(enhält 6 0-Bits und 10 1-Bits)</td></tr>
+                    <tr><th>16</th><td class="bitseq">1111101110111101</td><td class="num0s">(enhält 3 0-Bits und 13 1-Bits)</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Seite 1 von 1</div>
+        </div>
+    </div>
+</body>
+</html>
