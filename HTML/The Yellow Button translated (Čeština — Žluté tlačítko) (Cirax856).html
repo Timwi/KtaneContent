@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Žluté tlačítko — Keep Talking and Nobody Explodes mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            let size = 6;
+            function recurse(sofar, available)
+            {
+                function processAvailable(sq, v)
+                {
+                    let newAvailable = available.slice(0);
+                    for (let c = 0; c < size; c++)
+                    {
+                        let avIx = c + size * ((sq / size) | 0);
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1)
+                        {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    for (let r = 0; r < size; r++)
+                    {
+                        let avIx = (sq % size) + size * r;
+                        let ix = newAvailable[avIx].indexOf(v);
+                        if (ix !== -1)
+                        {
+                            newAvailable[avIx] = newAvailable[avIx].slice(0);
+                            newAvailable[avIx].splice(ix, 1);
+                        }
+                    }
+                    return newAvailable;
+                }
+
+                let ixs = [];
+                let lowest = null;
+                for (let sq = 0; sq < size * size; sq++)
+                {
+                    if (sofar[sq] !== null)
+                        continue;
+                    if (lowest == null || available[sq].length < lowest)
+                    {
+                        ixs = [sq];
+                        lowest = available[sq].length;
+                    }
+                    else if (available[sq].length === lowest)
+                        ixs.push(sq);
+                    if (lowest === 1)
+                        break;
+                }
+
+                if (ixs.length === 0)
+                    return sofar;
+
+                let square = ixs[rnd.next(0, ixs.length)];
+                let offset = rnd.next(0, available[square].length);
+                for (let fAvIx = 0; fAvIx < available[square].length; fAvIx++)
+                {
+                    let avIx = (fAvIx + offset) % available[square].length;
+                    let v = available[square][avIx];
+                    sofar[square] = v;
+
+                    let result = recurse(sofar, processAvailable(square, v));
+                    if (result !== null)
+                        return result;
+                }
+                sofar[square] = null;
+                return null;
+            }
+
+            let divs = Array.from(document.querySelectorAll(`.yellow-button-dancefloor`));
+            for (let df = 0; df < 4; df++)
+            {
+                let grid = recurse(
+                    Array(size * size).fill(null),
+                    Array(size * size).fill(null).map(x => Array(size).fill(null).map((_, c) => c)));
+
+                divs[df].innerHTML = `<table>${Array(size).fill(null).map((_, row) => `<tr>${Array(size).fill(null).map((_, col) => `<td class='color-${grid[col + size*row]}'><${''}/td>`).join('')}<${''}/tr>`).join('')}<${''}/table>`;
+            }
+        }
+    </script>
+    <style>
+        .hstack {
+            align-items: center;
+        }
+        @media screen and (max-width: 600px) {
+            .hstack {
+                position: relative;
+                left: 100px;
+            }
+        }
+
+        .yellow-button-dancefloor {
+            margin-left: 3%;
+            margin-right: 3%;
+            margin-bottom: 1cm;
+            border: 2px solid black;
+        }
+        .yellow-button-dancefloor td {
+            min-width: 1cm;
+            height: 1cm;
+            padding: 0;
+        }
+        .yellow-button-dancefloor td.color-0 { background: hsl(  0, 90%, 70%); }
+        .yellow-button-dancefloor td.color-1 { background: hsl( 60, 90%, 70%); }
+        .yellow-button-dancefloor td.color-2 { background: hsl(120, 90%, 70%); }
+        .yellow-button-dancefloor td.color-3 { background: hsl(180, 90%, 70%); }
+        .yellow-button-dancefloor td.color-4 { background: hsl(240, 90%, 70%); }
+        .yellow-button-dancefloor td.color-5 { background: hsl(300, 90%, 70%); }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Žluté tlačítko</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Yellow Button.svg" class="diagram">
+                <h2>Na téma Žlutého tlačítka</h2>
+                <p class="flavour-text">Co máme říct, když řekne “Charlie Brown?”</p>
+                <p>Vyberte správný taneční parket, znázorněný vyplněnou částí symbolu na tlačítku.</p>
+                <p>Obrazovka odhaluje nejnovější posloupnost hip barev, které musíte chápat, abyste zapadli do party. Je na vás, abyste našli úžasné taneční pohyby, které zabírají danou posloupnost. Můžete provést pouze jeden krok najednou do jakéhokoliv směru (i diagonálně) a nemůžete znovu použít čtverec, na kterém jste už byli. Pokud spadnete z tanečního parketu, bude za slabého smolaře.</p>
+                <p>Stiskněte tlačítko, abyste ušli krok do směru točící se šipky.</p>
+                <div class="hstack">
+                    <div class="yellow-button-dancefloor"></div>
+                    <div class="yellow-button-dancefloor"></div>
+                </div>
+                <div class="hstack">
+                    <div class="yellow-button-dancefloor"></div>
+                    <div class="yellow-button-dancefloor"></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Strana 1 z 1</div>
+        </div>
+    </div>
+</body>
+</html>
