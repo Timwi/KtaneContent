@@ -1,6 +1,6 @@
 let maleNames = ["Abasi","Abdu","Adhama","Amani","Anasa","Ashon","Atieno","Ayo","Azima","Azizi","Badru","Baraka","Barasa","Bayana","Beno","Busar","Busara","Bwana","Chane","Daudi","Duma","Elea","Eli","Fanaka","Faraji","Hali","Hamadi","Hamidi","Hamisi","Hodari","Ikeno","Jafari","Jamba","Jata","Jela","Juma","Jumaane","Kamari","Kiama","Kifeda","Kiira","Kito","Kitwana","Kobe","Koman","Kuende","Maulidi","Mbita","Mhina","Mosi","Moyo","Mpenda","Mshindi","Msia","Murati","Musa","Mwinyi","Mzuzi","Neema","Njogwa","Nyo","Rajabu","Safiri","Salehe","Salene","Sefu","Shani","Shomari","Tabia","Taji","Tambo","Tamu","Tian","Umoja","Usian","Yahya","Zahur","Zakia","Zawadi","Abelo","Amahle","Amehlo","Andile","Anele","Anelisa","Avela","Ayanda","Ayize","Azisa","Bafana","Bandile","Bheka","Bhekifa","Bongani","Busiso","Cakaza","Cashile","Cebo","Cela","Chacha","Chaka","Chakide","Chipo","Chotho","Chweba","Ciko","Cilonga","Cothoza","Cwatha","Dabu","Dabuka","Daza","Delani","Dida","Dinfa","Dingane","Dingani","Donya","Dube","Duma","Dumisa","Dumo","Duna","Dundu","Eethaba","Elethu","Falakhe","Fanyana","Fikile","Fobela","Fokazi","Fowabo","Fowenu","Fudu","Fundani","Fundisa","Fuza","Fuzo","Gabadi","Gangi","Gania","Ganya","Gatsha","Gazi","Gazini","Gebhuza","Geza","Gibeli","Gijimi","Goduka","Guduza","Gugu","Gwala","Gwazi","Gwedi","Gwili","Hlelile","Ibubesi","Ifu","Igama","Ikhanda","Impela","Impi","Impisi","Indlovu","Induna","Ingane","Ingwe","Inyoni","Iqaqa","Iqhunde","Izagala","Izula","Jabu","Jama","Kgabu","Khwezi","Khulani","Kubu","Kufika","Kwanele","Kwazulu","Lethu","Lindani","Lindela","Lindile","Litha","Lizwi","Lunga","Lungelo","Lungile","Luvo","Luyanda","Lwazi","Makhaya","Malusi","Manqoba","Mapoza","Mbube","Mcebo","Mduduzi","Menzi","Mfundo","Mhambi","Mmeli","Mndeni","Mnotho","Mnqobi","Mondli","Mpilo","Mpucuko","Msizi","Mthunzi","Musa","Mvelo","Mzamo","Ndonsa","Nduduzo","Ndumiso","Nhlahla","Nikhil","Njabulo","Nkosi","Nqobani","Nsizwa","Owethu","Phakama","Phila","Philani","Qhude","Qiniso","Sakhile","Sandile","Sanele","Sbu","Sduduzo","Senzo","Sfiso","Sibonele","Sifiso","Sihle","Siphiwe","Sipho","Siyanda","Siza","Sizani","Sizwe","Tandie","Thabo","Thando","Thatha","Themba","Thulani","Ubaba","Ukuza","Ulwazi","Umzuzu","Unathi","Uyise","Vala","Velaphi","Vukani","Vusi","Vuyo","Wandile","Wenzile","Xhegu","Xhibeni","Xolani","Zamani","Zenzele","Zonke"];
 let femaleNames = ["Adhama","Adia","Afiya","Aishia","Akina","Aleela","Aluna","Amana","Amanika","Andaiye","Angalia","Arusi","Ashura","Asya","Atiena","Ayah","Ayubu","Bahati","Bakari","Baraka","Barika","Bavana","Budhya","Busara","Chagina","Chanua","Chiku","Chinira","Dafina","Dalia","Dalila","Dinka","Elea","Elewa","Endana","Endelea","Fanaka","Faraji","Fikira","Gethera","Goma","Halima","Halina","Halisi","Hasana","Hasina","Hawa","Heshima","Himaya","Hodari","Imani","Imara","Inira","Inithia","Itanya","Jaha","Jahaira","Jamaa","Jamani","Jamba","Jehlani","Jiona","Julisha","Kakena","Kalere","Kaluwa","Kamara","Kamaria","Kanene","Kanika","Kanisa","Karama","Kenura","Kesi","Khadija","Kiama","Kiania","Kibibi","Kichea","Kiira","Kilinda","Kinaya","Kinjia","Kito","Koffi","Kudio","Kuende","Kwashi","Lindana","Lindia","Lisha","Madini","Mahiri","Majda","Maji","Majida","Malika","Maliza","Marini","Mashika","Masika","Maulidi","Milima","Mkiwa","Msia","Mwamini","Mwasaa","Mwatabu","Nadira","Najuma","Nbushe","Neema","Nigesa","Nurisha","Nyota","Onyesha","Otesha","Oyana","Panya","Penda","Radhiya","Rasheda","Rashida","Rasida","Raziya","Rehema","Risala","Rukiya","Saada","Safika","Safiri","Salama","Sanura","Sauda","Shani","Shauri","Siti","Subira","Taabu","Tabara","Taji","Tamu","Tia","Tisa","Tuliza","Ujamaa","Ujana","Umija","Usia","Waseme","Winda","Zahra","Zaida","Zakiya","Zawadi","Zawati","Zuri","Zuwena","Amahle","Amehlo","Andile","Anele","Anelisa","Aphiwe","Ayanda","Ayize","Bheka","Bongani","Bongile","Bongiwe","Buhle","Cabanga","Cebile","Dade","Dansa","Davathi","Deliwe","Dida","Didiza","Dumile","Ejaj","Ekuseni","Elethu","Enama","Enanela","Esasa","Ethuka","Ethulo","Ethwasa","Fahlasi","Fakazi","Fikile","Fudu","Fula","Funani","Futhi","Gagasi","Gatsha","Gede","Gonothi","Gqamile","Gugu","Icici","Ifu","Impela","Impisi","Indlovu","Ingani","Ingwe","Inyoni","Ishumi","Izula","Jabhile","Jezile","Kgabu","Khanya","Khaya","Kholiwe","Khule","Khwezi","Kwanele","Lethiwe","Lethu","Lindiwe","Londiwe","Lungelo","Lungile","Luvo","Lwandle","Mbali","Mhambi","Minehle","Mlilo","Mondli","Msizi","Mthunzi","Naledi","Nandi","Ndonsa","Ndumiso","Njabulo","Njabulu","Nobantu","Nobuhle","Nobuntu","Nokwazi","Nolwazi","Nomcebo","Nompilo","Nomsa","Nomusa","Nomvula","Nomzamo","Nonhle","Nosipho","Noxolo","Nozipho","Nozizwe","Nqobile","Ntokozo","Ntombi","Ogogo","Philile","Qhikiza","Qiniso","Ramla","Sakhile","Sandile","Sibahle","Sifiso","Sihle","Siphiwe","Sipho","Siyanda","Siza","Sizani","Sizwe","Sonto","Thabile","Thabisa","Thandie","Thando","Themba","Thembi","Thoko","Thulani","Thulile","Uju","Ukudala","Ukuza","Umakoti","Umzuzu","Unathi","Unina","Usizo","Vala","Velile","Vemvane","Vumela","Vumile","Vuyiswa","Welile","Winile","Xolani","Xolile","Zamani","Zamile","Zandile","Zanele","Zibu","Zinhle","Zodwa","Zola","Zongile","Zonke","Zula"];
-let blackAndWhite = document.currentScript.getAttribute('blackandwhite') === 'true';
+let blackAndWhite = LionsShare.blackAndWhite || false;
 
 function filterIndexes(list, predicate)
 {
@@ -243,14 +243,13 @@ function setRules(rnd)
 	let adult = adultSibling - rnd.next(1, 3);          // 5–17
 	let cubSibling = adult - rnd.next(1, 4);            // 2–16
 	let cub = Math.max(1, cubSibling - rnd.next(1, 4)); // 1–15
-	function unit(n) { return n === 1 ? '1 unit' : `${n} units`; }
 
-	document.getElementById('entitlement-king').innerText = unit(kingPortion);
-	document.getElementById('entitlement-adult-sibling').innerText = unit(adultSibling);
-	document.getElementById('entitlement-adult').innerText = unit(adult);
-	document.getElementById('entitlement-cub-sibling').innerText = unit(cubSibling);
-	document.getElementById('entitlement-cub').innerText = unit(cub);
-	document.getElementById('indicator').innerText = ['each', 'each lit', 'each unlit'][rnd.next(0, 3)];
+	document.getElementById('entitlement-king').innerText = LionsShare.unit(kingPortion);
+	document.getElementById('entitlement-adult-sibling').innerText = LionsShare.unit(adultSibling);
+	document.getElementById('entitlement-adult').innerText = LionsShare.unit(adult);
+	document.getElementById('entitlement-cub-sibling').innerText = LionsShare.unit(cubSibling);
+	document.getElementById('entitlement-cub').innerText = LionsShare.unit(cub);
+	document.getElementById('indicator').innerText = LionsShare.indicatorRules[rnd.next(0, 3)];
 
 	let indKing = rnd.next(3, 6);               // 3–5
 	let indSibling = indKing - rnd.next(1, 3);  // 1–4
@@ -258,13 +257,13 @@ function setRules(rnd)
 	let indFemale = 3 - indMale;
 	let sn = rnd.next(1, 3);
 
-	document.getElementById('entitlement-ind-king').innerText = unit(indKing);
-	document.getElementById('entitlement-ind-sibling').innerText = unit(indSibling);
-	document.getElementById('entitlement-ind-male').innerText = unit(indMale);
-	document.getElementById('entitlement-ind-female').innerText = unit(indFemale);
-	document.getElementById('entitlement-sn').innerText = unit(sn);
+	document.getElementById('entitlement-ind-king').innerText = LionsShare.unit(indKing);
+	document.getElementById('entitlement-ind-sibling').innerText = LionsShare.unit(indSibling);
+	document.getElementById('entitlement-ind-male').innerText = LionsShare.unit(indMale);
+	document.getElementById('entitlement-ind-female').innerText = LionsShare.unit(indFemale);
+	document.getElementById('entitlement-sn').innerText = LionsShare.unit(sn);
 
-	document.getElementById('lead-huntress-color').innerText = ['red', 'brown', 'yellow', 'green', 'turquoise', 'dark blue', 'purple', 'pink'][rnd.next(0, 8)];
+	document.getElementById('lead-huntress-color').innerText = LionsShare.colors[rnd.next(0, 8)];
 }
 
 window.addEventListener('load', function()
