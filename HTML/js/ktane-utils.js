@@ -52,7 +52,7 @@ e.onload = function()
                 <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled'>Enabled</label> (Alt-W)</div>
             </div>
             <div class='option-group'>
-                <h3>Highlight overflow</h3>
+                <h3>Developer mode</h3>
                 <div><input type='checkbox' id='developer-mode-enabled'>&nbsp;<label for='developer-mode-enabled'>Enabled</label></div>
             </div>
         </div>`).appendTo("body");
@@ -72,18 +72,35 @@ e.onload = function()
             }
         }
         $('#dark-mode-enabled').click(updateDarkMode);
-
-        // DEVELOPER MODE ("HIGHLIGHT OVERFLOW")
+        // DEVELOPER MODE: Highlight overflow, matching module name headers, only one flavour text.
         function updateDeveloperMode()
         {
             if ($('#developer-mode-enabled').prop('checked'))
             {
                 $("body").addClass("developer-mode");
+                let infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (check alt-O)")).appendTo($("body"));
+                const flavourTextCounts = document.getElementsByClassName("flavour-text").length;
+                if (flavourTextCounts > 1) {
+                    $(".flavour-text").addClass("developer-mode-warning");
+                    $("<p>").text("There is more than one element with the \"flavour-text\" class. Use the \"comment\" class for all but the actual flavour text immediately following the title.").appendTo(infoDiv);
+                } else if (flavourTextCounts === 0)
+                    $("<p>").text("There is no flavour text. There must be exactly one flavour text, which must have the \"flavour-text\" class.").appendTo(infoDiv);
+                const moduleNameHeaders = document.getElementsByClassName("page-header-section-title");
+                for (let ix = 0; ix < moduleNameHeaders.length; ix++) {
+                    if (moduleNameHeaders[ix].textContent != moduleNameHeaders[(ix + 1) % moduleNameHeaders.length].textContent || moduleNameHeaders[ix].textContent === "Module Name") {
+                        $(".page-header-section-title").addClass("developer-mode-warning");
+                        $("<p>").text("The module name headers do not match or have not been changed from the default. (Ignore this if intentional)").appendTo(infoDiv);
+                        break;
+                    }
+                }
                 localStorage.setItem('ktane-developer-mode', true);
             }
             else
             {
-                $("body").removeClass("developer-mode");   
+                $("body").removeClass("developer-mode");
+                $(".flavour-text").removeClass("developer-mode-warning");
+                $(".page-header-section-title").removeClass("developer-mode-warning");
+                $(".developer-mode-warning").remove();
                 localStorage.setItem('ktane-developer-mode', false);
             }
         }
