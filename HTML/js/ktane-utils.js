@@ -51,6 +51,10 @@ e.onload = function()
                 <h3>Dark Mode</h3>
                 <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled'>Enabled</label> (Alt-W)</div>
             </div>
+            <div class='option-group'>
+                <h3>Highlight overflow</h3>
+                <div><input type='checkbox' id='developer-mode-enabled'>&nbsp;<label for='developer-mode-enabled'>Enabled</label></div>
+            </div>
         </div>`).appendTo("body");
 
         // DARK MODE
@@ -68,6 +72,22 @@ e.onload = function()
             }
         }
         $('#dark-mode-enabled').click(updateDarkMode);
+
+        // DEVELOPER MODE ("HIGHLIGHT OVERFLOW")
+        function updateDeveloperMode()
+        {
+            if ($('#developer-mode-enabled').prop('checked'))
+            {
+                $("body").addClass("developer-mode");
+                localStorage.setItem('ktane-developer-mode', true);
+            }
+            else
+            {
+                $("body").removeClass("developer-mode");   
+                localStorage.setItem('ktane-developer-mode', false);
+            }
+        }
+        $('#developer-mode-enabled').click(updateDeveloperMode);
 
         // PAGE-LAYOUT OPTIONS
         function updateMultipageView()
@@ -482,8 +502,11 @@ e.onload = function()
         $(`#page-layout-${pageLayout}`).prop('checked', true);
         let darkModeEnabled = localStorage.getItem('ktane-dark-mode');
         $('#dark-mode-enabled').prop('checked', darkModeEnabled == null ? false : darkModeEnabled == "true");
-        updateDarkMode();
+        let developerModeEnabled = localStorage.getItem('ktane-developer-mode');
+        $('#developer-mode-enabled').prop('checked', developerModeEnabled == null ? false : developerModeEnabled == "true");
         updateMultipageView();
+        updateDarkMode();
+        updateDeveloperMode();
         setColor(1);
     });
 };
