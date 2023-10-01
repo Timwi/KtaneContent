@@ -18,7 +18,7 @@
         var rules = document.getElementsByClassName("rules");
         var colorNames = [ "red", "green", "blue", "gray", "yellow" ];
         var indicatorNames = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
-        var rulesCount = [ "red buttons", "batteries", "yellow buttons", "red buttons", "module with “Maze” in its name other than “Blind Maze”", "port types", "green buttons", "blue buttons", "gray buttons", "AA batteries", "D batteries", "battery holders", "ports", "port plates", "indicators", "lit indicators", "unlit indicators" ];
+        var rulesCount = [ "red buttons", "batteries", "yellow buttons", "red buttons", "modules with “Maze” in its name other than “Blind Maze”", "port types", "green buttons", "blue buttons", "gray buttons", "AA batteries", "D batteries", "battery holders", "ports", "port plates", "indicators", "lit indicators", "unlit indicators" ];
         var rulesCountCopy;
         var conditionCount = [ 2, 5, 1, 1, 1 ];
         var conditionCountCopy;
@@ -31,8 +31,6 @@
         var calculateCopy;
         var generated;
         var pass;
-
-        var rng;
 
         //Cell class
         function Cell() {
@@ -55,7 +53,7 @@
         }
 
         //Default rules
-        function setDefaultRules() {
+        function setDefaultRules(rnd) {
             InitializeCells();
             var mazes = [
                 [ "UL", "U", "NDR", "LU", "UR",
@@ -134,55 +132,58 @@
             for (var i = 0; i < 4; i++) {
                 Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
             }
-            handleRules(true);
             if (!pass)
                 generateSVG();
         }
 
         //Rule Seed rules
         function setRules(rnd) {
-            rng = rnd;
-
             pass = true;
-            setDefaultRules();
+            setDefaultRules(rnd);
             pass = false;
+            
+            rulesCountCopy = rulesCount.slice();
+            conditionCountCopy = conditionCount.slice();
+            clockwiseCopy = clockwise.slice();
+            mazeRotationCopy = mazeRotation.slice();
+            calculateCopy = calculate.slice();
 
             for (var i = 0; i < 10; i++)
-                checkCell(i, rng.nextMax(4), rng.nextMax(4));
+                checkCell(i, rnd.nextMax(4), rnd.nextMax(4), rnd);
 
             var colorTable = [];
 
             for (var i = 0; i < 20; i++)
-                colorTable.push(rng.next(1, 5));
+                colorTable.push(rnd.next(1, 5));
 
             for (var i = 0; i < 5; i++) {
                 Array.from(document.getElementsByClassName("colorTable" + (i + 1))).forEach((x, y) => x.innerHTML = colorTable[y + (5 * i)]);
             }
-            rulesCountCopy = rng.shuffleFisherYates(rulesCountCopy).slice(0, 7);
-            conditionIndicator = rng.nextMax(11);
+            rulesCountCopy = rnd.shuffleFisherYates(rulesCountCopy).slice(0, 7);
+            conditionIndicator = rnd.nextMax(11);
 
             for (var i = 0; i < 6; i++) {
-                if (i < 5) conditionCountCopy[i] = rng.next(1, 5);
+                if (i < 5) conditionCountCopy[i] = rnd.next(1, 5);
 
-                mazeRotationCopy[i] = rng.next(1, 4);
-                clockwiseCopy[i] = (rng.nextMax(2) == 1) ? true : false;
-                calculateCopy[i] = (rng.nextMax(2) == 1) ? true : false;
+                mazeRotationCopy[i] = rnd.next(1, 4);
+                clockwiseCopy[i] = (rnd.nextMax(2) == 1) ? true : false;
+                calculateCopy[i] = (rnd.nextMax(2) == 1) ? true : false;
             }
 
-            handleRules(rng.seed == 1);
+            handleRules(rnd.seed == 1);
             generateSVG();
         }
 
         //Recursive algorithm for the maze generation
-        function checkCell(maze, row, col, prevDir = -1) {
+        function checkCell(maze, row, col, rnd, prevDir = -1) {
             if (!inRange(row, 0, 4) || !inRange(col, 0, 4) || cells[maze][row][col].visited) return false;
 
             cells[maze][row][col].visited = true;
-            var start = rng.nextMax(4);
+            var start = rnd.nextMax(4);
 
             for (var i = 0; i < 4; i++) {
                 var point = (start + i) % 4;
-                cells[maze][row][col].directions[cardinal[point]] = checkCell(maze, row + locations[0][point], col + locations[1][point], point);
+                cells[maze][row][col].directions[cardinal[point]] = checkCell(maze, row + locations[0][point], col + locations[1][point], rnd, point);
             }
 
             if (prevDir != -1) cells[maze][row][col].directions[cardinal[3 - prevDir]] = true;
@@ -196,13 +197,6 @@
         function handleRules(original) {
             var countRule = 0;
             var countCondition = 0;
-            if (!rulesCountCopy || original) {
-                rulesCountCopy = rulesCount.slice();
-                conditionCountCopy = conditionCount.slice();
-                clockwiseCopy = clockwise.slice();
-                mazeRotationCopy = mazeRotation.slice();
-                calculateCopy = calculate.slice();
-            }
 
             var ruleTemplates = [
                 "If there are at least {c} {r}, {m}.",
@@ -211,12 +205,13 @@
                 "Otherwise, if there are no {r1} and at least {c} {r2}, {m}.",
                 "Otherwise, if there is at least {c} {r}, {m}.",
                 "Otherwise, if there is at most {c} {r}, {m}.",
-                "Otherwise, keep the maze as it is."];
+                "Otherwise, keep the maze as it is."
+            ];
 
             for (var i = 0; i < rules.length; i++) {
                 var ruleText = ruleTemplates[i];
                 if (i != 2) {
-                    if (conditionCount[countCondition] == 1) {
+                    if (conditionCountCopy[countCondition] == 1) {
                         if (countCondition != 2) {
                             ruleText = ruleText.replace("there are", "there is");
                             rulesCountCopy[countRule] = makeSingular(rulesCountCopy[countRule]);
