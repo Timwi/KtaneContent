@@ -16193,6 +16193,112 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "TAC",
+		moduleID: "TACModule",
+		loggingTag: "TAC",
+		matches: [
+			{
+				regex: /^\{.*\}$/,
+				handler: function(matches, module) {
+					let json = JSON.parse(matches[0]);
+					json.names.unshift("You");
+					let colors = [ '#FF2626', '#FFFF4D', '#4DFF33', '#0033FF' ];
+					let positions = '10,0;11,0;12,0;12,1;12,2;12,3;12,4;11,4;10,4;9,4;8,4;7,4;6,4;5,4;4,4;3,4;2,4;1,4;0,4;0,3;0,2;0,1;0,0;1,0;2,0;3,0;4,0;5,0;6,0;7,0;8,0;9,0'
+						.split(';')
+						.map(str => str.split(','))
+						.map(arr => `translate(${arr[0]*69.5}, ${arr[1]*69.5})`);
+					let homePositions = '10,1;10,3;2,3;2,1'
+						.split(';')
+						.map(str => str.split(','))
+						.map(arr => `translate(${arr[0]*69.5}, ${arr[1]*69.5})`);
+					positions.unshift(homePositions[json.playerseat]);
+					let svg = `
+						<svg viewBox="0 0 936 519">
+							<path class='connectors' fill="none" stroke-width="5" d="M746.25 336.7v70M746.25 119.2v71.2M189.95 329.4v69.9M189.95 112v78.4"/>
+							<path class='connector' fill='none' stroke-width="2" d="M51.6 121.1H884v277.8H51.6z"/>
+							<g fill="#6e91d5" stroke-width="5" class='homes'>
+								<rect width="50.3" height="50.3" x="164.8" y="164.7" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="164.8" y="303.9" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="721.1" y="164.7" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="721.1" y="303.9" rx="12.8"/>
+							</g>
+							<g fill="#60abff" stroke-width="2" class='squares'>
+								<rect width="50.3" height="50.3" x="164.8" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="164.8" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="721.1" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="721.1" y="95.2" rx="12.8"/>
+							</g>
+							<g fill="#bce" stroke-width="2" class='squares'>
+								<rect width="50.3" height="50.3" x="234.3" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="234.3" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="25.7" y="164.7" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="25.7" y="303.9" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="373.3" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="373.3" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="512.4" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="512.4" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="651.4" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="651.4" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="790.6" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="790.6" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="860.1" y="164.7" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="860.1" y="303.9" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="95.2" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="95.2" y="95.2" rx="12.8"/>
+							</g>
+							<g fill="#def" stroke-width="2" class='squares'>
+								<rect width="50.3" height="50.3" x="25.7" y="234.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="25.7" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="25.7" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="303.8" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="303.8" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="442.8" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="442.8" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="581.9" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="581.9" y="95.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="860.1" y="234.2" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="860.1" y="373.5" rx="12.8"/>
+								<rect width="50.3" height="50.3" x="860.1" y="95.2" rx="12.8"/>
+							</g>
+							<circle cx="467" cy="259.1" r="83.4" stroke-width="6" class='logo'/>
+							<g font-family='Sitka Text' font-size='60' class='playernames'>
+								<text x='699' y='69' text-anchor='end'>${json.names[(4 - json.playerseat) % 4]}</text>
+								<text x='699' y='486' text-anchor='end'>${json.names[(5 - json.playerseat) % 4]}</text>
+								<text x='240' y='486'>${json.names[(6 - json.playerseat) % 4]}</text>
+								<text x='240' y='69'>${json.names[(7 - json.playerseat) % 4]}</text>
+							</g>
+							<g stroke="none">
+								<path fill="#326896" d="M467 190.9a77.8 77.8 0 0 0 0 68.2 77.8 77.8 0 0 0 0-68.2z"/>
+								<path fill="#646464" d="M408 225a77.8 77.8 0 0 0 59 34 77.8 77.8 0 0 0-59-34z"/>
+								<path fill="#2e8a38" d="M408 293.2a77.8 77.8 0 0 0 59-34.1 77.8 77.8 0 0 0-59 34z"/>
+								<path fill="#797e2a" d="M467 327.3a77.8 77.8 0 0 0 0-68.2 77.8 77.8 0 0 0 0 68.2z"/>
+								<path fill="#793296" d="M526 225a77.8 77.8 0 0 0-59 34 77.8 77.8 0 0 0 59-34z"/>
+								<path fill="#963232" d="M526 293.2a77.8 77.8 0 0 0-59-34.1 77.8 77.8 0 0 0 59 34z"/>
+							</g>
+							<g stroke="#000" stroke-width="2">
+								<circle fill="${colors[json.colors[0]]}" cx="746.2" cy="51.3" r="27.8"/>
+								<circle fill="${colors[json.colors[1]]}" cx="746.2" cy="468.4" r="27.8"/>
+								<circle fill="${colors[json.colors[2]]}" cx="189.9" cy="468.4" r="27.8"/>
+								<circle fill="${colors[json.colors[3]]}" cx="189.9" cy="51.3" r="27.8"/>
+							</g>
+							<g stroke="#000" stroke-width="2.2">
+								${json.positions[0] === null ? '' : `<path transform='${positions[json.positions[0]+1]}' fill="${colors[json.colors[(json.playerseat + 0) % 4]]}" d="M41 80.8c0 6.6 3.4 5.5 3.4 12.1 0 8.8-7.7 11-7.7 30.8 0 11 6.6 10 14.3 10 7.7 0 14.3 1 14.3-10 0-19.8-7.7-22-7.7-30.8 0-6.6 3.3-5.5 3.3-12 0-6.7-3.3-10-10-10-6.5 0-9.8 3.3-9.8 10z"/>`}
+								${json.positions[1] === null ? '' : `<path transform='${positions[json.positions[1]+1]}' fill="${colors[json.colors[(json.playerseat + 1) % 4]]}" d="M41 80.8c0 6.6 3.4 5.5 3.4 12.1 0 8.8-7.7 11-7.7 30.8 0 11 6.6 10 14.3 10 7.7 0 14.3 1 14.3-10 0-19.8-7.7-22-7.7-30.8 0-6.6 3.3-5.5 3.3-12 0-6.7-3.3-10-10-10-6.5 0-9.8 3.3-9.8 10z"/>`}
+								${json.positions[2] === null ? '' : `<path transform='${positions[json.positions[2]+1]}' fill="${colors[json.colors[(json.playerseat + 2) % 4]]}" d="M41 80.8c0 6.6 3.4 5.5 3.4 12.1 0 8.8-7.7 11-7.7 30.8 0 11 6.6 10 14.3 10 7.7 0 14.3 1 14.3-10 0-19.8-7.7-22-7.7-30.8 0-6.6 3.3-5.5 3.3-12 0-6.7-3.3-10-10-10-6.5 0-9.8 3.3-9.8 10z"/>`}
+								${json.positions[3] === null ? '' : `<path transform='${positions[json.positions[3]+1]}' fill="${colors[json.colors[(json.playerseat + 3) % 4]]}" d="M41 80.8c0 6.6 3.4 5.5 3.4 12.1 0 8.8-7.7 11-7.7 30.8 0 11 6.6 10 14.3 10 7.7 0 14.3 1 14.3-10 0-19.8-7.7-22-7.7-30.8 0-6.6 3.3-5.5 3.3-12 0-6.7-3.3-10-10-10-6.5 0-9.8 3.3-9.8 10z"/>`}
+							</g>
+						</svg>
+					`;
+					module.push({ label: json.message, obj: $(svg) });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Tax Returns",
 		moduleID: "taxReturns",
 		loggingTag: "Tax Returns",
