@@ -15763,14 +15763,15 @@ let parseData = [
 			{
 				regex: /Asking question: (.+) — (.+)/,
 				handler: function (matches, module) {
-					var answers = $("<div>").css({ margin: '.5em 0' });
+					var answers = $("<div>").addClass("souvenir-answer-set");
 					matches[2].split(" | ").forEach(function (answer) {
-						var answerSpan = $("<span>");
+						var answerSpan = $("<span>").addClass("souvenir-answer");
 						if (answer.substr(0, 2) == "[_") {
 							answer = answer.substr(2, answer.length - 4);
 							answerSpan.addClass("souvenir-correct-answer");
 						}
-						answerSpan.text(answer).css({ border: '1px solid #888', padding: '0 .5em', margin: '0 .3em' }).appendTo(answers);
+						answerSpan.html(answer.replaceAll(" ", "&nbsp;")).appendTo(answers);
+						answers.html(answers.html() + " ");
 					});
 
 					module.push({ label: matches[1], obj: answers, expanded: true });
