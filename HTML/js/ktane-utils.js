@@ -53,7 +53,7 @@ e.onload = function()
             </div>
             <div class='option-group'>
                 <h3>Developer mode</h3>
-                <div><input type='checkbox' id='developer-mode-enabled'>&nbsp;<label for='developer-mode-enabled'>Enabled</label></div>
+                <div><input type='checkbox' id='developer-mode-enabled'>&nbsp;<label for='developer-mode-enabled'>Enabled</label> (Alt-P)</div>
             </div>
         </div>`).appendTo("body");
 
@@ -78,7 +78,7 @@ e.onload = function()
             if ($('#developer-mode-enabled').prop('checked'))
             {
                 $("body").addClass("developer-mode");
-                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (check alt-O)")).appendTo($("body"));
+                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (Alt-P)")).appendTo($("body"));
                 const flavourTextCounts = document.getElementsByClassName("flavour-text").length;
                 if (flavourTextCounts > 1) {
                     $(".flavour-text").addClass("developer-mode-warning");
@@ -214,8 +214,14 @@ e.onload = function()
             {
                 $('#dark-mode-enabled').click();
             }
+            // Alt-P: Developer mode
+            else if (k == "p" || event.keyCode === 80)
+            {
+                $('#developer-mode-enabled').click();
+            }
             // Alt-#: Select highlight color
-            else if (!ctrlSelectsColors && n !== null) {
+            else if (!ctrlSelectsColors && n !== null)
+            {
                 colorSelect.val(n).change();
             }
         });
