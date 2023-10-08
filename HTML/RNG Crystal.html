@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>RNG Crystal — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 2"; }
+
+    </style>
+    <script>
+        const JSON_URL = "https://ktane.timwi.de/json/raw";
+
+        function fetchManual() {
+            return fetch(JSON_URL)
+            .then((v) => v.json())
+            .then((json) => {
+                const allMods = json.KtaneModules.filter(
+                    (module) => module.Name
+                );
+                const mod = allMods[Math.floor(Math.random() * allMods.length)];
+                const name = mod.Name;
+
+                const sheets = mod.Sheets;
+                if(sheets == undefined)
+                {
+                    fetchManual();
+                }
+                else
+                {
+                    const aSheet = sheets[Math.floor(Math.random() * sheets.length)].split("|")
+
+                    const link = name + aSheet[0] + "." + aSheet[1];
+                    document.getElementById("balls").setAttribute("href", "https://ktane.timwi.de/" + aSheet[1].toUpperCase() + "/" + link);
+                    document.getElementById("balls").innerHTML = "I'm feeling lucky";
+                }
+            })
+        }
+
+        fetchManual()
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RNG Crystal</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RNG Crystal.svg" class="diagram">
+                <h2>On the Subject of the RNG Crystal</h2>
+                <p class="flavour-text"><a id="balls" href="./RNG Crystal.html"></a></p>
+                <p>On the module is be a button, which also acts as a loading bar, and a few pieces of text:</p>
+                <ul>
+                    <li>The top-most reading "圧倒的運っ•••".</li>
+                    <li>One under that reading "1".</li>
+                    <li>One to the right of the module reading "運否天賦".</li>
+                </ul>
+                <p>To start, hold the button until the loading bar is filled up completely, then release it. This will start a trial. A trial consists of at most 11 coin tosses, where every toss must return Heads.</p>
+                <p>Alternatively, hold the status light’s position to enter the state in which the upcoming results of the tosses must be submitted. In this state,</p>
+                <ul>
+                    <li>Holding the loading bar submits Heads.</li>
+                    <li>Holding the status light’s position submits Tails.</li>
+                    <li><strong>No mistakes are tolerated.</strong></li>
+                </ul>
+                <p><strong><i>If all 11 tosses result in Heads, the module will read "神運", and a crystal will appear at the bottom-right of the module, where the status light would normally go. At this point, hold the button, following the same procedure one last time to collect the crystal and disarm the module.</i></strong></p>
+                <p>Otherwise, the module will show one of the other fortune texts. Try again, you might get lucky this time.</p>
+                <p>If, however, you wish to sacrifice one of your experts, the next page will contain information on the totally-not-biased coin.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RNG Crystal</span>
+            </div>
+            <div class="page-content">
+                <h2>On the Subject of the Totally-Not-Biased Coin™</h2>
+                <p class="comment">Embrace the randomness™*</p>
+                <p>The coin decides its result based on a Fibonacci linear-feedback shift register. It consists of:</p>
+                <ul>
+                    <li>A binary register — a sequence of at most 24 binary digits, ordered according to when the bit was calculated, which will be referred to as the “register”. Any extra binary digits present after the process detailed below are to be discarded.</li>
+                    <li>A set of positions that influence the next bit, which will be referred to as the “taps”. Each tap in this set refers to the bit in the corresponding position in the register.</li>
+                </ul>
+                <p>For each iteration of the process, consider the bits in the sequence in the positions the taps represent. Perform an XOR operation on all of those bits, and the result for this iteration is outputted. Add this binary digit to the register while maintaining its order.</p>
+                <p>1 is represented as Heads.</p>
+                <img src="./img/RNG Crystal/LFSR.svg" class="invertible" width="675">
+                <p>In the above example with a register of length 10 and the taps in the positions of the grey-filled cells relative to the cells with a solid border, the bits in those positions are XOR’d together to produce the output in the dashed cell. Then, the register is shifted as shown by the diagonal lines, discarding the latest bit as it has gone out of bounds of the register, then those same positions are evaluated once again to produce the new result.</p>
+                <p class="comment">*True randomness not guaranteed. Please see warranty for manufacturer’s details on potentially deterministic behaviour.</p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
