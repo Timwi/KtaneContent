@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>RGB Chess — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Modules/RGB Chess.js"></script>
+    <script>
+    $(function() {
+        const squareColors = ["red", "green", "blue", "white", "cyan", "magenta", "yellow", "black"];
+        const colorLetters = ["R", "G", "B", "W", "C", "M", "Y", "K"];
+        const colorKeyI = { r: 0, g: 1, b: 2, w: 3, c: 4, m: 5, y: 6, k: 7 };
+        let pieces = ["cpk", "cpq", "cpn", "cpb", "cpr"];
+
+        let selected = "";
+        let selectedColor = "white";
+        let selectedSquare = null;
+        let currX = 0;
+        let currY = 0;
+        let start;
+        let saveStates = [];
+        let currentState = 0;
+        let chessboard = $(".chessboard");
+        let squares = 6;
+
+        $(document).click(function() {
+            start = null;
+            if (selected != "marking") {
+                selectedSquare = null;
+                updateSelection();
+            }
+        }).keydown(function(event) {
+            if (!(event.altKey || event.ctrlKey || event.shiftKey)) {
+                let k = event.key.toLowerCase();
+                let space = event.key == " ";
+                if (
+                    space || k == "c" || k == "m" || k == "y" || k == "b" ||
+                    k == "g" || k == "r" || k == "k" || k == "w"
+                ) {
+                    pressColorKey(space ? -1 : colorKeyI[k]);
+                }
+                return false;
+            }
+        });
+
+        function pressColorKey(k) {
+            if (selectedSquare) {
+                if (k >= 0) {
+                    removeColorClass(selectedSquare);
+                    selectedSquare.addClass(squareColors[k]);
+                }
+                if (currX == squares - 1)
+                    currY = (currY + 1) % squares;
+                currX = (currX + 1) % squares;
+                selectedSquare = $(`.netsq.x${currX}.y${currY}`);
+                updateSelection();
+            }
+            if (k >= 0) {
+                removeColorClass(selectTool);
+                selectTool.addClass(squareColors[k]);
+                removeColorClass($(".piece svg"));
+                $(".piece svg").addClass(squareColors[k]);
+                selectedColor = squareColors[k];
+            }
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("white black cyan magenta yellow red blue green");
+        }
+
+        function hasWhichColor(elem) {
+            for (let i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function updateSelection() {
+            $(".netsq").removeClass("selected");
+            if(selectedSquare) selectedSquare.addClass("selected");
+        }
+
+        let row;
+        // Initially based on code from Samfundev’s Chess interactive
+        row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+        $("<div>").addClass("square").appendTo(row);
+        for (let i = 0; i < squares; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
+                $(this).addClass(`label${i+1}`);
+            });
+        }
+        for (let y = 0; y < squares; y++) {
+            row = $("<div>").addClass("chess-row").appendTo(chessboard);
+            $("<div>").addClass("square").text(y+1).appendTo(row);
+            for (let x = 0; x < squares; x++) {
+                $("<div>").addClass("netsq square " + ((y + x) % 2 == 1 ? "white" : "black")).appendTo(row).each(function(_, e) {
+                    let element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                    $(this).addClass(`x${x} y${y}`);
+
+                    element.mouseup(function(event) {
+                        let letgo = [x, y];
+                        if (start) { // Just in case.
+                            let changed = [];
+                            let a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                if (selected == "moving") {
+                                    changed.push([x, a]);
+                                    if (a != b) { changed.push([x, b]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([x, i]);
+                                    }
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                if (selected == "moving") {
+                                    changed.push([a, y]);
+                                    if (a != b) { changed.push([b, y]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([i, y]);
+                                    }
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                let dist = Math.abs(start[0] - x);
+                                let dirx = (start[0] < x) ? 1 : -1;
+                                let diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+                            else if (selected == "moving") {
+                                changed.push([start[0], start[1]]);
+                                changed.push([letgo[0], letgo[1]]);
+                            }
+
+                            if (changed.length > 0) {
+                                let from = $(`.netsq.x${start[0]}.y${start[1]}`);
+                                let fromSvg = $(`.netsq.x${start[0]}.y${start[1]} svg`);
+                                let toMove = hasWhichPieceClass(from);
+                                let toColor = hasWhichColor(fromSvg);
+                                changed.forEach((pos, idx) => {
+                                    let elm = $(`.netsq.x${pos[0]}.y${pos[1]}`);
+                                    let svg = $(`.netsq.x${pos[0]}.y${pos[1]} > svg`);
+                                    if (selected == "marking") {
+                                        if (pos[0] == letgo[0] || pos[1] == letgo[1]) {
+                                            selectedSquare = elm;
+                                            updateSelection();
+
+                                            currX = x;
+                                            currY = y;
+                                        }
+                                        removeColorClass(elm);
+                                        elm.addClass(selectedColor);
+                                    } else if (selected == "moving") {
+                                        if (changed.length > 1) {
+                                            if (pos[0] != letgo[0] || pos[1] != letgo[1]) {
+                                                removePieceClass(elm);
+                                            } else {
+                                                removePieceClass(elm);
+                                                elm.addClass(pieces[toMove]);
+                                                removeColorClass(svg);
+                                                svg.addClass(squareColors[toColor]);
+                                            }
+                                        }
+                                    } else if (changed.length == 1) {
+                                        let whichPiece = hasWhichPieceClass(elm);
+                                        let whichColor = hasWhichColor(svg);
+                                        if (whichPiece >= 0) {
+                                            elm.removeClass(pieces[whichPiece]);
+                                            if (pieces[whichPiece] != selected || squareColors[whichColor] != selectedColor) {
+                                                elm.addClass(selected);
+                                            }
+                                        } else {
+                                            elm.addClass(selected);
+                                        }
+                                        removeColorClass(svg);
+                                        svg.addClass(selectedColor);
+                                    }
+                                });
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    });
+                });
+            }
+        }
+
+        function removePieceClass(elem) {
+            pieces.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichPieceClass(elem) {
+            for (let i = 0; i < pieces.length; i++) {
+                if (elem.hasClass(pieces[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        let chesspieces1 = $(".chess-pieces.r1");
+        let chesspieces2 = $(".chess-pieces.r2");
+        for (let i = 0; i < pieces.length; i++) {
+            $("<div>").addClass("piece square").appendTo(i < 6 ? chesspieces1 : chesspieces2).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = pieces[i];
+            }).addClass(pieces[i]);
+        }
+
+        pieces.forEach(function(val) {
+            $(`.piece.square.${val}`).append($(baseimg[val]).addClass("white"));
+            $('.netsq').append($(baseimg[val]).addClass(`white ${val}`));
+        });
+        $(".cpk").click();
+        $("<div>").addClass("piece square move").text("Move").appendTo(chesspieces2).click(function() {
+            $(".piece").removeClass("selected");
+            $(this).addClass("selected");
+            selected = "moving";
+        });
+        let selectTool = $("<div>").addClass("piece square select white").text("Color").appendTo(chesspieces2).click(function(event) {
+            $(".piece").removeClass("selected");
+            $(this).addClass("selected");
+            selected = "marking";
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        let cButtons = $("<div>").addClass("vstack colors").appendTo(chesspieces2);
+        for (let v = 0; v < 2; v++) {
+            let hstack = $("<div>").addClass("hstack").appendTo(cButtons);
+            for (let h = 0; h < 4; h++) {
+                let t = h + v*4;
+                $("<button>").text(colorLetters[t]).click(function(event) {
+                    pressColorKey(t);
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).addClass(squareColors[t]).appendTo(hstack);
+            }
+        }
+
+        $(".reset-board").click(function() {
+            removePieceClass($(".netsq"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            removePieceClass($(".netsq"));
+            removeColorClass($(".netsq"));
+            pressColorKey(3);
+            for (let y = 0; y < squares; y++)
+                for (let x = 0; x < squares; x++)
+                    $(`.netsq.x${x}.y${y}`).addClass("netsq square " + ((y + x) % 2 == 1 ? "white" : "black"))
+            $(".cpk").click();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".chessboard .netsq, svg, .piece")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_selected = selected;
+            let s_selectedColor = selectedColor;
+            let s_selectedSquare = selectedSquare;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_start = start;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".chessboard .netsq, svg, .piece").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+
+                selected = s_selected;
+                selectedColor = s_selectedColor;
+                selectedSquare = s_selectedSquare;
+                currX = s_currX;
+                currY = s_currY;
+                start = s_start;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+        .chess-row.extra-height {
+            height: 62px;
+        }
+
+        .chess-pieces {
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            text-align: center;
+            border: 0px solid;
+            cursor: default;
+        }
+        .netsq {
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .netsq:not(.cpk) svg.cpk,
+        .netsq:not(.cpq) svg.cpq,
+        .netsq:not(.cpn) svg.cpn,
+        .netsq:not(.cpb) svg.cpb,
+        .netsq:not(.cpr) svg.cpr {
+            display: none;
+        }
+
+        .netsq.x0 { border-left: 1px solid black; }
+        .netsq.x5 { border-right: 1px solid black; }
+        .netsq.y0 { border-top: 1px solid black; }
+        .netsq.y5 { border-bottom: 1px solid black; }
+        .dark .netsq { border-color: #CCC; }
+        .netsq.selected { border: 4px dashed orange; }
+
+        .last-square {
+            border-right-width: 2px;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+
+        .move, .select {
+            border: 1px solid black;
+            font-size: 20px;
+            width: 67px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        svg.black .filled { fill: #555; }
+        svg.white .filled { fill: #FFFFFFEE; }
+        svg.cyan .filled { fill: #00FFFFDD; }
+        svg.magenta .filled { fill: #FF00FFDD; }
+        svg.yellow .filled { fill: #FFFF00DD; }
+        svg.blue .filled { fill: #0000FFDD; }
+        svg.green .filled { fill: #00FF00DD; }
+        svg.red .filled { fill: #FF0000DD; }
+
+        :is(div, button).black { background: #555; color: #FFF; }
+        :is(div, button).white { background: #FFFFFFEE; color:#000 }
+        :is(div, button).cyan { background: #00FFFFCC; color:#000 }
+        :is(div, button).magenta { background: #FF00FFCC; color:#000 }
+        :is(div, button).yellow { background: #FFFF00CC; color:#000 }
+        :is(div, button).blue { background: #0000FFCC; color: #FFF; }
+        :is(div, button).green { background: #00FF00CC; color:#000 }
+        :is(div, button).red { background: #FF0000CC; color: #FFF; }
+
+        .dark .colors button { border-color: #888; }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 38px;
+        }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+        .piece svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+        .dark .piece {
+            border-color: white;
+        }
+        .select.selected { border-color: orange; }
+
+        .gridholder {
+            height: 430px;
+            width: 430px;
+            margin-left: auto;
+            margin-right: auto;
+
+        }
+        .stampholder {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            font-family: 'Special Elite';
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-board, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+
+        .page1 li {
+            margin-bottom: 16px;
+        }
+
+        .rgb-diagram { width: 50%; }
+        .page {
+            background-repeat: repeat-y;
+            background-position: bottom;
+        }
+        text.big { font-size: 11px; }
+        text.small { font-size: 6px; }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01 page1">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB Chess</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RGB Chess.svg" class="diagram">
+                <h2>On the Subject of RGB Chess</h2>
+                <p class="flavour-text">I don’t remember chess having so many sides...</p>
+
+                <p>This module contains a 6×6 grid, a panel with chess piece buttons, and a color switcher button.
+                    Each cell in the grid will be one of the main RGB colors.
+                    (Blac<b>K</b>, <b>R</b>ed, <b>G</b>reen, <b>B</b>lue, <b>C</b>yan, <b>M</b>agenta, <b>Y</b>ellow or <b>W</b>hite)</p>
+                <p>To place down a piece, press one of the piece buttons on the panel,
+                    select a color using the color switcher (default is white, the color switcher will switch colors in the order above, looping around to black when reaching white),
+                    and press one of the cells on the grid, which will place down the currently selected piece on that cell.
+                    To remove an already placed down piece on the grid, press it.
+                </p>
+                <p>To solve the module, you must place down 4 chess pieces, so that they generate the same grid colors, as the initial grid state.
+                    <br> NOTE: The amount of pieces that will be generated can be changed in Mod Settings. </p>
+                <p>A colored piece will add its color to any of the cells it can move to, and the cell it is currently located on.
+                    <br> NOTE: Pieces do not block other pieces’ moves.</p>
+                <p>If multiple colors are added to a cell, they mix:</p>
+                <ul>
+                    <li>Decompose each color that was added to that cell into their RGB components using the diagram on the next page, where each component is either present or absent.</li>
+                    <li>Then, for each RGB component:
+                        <ul>
+                            <li>If it appears an odd number of times on a cell, that cell’s color has that component present.</li>
+                            <li>Otherwise, that component is absent.</li>
+                        </ul>
+                    </li>
+                    <li>Combine the components back into a color using the diagram below, this will be the color of the cell after mixing.</li>
+                </ul>
+                <svg viewbox="0 -5 100 100" text-anchor="middle" class="centered-img rgb-diagram">
+                    <circle cx="50" cy="29.333" r="29.95" fill="#E84F4F"/>
+                    <circle cx="67.898" cy="60.333" r="29.95" fill="#4FE85C"/>
+                    <circle cx="32.102" cy="60.333" r="29.95" fill="#4868E8"/>
+                    <path d="M20.2 32.795 A30 30 0 0 1 61.902 56.871 A30 30 0 0 1 20.2 32.795" fill="#D04FE7"/>
+                    <path d="M79.8 32.795 A30 30 0 0 1 38.098 56.871 A30 30 0 0 1 79.8 32.795" fill="#E8E64F"/>
+                    <path d="M50 84.409 A30 30 0 0 1 50 36.257 A30 30 0 0 1 50 84.409" fill="#4FE8D1"/>
+                    <path d="M50 36.257 A30 30 0 0 1 61.902 56.871 A30 30 0 0 1 38.098 56.871 A30 30 0 0 1 50 36.257" fill="#F8F4EE"/>
+                    <text class="big" x="50" y="18">Red</text>
+                    <text class="big" x="20" y="66">Blue</text>
+                    <text class="big" x="80" y="66">Green</text>
+                    <text class="small" x="33.5" y="38">Magenta</text>
+                    <text class="small" x="67" y="38">Yellow</text>
+                    <text class="small" x="50" y="70">Cyan</text>
+                    <text class="small" x="50" y="51">White</text>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RGB Chess</span>
+            </div>
+            <div class="page-content">
+                <div class="gridholder"><div class="chessboard vstack left"></div></div>
+                <div class="stampholder">
+                    <div class="chess-pieces hstack r1"></div>
+                    <div class="chess-pieces hstack alignc gap r2"></div>
+                </div>
+                <br>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-board">Reset Board</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Use the above interactive graphic as a chessboard.</li>
+                    <li>Select one of the tools below the chessboard then click on the chessboard to use that tool.</li>
+                    <li>Use the <strong>Color</strong> tool to select a square for coloring (to input the read).</li>
+                    <li>Use one of the color buttons or press <strong>R/G/B/C/M/Y/W/K/Space</strong> on your keyboard to choose a color.</li>
+                    <li>Drag using the <strong>Color</strong> tool to color several squares.</li>
+                    <li>Use one of the chess piece tools to place/remove a piece of the selected color.</li>
+                    <li>Use the <strong>Move</strong> tool to drag a piece from one square to another.</li>
+                    <li>
+                        You can save the current state of the board, reset the board,
+                        reset the saves, or reset everything using the other buttons.
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+
+</html>
