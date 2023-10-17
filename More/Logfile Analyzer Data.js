@@ -1484,6 +1484,96 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "TheArena",
+		loggingTag: "The Arena",
+		matches: [
+			{
+				regex: /^The order of the events is: ([GAD]{3})$/,
+				handler: function (matches, module) {
+					module.attackDropDown = ["Attack", []];
+					module.defendDropDown = ["Defend", []];
+					module.grabDropDown = ["Grab", []];
+					const charToAction = {
+						'A': "Attack",
+						'D': "Defend",
+						'G': "Grab"
+					};
+					const actionArr = [];
+					for (let i = 0; i < 3; i++)
+						actionArr.push(charToAction[matches[1][i]]);
+					module.push(`The order of the events is: ${actionArr.join(", ")}`);
+					module.push(module.attackDropDown);
+					module.push(module.defendDropDown);
+					module.push(module.grabDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /^\(Attack\) Weapons are: (.+)/,
+				handler: function (matches, module) {
+					module.weapons = matches[1].split(", ");
+					module.getWeaponStr = (numbers) => {
+						const weaponArr = [];
+						for (let i = 0; i < 5; i++)
+							weaponArr.push(module.weapons[Number(numbers[i]) - 1]);
+						return weaponArr.join(", ");
+					}
+					module.attackDropDown[1].push("Weapons are: " + matches[1]);
+					return true;
+				}
+			},
+			{
+				regex: /^\(Attack\) Example solution: (\d+)$/,
+				handler: function (matches, module) {
+					module.attackDropDown[1].push(`Example solution: ${module.getWeaponStr(matches[1])}`);
+					return true;
+				}
+			},
+			{
+				regex: /^You submitted (\d+)(.+)/,
+				handler: function (matches, module) {
+					module.attackDropDown[1].push(`You submitted ${module.getWeaponStr(matches[1])}${matches[2]}`);
+					return true;
+				}
+			},
+			{
+				regex: /^You pressed (?:top|middle|bottom) (?:left|middle|center|right)/,
+				handler: function (matches, module) {
+					module.grabDropDown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /^\(Defend\) The enemy with the largest first stat is (.+)/,
+				handler: function (matches, module) {
+					let monsters = [];
+					const regex = /\(Defend\) The enemy with the largest (?:.+) stat is (.+)/;
+					monsters.push(matches[1]);
+					monsters = monsters.concat(readTaggedLines(4).map(line => line.match(regex)[1]));
+					module.defendDropDown[1].push(`The enemies by largest stat in descending order are: ${monsters.join(", ")}`);
+					return true;
+				}
+			},
+			{
+				regex: /^You pressed (?:Sword|Shield) for turn (?:\d+)/,
+				handler: function (matches, module) {
+					module.defendDropDown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /^\((Defend|Grab|Attack)\) (.+)/,
+				handler: function (matches, module) {
+					module[`${matches[1].toLowerCase()}DropDown`][1].push(matches[2]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "ArithmeticCipherModule",
 		displayName: "Arithmetic Cipher",
 		loggingTag: "Arithmetic Cipher",
