@@ -695,7 +695,7 @@ let parseData = [
 		loggingTag: "14",
 		matches: [
 			{
-				regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \((-?\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
+				regex: /At stage (\d+), The digit shown on the ([RGB]) channel was ((?:standard|inverted) [0-9A-Z]) \(-?(\d+)\)\. The (.) function outputs (.* = (-?\d+) \((?:standard|inverted) [0-9A-Z]\))/,
 				handler: function (matches, module) {
 					if (!module.TableData) {
 						module.TableData = [];
@@ -732,7 +732,7 @@ let parseData = [
 					}
 					while (module.TableData.length <= matches[1])
 						module.TableData.push({});
-					module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: matches[4], led: matches[5], full: matches[6], result: matches[7] };
+					module.TableData[matches[1]][matches[2]] = { fulldisplay: matches[3], display: (matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[4], led: matches[5], full: matches[6], result: matches[7] };
 					module.Stage.push((matches[3].slice(0, 8) === "inverted" ? "-" : "") + matches[3][matches[3].length - 1]);
 					if (matches[2] === 'B') {
 						let ledColors = {
