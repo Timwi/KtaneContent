@@ -1488,7 +1488,7 @@ let parseData = [
 		loggingTag: "The Arena",
 		matches: [
 			{
-				regex: /^The order of the events is: ([GAD]+)/,
+				regex: /^The order of the events is: ([GAD]{3})$/,
 				handler: function (matches, module) {
 					module.attackDropDown = ["Attack", []];
 					module.defendDropDown = ["Defend", []];
@@ -1517,7 +1517,7 @@ let parseData = [
 						const weaponArr = [];
 						for(let i = 0; i < 5; i++) {
 							weaponArr.push(module.weapons[Number(numbers[i]) - 1]);
-						}
+}
 						return weaponArr.join(", ");
 					}
 					module.attackDropDown[1].push("Weapons are: " + matches[1]);
@@ -1525,7 +1525,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /^\(Attack\) Example solution: (\d+)/,
+				regex: /^\(Attack\) Example solution: (\d+)$/,
 				handler: function (matches, module) {
 					module.attackDropDown[1].push(`Example solution: ${module.getWeaponStr(matches[1])}`);
 					return true;
@@ -1546,7 +1546,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /^You pressed (top|middle|bottom) (left|middle|center|right)(.+)/,
+				regex: /^You pressed (?:top|middle|bottom) (?:left|middle|center|right)/,
 				handler: function (matches, module) {
 					module.grabDropDown[1].push(matches[0]);
 					return true;
@@ -1571,7 +1571,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /^You pressed (:?Sword|Shield) for turn (:?\d+)(:?.+)/,
+				regex: /^You pressed (?:Sword|Shield) for turn (?:\d+)/,
 				handler: function (matches, module) {
 					module.defendDropDown[1].push(matches[0]);
 					return true;
