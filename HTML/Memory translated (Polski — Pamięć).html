@@ -1,140 +1,165 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="initial-scale=1"/>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
     <title>Pamięć — Keep Talking and Nobody Explodes</title>
-    <link rel="stylesheet" type="text/css" href="css/font.css"/>
-    <link rel="stylesheet" type="text/css" href="css/normalize.css"/>
-    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
     <script>
-      var NUM_STAGES = 5;
+        var NUM_STAGES = 5;
 
-      function setRules(rnd) {
-        var weights = {};
-        var flag = true;
-        for (var i = 0; i < NUM_STAGES; i++) {
-          flag = !flag;
-          var tag = document.getElementById(`memory-stage-${i + 1}`);
-          tag.innerHTML = "";
-          for (var j = 1; j <= 4; j++) {
-            var digit = rnd.next(1, 5);
-            var stage = i > 0 ? rnd.next(1, i + 1) : null;
-            var rule = translateRule(
-              SelectSolution(
-                rnd,
-                weights,
-                CreateSolutionsList(weights, i, flag)
-              ),
-              digit,
-              stage
-            );
-            var highlightable = document.createElement("span");
-            highlightable.classList.add("highlightable");
-            highlightable.appendChild(
-              document.createTextNode(
-                `Jeśli na wyświetlaczu jest ${j}, ${rule}.`
-              )
-            );
-            tag.appendChild(highlightable);
-            if (j != 4) tag.appendChild(document.createElement("br"));
-          }
+        function setRules(rnd) {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++) {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = "";
+                for (var j = 1; j <= 4; j++) {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(
+                    SelectSolution(
+                    rnd,
+                    weights,
+                    CreateSolutionsList(weights, i, flag)
+                    ),
+                    digit,
+                    stage
+                    );
+                    var highlightable = document.createElement("span");
+                    highlightable.classList.add("highlightable");
+                    highlightable.appendChild(
+                    document.createTextNode(
+                    `Jeśli na wyświetlaczu jest ${j}, ${rule}.`
+                    )
+                    );
+                    tag.appendChild(highlightable);
+                    if (j != 4) tag.appendChild(document.createElement("br"));
+                }
+            }
         }
-      }
 
-      function setDefaultRules(rnd) {
-        setRules(rnd);
-      }
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
 
-      function translateRule(id, targetDigit, targetStage) {
-        switch (id) {
-          case 0:
-            return "naciśnij przycisk na pierwszej pozycji";
-          case 1:
-            return "naciśnij przycisk na drugiej pozycji";
-          case 2:
-            return "naciśnij przycisk na trzeciej pozycji";
-          case 3:
-            return "naciśnij przycisk na czwartej pozycji";
-          case 4:
-            return `naciśnij przycisk z cyfrą “${targetDigit}”`;
-          case 5:
-            return `naciśnij przycisk na tej samej pozycji, co w etapie ${targetStage}`;
-          case 6:
-            return `naciśnij przycisk z tą samą cyfrą, co w etapie ${targetStage}`;
+        function translateRule(id, targetDigit, targetStage) {
+            switch (id) {
+                case 0:
+                return "naciśnij przycisk na pierwszej pozycji";
+                case 1:
+                return "naciśnij przycisk na drugiej pozycji";
+                case 2:
+                return "naciśnij przycisk na trzeciej pozycji";
+                case 3:
+                return "naciśnij przycisk na czwartej pozycji";
+                case 4:
+                return `naciśnij przycisk z cyfrą “${targetDigit}”`;
+                case 5:
+                return `naciśnij przycisk na tej samej pozycji, co w etapie ${targetStage}`;
+                case 6:
+                return `naciśnij przycisk z tą samą cyfrą, co w etapie ${targetStage}`;
+            }
         }
-      }
 
-      function CreateSolutionsList(weights, stage, usePreviousIndex) {
-        var list = [];
-        list.push(0);
-        list.push(1);
-        list.push(2);
-        list.push(3);
-        list.push(4);
-        if (stage > 0) {
-          if (usePreviousIndex) list.push(5);
-          else list.push(6);
+        function CreateSolutionsList(weights, stage, usePreviousIndex) {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0) {
+                if (usePreviousIndex) list.push(5);
+                else list.push(6);
+            }
+            for (var i = 0; i < list.length; i++) {
+                var current = list[i];
+                if (!(current in weights)) weights[current] = 1;
+            }
+            if (stage > 2) {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
         }
-        for (var i = 0; i < list.length; i++) {
-          var current = list[i];
-          if (!(current in weights)) weights[current] = 1;
-        }
-        if (stage > 2) {
-          weights[5] = 1;
-          weights[6] = 1;
-        }
-        return list;
-      }
 
-      function SelectSolution(rnd, weights, list) {
-        var num = 0;
-        for (var i = 0; i < list.length; i++) num += weights[list[i]];
-        var num2 = rnd.nextDouble() * num;
-        for (var i = 0; i < list.length; i++) {
-          if (num2 < weights[list[i]]) {
-            weights[list[i]] = weights[list[i]] * 0.05;
-            return list[i];
-          }
-          num2 -= weights[list[i]];
+        function SelectSolution(rnd, weights, list) {
+            var num = 0;
+            for (var i = 0; i < list.length; i++) num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++) {
+                if (num2 < weights[list[i]]) {
+                    weights[list[i]] = weights[list[i]] * 0.05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
         }
-        return list[rnd.next(0, list.length)];
-      }
     </script>
-  </head>
-  <body>
+</head>
+<body>
     <div class="section">
-      <div class="page page-bg-03">
-        <div class="page-header">
-          <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
-          <span class="page-header-section-title">Pamięć</span>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Pamięć</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory.svg" class="diagram">
+                <h2>O Pamięciach</h2>
+                <p class="flavour-text">Pamięć jest krucha, zresztą jak wszystko inne gdy bomba wybucha, więc skup się!</p>
+                <ul>
+                    <li>Naciśnij prawidłowy przycisk, by przejść do kolejnego etapu. Ukończ wszystkie etapy, by unieszkodliwić moduł.</li>
+                    <li>Naciśnięcie niewłaściwego przycisku zresetuje moduł do etapu 1.</li>
+                    <li>Przyciski są numerowane od lewej do prawej.</li>
+                </ul>
+                <div class="memory-rules">
+                    <h4>Etap 1:</h4>
+                    <p id="memory-stage-1">
+                        Jeśli na wyświetlaczu jest 1, naciśnij przycisk na drugiej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 2, naciśnij przycisk na drugiej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 3, naciśnij przycisk na trzeciej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 4, naciśnij przycisk na czwartej pozycji.
+                    </p>
+                    <h4>Etap 2:</h4>
+                    <p id="memory-stage-2">
+                        Jeśli na wyświetlaczu jest 1, naciśnij przycisk z cyfrą “4”.<br>
+                        Jeśli na wyświetlaczu jest 2, naciśnij przycisk na tej samej pozycji, co w etapie 1.<br>
+                        Jeśli na wyświetlaczu jest 3, naciśnij przycisk na pierwszej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 4, naciśnij przycisk na tej samej pozycji, co w etapie 1.
+                    </p>
+                    <h4>Etap 3:</h4>
+                    <p id="memory-stage-3">
+                        Jeśli na wyświetlaczu jest 1, naciśnij przycisk z tą samą cyfrą, co w etapie 2.<br>
+                        Jeśli na wyświetlaczu jest 2, naciśnij przycisk z tą samą cyfrą, co w etapie 1.<br>
+                        Jeśli na wyświetlaczu jest 3, naciśnij przycisk na trzeciej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 4, naciśnij przycisk z cyfrą “4”.
+                    </p>
+                    <h4>Etap 4:</h4>
+                    <p id="memory-stage-4">
+                        Jeśli na wyświetlaczu jest 1, naciśnij przycisk na tej samej pozycji, co w etapie 1.<br>
+                        Jeśli na wyświetlaczu jest 2, naciśnij przycisk na pierwszej pozycji.<br>
+                        Jeśli na wyświetlaczu jest 3, naciśnij przycisk na tej samej pozycji, co w etapie 2.<br>
+                        Jeśli na wyświetlaczu jest 4, naciśnij przycisk na tej samej pozycji, co w etapie 2.
+                    </p>
+                    <h4>Etap 5:</h4>
+                    <p id="memory-stage-5">
+                        Jeśli na wyświetlaczu jest 1, naciśnij przycisk z tą samą cyfrą, co w etapie 1.<br>
+                        Jeśli na wyświetlaczu jest 2, naciśnij przycisk z tą samą cyfrą, co w etapie 2.<br>
+                        Jeśli na wyświetlaczu jest 3, naciśnij przycisk z tą samą cyfrą, co w etapie 4.<br>
+                        Jeśli na wyświetlaczu jest 4, naciśnij przycisk z tą samą cyfrą, co w etapie 3.
+                    </p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Strona 1 z 1</div>
         </div>
-        <div class="page-content">
-          <img src="img/Component/Memory.svg" class="diagram"/>
-          <h2>O Pamięciach</h2>
-          <p class="flavour-text">Pamięć jest krucha, zresztą jak wszystko inne gdy bomba wybucha, więc skup się!</p>
-          <ul>
-            <li>Naciśnij prawidłowy przycisk, by przejść do kolejnego etapu. Ukończ wszystkie etapy, by unieszkodliwić moduł.</li>
-            <li>Naciśnięcie niewłaściwego przycisku zresetuje moduł do etapu 1.</li>
-            <li>Przyciski są numerowane od lewej do prawej.</li>
-          </ul>
-          <div class="memory-rules">
-            <h4>Etap 1:</h4>
-            <p id="memory-stage-1">Jeśli na wyświetlaczu jest 1, naciśnij przycisk na drugiej pozycji.<br/> Jeśli na wyświetlaczu jest 2, naciśnij przycisk na drugiej pozycji.<br/> Jeśli na wyświetlaczu jest 3, naciśnij przycisk na trzeciej pozycji.<br/> Jeśli na wyświetlaczu jest 4, naciśnij przycisk na czwartej pozycji.</p>
-            <h4>Etap 2:</h4>
-            <p id="memory-stage-2">Jeśli na wyświetlaczu jest 1, naciśnij przycisk z cyfrą “4”.<br/> Jeśli na wyświetlaczu jest 2, naciśnij przycisk na tej samej pozycji, co w etapie 1.<br/> Jeśli na wyświetlaczu jest 3, naciśnij przycisk na pierwszej pozycji.<br/> Jeśli na wyświetlaczu jest 4, naciśnij przycisk na tej samej pozycji, co w etapie 1.</p>
-            <h4>Etap 3:</h4>
-            <p id="memory-stage-3">Jeśli na wyświetlaczu jest 1, naciśnij przycisk z tą samą cyfrą, co w etapie 2.<br/> Jeśli na wyświetlaczu jest 2, naciśnij przycisk z tą samą cyfrą, co w etapie 1.<br/> Jeśli na wyświetlaczu jest 3, naciśnij przycisk na trzeciej pozycji.<br/> Jeśli na wyświetlaczu jest 4, naciśnij przycisk z cyfrą “4”.</p>
-            <h4>Etap 4:</h4>
-            <p id="memory-stage-4">Jeśli na wyświetlaczu jest 1, naciśnij przycisk na tej samej pozycji, co w etapie 1.<br/> Jeśli na wyświetlaczu jest 2, naciśnij przycisk na pierwszej pozycji.<br/> Jeśli na wyświetlaczu jest 3, naciśnij przycisk na tej samej pozycji, co w etapie 2.<br/> Jeśli na wyświetlaczu jest 4, naciśnij przycisk na tej samej pozycji, co w etapie 2.</p>
-            <h4>Etap 5:</h4>
-            <p id="memory-stage-5">Jeśli na wyświetlaczu jest 1, naciśnij przycisk z tą samą cyfrą, co w etapie 1.<br/> Jeśli na wyświetlaczu jest 2, naciśnij przycisk z tą samą cyfrą, co w etapie 2.<br/> Jeśli na wyświetlaczu jest 3, naciśnij przycisk z tą samą cyfrą, co w etapie 4.<br/> Jeśli na wyświetlaczu jest 4, naciśnij przycisk z tą samą cyfrą, co w etapie 3.</p>
-          </div>
-        </div>
-        <div class="page-footer relative-footer">Strona 1 z 1</div>
-      </div>
     </div>
-  </body>
+</body>
 </html>
