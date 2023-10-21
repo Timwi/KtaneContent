@@ -3936,19 +3936,10 @@ let parseData = [
 			{
 				regex: /The (left|right|center) grid .+/,
 				handler: function (matches, module) {
-					if (matches[1] == "left" && !module.wordsRetrieved) {
-						linen -= 2;
-						module.retrievedWords = readLine().replace(/<.+> /, "");
-						linen++;
-						module.wordsRetrieved = true;
-					}
 					module.push({
 						label: matches.input,
 						obj: pre(readTaggedLines(4).map(l => l.replaceAll("X", "")).join("\n"))
 					});
-					if (matches.input == "The center grid should display:") {
-						module.push(`Converted words: ${module.retrievedWords}`);
-					}
 					return true;
 				}
 			},
