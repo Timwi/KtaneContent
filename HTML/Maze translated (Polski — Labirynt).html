@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Labirynt — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        svg { width: 200px; }
+        .dark svg :is(line, circle.big, path) { stroke: #ddd; }
+        .dark svg circle:not(.big) { fill: #ddd; }
+    </style>
+    <script>
+        function removeWalls(m1, m2) {
+            if (m1.x - m2.x == 1) {
+                m1.wallLeft = false;
+                m2.wallRight = false;
+            }
+            if (m1.x - m2.x == -1) {
+                m1.wallRight = false;
+                m2.wallLeft = false;
+            }
+            if (m1.y - m2.y == 1) {
+                m1.wallUp = false;
+                m2.wallDown = false;
+            }
+            if (m1.y - m2.y == -1) {
+                m1.wallDown = false;
+                m2.wallUp = false;
+            }
+        }
+
+        class Maze {
+            constructor() {
+                this.CellGrid = new Array(6);
+                for (let i = 0; i < 6; i++) {
+                    this.CellGrid[i] = new Array(6);
+                    for (let j = 0; j < 6; j++)
+                    this.CellGrid[i][j] = {
+                        x: i,
+                        y: j,
+                        visited: false,
+                        wallUp: true,
+                        wallDown: true,
+                        wallLeft: true,
+                        wallRight: true,
+                    };
+                }
+            }
+
+            BuildMaze(rnd, candidateIndicators) {
+                for (let i = 0; i < 6; i++) {
+                    for (let j = 0; j < 6; j++) {
+                        if (i > 0) rnd.nextDouble();
+                        if (j > 0) rnd.nextDouble();
+                    }
+                }
+                this.PopulateMaze(rnd);
+                this.indicators = [];
+                let ix = rnd.next(0, candidateIndicators.length);
+                this.indicators.push(candidateIndicators[ix]);
+                candidateIndicators.splice(ix, 1);
+                ix = rnd.next(0, candidateIndicators.length);
+                this.indicators.push(candidateIndicators[ix]);
+                candidateIndicators.splice(ix, 1);
+            }
+
+            PopulateMaze(rnd) {
+                let x = rnd.next(0, 6);
+                let y = rnd.next(0, 6);
+                this.VisitCell(this.CellGrid[x][y], [], rnd);
+            }
+
+            VisitCell(cell, cellStack, rnd) {
+                while (cell != null) {
+                    cell.visited = true;
+                    let mazeCell = this.GetNextNeigbour(cell, rnd);
+                    if (mazeCell != null) {
+                        removeWalls(cell, mazeCell);
+                        cellStack.push(cell);
+                    } else if (cellStack.length > 0) mazeCell = cellStack.pop();
+                    cell = mazeCell;
+                }
+            }
+
+            GetNextNeigbour(cell, rnd) {
+                let list = [];
+                if (cell.x > 0 && !this.CellGrid[cell.x - 1][cell.y].visited)
+                list.push(this.CellGrid[cell.x - 1][cell.y]);
+                if (cell.x < 5 && !this.CellGrid[cell.x + 1][cell.y].visited)
+                list.push(this.CellGrid[cell.x + 1][cell.y]);
+                if (cell.y > 0 && !this.CellGrid[cell.x][cell.y - 1].visited)
+                list.push(this.CellGrid[cell.x][cell.y - 1]);
+                if (cell.y < 5 && !this.CellGrid[cell.x][cell.y + 1].visited)
+                list.push(this.CellGrid[cell.x][cell.y + 1]);
+                return list.length > 0 ? list[rnd.next(0, list.length)] : null;
+            }
+
+            ToSVG() {
+                let svg = "";
+                for (let i = 0; i < 6; i++) {
+                    for (let j = 0; j < 6; j++) {
+                        let mazeCell = this.CellGrid[i][j];
+                        let x = i * 50;
+                        let y = j * 50;
+                        svg += `<circle cx='${x + 25}' cy='${
+                            y + 25
+                        }' r='3' fill='black' />`;
+                        for (let k = 0; k < this.indicators.length; k++)
+                        if (this.indicators[k].x === i && this.indicators[k].y === j)
+                        svg += `<circle cx='${x + 25}' cy='${
+                            y + 25
+                        }' r='15' class='big' stroke='black' fill='none' stroke-width='1.5' />`;
+                        if (mazeCell.wallUp)
+                        svg += `<line x1='${x - 1.3}' y1='${y}' x2='${
+                            x + 51.3
+                        }' y2='${y}' stroke-width='${
+                            j === 0 ? 10 : 3
+                        }' stroke='black' fill='none' />`;
+                        if (mazeCell.wallLeft)
+                        svg += `<line x1='${x}' y1='${y - 1.3}' x2='${x}' y2='${
+                            y + 51.3
+                        }' stroke-width='${
+                            i === 0 ? 10 : 3
+                        }' stroke='black' fill='none' />`;
+                    }
+                }
+                svg += `<path stroke-width='10' stroke='black' fill='none' d='M0 0h300v300h-300z'/>`;
+                return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>${svg}</svg>`;
+            }
+        }
+
+        function setRules(rnd) {
+            console.log("seed = " + rnd.seed);
+            let mazeIndicators = [];
+            for (let i = 0; i < 6; i++)
+            for (let j = 0; j < 6; j++) mazeIndicators.push({ x: i, y: j });
+
+            $("#mazes").html("");
+            for (let i = 0; i < 9; i++) {
+                let maze = new Maze();
+                maze.BuildMaze(rnd, mazeIndicators);
+                let svg = $(maze.ToSVG());
+                for (let x = 0; x < 6; x++)
+                for (let y = 0; y < 6; y++) {
+                    svg.append(
+                    MakeSvgElem("rect", {
+                        class: "highlightable",
+                        width: 50,
+                        height: 50,
+                        x: x * 50,
+                        y: y * 50,
+                        fill: "transparent",
+                    })
+                    );
+                }
+
+                $("#mazes").append(svg);
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Labirynt</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Maze.svg" class="diagram">
+                <h2>O Labiryntach</h2>
+                <p class="flavour-text">Wygląda to na jakiś rodzaj labiryntu, zapewne skradziony z restauracyjnej podkładki pod talerz.</p>
+                <ul>
+                    <li>Znajdź labirynt z pasującymi, okrągłymi znacznikami.</li>
+                    <li>Rozbrajający musi doprowadzić białe światełko do czerwonego trójkąta, używając przycisków ze strzałkami.</li>
+                    <li><strong>Uwaga:</strong> Nie przecinaj linii widocznych w labiryncie. Te linie są niewidzialne na bombie.</li>
+                </ul>
+                <div class="hstack wrap gap1" id="mazes"></div>
+            </div>
+            <div class="page-footer relative-footer">Strona 1 z 1</div>
+        </div>
+    </div>
+</body>
+</html>
