@@ -1068,6 +1068,42 @@ let parseData = [
 		moduleID: "3dTunnels",
 	},
 	{
+		loggingTag: "4 Buttons",
+		moduleID: "4buttons",
+		matches: [
+			{
+				regex: /The order to press 1/,
+				handler: function(matches, module) {
+					let orderRegex = /The order to press (?:\d+)/;
+					let pressRegex = /The button to press (ButtonTopLeft|ButtonTopRight|ButtonBottomLeft|ButtonBottomRight) \(KMSelectable\)/
+					let buttonPresses = [];
+
+					let parser = {
+						"ButtonTopLeft" : "Top Left",
+						"ButtonTopRight" : "Top Right",
+						"ButtonBottomLeft" : "Bottom Left",
+						"ButtonBottomRight" : "Bottom Right",
+					}
+					do
+					{
+						buttonPresses.push(readTaggedLine().match(pressRegex)[1]);
+						if(readTaggedLine().match(orderRegex) == null)
+						{
+							linen--;
+							break;
+						}
+					} while(true)
+					module.push(`Button order to press: ${buttonPresses.map(button => parser[button]).join(", ")}`)
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+
+			}
+		]
+	},
+	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
 		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
