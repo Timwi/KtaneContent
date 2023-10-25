@@ -1,44 +1,432 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Przycisk (Polski) — Keep Talking and Nobody Explodes Module</title>
+    <title>Przycisk — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+    var MaxInitialRules = 6;
+    var MaxHoldRules = 3;
+    var LOGGING = false;
+
+    var IndicatorLabels = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+    var ButtonColor = ["czerwony", "niebieski","żółty","biały"];
+    var BigButtonLEDColor = ["Czerwony", "Niebieski","Żółty","Biały"];
+    var ButtonInstruction = ["Press","Hold","Abort","Detonate"];
+    var PortList = [ "DVI-D", "PS/2", "RJ-45", "Stereo RCA", "równoległy", "seryjny" ];
+
+    // Main conditions (“queries”)
+    function IsButtonColor(color) { return { id: "isButtonColor", text: `przycisk jest ${color}` }; }
+    function IsButtonInstruction(label) { return { id: "isButtonLabel", text: `napis brzmi “${label}”` }; }
+    function IndicatorXLit(indicator) { return { id: "indicatorXLit", text: `wskaźnik ${indicator} się świeci` }; }
+    function IsPortPresent(port) { return { id: "portPresent", text: `na bombie występuje port ${port}` }; }
+    function MoreThanXBatteries(n) {
+        return {
+            id: "moreThanXBatteries",
+            text: n === 1
+                ? "bomba ma więcej niż 1 baterię"
+                : `bomba ma więcej niż ${n} baterie/i`
+        };
+    }
+    var EmptyPortPlate = { id: 'emptyportplate', text: "na bombie występuje pusta płytka portowa" };
+    var DoesSerialNumberStartWithLetter = { id: 'serial_letter', text: "numer seryjny zaczyna się literą" };
+    var IsSerialNumberOdd = { id: 'serial_odd', text: "ostatnia cyfra numery seryjnego jest nieparzysta" };
+
+    // Main rules
+    var Hold = { id: 'hold', text: "przytrzymaj przycisk i odnieś się do “Puszczanie trzymanego przycisku”." };
+    var Press = { id: 'tap', text: "naciśnij i natychmiast puść przycisk." };
+    var TapWhenSecondsMatch = { id: 'tap11n', text: "naciśnij i natychmiast puść przycisk, gdy dwie ostatnie cyfry licznika czasu są takie same." };
+
+    // Conditions for releasing held buttons
+    function IsIndicatorColor(color) { return { id: "isButtonColor", text: `${color} strip:` }; }
+
+    // Rules for releasing held buttons
+    function ReleaseOnTimerText(digit) { return { id: `rel_${digit}`, text: `puść, gdy licznik czasu wyświetla ${digit} na dowolnej pozycji.` }; }
+    var ReleaseWhenSecondsDigitsAddToSeven = { id: 'add7', text: "puść, gdy dwie ostatnie cyrfy licznika czasu sumują się do 7." };
+    var ReleaseWhenSecondsDigitsAddToThreeOrThirteen = { id: 'add3_13', text: "puść, gdy dwie ostatnie cyrfy licznika czasu sumują się do 3 lub 13." };
+    var ReleaseWhenSecondsDigitsAddToFive = { id: 'add5', text: "puść, gdy dwie ostatnie cyrfy licznika czasu sumują się do 5." };
+    var ReleaseWhenSecondsPrimeOrZero = { id: 'prime_0', text: "puść, gdy wyświetlana liczba sekund na liczniku czasu jest pierwsza lub 0." };
+    var ReleaseWhenSecondsAddToMultipleOfFour = { id: 'add4n', text: "puść, gdy dwie ostatnie cyrfy licznika czasu sumują się do cyrfy, która jest wielokrotnością cyfry 4." };
+    function ReleaseWhenLeastSignificantSecondIs(digit) { return { id: `lsd_${digit}`, text: `puść, gdy ostatnia cyfra licznika czasu to ${digit}.` }; }
+    var ReleaseAtAnyTime = { id: 'any', text: "puść, w dowolnym czasie." };
+
+    class Rule
+    {
+        constructor(queries, solution)
+        {
+            this.Queries = queries;
+            this.Solution = solution;
+        }
+
+        GetQueryString()
+        {
+            return this.Queries.map(q => q.text).join(" and ");
+        }
+
+        GetSolutionString()
+        {
+            return this.Solution.text;
+        }
+
+        GetString(isOtherwise)
+        {
+            return `If ${this.Queries.length ? this.GetQueryString() : 'Jeśli żadne z powyższych nie ma zastosowania'}, ${this.Solution.text}`;
+        }
+
+        AppendHoldHtml(elem)
+        {
+            var em = document.createElement('em');
+            em.innerText = this.Queries.length ? this.GetQueryString() : 'Pasek w innym kolorze:';
+            elem.appendChild(em);
+            elem.appendChild(document.createTextNode(' ' + this.GetSolutionString()));
+        }
+    }
+
+    function SelectSolution(rnd, weights, list)
+    {
+        var result = null;
+
+        var num = 0;
+        for (var i = 0; i < list.length; i++)
+            num += weights[list[i].id];
+        var num2 = rnd.nextDouble() * num;
+        for (var i = 0; i < list.length; i++)
+        {
+            if (num2 < weights[list[i].id])
+            {
+                weights[list[i].id] = weights[list[i].id] * .05;
+                result = list[i];
+                break;
+            }
+            num2 -= weights[list[i].id];
+        }
+        if (result === null)
+            result = list[rnd.next(0, list.length)];
+        if (LOGGING) {
+            console.log(`SelectSolution(list[${list.length}]) = #${list.indexOf(result)} (${result.id})`);
+            console.log(`weights:`);
+            for (var k in weights)
+                console.log(`  -- ${k} = ${weights[k]}`);
+        }
+        return result;
+    }
+
+    function RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList)
+    {
+        var remainder = ruleList;
+        if (remainder[remainder.length - 2].Solution.id == 'hold')
+            remainder[remainder.length - 2].Solution = SelectSolution(rnd, weights, CreateSolutionsList(rnd, weights, false));
+
+        var twobattery = -1;
+        var onebattery = -1;
+        var solution = '';
+        var samesolution = true;
+
+        for (var i = remainder.length - 1; i >= 0; i--)
+        {
+            if (remainder[i].GetQueryString().indexOf("more than 2 batteries") !== -1)
+            {
+                twobattery = i;
+                if (onebattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            else if (remainder[i].GetQueryString().indexOf("more than 1 battery") !== -1)
+            {
+                onebattery = i;
+                if (twobattery > -1)
+                {
+                    samesolution &= remainder[i].GetSolutionString() === solution;
+                    break;
+                }
+                solution = remainder[i].GetSolutionString();
+            }
+            if (solution === '')
+                continue;
+            samesolution &= remainder[i].GetSolutionString() === solution;
+        }
+        if (onebattery == -1 || twobattery == -1)
+            return;
+
+        if (onebattery < twobattery && remainder[onebattery].Queries.length == 1)
+        {
+            if (rnd.next(0, 2, LOGGING) === 0)
+                remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+            else
+                remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+        }
+        else if (remainder[onebattery].Queries.length === 1 && remainder[twobattery].Queries.length === 1 && samesolution)
+        {
+            switch (rnd.next(0, 7, LOGGING))
+            {
+                // push a secondary query to one or both of the battery rules
+                case 2:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    // fall through to case 0
+                case 0:
+                    remainder[onebattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+                case 1:
+                    remainder[twobattery].Queries.push(PopQueryFromList(rnd, q.SecondaryQueryList));
+                    break;
+
+                // Replace one or both of the battery rules with a new primary query
+                case 5:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    // fall through to case 3
+                case 3:
+                    remainder[onebattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+                case 4:
+                    remainder[twobattery].Queries[0] = PopQueryFromList(rnd, q.PrimaryQueryList);
+                    break;
+
+                // Replace one of the solutions in between the minimum and maximum battery.
+                default:
+                    var replacementsolution = remainder[onebattery].Solution.id === 'tap' ? Hold : Press;
+                    if (Math.abs(onebattery - twobattery) === 1)
+                        remainder[Math.min(onebattery, twobattery)].Solution = replacementsolution;
+                    else
+                        remainder[rnd.next(Math.min(onebattery, twobattery), Math.max(onebattery, twobattery), LOGGING)].Solution = replacementsolution;
+                    break;
+            }
+        }
+    }
+
+    var defaultPrimaryRules = null;
+    var defaultHoldRules = null;
+    var defaultAppendixReference = null;
+    function setDefaultRules(rnd) { setRules(rnd); }
+
+    function setRules(rnd)
+    {
+        if (defaultPrimaryRules === null) {
+            defaultPrimaryRules = document.getElementById('primary-rules').innerHTML;
+            defaultHoldRules = document.getElementById('hold-rules').innerHTML;
+            defaultAppendixReference = document.getElementById('appendix-reference').innerHTML;
+        }
+
+        if (rnd.seed === 1) {
+            document.getElementById('primary-rules').innerHTML = defaultPrimaryRules;
+            document.getElementById('hold-rules').innerHTML = defaultHoldRules;
+            document.getElementById('appendix-reference').innerHTML = defaultAppendixReference;
+            return;
+        }
+
+        var q = BuildQueryLists(rnd);
+        var weights = {};
+
+        var ruleList = [];
+        while (ruleList.length < MaxInitialRules && q.PrimaryQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.PrimaryQueryList);
+            var num = rnd.next(0, 2, LOGGING);
+            if (num === 0)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery], false));
+            for (var i = 0; i < num; i++)
+                ruleList.push(CreateRule(rnd, weights, [baseQuery, PopQueryFromList(rnd, q.SecondaryQueryList)], false));
+        }
+        // Otherwise: hold the button.
+        ruleList.push(new Rule([], Hold));
+
+        var holdRuleList = [];
+        while (holdRuleList.length < MaxHoldRules && q.IndicatorColorQueryList.length > 0)
+        {
+            var baseQuery = PopQueryFromList(rnd, q.IndicatorColorQueryList);
+            holdRuleList.push(CreateRule(rnd, weights, [baseQuery], true));
+        }
+        // Otherwise
+        holdRuleList.push(CreateRule(rnd, weights, [], true));
+
+        if (rnd.seed !== 1)
+            RemoveRedundantRules(rnd, weights, q, ruleList, holdRuleList);
+
+        var rulesOl = document.getElementById('primary-rules');
+        while (rulesOl.firstChild != null)
+            rulesOl.removeChild(rulesOl.firstChild);
+        for (var i = 0; i < ruleList.length; i++)
+        {
+            var li = document.createElement('li');
+            rulesOl.appendChild(li);
+            li.innerText = ruleList[i].GetString(i !== 0);
+        }
+
+        var holdRulesUl = document.getElementById('hold-rules');
+        while (holdRulesUl.firstChild != null)
+            holdRulesUl.removeChild(holdRulesUl.firstChild);
+        for (var i = 0; i < holdRuleList.length; i++)
+        {
+            var li = document.createElement('li');
+            holdRulesUl.appendChild(li);
+            holdRuleList[i].AppendHoldHtml(li);
+        }
+
+        var needsIndicatorAppendix = false, needsBatteryAppendix = false, needsPortAppendix = false;
+        var allRules = ruleList.concat(holdRuleList);
+        for (var i = 0; i < allRules.length; i++)
+            for (var j = 0; j < allRules[i].Queries.length; j++)
+            {
+                if (allRules[i].Queries[j].id === 'indicatorXLit')
+                    needsIndicatorAppendix = true;
+                if (allRules[i].Queries[j].id === 'moreThanXBatteries')
+                    needsBatteryAppendix = true;
+                if (allRules[i].Queries[j].id === 'portPresent')
+                    needsPortAppendix = true;
+            }
+        var references = [];
+        if (needsIndicatorAppendix)
+            references.push("Zobacz Załącznik A odnośnie rozpoznawania wskaźników.");
+        if (needsBatteryAppendix)
+            references.push("Zobacz Załącznik B odnośnie rozpoznawania baterii.");
+        if (needsPortAppendix)
+            references.push("Zobacz Załącznik C odnośnie rozpoznawania portów.");
+
+        var p = document.getElementById('appendix-reference');
+        p.innerHTML = '';
+        for (var i = 0; i < references.length; i++) {
+            if (i > 0)
+                p.appendChild(document.createElement('br'));
+            p.appendChild(document.createTextNode(references[i]));
+        }
+    }
+
+    function PopQueryFromList(rnd, queries)
+    {
+        var index = rnd.next(0, queries.length, LOGGING);
+        var query = queries[index];
+        queries.splice(index, 1);
+        return query;
+    }
+
+    function BuildQueryLists(rnd)
+    {
+        PrimaryQueryList = ButtonColor.map(c => IsButtonColor(c));
+        IndicatorColorQueryList = BigButtonLEDColor.map(c => IsIndicatorColor(c));
+        SecondaryQueryList = ButtonInstruction.map(i => IsButtonInstruction(i));
+        SecondaryHoldQueryList = SecondaryQueryList.slice(0);
+
+        for (var i = 1; i < 3; i++)
+            PrimaryQueryList.push(MoreThanXBatteries(i));
+
+        for (var m = 0; m < 3; m++)
+            SecondaryQueryList.push(IndicatorXLit(IndicatorLabels[rnd.next(0, IndicatorLabels.length, LOGGING)]));
+
+        if (rnd.seed !== 1)
+        {
+            var list = PortList.slice(0);
+            for (var i = 0; i < 3; i++)
+            {
+                var ix = rnd.next(0, list.length, LOGGING);
+                var port = list[ix];
+                list.splice(ix, 1);
+                SecondaryQueryList.push(IsPortPresent(port));
+            }
+            for (var i = 0; i < list.length; i++)
+                PrimaryQueryList.push(IsPortPresent(list[i]));
+
+            PrimaryQueryList.push(EmptyPortPlate);
+            SecondaryQueryList.push(DoesSerialNumberStartWithLetter);
+            SecondaryQueryList.push(IsSerialNumberOdd);
+        }
+
+        return {
+            PrimaryQueryList: PrimaryQueryList,
+            IndicatorColorQueryList: IndicatorColorQueryList,
+            SecondaryQueryList: SecondaryQueryList,
+            SecondaryHoldQueryList: SecondaryHoldQueryList
+        };
+    }
+
+    function CreateRule(rnd, weights, queries, isHoldRule)
+    {
+        return new Rule(queries, SelectSolution(rnd, weights, !isHoldRule ? CreateSolutionsList(rnd, weights, true) : CreateHoldSolutionsList(rnd, weights)));
+    }
+
+    function CreateSolutionsList(rnd, weights, holdAllowed)
+    {
+        var list = [ Hold, Press ];
+        if (!holdAllowed)
+            list.splice(0, 1);
+
+        if (rnd.seed !== 1)
+        {
+            list.push(TapWhenSecondsMatch);
+            if (!(TapWhenSecondsMatch.id in weights))
+                weights[TapWhenSecondsMatch.id] = 0.05;
+        }
+        if (!(Press.id in weights))
+            weights[Press.id] = 0.1;
+
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+
+    function CreateHoldSolutionsList(rnd, weights)
+    {
+        var list = [ ReleaseOnTimerText("5"), ReleaseOnTimerText("1"), ReleaseOnTimerText("2"), ReleaseOnTimerText("3"), ReleaseOnTimerText("4") ];
+        if (rnd.seed !== 1)
+        {
+            list.push(ReleaseOnTimerText("6"));
+            list.push(ReleaseOnTimerText("7"));
+            list.push(ReleaseOnTimerText("8"));
+            list.push(ReleaseOnTimerText("9"));
+            list.push(ReleaseOnTimerText("0"));
+
+            for (var i = 0; i < 10; i++)
+                list.push(ReleaseWhenLeastSignificantSecondIs(i));
+
+            list.push(ReleaseAtAnyTime);
+            list.push(ReleaseWhenSecondsAddToMultipleOfFour);
+            list.push(ReleaseWhenSecondsDigitsAddToFive);
+            list.push(ReleaseWhenSecondsDigitsAddToSeven);
+            list.push(ReleaseWhenSecondsDigitsAddToThreeOrThirteen);
+            list.push(ReleaseWhenSecondsPrimeOrZero);
+        }
+        for (var i = 0; i < list.length; i++)
+            if (!(list[i].id in weights))
+                weights[list[i].id] = 1;
+
+        return list;
+    }
+    </script>
 </head>
 <body>
     <div class="section">
-        <div class="page page-bg-06">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Przycisk (Polski) 1.0</span>
-            </div>
-            <div class="page-content">
-                <img src="img/Component/The Button.svg" class="diagram">
-                <h2>W Temacie Przycisku (Polski)</h2>
-                <p class="flavour-text">Możesz myśleć, że przycisk mówiący Ci, aby go nacisnąć jest dość dosłowny.<br>Jest to sposób myślenia, który powoduje, że ludzie wybuchają.</p>
-                <p class="appendix-reference">Spójrz na załącznik A dla identyfikacji wskaźnika.<br>Spójrz na załącznik B dla identyfikacji baterii.</p>
-                <p>Upewnij się, że naklejka na module jest oznakowana jako “PL&nbsp;V1”, w przeciwnym razie nie jest to poprawna instrukcja.</p>
-                <p>Przestrzegaj poniższych zasad zgodnie z kolejnością w jakiej są zapisane. Wykonaj pierwszą akcję, która odpowiada :</p>
-                <ol>
-                    <li>Jeśli przycisk jest opisany jako “Anuluj”, wciśnij, przytrzymaj przycisk i przejdź do sekcji “Uwolnienie trzymanego przycisku”.</li>
-                    <li>Jeśli jest więcej niż jedna bateria na bombie i przycisk jest opisany jako “Zdetonuj”, wciśnij i od razu uwolnij przycisk.</li>
-                    <li>Jeśli przycisk jest biały oraz świeci się wskaźnik opisany jako “CAR”, wciśnij, przytrzymaj przycisk i przejdź do sekcji “Uwolnienie trzymanego przycisku”.</li>
-                    <li>Jeśli są więcej niż dwie baterie na bombie oraz świeci sie wskaźnik oznaczony jako “FRK”, wciśnij i od razu uwolnij przycisk.</li>
-                    <li>Jeśli przycisk jest żółty, wciśnij, przytrzymaj przycisk i przejdź do sekcji “Uwolnienie trzymanego przycisku”.</li>
-                    <li>Jeśli przycisk jest czerwony oraz opisany jako “Przytrzymaj”, wciśnij i od razu uwolnij przycisk.</li>
-                    <li>Jeśli żadne z powyższych nie jest zgodne z tym co widzisz, wciśnij, przytrzymaj przycisk i przejdź do sekcji “Uwolnienie trzymanego przycisku”.</li>
+        <div class="page page-bg-03">
+            <div class="page-header"> <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span> <span class="page-header-section-title">Przycisk</span> </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content"> <img src="img/Component/The Button.svg" class="diagram">
+                <h2>O Przycisku</h2>
+                <p class="flavour-text">Mógłbyś pomyśleć, że przycisk proszący o naciśnięcie to oczywista sprawa. Właśnie takie myślenie doprowadza do eksplozji.</p>
+                <p class="appendix-reference" id="appendix-reference">Zobacz Załącznik A odnośnie rozpoznawania wskaźników.<br>Zobacz Załącznik B odnośnie rozpoznawania baterii.</p>
+                <p>Postępuj zgodnie z poniższymi zasadami w podanej kolejności. Wykonaj pierwszą czynność, która ma zastosowanie.</p>
+                <ol id='primary-rules'>
+                    <li>Jeśli przycisk jest niebieski i napis brzmi "Abort", przytrzymaj przycisk i odnieś się do "Puszczanie trzymanego przycisku".</li>
+                    <li>Jeśli bomba ma więcej niż 1 baterię i napis brzmi "Detonate", naciśnij i natychmiast puść przycisk.</li>
+                    <li>Jeśli przycisk jest biały i wskaźnik CAR się świeci, przytrzymaj przycisk i odnieś się do "Puszczanie trzymanego przycisku".</li>
+                    <li>Jeśli bomba ma więcej niż 2 baterie i wskaźnik FRK się świeci, naciśnij i natychmiast puść przycisk.</li>
+                    <li>Jeśli przycisk jest żółty, przytrzymaj przycisk i odnieś się i odnieś się do "Puszczanie trzymanego przycisku".</li>
+                    <li>Jeśli przycisk jest czerwony i napis brzmi "Hold", naciśnij i natychmiast puść przycisk.</li>
+                    <li>Jeśli żadne z powyższych nie ma zastosowania, przytrzymaj przycisk i odnieś się do "Puszczanie trzymanego przycisku".</li>
                 </ol>
-                <h3>Uwolnienie trzymanego przycisku</h3>
-                <p>Jeśli zacząłes trzymać wciśniety przycisk, po prawej stronie modułu zapali sie kolorowy pasek. Bazując na kolorze tego paska, musisz uwolnić przycisk w odpowiednim momencie:</p>
-                <ul>
-                    <li><em>Niebieski pasek:</em> uwolnij przycisk kiedy na zegarze pojawi się 4 na dowolnej pozycji.</li>
-                    <li><em>Biały pasek:</em> uwolnij przycisk kiedy na zegarze pojawi się 1 na dowolnej pozycji.</li>
-                    <li><em>żółty pasek:</em> uwolnij przycisk kiedy na zegarze pojawi się 5 na dowolnej pozycji.</li>
-                    <li><em>Inny kolor paska:</em> uwolnij przycisk kiedy na zegarze pojawi się 1 na dowolnej pozycji.</li>
+                <h3>Puszczanie trzymanego przycisku</h3>
+                <p>Gdy zaczniesz trzymać wciśnięty przycisk, zaświeci się kolorowy pasek po prawej stronie modułu. Na podstawie jego koloru, musisz puścić przycisk w odpowiedniej chwili:</p>
+                <ul id='hold-rules'>
+                    <li><em>Niebieski pasek:</em> puść, gdy licznik czasu wyświetla 4 na dowolnej pozycji.</li>
+                    <li><em>Biały pasek:</em> puść, gdy licznik czasu wyświetla 1 na dowolnej pozycji.</li>
+                    <li><em>Żółty pasek:</em> puść, gdy licznik czasu wyświetla 5 na dowolnej pozycji.</li>
+                    <li><em>Pasek w innym kolorze:</em> puść gdy licznik czasu wyświetla 1 na dowolnej pozycji.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Strona 1 z 1</div>
