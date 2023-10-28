@@ -17934,8 +17934,8 @@ let parseData = [
 					module.push({
 						obj: $(`<table>
 							<tr><th>Original</th><th>On the module</th></tr>
-							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png'></td>
-								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)'></td>
+							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.svg'></td>
+								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.svg' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)'></td>
 						</table>`)
 					});
 				}
