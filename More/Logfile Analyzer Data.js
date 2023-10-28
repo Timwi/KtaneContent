@@ -1072,27 +1072,17 @@ let parseData = [
 		moduleID: "4buttons",
 		matches: [
 			{
-				regex: /The order to press 1/,
+				regex: /^The order to press 1$/,
 				handler: function(_, module) {
-					let pressRegex = /The button to press (ButtonTopLeft|ButtonTopRight|ButtonBottomLeft|ButtonBottomRight) \(KMSelectable\)/
-					let buttonPresses = [];
-					let fourButtonsRegex = /^\[4 Buttons #(\d+)\]/
-					let parser = {
-						"ButtonTopLeft" : "Top Left",
-						"ButtonTopRight" : "Top Right",
-						"ButtonBottomLeft" : "Bottom Left",
-						"ButtonBottomRight" : "Bottom Right",
-					}
-					do
-					{
-						buttonPresses.push(readTaggedLine().match(pressRegex)[1]);
-						if(readLine().match(fourButtonsRegex) == null)
-						{
-							linen--;
-							break;
-						}
-					} while(true)
-					module.push(`Button order to press: ${buttonPresses.map(button => parser[button]).join(", ")}`)
+					const pressRegex = /^The button to press Button(Top|Bottom)(Left|Right) \(KMSelectable\)$/;
+					const fourButtonsRegex = /^\[4 Buttons #(?:\d+)\]/;
+					const buttonPresses = [];
+					do {
+						const match = readTaggedLine().match(pressRegex);
+						buttonPresses.push(`${match[1]}-${match[2]}`.toLowerCase());
+					} while (readLine().match(fourButtonsRegex));
+					linen--;
+					module.push(`Press the buttons in this order: ${buttonPresses.join(", ")}.`)
 					return true;
 				}
 			}
