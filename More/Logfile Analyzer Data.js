@@ -1068,6 +1068,27 @@ let parseData = [
 		moduleID: "3dTunnels",
 	},
 	{
+		loggingTag: "4 Buttons",
+		moduleID: "4buttons",
+		matches: [
+			{
+				regex: /^The order to press 1$/,
+				handler: function(_, module) {
+					const pressRegex = /^The button to press Button(Top|Bottom)(Left|Right) \(KMSelectable\)$/;
+					const fourButtonsRegex = /^\[4 Buttons #(?:\d+)\]/;
+					const buttonPresses = [];
+					do {
+						const match = readTaggedLine().match(pressRegex);
+						buttonPresses.push(`${match[1]}-${match[2]}`.toLowerCase());
+					} while (readLine().match(fourButtonsRegex));
+					linen--;
+					module.push(`Press the buttons in this order: ${buttonPresses.join(", ")}.`)
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
 		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
