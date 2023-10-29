@@ -8,6 +8,83 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const num = [
+            [5, 1, 3, 6, 4, 0, 2],
+            [1, 2, 6, 4, 0, 5, 3],
+            [4, 0, 5, 1, 3, 2, 6],
+            [3, 5, 2, 0, 1, 6, 4],
+            [0, 3, 4, 2, 6, 1, 5],
+            [6, 4, 0, 5, 2, 3, 1],
+            [2, 6, 1, 3, 5, 4, 0]
+        ];
+        let size = 7;
+        let coord = Array(size).fill().map(()=>Array(size).fill().map(()=>Array(2).fill(0)));
+        let grid = $("svg.grid");
+        for (let y = 0; y < size; y++) {
+            const row = num[y];
+            for (let x = 0; x < size; x++) {
+                coord[x][y][0] = x * 100;
+                coord[x][y][1] = y * 100;
+                let g = MakeSvgElem("g", {
+                    class:`sq x${x} y${y} highlightable`, fill:"transparent",
+                    style:`transform: translate(${coord[x][y][0]}px, ${coord[x][y][1]}px)`
+                });
+                let text = MakeSvgElem("text", { x:50, y:72, fill:"#000" }, row[x]);
+                let box = MakeSvgElem("rect", {
+                    x:0, y:0, width:100, height:100, "stroke-width":2, stroke:"#000"
+                }, row[x]);
+                $(g).append(text);
+                $(g).append(box);
+                grid.append(g);
+            }
+        }
+
+        function move() {
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++)
+                    $(`.sq.x${x}.y${y}`).css("transform", `translate(${coord[x][y][0]}px, ${coord[x][y][1]}px)`);
+        }
+        $(".fliphoriz").click(() => {
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++)
+                    coord[x][y][0] = (size - 1) * 100 - coord[x][y][0];
+            move();
+        });
+        $(".flipvert").click(() => {
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++)
+                    coord[x][y][1] = (size - 1) * 100 - coord[x][y][1];
+            move();
+        });
+        $(".diag").click(() => {
+            let saved = Array(size).fill().map(()=>Array(size).fill().map(()=>Array(2).fill(0)));
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++) {
+                    saved[x][y][0] = coord[x][y][0];
+                    saved[x][y][1] = coord[x][y][1];
+                }
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++) {
+                    coord[x][y][0] = saved[x][y][1];
+                    coord[x][y][1] = saved[x][y][0];
+                }
+            move();
+        });
+
+        $(".reset").click(() => {
+            for (let y = 0; y < size; y++)
+                for (let x = 0; x < size; x++) {
+                    coord[x][y][0] = x * 100;
+                    coord[x][y][1] = y * 100;
+                }
+            move();
+        });
+    });
+    </script>
     <style>
         table { margin: 1em auto; }
 
@@ -19,6 +96,42 @@
             float: right;
             width: 200px;
         }
+
+        .grid {
+            width: 215px;
+        }
+        .grid > :is(rect, g, text) {
+            transition: transform .6s;
+        }
+        .dark .button, .button {
+            border: 2px solid black;
+            color: #000;
+        }
+        .button {
+            margin: 4px;
+            border-radius: 3px;
+            transition: .6s;
+            display: block;
+            background-color: #FFF;
+            font-weight: bold;
+            line-height: 28px;
+            padding: 5px 9px 1px;
+            cursor: pointer;
+        }
+        .fliphoriz, .flipvert, .diag {
+            font-family: 'Logic-round';
+            line-height: 1;
+            font-size: 23px;
+            padding: 5px 8px;
+        }
+        .diag { padding: 5px; }
+        .diag div { transform: rotate(-45deg); }
+        .dark .button:hover, .button:hover {
+            color: #FFF;
+            background-color: #000;
+        }
+        .dark svg text { fill: #DDD; }
+        .dark svg rect { stroke: #DDD; }
     </style>
 </head>
 <body>
@@ -66,15 +179,8 @@
                 <span class="page-header-section-title">Kugelblitz</span>
             </div>
             <div class="page-content">
-                <table>
-                    <tr><td>5</td><td>1</td><td>3</td><td>6</td><td>4</td><td>0</td><td>2</td></tr>
-                    <tr><td>1</td><td>2</td><td>6</td><td>4</td><td>0</td><td>5</td><td>3</td></tr>
-                    <tr><td>4</td><td>0</td><td>5</td><td>1</td><td>3</td><td>2</td><td>6</td></tr>
-                    <tr><td>3</td><td>5</td><td>2</td><td>0</td><td>1</td><td>6</td><td>4</td></tr>
-                    <tr><td>0</td><td>3</td><td>4</td><td>2</td><td>6</td><td>1</td><td>5</td></tr>
-                    <tr><td>6</td><td>4</td><td>0</td><td>5</td><td>2</td><td>3</td><td>1</td></tr>
-                    <tr><td>2</td><td>6</td><td>1</td><td>3</td><td>5</td><td>4</td><td>0</td></tr>
-                </table>
+                <div class="hstack"> <div class="button reset">Reset</div> <div class="button fliphoriz">↔</div> <div class="button flipvert">↕</div> <div class="button diag"><div>↔</div></div> </div>
+                <svg class="grid centered-img" xmlns="http://www.w3.org/2000/svg" viewbox="-1 -1 703 703" text-anchor="middle" font-size="70"></svg>
                 <br>
                 <p>Convert each digit individually into its 3-bit binary representation. Keep all leading zeroes. Prepend this binary sequence with a 1.</p>
                 <p>For each bit, perform the first condition that applies to the current string of actions</p>

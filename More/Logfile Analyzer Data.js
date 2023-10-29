@@ -1068,6 +1068,27 @@ let parseData = [
 		moduleID: "3dTunnels",
 	},
 	{
+		loggingTag: "4 Buttons",
+		moduleID: "4buttons",
+		matches: [
+			{
+				regex: /^The order to press 1$/,
+				handler: function(_, module) {
+					const pressRegex = /^The button to press Button(Top|Bottom)(Left|Right) \(KMSelectable\)$/;
+					const fourButtonsRegex = /^\[4 Buttons #(?:\d+)\]/;
+					const buttonPresses = [];
+					do {
+						const match = readTaggedLine().match(pressRegex);
+						buttonPresses.push(`${match[1]}-${match[2]}`.toLowerCase());
+					} while (readLine().match(fourButtonsRegex));
+					linen--;
+					module.push(`Press the buttons in this order: ${buttonPresses.join(", ")}.`)
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
 		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
 		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
@@ -17913,8 +17934,8 @@ let parseData = [
 					module.push({
 						obj: $(`<table>
 							<tr><th>Original</th><th>On the module</th></tr>
-							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png'></td>
-								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.png' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)'></td>
+							<tr><td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.svg'></td>
+								<td><img src='../HTML/img/Visual Impairment/Colorblind${matches[1]}B.svg' style='transform: rotate(${matches[2]}deg) scale(${matches[3] ? -1 : 1}, 1)'></td>
 						</table>`)
 					});
 				}
