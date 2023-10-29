@@ -8,6 +8,56 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const num = [
+            [5, 1, 3, 6, 4, 0, 2],
+            [1, 2, 6, 4, 0, 5, 3],
+            [4, 0, 5, 1, 3, 2, 6],
+            [3, 5, 2, 0, 1, 6, 4],
+            [0, 3, 4, 2, 6, 1, 5],
+            [6, 4, 0, 5, 2, 3, 1],
+            [2, 6, 1, 3, 5, 4, 0]
+        ];
+        let flipX = 1;
+        let flipY = 1;
+        let grid = $(".grid");
+        for (let y = 0; y < num.length; y++) {
+            const row = num[y];
+            let tr = $("<div>").addClass("hstack").appendTo(grid);
+            for (let x = 0; x < row.length; x++) {
+                let svg = MakeSvgTag(100, 100, 0, 0, {
+                    class:"square", "text-anchor":"middle", "font-size":70
+                }).appendTo(tr);
+                let text = MakeSvgElem("text", { x:50, y:72 }, row[x]);
+                let box = MakeSvgElem("rect", {
+                    x:0, y:0, width:100, height:100, class:"highlightable", fill:"transparent"
+                }, row[x]);
+                svg.append(text);
+                svg.append(box);
+            }
+        }
+
+        function flipAll() {
+            grid.css("transform", `scale(${flipX}, ${flipY})`);
+            $(".square").css("transform", `scale(${flipX}, ${flipY})`);
+        }
+        $(".fliphoriz").click(() => {
+            flipX = -flipX;
+            flipAll();
+        });
+        $(".flipvert").click(() => {
+            flipY = -flipY;
+            flipAll();
+        });
+        $(".reset").click(() => {
+            flipY = flipX = 1;
+            flipAll();
+        });
+    });
+    </script>
     <style>
         table { margin: 1em auto; }
 
@@ -19,6 +69,38 @@
             float: right;
             width: 200px;
         }
+
+        .grid, .square {
+            transition: transform .5s;
+        }
+        .square {
+            height: 30px;
+            width: 30px;
+            border: 1px solid;
+            box-sizing: border-box;
+        }
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition:  .6s;
+            display: block;
+            font-family: "Special Elite";
+            font-weight: bold;
+            line-height: 20px;
+            padding: 5px 9px 1px;
+        }
+        .fliphoriz, .flipvert {
+            font-family: 'Logic-round';
+            line-height: 1;
+            font-size: 23px;
+            padding: 5px 8px;
+        }
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        .dark svg text { fill: #DDD; }
     </style>
 </head>
 <body>
@@ -66,15 +148,8 @@
                 <span class="page-header-section-title">Kugelblitz</span>
             </div>
             <div class="page-content">
-                <table>
-                    <tr><td>5</td><td>1</td><td>3</td><td>6</td><td>4</td><td>0</td><td>2</td></tr>
-                    <tr><td>1</td><td>2</td><td>6</td><td>4</td><td>0</td><td>5</td><td>3</td></tr>
-                    <tr><td>4</td><td>0</td><td>5</td><td>1</td><td>3</td><td>2</td><td>6</td></tr>
-                    <tr><td>3</td><td>5</td><td>2</td><td>0</td><td>1</td><td>6</td><td>4</td></tr>
-                    <tr><td>0</td><td>3</td><td>4</td><td>2</td><td>6</td><td>1</td><td>5</td></tr>
-                    <tr><td>6</td><td>4</td><td>0</td><td>5</td><td>2</td><td>3</td><td>1</td></tr>
-                    <tr><td>2</td><td>6</td><td>1</td><td>3</td><td>5</td><td>4</td><td>0</td></tr>
-                </table>
+                <div class="hstack"><button class="fliphoriz">↔</button> <button class="flipvert">↕</button> <button class="reset">0</button></div>
+                <div class="grid"></div>
                 <br>
                 <p>Convert each digit individually into its 3-bit binary representation. Keep all leading zeroes. Prepend this binary sequence with a 1.</p>
                 <p>For each bit, perform the first condition that applies to the current string of actions</p>
