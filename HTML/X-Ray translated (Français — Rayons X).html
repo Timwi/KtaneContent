@@ -7,239 +7,10 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/X-Ray.css">
     <script src="js/ktane-utils.js"></script>
     <script src='js/ruleseed.js'></script>
-    <script>
-        function setDefaultRules(rnd)
-        {
-            var convert = "a1,a1 flipped,b1,b1 flipped,c1,c1 flipped,d1,d1 flipped,e1,e1 flipped,h2 flipped,h2,d7,j1,h6,g1,a6,a2,k2,h1,a7,e2,d6,b3,a10,b10,c10,d10,e10,f10,i10,h9,i9".split(',');
-
-            var list1 = Array.from(document.querySelectorAll('.xray-table-1 td>.icon'));
-            for (var i = 0; i < 9; i++)
-                list1[i].className = 'icon ' + convert[i + 24];
-
-            var list2 = Array.from(document.querySelectorAll('.xray-table-2 th>.icon'));
-            for (var i = 0; i < 24; i++)
-                list2[i].className = 'icon ' + convert[i];
-
-            generateGrid(rnd);
-        }
-
-        function numbers(n)
-        {
-            var arr = [];
-            for (var i = 0; i < n; i++)
-                arr.push(i);
-            return arr;
-        }
-
-        function setRules(rnd)
-        {
-            // Decide on the icons for the 3×3 table up top
-            var smallTable = rnd.shuffleFisherYates(numbers(22)).slice(0, 9).map(x => ({ icon: x + 88, flipped: false }));
-
-            // For the rows, we can use any non-symmetric icon
-            var rows = rnd.shuffleFisherYates(numbers(88)).slice(0, 12).map(x => ({ icon: x, flipped: x < 55 ? rnd.next(0, 2) != 0 : false }));
-
-            // For the columns, we can only use flippable icons that we haven’t already used for rows
-            var columnsRaw = rnd.shuffleFisherYates(numbers(55).filter(x => rows.filter(r => r.icon === x).length === 0));
-            var columns = [];
-            for (var i = 0; i < 6; i++)
-            {
-                var f = rnd.next(0, 2);
-                columns.push({ icon: columnsRaw[i], flipped: f === 0 });
-                columns.push({ icon: columnsRaw[i], flipped: f === 1 });
-            }
-
-            var list1 = Array.from(document.querySelectorAll('.xray-table-1 td>.icon'));
-            var list2 = Array.from(document.querySelectorAll('.xray-table-2 th>.icon'));
-
-            function convert(icon)
-            {
-                return String.fromCharCode(97 + (icon.icon % 11)) + (Math.floor(icon.icon / 11) + 1) + (icon.flipped ? ' flipped' : '');
-            }
-
-            for (var i = 0; i < 9; i++)
-                list1[i].className = 'icon ' + convert(smallTable[i]);
-            for (var i = 0; i < 24; i++)
-                list2[i].className = 'icon ' + convert(i < 12 ? columns[i] : rows[i-12]);
-            generateGrid(rnd);
-        }
-
-        function generateGrid(rnd)
-        {
-            var list = Array.from(document.querySelectorAll('.xray-table-2 td:not(.corner)'));
-            var grid = [];
-            for (var i = 0; i < 144; i++)
-            {
-                var nmbrs = [];
-                var x = i % 12;
-                var y = (i / 12) | 0;
-                for (var j = 0; j < 5; j++)
-                    if ((x == 0 || j != grid[i - 1]) &&
-                        (y == 0 || j != grid[i - 12]) &&
-                        (x == 0 || y == 0 || j != grid[i - 13]))
-                        nmbrs.push(j);
-                var n = nmbrs[rnd.next(0, nmbrs.length)];
-                grid.push(n);
-                list[i].innerText = n + 1;
-            }
-        }
-    </script>
-    <style>
-        .xray-table-1 {
-            float: right;
-            margin-left: 1em;
-        }
-
-        .dark .xray-table-2, .xray-table-2 {
-            width: 100%;
-            clear: both;
-            border: none;
-        }
-
-            .xray-table-2 th, .xray-table-1 td {
-                text-align: center;
-                line-height: 0;
-                padding: .25em .4em;
-            }
-            .xray-table-2 td {
-                text-align: center;
-                padding: .2em .1em 0;
-                font-size: 20pt;
-            }
-
-            .xray-table th {
-                border-width: 3px;
-            }
-
-        ul {
-            padding-left: 1em;
-        }
-
-        .icon {
-            display: inline-block;
-            width: .9cm;
-            height: .9cm;
-            background-size: 9.9cm 9cm;
-            background-repeat: no-repeat;
-            background-image: url('img/X-Ray/Icons.svg');
-        }
-        .icon.flipped { transform: scaleY(-1); }
-        .dark .icon { filter: invert(87%); }
-        /*!!*/
-        .icon.a1 { background-position: 0cm 0cm; }
-        .icon.b1 { background-position: -0.9cm 0cm; }
-        .icon.c1 { background-position: -1.8cm 0cm; }
-        .icon.d1 { background-position: -2.7cm 0cm; }
-        .icon.e1 { background-position: -3.6cm 0cm; }
-        .icon.f1 { background-position: -4.5cm 0cm; }
-        .icon.g1 { background-position: -5.4cm 0cm; }
-        .icon.h1 { background-position: -6.3cm 0cm; }
-        .icon.i1 { background-position: -7.2cm 0cm; }
-        .icon.j1 { background-position: -8.1cm 0cm; }
-        .icon.k1 { background-position: -9cm 0cm; }
-        .icon.a2 { background-position: 0cm -0.9cm; }
-        .icon.b2 { background-position: -0.9cm -0.9cm; }
-        .icon.c2 { background-position: -1.8cm -0.9cm; }
-        .icon.d2 { background-position: -2.7cm -0.9cm; }
-        .icon.e2 { background-position: -3.6cm -0.9cm; }
-        .icon.f2 { background-position: -4.5cm -0.9cm; }
-        .icon.g2 { background-position: -5.4cm -0.9cm; }
-        .icon.h2 { background-position: -6.3cm -0.9cm; }
-        .icon.i2 { background-position: -7.2cm -0.9cm; }
-        .icon.j2 { background-position: -8.1cm -0.9cm; }
-        .icon.k2 { background-position: -9cm -0.9cm; }
-        .icon.a3 { background-position: 0cm -1.8cm; }
-        .icon.b3 { background-position: -0.9cm -1.8cm; }
-        .icon.c3 { background-position: -1.8cm -1.8cm; }
-        .icon.d3 { background-position: -2.7cm -1.8cm; }
-        .icon.e3 { background-position: -3.6cm -1.8cm; }
-        .icon.f3 { background-position: -4.5cm -1.8cm; }
-        .icon.g3 { background-position: -5.4cm -1.8cm; }
-        .icon.h3 { background-position: -6.3cm -1.8cm; }
-        .icon.i3 { background-position: -7.2cm -1.8cm; }
-        .icon.j3 { background-position: -8.1cm -1.8cm; }
-        .icon.k3 { background-position: -9cm -1.8cm; }
-        .icon.a4 { background-position: 0cm -2.7cm; }
-        .icon.b4 { background-position: -0.9cm -2.7cm; }
-        .icon.c4 { background-position: -1.8cm -2.7cm; }
-        .icon.d4 { background-position: -2.7cm -2.7cm; }
-        .icon.e4 { background-position: -3.6cm -2.7cm; }
-        .icon.f4 { background-position: -4.5cm -2.7cm; }
-        .icon.g4 { background-position: -5.4cm -2.7cm; }
-        .icon.h4 { background-position: -6.3cm -2.7cm; }
-        .icon.i4 { background-position: -7.2cm -2.7cm; }
-        .icon.j4 { background-position: -8.1cm -2.7cm; }
-        .icon.k4 { background-position: -9cm -2.7cm; }
-        .icon.a5 { background-position: 0cm -3.6cm; }
-        .icon.b5 { background-position: -0.9cm -3.6cm; }
-        .icon.c5 { background-position: -1.8cm -3.6cm; }
-        .icon.d5 { background-position: -2.7cm -3.6cm; }
-        .icon.e5 { background-position: -3.6cm -3.6cm; }
-        .icon.f5 { background-position: -4.5cm -3.6cm; }
-        .icon.g5 { background-position: -5.4cm -3.6cm; }
-        .icon.h5 { background-position: -6.3cm -3.6cm; }
-        .icon.i5 { background-position: -7.2cm -3.6cm; }
-        .icon.j5 { background-position: -8.1cm -3.6cm; }
-        .icon.k5 { background-position: -9cm -3.6cm; }
-        .icon.a6 { background-position: 0cm -4.5cm; }
-        .icon.b6 { background-position: -0.9cm -4.5cm; }
-        .icon.c6 { background-position: -1.8cm -4.5cm; }
-        .icon.d6 { background-position: -2.7cm -4.5cm; }
-        .icon.e6 { background-position: -3.6cm -4.5cm; }
-        .icon.f6 { background-position: -4.5cm -4.5cm; }
-        .icon.g6 { background-position: -5.4cm -4.5cm; }
-        .icon.h6 { background-position: -6.3cm -4.5cm; }
-        .icon.i6 { background-position: -7.2cm -4.5cm; }
-        .icon.j6 { background-position: -8.1cm -4.5cm; }
-        .icon.k6 { background-position: -9cm -4.5cm; }
-        .icon.a7 { background-position: 0cm -5.4cm; }
-        .icon.b7 { background-position: -0.9cm -5.4cm; }
-        .icon.c7 { background-position: -1.8cm -5.4cm; }
-        .icon.d7 { background-position: -2.7cm -5.4cm; }
-        .icon.e7 { background-position: -3.6cm -5.4cm; }
-        .icon.f7 { background-position: -4.5cm -5.4cm; }
-        .icon.g7 { background-position: -5.4cm -5.4cm; }
-        .icon.h7 { background-position: -6.3cm -5.4cm; }
-        .icon.i7 { background-position: -7.2cm -5.4cm; }
-        .icon.j7 { background-position: -8.1cm -5.4cm; }
-        .icon.k7 { background-position: -9cm -5.4cm; }
-        .icon.a8 { background-position: 0cm -6.3cm; }
-        .icon.b8 { background-position: -0.9cm -6.3cm; }
-        .icon.c8 { background-position: -1.8cm -6.3cm; }
-        .icon.d8 { background-position: -2.7cm -6.3cm; }
-        .icon.e8 { background-position: -3.6cm -6.3cm; }
-        .icon.f8 { background-position: -4.5cm -6.3cm; }
-        .icon.g8 { background-position: -5.4cm -6.3cm; }
-        .icon.h8 { background-position: -6.3cm -6.3cm; }
-        .icon.i8 { background-position: -7.2cm -6.3cm; }
-        .icon.j8 { background-position: -8.1cm -6.3cm; }
-        .icon.k8 { background-position: -9cm -6.3cm; }
-        .icon.a9 { background-position: 0cm -7.2cm; }
-        .icon.b9 { background-position: -0.9cm -7.2cm; }
-        .icon.c9 { background-position: -1.8cm -7.2cm; }
-        .icon.d9 { background-position: -2.7cm -7.2cm; }
-        .icon.e9 { background-position: -3.6cm -7.2cm; }
-        .icon.f9 { background-position: -4.5cm -7.2cm; }
-        .icon.g9 { background-position: -5.4cm -7.2cm; }
-        .icon.h9 { background-position: -6.3cm -7.2cm; }
-        .icon.i9 { background-position: -7.2cm -7.2cm; }
-        .icon.j9 { background-position: -8.1cm -7.2cm; }
-        .icon.k9 { background-position: -9cm -7.2cm; }
-        .icon.a10 { background-position: 0cm -8.1cm; }
-        .icon.b10 { background-position: -0.9cm -8.1cm; }
-        .icon.c10 { background-position: -1.8cm -8.1cm; }
-        .icon.d10 { background-position: -2.7cm -8.1cm; }
-        .icon.e10 { background-position: -3.6cm -8.1cm; }
-        .icon.f10 { background-position: -4.5cm -8.1cm; }
-        .icon.g10 { background-position: -5.4cm -8.1cm; }
-        .icon.h10 { background-position: -6.3cm -8.1cm; }
-        .icon.i10 { background-position: -7.2cm -8.1cm; }
-        .icon.j10 { background-position: -8.1cm -8.1cm; }
-        .icon.k10 { background-position: -9cm -8.1cm; }
-        /*!!!*/
-    </style>
+    <script src='js/Modules/X-Ray.js'></script>
 </head>
 <body>
     <div class="section">
@@ -268,7 +39,26 @@
                         Presser le bouton dont le symbole correspond à cette nouvelle position.</li>
                 </ul>
 
-                <table class="xray-table xray-table-2"><tbody><tr><td class="corner"></td><th><div class="icon a1"></div></th><th><div class="icon a1 flipped"></div></th><th><div class="icon b1"></div></th><th><div class="icon b1 flipped"></div></th><th><div class="icon c1"></div></th><th><div class="icon c1 flipped"></div></th><th><div class="icon d1"></div></th><th><div class="icon d1 flipped"></div></th><th><div class="icon e1"></div></th><th><div class="icon e1 flipped"></div></th><th><div class="icon h2 flipped"></div></th><th><div class="icon h2"></div></th></tr><tr><th><div class="icon d7"></div></th><td>2</td><td>1</td><td>5</td><td>2</td><td>5</td><td>2</td><td>5</td><td>3</td><td>5</td><td>2</td><td>5</td><td>3</td></tr><tr><th><div class="icon j1"></div></th><td>4</td><td>5</td><td>4</td><td>3</td><td>4</td><td>3</td><td>4</td><td>2</td><td>1</td><td>4</td><td>3</td><td>2</td></tr><tr><th><div class="icon h6"></div></th><td>2</td><td>3</td><td>1</td><td>5</td><td>2</td><td>1</td><td>5</td><td>1</td><td>3</td><td>2</td><td>1</td><td>4</td></tr><tr><th><div class="icon g1"></div></th><td>4</td><td>1</td><td>4</td><td>3</td><td>4</td><td>3</td><td>2</td><td>4</td><td>2</td><td>1</td><td>3</td><td>5</td></tr><tr><th><div class="icon a6"></div></th><td>3</td><td>2</td><td>5</td><td>2</td><td>1</td><td>2</td><td>5</td><td>1</td><td>5</td><td>4</td><td>5</td><td>2</td></tr><tr><th><div class="icon a2"></div></th><td>4</td><td>5</td><td>1</td><td>4</td><td>3</td><td>5</td><td>3</td><td>2</td><td>3</td><td>2</td><td>3</td><td>4</td></tr><tr><th><div class="icon k2"></div></th><td>2</td><td>3</td><td>2</td><td>3</td><td>5</td><td>4</td><td>2</td><td>1</td><td>4</td><td>1</td><td>4</td><td>2</td></tr><tr><th><div class="icon h1"></div></th><td>4</td><td>5</td><td>1</td><td>4</td><td>2</td><td>3</td><td>5</td><td>4</td><td>3</td><td>5</td><td>2</td><td>1</td></tr><tr><th><div class="icon a7"></div></th><td>5</td><td>2</td><td>3</td><td>2</td><td>3</td><td>4</td><td>1</td><td>2</td><td>1</td><td>2</td><td>4</td><td>5</td></tr><tr><th><div class="icon e2"></div></th><td>2</td><td>4</td><td>1</td><td>5</td><td>1</td><td>2</td><td>5</td><td>3</td><td>4</td><td>3</td><td>5</td><td>1</td></tr><tr><th><div class="icon d6"></div></th><td>5</td><td>3</td><td>5</td><td>3</td><td>2</td><td>3</td><td>1</td><td>4</td><td>2</td><td>5</td><td>2</td><td>4</td></tr><tr><th><div class="icon b3"></div></th><td>2</td><td>4</td><td>1</td><td>2</td><td>1</td><td>5</td><td>4</td><td>3</td><td>5</td><td>4</td><td>3</td><td>5</td></tr></tbody></table>
+                <table class="xray-table xray-table-2">
+                    <tr>
+                        <td class="corner"></td><th><div class="icon a1"></div></th><th><div class="icon a1 flipped"></div></th><th><div class="icon b1"></div></th>
+                        <th><div class="icon b1 flipped"></div></th><th><div class="icon c1"></div></th><th><div class="icon c1 flipped"></div></th>
+                        <th><div class="icon d1"></div></th><th><div class="icon d1 flipped"></div></th><th><div class="icon e1"></div></th>
+                        <th><div class="icon e1 flipped"></div></th><th><div class="icon h2 flipped"></div></th><th><div class="icon h2"></div></th>
+                    </tr>
+                    <tr><th><div class="icon d7"></div></th><td>2</td><td>1</td><td>5</td><td>2</td><td>5</td><td>2</td><td>5</td><td>3</td><td>5</td><td>2</td><td>5</td><td>3</td></tr>
+                    <tr><th><div class="icon j1"></div></th><td>4</td><td>5</td><td>4</td><td>3</td><td>4</td><td>3</td><td>4</td><td>2</td><td>1</td><td>4</td><td>3</td><td>2</td></tr>
+                    <tr><th><div class="icon h6"></div></th><td>2</td><td>3</td><td>1</td><td>5</td><td>2</td><td>1</td><td>5</td><td>1</td><td>3</td><td>2</td><td>1</td><td>4</td></tr>
+                    <tr><th><div class="icon g1"></div></th><td>4</td><td>1</td><td>4</td><td>3</td><td>4</td><td>3</td><td>2</td><td>4</td><td>2</td><td>1</td><td>3</td><td>5</td></tr>
+                    <tr><th><div class="icon a6"></div></th><td>3</td><td>2</td><td>5</td><td>2</td><td>1</td><td>2</td><td>5</td><td>1</td><td>5</td><td>4</td><td>5</td><td>2</td></tr>
+                    <tr><th><div class="icon a2"></div></th><td>4</td><td>5</td><td>1</td><td>4</td><td>3</td><td>5</td><td>3</td><td>2</td><td>3</td><td>2</td><td>3</td><td>4</td></tr>
+                    <tr><th><div class="icon k2"></div></th><td>2</td><td>3</td><td>2</td><td>3</td><td>5</td><td>4</td><td>2</td><td>1</td><td>4</td><td>1</td><td>4</td><td>2</td></tr>
+                    <tr><th><div class="icon h1"></div></th><td>4</td><td>5</td><td>1</td><td>4</td><td>2</td><td>3</td><td>5</td><td>4</td><td>3</td><td>5</td><td>2</td><td>1</td></tr>
+                    <tr><th><div class="icon a7"></div></th><td>5</td><td>2</td><td>3</td><td>2</td><td>3</td><td>4</td><td>1</td><td>2</td><td>1</td><td>2</td><td>4</td><td>5</td></tr>
+                    <tr><th><div class="icon e2"></div></th><td>2</td><td>4</td><td>1</td><td>5</td><td>1</td><td>2</td><td>5</td><td>3</td><td>4</td><td>3</td><td>5</td><td>1</td></tr>
+                    <tr><th><div class="icon d6"></div></th><td>5</td><td>3</td><td>5</td><td>3</td><td>2</td><td>3</td><td>1</td><td>4</td><td>2</td><td>5</td><td>2</td><td>4</td></tr>
+                    <tr><th><div class="icon b3"></div></th><td>2</td><td>4</td><td>1</td><td>2</td><td>1</td><td>5</td><td>4</td><td>3</td><td>5</td><td>4</td><td>3</td><td>5</td></tr>
+                </table>
             </div>
             <div class="page-footer relative-footer">Page 1 / 1</div>
         </div>
