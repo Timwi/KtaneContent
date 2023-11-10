@@ -8,6 +8,102 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let defaultRules = [
+            // Stage 1
+            "the left button",
+            "the top button",
+            "Green",
+            "Red",
+            // Stage 2
+            "the button opposite to the button pressed in stage 1",
+            "the same button pressed in stage 1",
+            "the bottom button",
+            "Blue",
+            // Stage 3
+            "the button one clockwise to the button pressed in stage 1",
+            "the button one counter-clockwise to the button pressed in stage 2",
+            "the button one clockwise to the button pressed in stage 2",
+            "the button one counter-clockwise to the button pressed in stage 1",
+            // Stage 4
+            "the button one clockwise to the button pressed in stage 3",
+            "the button one clockwise to the button pressed in stage 2",
+            "the button one clockwise to the button pressed in stage 1",
+            "the button one counter-clockwise to the button pressed in stage 3",
+            // Stage 5
+            "the same button that was pressed in stage 4",
+            "the top button",
+            "Yellow",
+            "the button opposite to the button pressed in stage 2",
+            // Stage 6
+            "the same button that was pressed in stage 3",
+            "the button one clockwise to the button pressed in stage 5",
+            "Green",
+            "Yellow",
+        ];
+        let curRules = [];
+        function setRules(rng)
+        {
+            curRules = [];
+            let offsetRules = [ "the button one clockwise to ","the button one counter-clockwise to ","","the button opposite to " ];
+            let substitutionOptions = [
+                [["the XXX button"], ["top","left","right","bottom"]],
+                [["XXX"], ["Red","Blue","Green","Yellow"]],
+                [["the button pressed in stage XXX"], ["1","2","3","4","5"]],
+            ];
+            let idxRestrictions = [
+                [ 0, 0, 0, 0, 1, 1, 1, 1 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2, 2 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2 ],
+                [ 0, 0, 1, 1, 2, 2, 2, 2 ],
+                [ 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 ],
+                ];
+            for (let x = 0; x < 6; x++)
+            {
+                let curListShuffled = rng.shuffleFisherYates(idxRestrictions[x]);
+                for (let p = 0; p < 4; p++)
+                {
+                    let resultingString = "XXX";
+                    let idxRulePicked = curListShuffled[p];
+                    let curInstructionBatch = substitutionOptions[idxRulePicked];
+                    let stageDetected = false;
+                    for (let y = 0; y < curInstructionBatch.length; y++)
+                    {
+                        let optionsAllowed = curInstructionBatch[y];
+                        if (stageDetected)
+                        {
+                            optionsAllowed = optionsAllowed.slice(0, x);
+                            let pickedVal = rng.next(0, 4);
+                            if (pickedVal == 2)
+                                resultingString = resultingString.replace("button", "same button");
+                            else
+                                resultingString = offsetRules[pickedVal] + resultingString;
+                        }
+                        let pickedOption = optionsAllowed[rng.next(0, optionsAllowed.length)];
+                        if (y == 0 && idxRulePicked == 2)
+                            stageDetected = true;
+                        resultingString = resultingString.replace("XXX",pickedOption);
+                    }
+                    curRules.push(resultingString);
+                }
+            }
+            UpdateManual();
+        }
+        function setDefaultRules()
+        {
+            curRules = defaultRules;
+            UpdateManual();
+        }
+        function UpdateManual()
+        {
+            let allRSSpans = $(".seedable");
+            for (let x = 0; x < allRSSpans.length; x++)
+                allRSSpans[x].innerText = curRules[x];
+        }
+    </script>
     <style>
         h4, ul {
             font-size: 15.5px;
@@ -30,34 +126,34 @@
 
                 <h4>STAGE 1:</h4>
                 <ul>
-                    <li>If Red flashed, press the left button.</li>
-                    <li>If Blue flashed, press the top button.</li>
-                    <li>If Green flashed, press Green.</li>
-                    <li>If Yellow flashed press Red.</li>
+                    <li>If Red flashed, press <span class="seedable">the left button</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the top button</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">Green</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">Red</span>.</li>
                 </ul>
                 
                 <h4>STAGE 2:</h4>
                 <ul>
-                    <li>If Red flashed, press the button opposite to the button pressed in Stage 1.</li>
-                    <li>If Blue flashed, press the same button pressed in Stage 1.</li>
-                    <li>If Green flashed, press the bottom button.</li>
-                    <li>If Yellow flashed, press blue.</li>
+                    <li>If Red flashed, press <span class="seedable">the button opposite to the button pressed in stage 1</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the same button pressed in stage 1</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">the bottom button</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">Blue</span>.</li>
                 </ul>
                 
                 <h4>STAGE 3:</h4>
                 <ul>
-                    <li>If Red flashed, press the button one clockwise to the button pressed in stage 1.</li>
-                    <li>If Blue flashed, press the button one counter-clockwise to the button pressed in stage 2.</li>
-                    <li>If Green flashed, press the button one clockwise to the button pressed in stage 2.</li>
-                    <li>If Yellow flashed, press the button one counter-clockwise to the button pressed in stage 1.</li>
+                    <li>If Red flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 1</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the button one counter-clockwise to the button pressed in stage 2</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 2</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">the button one counter-clockwise to the button pressed in stage 1</span>.</li>
                 </ul>
                 
                 <h4>STAGE 4:</h4>
                 <ul>
-                    <li>If Red flashed, press the button one clockwise to the button pressed in stage 3.</li>
-                    <li>If Blue flashed, press the button one clockwise to the button pressed in stage 2.</li>
-                    <li>If Green flashed, press the button one clockwise to the button pressed in stage 1.</li>
-                    <li>If Yellow flashed, press the button one counter-clockwise to the button pressed in stage 3.</li>
+                    <li>If Red flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 3</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 2</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 1</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">the button one counter-clockwise to the button pressed in stage 3</span>.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
@@ -70,18 +166,18 @@
             <div class="page-content">
                 <h4>STAGE 5:</h4>
                 <ul>
-                    <li>If Red flashed, press the same button that was pressed in stage 4.</li>
-                    <li>If Blue flashed, press the top button.</li>
-                    <li>If Green flashed, press Yellow.</li>
-                    <li>If Yellow flashed, press the button opposite to the button pressed in stage 2.</li>
+                    <li>If Red flashed, press <span class="seedable">the same button that was pressed in stage 4</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the top button</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">Yellow</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">the button opposite to the button pressed in stage 2</span>.</li>
                 </ul>
                 
                 <h4>STAGE 6:</h4>
                 <ul>
-                    <li>If Red flashed, press the same button that was pressed in stage 3.</li>
-                    <li>If Blue flashed, press the button one clockwise to the button pressed in stage 5.</li>
-                    <li>If Green flashed, press Green.</li>
-                    <li>If Yellow flashed, press Yellow.</li>
+                    <li>If Red flashed, press <span class="seedable">the same button that was pressed in stage 3</span>.</li>
+                    <li>If Blue flashed, press <span class="seedable">the button one clockwise to the button pressed in stage 5</span>.</li>
+                    <li>If Green flashed, press <span class="seedable">Green</span>.</li>
+                    <li>If Yellow flashed, press <span class="seedable">Yellow</span>.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
