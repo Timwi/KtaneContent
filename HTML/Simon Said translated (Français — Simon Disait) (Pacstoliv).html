@@ -8,6 +8,102 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let defaultRules = [
+            // Stage 1
+            "le bouton de gauche",
+            "le bouton du haut",
+            "le bouton Vert",
+            "le bouton Rouge",
+            // Stage 2
+            "le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 1",
+            "le même bouton qu’à l’étape 1",
+            "le bouton du bas",
+            "le bouton Bleu",
+            // Stage 3
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1",
+            "le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 2",
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2",
+            "le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 1",
+            // Stage 4
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 3",
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2",
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1",
+            "le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 3",
+            // Stage 5
+            "le même bouton qu’à l’étape 4",
+            "le bouton du haut",
+            "le bouton Jaune",
+            "le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 2",
+            // Stage 6
+            "le même bouton qu’à l’étape 3",
+            "le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 5",
+            "le bouton Vert",
+            "le bouton Jaune",
+        ];
+        let curRules = [];
+        function setRules(rng)
+        {
+            curRules = [];
+            let offsetRules = [ "le bouton se trouvant, dans le sens horaire, à côté du ","le bouton se trouvant, dans le sens anti-horaire, à côté du ","","le bouton se trouvant à l’opposé du " ];
+            let substitutionOptions = [
+                [["le bouton XXX"], ["du haut","de gauche","de droite","du bas"]],
+                [["le bouton XXX"], ["Rouge","Bleu","Vert","Jaune"]],
+                [["bouton pressé lors de l’étape XXX"], ["1","2","3","4","5"]],
+            ];
+            let idxRestrictions = [
+                [ 0, 0, 0, 0, 1, 1, 1, 1 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2, 2 ],
+                [ 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2 ],
+                [ 0, 0, 1, 1, 2, 2, 2, 2 ],
+                [ 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 ],
+                ];
+            for (let x = 0; x < 6; x++)
+            {
+                let curListShuffled = rng.shuffleFisherYates(idxRestrictions[x]);
+                for (let p = 0; p < 4; p++)
+                {
+                    let resultingString = "XXX";
+                    let idxRulePicked = curListShuffled[p];
+                    let curInstructionBatch = substitutionOptions[idxRulePicked];
+                    let stageDetected = false;
+                    for (let y = 0; y < curInstructionBatch.length; y++)
+                    {
+                        let optionsAllowed = curInstructionBatch[y];
+                        if (stageDetected)
+                        {
+                            optionsAllowed = optionsAllowed.slice(0, x);
+                            let pickedVal = rng.next(0, 4);
+                            if (pickedVal == 2)
+                                resultingString = resultingString.replace("bouton", "le même bouton");
+                            else
+                                resultingString = offsetRules[pickedVal] + resultingString;
+                        }
+                        let pickedOption = optionsAllowed[rng.next(0, optionsAllowed.length)];
+                        if (y == 0 && idxRulePicked == 2)
+                            stageDetected = true;
+                        resultingString = resultingString.replace("XXX",pickedOption);
+                    }
+                    curRules.push(resultingString);
+                }
+            }
+            UpdateManual();
+        }
+        function setDefaultRules()
+        {
+            curRules = defaultRules;
+            UpdateManual();
+        }
+        function UpdateManual()
+        {
+            let allRSSpans = $(".seedable");
+            for (let x = 0; x < allRSSpans.length; x++)
+                allRSSpans[x].innerText = curRules[x];
+        }
+    </script>
     <style>
         h4, ul {
             font-size: 15.5px;
@@ -25,38 +121,39 @@
                 <img src="img/Component/Simon Said.svg" class="diagram">
                 <h2>À propos du Simon Disait</h2>
                 <p class="flavour-text">C’est quoi la dernière couleur que t’as pressée ? Ok presse la même couleur.</p>
+
                 <p>Ce module consiste en 4 boutons de 4 couleurs : Rouge, Bleu, Vert, et Jaune. Un bouton clignotera et le désamorceur doit presser une couleur en se basant sur les critères ci-dessous. À chaque étape, considérer l’ensemble de la séquence lumineuse. Si un bouton incorrect est pressé, une erreur sera enregistrée et le module se réinitialisera à l’étape 1.</p>
 
                 <h4>ÉTAPE 1 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le bouton de gauche.</li>
-                    <li>Si Bleu clignote, presser le bouton du haut.</li>
-                    <li>Si Vert clignote, presser le bouton Vert.</li>
-                    <li>Si Jaune clignote, presser le bouton Rouge.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le bouton de gauche</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le bouton du haut</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton Vert</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton Rouge</span>.</li>
                 </ul>
                 
                 <h4>ÉTAPE 2 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 1.</li>
-                    <li>Si Bleu clignote, presser le même bouton qu’à l’étape 1.</li>
-                    <li>Si Vert clignote, presser le bouton du bas.</li>
-                    <li>Si Jaune clignote, presser le bouton Bleu.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 1</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le même bouton qu’à l’étape 1</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton du bas</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton Bleu</span>.</li>
                 </ul>
                 
                 <h4>ÉTAPE 3 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1.</li>
-                    <li>Si Bleu clignote, presser le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 2.</li>
-                    <li>Si Vert clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2.</li>
-                    <li>Si Jaune clignote, presser le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 1.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 2</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 1</span>.</li>
                 </ul>
                 
                 <h4>ÉTAPE 4 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 3.</li>
-                    <li>Si Bleu clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2.</li>
-                    <li>Si Vert clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1.</li>
-                    <li>Si Jaune clignote, presser le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 3.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 3</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 2</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 1</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton se trouvant, dans le sens anti-horaire, à côté du bouton pressé lors de l’étape 3</span>.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 1 sur 2</div>
@@ -69,18 +166,18 @@
             <div class="page-content">
                 <h4>ÉTAPE 5 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le même bouton qu’à l’étape 4.</li>
-                    <li>Si Bleu clignote, presser le bouton du haut.</li>
-                    <li>Si Vert clignote, presser le bouton Jaune.</li>
-                    <li>Si Jaune clignote, presser le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 2.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le même bouton qu’à l’étape 4</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le bouton du haut</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton Jaune</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton se trouvant à l’opposé du bouton pressé lors de l’étape 2</span>.</li>
                 </ul>
                 
                 <h4>ÉTAPE 6 :</h4>
                 <ul>
-                    <li>Si Rouge clignote, presser le même bouton qu’à l’étape 3.</li>
-                    <li>Si Bleu clignote, presser le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 5.</li>
-                    <li>Si Vert clignote, presser le bouton Vert.</li>
-                    <li>Si Jaune clignote, presser le bouton Jaune.</li>
+                    <li>Si Rouge clignote, presser <span class="seedable">le même bouton qu’à l’étape 3</span>.</li>
+                    <li>Si Bleu clignote, presser <span class="seedable">le bouton se trouvant, dans le sens horaire, à côté du bouton pressé lors de l’étape 5</span>.</li>
+                    <li>Si Vert clignote, presser <span class="seedable">le bouton Vert</span>.</li>
+                    <li>Si Jaune clignote, presser <span class="seedable">le bouton Jaune</span>.</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 2 sur 2</div>
