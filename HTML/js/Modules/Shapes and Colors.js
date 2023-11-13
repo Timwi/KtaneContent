@@ -21,7 +21,7 @@ $(function() {
                     svg.append(shape);
                 }
                 else if (descs[1] == "cir") {
-                    let shape = MakeSvgElem("circle", { class:`shape ${descs[0]}`, cx:(x*100 + offs), cy:(y*100  + offs), r:33 });
+                    let shape = MakeSvgElem("circle", { class:`shape ${descs[0]}`, cx:(x*100 + offs), cy:(y*100 + offs), r:33 });
                     svg.append(shape);
                 }
                 else if (descs[1] == "x") {
