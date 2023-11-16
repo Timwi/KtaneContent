@@ -13319,6 +13319,10 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "queensWarModule",
+		loggingTag: "Queen’s War"
+	},
+	{
 		displayName: "Quintuples",
 		moduleID: "quintuples",
 		loggingTag: "Quintuples",
@@ -17962,15 +17966,16 @@ let parseData = [
 						module.Infos = [];
 
 						let svg = module[0].obj[0];
+						svg.classList.add("voronoi-maze");
 						let controlsDiv = document.createElement('div');
 						controlsDiv.innerHTML = `
 							<button type='button' class='left' style='position: absolute; left: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>◀</button>
 							<button type='button' class='right' style='position: absolute; right: .1cm; top: 50%; transform: translateY(-50%); background: #ccf; border: 1px solid #88d; width: 1cm; height: 1cm; text-align: center;'>▶</button>
-							<div class='info1' style='text-align: center'></div>
-							<div class='info2' style='text-align: center'></div>
-							<div class='info3' style='text-align: center'></div>
+							<div class='info info1' style='text-align: center'></div>
+							<div class='info info2' style='text-align: center'></div>
+							<div class='info info3' style='text-align: center'></div>
 						`;
-						controlsDiv.setAttribute('style', 'position: relative; background: #eef; padding: .1cm .25cm; margin: 0 auto .5cm; width: 12cm;');
+						controlsDiv.classList.add("voronoi-maze");
 						let info1 = controlsDiv.querySelector('.info1');
 						let info2 = controlsDiv.querySelector('.info2');
 						let info3 = controlsDiv.querySelector('.info3');
