@@ -5586,52 +5586,47 @@ let parseData = [
 		loggingTag: "Forget Them All",
 		matches: [
 			{
-				regex: /--------------------------- Stage (\d+) ---------------------------/,
+				regex: /^-{27} Stage (\d+) -{27}$/,
 				handler: function (matches, module) {
 					if (!module.stageDropdowns)
 						module.stageDropdowns = [];
 					const stage = parseInt(matches[1]);
-					const index = stage - 1;
 					module.stageDropdowns.push([`Stage ${stage}: ?`, []]);
-					module.push(module.stageDropdowns[index]);
+					module.push(module.stageDropdowns[stage - 1]);
 					return true;
 				}
 			},
 			{
-				regex: /Stage (\d+) LED: \[(.+)\]/,
-				handler: function (matches, module) {
-					const stage = parseInt(matches[1]);
-					const index = stage - 1;
-					const leds = `Displayed LEDS: ${matches[2].replaceAll(" ", ", ")}`;
-					module.stageDropdowns[index][1].push(leds);
-					return true;
-				}
-			},
-			{
-				regex: /Stage (\d+)'s corresponding module: (.+)/,
-				handler: function (matches, module) {
-					const stage = parseInt(matches[1]);
-					const index = stage - 1;
-					const moduleName = matches[2];
-					module.stageDropdowns[index][0] = `Stage ${stage}: ${moduleName}`;
-					return true;
-				}
-			},
-			{
-				regex: /Stage (\d+)'s Actual LED \(after evaluating broken\): \[(.+)\]/,
-				handler: function (matches, module) {
-					const stage = parseInt(matches[1]);
-					const index = stage - 1;
-					const leds = `Actual LEDS: ${matches[2].replaceAll(" ", ", ")}`;
-					module.stageDropdowns[index][1].push(leds);
-					return true;
-				}
-			},
-			{
-				regex: /Stage (\d+)'s corresponding module name contains "(.+)"\.(.+)./,
+				regex: /^Stage (\d+) LED: \[(.+)\]$/,
 				handler: function (matches, module) {
 					const index = parseInt(matches[1]) - 1;
-					module.stageDropdowns[index][1].push(matches[0]);
+					const leds = `Displayed LEDS: ${matches[2].replaceAll(" ", ", ")}.`;
+					module.stageDropdowns[index][1].push(leds);
+					return true;
+				}
+			},
+			{
+				regex: /^Stage (\d+)'s corresponding module: (.+)/,
+				handler: function (matches, module) {
+					const stage = parseInt(matches[1]);
+					module.stageDropdowns[stage - 1][0] = `Stage ${stage}: ${matches[2]}`;
+					return true;
+				}
+			},
+			{
+				regex: /^Stage (\d+)'s Actual LED \(after evaluating broken\): \[(.*)\]$/,
+				handler: function (matches, module) {
+					const index = parseInt(matches[1]) - 1;
+					const brokenLeds = matches[2].replaceAll(" ", ", ")
+					module.stageDropdowns[index][1].push(`Actual LEDS: ${brokenLeds !== "" ? brokenLeds : "none"}.`);
+					return true;
+				}
+			},
+			{
+				regex: /^Stage (\d+)'s corresponding module name contains/,
+				handler: function (matches, module) {
+					const index = parseInt(matches[1]) - 1;
+					module.stageDropdowns[index][1].push(matches.input);
 					return true;
 				}
 			},
@@ -5642,37 +5637,21 @@ let parseData = [
 					module.colorDropdown = [`Color values on ${matches[1] == "Solving" ? "solve" : "detonation"}`, []];
 					module.push(module.colorDropdown);
 					return true;
-
 				}
 			},
 			{
-				regex: /(.+) ocurrences: (\d+)\. Multiplier: (\d+)\. LED value: (\d+)\./,
+				regex: /(.+) ocurrences: (\d+)\. Multiplier: (\d+)\. LED value: (\d+)\.$/,
 				handler: function (matches, module) {
 					if (!module.answerDropdowns)
 						module.answerDropdowns = [];
-					const color = matches[1];
-					const occurrences = matches[2];
-					const multiplier = matches[3];
-					const ledValue = matches[4];
-					module.colorDropdown[1].push([`${color} value: ${ledValue}`, [`Occurrences: ${occurrences}`, `Multiplier: ${multiplier}`]]);
+					module.colorDropdown[1].push([`${matches[1]} value: ${matches[4]}`, [`Occurrences: ${matches[2]}`, `Multiplier: ${matches[3]}`]]);
 					return true;
 				}
 			},
 			{
-				regex: /(Wire cut order): \[(.+)\]/,
+				regex: /^(Wire cut order|The remaining wires to cut)(?: in order are)?: \[(.+)\]\.$/,
 				handler: function (matches, module) {
-					const words = matches[1];
-					const wires = matches[2].replaceAll(" ", ", ");
-					module.push(`${words}: ${wires}`);
-					return true;
-				}
-			},
-			{
-				regex: /(The remaining wires to cut) in order are: \[(.+)\]./,
-				handler: function (matches, module) {
-					const words = matches[1];
-					const wires = matches[2].replaceAll(" ", ", ");
-					module.push(`${words}: ${wires}`);
+					module.push(`${matches[1]}: ${matches[2].replaceAll(" ", ", ")}.`);
 					return true;
 				}
 			},
