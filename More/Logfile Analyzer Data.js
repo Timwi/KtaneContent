@@ -1505,6 +1505,34 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "AquariumModule",
+		loggingTag: "Aquarium",
+		matches: [
+			{
+				regex: /=svg\[Solution:\](.+)/,
+				handler: function (matches, module) {
+					let svg = matches[1];
+					const viewBoxDimension = svg.match(/<svg viewBox='-\.1 -1\.1 ([0-9]*(?:\.[0-9]+)?) ([0-9]*(?:\.[0-9]+)?)' xmlns='http:\/\/www\.w3\.org\/2000\/svg'/);
+
+					const board = $(`<svg viewBox='-.1 -1.1 ${viewBoxDimension[1]} ${viewBoxDimension[2]}' fill='none' font-size='1'>`);
+
+					const gridLineMatches = svg.match(/(<path d='([^']+)' stroke='black' stroke-width='.02' \/>)/g);
+					const outlineeMatches = svg.match(/(<path d='([^']+)' stroke='black' stroke-width='.07' \/>)/g);
+					const textMatches = svg.match(/<text x='-?(?:[0-9]*(?:\.[0-9]+)?)' y='-?(?:[0-9]*(?:\.[0-9]+)?)' text-anchor='(?:start|middle)' fill='black'>(?:\d)<\/text>/g);
+					const blueSquareMatches = svg.match(/<rect x='(?:\d)' y='(?:\d)' width='1' height='1' fill='#005EFA' \/>/g);
+
+					blueSquareMatches.map(line => $SVG(line).appendTo(board));
+					gridLineMatches.map(line => $SVG(line.replace(`stroke='black'`, `class="aquarium-line"`)).appendTo(board));
+					outlineeMatches.map(line => $SVG(line.replace(`stroke='black'`, `class="aquarium-line"`)).appendTo(board));
+					textMatches.map(line => $SVG(line.replace(`fill='black'`, `class="aquarium-number"`)).appendTo(board));
+
+					module.push({ label: "Solution:", obj: board });
+
+				}
+			}
+		]
+	},
+	{
 		moduleID: "TheArena",
 		loggingTag: "The Arena",
 		matches: [
