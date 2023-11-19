@@ -14214,6 +14214,43 @@ let parseData = [
 		]
 	},
 	{
+		moduleID : "technicalButtons",
+		loggingTag: "Technical Buttons",
+		matches: [
+			{
+				regex: /LED #0 is (.+)/,
+				handler: function (matches, module) {
+					const colors = [matches[1]].concat(readTaggedLines(3).map(line => line.match(/LED #(?:\d) is (.+)/)[1]));
+					module.buttons = readTaggedLines(8).map(line => [line.match(/Button #(?:\d) is .+/)[0], []]);
+					module.push(`LEDS in order: ${colors.join(", ")}`);
+					module.push(readTaggedLine());
+					module.buttons.forEach(button => module.push(button));
+					return true;
+				}
+			},
+			{
+				regex: /Button ID: (\d), Should be pressed: (.+)/,
+				handler: function (matches, module) {
+					module.buttons[matches[1]][1].push(`This button should ${matches[2] === "False" ? "NOT" : ""} be pressed`.replace("  ", " "));
+					return true;
+				}
+			},
+			{
+				regex: /Button ID: (\d), Button colour: (?:.+), Color occurrences: (\d)/,
+				handler: function (matches, module) {
+					const index = matches[1];
+					module.buttons[index][1].push(`Color occurrences: ${matches[2]}`);
+					const passedId = `Passed id: ${index}`;
+					if(readTaggedLine() === passedId)
+						module.buttons[index][1].push(passedId);
+					else
+						linen--;
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "The Samsung",
 		moduleID: "theSamsung",
 		loggingTag: "The Samsung",
