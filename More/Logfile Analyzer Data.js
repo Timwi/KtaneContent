@@ -2598,7 +2598,8 @@ let parseData = [
 				handler: function (matches, module) {
 					module.currentDropdown = ["Attempt 1", []];
 					module.attemptNum = 1;
-					module.push(matches[0]);
+					// module.push(`<span>${matches[0]}</span>`);
+					module.push($(`<span class="character-slots-underline">`).text(matches[0]));
 					module.push(module.currentDropdown);
 					return true;
 				}
