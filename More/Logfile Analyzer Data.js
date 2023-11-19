@@ -18901,6 +18901,13 @@ let parseData = [
 					let stacktrace = [];
 					while (true) {
 						let line = readLine();
+						// Check for a valid logging tag in case an exception is not immediately followed by an empty line
+						const match = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?(.+?)\]:? ?(.+)/.exec(line);
+						if (match && getModuleData(match[1])) {
+							// Insert an empty line where we were expecting one
+							lines.splice(linen, 0, "");
+							break;
+						}
 						if (line === "") break;
 
 						stacktrace.push(line);
