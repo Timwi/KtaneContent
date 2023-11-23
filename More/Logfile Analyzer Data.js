@@ -1089,25 +1089,6 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
-		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
-		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
-		matches: [
-			{
-				regex: /Solution:/,
-				handler: function (_, module) {
-					module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
-				}
-			},
-			{
-				regex: /You submitted:/,
-				handler: function (_, module) {
-					module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
-				}
-			}
-		]
-	},
-	{
 		displayName: "7",
 		loggingTag: "7",
 		moduleID: "7",
@@ -1334,6 +1315,25 @@ let parseData = [
 					}
 					let label = match.input + " (Frontal view; different grids are y-layers, bottom to top.)";
 					module.push({ label:label, obj:div.prop('outerHTML') });
+				}
+			}
+		]
+	},
+	{
+		moduleID: ["AdjacentLettersModule", "AdjacentLettersModule_Rus"],
+		loggingTag: ["AdjacentLetters", "AdjacentLetters (Russian)"],
+		displayName: ["Adjacent Letters", "Adjacent Letters (Russian)"],
+		matches: [
+			{
+				regex: /Solution:/,
+				handler: function (_, module) {
+					module.push({ label: "Solution:", obj: pre(readMultiple(3)) });
+				}
+			},
+			{
+				regex: /You submitted:/,
+				handler: function (_, module) {
+					module.push({ label: "You submitted:", obj: pre(readMultiple(3)) });
 				}
 			}
 		]
