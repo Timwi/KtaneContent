@@ -1677,6 +1677,42 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: ["advancedShapesAndColors", "shapesAndColors"],
+		loggingTag: ["Advanced Shapes and Colors", "Shapes and Colors"],
+		matches: [
+			{
+				regex: /^(?:((?:Nega|Posi)tive\s)?Clue #\d+|Solution):$/,
+				handler: function (matches, module) {
+					const borderColor = matches[1] == "Negative " ? "#c2766b" : "#94a5c0"; 
+					const grid = readTaggedLines(3).map(l => l.split(' '));
+					let svg = `<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black; border: ${borderColor} 5px solid '>`;
+						const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
+						const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
+						for (let row = 0; row < 3; row++) {
+							for (let col = 0; col < 3; col++) {
+								let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
+								const cell = grid[row][col];
+								if (!cell.match((/^-?[RGBY]$|KK/)))
+									g += "<rect width='100' height='100' fill='#FFF'/>";
+								if (cell.match(/[RGBY][CDT]/))
+									g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
+								else if (cell.match(/-?[RGBY]/))
+									g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
+								else if (cell.match(/-?[CDT]/))
+									g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
+								if (cell[0] == '-')
+									g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
+								svg += g + '</g>';
+							}
+						}
+
+					svg += `</svg>`;
+					module.push({ label: matches[0], obj: svg });
+				}
+			}
+		]
+	},
+	{
 		displayName: "Badugi",
 		moduleID: "ksmBadugi",
 		loggingTag: "Badugi",
@@ -14811,39 +14847,6 @@ let parseData = [
 			},
 			{
 				regex: /.+/,
-			}
-		]
-	},
-	{
-		moduleID: 'shapesAndColors',
-		loggingTag: 'Shapes and Colors',
-		matches: [
-			{
-				regex: /Clue #\d+:/,
-				handler: function(match, module) {
-					let grid = readTaggedLines(3).map(l => l.split(' '));;
-					let svg = "<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black'>";
-					const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
-					const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
-					for (let row = 0; row < 3; row++) {
-						for (let col = 0; col < 3; col++) {
-							let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
-							const cell = grid[row][col];
-							if (!cell.match((/^-?[RGBY]$|KK/)))
-								g += "<rect width='100' height='100' fill='#FFF'/>";
-							if (cell.match(/[RGBY][CDT]/))
-								g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
-							else if (cell.match(/-?[RGBY]/))
-								g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
-							else if (cell.match(/-?[CDT]/))
-								g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
-							if (cell[0] == '-')
-								g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
-							svg += g + '</g>';
-						}
-					}
-					module.push({ label: match, obj: svg + '</svg>' });
-				}
 			}
 		]
 	},
