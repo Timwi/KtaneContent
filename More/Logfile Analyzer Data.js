@@ -1681,34 +1681,103 @@ let parseData = [
 		loggingTag: ["Advanced Shapes and Colors", "Shapes and Colors"],
 		matches: [
 			{
-				regex: /^(?:((?:Nega|Posi)tive\s)?Clue #\d+|Solution):$/,
+				regex: /^(?:Clue #1|Solution):$/, 
 				handler: function (matches, module) {
-					const borderColor = matches[1] == "Negative " ? "#c2766b" : "#94a5c0"; 
-					const grid = readTaggedLines(3).map(l => l.split(' '));
-					let svg = `<svg viewbox='-20 -20 380 380' style='display: block; width: 1.5in; background-color: black; border: ${borderColor} 5px solid '>`;
-						const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
-						const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
-						for (let row = 0; row < 3; row++) {
-							for (let col = 0; col < 3; col++) {
-								let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
-								const cell = grid[row][col];
-								if (!cell.match((/^-?[RGBY]$|KK/)))
-									g += "<rect width='100' height='100' fill='#FFF'/>";
-								if (cell.match(/[RGBY][CDT]/))
-									g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
-								else if (cell.match(/-?[RGBY]/))
-									g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
-								else if (cell.match(/-?[CDT]/))
-									g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
-								if (cell[0] == '-')
-									g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
-								svg += g + '</g>';
+						linen--;
+						const line = readLine();
+						module.positiveColor = "#94a5c0";
+						module.negativeColor = "#c2766b";
+						module.getSVG = (grid, borderColor) => {
+							let svg = `<svg viewbox='-20 -20 380 380' style='margin-right: 1%; width: 1.5in; background-color: black; border: ${borderColor} 5px solid '>`;
+							const colors = { 'R':'#F00', 'G':'#0A0', 'B':'#00F', 'Y':'#FF0' };
+							const paths = { 'C':'M0 40a20 20 0 0080 0 20 20 0 00-80 0', 'D':'M0 40 40 0 80 40 40 80Z', 'T':'M40 5 0 74H80Z' };
+							for (let row = 0; row < 3; row++) {
+								for (let col = 0; col < 3; col++) {
+									let g = `<g transform='translate(${120 * col}, ${120 * row})'>`;
+									const cell = grid[row][col];
+									if (!cell.match((/^-?[RGBY]$|KK/)))
+										g += "<rect width='100' height='100' fill='#FFF'/>";
+									if (cell.match(/[RGBY][CDT]/))
+										g += `<path transform='translate(10, 10)' d='${paths[cell[1]]}' fill='${colors[cell[0]]}' stroke='#000' stroke-width='10'/>`;
+									else if (cell.match(/-?[RGBY]/))
+										g += `<rect width='100' height='100' fill='${colors[cell[cell.length - 1]]}'/>`;
+									else if (cell.match(/-?[CDT]/))
+										g += `<path transform='translate(10,10)' d='${paths[cell[cell.length - 1]]}' fill='#888' stroke='#000' stroke-width='10'/>`;
+									if (cell[0] == '-')
+										g += `<path d='M-5-5 105 105M105-5-5 105' stroke='#000' stroke-width='8'/>`;
+									svg += g + '</g>';
+								}
 							}
+							svg += `</svg>`;
+							return svg;
 						}
-
-					svg += `</svg>`;
-					module.push({ label: matches[0], obj: svg });
+						const grid = readTaggedLines(3).map(l => l.split(' '));
+						const svg = module.getSVG(grid, module.positiveColor);
+						module.advanced = matches[0].includes("Solution");
+						if(module.advanced) {
+							module.positiveClues = [];
+							module.negativeClues = [];
+							module.modID = line.match(/^\[Advanced Shapes and Colors #(\d+)\].+$/)[1];
+							let div = $('<div>').append(svg);
+							module.push({ label: matches[0], obj: div});
+						}
+						else {
+							module.clues = [svg];
+							module.modID = line.match(/\[Shapes and Colors #(\d+)\] Clue #1:/)[1];
+						}
+					return true;
 				}
+			},
+			{
+				regex: /Clue #\d+:/,
+				handler: function (matches, module) {
+					if(module.advanced) {
+						linen--;
+						const pastLine = readLine();
+						const isNegative = pastLine.includes("Negative");
+						const grid = readTaggedLines(3).map(l => l.split(' '));
+						const svg = module.getSVG(grid, isNegative ? module.negativeColor : module.positiveColor);
+						if(isNegative)
+							module.negativeClues.push(svg);
+						else
+							module.positiveClues.push(svg);
+						const regex = /^\[Advanced Shapes and Colors #(\d+)\].+$/
+						const nextLine = readLine();
+						const nextLineMatches = nextLine.match(regex);
+						if(nextLineMatches == null || nextLineMatches[1] != module.modID) {
+							let positiveDiv = $('<div>');
+							let negativeDiv = $('<div>');
+
+							module.positiveClues.forEach(clue => positiveDiv.append(clue));
+							module.negativeClues.forEach(clue => negativeDiv.append(clue));
+
+							module.push({ label:'Positive Clues:', obj:positiveDiv });
+							module.push({ label:'Negative Clues:', obj:negativeDiv });
+							module.positiveClues = [];
+							module.negativeClues = [];
+						}
+						linen--;
+					}
+					else {
+						const grid = readTaggedLines(3).map(l => l.split(' '));
+						const svg = module.getSVG(grid, module.positiveColor);
+						module.clues.push(svg);
+						const regex = /^\[Shapes and Colors #(\d+)\].+$/;
+						const nextLine = readLine();
+						const nextLineMatches = nextLine.match(regex);
+						if(nextLineMatches == null || nextLineMatches[1] != module.modID) {
+							let div = $('<div>');
+							module.clues.forEach(clue => div.append(clue));
+							module.push({ label:'Clues:', obj:div });
+							module.clues = [];
+						}
+						linen--;
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
 			}
 		]
 	},
