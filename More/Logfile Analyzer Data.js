@@ -2594,18 +2594,17 @@ let parseData = [
 		loggingTag: "Character Slots",
 		matches: [
 			{
-				regex: /The appearing characters on stage (\d+) are : (.+)/,
+				regex: /^The appearing characters on stage (\d+) are : (.+)/,
 				handler: function (matches, module) {
 					module.currentDropdown = ["Attempt 1", []];
 					module.attemptNum = 1;
-					// module.push(`<span>${matches[0]}</span>`);
 					module.push($(`<span class="character-slots-underline">`).text(matches[0]));
 					module.push(module.currentDropdown);
 					return true;
 				}
 			},
 			{
-				regex: /Checking validity for (.+)\.{3}/,
+				regex: /^Checking validity for (.+)\.{3}$/,
 				handler: function (matches, module) {
 					const name = matches[1];
 					const lines = [];
@@ -2618,7 +2617,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Your answer for this character is incorrect\. Strike!|All keep states are correct\. Stage \d+ done!/,
+				regex: /^Your answer for this character is incorrect\. Strike!|All keep states are correct\. Stage \d+ done!$/,
 				handler: function (matches, module) {
 					module.push(matches[0]);
 					if (matches[0] == "Your answer for this character is incorrect. Strike!") {
