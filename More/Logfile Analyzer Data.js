@@ -16401,6 +16401,49 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "technicalButtons",
+		loggingTag: "Technical Buttons",
+		matches: [
+			{
+				regex: /^LED #0 is (.+)/,
+				handler: function (matches, module) {
+					const ledColors = [matches[1]].concat(readTaggedLines(3).map(line => line.match(/^LED #(?:\d) is (.+)/)[1])).join(", ");
+					module.loggedColours = [];
+					module.buttons = readTaggedLines(8).map(line => [line.match(/^Button #(?:\d) is .+/)[0].replace("#", ""), []]);
+					module.push(`LEDS in order: ${ledColors}.`);
+					module.push(readTaggedLine() + ".");
+					module.buttons.forEach(button => module.push(button));
+					return true;
+				}
+			},
+			{
+				regex: /^Button ID: (\d), Should be pressed: (.+)/,
+				handler: function (matches, module) {
+					module.buttons[matches[1]][0] += `. ${matches[2] === "False" ? "Do not press" : "Press"} this button.`
+					return true;
+				}
+			},
+			{
+				regex: /^Button ID: (\d), Button colour: (?:.+), Color occurrences: (\d)$/,
+				handler: function (matches, module) {
+					const index = matches[1];
+					if (!module.loggedColours[matches[1]]) {
+						module.buttons[index][1].push(`This color occurs ${matches[2] === "1" ? "1 time" : matches[2] + " times"}.`);
+						module.loggedColours[matches[1]] = true;
+					}
+					if (readTaggedLine() === `Passed id: ${index}`)
+						module.buttons[index][1].push("You pressed this button.");
+					else
+						linen--;
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		displayName: "Ten-Button Color Code",
 		moduleID: "TenButtonColorCode",
 		loggingTag: "Ten-Button Color Code",
