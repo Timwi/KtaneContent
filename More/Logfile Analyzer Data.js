@@ -4164,28 +4164,27 @@ let parseData = [
 		loggingTag: 'Directional Button',
 		matches: [
 			{
-				regex: /<Stage (\d)>(.+)/,
-				handler: function(matches, module) {
-					if(!module.stageDropdown) {
+				regex: /^<Stage (\d)>(.+)/,
+				handler: function (matches, module) {
+					if (!module.stageDropdown) {
 						module.stageDropdown = [`Stage 1`, []];
 						module.stageNum = 1;
 						module.stageDropdown[1].push(matches[2]);
-						module.stageDropdown[1].push(readTaggedLine().match(/<Stage (\d)>(.+)/)[2]);
+						module.stageDropdown[1].push(readTaggedLine().match(/^<Stage \d>(.+)/)[1]);
 						module.push(module.stageDropdown);
 					}
-
-					else if(module.stageNum == matches[1]) {
+					else if (module.stageNum == matches[1]) {
 						module.stageDropdown[1].push(matches[2]);
+						if (matches[2].match(/Strike!$/))
+							module.stageDropdown[1].push({ nobullet: true, obj: $("<hr>") });
 					}
-
 					else {
 						module.stageDropdown = [`Stage ${matches[1]}`, []];
 						module.stageNum = matches[1];
 						module.stageDropdown[1].push(matches[2]);
-						module.stageDropdown[1].push(readTaggedLine().match(/<Stage (\d)>(.+)/)[2]);
+						module.stageDropdown[1].push(readTaggedLine().match(/^<Stage \d>(.+)/)[1]);
 						module.push(module.stageDropdown);
 					}
-
 					return true;
 				}
 			},
