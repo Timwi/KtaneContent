@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="preload" href="https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Sprites/Master%20Sheet1.png" as="image">
     <script src="js/ktane-utils.js"></script>
 <style>
     .containers {
@@ -29,13 +30,10 @@
         bottom: 0;
         color: #000;
     }
-    .repo-toggle-notice {
-        font-size: 11px;
-        font-style: italic;
-    }
     .result {
         font-size: 72pt;
     }
+
     .icon-container {
         border: 10px outset;
         border-color: #E0E0E0;
@@ -50,14 +48,23 @@
         height: 100%;
         vertical-align: middle;
     }
+    .icon-container div {
+        width: 320px;
+        height: 320px;
+        display: inline;
+        vertical-align: middle;
+    }
     .icon {
         image-rendering: crisp-edges; /* Firefox */
         image-rendering: pixelated; /* Chrome */
-        width: 320px;
-        height: 320px;
+        scale: 1000%; /* To fit 320x320 box */
+        width: 32px;
+        height: 32px;
+        object-fit: none;
         text-align: center;
         margin: auto;
     }
+
     .module-input-box {
         width: 96%;
         font-family: 'Special Elite', 'Courier New', monospace;
@@ -66,86 +73,90 @@
     }
 </style>
 <script>
-    alpha_positions = [
-        "A", "B", "C", "D", "E", "F", "G", "H",
-        "I", "J", "K", "L", "M", "N", "O", "P",
-        "Q", "R", "S", "T", "U", "V", "W", "X",
-        "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF",
+    // Location of Iconic's repository, plus all relevant file locations.
+    const iconic_repo = "https://raw.githubusercontent.com/Blananas2/ktane-iconic/master";
+    const iconic_SpriteData = iconic_repo + "/Assets/Sprites/spriteData.json";
+    const iconic_IconEmpty = iconic_repo + "/Assets/Sprites/Empty.png";
+    const iconic_IconBlank = iconic_repo + "/Assets/Sprites/blank.png";
+    const iconic_IconSheets = [
+        /* 0 */ iconic_repo + "/Assets/Sprites/Master%20Sheet1.png",
+        // Append here if more than one sheet is used in the future
+        // Also remember to add a <link rel="preload"> for new entries
     ];
-    module_icons = {
-        "...?": "...q.png",
-        "A>N<D": "A_N_D.png",
-        "ƎNA Cipher": "ENA Cipher.png",
-        "int##": "int__.png",
 
-        // These ones are needed for Iconic's repo specifically, and don't cause problems for the manual repo.
-        "Simon's On First": "Simon's on First.png",
+    // Alternate names for modules that are difficult to type in.
+    // Use the module's sort key as the key, and the alternate name as the value.
+    const alternateNames = {
+        "NONVERBALSIMON": "Nonverbal Simon",
+        "ENACIPHER": "ENA Cipher",
+        "INUPIAQNUMERALS": "Inupiaq Numerals",
+        "MAZE3": "Maze^3",
+        "UBERMODULE": "Ubermodule",
     };
-    /*
-     * Aliases for module that is hard to search in English alphabet.
-     * Module such as Vigenère Cipher doesn’t need one as it can be
-     * searched relatively easily.
-     */
-    module_aliases = {
-        "ENA Cipher": "ENA Cipher.png",
-        "Inupiaq Numerals": "Iñupiaq Numerals.png",
-        "Maze^3": "Maze³.png",
-        "Nonverbal Simon": "❖.png",
-        "Ubermodule": "Übermodule.png",
-    };
-    async function fetchRepoInformation() {
-        var request = await fetch("https://ktane.timwi.de/json/raw");
-        var repo_json = await request.text();
-        var all_modules = JSON.parse(repo_json);
 
-        var datalist = document.getElementById("modules");
-        all_modules["KtaneModules"].forEach(mod => {
-            if (!["Regular", "Needy"].includes(mod["Type"]))
-                return; // Don't show things that aren't modules
+    // This is filled in automatically with the contents of spriteData.json
+    var spriteInfo = {};
 
-            var name = mod["Name"].replace("’", "'");
-            var newopt = document.createElement("option");
-            newopt.value = name;
-            datalist.appendChild(newopt);
+    // ----------------------
 
-            if (module_icons[name] === undefined)
-            {
-                var cleanname = name.replace("?", "").replace("/", "");
-                module_icons[name] = cleanname + ".png";
-            }
-
-            updateIcon(document.getElementById("modinput"));
-        });
-
-        Object.keys(module_aliases).forEach(mod => {
-            var newopt = document.createElement("option");
-            newopt.value = mod;
-            datalist.appendChild(newopt);
-            module_icons[mod] = module_aliases[mod];
-            updateIcon(document.getElementById("modinput"));
-        })
+    function newOption(name)
+    {
+        let newopt = document.createElement("option");
+        newopt.value = name;
+        return newopt;
     }
-    fetchRepoInformation();
+
+    async function fetchSpriteData() {
+        let request = await fetch(iconic_SpriteData);
+        let spriteData = await request.text();
+        let spriteList = JSON.parse(spriteData)["sprites"];
+
+        let datalist = document.getElementById("modules");
+
+        Object.values(spriteList).forEach(icon => {
+            let newData = {sheet: icon.sheet, x: icon.x*-32, y: icon.y*-32};
+
+            datalist.appendChild(newOption(icon.name));
+            spriteInfo[icon.name.toLowerCase()] = newData;
+
+            if (alternateNames[icon.sortkey] !== undefined)
+            {
+                let altName = alternateNames[icon.sortkey];
+
+                datalist.appendChild(newOption(altName));
+                spriteInfo[altName.toLowerCase()] = newData;
+            }
+        });
+        
+        updateIcon();
+    }
 
     function updateIcon() {
-        var modname = document.getElementById("modinput").value;
-        if (module_icons[modname] !== undefined) {
-            // We still want to keep the manual repo as an option, just in case GitHub is down or something bad happens
-            var baseurl = (document.getElementById("repotoggle").checked)
-                ? "https://ktane.timwi.de/Icons/"
-                : "https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Icons/";
-            document.getElementById("icon").src = baseurl + encodeURI(module_icons[modname]);
+        let iconElem = document.getElementById("icon");
+        let modName = document.getElementById("modinput").value.toLowerCase().trim();
+
+        if (spriteInfo[modName] !== undefined) {
+            let info = spriteInfo[modName];
+            iconElem.src = iconic_IconSheets[info.sheet];
+            iconElem.style.objectPosition = `${info.x}px ${info.y}px`;
         } else {
-            // It doesn't really matter where we fetch this from.
-            document.getElementById("icon").src = "https://ktane.timwi.de/Icons/Blank.png";
+            iconElem.src = (modName == "") ? iconic_IconEmpty : iconic_IconBlank;
+            iconElem.style.objectPosition = "0px 0px";
         }
     }
 
+    // ----------------------
+
+    const alpha_positions = [
+        "A","B","C","D","E","F","G","H","I","J","K", "L", "M", "N", "O", "P",
+        "Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF",
+    ];
+
     function clickedIcon(event) {
-        var icon = document.getElementById("icon");
-        var bounds = icon.getBoundingClientRect();
-        var x = Math.floor(((event.clientX - 1) - Math.round(bounds.left)) / 10);
-        var y = Math.floor(((event.clientY - 1) - Math.round(bounds.top)) / 10);
+        let icon = document.getElementById("icon");
+        let bounds = icon.getBoundingClientRect();
+        let x = Math.floor(((event.clientX - 1) - Math.round(bounds.left)) / 10);
+        let y = Math.floor(((event.clientY - 1) - Math.round(bounds.top)) / 10);
         if (x < 0 || x > 31 || y < 0 || y > 31)
             return;
         document.getElementById("result").innerHTML = alpha_positions[x] + (y + 1);
@@ -154,6 +165,10 @@
     function addEventHandlers() {
         document.getElementById("icon").addEventListener("click", clickedIcon);
     }
+
+    // ----------------------
+
+    fetchSpriteData();
 </script>
 </head>
 <body onload="addEventHandlers()">
@@ -180,15 +195,13 @@
                         <div class="location-box">
                             <div>Location:</div>
                             <div id="result" class="result">-</div>
-
-                            <input type="checkbox" id="repotoggle" oninput="updateIcon()">
-                            <label for="repotoggle">Use icons from the manual repo</label>
-                            <p class="repo-toggle-notice">Use this option at your own risk. The icons on the manual repo may differ from the ones Iconic uses.</p>
                         </div>
                     </div>
                     <div class="icon-container">
                         <span></span>
-                        <img src="https://ktane.timwi.de/Icons/Blank.png" id="icon" class="icon">
+                        <div>
+                            <img src="https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Sprites/Empty.png" id="icon" class="icon" style="object-position=0px 0px;">
+                        </div>
                         <span></span>
                     </div>
                 </div>
