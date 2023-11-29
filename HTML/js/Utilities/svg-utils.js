@@ -135,3 +135,126 @@ function MakeArrow(rotation = 0, scale = 100, x = 50, y = 50, head = "triangle",
     if (headexists) group.appendChild(arrowhead);
     return group;
 }
+
+/**
+ * Represents a circular grid to be used in SVGs.
+ * All lengths and coordinates are based on the number of rows/columns.
+ */
+class CircularGrid {
+    #columns;
+    #rows;
+    #innerRadius;
+    #stripRadius;
+    #insideOut;
+    #goAntiClockwise;
+    #svgElement;
+
+    /**
+     * Returns an object with methods for drawing circular grids.
+     * The first column (0-indexed) meets the last column at the positive x half-axis from the centre of the circle.
+     * Access the grid SVG element itself through the svgElement property.
+     * Requires jquery.
+     * @param {Number} columns - number of columns going out from the centre of the circle.
+     * @param {Number} rows - number of rows going around the centre of the circle.
+     * @param {float} outerRadius - radius of the full grid.
+     * @param {float} innerRadius - radius of the circle of negative space inside the grid.
+     * @param {Dictionary} attrs - Attributes to set in the group element representing the grid. e.g. {class:"highlightable", fill:"#F00"}.
+     * @param {Boolean} insideOut - if true, take the first row (0-indexed) to be the one closest to the origin instead of farthest from it.
+     * @param {Boolean} goAntiClockwise - if true, columns go anti-clockwise. Otherwise, they go clockwise.
+     */
+    constructor(columns, rows, outerRadius = 100, innerRadius = 0, attrs = null, insideOut = false, goAntiClockwise = false) {
+        this.#columns = columns;
+        this.#rows = rows;
+        this.#innerRadius = innerRadius;
+        this.#stripRadius = outerRadius - innerRadius;
+        this.#insideOut = insideOut;
+        this.#goAntiClockwise = goAntiClockwise;
+        this.#svgElement = MakeSvgElem("g", attrs);
+    }
+
+    get svgElement() {
+        return this.#svgElement;
+    }
+
+    #transform(x, y) {
+        const r = this.#distanceFromOrigin(y);
+        const theta = this.#argument(x);
+        return `${r * Math.cos(theta)} ${-r * Math.sin(theta)}` // Negate y-coordinate to account for y going down in SVG units.
+    }
+
+    #distanceFromOrigin(y) {
+        return (this.#insideOut ? y / this.#rows : 1 - y / this.#rows) * this.#stripRadius + this.#innerRadius;
+    }
+
+    #argument(x) {
+        return Math.PI * 2 * (this.#goAntiClockwise ? x / this.#columns : 1 - x / this.#columns);
+    }
+
+    /**
+     * Draws a transformed square onto the grid.
+     * @param {float} x - x-coordinate of the top-left corner of the square.
+     * @param {float} y - y-coordinate of the top-left corner of the square.
+     * @param {float} width - width of the square.
+     * @param {float} height - height of the square.
+     * @param {Dictionary} attrs - Attributes to set in the path element representing the cell. e.g. {class:"highlightable", fill:"#F00"}.
+     */
+    drawCell(x = 0, y = 0, width = 0, height = 0, attrs = null) {
+        const topLeft = this.#transform(x, y);
+        const topRight = this.#transform(x + width, y);
+        const bottomRight = this.#transform(x + width, y + height);
+        const bottomLeft = this.#transform(x, y + height);
+        const largeArcFlag = width > this.#columns / 2 ? 1 : 0;
+        const sweepFlag = this.#goAntiClockwise ? 0 : 1;
+        const outerRadius = this.#distanceFromOrigin(y);
+        const innerRadius = this.#distanceFromOrigin(y + height);
+        const outerArc = `A${outerRadius} ${outerRadius} 0 ${largeArcFlag} ${sweepFlag} ${topRight}`;
+        const innerArc = `A${innerRadius} ${innerRadius} 0 ${largeArcFlag} ${1 - sweepFlag} ${bottomLeft}`;
+        const d = `M${topLeft}${outerArc}L${bottomRight}${innerArc}z`;
+        const cell = MakeSvgElem("path", {...attrs, d });
+        this.#svgElement.append(cell);
+    }
+
+    /**
+     * Draws the inner circle boundary.
+     * @param {Dictionary} attrs - Attributes to set in the circle element. e.g. {class:"highlightable", fill:"#F00"}.
+     */
+    drawInnerCircle(attrs = { fill: "none", stroke: "#000", "stroke-width": "1" }) {
+        this.#svgElement.append(MakeSvgElem("circle", { ...attrs, r: this.#innerRadius }));
+    }
+
+    /**
+     * Draws the outer circle boundary.
+     * @param {Dictionary} attrs - Attributes to set in the circle element. e.g. {class:"highlightable", fill:"#F00"}.
+     */
+    drawOuterCircle(attrs = { fill: "none", stroke: "#000", "stroke-width": "1" }) {
+        this.#svgElement.append(MakeSvgElem("circle", { ...attrs, r: this.#innerRadius + this.#stripRadius }));
+    }
+
+    /**
+     * Draws a ring. Equivalent to a rectangular cell covering the full width of the grid.
+     * @param {float} outerRadius - outer radius of the ring.
+     * @param {float} innerRadius - inner radius of the ring.
+     * @param {Dictionary} attrs - Attributes to set in the path element. e.g. {class:"highlightable", fill:"#F00"}.
+     */
+    drawRing(outerRadius, innerRadius = 0, attrs = { fill: "none", stroke: "#000", "stroke-width": "1" }) {
+        const circularArc = (radius) => {
+            const scaledRadius = this.#innerRadius + (radius / this.#rows) * this.#stripRadius;
+            return `M${scaledRadius} 0A${scaledRadius} ${scaledRadius} 0 1 1 ${-scaledRadius} 0A${scaledRadius} ${scaledRadius} 0 1 1 ${scaledRadius} 0`;
+        }
+        let d = circularArc(outerRadius) + circularArc(innerRadius);
+        this.#svgElement.append(MakeSvgElem("path", { ...attrs, d, "fill-rule": "evenodd" }));
+    }
+
+    /**
+     * @param {HTMLElement} elem - the element to be inserted.
+     * @param {float} x - x-coordinate of the element.
+     * @param {float} y - y-coordinate of the element.
+     */
+    insertElementAt(elem, x, y) {
+        const innerG = MakeSvgElem("g", { style: "transform: rotate(90deg)" });
+        const outerG = MakeSvgElem("g", { style: `transform: rotate(${-this.#argument(x) / Math.PI * 180}deg) translate(${this.#distanceFromOrigin(y)}px, 0)` });
+        innerG.append(elem);
+        outerG.append(innerG);
+        this.#svgElement.append(outerG);
+    }
+}
