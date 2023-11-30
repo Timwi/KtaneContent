@@ -191,11 +191,11 @@ class CircularGrid {
     }
 
     /**
-     * Draws a transformed square onto the grid.
-     * @param {float} x - x-coordinate of the top-left corner of the square.
-     * @param {float} y - y-coordinate of the top-left corner of the square.
-     * @param {float} width - width of the square.
-     * @param {float} height - height of the square.
+     * Draws a transformed rectangle onto the grid.
+     * @param {float} x - x-coordinate of the top-left corner of the rectangle.
+     * @param {float} y - y-coordinate of the top-left corner of the rectangle.
+     * @param {float} width - width of the rectangle.
+     * @param {float} height - height of the rectangle.
      * @param {Dictionary} attrs - Attributes to set in the path element representing the cell. e.g. {class:"highlightable", fill:"#F00"}.
      */
     drawCell(x = 0, y = 0, width = 0, height = 0, attrs = null) {
@@ -233,7 +233,7 @@ class CircularGrid {
     /**
      * Draws a ring. Equivalent to a rectangular cell covering the full width of the grid.
      * @param {float} outerRadius - outer radius of the ring.
-     * @param {float} innerRadius - inner radius of the ring.
+     * @param {float} innerRadius - inner radius of the ring. Set to undefined to draw a circle instead of a ring.
      * @param {Dictionary} attrs - Attributes to set in the path element. e.g. {class:"highlightable", fill:"#F00"}.
      */
     drawRing(outerRadius, innerRadius = 0, attrs = { fill: "none", stroke: "#000", "stroke-width": "1" }) {
@@ -241,7 +241,9 @@ class CircularGrid {
             const scaledRadius = this.#innerRadius + (radius / this.#rows) * this.#stripRadius;
             return `M${scaledRadius} 0A${scaledRadius} ${scaledRadius} 0 1 1 ${-scaledRadius} 0A${scaledRadius} ${scaledRadius} 0 1 1 ${scaledRadius} 0`;
         }
-        let d = circularArc(outerRadius) + circularArc(innerRadius);
+        let d = circularArc(outerRadius);
+        if (innerRadius !== undefined)
+            d += circularArc(innerRadius);
         this.#svgElement.append(MakeSvgElem("path", { ...attrs, d, "fill-rule": "evenodd" }));
     }
 
@@ -252,7 +254,7 @@ class CircularGrid {
      */
     insertElementAt(elem, x, y) {
         const innerG = MakeSvgElem("g", { style: "transform: rotate(90deg)" });
-        const outerG = MakeSvgElem("g", { style: `transform: rotate(${-this.#argument(x) / Math.PI * 180}deg) translate(${this.#distanceFromOrigin(y)}px, 0)` });
+        const outerG = MakeSvgElem("g", { style: `transform: rotate(${-this.#argument(x)}rad) translate(${this.#distanceFromOrigin(y)}px, 0)` });
         innerG.append(elem);
         outerG.append(innerG);
         this.#svgElement.append(outerG);
