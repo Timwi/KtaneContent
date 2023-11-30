@@ -9,6 +9,8 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="preload" href="https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Sprites/Master%20Sheet1.png" as="image">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
 <style>
     .containers {
         display: flex;
@@ -52,17 +54,13 @@
         vertical-align: middle;
     }
     .icon-container div {
-        width: 320px;
-        height: 320px;
-        display: inline;
+        width: 340px;
+        height: 340px;
         vertical-align: middle;
     }
     .icon {
         image-rendering: crisp-edges; /* Firefox */
         image-rendering: pixelated; /* Chrome */
-        scale: 1000%; /* To fit 320x320 box */
-        width: 32px;
-        height: 32px;
         object-fit: none;
         text-align: center;
         margin: auto;
@@ -90,6 +88,30 @@
             width: 100%;
             height: 360px;
         }
+    }
+
+    .icon-svg {
+        width: 320px;
+        height: 320px;
+        display: block;
+        margin: 10px;
+    }
+    .pixel {
+        fill: transparent;
+        stroke: transparent;
+        stroke-width: 1;
+    }
+    .pixel:hover {
+        fill: #0005;
+        stroke: #fff;
+    }
+    .pixel.selected {
+        fill: #f8f8;
+        stroke: #888;
+    }
+    .pixel.selected:hover {
+        fill: #0009;
+        stroke: #fff;
     }
 </style>
 <script>
@@ -154,14 +176,17 @@
     function updateIcon() {
         let iconElem = document.getElementById("icon");
         let modName = document.getElementById("modinput").value.toLowerCase().trim();
-
         if (spriteInfo[modName] !== undefined) {
             let info = spriteInfo[modName];
-            iconElem.src = iconic_IconSheets[info.sheet];
-            iconElem.style.objectPosition = `${info.x}px ${info.y}px`;
+            iconElem.setAttribute("href", iconic_IconSheets[info.sheet]);
+            iconElem.setAttribute("x", info.x * 10);
+            iconElem.setAttribute("y", info.y * 10);
+            iconElem.setAttribute("width", 12800);            // iconElem.style.objectPosition = `${info.x}px ${info.y}px`;
         } else {
-            iconElem.src = (modName == "") ? iconic_IconEmpty : iconic_IconBlank;
-            iconElem.style.objectPosition = "0px 0px";
+            iconElem.setAttribute("href", (modName == "") ? iconic_IconEmpty : iconic_IconBlank);
+            iconElem.setAttribute("x", 0);
+            iconElem.setAttribute("y", 0);
+            iconElem.setAttribute("width", 320);
         }
     }
 
@@ -172,26 +197,40 @@
         "Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF",
     ];
 
-    function clickedIcon(event) {
-        let icon = document.getElementById("icon");
-        let bounds = icon.getBoundingClientRect();
-        let x = Math.floor(((event.clientX - 1) - Math.round(bounds.left)) / 10);
-        let y = Math.floor(((event.clientY - 1) - Math.round(bounds.top)) / 10);
-        if (x < 0 || x > 31 || y < 0 || y > 31)
-            return;
-        document.getElementById("result").innerHTML = alpha_positions[x] + (y + 1);
-    }
-
-    function addEventHandlers() {
-        document.getElementById("icon").addEventListener("click", clickedIcon);
-    }
-
     // ----------------------
 
-    fetchSpriteData();
+    const pixels = [];
+    let selectedPixel;
+
+    $(() => {
+        const iconSvg = MakeSvgTag(320, 320, 0, 0, { class: "icon-svg" });
+        iconSvg.append(MakeSvgElem("image", { href: "https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Sprites/Empty.png", id: "icon", class: "icon", width: 320 }));
+
+        const pixelOnClickHandler = (x, y) => () => {
+            document.getElementById("result").innerHTML = alpha_positions[x] + (y + 1);
+            if (selectedPixel)
+                selectedPixel.classList.remove("selected");
+            selectedPixel = pixels[y][x];
+            selectedPixel.classList.add("selected");
+        };
+
+        for (let row = 0; row < 32; row++) {
+            const pixelRow = [];
+            for (let col = 0; col < 32; col++) {
+                const pixel = MakeSvgElem("rect", { class: "pixel", width: 9, height: 9, x: col * 10 + .5, y: row * 10 + .5 });
+                pixel.addEventListener("click", pixelOnClickHandler(col, row));
+                iconSvg.append(pixel);
+                pixelRow.push(pixel);
+            }
+            pixels.push(pixelRow);
+        }
+
+        $("#icon-holder").append(iconSvg);
+        fetchSpriteData();
+    })
 </script>
 </head>
-<body onload="addEventHandlers()">
+<body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
@@ -218,11 +257,7 @@
                         </div>
                     </div>
                     <div class="icon-container">
-                        <span></span>
-                        <div>
-                            <img src="https://raw.githubusercontent.com/Blananas2/ktane-iconic/master/Assets/Sprites/Empty.png" id="icon" class="icon" style="object-position=0px 0px;">
-                        </div>
-                        <span></span>
+                        <div id="icon-holder"></div>
                     </div>
                 </div>
             </div>
