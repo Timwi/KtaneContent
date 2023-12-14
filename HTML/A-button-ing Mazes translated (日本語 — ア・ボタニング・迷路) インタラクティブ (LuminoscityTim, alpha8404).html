@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ア・ボタニング・迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        let grid = $(".holder");
+
+        let rows = 5;
+        let cols = 5;
+        let h = 100;
+        let w = 100;
+
+        const mazes = 12;
+        let netRotation = Array(mazes).fill(0);
+        let netflipX = Array(mazes).fill(1);
+        let netflipY = Array(mazes).fill(1);
+        for (let net = 0; net < grid.length; net++) {
+            let el = $(grid[net]);
+            let svg = MakeSvgTag(500,500);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable", x:(c*w), y:(r*h),
+                        width:w, height:h, fill:"transparent"
+                    });
+                    svg.append(cell);
+                }
+            }
+            el.find(".imgs").append(svg);
+            el.find(".imgs").addClass(`g${net}`);
+
+            let buttons = $("<div>").addClass("hstack").prependTo(el);
+            $("<button>").addClass("rotatenet bg-ccw").appendTo(buttons).click(function() {
+                netRotation[net] -= 1;
+                rotateFlipNetShape(net, netRotation[net], netflipX[net], netflipY[net]);
+            });
+            $("<button>").text("0").appendTo(buttons).click(function() {
+                netRotation[net] = 0;
+                netflipX[net] = 1;
+                netflipY[net] = 1;
+                rotateFlipNetShape(net, netRotation[net], netflipX[net], netflipY[net]);
+            });
+            $("<button>").addClass("flipnet").appendTo(buttons).click(function() {
+                flipNetShape(net);
+            });
+            $("<button>").addClass("rotatenet bg-cw").appendTo(buttons).click(function() {
+                netRotation[net] += 1;
+                rotateFlipNetShape(net, netRotation[net], netflipX[net], netflipY[net]);
+            });
+        }
+
+        function rotateFlipNetShape(n, r, nfX, nfY) {
+            $(`.imgs.g${n}`).css("transform", `rotate(${90*r}deg) scale(${nfX}, ${nfY})`);
+        }
+
+        function flipNetShape(n) {
+            let r = netRotation[n];
+            if (r % 2 == 0) { netflipX[n] *= -1; }
+            else { netflipY[n] *= -1; }
+            rotateFlipNetShape(n, r, netflipX[n], netflipY[n]);
+        }
+    });
+    </script>
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            border: none;
+            margin: 1em auto;
+            width: 100%;
+        }
+        .holder {
+            margin: 5px 10px 0;
+        }
+        .imgs {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            transition: .6s;
+        }
+        .imgs img, .imgs svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+        }
+
+        button {
+            margin: 1px 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: .6s;
+            display: block;
+            font-family: "Special Elite";
+            height: 19px;
+            width: 34px;
+            line-height: 19px;
+            font-weight: bold;
+            background-size: 30px 64px;
+            background-position: 2px -20px;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+        }
+        button.rotatenet {
+            height: 19px;
+            width: 34px;
+        }
+        .bg-ccw {
+            background-image: url('img/Common/ccw-arrow.svg');
+        }
+        .bg-cw {
+            background-image: url('img/Common/cw-arrow.svg');
+        }
+        button.rotatenet.bg-ccw {
+            background-size: 27px 60px;
+            background-position: 2px -22.5px;
+        }
+        button.rotatenet.bg-cw {
+            background-size: 27px 57px;
+            background-position: 2px -21px;
+        }
+        button.flipnet {
+            height: 19px;
+            width: 34px;
+            font-family: 'Logic-round';
+            line-height: 15px;
+            padding: 0;
+            font-size: 23px;
+        }
+        button.flipnet::after { content: '↔'; }
+        button.bg-ccw:hover {
+            background-image: url('img/Common/ccw-arrowW.svg');
+        }
+        button.bg-cw:hover {
+            background-image: url('img/Common/cw-arrowW.svg');
+        }
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        .dark .imgs img { filter: invert(.85) hue-rotate(180deg); }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ア・ボタニング・迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/A-button-ing Mazes.svg" class="diagram">
+                <h2>モジュール詳細：ア・ボタニング・迷路</h2>
+                <p class="flavour-text">これらのボタンは本当に素晴らしい！こんなもの押したことがない！</p>
+                <ul>
+                    <li>このモジュールには、4つの基本方向のそれぞれを向いたボタンがある。</li>
+                    <li>各ボタンには、目に見えない壁がついた異なる5×5の迷路があり、それぞれに白い開始地点、赤いゴール地点、及び下の迷路のどれかに存在する4つの赤いXマーカーがある。迷路の壁は任意の方向に回転または反転しており、それに応じてマーカーの位置は再設定される。</li>
+                    <li>迷路を移動するには、<ul>
+                            <li>行きたい方向にボタンを長押しする。これにより、長押ししたボタンが6色のうちのいずれかで点灯する。</li>
+                            <li>ボタンを離すと、下の表に示されている対応する迷路のペア内の白いピースがその方向に移動しようとする。</li>
+                            <li>どちらかの迷路が壁にぶつかった場合、ミスが記録され、壁が表示され、どちらかがぶつかった場合でも両方動かない。</li>
+                        </ul>
+                    </li>
+                    <li>モジュールを解除するには、4つのピース全てを同時に目的地点に移動する必要がある。</li>
+                </ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan=2 rowspan=2></th>
+                        <th colspan=6>カウントダウンタイマーの秒の1の桁*</th>
+                       </tr>
+                       <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+                       <tr><th rowspan=6>色</th><th>赤</th><th>上 & 右</th><th>上 & 下</th><th>下 & 右</th><th>下 & 左</th><th>右 & 左</th><th>上 & 左</th></tr>
+                       <tr><th>青</th><th>上 & 下</th><th>下 & 左</th><th>上 & 右</th><th>上 & 左</th><th>下 & 右</th><th>右 & 左</th></tr>
+                       <tr><th>黄</th><th>下 & 左</th><th>上 & 左</th><th>上 & 下</th><th>右 & 左</th><th>上 & 右</th><th>下 & 右</th></tr>
+                       <tr><th>マゼンタ</th><th>上 & 左</th><th>右 & 左</th><th>下 & 左</th><th>下 & 右</th><th>上 & 下</th><th>上 & 右</th></tr>
+                       <tr><th>シアン</th><th>右 & 左</th><th>下 & 右</th><th>上 & 左</th><th>上 & 右</th><th>下 & 左</th><th>上 & 下</th></tr>
+                       <tr><th>白</th><th>下 & 右</th><th>上 & 右</th><th>右 & 左</th><th>上 & 下</th><th>上 & 左</th><th>下 & 左</th></tr>
+                   </table>
+                   <p>*表のどの列にも属さない場合を除く。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ア・ボタニング・迷路</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap">
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/A.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/B.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/C.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/D.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/E.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/F.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/G.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/H.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/I.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/J.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/K.svg"></div></div>
+                    <div class="holder"><div class="imgs"><img src="img/A-button-ing Mazes/L.svg"></div></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
