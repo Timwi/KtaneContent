@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Rychlá matika — Keep Talking and Nobody Explodes mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .ruleseed-active .left-right {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function setDefaultRules()
+        {
+            let rulesHtml = document.getElementsByClassName('rule');
+            rulesHtml[0].innerText = 'Pokud obsahuje bomba rozsvícený indikátor MSA, přičtěte k vašemu počátečnímu kódu 20.';
+            rulesHtml[1].innerText = 'Pokud obsahuje bomba sériový port, přičtěte k vašemu počátečnímu kódu 14.';
+            rulesHtml[2].innerText = 'Pokud obsahuje sériové číslo F, A, S nebo T, odečtěte od vašeho počátečního kódu 5.';
+            rulesHtml[3].innerText = 'Pokud obsahuje bomba RJ-45 port, přičtěte k vašemu počátečnímu kódu 27.';
+            rulesHtml[4].innerText = 'Pokud obsahuje bomba více než 3 baterie, odečtěte od vašeho počátečního kódu 15.';
+
+            let candidateLetters = ['A', 'B', 'C', 'D', 'E', 'G', 'K', 'N', 'P', 'S', 'T', 'X', 'Z'];
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers =
+                [25, 11, 53, 97, 2, 42, 51, 97, 12, 86, 55, 73, 33,
+                    54, 7, 32, 19, 84, 33, 27, 78, 26, 46, 9, 13, 58,
+                    86, 37, 44, 1, 5, 26, 93, 49, 18, 69, 23, 40, 22,
+                    54, 28, 77, 93, 11, 0, 35, 61, 27, 48, 13, 72, 80,
+                    99, 36, 23, 95, 67, 5, 26, 17, 44, 60, 26, 41, 67,
+                    74, 95, 3, 4, 56, 23, 54, 29, 52, 38, 10, 76, 98,
+                    88, 46, 37, 96, 2, 52, 81, 37, 12, 70, 14, 36, 78,
+                    54, 43, 12, 65, 94, 3, 47, 23, 16, 62, 73, 46, 21,
+                    7, 33, 26, 1, 67, 26, 27, 77, 83, 14, 27, 93, 9,
+                    63, 64, 94, 27, 48, 84, 33, 10, 16, 74, 43, 99, 4,
+                    35, 39, 3, 25, 47, 62, 38, 45, 88, 48, 34, 31, 27,
+                    67, 30, 27, 71, 9, 11, 44, 37, 18, 40, 32, 15, 78,
+                    13, 23, 26, 85, 92, 12, 73, 56, 81, 7, 75, 47, 99];
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            lrs[0].innerText = 'Pravé písmeno:';
+            lrs[1].innerText = 'Levé písmeno:';
+        }
+
+        function setRules(rnd)
+        {
+            let candidates = {
+                's': [
+                    "je poslední cifra sériového čísla sudá",
+                    "obsahuje sériové číslo samohlásku",
+                    function(rnd) {
+                        let values = rnd.shuffleFisherYates([...Array(36).keys()]).slice(0, 4);
+                        let letterNames = values.filter(v => v >= 10).map(v => String.fromCodePoint(55 + v));
+                        let digitNames = values.filter(v => v < 10);
+                        switch (digitNames.length)
+                        {
+                            case 0: return `obsahuje sériové číslo ${letterNames[0]}, ${letterNames[1]}, ${letterNames[2]} nebo ${letterNames[3]}`;
+                            case 1: return `obsahuje sériové číslo ${letterNames[0]}, ${letterNames[1]}, ${letterNames[2]} nebo ${digitNames[0]}`;
+                            case 2: return `obsahuje sériové číslo ${letterNames[0]}, ${letterNames[1]}, ${digitNames[0]} nebo ${digitNames[1]}`;
+                            case 3: return `obsahuje sériové číslo ${letterNames[0]}, ${digitNames[0]}, ${digitNames[1]} nebo ${digitNames[2]}`;
+                            case 4: return `obsahuje sériové číslo ${digitNames[0]}, ${digitNames[1]}, ${digitNames[2]} nebo ${digitNames[3]}`;
+                        }
+                    }
+                ],
+                'p': [
+                    "obsahuje bomba paralelní port",
+                    "obsahuje bomba sériový port",
+                    "obsahuje bomba PS/2 port",
+                    "obsahuje bomba Stereo RCA port",
+                    "obsahuje bomba RJ-45 port",
+                    "obsahuje bomba DVI-D port",
+                    "obsahuje bomba duplikátní port",
+                    "obsahuje bomba prázdný držák na porty"
+                ],
+                'i': [
+                    "obsahuje bomba indikátor SND",
+                    "obsahuje bomba indikátor CLR",
+                    "obsahuje bomba indikátor CAR",
+                    "obsahuje bomba indikátor IND",
+                    "obsahuje bomba indikátor FRQ",
+                    "obsahuje bomba indikátor SIG",
+                    "obsahuje bomba indikátor NSA",
+                    "obsahuje bomba indikátor MSA",
+                    "obsahuje bomba indikátor TRN",
+                    "obsahuje bomba indikátor BOB",
+                    "obsahuje bomba indikátor FRK",
+                    "obsahuje bomba rozsvícený indikátor SND",
+                    "obsahuje bomba rozsvícený indikátor CLR",
+                    "obsahuje bomba rozsvícený indikátor CAR",
+                    "obsahuje bomba rozsvícený indikátor IND",
+                    "obsahuje bomba rozsvícený indikátor FRQ",
+                    "obsahuje bomba rozsvícený indikátor SIG",
+                    "obsahuje bomba rozsvícený indikátor NSA",
+                    "obsahuje bomba rozsvícený indikátor MSA",
+                    "obsahuje bomba rozsvícený indikátor TRN",
+                    "obsahuje bomba rozsvícený indikátor BOB",
+                    "obsahuje bomba rozsvícený indikátor FRK",
+                    "obsahuje bomba nerozsvícený indikátor SND",
+                    "obsahuje bomba nerozsvícený indikátor CLR",
+                    "obsahuje bomba nerozsvícený indikátor CAR",
+                    "obsahuje bomba nerozsvícený indikátor IND",
+                    "obsahuje bomba nerozsvícený indikátor FRQ",
+                    "obsahuje bomba nerozsvícený indikátor SIG",
+                    "obsahuje bomba nerozsvícený indikátor NSA",
+                    "obsahuje bomba nerozsvícený indikátor MSA",
+                    "obsahuje bomba nerozsvícený indikátor TRN",
+                    "obsahuje bomba nerozsvícený indikátor BOB",
+                    "obsahuje bomba nerozsvícený indikátor FRK"
+                ],
+                'b': [
+                    function (rnd) { let rndnext = rnd.next(2, 5); return `obsahuje bomba více než ${rndnext} ${rndnext == 5 ? "baterií" : "baterie"}`; },
+                    function (rnd) { let rndnext = rnd.next(2, 5); return `obsahuje bomba více než ${rndnext} ${rndnext == 5 ? "baterií" : "baterie"}`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `má bomba mezi ${min} a ${rnd.next(min+1, min+3)} beteriemi`; },
+                    function (rnd) { let rndnext = rnd.next(2, 5); return `obsahuje bomba více než ${rndnext} ${rndnext == 5 ? "držáků na baterie" : "držáky na baterie"}`; },
+                    function (rnd) { let rndnext = rnd.next(2, 5); return `obsahuje bomba méně než ${rnd.next(2, 5)} ${rndnext == 5 ? "držáků na baterie" : "držáky na baterie"}`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `má bomba mezi ${min} a ${rnd.next(min+1, min+3)} držákmi na baterie`; }
+                ]
+            };
+            let rules = [];
+            let offsets = rnd.shuffleFisherYates([...Array(60).keys()].map(i => i < 30 ? i-30 : i-29));
+            let ruleTypes = ['s', 'p', 'i', 'b'];
+            ruleTypes.push(['s', 'p', 'i', 'b'][rnd.next(0, 4)]);
+            for (let ruleType of ruleTypes)
+            {
+                let ix = rnd.next(0, candidates[ruleType].length);
+                rules.push(candidates[ruleType][ix]);
+                candidates[ruleType].splice(ix, 1);
+            }
+            rnd.shuffleFisherYates(rules);
+
+            let rulesHtml = document.getElementsByClassName('rule');
+            for (let i = 0; i < 5; i++)
+            {
+                let ruleStr = typeof rules[i] === 'function' ? rules[i](rnd) : rules[i];
+                rulesHtml[i].innerText = `Pokud ${ruleStr}, ${offsets[i] < 0 ? 'odečtěte od vašeho čísla' : 'přičtěte k vašemu číslu'} ${Math.abs(offsets[i])}.`;
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            if (rnd.next(0, 2) != 0)
+            {
+                lrs[0].innerText = 'Levé písmeno:';
+                lrs[1].innerText = 'Pravé písmeno:';
+            }
+            else
+            {
+                lrs[0].innerText = 'Pravé písmeno:';
+                lrs[1].innerText = 'Levé písmeno:';
+            }
+
+            let candidateLetters = rnd.shuffleFisherYates(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']).slice(0, 13).sort();
+            let cols = document.getElementsByClassName('letter-col');
+            let rows = document.getElementsByClassName('letter-row');
+            let tds = document.getElementsByClassName('number');
+            let numbers = rnd.shuffleFisherYates([...Array(200).keys()].map(i => i % 100));
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j] < 10 ? `0${numbers[i*13 + j]}` : numbers[i*13 + j];
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Rychlá matika</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Fast Math.svg" class="diagram">
+                <h2>Na téma Rychlé matiky</h2>
+                <p class="flavour-text">
+                    Musíte jít rychle!
+                </p>
+
+                <ul style='font-size: 10.5pt;'>
+                    <li>Na obrazovce se zobrazí dvě písmena. Použijte číselnou klávesnici a poté odešlete kód ke zneškodnění modulu. Modul obsahuje 3 - 5 fází.</li>
+                    <li>Abyste začali, stiskněte tlačítko s nápisem „GO!“. máte 10 sekund na odeslání <b>dvouciferné</b> odpovědi. (Čas může být změněn ve složce s nastavením modů.)</li>
+                    <li>Pokud dojde časovač k 0, dostanete chybu a modul se resetuje.</li>
+                    <li>Jakmile je jedna fáze dokončena, časovač se resetuje a na displeji se zobrazí dvě nová písmena.</li>
+                    <li>
+                        Řiďte se následujícími pokyny před odesláním odpovědi:
+                        <ul>
+                            <li class='rule'>Pokud obsahuje bomba  rozsvícený indikátor MSA, přičtěte k vašemu počátečnímu kódu 20.</li>
+                            <li class='rule'>Pokud obsahuje bomba  sériový port, přičtěte k vašemu počátečnímu kódu 14.</li>
+                            <li class='rule'>Pokud obsahuje sériové číslo  F, A, S nebo T,“ odečtěte od vašeho počátečního kódu 5.</li>
+                            <li class='rule'>Pokud obsahuje bomba  RJ-45 port, přičtěte k vašemu počátečnímu kódu 27.</li>
+                            <li class='rule'>Pokud obsahuje bomba  více než 3 baterie, odečtěte od vašeho počátečního kódu 15.</li>
+                        </ul>
+                    </li>
+                    <li><i>Pokud je vaše konečné celkové číslo větší než 99, použijte poslední dvě cifry celého čísla. Pokud je vaše konečné číslo menší než 0, přičtěte k němu 50.</i></li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th class="repeaters-spacer left-right" colspan="2">Pravé písmeno:</th>
+                        <th class='letter-col'>A</th>
+                        <th class='letter-col'>B</th>
+                        <th class='letter-col'>C</th>
+                        <th class='letter-col'>D</th>
+                        <th class='letter-col'>E</th>
+                        <th class='letter-col'>G</th>
+                        <th class='letter-col'>K</th>
+                        <th class='letter-col'>N</th>
+                        <th class='letter-col'>P</th>
+                        <th class='letter-col'>S</th>
+                        <th class='letter-col'>T</th>
+                        <th class='letter-col'>X</th>
+                        <th class='letter-col'>Z</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="13" class='left-right'>Levé písmeno:</th>
+                        <th class='letter-row'>A</th>
+                        <td class='number'>25</td>
+                        <td class='number'>11</td>
+                        <td class='number'>53</td>
+                        <td class='number'>97</td>
+                        <td class='number'>02</td>
+                        <td class='number'>42</td>
+                        <td class='number'>51</td>
+                        <td class='number'>97</td>
+                        <td class='number'>12</td>
+                        <td class='number'>86</td>
+                        <td class='number'>55</td>
+                        <td class='number'>73</td>
+                        <td class='number'>33</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>B</th>
+                        <td class='number'>54</td>
+                        <td class='number'>07</td>
+                        <td class='number'>32</td>
+                        <td class='number'>19</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>27</td>
+                        <td class='number'>78</td>
+                        <td class='number'>26</td>
+                        <td class='number'>46</td>
+                        <td class='number'>09</td>
+                        <td class='number'>13</td>
+                        <td class='number'>58</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>C</th>
+                        <td class='number'>86</td>
+                        <td class='number'>37</td>
+                        <td class='number'>44</td>
+                        <td class='number'>01</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>93</td>
+                        <td class='number'>49</td>
+                        <td class='number'>18</td>
+                        <td class='number'>69</td>
+                        <td class='number'>23</td>
+                        <td class='number'>40</td>
+                        <td class='number'>22</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>D</th>
+                        <td class='number'>54</td>
+                        <td class='number'>28</td>
+                        <td class='number'>77</td>
+                        <td class='number'>93</td>
+                        <td class='number'>11</td>
+                        <td class='number'>00</td>
+                        <td class='number'>35</td>
+                        <td class='number'>61</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>13</td>
+                        <td class='number'>72</td>
+                        <td class='number'>80</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>E</th>
+                        <td class='number'>99</td>
+                        <td class='number'>36</td>
+                        <td class='number'>23</td>
+                        <td class='number'>95</td>
+                        <td class='number'>67</td>
+                        <td class='number'>05</td>
+                        <td class='number'>26</td>
+                        <td class='number'>17</td>
+                        <td class='number'>44</td>
+                        <td class='number'>60</td>
+                        <td class='number'>26</td>
+                        <td class='number'>41</td>
+                        <td class='number'>67</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>G</th>
+                        <td class='number'>74</td>
+                        <td class='number'>95</td>
+                        <td class='number'>03</td>
+                        <td class='number'>04</td>
+                        <td class='number'>56</td>
+                        <td class='number'>23</td>
+                        <td class='number'>54</td>
+                        <td class='number'>29</td>
+                        <td class='number'>52</td>
+                        <td class='number'>38</td>
+                        <td class='number'>10</td>
+                        <td class='number'>76</td>
+                        <td class='number'>98</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>K</th>
+                        <td class='number'>88</td>
+                        <td class='number'>46</td>
+                        <td class='number'>37</td>
+                        <td class='number'>96</td>
+                        <td class='number'>02</td>
+                        <td class='number'>52</td>
+                        <td class='number'>81</td>
+                        <td class='number'>37</td>
+                        <td class='number'>12</td>
+                        <td class='number'>70</td>
+                        <td class='number'>14</td>
+                        <td class='number'>36</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>N</th>
+                        <td class='number'>54</td>
+                        <td class='number'>43</td>
+                        <td class='number'>12</td>
+                        <td class='number'>65</td>
+                        <td class='number'>94</td>
+                        <td class='number'>03</td>
+                        <td class='number'>47</td>
+                        <td class='number'>23</td>
+                        <td class='number'>16</td>
+                        <td class='number'>62</td>
+                        <td class='number'>73</td>
+                        <td class='number'>46</td>
+                        <td class='number'>21</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>P</th>
+                        <td class='number'>07</td>
+                        <td class='number'>33</td>
+                        <td class='number'>26</td>
+                        <td class='number'>01</td>
+                        <td class='number'>67</td>
+                        <td class='number'>26</td>
+                        <td class='number'>27</td>
+                        <td class='number'>77</td>
+                        <td class='number'>83</td>
+                        <td class='number'>14</td>
+                        <td class='number'>27</td>
+                        <td class='number'>93</td>
+                        <td class='number'>09</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>S</th>
+                        <td class='number'>63</td>
+                        <td class='number'>64</td>
+                        <td class='number'>94</td>
+                        <td class='number'>27</td>
+                        <td class='number'>48</td>
+                        <td class='number'>84</td>
+                        <td class='number'>33</td>
+                        <td class='number'>10</td>
+                        <td class='number'>16</td>
+                        <td class='number'>74</td>
+                        <td class='number'>43</td>
+                        <td class='number'>99</td>
+                        <td class='number'>04</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>T</th>
+                        <td class='number'>35</td>
+                        <td class='number'>39</td>
+                        <td class='number'>03</td>
+                        <td class='number'>25</td>
+                        <td class='number'>47</td>
+                        <td class='number'>62</td>
+                        <td class='number'>38</td>
+                        <td class='number'>45</td>
+                        <td class='number'>88</td>
+                        <td class='number'>48</td>
+                        <td class='number'>34</td>
+                        <td class='number'>31</td>
+                        <td class='number'>27</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>X</th>
+                        <td class='number'>67</td>
+                        <td class='number'>30</td>
+                        <td class='number'>27</td>
+                        <td class='number'>71</td>
+                        <td class='number'>09</td>
+                        <td class='number'>11</td>
+                        <td class='number'>44</td>
+                        <td class='number'>37</td>
+                        <td class='number'>18</td>
+                        <td class='number'>40</td>
+                        <td class='number'>32</td>
+                        <td class='number'>15</td>
+                        <td class='number'>78</td>
+                    </tr>
+                    <tr>
+                        <th class='letter-row'>Z</th>
+                        <td class='number'>13</td>
+                        <td class='number'>23</td>
+                        <td class='number'>26</td>
+                        <td class='number'>85</td>
+                        <td class='number'>92</td>
+                        <td class='number'>12</td>
+                        <td class='number'>73</td>
+                        <td class='number'>56</td>
+                        <td class='number'>81</td>
+                        <td class='number'>07</td>
+                        <td class='number'>75</td>
+                        <td class='number'>47</td>
+                        <td class='number'>99</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Strana 1 z 1</div>
+        </div>
+    </div>
+</body>
+</html>
