@@ -11,19 +11,23 @@
     <style>
         .dark table, table {
             margin: 1em auto;
-            border: none;
             font-size: 7.5pt;
+        }
+
+        p {
+            margin-bottom: .8em;
+        }
+
+        .icon-grid { width: 100%; }
+        .dark .icon-grid {
+            background-color: #888;
+            margin: -5px;
+            padding: 5px;
+            border-radius: 5px;
         }
 
         .dark .unfilled, .filled { background-color: #111; color: #ddd; }
         .dark .filled, .unfilled { background-color: #eee; color: #222; }
-
-        .hstack {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-        }
 
         .page-footer::before { content: 'Page '; }
         .page-footer::after { content: ' of 2'; }
@@ -35,30 +39,25 @@
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         function addEventHandlers() {
-            document.getElementById("emojiGrid").addEventListener("click", clickedEmojiGrid);
-            document.getElementById("flagGrid").addEventListener("click", clickedFlagGrid);
+            document.getElementById("emoji-grid").addEventListener("click", clickHandler("emoji-grid", 25, 25, "result", (x, y) => sentence + " <b>" + emoji[y * 25 + x].toUpperCase() + "</b>"));
+            document.getElementById("flag-grid").addEventListener("click", clickHandler("flag-grid", 26, 26, "otherResult", (x, y) => paragraph + " <b>" + alphabet[y] + alphabet[x] + "</b>"));
         }
 
-        function clickedEmojiGrid(event) {
-            var emojiGrid = document.getElementById("emojiGrid");
-            var bounds = emojiGrid.getBoundingClientRect();
-            var x = Math.floor(((event.clientX) - Math.round(bounds.left))/26.88);
-            var y = Math.floor(((event.clientY) - Math.round(bounds.top))/26.88);
-            if (x < 0 || x > 24 || y < 0 || y > 24) {
-                return;
+        function clickHandler(gridElemId, numCols, numRows, outputElemId, resultFunc) {
+            const gridElem = document.getElementById(gridElemId)
+            const outputElem = document.getElementById(outputElemId)
+            
+            function handleClick(event) {
+                // Width and height need to be recalculated on every click in case the user zooms in/out enough to change between mobile/desktop view.
+                const colWidth = gridElem.offsetWidth / numCols;
+                const rowHeight = gridElem.offsetHeight / numRows;
+                const bounds = gridElem.getBoundingClientRect();
+                const x = Math.floor((event.clientX - bounds.left) / colWidth);
+                const y = Math.floor((event.clientY - bounds.top) / rowHeight);
+                if (x >= 0 && x < numCols && y >= 0 && y < numRows)
+                    outputElem.innerHTML = resultFunc(x, y);
             }
-            document.getElementById("result").innerHTML = sentence + " <b>" + emoji[y * 25 + x].toUpperCase() + "</b>";
-        }
-
-        function clickedFlagGrid(event) {
-            var flagGrid = document.getElementById("flagGrid");
-            var bounds = flagGrid.getBoundingClientRect();
-            var x = Math.floor(((event.clientX) - Math.round(bounds.left))/25.846);
-            var y = Math.floor(((event.clientY) - Math.round(bounds.top))/19.115);
-            if (x < 0 || x > 25 || y < 0 || y > 25) {
-                return;
-            }
-            document.getElementById("otherResult").innerHTML = paragraph + " <b>" + alphabet[y] + alphabet[x] + "</b>";
+            return handleClick
         }
     </script>
 </head>
@@ -72,12 +71,11 @@
             <div class="page-content">
                 <img src="img/Component/Emoji.svg" class="diagram">
                 <h2>On the Subject of Emoji</h2>
-                <p class="flavour-text">“😂” was the Oxford word of the year in 2015? What the hell?</p> 
+                <p class="flavour-text">“😂” was the Oxford word of the year in 2015? What the hell?</p>
 
                 <p>This module consists of a Apple monitor with a stand. But the stand is also by Apple, so it costs $999. In frustration, you decide you want to destroy it. However, if you do not destroy it correctly it will rematerialize (and give you a strike).</p>
                 <p id="result">The monitor consists of two emoji, both of which have a name. Click the two emoji in the image below to get their names for the next step.</p>
-
-                <img src="img/Emoji/Emoji Grid.png" id="emojiGrid" style='width: 100%'/>
+                <img src="img/Emoji/Emoji Grid.png" id="emoji-grid" class="icon-grid"/>
             </div>
             <div class="page-footer relative-footer">1</div>
         </div>
@@ -88,23 +86,20 @@
                 <span class="page-header-section-title">Emoji</span>
             </div>
             <div class="page-content">
-                <p id="otherResult">Using the names of the two emoji, create a new grid where it's rows have the letters of the left emoji from top to bottom, and it's columns have the letters of the right emoji from left to right. Using the row as the first character and the column as the second, determine whether these two characters form a valid two-letter code representing an emoji flag. These flags are found below. Consider valid codes as filled in the grid, and invalid as unfilled.</p>
-            
-                <img src="img/Emoji/Flag Grid.png" id="flagGrid" style='width: 100%'/>
-
+                <p id="otherResult">Using the names of the two emoji, create a new grid where its rows have the letters of the left emoji from top to bottom, and its columns have the letters of the right emoji from left to right. Using the row as the first character and the column as the second, determine whether these two characters form a valid two-letter code representing an emoji flag. These flags are found below. Consider valid codes as filled in the grid, and invalid as unfilled.</p>
+                <img src="img/Emoji/Flag Grid.png" id="flag-grid" class="icon-grid"/>
                 <div class="hstack">
-                <p>A region will be defined as any orthogonally adjacent cells in your generated grid of similar shade (filled or unfilled). Count the number of regions total in your grid. For example, if both emoji's names were "ABCDE", the resulting grid would have 9 regions.</p>
-                <table>
-                    <tr><td class="unfilled">1</td><td class="unfilled"></td><td class="filled"></td><td class="filled">2</td><td class="filled"></td></tr>
-                    <tr><td class="filled">3</td><td class="filled"></td><td class="unfilled">4</td><td class="filled"></td><td class="filled"></td></tr>
-                    <tr><td class="filled"></td><td class="unfilled">5</td><td class="filled"></td><td class="filled"></td><td class="unfilled">6</td></tr>
-                    <tr><td class="unfilled"></td><td class="unfilled"></td><td class="unfilled"></td><td class="unfilled"></td><td class="filled">7</td></tr>
-                    <tr><td class="filled">8</td><td class="unfilled"></td><td class="filled">9</td><td class="unfilled"></td><td class="filled"></td></tr>
-                </table>
+                    <p>A region will be defined as any orthogonally adjacent cells in your generated grid of similar shade (filled or unfilled). Count the number of regions total in your grid. For example, if both emoji names were “ABCDE”, the resulting grid would have 9 regions.</p>
+                    <table>
+                        <tr><td class="unfilled">1</td><td class="unfilled"></td><td class="filled"></td><td class="filled">2</td><td class="filled"></td></tr>
+                        <tr><td class="filled">3</td><td class="filled"></td><td class="unfilled">4</td><td class="filled"></td><td class="filled"></td></tr>
+                        <tr><td class="filled"></td><td class="unfilled">5</td><td class="filled"></td><td class="filled"></td><td class="unfilled">6</td></tr>
+                        <tr><td class="unfilled"></td><td class="unfilled"></td><td class="unfilled"></td><td class="unfilled"></td><td class="filled">7</td></tr>
+                        <tr><td class="filled">8</td><td class="unfilled"></td><td class="filled">9</td><td class="unfilled"></td><td class="filled"></td></tr>
+                    </table>
                 </div>
-                
-                <p>The number of regions in your grid determines how many times to punch each emoji on the screen. The tens digit determines how many times you punch the left emoji, and the ones digit determines how many times you punch the right emoji.</p>
 
+                <p>The number of regions in your grid determines how many times to punch each emoji on the screen. The tens digit determines how many times you punch the left emoji, and the ones digit determines how many times you punch the right emoji.</p>
                 <p>Failure to do this correctly will yield a strike, rematerialize the monitor, and give you new emoji.</p>
             </div>
             <div class="page-footer relative-footer">2</div>
