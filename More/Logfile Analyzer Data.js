@@ -1803,6 +1803,81 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "bakery",
+		loggingTag: "Bakery",
+		matches: [
+			{
+				regex: /[ABCD][1234] .+/,
+				handler: function (matches, module) {
+					const cookieRegex = /([ABCD][1234]) \((.+)\): (.+)/;
+					const lines = [];
+					lines.push(matches[0]);
+					readTaggedLines(11).forEach(line => lines.push(line));
+					const cookies = lines.map(line => {
+						const lineMatches = line.match(cookieRegex);
+						const obj = {};
+						obj.coordinate = lineMatches[1];
+						obj.name = lineMatches[2];
+						obj.reason = lineMatches[3];
+						obj.valid = !lineMatches[3].includes("invalid");
+						obj.index = ((obj.coordinate[1]) - 1) * 4 + "ABCD".indexOf(obj.coordinate[0]);
+						return obj;
+					});
+					const cookieLogs = [];
+					const cookieSorted = {
+						branded: ["Bastenaken cookie", "Caramoa", "Digits", "Dim dam", "Festivity loops", "Fig glutton", "Grease's cup", "Havabreaks", "Jaffa cake", "Lombardia cookie", "Loreol", "Pokey", "Sagalong", "Shortfoil", "Win mint", "Zilla wafers"],
+						butterBiscuits: ["Butter biscuit (with butter)", "Cosmic chocolate butter biscuit", "Dark chocolate butter biscuit", "Everybutter biscuit", "Lavender chocolate butter biscuit", "Milk chocolate butter biscuit", "Pure pitch-black chocolate butter biscuit", "Royal raspberry chocolate butter biscuit", "Ruby chocolate butter biscuit", "Synthetic chocolate green honey butter biscuit", "Ultra-concentrated high-energy chocolate butter biscuit", "White chocolate butter biscuit"],
+						christmas: ["Bell cookie", "Candy cane cookie", "Christmas tree cookie", "Holly cookie", "Present cookie", "Snowflake cookie", "Snowman cookie"],
+						danishButter: ["Butter knot", "Butter puck", "Butter slab", "Butter swirl", "Butter horseshoe"],
+						holloween: ["Bat cookie", "Eyeball cookie", "Ghost cookie", "Pumpkin cookie", "Skull cookie", "Slime cookie", "Spider cookie"],
+						macarons: ["Caramel macaron", "Chocolate macaron", "Earl Grey macaron", "Hazelnut macaron", "Lemon macaron", "Licorice macaron", "Pistachio macaron", "Rose macaron", "Violet macaron"],
+						notCookies: ["Butter croissant", "Chocolate cake", "Crackers", "Fudge square", "Glazed donut", "Ice cream sandwich", "Jelly donut", "Lemon meringue pie", "Profiteroles", "Strawberry cake", "Toast", "Apple pie"],
+						teaBuscuits: ["Chocolate hearted tea biscuit", "Chocolate round tea biscuit", "Chocolate tea biscuit", "Hearted tea biscuit", "Round tea biscuit", "Tea biscuit"],
+						valentine: ["Ardent heart cookie", "Eternal heart cookie", "Golden heart cookie", "Prism heart cookie", "Pure heart cookie", "Sour heart cookie", "Weeping heart cookie"],
+					};
+					const revisedCookieNames = [
+						{ old: "Gluten-free cookie", new: "gluten free cookie" },
+						{ old: "Petit buerre", new: "petit beurre" },
+						{ old: "Bokkenpootje", new: "bokkenpootjes" },
+						{ old: "Ischler cookies", new: "ischler cookie" },
+					];
+					const solutionLine = readTaggedLine();
+					let solution = solutionLine.match(/Solution:(.+)/)[1];
+					solution = solution.split(',').map(el => el.trim());
+					const table = $("<table>").addClass("bakery");
+					for (let row = 0; row < 3; row++) {
+						const tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 4; col++) {
+							const index = row * 4 + col;
+							const cookie = cookies.filter(c => c.index == index)[0];
+							const folder = cookieSorted.branded.includes(cookie.name) ? "Branded" :
+								cookieSorted.butterBiscuits.includes(cookie.name) ? "Butter Biscuits" :
+								cookieSorted.christmas.includes(cookie.name) ? "Christmas" :
+								cookieSorted.danishButter.includes(cookie.name) ? "Butter" :
+								cookieSorted.holloween.includes(cookie.name) ? "Halloween" :
+								cookieSorted.macarons.includes(cookie.name) ? "Macarons" :
+								cookieSorted.notCookies.includes(cookie.name) ? "Other" :
+								cookieSorted.teaBuscuits.includes(cookie.name) ? "Tea Biscuits" :
+								cookieSorted.valentine.includes(cookie.name) ? "Valentine" : "Regular";
+							const revisedCookieObj = revisedCookieNames.filter(obj => obj.old == cookie.name)[0];
+							const revisedCookieName = revisedCookieObj == null ? cookie.name : revisedCookieObj.new;
+							cookieLogs.push([`${cookie.name}: ${cookie.valid ? "Valid" : "Invalid"}`, [cookie.reason]]);
+							const td = $('<td>').appendTo(tr);
+							td.addClass(`bakery-${solution.includes(cookie.coordinate) ? "purple" : "brown"}`);
+							const div = $('<div>').addClass('bakery').appendTo(td);
+							$('<img>').attr('src', `../HTML/img/Bakery/${folder}/${revisedCookieName}.png`).addClass("centered-img").addClass("bakery").appendTo(div);
+							$(`<p>${cookie.name}</p>`).addClass("bakery").appendTo(div);
+						}
+					}
+					module.push({ obj: table, nobullet: true });
+					cookieLogs.forEach(cookie => module.push(cookie));
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "bamboozlingTimeKeeper",
 		loggingTag: "Bamboozling Time Keeper",
 		matches: [
