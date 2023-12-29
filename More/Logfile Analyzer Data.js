@@ -684,9 +684,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -821,9 +819,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -858,9 +854,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -879,9 +873,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1057,9 +1049,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1196,9 +1186,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1280,9 +1268,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1355,9 +1341,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			},
+			{ regex: /.+/ },
 			{
 				regex: /The (?:true )?value of [CZ] is/,
 				handler: function (_, module) {
@@ -1449,9 +1433,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1612,9 +1594,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1694,9 +1674,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1821,9 +1799,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -1889,9 +1865,7 @@ let parseData = [
 		moduleID: "BattleshipModule",
 		loggingTag: "Battleship",
 		matches: [
-			{
-				regex: /.+/
-			},
+			{ regex: /.+/ },
 			{
 				regex: /Ships: .+/,
 				handler: function (matches, module) {
@@ -1978,9 +1952,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2002,9 +1974,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2089,9 +2059,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2150,9 +2118,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2192,9 +2158,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2343,9 +2307,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2544,9 +2506,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2599,9 +2559,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2631,9 +2589,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2759,9 +2715,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2775,9 +2729,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -2872,9 +2824,7 @@ let parseData = [
 					return svg;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3004,9 +2954,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3021,9 +2969,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3069,9 +3015,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3084,9 +3028,7 @@ let parseData = [
 					module.push($("<span style='direction: ltr;'>").text(matches[1]));
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3184,9 +3126,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3258,9 +3198,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3282,9 +3220,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3334,9 +3270,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3509,9 +3443,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3569,9 +3501,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3721,9 +3651,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3780,9 +3708,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3918,9 +3844,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -3949,9 +3873,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4105,9 +4027,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4128,9 +4048,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4254,9 +4172,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4285,9 +4201,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4319,9 +4233,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4366,9 +4278,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4388,9 +4298,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4407,9 +4315,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4459,9 +4365,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4477,9 +4381,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4517,9 +4419,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4721,9 +4621,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4739,9 +4637,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4767,9 +4663,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4847,9 +4741,7 @@ let parseData = [
 
 
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -4893,9 +4785,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5021,9 +4911,7 @@ let parseData = [
 				regex: /The solution path generated is as follows:/,
 				handler: () => true
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5037,9 +4925,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5055,9 +4941,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5079,9 +4963,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5110,9 +4992,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5127,9 +5007,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5226,9 +5104,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			},
+			{ regex: /.+/ },
 			{
 				regex: /Solution for /,
 				handler: function (_, module) {
@@ -5313,9 +5189,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5371,9 +5245,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5412,9 +5284,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5473,9 +5343,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5493,9 +5361,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5585,9 +5451,7 @@ let parseData = [
 				regex: /Final answer: \d+$/,
 				handler: function () { return true; }
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5644,9 +5508,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5674,9 +5536,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5720,9 +5580,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5740,9 +5598,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5820,9 +5676,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -5872,9 +5726,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6058,9 +5910,7 @@ let parseData = [
 					module.push($("<div style='background: url(\"data:image/svg+xml," + escape(bkgSvg) + "\"); position: relative; width: 490px; height: 370px; margin-bottom: 50px;'>").append(colDisregards + rowDisregards + cutieMarks));
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6086,9 +5936,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6295,9 +6143,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6509,9 +6355,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6559,9 +6403,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6586,9 +6428,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6640,9 +6480,7 @@ let parseData = [
 					module.Link.label = "<a href='../HTML/Hexamaze interactive (samfundev).html#" + JSON.stringify(module.JSON) + "'>View the solution interactively</a>";
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6704,9 +6542,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6778,9 +6614,7 @@ let parseData = [
 		moduleID: "http",
 		loggingTag: "NeedyHTTP",
 		matches: [
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6945,9 +6779,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -6987,9 +6819,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7018,9 +6848,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7034,9 +6862,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7071,9 +6897,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7088,9 +6912,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7104,9 +6926,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7182,9 +7002,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7208,9 +7026,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7247,9 +7063,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7257,9 +7071,7 @@ let parseData = [
 		moduleID: "jewelVault",
 		loggingTag: "Jewel Wheels",
 		matches: [
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7347,9 +7159,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7376,9 +7186,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7392,9 +7200,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7414,9 +7220,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7432,9 +7236,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -7892,9 +7694,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8018,9 +7818,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8102,9 +7900,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8287,9 +8083,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8316,9 +8110,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8410,9 +8202,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8435,9 +8225,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8569,9 +8357,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8607,9 +8393,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8735,9 +8519,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8763,9 +8545,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8809,9 +8589,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8838,9 +8616,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -8888,9 +8664,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9004,9 +8778,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9052,9 +8824,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9374,9 +9144,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9542,9 +9310,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
         ]
     },
 	{
@@ -9562,9 +9328,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9579,9 +9343,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9780,9 +9542,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9804,9 +9564,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9924,9 +9682,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -9955,9 +9711,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 		{
@@ -10335,9 +10089,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 {
@@ -10395,9 +10147,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 
 		]
 	},
@@ -10412,9 +10162,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -10436,9 +10184,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -10509,9 +10255,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -10590,9 +10334,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -10840,9 +10582,7 @@ let parseData = [
 					}
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -10943,9 +10683,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11020,9 +10758,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11036,9 +10772,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11116,9 +10850,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11161,9 +10893,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11214,9 +10944,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11478,9 +11206,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11505,9 +11231,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11522,9 +11246,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11624,9 +11346,7 @@ let parseData = [
 					}
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11728,9 +11448,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11747,9 +11465,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11907,9 +11623,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -11964,9 +11678,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12095,9 +11807,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12148,9 +11858,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12243,9 +11951,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12342,9 +12048,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12538,9 +12242,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12641,9 +12343,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -12813,9 +12513,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13069,9 +12767,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13358,9 +13054,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13368,9 +13062,7 @@ let parseData = [
 		moduleID: "QRCode",
 		loggingTag: "NeedyQRCode",
 		matches: [
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13425,9 +13117,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13575,9 +13265,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13739,9 +13427,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -13991,9 +13677,7 @@ let parseData = [
 					module.groups.add($(`<a href="https://api.mrmelon54.com/v1/remote-math/log?date=${matches[1]}&code=${matches[2]}" download="${matches[1]}-${matches[2]}.log">Download server's logfile</a>`))
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14045,9 +13729,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14127,9 +13809,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14158,9 +13838,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14189,9 +13867,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14229,9 +13905,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14311,9 +13985,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14355,9 +14027,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14374,9 +14044,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14444,9 +14112,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14628,9 +14294,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14665,9 +14329,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14747,9 +14409,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	    {
@@ -14839,9 +14499,7 @@ let parseData = [
 				}
 			},
 
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -14863,9 +14521,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -15368,9 +15024,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -15454,9 +15108,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -15861,9 +15513,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16046,9 +15696,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16092,9 +15740,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16138,9 +15784,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16333,9 +15977,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16446,9 +16088,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16547,9 +16187,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16653,9 +16291,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16670,9 +16306,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16713,9 +16347,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16737,9 +16369,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16771,9 +16401,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16823,9 +16451,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16904,9 +16530,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -16954,9 +16578,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17006,9 +16628,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17275,9 +16895,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17309,9 +16927,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17415,9 +17031,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17443,9 +17057,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 			//{
 			//	regex: /^The matrix for tile ([A-Z]+)(\d+) is: (.+)$/,
 			//	handler: function(matches, module)
@@ -17519,9 +17131,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17538,9 +17148,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17667,9 +17275,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17783,9 +17389,7 @@ let parseData = [
 					module.push({ label: `Winner${winners.length == 1 ? "" : "s"}:`, obj: winnersSvg, nobullet: true });
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17853,9 +17457,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17963,9 +17565,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18063,9 +17663,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18214,9 +17812,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18241,9 +17837,7 @@ let parseData = [
 					});
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18381,9 +17975,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18612,9 +18204,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18771,9 +18361,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -18796,9 +18384,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 
@@ -19104,9 +18690,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -19164,9 +18748,7 @@ let parseData = [
 					module.push({ linebreak: true });
 				}
 			},
-			{
-				regex: /.+/
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
