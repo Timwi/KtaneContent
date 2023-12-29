@@ -13752,18 +13752,18 @@ let parseData = [
 								.attr("width", dimension).attr("height", dimension)
 								.attr("x", x).attr("y", y)
 								.appendTo(svg);
-							if(edge.incorrect) {
+							if (edge.incorrect) {
 								$SVG("<circle>")
-								.attr("cx", x + dimension / 2)
-								.attr("cy", y + dimension / 2)
-								.attr("r", (dimension / 2) - 1)
-								.addClass(`reflection ${edge.color}`).appendTo(svg);
+									.attr("cx", x + dimension / 2)
+									.attr("cy", y + dimension / 2)
+									.attr("r", (dimension / 2) - 1)
+									.addClass(`reflection ${edge.color}`).appendTo(svg);
 							}
 							$SVG(`<text>`).attr("x", x + dimension / 2)
-							.attr("y", y + dimension / 2)
-							.text(edge.num)
-							.addClass("reflection")
-							.appendTo(svg);
+								.attr("y", y + dimension / 2)
+								.text(edge.num)
+								.addClass("reflection")
+								.appendTo(svg);
 						}
 						return svg;
 					}
@@ -13781,26 +13781,27 @@ let parseData = [
 					let line;
 					const icons = matches[1].split(" }, { ").map(el => el.replaceAll('}', '').replaceAll('{', '').trim().split(", "));
 					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400' class='reflection-grid'>");
-					while((line = readTaggedLine().match(/^Your submission of edge ([TBLR][ABCDE12345]) is (green|yellow|ash) (\d+), but the answer is (?:green|yellow|ash) (?:\d+). Incorrect!$/)) != null)
-					{
+					while ((line = readTaggedLine().match(/^Your submission of edge ([TBLR][ABCDE12345]) is (green|yellow|ash) (\d+), but the answer is (?:green|yellow|ash) (?:\d+). Incorrect!$/)) != null) {
 						let row, col;
 						row = 'TBLR'.indexOf(line[1][0]);
 						col = '12345'.indexOf(line[1][1]);
-						if(col == -1)
+						if (col == -1)
 							col = 'ABCDE'.indexOf(line[1][1]);
-						inccorectSubmission.push({row: row,
-												  col: col,
-											      color: line[2], 
-												  num: line[3]});
-					} 
+						inccorectSubmission.push({
+							row: row,
+							col: col,
+							color: line[2],
+							num: line[3]
+						});
+					}
 					linen--;
 					const edges = [];
 					for (let row = 0; row < 4; row++) {
 						let newRow = [];
 						for (let col = 0; col < 5; col++) {
 							let edge = inccorectSubmission.filter(obj => obj.row == row && obj.col == col)[0];
-							if(edge)
-								newRow.push({color: edge.color, num: edge.num, incorrect: true});
+							if (edge)
+								newRow.push({ color: edge.color, num: edge.num, incorrect: true });
 							else
 								newRow.push(module.edges[row][col]);
 						}
