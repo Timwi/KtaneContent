@@ -13681,7 +13681,7 @@ let parseData = [
 				regex: /Answer grid: {((\s{\s(\d+[\s,]*){5}},?){5})\s}/,
 				handler: function (matches, module) {
 					module.submissionNum = 0;
-					module.iconsArr = [{ img: "slash" }, { img: "slash", class: "reflection-hflipped" }, { img: "double line", class: "reflection-rotated-clock", transformOrigin: true }, { img: "double line" }, { img: "square" }, { img: "blackhole" }, { img: "triangle", class: "reflection-rotated-counter", transformOrigin: true }, { img: "triangle", class: "reflection-hflipped" }, { img: "triangle", class: "reflection-hflipped reflection-rotated-clock", transformOrigin: true }, { img: "triangle" }, {}, { img: "warp" }];
+					module.iconsArr = [{ img: "slash" }, { img: "slash", class: "reflection hflipped" }, { img: "double line", class: "reflection rotated-clock", transformOrigin: true }, { img: "double line" }, { img: "square" }, { img: "blackhole" }, { img: "triangle", class: "reflection rotated-counter", transformOrigin: true }, { img: "triangle", class: "reflection hflipped" }, { img: "triangle", class: "reflection hflipped reflection rotated-clock", transformOrigin: true }, { img: "triangle" }, {}, { img: "warp" }];
 					const icons = matches[1].split(" }, { ").map(el => el.replaceAll('}', '').replaceAll('{', '').trim().split(", "));
 					const edgesMatches = readTaggedLine().match(/^Answer edge: ({ (?:{(?: { (?:ash|green|yellow), \d+ },?){5} },? ){4}});$/);
 					module.edges = edgesMatches[1].split(/ } }, { { |{ { { | } } }/).map(row => row.split(" }, { ").map(el => {
@@ -13692,13 +13692,13 @@ let parseData = [
 					module.edges.shift();
 
 					module.dimension = 50;
-					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400'>");
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400' class='reflection-grid'>");
 					module.createIcons = (iconList, currentIcons, svg, dimension) => {
 						for (let row = 1; row < 6; row++) {
 							for (let col = 1; col < 6; col++) {
 								const x = col * dimension;
 								const y = row * dimension;
-								$SVG("<rect>").addClass("reflection")
+								$SVG("<rect>").addClass("reflection gray")
 									.attr("width", dimension).attr("height", dimension)
 									.attr("x", x).attr("y", y)
 									.appendTo(svg);
@@ -13748,7 +13748,7 @@ let parseData = [
 								x = dimension * 6;
 								y = (startingIndex + 1) * dimension;
 							}
-							$SVG("<rect>").addClass(`reflection-${edge.incorrect ? `pink` : edge.color}`)
+							$SVG("<rect>").addClass(`reflection ${edge.incorrect ? `pink` : edge.color}`)
 								.attr("width", dimension).attr("height", dimension)
 								.attr("x", x).attr("y", y)
 								.appendTo(svg);
@@ -13757,7 +13757,7 @@ let parseData = [
 								.attr("cx", x + dimension / 2)
 								.attr("cy", y + dimension / 2)
 								.attr("r", (dimension / 2) - 1)
-								.addClass(`reflection-${edge.color}`).appendTo(svg);
+								.addClass(`reflection ${edge.color}`).appendTo(svg);
 							}
 							$SVG(`<text>`).attr("x", x + dimension / 2)
 							.attr("y", y + dimension / 2)
@@ -13780,7 +13780,7 @@ let parseData = [
 					const inccorectSubmission = [];
 					let line;
 					const icons = matches[1].split(" }, { ").map(el => el.replaceAll('}', '').replaceAll('{', '').trim().split(", "));
-					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400'>");
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400' class='reflection-grid'>");
 					while((line = readTaggedLine().match(/^Your submission of edge ([TBLR][ABCDE12345]) is (green|yellow|ash) (\d+), but the answer is (?:green|yellow|ash) (?:\d+). Incorrect!$/)) != null)
 					{
 						let row, col;
