@@ -2403,6 +2403,66 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "bridges",
+		loggingTag: "Bridges",
+		matches: [
+			{
+				regex: /^Islands placed at \(x, y, connections\):\s(.+)\.$/,
+				handler: function (matches, module) {
+					module.symbols = matches[1].split("), (").map(ele => { 
+						arr = ele.replace("(","").replace(")","").split(', ');
+						return {x: arr[0], y: arr[1], item:arr[2]};
+				});
+					return true;
+				}
+			},
+			{
+				regex: /^Shifting symbol table to the left by \d\.$/,
+				handler: function(matches, module) {
+					const dimension = 40;
+					const radius = 10;
+					const padding = 5;
+					const imageNames = ["thiswayupM", "umbrellaM","biohazardM", "boxesM", "fireM", "glassM", "recycleM", "snowflakeM"];
+					const svg = $(`<svg viewbox="-${radius + padding} -${radius + padding} 400 350">`)
+					for (let row = 0; row < 8; row++) {
+						for (let col = 0; col < 6; col++) {
+							const startingX =  col * dimension;
+							const startingY =  row * dimension;
+							$SVG(`<rect>`)
+								.attr("x", startingX)
+								.attr("y", startingY)
+								.attr("width", dimension)
+								.attr("height", dimension)
+								.addClass("bridges")
+								.appendTo(svg);
+						}
+					}
+					module.symbols.forEach(symbol => {
+						const xPos = symbol.x * dimension;
+						const yPos = symbol.y * dimension;
+						const imgDimension = radius + 3;
+						$SVG(`<circle>`)
+							.attr('cx', xPos)
+							.attr('cy', yPos)
+							.attr('r', radius)
+							.addClass("bridges")
+							.appendTo(svg);
+						$SVG("<image>")
+							.attr("width", imgDimension)
+							.attr("height", imgDimension)
+							.attr("x", xPos - (imgDimension / 2)).attr("y", yPos - (imgDimension / 2))
+							.attr("href", `../HTML/img/Bridges/${imageNames[symbol.item]}.png`)
+							.appendTo(svg);
+					});
+					module.push(matches[0]);
+					module.push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "BrokenButtonsModule",
 		loggingTag: "Broken Buttons",
 		matches: [
