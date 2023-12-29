@@ -13678,7 +13678,7 @@ let parseData = [
 		loggingTag: "Reflection",
 		matches: [
 			{
-				regex: /Answer grid: {((\s{\s(\d+[\s,]*){5}},?){5})\s}/,
+				regex: /^Answer grid: {((\s{\s(\d+[\s,]*){5}},?){5})\s};$/,
 				handler: function (matches, module) {
 					module.submissionNum = 0;
 					module.iconsArr = [{ img: "slash" }, { img: "slash", class: "reflection hflipped" }, { img: "double line", class: "reflection rotated-clock", transformOrigin: true }, { img: "double line" }, { img: "square" }, { img: "blackhole" }, { img: "triangle", class: "reflection rotated-counter", transformOrigin: true }, { img: "triangle", class: "reflection hflipped" }, { img: "triangle", class: "reflection hflipped reflection rotated-clock", transformOrigin: true }, { img: "triangle" }, {}, { img: "warp" }];
@@ -13705,8 +13705,7 @@ let parseData = [
 								const iconObj = iconList[currentIcons[row - 1][col - 1]];
 								if (!iconObj.img)
 									continue;
-								let image =
-									$SVG('<image>')
+								let image = $SVG('<image>')
 										.attr("href", `../HTML/img/Reflection/${iconObj.img}.svg`)
 										.attr("width", dimension)
 										.attr("height", dimension)
@@ -13769,12 +13768,12 @@ let parseData = [
 					}
 					svg = module.createIcons(module.iconsArr, icons, svg, module.dimension);
 					svg = module.createEdges(module.edges, svg, module.dimension);
-					module.push(["Answer Grid", [{ obj: svg, nobullet: true }]])
+					module.push(["Answer Grid", [{ obj: svg, nobullet: true }]]);
 					return true;
 				}
 			},
 			{
-				regex: /Submission: {(( { (\d+[\s,]*){5}},?){5})\s}/,
+				regex: /^Submission: {(( { (\d+[\s,]*){5}},?){5})\s};$/,
 				handler: function (matches, module) {
 					module.submissionNum++;
 					const inccorectSubmission = [];
