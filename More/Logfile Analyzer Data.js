@@ -12522,7 +12522,6 @@ let parseData = [
 					let startCol = 'ABCDEF'.indexOf(start[0]);
 					let startRow = start[1] - '1';
 					console.log(start);
-
 					let table = "<table style='width: 3in;'>";
 					for (let row = 0; row < 6; row++) {
 						table += '<tr>';
@@ -13815,6 +13814,150 @@ let parseData = [
 				}
 			}
 		]
+	},
+	{
+		moduleID: "laserreflection",
+		loggingTag: "Reflection",
+		matches: [
+			{
+				regex: /^Answer grid: {((\s{\s(\d+[\s,]*){5}},?){5})\s};$/,
+				handler: function (matches, module) {
+					module.submissionNum = 0;
+					module.iconsArr = [{ img: "slash" }, { img: "slash", class: "reflection hflipped" }, { img: "double line", class: "reflection rotated-clock", transformOrigin: true }, { img: "double line" }, { img: "square" }, { img: "blackhole" }, { img: "triangle", class: "reflection rotated-counter", transformOrigin: true }, { img: "triangle", class: "reflection hflipped" }, { img: "triangle", class: "reflection hflipped reflection rotated-clock", transformOrigin: true }, { img: "triangle" }, {}, { img: "warp" }];
+					const icons = matches[1].split(" }, { ").map(el => el.replaceAll('}', '').replaceAll('{', '').trim().split(", "));
+					const edgesMatches = readTaggedLine().match(/^Answer edge: ({ (?:{(?: { (?:ash|green|yellow), \d+ },?){5} },? ){4}});$/);
+					module.edges = edgesMatches[1].split(/ } }, { { |{ { { | } } }/).map(row => row.split(" }, { ").map(el => {
+						const properties = el.split(", ");
+						return { color: properties[0], num: properties[1] };
+					}));
+					module.edges.pop();
+					module.edges.shift();
+
+					module.dimension = 50;
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400' class='reflection-grid'>");
+					module.createIcons = (iconList, currentIcons, svg, dimension) => {
+						for (let row = 1; row < 6; row++) {
+							for (let col = 1; col < 6; col++) {
+								const x = col * dimension;
+								const y = row * dimension;
+								$SVG("<rect>").addClass("reflection gray")
+									.attr("width", dimension).attr("height", dimension)
+									.attr("x", x).attr("y", y)
+									.appendTo(svg);
+								const iconObj = iconList[currentIcons[row - 1][col - 1]];
+								if (!iconObj.img)
+									continue;
+								let image = $SVG('<image>')
+										.attr("href", `../HTML/img/Reflection/${iconObj.img}.svg`)
+										.attr("width", dimension)
+										.attr("height", dimension)
+										.attr("x", x)
+										.attr("y", y)
+										.css("transform-origin", `${x + dimension / 2}px ${y + dimension / 2}px`);
+								if (iconObj.class)
+									image.addClass(iconObj.class);
+								image.appendTo(svg);
+							}
+						}
+						return svg;
+					}
+					module.createEdges = (edges, svg, dimension) => {
+						for (let i = 0; i < 20; i++) {
+							let edge;
+							let x;
+							let y;
+							if (i < 5) {
+								edge = edges[0][i];
+								x = (i + 1) * dimension;
+								y = 0;
+							}
+							else if (i < 10) {
+								const startingIndex = i - 5;
+								edge = edges[1][startingIndex];
+								x = (startingIndex + 1) * dimension;
+								y = dimension * 6;
+							}
+							else if (i < 15) {
+								const startingIndex = i - 10;
+								edge = edges[2][startingIndex];
+								x = 0;
+								y = (startingIndex + 1) * dimension;
+							}
+							else {
+								const startingIndex = i - 15;
+								edge = edges[3][startingIndex];
+								x = dimension * 6;
+								y = (startingIndex + 1) * dimension;
+							}
+							$SVG("<rect>").addClass(`reflection ${edge.incorrect ? `pink` : edge.color}`)
+								.attr("width", dimension).attr("height", dimension)
+								.attr("x", x).attr("y", y)
+								.appendTo(svg);
+							if (edge.incorrect) {
+								$SVG("<circle>")
+									.attr("cx", x + dimension / 2)
+									.attr("cy", y + dimension / 2)
+									.attr("r", (dimension / 2) - 1)
+									.addClass(`reflection ${edge.color}`).appendTo(svg);
+							}
+							$SVG(`<text>`).attr("x", x + dimension / 2)
+								.attr("y", y + dimension / 2)
+								.text(edge.num)
+								.addClass("reflection")
+								.appendTo(svg);
+						}
+						return svg;
+					}
+					svg = module.createIcons(module.iconsArr, icons, svg, module.dimension);
+					svg = module.createEdges(module.edges, svg, module.dimension);
+					module.push(["Answer Grid", [{ obj: svg, nobullet: true }]]);
+					return true;
+				}
+			},
+			{
+				regex: /^Submission: {(( { (\d+[\s,]*){5}},?){5})\s};$/,
+				handler: function (matches, module) {
+					module.submissionNum++;
+					const inccorectSubmission = [];
+					let line;
+					const icons = matches[1].split(" }, { ").map(el => el.replaceAll('}', '').replaceAll('{', '').trim().split(", "));
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 400' class='reflection-grid'>");
+					while ((line = readTaggedLine().match(/^Your submission of edge ([TBLR][ABCDE12345]) is (green|yellow|ash) (\d+), but the answer is (?:green|yellow|ash) (?:\d+). Incorrect!$/)) != null) {
+						let row, col;
+						row = 'TBLR'.indexOf(line[1][0]);
+						col = '12345'.indexOf(line[1][1]);
+						if (col == -1)
+							col = 'ABCDE'.indexOf(line[1][1]);
+						inccorectSubmission.push({
+							row: row,
+							col: col,
+							color: line[2],
+							num: line[3]
+						});
+					}
+					linen--;
+					const edges = [];
+					for (let row = 0; row < 4; row++) {
+						let newRow = [];
+						for (let col = 0; col < 5; col++) {
+							let edge = inccorectSubmission.filter(obj => obj.row == row && obj.col == col)[0];
+							if (edge)
+								newRow.push({ color: edge.color, num: edge.num, incorrect: true });
+							else
+								newRow.push(module.edges[row][col]);
+						}
+						edges.push(newRow);
+					}
+					svg = module.createIcons(module.iconsArr, icons, svg, module.dimension);
+					console.log(edges);
+					svg = module.createEdges(edges, svg, module.dimension);
+					let submission = [`Submission ${module.submissionNum}`, [{ nobullet: true, obj: svg }]];
+					module.push(submission);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		],
 	},
 	{
 		displayName: "Regular Sudoku",
