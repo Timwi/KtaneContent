@@ -11762,6 +11762,113 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "Overcooked",
+		loggingTag: "Overcooked",
+		matches: [
+			{
+				regex: /^The orders are:\s(.+)\.$/,
+				handler: function (matches, module) {
+					if(!module.recipes) {
+						module.recipes = [
+							{name: "Beef Burrito", ingredients: ["CookedRice", "Tortilla", "CookedBeef"], png: "BurritoMeat"}, 
+							{name: "Beef Pasta", ingredients: ["CookedPasta", "CookedBeef"], png: "PastaMeat"},
+							{name: "Blueberry Pancakes", ingredients: ["CookedFlour", "CookedEgg", "CookedBlueberry"], png: "PancakeBlueberry"},
+							{name: "Carrot Cake", ingredients: ["BakedFlour", "BakedEgg", "BakedHoney", "BakedCarrot"], png: "CakeCarrot"},
+							{name: "Carrot Dumpling", ingredients: ["SteamedFlour", "SteamedCarrot"], png: "DumplingCarrot"},
+							{name: "Cheese Burger", ingredients: ["Bun", "CookedBeef", "CutCheese"], png: "Cheeseburger"},
+							{name: "Cheese Lettuce Burger", ingredients: ["Bun", "CookedBeef", "CutLettuce", "CutCheese"], png: "CheeseburgerLettuce"},
+							{name: "Cheese Pizza", ingredients: ["BakedDough", "BakedCheese", "BakedTomato"], png: "PizzaCheeseTomato"},
+							{name: "Chicken Burrito", ingredients: ["CookedRice", "Tortilla", "CookedChicken"], png: "BurritoChicken"},
+							{name: "Chicken Nuggets", ingredients: ["FriedChicken"], png: "ChickenNuggets"},
+							{name: "Chicken Nuggets and Chips", ingredients: ["FriedPotato", "FriedChicken"], png: "ChipsChickenNuggets"},
+							{name: "Chips", ingredients: ["FriedPotato"], png: "Chips"},
+							{name: "Chocolate Cake", ingredients: ["BakedFlour", "BakedEgg", "BakedHoney", "BakedChocolate"], png: "CakeChocolate"},
+							{name: "Chocolate Pancakes", ingredients: ["CookedFlour", "CookedEgg", "CookedChocolate"], png: "PancakeChocolate"},
+							{name: "Cucumber Sushi", ingredients: ["Seaweed", "CookedRice", "CutCucumber"], png: "SushiCucumber"},
+							{name: "Fish and Cucumber Sushi", ingredients: ["Seaweed", "CookedRice", "CutFish", "CutCucumber"], png: "SushiFishCucumber"},
+							{name: "Fish Sushi", ingredients: ["Seaweed", "CookedRice", "CutFish"],png: "SushiFish"},
+							{name: "Fish Sashimi", ingredients: ["CutFish"],png: "SushimiFish"},
+							{name: "Lettuce Salad", ingredients: ["CutLettuce"], png: "SaladLettuce"},
+							{name: "Lettuce Tomato Burger", ingredients: ["Bun", "CookedBeef", "CutLettuce", "CutTomato"], png: "CheeseburgerLettuceTomato"},
+							{name: "Lettuce Tomato Cucumber Salad", ingredients: ["CutLettuce", "CutTomato", "CutCucumber"], png: "SaladLettuceTomatoCucumber"},
+							{name: "Lettuce Tomato Salad", ingredients: ["CutLettuce", "CutTomato"], png: "SaladLettuceTomato"},
+							{name: "Meat Dumpling", ingredients: ["SteamedFlour", "SteamedBeef"], png: "DumplingMeat"},
+							{name: "Mushroom Burrito", ingredients: ["CookedRice", "Tortilla", "CookedMushroom"], png: "BurritoMushroom"},
+							{name: "Mushroom Pasta", ingredients: ["CookedPasta", "CookedMushroom"], png: "PastaMushroom"},
+							{name: "Pepperoni Pizza", ingredients: ["BakedDough", "BakedCheese", "BakedTomato", "BakedPepperoni"], png: "PizzaPepperoni"},
+							{name: "Plain Burger", ingredients: ["Bun", "CookedBeef"], png: "BurgerPlain"},
+							{name: "Plain Cake", ingredients: ["BakedFlour", "BakedEgg", "BakedHoney"], png: "CakePlain"},
+							{name: "Plain Pancakes", ingredients: ["CookedFlour", "CookedEgg"], png: "Pancake"},
+							{name: "Seafood Pasta", ingredients: ["CookedPasta", "CookedFish", "CookedShrimp"], png: "PastaSeafood"},
+							{name: "Shrimp Dumpling", ingredients: ["SteamedFlour", "SteamedShrimp",], png: "DumplingPrawn"},
+							{name: "Shrimp Sashimi", ingredients: ["CutShrimp"], png: "SushimiPrawn"},
+							{name: "Steamed Fish", ingredients: ["SteamedFish"], png: "FishSteamed"},
+							{name: "Strawberry Pancakes", ingredients: ["CookedFlour", "CookedEgg", "CookedStrawberry"], png: "PancakeStrawberry"},
+							{name: "Tomato Pasta", ingredients: ["CookedPasta", "CookedTomato"], png: "PastaTomato"}
+						];
+						module.getRecipe = (recipes, ingredients) => {
+							const caplitalizedIngredients = ingredients.map(ele => ele.charAt(0).toUpperCase() + ele.slice(1));
+							return recipes.find(recipe => {
+								return recipe.ingredients.length == caplitalizedIngredients.length && 
+									   caplitalizedIngredients.every(ingredient => recipe.ingredients.includes(ingredient));
+							});
+						};
+						module.getOrderName = (recipes, ingredients) => {
+							const recipe = module.getRecipe(recipes, ingredients);
+							return !recipe ? "nothing" : recipe.name;
+						}
+						module.attemptNum = 1;
+					}
+					else
+						module.attemptNum++;
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					const recipes = matches[1].split(", ").map(str => module.getRecipe(module.recipes, str.split(" ")));
+					const parentDiv = $('<div>').addClass("parent-overcooked");
+					recipes.forEach(recipe => {
+						let div = $('<div>').addClass("overcooked").appendTo(parentDiv);
+						$('<img>').attr('src', `../HTML/img/Overcooked/${recipe.png}.png`).addClass("overcooked").appendTo(div);
+						$(`<p>${recipe.name.replaceAll(" ","<br>")}</p>`).addClass("overcooked").appendTo(div);
+					});
+					module.currentDropdown[1].push({ label: "Orders:", obj: parentDiv, nobullet: true }, ["Inputs", []] );
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Incorrect! Submitted(.+)when supposed to submit(.+)Strike Issued\./,
+				handler: function (matches, module) {
+					let input = matches[1].trim();
+					let answer = matches[2].trim();
+					if(input == "")
+						input = "nothing";
+					else {
+						const ingredients = input.split(" ");
+						let recipe = module.getRecipe(module.recipes, ingredients);
+						input = recipe ? recipe.name : `the ingredients ${ingredients.slice(0, ingredients.length - 1).join(", ")}, and ${ingredients[ingredients.length - 1]}`;
+					}
+					answer = module.getOrderName(module.recipes, answer.split(" "));
+					module.currentDropdown[1][1][1].push("Submitted " + input);
+					module.push(`Incorrect! Submitted ${input} when supposed to submit ${answer}. Strike Issued.`);
+					return true;
+				}
+			},
+			{
+				regex: /(.+)Strike Issued\./,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1][1][1].push(matches[0]);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "PapyrusTiles",
 		loggingTag: "Papyrus Tiles",
 		matches: [
