@@ -2423,7 +2423,7 @@ let parseData = [
 					const radius = 10;
 					const padding = 5;
 					const imageNames = ["thiswayupM", "umbrellaM","biohazardM", "boxesM", "fireM", "glassM", "recycleM", "snowflakeM"];
-					const svg = $(`<svg viewbox="-${radius + padding} -${radius + padding} 400 350">`)
+					const svg = $(`<svg viewbox="-${radius + padding} -${radius + padding} 400 350">`);
 					for (let row = 0; row < 8; row++) {
 						for (let col = 0; col < 6; col++) {
 							const startingX =  col * dimension;
