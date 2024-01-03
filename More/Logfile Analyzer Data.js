@@ -2489,6 +2489,7 @@ let parseData = [
 							.attr("height", imgDimension)
 							.attr("x", xPos - (imgDimension / 2)).attr("y", yPos - (imgDimension / 2))
 							.attr("href", `../HTML/img/Bridges/${imageNames[symbol.item]}.png`)
+							.addClass("bridges")
 							.appendTo(svg);
 					});
 					module.push(matches[0]);
