@@ -8,10 +8,14 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <style>
         .page-footer::before { content: 'Page '; }
         .page-footer::after { content: ' of 4'; }
         table { margin: 0 auto; }
+        .small { font-size: 15px; }
+        .smalll { font-size: 14px; }
+        th, table.sh { line-height: 1.2; }
         #interactive-table td {
             background-color: #AAA;
             table-layout: fixed;
@@ -30,16 +34,18 @@
         .dark #interactive-table p {
             color: black;
         }
-        #interactive-table > tbody > tr > td > div {
+        #interactive-table tr > td > div {
             position: relative;
             height: 100%;
         }
-        #interactive-table > tbody > tr > td > div > p {
+        p.room-name {
             font-size: large;
             position: absolute;
             bottom: 0;
             width: 100%;
             text-align: center;
+            cursor: pointer;
+            user-select: none;
         }
         img:not(.diagram) {
             width: 50px;
@@ -54,7 +60,11 @@
             align-items: center;
             width: 95px;
         }
-        .people-container > .vstack > p { margin-top: 0; }
+        .people-container > .vstack > p {
+            margin-top: 0;
+            cursor: pointer;
+            user-select: none;
+        }
         .no-bullet { list-style-type: none; }
         button {
             font-family: Special Elite;
@@ -79,94 +89,89 @@
         #instructions {
             margin-bottom: 1%;
         }
+        .gold { background-color: gold; }
     </style>
     <script>
+    $(function() {
         let highlightedSuspect;
-        function loadInteractive() {
-            // Improvments
-            // Make border lines of table bigger
-            // Dark mode support
-            const table = document.querySelector("#interactive-table");
-            const rooms = getRooms();
-            const roomNames = rooms.map(room => room.querySelector(".room-name"));
-            //select room
-            rooms.forEach(r => r.addEventListener("click", roomClick));
-            //room name interactions
-            roomNames.forEach(roomName => roomName.addEventListener("click", clickEventHandler(["Ballroom", "Billiard Room", "Conservatory", "Dining Room", "Hall", "Kitchen", "Library", "Lounge", "Study"])));
-            //highlight picture
-            const pics = [...document.querySelector("#console").querySelectorAll("img")];
-            pics.forEach(p => p.addEventListener("click", suspectClick));
-            //reset button
-            document.querySelector("#reset").addEventListener("click", resetClick);
-            //delete button
-            document.querySelector("#delete").addEventListener("click", deleteClick);
-        }
+        let tmplPerson = $("#person")[0].content;
         function clickEventHandler(arr) {
             function handleClick(e) {
-                e.target.innerHTML = arr[(parseInt(arr.indexOf(e.target.innerHTML)) + 1) % arr.length];
+                e.target.innerText = arr[(parseInt(arr.indexOf(e.target.innerText)) + 1) % arr.length];
+                e.stopPropagation();
             }
             return handleClick;
         }
         function suspectClick(e) {
             e.stopPropagation()
-            if(highlightedSuspect) {
-                highlightedSuspect.style.backgroundColor = "";
-                if(highlightedSuspect == e.target) {
+            if (highlightedSuspect) {
+                $(highlightedSuspect).removeClass("gold");
+                if (highlightedSuspect == e.target) {
                     highlightedSuspect = undefined;
                     return;
                 }
             }
             highlightedSuspect = e.target;
-            highlightedSuspect.style.backgroundColor = "gold";
+            $(highlightedSuspect).addClass("gold");
         }
         function roomClick(e) {
             //adding a suspect
             if (highlightedSuspect && highlightedSuspect.parentNode.id === "console") {
-                if (suspect = document.querySelector(`#${highlightedSuspect.id + "-clone"}`)) {
+                let suspect = $(`#${highlightedSuspect.id + "-clone"}`);
+                if (suspect.length > 0) {
                     //moving a suspect
-                    e.target.querySelector('.people-container').appendChild(suspect);
+                    $(e.target).find('.people-container').append(suspect);
                     return;
                 }
-                const person = document.querySelector("#person").content.cloneNode(true);
-                person.querySelector(".person").id = highlightedSuspect.id + "-clone";
-                const faceImage = person.querySelector("img");
-                faceImage.src = highlightedSuspect.src;
-                faceImage.addEventListener("click", suspectClick);
-                const itemText = person.querySelector(".item-text");
-                itemText.addEventListener("click", clickEventHandler(["Candlestick", "Dagger", "Lead Pipe", "Revolver", "Rope", "Spanner"]));
-                e.target.querySelector('.people-container').appendChild(person);
+                const person = $(tmplPerson.cloneNode(true));
+                person.find(".person")[0].id = highlightedSuspect.id + "-clone";
+                const faceImage = person.find("img");
+                faceImage[0].src = highlightedSuspect.src;
+                faceImage.click(suspectClick);
+                $(".item-text").click(clickEventHandler(["Candlestick", "Dagger", "Lead Pipe", "Revolver", "Rope", "Spanner"]));
+                $(e.target).find('.people-container').append(person);
                 clearHighlightedSuspect();
             }
             //moving a suspect
-            else if(highlightedSuspect) {
-                e.target.querySelector('.people-container').appendChild(highlightedSuspect.parentNode);
+            else if (highlightedSuspect) {
+                $(e.target).find('.people-container').append(highlightedSuspect.parentNode);
                 clearHighlightedSuspect();
             }
         }
-        function getRooms() {
-            const rooms = [];
-            for(let i = 0; i < 6; i++)
-                rooms.push(document.querySelector(`#${['tl', 'tm', 'tr', 'bl', 'bm', 'br'][i]}-room`));
-            return rooms;
-        }
         function resetClick(e) {
-            if(highlightedSuspect)
+            if (highlightedSuspect)
                 clearHighlightedSuspect()
-            getRooms().map(r => r.querySelector(".people-container")).forEach(p => p.innerHTML = "");
+            $(".people-container").html("");
         }
         function deleteClick(e) {
             if (highlightedSuspect && highlightedSuspect.parentNode.id.includes("clone")) {
                 highlightedSuspect.parentNode.remove();
                 clearHighlightedSuspect();
-            }                
+            }
         }
         function clearHighlightedSuspect() {
-            highlightedSuspect.style.backgroundColor = "";
+            $(highlightedSuspect).removeClass("gold");
             highlightedSuspect = undefined;
         }
+
+        // Improvments
+        // Make border lines of table bigger
+        // Dark mode support
+
+        //select room
+        $("#interactive-table tr > td > div").click(roomClick);
+        //room name interactions
+        $(".room-name").click(clickEventHandler(["Ballroom", "Billiard Room", "Conservatory", "Dining Room", "Hall", "Kitchen", "Library", "Lounge", "Study"]));
+        //highlight picture
+        $("#console img").click(suspectClick);
+        //reset button
+        $("#reset").click(resetClick);
+        //delete button
+        $("#delete").click(deleteClick);
+    });
     </script>
 </head>
-<body onload="loadInteractive()">
+<body>
     <div class="section">
         <div class="page page-bg-05">
             <div class="page-header">
@@ -177,12 +182,12 @@
                 <img src="img/Component/Not Murder.svg" class="diagram">
                 <h2>On the Subject of Not Murder</h2>
                 <p class="flavour-text">This module is powered by the restless soul of a murder victim. The only way to disarm it is to solve an unrelated burglary case so the victim can pass peacefully to the afterlife.</p>
-                <ul style="font-size:15px">
+                <ul class="small">
                     <li>Five high-profile thieves have been arrested under suspicion of breaking into Black Manor and stealing five items from the property.</li>
                     <li>The module displays the names of the five suspects, the five stolen items, and the six rooms on the ground floor of the manor from which the items have gone missing.</li>
                     <li>Each display has a tell, where it clicks louder. Starting from these displays, scroll through each in the given direction to determine the layout of the manor, which room each suspect broke into, and which item was initially taken by each suspect.</li>
                 </ul>
-                <table>
+                <table class="sh">
                     <tr>
                         <th>Display</th>
                         <th>Scroll <em>left</em> if and only if-</th>
@@ -200,18 +205,18 @@
                         <td>The sum of the numeric digits of the serial number is greater than 14.</td>
                     </tr>
                 </table>
-                <ul style="font-size:15px">
-                    <li>The rooms are laid out in a 2&#x00d7;3 grid in reading order.</li>
+                <ul class="small">
+                    <li>The rooms are laid out in a 2×3 grid in reading order.</li>
                     <li>The suspects broke into each room in reading order, skipping over the room shown in red, leaving it empty.</li>
                     <li>Each item was initially taken by each suspect in reading order.</li>
                 </ul>
                 <p></p>
-                <ul style="font-size:15px">
+                <ul class="small">
                     <li>The alarm was triggered once the five had broken in, sending each one looking from room to room for an exit.</li>
                     <li>Each suspect moved about the manor differently, check each suspect’s profile to determine their movements.</li>
                     <li>If exactly two people enter a room at the same time, they both drop the item they were holding and, in a blind panic, pick up the item dropped by the other person.</li>
                     <li>After enough time has passed for each suspect to have travelled between five rooms and pick up any items that may have been dropped thereafter, all leave the manor through the room they ended up in, with the item they were holding at the time.</li>
-                    <li>For each suspect, select the item they left the manor with and the room they had exited from and press the "ACCUSE" button.</li>
+                    <li>For each suspect, select the item they left the manor with and the room they had exited from and press the “ACCUSE” button.</li>
                     <li>If you have correctly deduced a suspect’s actions, both their name and stolen item will be removed from the module.</li>
                     <li>The module is solved once all five suspects have been correctly convicted.</li>
                 </ul>
@@ -224,7 +229,7 @@
                 <span class="page-header-section-title">Not Murder</span>
             </div>
             <div class="page-content">
-                <p style="font-size:14px"><strong>Each suspect can only see into the rooms adjacent to them. Consider only rooms which the suspect can see.<br>All suspects move into an adjacent room unless a rule says otherwise.</strong></p>
+                <p class="smalll"><strong>Each suspect can only see into the rooms adjacent to them. Consider only rooms which the suspect can see.<br>All suspects move into an adjacent room unless a rule says otherwise.</strong></p>
                 <table>
                     <tr>
                         <th><img src="img/Not Murder/Miss Scarlett.svg"></th>
@@ -232,7 +237,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <ul style="font-size:14px">
+                            <ul class="smalll">
                                 <li>If all adjacent rooms are empty, she will move between the front and back of the building.</li>
                                 <li>Otherwise, she will move to the room with the most people inside.
                                     <ul>
@@ -251,14 +256,14 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <p style="font-size:14px">If he holds the Revolver:</p>
-                            <ul style="font-size:14px">
+                            <p class="smalll">If he holds the Revolver:</p>
+                            <ul class="smalll">
                                 <li>He will not enter any room with exactly one person inside, staying in the current room if all other rooms have one person in them.</li>
                                 <li>Otherwise, he will move about the rooms in a clockwise direction if possible.</li>
                                 <li>He will not move counter-clockwise about the rooms if he has another option.</li>
                             </ul>
-                            <p style="font-size:14px">If he does not hold the Revolver:</p>
-                            <ul style="font-size:14px">
+                            <p class="smalll">If he does not hold the Revolver:</p>
+                            <ul class="smalll">
                                 <li>If he is in a room adjacent to the person holding the Revolver, he will move into the room that person is in.</li>
                                 <li>Otherwise, he will move into a room in the middle of the building.</li>
                             </ul>
@@ -273,7 +278,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <ul style="font-size:14px">
+                            <ul class="smalll">
                                 <li>He will move about the rooms in a clockwise direction until he enters the Conservatory, the Kitchen, or the Study.
                                     <ul>
                                         <li>Once he enters one of those rooms, he will reverse his direction of movement unless he has not yet moved from the room he broke into.</li>
@@ -299,7 +304,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <ul style="font-size:14px">
+                            <ul class="smalll">
                                 <li>She will avoid entering any room she has previously entered, including the room she broke into.</li>
                                 <li>If she cannot move into a room she has not already entered, she move about the building in a counter-clockwise direction.</li>
                                 <li>Otherwise, she will move into the room that comes first in alphabetical order.</li>
@@ -315,7 +320,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <ul style="font-size:14px">
+                            <ul class="smalll">
                                 <li>If there is only one empty room, he will enter it.</li>
                                 <li>Otherwise he will move to the room that comes first in alphabetical order.</li>
                                 <li>If he enters the Library, the Lounge, or the Study he will stay there for one move unless he has not yet moved from the room he broke into.</li>
@@ -331,7 +336,7 @@
                     </tr>
                     <tr>
                         <td colspan=2>
-                            <ul style="font-size:14px">
+                            <ul class="smalll">
                                 <li>She will not enter a room if there is someone in it holding the Dagger or the Revolver, staying in the current room if she has no movement options.</li>
                                 <li>She will move into the room that comes first alphabetically, avoiding the Ballroom, Billiard Room, and the Conservatory if she can.</li>
                             </ul>
@@ -387,45 +392,39 @@
                                         <p class="item-text">Candlestick</p>
                                     </div>
                                 </template>
-                                <div class="people-container">
-                                </div>
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
                         <td>
                             <div id="tm-room">
-                                <div class="people-container">
-                                </div>
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
                         <td>
                             <div id="tr-room">
-                                <div class="people-container">
-                                </div>
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <div id="bl-room"> 
-                                <div class="people-container">
-                                </div>
+                            <div id="bl-room">
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
                         <td>
                             <div id="bm-room">
-                                <div class="people-container">
-                                </div>
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
                         <td>
                             <div id="br-room">
-                                <div class="people-container">
-                                </div>
+                                <div class="people-container"></div>
                                 <p class="room-name">Ballroom</p>
                             </div>
                         </td>
