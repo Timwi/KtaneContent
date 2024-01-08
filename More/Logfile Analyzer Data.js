@@ -4393,6 +4393,25 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "DiophantineEquations",
+		loggingTag: "Diophantine Equations",
+		matches: [
+			{
+				regex: /(^Subtracting|^Initial).+/,
+				handler: function(matches, module) {
+					const grid = readTaggedLines(5)
+						.map(l => /: ([\d\- ]+) /.exec(l)[1])
+						.map(l => l.split(' ')
+							.map(v => String(v).padStart(4, ' ')));
+					const prettyGrid = grid.map(r => r.join('')).join('\n');
+					module.push({ label: matches[0], nobullet: true, obj: pre(prettyGrid) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: 'GSDirectingButtons',
 		loggingTag: 'Directing Buttons',
 		matches: [
@@ -9438,32 +9457,32 @@ let parseData = [
 			}
 		]
 	},
-    {
-        moduleID: "matrixMapping",
+	{
+		moduleID: "matrixMapping",
 		loggingTag: "Matrix Mapping",
-        matches: [
-            {
-                regex: /The chosen colour sets are: (.+)\./,
-                handler: function(matches, module) {
-                    let colourData = matches[1];
-                    let colours = colourData.split("}, {");
-                    for(let i = 0; i < colours.length; i++) {
-                        colours[i] = colours[i].replace(/[{}]/, "").toLowerCase().split("), ");
-                        for(let j = 0; j < colours[i].length - 1; j++) {
-                            colours[i][j] += ")";
-                        }
-                    }
-                    module.Colours = colours;
+		matches: [
+			{
+				regex: /The chosen colour sets are: (.+)\./,
+				handler: function(matches, module) {
+					let colourData = matches[1];
+					let colours = colourData.split("}, {");
+					for(let i = 0; i < colours.length; i++) {
+						colours[i] = colours[i].replace(/[{}]/, "").toLowerCase().split("), ");
+						for(let j = 0; j < colours[i].length - 1; j++) {
+							colours[i][j] += ")";
+						}
+					}
+					module.Colours = colours;
 					return true;
-                }
-            },
-            {
-                regex: /The grids are: (.+)\./,
-                handler: function(matches, module) {
-                    let puzzleData = matches[1].split(", ");
-                    for(let i = 0; i < puzzleData.length; i++) {
-                        puzzleData[i] = puzzleData[i].split("/");
-                    }
+				}
+			},
+			{
+				regex: /The grids are: (.+)\./,
+				handler: function(matches, module) {
+					let puzzleData = matches[1].split(", ");
+					for(let i = 0; i < puzzleData.length; i++) {
+						puzzleData[i] = puzzleData[i].split("/");
+					}
 
 					module.convertedModuleColours = [[], []];
 					for(let i = 0; i < module.Colours.length; i++) {
@@ -9477,7 +9496,7 @@ let parseData = [
 						}
 					}
 
-                    let svg = `<svg class='matrix-mapping-displayed' width="630" height="320" viewbox="-30 135 600 100">`;
+					let svg = `<svg class='matrix-mapping-displayed' width="630" height="320" viewbox="-30 135 600 100">`;
 
 					for(let i = 0; i < puzzleData.length; i++) {
 						for(let j = 0; j < puzzleData[i].length; j++) {
@@ -9488,8 +9507,8 @@ let parseData = [
 					}
 					module.push({label: "The grids shown on the module: ", obj: svg});
 					return true;
-                }
-            },
+				}
+			},
 			{
 				regex: /The calculated matrix is: (.+)\./,
 				handler: function(matches, module) {
@@ -9528,8 +9547,8 @@ let parseData = [
 				}
 			},
 			{ regex: /.+/ }
-        ]
-    },
+		]
+	},
 	{
 		displayName: "Maze³",
 		moduleID: "maze3",
@@ -11567,33 +11586,33 @@ let parseData = [
 		]
 	},
 	{
-        moduleID: "numbrix",
-        loggingTag: "Numbrix",
-        matches: [
-            {
-                regex: /(.*grid)\D*([\d, ]+)\.( )?(.*)?/,
-                handler: function (matches, module) {
-                    let rawGrid = matches[2].split(", ");
+		moduleID: "numbrix",
+		loggingTag: "Numbrix",
+		matches: [
+			{
+				regex: /(.*grid)\D*([\d, ]+)\.( )?(.*)?/,
+				handler: function (matches, module) {
+					let rawGrid = matches[2].split(", ");
 					let grid = $(`<svg class="numbrix" viewbox="0 0 900 900"></svg>`);
-                    for (let row = 0; row < 9; row++) {
-                        for (let col = 0; col < 9; col++) {
+					for (let row = 0; row < 9; row++) {
+						for (let col = 0; col < 9; col++) {
 							gridIndex = 9 * row + col;
-                            $SVG("<rect>").addClass("key").attr("x", col * 100).attr("y", row * 100).attr("width", 100).attr("height", 100).appendTo(grid);
-                            $SVG("<text>").addClass("key").attr("x", col * 100 + 50).attr("y", row * 100 + 66).text(rawGrid[gridIndex]).appendTo(grid);
-                        }
-                    }
-                    module.push({ label: `${matches[1]}:`, obj: grid });
-                    if (matches[4] != null) {
-                        module.push(matches[4]);
-                    }
-                    return true;
-                }
-            },
-            {
-                regex: /.+/
-            }
-        ]
-    },
+							$SVG("<rect>").addClass("key").attr("x", col * 100).attr("y", row * 100).attr("width", 100).attr("height", 100).appendTo(grid);
+							$SVG("<text>").addClass("key").attr("x", col * 100 + 50).attr("y", row * 100 + 66).text(rawGrid[gridIndex]).appendTo(grid);
+						}
+					}
+					module.push({ label: `${matches[1]}:`, obj: grid });
+					if (matches[4] != null) {
+						module.push(matches[4]);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
 	{
 		moduleID: "NumericalKnightMovement",
 		loggingTag: "Numerical Knight Movement",
@@ -12505,33 +12524,33 @@ let parseData = [
 		]
 	},
 	{
-        moduleID: "pieModule",
-        loggingTag: "Pie",
-        matches: [
-            {
-                regex: /Display is (.+)$/,
-                handler: function (match, module) {
-                    display = match[1].split(" ");
-                    svg = $("<svg viewbox='-5 -5 510 110'>").addClass("pie-display")
-                    for (let i = 0; i < 5; i++) {
-                        $SVG("<rect>").addClass("pie-cell")
-                            .attr("x", 100 * i).attr("y", 0)
-                            .attr("width", 100).attr("height", 100)
-                            .appendTo(svg);
-                        $SVG("<text>").addClass("pie-text")
-                            .attr("x", 100 * i + 50).attr("y", 55)
-                            .text(display[i])
-                            .appendTo(svg);
-                    }
-                    module.push({ label: "Display:", obj: svg });
-                    return true;
-                }
-            },
-            {
-                regex: /.+/
-            }
-        ]
-    },
+		moduleID: "pieModule",
+		loggingTag: "Pie",
+		matches: [
+			{
+				regex: /Display is (.+)$/,
+				handler: function (match, module) {
+					display = match[1].split(" ");
+					svg = $("<svg viewbox='-5 -5 510 110'>").addClass("pie-display")
+					for (let i = 0; i < 5; i++) {
+						$SVG("<rect>").addClass("pie-cell")
+							.attr("x", 100 * i).attr("y", 0)
+							.attr("width", 100).attr("height", 100)
+							.appendTo(svg);
+						$SVG("<text>").addClass("pie-text")
+							.attr("x", 100 * i + 50).attr("y", 55)
+							.text(display[i])
+							.appendTo(svg);
+					}
+					module.push({ label: "Display:", obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
 	{
 		moduleID: 'PineapplePenModule',
 		loggingTag: 'Pineapple Pen',
@@ -14736,7 +14755,7 @@ let parseData = [
 			{ regex: /.+/ }
 		]
 	},
-	    {
+		{
 		displayName: "Set Connections",
 		moduleID: "setConnections",
 		loggingTag: "Set Connections",
@@ -14823,6 +14842,38 @@ let parseData = [
 				}
 			},
 
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "settingCharges",
+		loggingTag: "Setting Charges",
+		matches: [
+			{
+				regex: /^Grid with solution:|^Attempted placement:/,
+				handler: function(matches, module) {
+					const dict = {
+						"x": "charge",
+						"o": "obstacle"
+					};
+					const grid = readTaggedLine().split('|').map(l => l.split(''));
+					const svg = $(`<svg viewBox="-5 -5 130 90">`).addClass("setting-charges");
+					$SVG("<rect>").addClass("border invertible")
+						.attr("x", -2.5).attr("y", -2.5)
+						.attr("width", 125).attr("height", 85)
+						.appendTo(svg);
+					for (const [y, row] of grid.entries()) {
+						for (const [x, type] of row.entries()) {
+							$SVG("<circle>")
+								.attr("cx", 5 + x * 10).attr("cy", 5 + y * 10)
+								.attr("r", 4.65).addClass(type == "." ? "" : dict[type])
+								.appendTo(svg);
+						}
+					}
+				module.push({ label: matches[0], obj: svg });
+				return true;
+				}
+			},
 			{ regex: /.+/ }
 		]
 	},
@@ -15454,7 +15505,7 @@ let parseData = [
 					const colorLetters = 'KBGCRMYW';
 					const triplets = matches[2].split('|').map(str =>
 																 str.split(',').map(digit =>
-																                    parseInt(digit)
+																					parseInt(digit)
 																));
 					const coords = triplets.map(t => ({ color: t[0], x: t[1], y: t[2] }));
 
