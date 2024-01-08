@@ -1878,6 +1878,87 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "bamboozledAgain",
+		loggingTag: "Bamboozled Again",
+		matches: [
+			{
+				regex: /The unencrypted message reads:/,
+				handler: function (match, module) {
+					if (!module.attemptNum)
+						module.attemptNum = 0;
+					module.attemptNum++;
+					module.stageNum = 1;
+					function updateMessage(arr) {
+						arr[1] = arr[1].split(" - ").join(", ");
+						return arr.join(" ");
+					}
+					linen--;
+					const unencryptedMessage = updateMessage(readTaggedLines(2));
+					const aValues = readTaggedLine();
+					const rotatedMessage = updateMessage(readTaggedLines(2));
+					const appendedMessage = updateMessage(readTaggedLines(2));
+					const bValues = readTaggedLine();
+					const encryptedMessage = updateMessage(readTaggedLines(2));
+					const cValues = readTaggedLine();
+					const rawValues = readTaggedLine();
+					const textColours = readTaggedLine();
+					const modifiedValues = readTaggedLine();
+					const finalValues = readTaggedLine();
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, [["Display", [textColours, unencryptedMessage, rotatedMessage, appendedMessage, encryptedMessage]]]];
+					module.currentDropdown[1].push(aValues, bValues, cValues, rawValues, modifiedValues, finalValues);
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The (?:TL|TM|TR|BL|BM|BR) button has the colour: (?:.+)/,
+				handler: function (match, module) {
+					//have dropdowns be expanded by default
+					const initialButtonRegex = /The initial button values are: (.+)/;
+					const finalButtonRegex = /The final button values are: (.+)/;
+					const getButtonObj = (str, initialArr, finalArr) => {
+						const match = str.match(/The (.+) button has the colour: (.+) and the text: (.+)/);
+						const index = ["TL", "TM", "TR", "BL", "BM", "BR"].indexOf(match[1]);
+						return { name: match[1], color: match[2], text: match[3], initial: initialArr[index], final: finalArr[index] };
+					}
+					const formatButton = (button) => [`${button.name} button`, [`Colour: ${button.color}`, `Text: ${button.text}`, `Initial Value: ${button.initial}`, `Final Value: ${button.final}`], true];
+					if (module.stageNum == 1) {
+						linen--;
+						const buttonLines = [...Array(6)].map(_ => readTaggedLines(2).join(" "));
+						const initialArr = readTaggedLine().match(initialButtonRegex)[1].split(", ");
+						const finalArr = readTaggedLine().match(finalButtonRegex)[1].split(", ");
+						const buttonObjs = buttonLines.map(buttonLine => getButtonObj(buttonLine, initialArr, finalArr));
+						buttonObjs.forEach(button => module.currentDropdown[1].push(formatButton(button)));
+					}
+					else {
+						linen--;
+						const buttonLine = readTaggedLines(2).join(" ");
+						const initialArr = readTaggedLine().match(initialButtonRegex)[1].split(", ");
+						const finalArr = readTaggedLine().match(finalButtonRegex)[1].split(", ");
+						module.currentDropdown[1].push(formatButton(getButtonObj(buttonLine, initialArr, finalArr)));
+					}
+					return true;
+				}
+			},
+			{
+				regex: /After (?:.+) presses, the correct button to press is the (?:.+) button/,
+				handler: function (match, module) {
+					let arr = module.stageNum != 4 ? readTaggedLines(3) : readTaggedLines(6);
+					module.currentDropdown[1].push([arr[arr.length - 1], arr.slice(0, -1)]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (match[0].includes("was pressed when"))
+						module.stageNum++;
+					module.currentDropdown[1].push(match[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "bamboozlingTimeKeeper",
 		loggingTag: "Bamboozling Time Keeper",
 		matches: [
