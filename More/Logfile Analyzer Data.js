@@ -4740,6 +4740,145 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "DiscoloredSquaresModule",
+		loggingTag: "Discolored Squares",
+		matches: [
+			{
+				regex: /Initial colors are: (.+) at (.+), (.+) at (.+), (.+) at (.+), (.+) at (.+)/,
+				handler: function (matches, module) {
+					if(!module.dimension) {
+						module.dimension = 50;
+						module.halfDimension = module.dimension / 2;
+						module.attemptNum = 0;
+						module.makeRect = (x, y, color, dimension) => {
+							return $SVG("<rect>")
+									.attr("width", dimension)
+									.attr("height", dimension)
+									.addClass("discolored-squares")
+									.attr("x", x).attr("y", y)
+									.addClass(`discolored-squares-${color}`);
+						}
+						module.makeText = (x, y, text, c = "discolored-squares") => {
+							return $SVG("<text>")
+									.attr("x", x)
+									.attr("y", y)
+									.text(text)
+									.addClass(c);
+						}
+					}
+					module.whiteCoordinates = [];
+					module.attemptNum++;
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.push(module.currentDropdown);
+					const specialCoordinates = [1, 3, 5, 7].map(i => ({color: matches[i].toLowerCase(), coordinate: matches[i + 1]}));
+					const unusedColor = ["yellow", "blue", "magenta", "red", "green"].find(color => !specialCoordinates.map(coor => coor.color).includes(color));
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 220 220'>");
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							const coordinate = `${"ABCD"[col]}${row + 1}`;
+							const obj = specialCoordinates.find(o => o.coordinate == coordinate);
+							const x = col * module.dimension;
+							const y = row * module.dimension;
+							const color = obj ? obj.color : unusedColor;
+							module.makeRect(x, y, color, module.dimension).appendTo(svg);
+							module.makeText(x + 2, y + module.dimension - 2, color.toUpperCase()[0], "discolored-squares-color-blind").appendTo(svg);
+						}
+					}
+					module.currentDropdown[1].push({ obj: svg, label: "Initial Board:", nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /You pressed them in this order: (?:.+) \((.+)\), (?:.+) \((.+)\), (?:.+) \((.+)\), (?:.+) \((.+)\)/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(`You pressed them in this order: ${[1, 2, 3, 4].map(i => matches[i]).join(", ")}`);
+					return true;
+				}
+			},
+			{
+				regex: /On to stage \d+\./,
+				handler: function (_, module) {
+					const formatArr = [
+						{original: "MirrorDiagonallyA1D4", new: "Mirror about \\"},
+						{original: "MirrorDiagonallyA4D1", new: "Mirror about /"},
+						{original: "MirrorHorizontally", new: "Mirror about |"},
+						{original: "MirrorVertically", new: "Mirror about —"},
+						{original: "MoveDown", new: "Move S"},
+						{original: "MoveDownLeft", new: "Move SW"},
+						{original: "MoveDownRight", new: "Move SE"},
+						{original: "MoveUp", new: "Move N"},
+						{original: "MoveUpLeft", new: "Move NW"},
+						{original: "MoveUpRight", new: "Move NE"},
+						{original: "MoveLeft", new: "Move W"},
+						{original: "MoveRight", new: "Move E"},
+						{original: "Rotate180", new: "Rotate 180°"},
+						{original: "Rotate90CCW", new: "Rotate 90° CCW"},
+						{original: "Rotate90CW", new: "Rotate 90° CW"},
+						{original: "Stay", new: "Stay in place"},
+					];
+					const correctOrderMatches = readTaggedLine().match(/Stage (\d): (.+) squares in the correct order are (.+)\./);
+					const color = correctOrderMatches[2].toLowerCase();
+					const answerLines = readTaggedLines(correctOrderMatches[3].split(", ").length);
+					const coordinates = answerLines.map((line, ix) => { 
+						const match1 = line.match(/— (.+) \/ (.+) translates to (.+)/);
+						const originalCoordinate = match1 ? match1[1] : line.match(/— (.+) has already become white. Skip it./)[1];
+						const answerCoordinate = match1 ? match1[3] : undefined;
+						const num = ix + 1;
+						const tranformation = match1 ? match1[2] : undefined;
+						return {originalCoordinate: originalCoordinate, answerCoordinate: answerCoordinate, num: num, tranformation: tranformation};
+					});
+					const whiteCoordinates = [];
+					const orderSVG = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 220 220'>").addClass("discolored-squares");
+					const answerSVG = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 220 220'>").addClass("discolored-squares");
+					for (let row = 0; row < 4; row++) {
+						for (let col = 0; col < 4; col++) {
+							const coordinate = `${"ABCD"[col]}${row + 1}`;
+							const foundOrderCoordinate = coordinates.find(c => c.originalCoordinate == coordinate);
+							const foundAnswerCoordinate = coordinates.find(c => c.answerCoordinate == coordinate);
+							const foundWhiteCoordinate = module.whiteCoordinates.find(c => c == coordinate);
+							const x = col * module.dimension;
+							const y = row * module.dimension;
+							const textX = x + module.halfDimension;
+							const textY = y + module.halfDimension;
+							const colorBlindX = x + 2;
+							const colorBlindY = y + module.dimension - 2;
+							module.makeRect(x, y, foundOrderCoordinate ? color : foundWhiteCoordinate ? "white" : "none", module.dimension).appendTo(orderSVG);
+							module.makeRect(x, y, foundAnswerCoordinate ? color : foundWhiteCoordinate ? "white" : "none", module.dimension).appendTo(answerSVG);
+							if(foundOrderCoordinate) {
+								module.makeText(textX, textY, foundOrderCoordinate.num).appendTo(orderSVG);
+								module.makeText(colorBlindX, colorBlindY, color.toUpperCase()[0], "discolored-squares-color-blind").appendTo(orderSVG);
+							}
+							if (foundAnswerCoordinate) {
+								module.makeText(textX, textY, foundAnswerCoordinate.num).appendTo(answerSVG);
+								module.makeText(colorBlindX, colorBlindY, color.toUpperCase()[0], "discolored-squares-color-blind").appendTo(answerSVG);
+								whiteCoordinates.push(coordinate);
+							}
+							if(foundWhiteCoordinate) {
+								module.makeText(colorBlindX, colorBlindY, "W", "discolored-squares-color-blind").appendTo(orderSVG);
+								module.makeText(colorBlindX, colorBlindY, "W", "discolored-squares-color-blind").appendTo(answerSVG);
+							}
+						}
+					}
+					whiteCoordinates.forEach(w => module.whiteCoordinates.push(w));
+					module.currentDropdown[1].push({nobullet: true, obj: $(`<p>Stage ${correctOrderMatches[1]}</p>`).addClass("discolored-squares-header")}, {obj: $('<hr>'), nobullet: true});
+					const format = formatArr.find(f => f.original == coordinates[0].tranformation);
+					const arrow = $('<img>').attr('src', `../HTML/img/Bakery/arrow.svg`).addClass("discolored-squares");
+					const div = $('<div>').append(orderSVG).append($('<div>').addClass("discolored-squares-centered").append(arrow).append($(`<p>${format ? format.new : "THIS SHOULD NOT BE HERE"}</p>`).addClass("discolored-squares"))).append(answerSVG).addClass("disolored-squares-parent");
+					module.currentDropdown[1].push({ nobullet: true, obj: div });
+					return true;
+				}
+			},
+			{
+				regex: /((:?.+) was correct)\.|(Expected (?:.+), but you pressed (?:.+)\. Strike\. Module resets\.)/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0]);
+					return true;
+				 }
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Dominosa",
 		moduleID: "DominosaModule",
 		loggingTag: "Dominosa",
