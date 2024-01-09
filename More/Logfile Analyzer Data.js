@@ -4316,11 +4316,6 @@ let parseData = [
 		],
 	},
 	{
-		displayName: "The Dealmaker",
-		moduleID: "thedealmaker",
-		loggingTag: "TheDealmaker"
-	},
-	{
 		displayName: "DACH Maze",
 		moduleID: "DACH",
 		loggingTag: "DACH Maze",
@@ -4441,6 +4436,11 @@ let parseData = [
 				}
 			}
 		]
+	},
+	{
+		displayName: "The Dealmaker",
+		moduleID: "thedealmaker",
+		loggingTag: "TheDealmaker"
 	},
 	{
 		moduleID: "rgbArithmeticDecomposed",
