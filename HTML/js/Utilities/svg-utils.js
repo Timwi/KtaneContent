@@ -6,7 +6,7 @@
  * @example {class:"highlightable", r:5, cx:4, cy:12}
  * @returns {HTMLElement} The generated tag with the provided attributes.
  */
- function MakeSvgElem(tag, attrs, inner = null) {
+function MakeSvgElem(tag, attrs, inner = null) {
     let el = document.createElementNS('http://www.w3.org/2000/svg', tag);
     for (let k in attrs)
         el.setAttribute(k, attrs[k]);
