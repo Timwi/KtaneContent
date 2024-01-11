@@ -4094,6 +4094,228 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "CyanArrows",
+		loggingTag: "Cyan Arrows",
+		matches: [
+			{
+				regex: /^-{70}$/,
+				handler: function (_, module) {
+					if (!module.initialised) {
+						module.push("Red arrows indicate blinking lights.");
+						module.push("Press the play button to start.");
+						module.attempts = 0;
+						module.pushHeader = function (text, type = "h4") {
+							module.push({obj: $(`<${type}>`).text(text), nobullet: true});
+						}
+						module.trianglePath = $SVG("<path>").attr("d", "M0 10h10l-5 -10z").addClass("arrow");
+						module.makeTriangle = function (isNorth, direction, number, target = null, x = 0, y = 0) {
+							if (target === null)
+								target = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>');
+							if (!isNorth)
+								target.addClass("regular-arrow");
+							else
+								target.addClass("north-arrow");
+							target.addClass("arrow");
+							
+							const rotation = "URDL".indexOf(direction) * 90;
+							target.attr("transform", `rotate(${rotation}) translate(${x}, ${y})`)
+							target.append(module.trianglePath.clone());
+							target.append($SVG("<text>")
+								.text(number)
+								.addClass("arrow-label")
+								.attr("x", 5)
+								.attr("y", 7)
+								.attr("transform-origin", "5 7")
+								.attr("transform", `rotate(${-rotation})`));
+							return target;
+						};
+						module.makeCell = function (g, x, y, number, openings, invert = false) {
+							const cell = $SVG("<g>").addClass("cell").appendTo(g);
+							cell.append($SVG("<path>")
+								.attr("d", `M${x * 10 + .5} ${y * 10 + .5}v-1h9v1h1v9h-1v1h-9v-1h-1v-9z`)
+								.addClass("cell-bg"));
+							cell.append($SVG("<text>")
+								.text(number)
+								.addClass("arrow-label")
+								.attr("x", 5 + x * 10)
+								.attr("y", 5 + y * 10))
+								.attr("transform-origin", `${5 + x * 10} ${5 + y * 10}`);
+							module.addWalls(cell, x, y, openings, invert)
+							return cell;
+						}
+						module.addWalls = function (cell, x, y, exceptDirs, invert) {
+							for (const dir of "UDLR") {
+								if (exceptDirs.includes(dir)) {
+									if (!invert)
+										continue;
+								}
+								else if (invert)
+									continue;
+
+								const startX = dir !== "R" ? x * 10 : (x + 1) * 10;
+								const startY = dir !== "D" ? y * 10 : (y + 1) * 10;
+								const dDir = "UD".includes(dir) ? "h" : "v";
+								cell.append($SVG("<path>")
+									.attr("d", `M${startX} ${startY}${dDir}10`)
+									.addClass("cell-wall"));
+							}
+						}
+						module.oppositeDirs = {
+							"U": "D",
+							"D": "U",
+							"L": "R",
+							"R": "L"
+						}
+						module.initialised = true;
+					}
+					module.attempts += 1;
+					module.push({obj: $("<hr>"), nobullet: true});
+					module.pushHeader(`Attempt ${module.attempts}`, "h3");
+					module.pushHeader("Flashes");
+					module.flashGroups = [];
+					return true;
+				}
+			},
+			{
+				regex: /^Orientation (\d): ([UDLR]) \/ Movement \d: ([UDLR]+)$/,
+				handler: function (match, module) {
+					module.flashGroups.push({ trueNorth: match[2], flashes: match[3] });
+					const div = $("<div>").addClass("cyan-arrows");
+					div.append(module.makeTriangle(true, match[2], match[1]));
+					for (const dir of match[3])
+						div.append(module.makeTriangle(false, dir));
+					module.push({obj: div, nobullet: true});
+					return true;
+				}
+			},
+			{
+				regex: /^Wall 1: [UDLR]+/,
+				handler: function (_, module) {
+					const div = $("<div>").addClass("cyan-arrows cyan-arrows--display");
+					module.pushHeader("Wall construction");
+					module.push({ obj: div, nobullet: true });
+					
+					const buttonPanel = $("<div>").addClass("menu").appendTo(div);
+					// 10x50 box for the north-pointing arrow, 50x50 box for the groups.
+					const svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 0 70 50" overflow="visible"/>').addClass("display").appendTo(div);
+					const groups = [];
+					const cells = [];
+					let maxWidth = 0;
+					let maxHeight = 0;
+
+					for (const group of module.flashGroups) {
+						const container = $SVG("<g>").addClass("container").data("rotation", "URDL".indexOf(group.trueNorth)).appendTo(svg);
+						const elem = $SVG("<g>").addClass("group").appendTo(container);
+						const northArrow = module.makeTriangle(true, "U", groups.length + 1, $SVG("<g>"), -20, 20)
+							.attr("data-rotation", "URDL".indexOf(group.trueNorth)).appendTo(svg);
+						const g = { elem, container, start_ix: cells.length, northArrow};
+
+						let x = 0, minX = 0, maxX = 0;
+						let y = 0, minY = 0, maxY = 0;
+						let lastOpening = "";
+						for (const flash of group.flashes) {
+							cells.push({ elem: module.makeCell(elem, x, y, cells.length + 1, flash + lastOpening), group: g, northArrow});
+							switch (flash) {
+								case "U": y -= 1; minY = Math.min(minY, y); break;
+								case "D": y += 1; maxY = Math.max(maxY, y); break;
+								case "L": x -= 1; minX = Math.min(minX, x); break;
+								case "R": x += 1; maxX = Math.max(maxX, x); break;
+								default: module.push(`What in the bengo direction is this???? ${flash}`); break;
+							}
+							lastOpening = module.oppositeDirs[flash];
+						}
+						cells.push({elem: module.makeCell(elem, x, y, cells.length + 1, lastOpening), group: g, northArrow});
+
+						g.height = (maxY - minY + 1) * 10;
+						g.width = (maxX - minX + 1) * 10;
+						g.offsetX = -minX * 10;
+						g.offsetY = -minY * 10;
+						g.end_ix = cells.length;
+						
+						groups.push(g);
+						maxWidth = Math.max(maxWidth, g.width);
+						maxHeight = Math.max(maxHeight, g.height);
+					}
+					// Centre the groups and scale them to fit in the 50x50 box while keeping all the cells the same size.
+					const size = Math.max(maxWidth, maxHeight);
+					const scale = 50 / size;
+					for (const g of groups) {
+						const translateX = g.offsetX + (size - g.width) / 2;
+						const translateY = g.offsetY + (size - g.height) / 2;
+						g.elem.attr("transform", `scale(${scale}) translate(${translateX}, ${translateY})`);
+					}
+
+					let position = 0;
+					cells[0].elem.addClass("current visible");
+					cells[0].northArrow.addClass("visible");
+					buttonPanel.append($("<button>").addClass("menu-button").attr("type", "button").text("< Previous").on("click", () => handleButton(-1)));
+					buttonPanel.append($("<button>").addClass("menu-button").attr("type", "button").text("Next >").on("click", () => handleButton(1)));
+					buttonPanel.append($("<button>").addClass("menu-button").attr("type", "button").text("Toggle North-Alignment").on("click", toggleNorthAlignments));
+
+					function handleButton(offset) {
+						const oldCell = cells[position]
+						position = (position + offset + cells.length) % cells.length;
+						const newCell = cells[position];
+
+						for ([ix, cell] of cells.entries()) {
+							if (cell.group === newCell.group && ix <= position)
+								cell.elem.addClass("visible");
+							else
+								cell.elem.removeClass("visible");
+						}
+						oldCell.elem.removeClass("current");
+						oldCell.northArrow.removeClass("visible");
+						newCell.elem.addClass("current");
+						newCell.northArrow.addClass("visible");
+					}
+					let aligned = false;
+					function toggleNorthAlignments() {
+						aligned = !aligned;
+						for (const g of groups) {
+							if (aligned) {
+								g.container.css("rotate", `${90 * parseInt(g.container.data("rotation"))}deg`);
+								g.northArrow.css("rotate", `${90 * parseInt(g.northArrow.data("rotation"))}deg`);
+							}
+							else {
+								g.container.css("rotate", "");
+								g.northArrow.css("rotate", "");
+							}
+						}
+					}
+					module.pushHeader("Solution walls");
+					module.solutionDiv = $("<div>").addClass("cyan-arrows");
+					module.push({ obj: module.solutionDiv, nobullet: true })
+				}
+			},
+			{
+				regex: /^Walls Assembled/,
+				handler: function (_, module) {
+					module.pushHeader("Submitted Answer");
+					module.solutionDiv = $("<div>").addClass("cyan-arrows");
+					module.push({ obj: module.solutionDiv, nobullet: true })
+				}
+			},
+			{
+				regex: /Wall \d+: (?:[UDLR]+|\[EMPTY\])/,
+				handler: function (match, module) {
+					for (const m of match.input.matchAll(/Wall (\d+): ([UDLR]+|\[EMPTY\])/g)) {
+						const walls = m[2] === "[EMPTY]" ? "" : m[2];
+						const svg = $('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>').addClass("solution").appendTo(module.solutionDiv);
+						module.makeCell(svg, 0, 0, m[1], m[2], true).addClass("visible");
+					}
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (match, module) {
+					if (match.input !== "Colorblind mode active!")
+						module.push(match.input);
+				}
+			}
+		],
+	},
+	{
 		displayName: "The Dealmaker",
 		moduleID: "thedealmaker",
 		loggingTag: "TheDealmaker"
