@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+    <title>セル・ラボ — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <style>
+            table {
+                margin: 1em auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">セル・ラボ</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Cell Lab.svg" class="diagram">
+                <h2>モジュール詳細：セル・ラボ</h2>
+                    <p class="flavour-text">幸いなことに、モジュールは有糸分裂をしない。</p>
+
+                    <p>このモジュールは多くのテキストを表示する。これは3つの多細胞生物のデータである。しかし、いくつかのデータが失われている。モジュールを解除するには、このデータを修正する。<strong>注: H、S、Vはそれぞれ一度だけ計算する必要がある。</strong></p>
+                    <p>下の3行のテキストは、R(赤)、G(緑)、B(青)の値を0～255の範囲で表示する。これらはHSVに変換する必要がある。</p>
+                    <h3>RGB から HSVへの変換</h3>
+                    <p>色相(H)を求めるには、まずその色相がどの範囲にあるかを知る必要がある。表中の+はRGB内で最も高いチャンネル、-は最も低いチャンネルを示す。同値がある場合は、表で当てはまるもののうち、読み順で最初にあるものを選ぶ（255, 255, 0は+0-にも0+-にもなるが、このルールにより+0-を選ぶ）。</p>
+                    <table>
+                        <tr><td>+0-</td><td>0+-</td><td>-+0</td><td>-0+</td><td>0-+</td><td>+-0</td></tr>
+                        <tr><td>0–60</td><td>60–120</td><td>120–180</td><td>180–240</td><td>240–300</td><td>300–360</td></tr>
+                    </table>
+                    <p>次に、以下の式を使って初期値 O を求める。最小値、最大値、およびその中間の値をそれぞれC<sub>-</sub>、 C<sub>+</sub>、 C<sub>*</sub>と表記する。</p>
+                    <p style="text-align:center">O = (C<sub>*</sub> - C<sub>-</sub>)/(C<sub>+</sub> - C<sub>-</sub>) * 60</p>
+                    <p>もし、現在の色が表の奇数番目にあった場合、表内の左の値に O を加える。そうでない場合、表内の右の値から O を引く。小数点以下を切り捨て、色相(H)を求める。</p>
+                    <p>彩度(S)を求めるには、以下の式を使用し、小数点以下を切り捨てる。</p>
+                    <p style="text-align:center">S = (C<sub>+</sub> - C<sub>-</sub>)/C<sub>+</sub> * 100</p>
+                    <p>明度(V)を求めるには、以下の計算式を使用し、小数点以下を切り捨てる。</p>
+                    <p style="text-align:center">V = C<sub>+</sub>/2.55</p>
+                    <p>ゼロによる除算により計算が意味をなさない場合、その値を無視する。その値は今後使われることはない。</p>
+                    <p style="font-size:small">注: 通常のHSV変換器とは、小数点以下の処理が異なる。誤差の判定に関するエラーを避けるため、これらの使用は控えること。</p>
+                    </div>
+                <div class="page-footer relative-footer">ページ 1/3</div>
+            </div>
+            
+            <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">セル・ラボ</span>
+                </div>
+                <div class="page-content">
+                    <h3>HSV から データへの変換</h3>
+                    <p>これらのHSV値のみでは、多くのことはできないため、変換する必要がある。</p>
+                    <p>彩度または明度のいずれかが5未満の場合、これらの手順を無視し、分割量(Split mass)を<i>「never」</i>に設定する。</p>
+                    <p>分割量(Split mass)、分割角度(Split angle)は、色相Hに基づいている。%は、剰余の演算子である。</p>
+                    <p style="text-align:center">m<sub>split</sub> = (H%15) * 0.22ng</p>
+                    <p style="text-align:center">θ = ⌊H/15⌋ * 15</p>
+                    <p>子(Child)たちは、彩度S（Child 1）と明度V（Child 2）に基づいた角度を持つ。</p>
+                    <p style="text-align:center">α = ((S-5)%24) * 15</p>
+                    <p style="text-align:center">β = ((V-5)%24) * 15</p>
+                    <p>次の計算は、チェックボックスにチェックを入れるためのものである。計算結果が「1」になる場合、必ずチェックしなければならない。</p>
+                    <p style="text-align:center">B<sub>p</sub> = ⌊(V-5)/48⌋</p>
+                    <p style="text-align:center">B<sub>c1</sub> = ⌊(S-5)/24⌋ % 2</p>
+                    <p style="text-align:center">B<sub>c2</sub> = ⌊(V-5)/24⌋ % 2</p>
+                    <p style="font-size:small">注: ⌊x⌋ はFloor関数であり、括弧内の値の小数点以下を切り捨てる。</p>
+                    <h3>細胞タイプ</h3>
+                    <p>細胞には様々な種類がある。ある細胞について、それを子に持つ自分以外の細胞の個数を取得し、それを2倍にする。その後、その細胞の子も自身である場合は1を加える。この数字を以下の表から探し、細胞タイプを取得する。</p>
+                    <table>
+                        <tr><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+                        <tr><td>脂肪細胞</td><td>角化細胞</td><td>鞭毛細胞</td><td>食細胞</td><td>発光細胞</td><td>貪食細胞</td></tr>
+                        <tr><td>lp</td><td>kt</td><td>fl</td><td>pg</td><td>pt</td><td>dv</td></tr>
+                    </table>
+                    </div>
+                <div class="page-footer relative-footer">ページ 2/3</div>
+            </div>
+            
+            <div class="page page-bg-03">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">セル・ラボ</span>
+                </div>
+                <div class="page-content">
+                    <h3>ユーザーインターフェース</h3>
+                    <p>細胞を循環して表示させるには、 <i>Edit mode(編集モード)</i> の横にある M# テキストを押す。</p>
+                    <p>値を編集するには、その値を押す（編集が許可されている限り）。</p>
+                    <p>すべてが正しく入力されると、モジュールは自動的に解除される。</p>
+                    </div>
+                <div class="page-footer relative-footer">ページ 3/3</div>
+            </div>
+        </div>
+    </body>
+</html>
