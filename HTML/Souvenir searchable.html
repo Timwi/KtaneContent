@@ -28,8 +28,8 @@
         }
 
         .souvenir .module .name .the {
-                font-weight: normal;
-                font-size: 10pt;
+            font-weight: normal;
+            font-size: 10pt;
         }
 
         .souvenir ul {
@@ -47,6 +47,10 @@
             text-align: right;
             font-style: italic;
             font-size: 10pt;
+        }
+
+        select {
+            font-family: 'Trebuchet MS';
         }
 
         .warning {
@@ -655,13 +659,45 @@
         fetchBombData();
 
         async function fetchBombData() {
-            let request = await fetch("https://bombs.samfun.dev/json/missionsreduced");
+            let request = await fetch("https://bombs.samfun.dev/json/missions");
             let reqText = await request.text();
             let reqJson = JSON.parse(reqText);
 
             for (j = 0; j < reqJson.length; j++) {
-                if (reqJson[j].moduleList.includes("SouvenirModule")) {
-                    bombData.push(reqJson[j]);
+                let mission = reqJson[j];
+                let modList = [];
+                let partOfPool = [];
+                let souvenirCount = 0;
+                let souvenirFlag = false;
+
+                mission.bombs.forEach(bomb => {
+                    souvenirCount = 0;
+                    bomb.pools.forEach(pool => {
+                        let pooled = pool.modules.length > 1;
+                        pool.modules.forEach(module => {
+                            if (!modList.includes(module)) {
+                                modList.push(module);
+                                partOfPool.push(pooled);
+                            }
+                            if (pooled && !partOfPool[modList.indexOf(module)]) {
+                                partOfPool[modList.indexOf(module)] = true;
+                            }
+                            if (module == "SouvenirModule") {
+                                souvenirCount += pool.count;
+                            }
+                        });
+                    });
+                    if (souvenirCount == 2) {
+                        souvenirFlag = true;
+                    }
+                });
+
+                if (souvenirCount) {
+                    if (!souvenirFlag) {
+                        partOfPool.splice(modList.indexOf("SouvenirModule"), 1);
+                        modList.splice(modList.indexOf("SouvenirModule"), 1);
+                    }
+                    bombData.push({ "name": mission.name, "moduleList": modList, "partOfPool": partOfPool });
                 }
             }
 
@@ -684,6 +720,7 @@
             warningSvg.style.width = "0px";
             warningSvg.innerHTML = '<path fill="none" stroke="#000" stroke-miterlimit="3" stroke-width="1.26" d="m8.47 2.12 7.33 12.7H1.13zm0 3.44v5.29m0 1.05v1.33"></path>';
             let modList = bombData[bombList.value].moduleList;
+            let poolList = bombData[bombList.value].partOfPool;
             let warningMessage = null;
             let vanillaList = [];
 
@@ -695,10 +732,6 @@
                         warningMessage = "Note: Your bomb may not necessarily contain every vanilla module given below.";
                     }
                 }
-            }
-
-            if (modList.includes("ALL_MODS_SOLVABLE") || modList.includes("ALL_SOLVABLE")) {
-                warningMessage = "Note: Only modules guaranteed to appear on your bomb are given below. Refer to the Challenge Bombs website to deduce which modules are not given below, and to the original Souvenir manual for any questions Souvenir may ask about those modules.";
             }
 
             for (m = 0; m < moduleData.length; m++) {
@@ -733,11 +766,19 @@
 
                     questionBatch.appendChild(moduleDiv);
 
-                    if (warningMessage) {
-                        warningSvg.style.width = "64px";
-                        warningSvg.innerHTML += ("<title>" + warningMessage + "</title>");
+                    if (poolList[modList.indexOf(data.id)]) {
+                        warningMessage = "Note: Your bomb may not necessarily contain every module given below.";
                     }
                 }
+            }
+
+            if (modList.includes("ALL_MODS_SOLVABLE") || modList.includes("ALL_SOLVABLE")) {
+                warningMessage = "Note: Not all modules on your bomb could be given below. Refer to the Challenge Bombs website to deduce which modules are not given below, and to the original Souvenir manual for any questions Souvenir may ask about those modules.";
+            }
+
+            if (warningMessage) {
+                warningSvg.style.width = "64px";
+                warningSvg.innerHTML += ("<title>" + warningMessage + "</title>");
             }
         });
 
