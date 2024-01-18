@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>シリンダー錠 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin-left: auto; 
+            margin-right: auto;
+            text-align: center;
+        }
+        .dark canvas { filter: invert(90%); }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <!-- Start the pages! -->
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シリンダー錠</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Thread the Needle.svg" class="diagram">
+                <h2>モジュール詳細：シリンダー錠</h2>
+                <p class="flavour-text">回して縫うのはとても楽しいよ！</p>
+
+                <ul>
+                    <li>モジュール上にある5つのコードホイールは、それぞれ8つの位置のいずれかに設定できる。コードホイールのそれぞれのシンボルの下には穴がある。これらの穴はモジュール内部に隠されているため、処理担当者からは見えない。</li>
+                    <li>穴は無し、円形、三角形の3種類がある。</li>
+                    <li>幸いなことに、それぞれのコードホイールのシンボルパターンはすべて異なる。これを、どのコードホイールがモジュール上にあるかを識別するために使用すること。</li>
+                    <li>三角形の穴が1列に連続することなく、円形の穴が少なくとも1列連続するようにコードホイールを回転させ、送信ボタンを押す。</li>
+                    <li>さらに、モジュールの最も右側の内部には「ボーナスホイール」が1つ隠されている。ボーナスホイールは手動で回すことができない。それ以外は、通常のホイールと同じように機能するため、他のホイールもそれに合わせる必要がある。</li>
+                </ul>
+
+                <h3>コードホイール</h3>
+                <br>
+                <!-- JavaScriptで自動生成しているよ -->
+                <table id="codeWheels"></table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シリンダー錠</span>
+            </div>
+            <div class="page-content">
+                <h3>ボーナスホイールの特定</h3>
+                <ul>
+                    <li><strong>U</strong> は、シリアルナンバーにある奇数の個数に、シリアルナンバーにある母音の個数の2倍を足した数とする。</li>
+                    <li><strong>W</strong> は、爆弾にあるバッテリーの数から、点灯したインジケーターの数を引いた数とする。</li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <td class="repeaters-spacer"></td>
+                        <th>U = 1, 3</th>
+                        <th>U = 2, 4, 5</th>
+                        <th>U >= 6 or 0</th>
+                    </tr>
+                    <tr>
+                        <th>W &lt;= 0</th>
+                        <td id="bonus-1-1"></td>
+                        <td id="bonus-1-2"></td>
+                        <td id="bonus-1-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W = 1, 2</th>
+                        <td id="bonus-2-1"></td>
+                        <td id="bonus-2-2"></td>
+                        <td id="bonus-2-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W = 3</th>
+                        <td id="bonus-3-1"></td>
+                        <td id="bonus-3-2"></td>
+                        <td id="bonus-3-3"></td>
+                    </tr>
+                    <tr>
+                        <th>W &gt;= 4</th>
+                        <td id="bonus-4-1"></td>
+                        <td id="bonus-4-2"></td>
+                        <td id="bonus-4-3"></td>
+                    </tr>
+                </table>
+
+                <ul><li>ボーナスホイールは、ミスが1回記録されるたびに反時計回りに1つ分だけ回転し、モジュールが1つ解除されるたびに時計回りに1つ分だけ回転する。この図の位置を基準として、最も上の部分をモジュールの正面に向けた状態から開始する。</li></ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+    <script>
+        const table = document.getElementById("codeWheels");
+
+        const ROW_WIDTH = 4;
+
+        const CANVAS_UPSCALE = 8.0; // Make it 8x as sharp
+        const CIRCLE_RADIUS = 0.75;
+        const LABEL_RADIUS = 0.9;
+        const HOLE_RADIUS = 0.6;
+        const SPINDLE_RADIUS = 0.1;
+        const RING_RADIUS = 0.15;
+
+        const PI = Math.PI;
+        const TAU = 2 * Math.PI;
+
+        const wheels = [
+            ["+-]!<0#<", "O.^^^.OO"],
+            ["$)2=*/>!", "^.^.O^O."],
+            ["78/?(-7~", "O.O..^.^"],
+            ["96394?#!", "O^..^^OO"],
+
+            ["+!2#!@*@", "^^O..OO."],
+            ["%*&50$52", "^..O^O.."],
+            ["%*!%~*+$", "O^.^O.^^"],
+            ["[%?/1{]}", "^.^..O^^"],
+
+            ["1@3!2312", "O^..^^.O"],
+            ["%^O<#>^(", ".^.^OOO."],
+            ["->-~>@<%", ".O...^.^"],
+            ["{]}[%?/$", ".^..OOO."]
+        ];
+
+        const bonus_wheels = [
+            ["..O..^^O", "..^O..^^", "..^^.^.O"],
+            ["^^.O.^^^", "....OOOO", "..^OO..."],
+            ["^...OOOO", ".^^O..^^", "...^O^^."],
+            [".^O^O^.O", ".O^.^.O^", "..^^.OOO"]
+        ];
+
+        /**
+        * this is to make VS code know what type it is
+        * @param {CanvasRenderingContext2D} ctx the drawing context
+        * @param {Number} size the size of the enclosing square in pixels
+        * @param {Array<String>} wheel the wheel data. [0] is the labels, [1] is the holes.
+        */
+        function doWheel(ctx, size, wheel) {
+            // Draw the circle
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2 * CIRCLE_RADIUS, 0, TAU);
+            ctx.stroke();
+            // Spindle
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2 * SPINDLE_RADIUS, 0, TAU);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2 * RING_RADIUS, 0, TAU);
+            ctx.stroke();
+
+            // Draw the text & holes
+            ctx.font = `bold 16px Special Elite, monospace`;
+            ctx.textAlign = `center`;
+            ctx.textBaseline = `middle`;
+            const triangle = (x, y) => {
+                const triSide = 12;
+                const triHeight = triSide * 0.5 * Math.sqrt(3);
+                ctx.beginPath();
+                ctx.moveTo(x - triSide / 2, y + triHeight / 2);
+                // 3 sides, 3 lineTos
+                ctx.lineTo(x + triSide / 2, y + triHeight / 2);
+                ctx.lineTo(x, y - triHeight / 2);
+                ctx.lineTo(x - triSide / 2, y + triHeight / 2);
+                ctx.stroke();
+            };
+            const circle = (x, y) => {
+                const radius = 6;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, TAU);
+                ctx.stroke();
+            };
+
+            ctx.fillStyle = "white";
+            const length = wheel[0].length;
+            for (let i = 0; i < length; i++) {
+                const theta = (i / length) * TAU - TAU / 4;
+
+                const label = wheel[0][i];
+                const hole = wheel[1][i];
+
+                const vX = Math.cos(theta);
+                const vY = Math.sin(theta);
+
+                // Draw the outer label
+                ctx.fillStyle = "black";
+                const textX = vX * size * LABEL_RADIUS / 2 + size / 2;
+                const textY = vY * size * LABEL_RADIUS / 2 + size / 1.95;
+                ctx.fillText(label, textX, textY);
+
+                // Draw the inner holes
+                ctx.fillStyle = "white";
+                const holeX = vX * size * HOLE_RADIUS / 2 + size / 2;
+                const holeY = vY * size * HOLE_RADIUS / 2 + size / 2;
+                if (hole == 'O') circle(holeX, holeY);
+                else if (hole == '^') triangle(holeX, holeY);
+            }
+        }
+
+        // Main!
+        const cellSize = (
+            document.getElementsByClassName("page-content")[0].clientWidth
+            - Number(
+                window.getComputedStyle(
+                    document.getElementsByClassName("page-content")[0]
+                ).marginLeft.replace(/[^\d\.]/g, '')
+            ) * 1.5)
+            / ROW_WIDTH;
+
+        let row;
+        for (let c = 0; c < wheels.length; c++) {
+            if (c % ROW_WIDTH == 0) {
+                row = document.createElement("tr");
+                table.appendChild(row);
+            }
+            let wheel = wheels[c];
+
+            const cell = document.createElement("td");
+            row.appendChild(cell);
+
+            const canvas = document.createElement("canvas");
+            cell.appendChild(canvas);
+            canvas.width = cellSize * CANVAS_UPSCALE;
+            canvas.height = cellSize * CANVAS_UPSCALE;
+            canvas.style.width = `${cellSize}px`;
+            canvas.style.height = `${cellSize}px`;
+            const ctx = canvas.getContext("2d");
+            ctx.scale(CANVAS_UPSCALE, CANVAS_UPSCALE);
+            doWheel(ctx, cellSize, wheel);
+        }
+
+        // Bonus wheels!
+        for (let u = 0; u < 3; u++) {
+            for (let w = 0; w < 4; w++) {
+                const cell = document.getElementById(`bonus-${w + 1}-${u + 1}`);
+                const canvas = document.createElement("canvas");
+                cell.appendChild(canvas);
+                canvas.width = cellSize * CANVAS_UPSCALE;
+                canvas.height = cellSize * CANVAS_UPSCALE;
+                canvas.style.width = `${cellSize}px`;
+                canvas.style.height = `${cellSize}px`;
+                const ctx = canvas.getContext("2d");
+                ctx.scale(CANVAS_UPSCALE, CANVAS_UPSCALE);
+                doWheel(ctx, cellSize, ["·".repeat(8), bonus_wheels[w][u]]);
+            }
+        }
+    </script>
+</body>
+</html>
