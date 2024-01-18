@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>新世界 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .maze svg {
+            stroke-linecap: square;
+            --colour: #000;
+        }
+        .dark .maze svg { --colour: #DDD; }
+        .maze svg :not(.highlightable, g) {
+            user-select: none;
+            pointer-events: none;
+        }
+        .maze svg .line {
+            stroke: var(--colour);
+            stroke-width: 2;
+        }
+        .maze svg .square { fill: var(--colour); }
+
+        .page-footer::before { content: 'ページ '; }
+        .page-footer::after { content: '/2'; }
+    </style>
+    <script>
+        const cells = [];
+        const cardinal = ["N", "E", "W", "S"];
+        const locations = [[-1, 0, 0, 1], [0, 1, -1, 0]];
+        let defaultRules = null;
+        let generated;
+        let rng;
+
+        function Cell() {
+            this.visited = false;
+            this.directions = { N: true, E: true, W: true, S: true };
+        }
+
+        function getDefaultRules() {
+            if (defaultRules !== null)
+                return;
+            defaultRules = {};
+            for (let i = 1; i <= 8; i++)
+                defaultRules[`rule-${i}`] = document.getElementById(`rule-${i}`).innerText;
+        }
+
+        function setDefaultRules() {
+            getDefaultRules();
+            for (let i = 1; i <= 8; i++)
+                document.getElementById(`rule-${i}`).innerText = defaultRules[`rule-${i}`];
+            const maze = [
+                ["U L D", "U", "U R D", "U L", "U", "U R D"],
+                ["U L", "D R", "U L", "D R", "L D", "U R"],
+                ["L R", "L U", "D R", "U L", "U D", "R"],
+                ["L", "D R", "U L", "D R", "U L R", "L R"],
+                ["L R", "L U R", "L R", "U L", "D R", "L R"],
+                ["L D R", "L D", "D R", "L D", "U D", "D R"]
+            ];
+            InitializeGeneration();
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) {
+                    cells[j][k].directions.N = !maze[j][k].includes('U');
+                    cells[j][k].directions.E = !maze[j][k].includes('R');
+                    cells[j][k].directions.W = !maze[j][k].includes('L');
+                    cells[j][k].directions.S = !maze[j][k].includes('D');
+                }
+            }
+            generateSVG();
+        }
+
+        function setRules(rnd) {
+            setDefaultRules();
+            rng = rnd;
+            generateRuleSeed2();
+            rnd = new MonoRandom(rnd.seed);
+            rng = rnd;
+            makeMaze();
+        }
+
+        function makeMaze() {
+            InitializeGeneration();
+            CheckCell(rng.nextMax(5), rng.nextMax(5));
+            generateSVG();
+        }
+
+        function InitializeGeneration() {
+            for (let j = 0; j < 6; j++) {
+                cells[j] = [];
+                for (let k = 0; k < 6; k++)
+                    cells[j][k] = new Cell();
+            }
+        }
+
+        function generateRuleSeed2() {
+            const rules = new Array(8);
+            const random = rng.nextMax(8);
+            for (let i = 0; i < 8; i++)
+                rules[i] = i;
+            for (let i = 0; i < random; i++) {
+                const r1 = rng.nextMax(8);
+                const r2 = rng.nextMax(8);
+                const temp = rules[r1];
+                rules[r1] = rules[r2];
+                rules[r2] = temp;
+            }
+            for (let i = 0; i < 8; i++) {
+                const span = document.getElementById(`rule-${i + 1}`);
+
+                switch (rules[i]) {
+                    case 0: span.innerText = `単1バッテリーの個数`; break;
+                    case 1: span.innerText = `単3バッテリーの個数`; break;
+                    case 2: span.innerText = `バッテリーホルダーの個数`; break;
+                    case 3: span.innerText = `ポートプレートの個数`; break;
+                    case 4: span.innerText = `ポートの個数`; break;
+                    case 5: span.innerText = `点灯していないインジケーターの個数`; break;
+                    case 6: span.innerText = `点灯したインジケーターの個数`; break;
+                    case 7: span.innerText = `シリアルナンバー内の数字(先頭の0は無視される)`; break;
+                }
+            }
+        }
+
+        function CheckCell(row, col, prevDir = -1) {
+            if (!inRange(row, 0, 5) || !inRange(col, 0, 5) || cells[row][col].visited)
+                return false;
+            cells[row][col].visited = true;
+            const start = rng.nextMax(4);
+            for (let i = 0; i < 4; i++) {
+                const point = (start + i) % 4;
+                cells[row][col].directions[cardinal[point]] = CheckCell(row + locations[0][point], col + locations[1][point], point);
+            }
+            if (prevDir != -1)
+                cells[row][col].directions[cardinal[3 - prevDir]] = true;
+            return true;
+        }
+
+        function inRange(value, min, max) { return (value >= min && value <= max); }
+
+        function generateSVG() {
+            const svg = document.getElementsByClassName("maze")[0].getElementsByTagName("svg")[0];
+            if (!generated) {
+                const maze = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                svg.appendChild(maze);
+            }
+            generated = true;
+            maze = svg.firstChild;
+            maze.innerHTML = '';
+
+            for (let j = 0; j < 6; j++) {
+                for (let k = 0; k < 6; k++) {
+                    const x = 2 + 45 * k + 237.5;
+                    const y = 21 + 45 * j;
+
+                    const highlight = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        ["class", "x", "y", "width", "height", "fill"],
+                        ["highlightable", `${x - 1}`, `${y}`, "45", "45", "transparent"]);
+                    maze.prepend(highlight);
+
+                    const small = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                        ["x", "y", "width", "height", "class"],
+                        [`${x + 17}`, `${y + 17}`, "12", "12", "square"]);
+                    maze.appendChild(small);
+
+                    if (k < 5 && !cells[j][k].directions.E) {
+                        const e = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            ["x1", "y1", "x2", "y2", "class"],
+                            [`${x + 45}`, `${y}`, `${x + 45}`, `${y + 45}`, "line"]);
+                        maze.appendChild(e);
+                    }
+                    if (j < 5 && !cells[j][k].directions.S) {
+                        const s = setElement(document.createElementNS("http://www.w3.org/2000/svg", "line"),
+                            ["x1", "y1", "x2", "y2", "class"],
+                            [`${x}`, `${y + 45}`, `${x + 45}`, `${y + 45}`, "line"]);
+                        maze.appendChild(s);
+                    }
+                }
+            }
+            let square = setElement(document.createElementNS("http://www.w3.org/2000/svg", "rect"),
+                ["x", "y", "width", "height", "fill", "class"],
+                [`239.5`, `21`, "270", "270", "none", "line"]);
+            maze.appendChild(square);
+        }
+        function setElement(element, names, values) {
+            if (names.length <= 0 || values.length <= 0)
+                return null;
+            for (let i = 0; i < names.length; i++)
+                element.setAttribute(names[i], values[i]);
+            return element;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">新世界</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/New World.svg" class="diagram">
+                <h2>モジュール詳細：新世界</h2>
+                <p class="flavour-text">誓うよ、さっきもここにいたんだけど…</p>
+                <p>
+                    このモジュールは2つのルールシードを使用する。このモジュールに必要なページにアクセスするには、<code><em>https://ktane.timwi.de/HTML/New World translated (日本語 — 新世界) (alpha8404).html#</em></code>をコピーし、#の後にルールシードを入力する必要がある。
+                </p>
+                <p>
+                    モジュールは複数の数字を示す点滅テキストを表示するディスプレーと4つの方向矢印ボタンで構成されている。点滅するテキストにはルールシードとして使用する数字がリストされている。最初の数字と最後の数字を区別するために長い休止が置かれている。
+                </p>
+                <p>提供された最初のルールシードを使用してルールシードページにアクセスし、2つ目のルールシードを取得する。</p>
+                <p>取得した2つ目のルールシードを使用してルールシードページにアクセスし、モジュールで使用する迷路を取得する。</p>
+                <p>
+                    モジュールを進めるにはディスプレーを押して迷路を表示する。この時点でテキストは表示されなくなり、矢印ボタンを操作できるようになる。
+                </p>
+                <p>
+                    迷路が表示されたら、処理担当者は緑の正方形から赤の三角形まで移動する必要がある。いずれかの矢印を押すと緑の正方形と赤の三角形が処理担当者から見えなくなる。
+                </p>
+                <p>モジュールを解除するには、点滅したルールシードから取得した別のルールシードによって提供された迷路でゴールまで行く必要がある。</p>
+                <p>壁にぶつかるとミスが記録され、緑の正方形と赤の三角形の現在の位置が表示される。</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">新世界</span>
+            </div>
+            <div class="page-content">
+                <p>2つ目のルールシードについては、以下の数値を次の順序で連結し、2147483647で割った余りを使用する。</p>
+                <span class='rule' id='rule-1'>単1バッテリーの個数</span><br>
+                <span class='rule' id='rule-2'>単3バッテリーの個数</span><br>
+                <span class='rule' id='rule-3'>バッテリーホルダーの個数</span><br>
+                <span class='rule' id='rule-4'>ポートプレートの個数</span><br>
+                <span class='rule' id='rule-5'>ポートの個数</span><br>
+                <span class='rule' id='rule-6'>点灯していないインジケーターの個数</span><br>
+                <span class='rule' id='rule-7'>点灯したインジケーターの個数</span><br>
+                <span class='rule' id='rule-8'>シリアルナンバー内の数字(先頭の0は無視される)</span>
+                <p>これが正しいルールシードであると仮定すると、以下の迷路がモジュールで使用される迷路になる。</p>
+                <span class='maze'><svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 1.5 725 300"></svg></span>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>偽赤色矢印 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        br.doublebr { margin-bottom: 10pt; }
+        .page-footer::before { content: "ページ "; }
+        .page-footer::after { content: "/7"; }
+        .strikethrough { text-decoration: line-through; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Red Arrows.svg" class="diagram">
+                <h2>モジュール詳細：偽赤色矢印</h2>
+                <p class="flavour-text"><span class="strikethrough">ポインター。</span>例外を投げないように、コードを正しい方向に向けてくれ。</p>
+                <p>モジュールには4つの方向ボタンと中央に小さなディスプレーがある。</p>
+                <p>ボタンが赤ではない場合、またはディスプレーに2桁の数字が表示されていない場合、異なるモジュールを参照している。</p>
+                <p>
+                    ディスプレーには初期値が表示される。上と下ボタンは数値を1ずつ変更し、左と右は数値を10ずつ変更する。モジュールを解除するには以下のアセンブリ言語コードに従ってディスプレーを取得した数値に設定し、ディスプレーを押して入力を送信する。間違った数値を送信するとミスが記録され、モジュールが新しい初期値を生成する。
+                </p>
+                <hr>
+                <p><code>
+                    <strong>INNI:</strong><br>
+                    int startNumber = <strong>[初期値];</strong><br>
+                    int key = startNumber;<br>
+                    int lastDigit = <strong>[シリアルナンバーの最後の数字]</strong>;<br>
+                    int tick = 0;<br>
+                    int totalCount = 0;<br>
+                    int correctNumber = 11;<br>
+                    int dunceCounter = 0;<br>
+                    bool trigger = <strong>true</strong>;
+                </code></p>
+                <p><code>
+                    <strong>START:</strong><br>
+                    if (startNumber % 2 == 0) {<br>
+                    &ThickSpace; JMP S_E;<br>
+                    } else {<br>
+                    &ThickSpace; JMP S_O;<br>
+                    }
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>S_E:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; trigger = false;<br>
+                        &ThickSpace; key = key - lastDigit;<br>
+                    } else if (key % 10 &gt; lastDigit) {<br>
+                        &ThickSpace; key = (lastDigit + 2) * 7;<br>
+                    } else {<br>
+                        &ThickSpace; key = key + lastDigit;<br>
+                    }<br>
+                    JMP CNT_OB;
+                </code></p>
+                <p><code>
+                    <strong>S_O:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; key = key - lastDigit;<br>
+                    } else if (key % 10 &gt; lastDigit) {<br>
+                        &ThickSpace; key = (lastDigit - 2) * 5;<br>
+                        &ThickSpace; trigger = false;<br>
+                    } else {<br>
+                        &ThickSpace; key = 50 - key;<br>
+                    }<br>
+                    JMP CNT_OB;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>CNT_OB:</strong><br>
+                    int n = Math.abs(key), cycleCount = 0, count = 0;<br>
+                    while (n > 0) {<br>
+                    &ThickSpace; int a = n % 2;<br>
+                    &ThickSpace; if (a == 1)<br>
+                    &ThickSpace;&ThickSpace; count++;<br>
+                    &ThickSpace; n = n / 2;<br>
+                    &ThickSpace; cycleCount++;<br>
+                    }<br>
+                    totalCount = totalCount + count;<br>
+                    if (tick > 2)<br>
+                    &ThickSpace; JMP FORK_A;<br>
+                    if (cycleCount % 2 == 0)<br>
+                    &ThickSpace; JMP O_V;<br>
+                    else<br>
+                    &ThickSpace; JMP O_D;<br>
+                    JMP FAILSAFE;
+                </code></p>
+                <p><code>
+                    <strong>O_V:</strong><br>
+                    if (trigger == <strong>true</strong>) {<br>
+                        &ThickSpace; trigger = <strong>false</strong>;<br>
+                        &ThickSpace; key = key * (cycleCount + 1);<br>
+                    } else {<br>
+                        &ThickSpace; key = key + cycleCount;<br>
+                    }<br>
+                    tick++;<br>
+                    JMP CNT_OB;
+                </code></p>
+                <p><code>
+                    <strong>O_D:</strong><br>
+                    if (trigger == <strong>true</strong>) {<br>
+                        &ThickSpace; key = key + (cycleCount * lastDigit);<br>
+                    } else {<br>
+                        &ThickSpace; trigger = <strong>false</strong>;<br>
+                        &ThickSpace; key++;<br>
+                    }<br>
+                    tick++;<br>
+                    JMP CNT_OB;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>FORK_A:</strong><br>
+                    int x = 32 - totalCount;<br>
+                    if (trigger == <strong>true</strong>) {<br>
+                    &ThickSpace; key++;<br>
+                    &ThickSpace; JMP A_TR;<br>
+                    } else {<br>
+                    &ThickSpace; key = key - 10;<br>
+                    &ThickSpace; JMP A_FL;<br>
+                    }<br>
+                    JMP CNT_OB;
+                </code></p>
+                <p><code>
+                    <strong>A_TR:</strong><br>
+                    int atr = (cycleCount * lastDigit) + 3;<br>
+                    for (int i = 0; i &lt; x; i++) {<br>
+                    &ThickSpace; if (startNumber % atr == 0) {<br>
+                    &ThickSpace;&ThickSpace; key = key + atr;<br>
+                    &ThickSpace;&ThickSpace; continue;<br>
+                    &ThickSpace; }<br>
+                    &ThickSpace; atr++;<br>
+                    &ThickSpace; key = key + (atr - i);<br>
+                    }<br>
+                    JMP PR_CH;
+                </code></p>
+                <p><code>
+                    <strong>A_FL:</strong><br>
+                    int afl = (totalCount - lastDigit) + 4;<br>
+                    for (int i = 0; i &lt; x; i++) {<br>
+                    &ThickSpace; if (startNumber % afl == 0) {<br>
+                    &ThickSpace;&ThickSpace; key = key + afl;<br>
+                    &ThickSpace;&ThickSpace; continue;<br>
+                    &ThickSpace; }<br>
+                    &ThickSpace; afl++;<br>
+                    &ThickSpace; key = key + (afl - i);<br>
+                    }<br>
+                    JMP PR_CH;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>PR_CH:</strong><br>
+                    int r = 0;<br>
+                    bool flag = false;<br>
+                    r = Math.abs(key) / 2;<br>
+                    if (Math.abs(key) == 0 || Math.abs(key) == 1){<br>
+                    &ThickSpace; JMP KEY_CMP;<br>
+                    } else {<br>
+                    &ThickSpace; for (int q = 2; q &lt; r; q++) {<br>
+                    &ThickSpace;&ThickSpace; if (key % q == 0) {<br>
+                    &ThickSpace;&ThickSpace;&ThickSpace; flag = <strong>true</strong>;<br>
+                    &ThickSpace;&ThickSpace;&ThickSpace; JMP KEY_CMP;<br>
+                    &ThickSpace;&ThickSpace;&ThickSpace; break;<br>
+                    &ThickSpace;&ThickSpace;&ThickSpace; }<br>
+                    &ThickSpace;&ThickSpace; }<br>
+                    &ThickSpace; if (flag == <strong>false</strong>) JMP KEY_PR;<br>
+                    &ThickSpace; }<br>
+                    JMP FAILSAFE;
+                </code></p>
+                <p><code>
+                    <strong>KEY_CMP:</strong><br>
+                    int b = 1;<br>
+                    int v = x % (lastDigit + 1);<br>
+                    v = v + 5;<br>
+                    for (int i = 0; i &lt; v; i++) {<br>
+                    &ThickSpace; b = b + i;<br>
+                    &ThickSpace; key = key + (totalCount % b);<br>
+                    }<br>
+                    JMP FORK_B;
+                </code></p>
+                <p><code>
+                    <strong>KEY_PR:</strong><br>
+                    int b = 2;<br>
+                    int v = totalCount % (lastDigit + 1);<br>
+                    v = v + 2;<br>
+                    for (int i = 0; i &lt; v; i++) {<br>
+                    &ThickSpace; b = b + i;<br>
+                    &ThickSpace; key = key + (x % b);<br>
+                    }<br>
+                    JMP FORK_B;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>FORK_B:</strong><br>
+                    if (trigger == <strong>true</strong> && flag == <strong>true</strong>) {<br>
+                        &ThickSpace; JMP ANS_A;<br>
+                    } else if (trigger == <strong>true</strong>) {<br>
+                        &ThickSpace; JMP ANS_B;<br>
+                    } else if (flag == <strong>true</strong>) {<br>
+                        &ThickSpace; JMP ANS_C;<br>
+                    } else {<br>
+                        &ThickSpace; JMP ANS_D;<br>
+                    }
+                </code></p>
+                <p><code>
+                    <strong>ANS_A:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; correctNumber = correctNumber * (key - totalCount);<br>
+                    } else if (key % 10 > lastDigit) {<br>
+                        &ThickSpace; correctNumber = (2 * key) - cycleCount;<br>
+                    } else {<br>
+                        &ThickSpace; correctNumber = key;<br>
+                    }<br>
+                    JMP LAS;
+                </code></p>
+                <p><code>
+                    <strong>ANS_B:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; correctNumber = key + 11 - totalCount;<br>
+                    } else if (key % 10 > lastDigit) {<br>
+                        &ThickSpace; correctNumber = key + 2;<br>
+                    } else {<br>
+                        &ThickSpace; correctNumber = correctNumber + key;<br>
+                    }<br>
+                    JMP LAS;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">偽赤色矢印</span>
+            </div>
+            <div class="page-content">
+                <p><code>
+                    <strong>ANS_C:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; correctNumber = key - correctNumber;<br>
+                    } else if (key % 10 > lastDigit) {<br>
+                        &ThickSpace; correctNumber = x + lastDigit;<br>
+                    } else {<br>
+                        &ThickSpace; correctNumber = correctNumber + totalCount;<br>
+                    }<br>
+                    JMP LAS;
+                </code></p>
+                <p><code>
+                    <strong>ANS_D:</strong><br>
+                    if (key % 10 == lastDigit) {<br>
+                        &ThickSpace; correctNumber = correctNumber + totalCount;<br>
+                    } else if (key % 10 > lastDigit) {<br>
+                        &ThickSpace; correctNumber = key - 21;<br>
+                    } else {<br>
+                        &ThickSpace; correctNumber = correctNumber * lastDigit;<br>
+                    }<br>
+                    JMP LAS;
+                </code></p>
+                <p><code>
+                    <strong>LAS:</strong><br>
+                    correctNumber = Math.abs(correctNumber) % 100;<br>
+                    <strong>return</strong>;
+                </code></p>
+                <p><code>
+                    <strong>FAILSAFE:</strong><br>
+                    /* ここに到達した場合、君は根本的に間違ったことを行っている。<br>
+                    * どこで間違ったのか思い出せないのであれば、もう一度一番上からやり直そう。<br>
+                    */<br>
+                    dunceCounter++;<br>
+                    JMP INNI;
+                </code></p>
+            </div>
+            <div class="page-footer relative-footer">7</div>
+        </div>
+    </div>
+</body>
+</html>
