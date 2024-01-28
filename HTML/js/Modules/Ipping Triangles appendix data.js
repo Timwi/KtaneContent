@@ -27,5 +27,9 @@ const appendixEntries = [
     {
         name: "Clipping",
         explanation: "If the highlights span over multiple triangles:"
+    },
+    {
+        name: "Shipping",
+        explanation: "If all triangles are red, green, or blue:"
     }
 ];
