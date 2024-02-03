@@ -3009,6 +3009,69 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "chippingTriangles",
+		loggingTag: "Chipping Triangles",
+		matches: [
+			{
+				regex: /The plate is (.).+/,
+				handler: function(matches, module) {
+					module.colourDict = {
+						"R": "#FF4444",
+						"B": "#4080F0",
+						"Y": "#FFFF00",
+						"l": "#DA8DFF",
+						"s": "#BDBDBD",
+						"p": "#65FFB9",
+						"h": "#FFCB97",
+					};
+					module.transforms = [
+						`translate(0 0)`,
+						`translate(-4.1 7.1)`,
+						`matrix(1 0 0 -1 0 16.1)`,
+						`translate(4.1 7.1)`,
+						`translate(-8.2 14.2)`,
+						`matrix(1 0 0 -1 -4.1 23.2)`,
+						`translate(0 14.2)`,
+						`rotate(180 16.36 11.6)`,
+						`translate(8.2 14.2)`,
+					];
+					module.plateColour = module.colourDict[matches[1].charAt(0)];
+					return true;
+				}
+			},
+			{
+				regex: /The colours of the chips on the (.+) of the plate are:/,
+				handler: function(matches, module) {
+					const side = matches[1];
+					const label = `${side.charAt(0).toUpperCase()}${side.slice(1)}:`;
+					const colours = readTaggedLine().split(', ')
+						.map(colour => module.colourDict[colour.charAt(0)]);
+					const falseChipLine = readTaggedLine();
+					const falseChip = falseChipLine.match(/position (\d)/)[1] - 1;
+					let svg = `
+					<svg xmlns="http://www.w3.org/2000/svg" class="chipping-triangles" viewBox="0 -1.5 30 25.98">
+						<path id="a" d="M15.27 2.76h-8.2l4.1-7.1z" transform="translate(3.14 5.3)"/>
+						<path fill="${module.plateColour}" d="M28.3756 23.26078H.2444L14.31-1.10156Z"/>
+					`;
+					const triangles = [];
+					console.log(module.transforms.entries());
+					for (const [colourIx, transform] of module.transforms.entries()) {
+						const isFalseChip = colourIx == falseChip;
+						const triangle = `<use fill="${colours[colourIx]}" href="#a" transform="${transform}"${isFalseChip ? ` stroke="#0D0"` : ``}/>`;
+						if (isFalseChip)
+							triangles.push(triangle);
+						else
+							triangles.unshift(triangle);
+					}
+					module.push({ label: label, obj: svg + triangles.join('') + `</svg>` });
+					module.push(falseChipLine);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "ChordQualities",
 		loggingTag: "ChordQualities"
 	},
@@ -6840,6 +6903,38 @@ let parseData = [
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
+	},
+	{
+		moduleID: "graffitiNumbers",
+		loggingTag: "Graffiti Numbers",
+		matches: [
+			{
+				regex: /The (.+) row is (.+? \d), (.+? \d), (.+? \d)\./,
+				handler: function(matches, module) {
+					if (!module.grid)
+						module.grid = [matches.slice(2,5)];
+					else
+						module.grid.push(matches.slice(2,5));
+					if (matches[1] == "bottom") {
+						const grid = module.grid
+							.map(row => row
+								.map(item => item.split(' ')));
+						let makeGrid = (index) => {
+							return grid
+								.map(row => row
+									.map(item => item[index].padEnd(7, ' ')))
+								.map(row => row.join(' '))
+								.join('\n');
+						}
+						const colourGrid = pre(makeGrid(0));
+						const numberGrid = pre(makeGrid(1));
+						module.push({ label: "Numbers:", obj: numberGrid, nobullet: true }, { label: "Colours:", obj: colourGrid, nobullet: true });
+					}
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
 	},
 	{
 		displayName: "The Grand Prix",
