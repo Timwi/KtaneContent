@@ -63,11 +63,6 @@ function setRules(rnd)
 {
 	getDefaultRules();
 
-	function logPride()
-	{
-		console.log(pride.map(lion => `${lion.name} (${lion.sex}) = ${lion.status.join('')} (${lion.birthyear}/${lion.mother})`));
-	}
-
 	let pride, visiting;
 	while (true)
 	{
@@ -275,7 +270,6 @@ window.addEventListener('load', function()
 	let totalWidth = 0;
 	for (let w of widths)
 		totalWidth += w;
-	console.log(totalWidth);
 	let availableSpace = 225 - totalWidth;
 	let spacing = availableSpace/8;
 	for (let lgIx = 0; lgIx < legends.length; lgIx++)
