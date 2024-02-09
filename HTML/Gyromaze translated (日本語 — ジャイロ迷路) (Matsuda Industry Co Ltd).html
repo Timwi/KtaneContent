@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>ジャイロ迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        $("td svg").each(function() {
+            let maze = $(this);
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    let dot = MakeSvgElem("circle", {
+                        cx:(25 + c*50), cy:(25 + r*50), r:3
+                    });
+                    maze[0].appendChild(dot);
+                }
+            }
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable", x:(c*50), y:(r*50), width:50, height:50, fill:"transparent"
+                    });
+                    maze[0].appendChild(cell);
+                }
+            }
+        });
+        $("table.mazes td").addClass("nohighlight");
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+            text-align: center;
+        }
+        .positionTables{
+            display: flex;
+            flex-flow: row nowrap;
+        }
+        .positionTables td {
+            width: 1em;
+            height: 1em;
+        }
+        .positionTables table {
+            table-layout: fixed;
+        }
+        td svg {
+            width: 100px;
+            height: 100px;
+        }
+        svg line { stroke: #000; }
+        svg circle { fill: #000; }
+        .dark svg line { stroke: #DDD; }
+        .dark svg circle { fill: #DDD; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ジャイロ迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Gyromaze.svg" class="diagram">
+                <h2>モジュール詳細：ジャイロ迷路</h2>
+                <p class="flavour-text">これで、あなたも吐き気を催すだろう…。</p>
+
+                    <ul>
+                        <li>2つの矢印を使用し、スタート位置からゴール位置まで移動する。迷路の壁を通り抜けようとした場合、ミスが記録され、スタート位置と向きに戻る。</li>
+                    </ul>
+                    <ul>
+                        <li>スタート位置は、ポートの数を4で割った余りとバッテリーの数を4で割った余りで決定される。</li>
+                        <li>ゴール位置は、モジュールの左下にある2つのLEDによって決定される。</li>
+                        <li>使用される迷路は、爆弾のシリアルナンバーの最後の数字と、モジュール中央のホイールの材質によって決定される。</li>
+                    </ul>
+
+                    <div class="positionTables">
+                        <table class="borderless">
+                            <tr>
+                                <td class="corner" rowspan="2" colspan="2"></td>
+                                <td colspan="4">バッテリー % 4</td>
+                            </tr>
+                            <tr>
+                                <th>0</th>
+                                <th>1</th>
+                                <th>2</th>
+                                <th>3</th>
+                            </tr>
+                            <tr>
+                                <td rowspan="4">ポート<br>% 4</td>
+                                <th>0</th>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <th>1</th>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <th>2</th>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <th>3</th>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                        </table>
+
+                        <table class="borderless">
+                            <tr>
+                                <td class="corner" rowspan="2" colspan="2"></td>
+                                <td colspan="4">上部 LED</td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: red"></td>
+                                <td style="background-color: blue"></td>
+                                <td style="background-color: green"></td>
+                                <td style="background-color: yellow"></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="4">下部<br>LED</td>
+                                <td style="background-color: red"></td>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: blue"></td>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: green"></td>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: yellow"></td>
+                                <td></td> <td></td> <td></td> <td></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <table class="mazes">
+                        <tr>
+                            <th>条件</th> <th>0, 1</th> <th>2, 3</th> <th>4, 5</th> <th>6, 7</th> <th>8, 9</th>
+                        </tr>
+
+                        <tr>
+                            <th>銀</th>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' />
+                                <line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' /><line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' />
+                                <line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='50' y2='50' stroke-width='3' fill='none' />
+                                <line x1='50' y1='50' x2='50' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='100' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='50' y1='100' x2='50' y2='150' stroke-width='3' fill='none' /><line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' /><line x1='100' y1='50' x2='150' y2='50' stroke-width='3' fill='none' />
+                                <line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='100' y2='200' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='150' y1='50' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' /><line x1='150' y1='100' x2='150' y2='150' stroke-width='3' fill='none' />
+                                <line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='0' x2='50' y2='50' stroke-width='3' fill='none' /><line x1='50' y1='150' x2='100' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' />
+                                <line x1='100' y1='50' x2='150' y2='50' stroke-width='3' fill='none' /><line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='100' x2='100' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='100' y2='200' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' />
+                                <line x1='150' y1='100' x2='200' y2='100' stroke-width='3' fill='none' /><line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' />
+                                <line x1='150' y1='150' x2='150' y2='200' stroke-width='3' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='50' x2='100' y2='50' stroke-width='3' fill='none' /><line x1='50' y1='150' x2='100' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='150' x2='50' y2='200' stroke-width='3' fill='none' /><line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' /><line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='100' x2='150' y2='100' stroke-width='3' fill='none' /><line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='150' y2='50' stroke-width='3' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' />
+                                <line x1='150' y1='100' x2='200' y2='100' stroke-width='3' fill='none' /><line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' />
+                                <line x1='150' y1='150' x2='150' y2='200' stroke-width='3' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='50' x2='50' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='150' x2='100' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='100' y2='50' stroke-width='3' fill='none' /><line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='100' y2='200' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='150' y1='50' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' /><line x1='150' y1='100' x2='150' y2='150' stroke-width='3' fill='none' />
+                                <line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='50' x2='50' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='100' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='50' y1='150' x2='50' y2='200' stroke-width='3' fill='none' /><line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='100' y2='50' stroke-width='3' fill='none' />
+                                <line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='150' y2='50' stroke-width='3' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='150' y1='50' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' /><line x1='150' y1='100' x2='150' y2='150' stroke-width='3' fill='none' />
+                                <line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+
+                        </tr>
+                        <tr>
+                            <th>金</th>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='50' x2='100' y2='50' stroke-width='3' fill='none' /><line x1='50' y1='100' x2='50' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='150' x2='100' y2='150' stroke-width='3' fill='none' /><line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' /><line x1='100' y1='50' x2='150' y2='50' stroke-width='3' fill='none' />
+                                <line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' /><line x1='100' y1='100' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' /><line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' />
+                                <line x1='150' y1='50' x2='200' y2='50' stroke-width='3' fill='none' /><line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' />
+                                <line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' />
+                                <line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' /><line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' />
+                                <line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' /><line x1='50' y1='50' x2='100' y2='50' stroke-width='3' fill='none' />
+                                <line x1='50' y1='50' x2='50' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='100' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='50' y1='100' x2='50' y2='150' stroke-width='3' fill='none' /><line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' />
+                                <line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' /><line x1='100' y1='100' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='100' x2='100' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='100' y2='200' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='150' y2='50' stroke-width='3' fill='none' /><line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' />
+                                <line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' /><line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' />
+                                <line x1='150' y1='150' x2='200' y2='150' stroke-width='3' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='50' y2='50' stroke-width='3' fill='none' /><line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' />
+                                <line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='100' x2='100' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='150' x2='100' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' />
+                                <line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' /><line x1='100' y1='100' x2='150' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='100' x2='100' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='100' y2='200' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='150' y2='50' stroke-width='3' fill='none' /><line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' />
+                                <line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' /><line x1='150' y1='100' x2='150' y2='150' stroke-width='3' fill='none' />
+                                <line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' />
+                                <line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' /><line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' />
+                                <line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='50' y2='50' stroke-width='3' fill='none' />
+                                <line x1='50' y1='100' x2='100' y2='100' stroke-width='3' fill='none' /><line x1='50' y1='100' x2='50' y2='150' stroke-width='3' fill='none' />
+                                <line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' />
+                                <line x1='100' y1='50' x2='150' y2='50' stroke-width='3' fill='none' /><line x1='100' y1='50' x2='100' y2='100' stroke-width='3' fill='none' />
+                                <line x1='100' y1='100' x2='100' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' />
+                                <line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' /><line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' />
+                                <line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' /><line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' />
+                                <line x1='150' y1='100' x2='200' y2='100' stroke-width='3' fill='none' /><line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' />
+                                <line x1='150' y1='150' x2='150' y2='200' stroke-width='3' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                            <td> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+                                <line x1='0' y1='0' x2='50' y2='0' stroke-width='10' fill='none' /><line x1='0' y1='0' x2='0' y2='50' stroke-width='10' fill='none' />
+                                <line x1='0' y1='50' x2='0' y2='100' stroke-width='10' fill='none' /><line x1='0' y1='100' x2='0' y2='150' stroke-width='10' fill='none' />
+                                <line x1='0' y1='150' x2='50' y2='150' stroke-width='3' fill='none' /><line x1='0' y1='150' x2='0' y2='200' stroke-width='10' fill='none' />
+                                <line x1='0' y1='200' x2='50' y2='200' stroke-width='10' fill='none' /><line x1='50' y1='0' x2='100' y2='0' stroke-width='10' fill='none' />
+                                <line x1='50' y1='0' x2='50' y2='50' stroke-width='3' fill='none' /><line x1='50' y1='50' x2='50' y2='100' stroke-width='3' fill='none' />
+                                <line x1='50' y1='200' x2='100' y2='200' stroke-width='10' fill='none' /><line x1='100' y1='0' x2='150' y2='0' stroke-width='10' fill='none' />
+                                <line x1='100' y1='50' x2='150' y2='50' stroke-width='3' fill='none' /><line x1='100' y1='100' x2='100' y2='150' stroke-width='3' fill='none' />
+                                <line x1='100' y1='150' x2='150' y2='150' stroke-width='3' fill='none' /><line x1='100' y1='200' x2='150' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='0' x2='200' y2='0' stroke-width='10' fill='none' /><line x1='200' y1='0' x2='200' y2='50' stroke-width='10' fill='none' />
+                                <line x1='150' y1='50' x2='150' y2='100' stroke-width='3' fill='none' /><line x1='200' y1='50' x2='200' y2='100' stroke-width='10' fill='none' />
+                                <line x1='150' y1='100' x2='200' y2='100' stroke-width='3' fill='none' /><line x1='200' y1='100' x2='200' y2='150' stroke-width='10' fill='none' />
+                                <line x1='150' y1='150' x2='150' y2='200' stroke-width='3' fill='none' /><line x1='200' y1='150' x2='200' y2='200' stroke-width='10' fill='none' />
+                                <line x1='150' y1='200' x2='200' y2='200' stroke-width='10' fill='none' /></svg> </td>
+                        </tr>
+
+                    </table>
+
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">ジャイロ迷路</span>
+            </div>
+            <div class="page-content">
+
+                <h3>迷路のナビゲーション</h3>
+
+                <ul>
+                    <li>迷路の中には「ポーン」が入っており、ポーンはスタート位置から迷路内を移動することができる。</li>
+                    <li>ポーンは最初モジュールと同じ向きで始まる。上ボタンを押すとポーンは1セル上に移動し、下ボタンを押すと1セル下に移動する。</li>
+                    <li>矢印ボタンを押すと、ポーンはその方向に移動し、その後時計回りに90度回転する。これにより、ボタンが移動させる方向が変わる。</li>
+                    <li>ホイールを押すと、ポーンは移動せずに回転する。</li>
+                    <li>矢印ボタンは常にポーンをその回転に応じて移動させる。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>

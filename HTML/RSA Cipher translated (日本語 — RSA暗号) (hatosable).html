@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>RSA暗号 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        @media print {
+            h4 {
+                margin: .5em 0 0;
+            }
+            p {
+                margin: .5em 0 .9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RSA暗号</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RSA Cipher.svg" class="diagram">
+                <h2>モジュール詳細：RSA暗号</h2>
+                <p class="flavour-text">ヒル暗号2.0。</p>
+                <p>ある6文字の英単語が、ディスプレーの中央にある6つの数字に暗号化されている。この単語を送信すると、モジュールは解除される。</p>
+                <p>6つの数字の真上には、NとEのラベルが付けられた別の2つの数字がある。真下には、キーボードからの入力内容を最大6文字受け付ける点滅カーソルがある。緑の丸いボタンは入力内容を送信し、赤の丸いボタンは入力内容を削除する。</p>
+                <p>以下の手順に従い、復号された単語を取得する。</p>
+                <h3>ステップ1：λ(N)の取得</h3>
+                <p>最初にやることは、Nに掛け合わせられている2つの素数を取得することである。以下は、このモジュールで使用される素数の一覧である。</p>
+                <p style="text-align:center">11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97</p>
+                <p>2つの素数を見つけたら、以下の式を用いてλ(N)を求める。</p>
+                <p style="text-align:center">λ(N) = ((P1 - 1) * (P2 - 1)) / GCD(P1 - 1, P2 - 1)</p>
+                <p>GCDは「最大公約数」のことであり、以下の手順を使用して求めることができる。</p>
+                <ol>
+                    <li>2つの数字のうち大きい方を取得し、小さい方の数字で割った余りを求める。</li>
+                    <li>その後、割った数(除算の右側にある数)を先程の結果で割った余りを求める。</li>
+                    <li>ステップ2を、結果が0になるまで行う。</li>
+                    <li>結果が0になる際の割った数が、2つの数字の最大公約数である。</li>
+                </ol>
+                <h4 style="text-align:center">例</h4>
+                <p style="text-align:center">
+                N = 1643<br>
+                P1 = 31<br>
+                P2 = 53<br>
+                </p>
+                <p style="text-align:center">
+                GCDの計算<br>
+                52 % 30 = 22<br>
+                30 % 22 = 8<br>
+                22 % 8 = 6<br>
+                8 % 6 = 2<br>
+                6 % 2 = 0<br>
+                GCD(52, 30) = 2
+                </p>
+                <p style="text-align:center">
+                λ(N) = (52 * 30) / 2 = 780
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RSA暗号</span>
+            </div>
+            <div class="page-content">
+            <h3>ステップ2：Dの取得</h3>
+            <p>Dを求めるには、以下の手順で示される拡張ユークリッドの互除法を行う。</p>
+            <ol>
+                    <li>A, B, Q, R, T1, T2, T3からなる7つの変数を用意する。</li>
+                    <li>Aをλ(N)とする。</li>
+                    <li>BをEとする。</li>
+                    <li>QをA / B(小数点以下切り捨て)とする。</li>
+                    <li>RをA % Bとする。</li>
+                    <li>T1を0とする。</li>
+                    <li>T2を1とする。</li>
+                    <li>T3をT1 - (T2 * Q)とする。</li>
+                    <li>AをBとする。</li>
+                    <li>BをRとする。</li>
+                    <li>QをA / B(小数点以下切り捨て)とする。</li>
+                    <li>RをA % Bとする。</li>
+                    <li>T1をT2とする。</li>
+                    <li>T2をT3とする。</li>
+                    <li>T3をT1 - (T2 * Q)とする。</li>
+                    <li>Rが0になるまで、ステップ9 ~ 15を繰り返す。</li>
+                    <li>ステップ12で終わった場合、DをT3 % λ(N)とする。そうでなくステップ15で終わった場合、DをT2 % λ(N)とする。</li>
+            </ol>
+            <p>すべてが正しく終われば、DとEの積をλ(N)で割った余りが1となるはずである。</p>
+            <h4 style="text-align:center">例</h4>
+            <p style="text-align:center">
+            λ(N) = 780<br>
+            E = 347
+            </p>
+            <table>
+            <tbody>
+            <tr><th>A</th><th>B</th><th>Q</th><th>R</th><th>T1</th><th>T2</th><th>T3</th></tr>
+            <tr><th>780</th><th>347</th><th>2</th><th>86</th><th>0</th><th>1</th><th>-2</th></tr>
+            <tr><th>347</th><th>86</th><th>4</th><th>3</th><th>1</th><th>-2</th><th>9</th></tr>
+            <tr><th>86</th><th>3</th><th>28</th><th>2</th><th>-2</th><th>9</th><th>-254</th></tr>
+            <tr><th>3</th><th>2</th><th>1</th><th>1</th><th>9</th><th>-254</th><th>263</th></tr>
+            <tr><th>2</th><th>1</th><th>2</th><th>0</th><th>-254</th><th>263</th><th>-780</th></tr>
+            </tbody>
+            </table>
+            <p style="text-align:center">
+            D = 263 % 780 = 263
+            </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">RSA暗号</span>
+            </div>
+            <div class="page-content">
+            <h3>ステップ3：数字の復号</h3>
+            <p>6つの数字は読み順に読む。各数字(C)に対して、以下の演算を行い、Pを求める。</p>
+            <p style="text-align:center">(C<sup>D</sup> % N) - 1 = P</p>
+            <p>Pをアルファベット上の位置の数字とみなし、英字に変換する。</p>
+            <p>復号し各数字を英字に変換したら、復号された単語を取得できるはずである。</p>
+            <h4 style="text-align:center">例</h4>
+            <p style="text-align:center">
+            暗号化された数字：1622 1247 1012 283 2 1018<br>
+            D = 263<br>
+            N = 1643
+            </p>
+            <p style="text-align:center">
+            (1622<sup>263</sup> % 1643) - 1 = 13 -> M<br>
+            (1247<sup>263</sup> % 1643) - 1 = 9 -> I<br>
+            (1012<sup>263</sup> % 1643) - 1 = 18 -> R<br>
+            (283<sup>263</sup> % 1643) - 1 = 1 -> A<br>
+            (2<sup>263</sup> % 1643) - 1 = 7 -> G<br>
+            (1018<sup>263</sup> % 1643) - 1 = 5 -> E<br>
+            復号された単語：MIRAGE
+            </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+
+    </div>
+</body>
+</html>
