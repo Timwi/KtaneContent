@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Folge dem Führer — Keep Talking and Nobody Explodes-Modul</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.repeaters-table th {
+            white-space: nowrap;
+        }
+
+        .table-rule {
+            font-size: 11pt;
+        }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #footnote {
+            font-size: 10pt;
+            margin-top: .7cm;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let ports = ["ein Parallel-Anschluss", "ein Seriell-Anschluss", "ein RJ-45-Anschluss", "ein PS/2-Anschluss", "ein DVI-D-Anschluss", "ein Stereo-RCA-Anschluss"];
+            document.getElementById('rule-port').innerText = ports[rnd.next(0, ports.length)];
+
+            let startingPlugConditions = [
+                "der Anzahl der indicators on the bomb",
+                "der Anzahl der lit indicators on the bomb",
+                "der Anzahl der unlit indicators on the bomb",
+                "der Anzahl der batteries on the bomb",
+                "der Anzahl der battery holders on the bomb",
+                "der Anzahl der AA batteries on the bomb",
+                "der Anzahl der D batteries on the bomb",
+                "der Anzahl der ports on the bomb",
+                "der Anzahl der port plates on the bomb",
+                "der Anzahl der distinct port types on the bomb",
+                "der Anzahl der modules on the bomb",
+                "der Anzahl der non-needy modules on the bomb",
+                "der alphabetischen Position des ersten Buchstabens in der Seriennummer",
+                "der alphabetischen Position des zweiten Buchstabens in der Seriennummer",
+                "der alphabetischen Position des letzten Buchstabens in der Seriennummer",
+                "der alphabetischen Position des zweitletzten Buchstabens in der Seriennummer",
+                "die letzte Ziffer der Seriennummer",
+                "die zweite Ziffer der Seriennummer",
+                "die erste Ziffer der Seriennummer"
+            ];
+
+            let startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            let startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            let startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `Anschluss ${startPlug}`;
+
+            let indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            let indicator = indicators[rnd.next(0, indicators.length)];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            let endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `Anschluss ${endPlug}`;
+
+            let litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? 'leuchtender' : 'nicht leuchtender';
+
+            let startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `im Uhrzeigersinn hinter ${startAt}` : 'mit der niedrigsten Nummer';
+
+            let startingRuleConditions = [
+                ["alphabetisch erster Buchstabe in den Indikatoren", "Sind keine Indikatoren vorhanden"],
+                ["alphabetisch letzter Buchstabe in den Indikatoren", "Sind keine Indikatoren vorhanden"],
+                ["zweite Buchstabe in der Seriennummer", "Enthält die Seriennummer keine Buchstaben"],
+                ["zweitletzte Buchstabe in der Seriennummer", "Enthält die Seriennummer keine Buchstaben"],
+                ["letzte Buchstabe in der Seriennummer", "Enthält die Seriennummer keine Buchstaben"],
+                ["erste Buchstabe in der Seriennummer", "Enthält die Seriennummer keine Buchstaben"],
+            ];
+            let startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            let colors = ["rot", "grün", "blau", "weiß", "schwarz", "gelb"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]} oder ${colors[2]}`;
+
+            let tableRules = [
+                "Diesen Draht immer durchtrennen.",
+                "Diesen Draht niemals durchtrennen.",
+                "... der vorherige Draht zu einem Anschluss mit einer geraden Zahl führt.",
+                "... der vorherige Draht zu einem Anschluss mit einer ungeraden Zahl führt.",
+                "... der vorherige Draht zu einem Anschluss mit einer Primzahl führt.",
+                "... der vorherige Draht zu keinem Anschluss mit einer Primzahl führt.",
+                "... der vorherige Draht durchtrennt werden sollte.",
+                "... der vorherige Draht nicht durchtrennt werden sollte.",
+                "... der vorherigen zwei Drähte die gleiche Farbe haben.",
+                "... der vorherigen zwei Drähte verschiedene Farben haben.",
+                "... mindestens zwei der vorherigen drei Drähte die gleiche Farbe haben.",
+                "... der vorherigen drei Drähte verschiedene Farben haben.",
+                "... der vorherigen drei Drähte alle die gleiche Farbe haben.",
+                "... der vorherige Draht die gleiche Farbe hat wie dieser Draht.",
+                "... der vorherige Draht eine andere Farbe hat als dieser Draht.",
+                "... keiner der vorherigen zwei Drähte die gleiche Farbe hat wie dieser.",
+                "... genau einer der vorherigen zwei Drähte die gleiche Farbe hat wie dieser.",
+                "... die vorherigen zwei Drähte beide die gleiche Farbe haben wie dieser.",
+                "... genau einer oder keiner der vorherigen zwei Drähte die gleiche Farbe hat wie dieser.",
+                "... genau einer oder beide der vorherigen zwei Drähte die gleiche Farbe haben wie dieser.",
+                "... keiner der vorherigen zwei Drähte die gleiche Farbe hat wie dieser.",
+                "... der vorherige Draht einen Anschluss überspringt.",
+                "... der vorherige Draht keinen Anschluss überspringt.",
+                "... keiner der vorherigen zwei Drähte einen Anschluss überspringt.",
+                "... genau einer der vorherigen zwei Drähte einen Anschluss überspringt.",
+                "... die vorherigen zwei Drähte beide einen Anschluss überspringen.",
+                "... genau einer oder keiner der vorherigen zwei Drähte einen Anschluss überspringt.",
+                "... genau einer oder beide der vorherigen zwei Drähte einen Anschluss überspringen.",
+                ['n12', n => `... der vorherige Draht zu einer Position mit der Nummer ${n} oder weniger führt.`],
+                ['n12', n => `... der vorherige Draht nicht zu einer Position mit der Nummer ${n} oder weniger führt.`],
+                ['n12', n => `... der vorherige Draht zu einer Position mit der Nummer ${n} oder höher führt.`],
+                ['n12', n => `... der vorherige Draht nicht zu einer Position mit der Nummer ${n} oder höher führt.`],
+                ['n6', n =>  `... ${n} oder mehr Drähte auf dem Modul vorhanden sind.`],
+                ['n6', n =>  `... ${n} oder weniger Drähte auf dem Modul vorhanden sind.`],
+                ['c', c =>   `... der vorherige Draht ${c[0]}, ${c[1]} oder ${c[2]} ist.`],
+                ['c', c =>   `... der vorherige Draht weder ${c[0]}, noch ${c[1]}, noch ${c[2]} ist.`],
+                ['c', c =>   `... der Draht vor dem vorherigen ${c[0]}, ${c[1]} oder ${c[2]} ist.`],
+                ['c', c =>   `... der Draht vor dem vorherigen weder ${c[0]}, noch ${c[1]}, noch ${c[2]} ist.`],
+                ['c', c =>   `... keiner der vorherigen zwei Drähte ${c[0]} oder ${c[1]} ist.`],
+                ['c', c =>   `... genau einer der vorherigen zwei Drähte ${c[0]} oder ${c[1]} ist.`],
+                ['c', c =>   `... die vorherigen zwei Drähte beide ${c[0]} oder ${c[1]} sind.`],
+                ['c', c =>   `... genau einer oder keiner der vorherigen zwei Drähte ${c[0]} oder ${c[1]} ist.`],
+                ['c', c =>   `... genau einer oder beide der vorherigen zwei Drähte ${c[0]} oder ${c[1]} sind.`],
+                ['c', c =>   `... keiner der vorherigen zwei Drähte ${c[0]} oder ${c[1]} ist.`],
+                ['c', c =>   `... alle vorherigen ${c[0]}en Drähte nach dem Anfangsdraht durchtrennt werden sollten.\u00a0*`, true],
+                ['c', c =>   `... keine vorherigen ${c[0]}en Drähte nach dem Anfangsdraht durchtrennt werden sollten.\u00a0*`, true],
+                "... mehr als die Hälfte der bisherigen Drähte (Anfangsdraht inklusive) durchtrennt werden sollten.",
+                "... weniger als die Hälfte der bisherigen Drähte (Anfangsdraht inklusive) durchtrennt werden sollten.",
+                "... mehr als die Hälfte der bisherigen Drähte (Anfangsdraht ausgeschlossen) durchtrennt werden sollten.",
+                "... weniger als die Hälfte der bisherigen Drähte (Anfangsdraht ausgeschlossen) durchtrennt werden sollten.",
+                "... der vorherige Draht die gleiche Farbe hat wie der Anfangsdraht.",
+                "... der vorherige Draht has eine andere Farbe hat als der Anfangsdraht.",
+            ];
+            let list = document.getElementsByClassName('table-rule');
+            let footnote = false;
+            if (rnd.seed === 1)
+            {
+                list[0].innerText = tableRules[35][1](['gelb', 'blau', 'grün']);
+                list[1].innerText = tableRules[2];
+                list[2].innerText = tableRules[6];
+                list[3].innerText = tableRules[34][1](['rot', 'blau', 'schwarz']);
+                list[4].innerText = tableRules[10];
+                list[5].innerText = tableRules[16];
+                list[6].innerText = tableRules[34][1](['gelb', 'weiß', 'grün']);
+                list[7].innerText = tableRules[7];
+                list[8].innerText = tableRules[21];
+                list[9].innerText = tableRules[35][1](['weiß', 'schwarz', 'rot']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['weiß', 'schwarz']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (let i = 0; i < 13; i++)
+                {
+                    let str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[2])
+                            footnote = true;
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+            document.getElementById('footnote').style.display = footnote ? '' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Folge dem Führer</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Follow the Leader.svg">
+                <h2>Betrifft: Folge dem Führer</h2>
+
+                <p class="flavour-text">Kinderspiel. Einfach den Vorgaben folgen. Bedenke nur: bei Versäumnis kann eine explosive Strafe vorkommen.</p>
+                <p>Dieses Modul enthält 8 bis 12 Drähte, die nummerierte Anschlüsse verbinden. Jeder Draht führt von einem Anschluss zum nächsten im Uhrzeigersinn. Dieses Handbuch bezeichnet Drähte nach ihrer Ausgangsnummer; ein Draht von Anschluss 1 nach Anschluss 2 ist also „Draht 1“ und ein Draht von Anschluss 12 nach Anschluss 1 ist „Draht 12“.</p>
+                <p>Zum Entschärfen muss zunächst der Anfangsdraht durchtrennt werden und danach in der numerischen Reihenfolge fortgefahren werden. Bei jedem Draht wird bestimmt, ob er durchtrennt werden muss oder nicht, basierend auf den vorherigen Drähten in der Folge. Drähte dürfen nicht außerhalb der Reihenfolge durchtrennt werden.</p>
+
+                <h3>Bestimmen des Anfangsdrahtes</h3>
+                <p>Die erste zutreffende Regel bestimmt den Anfangsdraht:</p>
+
+                <ol>
+                    <li>Ist <span class='rule' id='rule-port'>ein RJ-45-Anschluss</span> vorhanden und ein Draht führt <em>direkt</em> von <span class='rule' id='rule-plug-start'>Anschluss 4</span> nach <span class='rule' id='rule-plug-end'>Anschluss 5</span>, dann ist das der Anfangsdraht.</li>
+                    <li>Andernfalls, gibt es einen Draht von dem Anschluss, der <span class='rule' id='rule-start-2'>der Anzahl der Batterien an der Bombe</span> entspricht, dann ist das der Anfangsdraht.</li>
+                    <li>Andernfalls, gibt es einen Draht von dem Anschluss, der <span class='rule' id='rule-start-3'>der ersten Ziffer der Seriennummer</span> entspricht, dann ist das der Anfangsdraht.</li>
+                    <li>Andernfalls, ist ein <span class='rule' id='rule-indicator-lit'>leuchtender</span> Indikator mit der Aufschrift <span class='rule' id='rule-indicator'>CLR</span> vorhanden, sind alle Instruktionen dieses Handbuchs zu ignorieren und alle Drähte in abfallender numerischer Reihenfolge zu durchtrennen.</li>
+                    <li>Falls keine dieser Bedingungen zutrifft, ist der Anfangsdraht der Draht <span class='rule' id='rule-else'>mit der niedrigsten Nummer</span>.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Seite 1 von 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Folge dem Führer</span>
+            </div>
+            <div class="page-content">
+                <h3>Drähte durchtrennen</h3>
+                <ul>
+                    <li>Der Anfangsdraht ist <em>immer</em> vor dem Rest zu durchtrennen.</li>
+                    <li>Danach muss laut der folgenden Tabelle, beginnend mit der Regel, die dem <span class='rule' id='rule-starting-step'>ersten Buchstaben in der Seriennummer</span> entspricht, mit dem nächsten Draht fortgefahren werden. <span id='rule-starting-step-fallback'>Enthält die Seriennummer keine Buchstaben</span>, ist <span class='rule' id='rule-starting-step-fallback-step'>A</span> die Anfangsregel.</li>
+                    <li>Mit jedem darauf folgenden Draht ist in alphabetischer Reihenfolge mit der nächsten Regel in der Tabelle fortzufahren, um zu bestimmen, welche Drähte durchtrennt werden müssen.</li>
+                    <li>„Vorherige(r) Draht/Drähte“ kann u.U. auch Drähte vor dem ursprünglichen Anfangsdraht bezeichnen.</li>
+                    <li>Ist der Anfangsdraht <span class='rule' id='rule-reverse-colors'>rot, grün oder weiß</span>, müssen die Regeln stattdessen in umgekehrter alphabetischer Reihenfolge befolgt werden.</li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th>Regel</th>
+                        <th>Draht durchtrennen, wenn...</th>
+                    </tr>
+                    <tr>
+                        <th>A oder N</th>
+                        <td class='table-rule'>... der vorherige Draht is weder gelb, noch blau, noch grün.</td>
+                    </tr>
+                    <tr>
+                        <th>B oder O</th>
+                        <td class='table-rule'>... der vorherige Draht führt zu einem Anschluss mit einer geraden Nummer.</td>
+                    </tr>
+                    <tr>
+                        <th>C oder P</th>
+                        <td class='table-rule'>... der vorherige Draht durchtrennt werden sollte.</td>
+                    </tr>
+                    <tr>
+                        <th>D oder Q</th>
+                        <td class='table-rule'>... der vorherige Draht rot, blau oder schwarz ist.</td>
+                    </tr>
+                    <tr>
+                        <th>E oder R</th>
+                        <td class='table-rule'>... mindestens zwei der vorherigen drei Drähte eine Farbe gemeinsam haben.</td>
+                    </tr>
+                    <tr>
+                        <th>F oder S</th>
+                        <td class='table-rule'>... genau einer der vorherigen zwei Drähte die gleiche Farbe hat wie dieser.</td>
+                    </tr>
+                    <tr>
+                        <th>G oder T</th>
+                        <td class='table-rule'>... der vorherige Draht gelb, weiß oder grün ist.</td>
+                    </tr>
+                    <tr>
+                        <th>H oder U</th>
+                        <td class='table-rule'>... der vorherige Draht nicht durchtrennt werden sollte.</td>
+                    </tr>
+                    <tr>
+                        <th>I oder V</th>
+                        <td class='table-rule'>... der vorherige Draht einen Anschluss überspringt.</td>
+                    </tr>
+                    <tr>
+                        <th>J oder W</th>
+                        <td class='table-rule'>... der vorherige Draht weder weiß, noch schwarz, noch rot ist.</td>
+                    </tr>
+                    <tr>
+                        <th>K oder X</th>
+                        <td class='table-rule'>... der vorherigen zwei Drähte verschiedene Farben haben.</td>
+                    </tr>
+                    <tr>
+                        <th>L oder Y</th>
+                        <td class='table-rule'>... der vorherige Draht nicht zu einer Position mit der Nummer 6 oder weniger führt.</td>
+                    </tr>
+                    <tr>
+                        <th>M oder Z</th>
+                        <td class='table-rule'>... genau einer oder keiner der vorherigen zwei Drähte weiß oder schwarz ist.</td>
+                    </tr>
+                </table>
+                <div id='footnote' style='display:none'>*&nbsp;Zu beachten ist auch <a href='https://de.wikipedia.org/wiki/Leere_Wahrheit'>leere Wahrheit</a>.</div>
+            </div>
+            <div class="page-footer relative-footer">Seite 2 von 2</div>
+        </div>
+    </div>
+</body>
+</html>
