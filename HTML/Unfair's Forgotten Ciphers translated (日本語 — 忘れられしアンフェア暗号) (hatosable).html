@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>忘れられしアンフェア暗号 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(function () {
+            let names = [
+                "BLUE", "AZURE", "CYAN", "VIOLET", "MAYA", "AQUA", "MAGENTA", "PINK", "WHITE",
+                "INDIGO", "TEAL", "JADE", "PLUM", "GRAY", "MINT", "ROSE", "SALMON", "CREAM",
+                "BLACK", "FOREST", "GREEN", "MAROON", "OLIVE", "LIME", "RED", "ORANGE", "YELLOW"
+            ];
+            let colors = [
+                "#00F", "#08F", "#0FF", "#80F", "#88F", "#8FF", "#F0F", "#F8F", "#FFF",
+                "#008", "#088", "#0F8", "#808", "#888", "#8F8", "#F08", "#F88", "#FF8",
+                "#000", "#080", "#0F0", "#800", "#880", "#8F0", "#F00", "#F80", "#FF0"
+            ];
+            let tColor = [
+                "w", "b", "b", "w", "b", "b", "b", "b", "b",
+                "w", "w", "b", "w", "b", "b", "w", "b", "b",
+                "w", "w", "b", "w", "w", "b", "w", "b", "b"
+            ];
+            let chart = $("svg.chart");
+            let l = 14.5;
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 9; c++) {
+                    let idx = r * 9 + c;
+                    let offset = c > 5 ? 10 : (c > 2 ? 5 : 0);
+                    let box = MakeSvgElem("rect", {
+                        x: (c * (l + 1.6) + offset + 32), y: (r * (l + 1.6) + 38),
+                        width: l, height: l, fill: colors[idx]
+                    });
+                    chart[0].appendChild(box)
+                    let text = MakeSvgElem("text", {
+                        class: tColor[idx],
+                        x: (l + c * (l + 1.6) + offset + 24.7), y: (l + r * (l + 1.6) + 32)
+                    });
+                    text.textContent = names[idx];
+                    chart[0].appendChild(text);
+                }
+            }
+            let box = MakeSvgElem("rect", {
+                x: (8 * (l + 1.6) + 42.1), y: (0 * (l + 1.6) + 38.1),
+                width: (l - 0.2), height: (l - 0.2), fill: "transparent", stroke: "#000", "stroke-width": "0.3"
+            });
+            chart[0].appendChild(box)
+        });
+    </script>
+    <style>
+        .smalltext { font-size: 90%; }
+        .smallertext { font-size: 80%; }
+        .smaller { width: 40%; }
+        .sqz table td, .sqz table th {
+            line-height: 1.1;
+            padding: .3em .55em .1em;
+        }
+        .page-footer::before { content: "ページ "; }
+        .page-footer::after { content: "/14"; }
+        svg { width: 80%; }
+        svg text.w { fill: #FFF; }
+        svg text.b { fill: #000; }
+        .squeeze { margin:auto; }
+        .hstack {
+            align-items: center;
+            flex-wrap: wrap
+        }
+        .hstack table {
+            margin: 0 20px 20px;
+            width: 20%;
+        }
+        .hstack table th { padding: .1em .4em 0; }
+        td { text-align: center; }
+        table:not(.exempt) {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        td ul { margin: 0; }
+        .dark .invertable { filter: invert(85%); }
+        .dark svg path { fill: #DDD; }
+        .dark svg path.s { stroke: #DDD; }
+        .invert {
+            color: white;
+            background-color: black;
+        }
+        .dark .invert {
+            color: black;
+            background-color: lightgray;
+        }
+        .page.strip { --strip-color: #555; }
+        .word {
+         font-size: small;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Unfair's Forgotten Ciphers.svg" class="diagram">
+                <h2>モジュール詳細：忘れられしアンフェア暗号</h2>
+                <p class="flavour-text">結局、忘れ去られることになった暗号もある。そもそも「本当にアンフェア」だったのだろうか？</p>
+                <p>上部のディスプレーには暗号化されたメッセージが表示される。ディスプレーの下には丸いLEDのストリップがあり、処理担当者が開いているページに応じて点灯する。</p>
+                <p>この状態では、真ん中のボタンをいつでも選択することができ、ページ間を循環表示させたり、単語送信モードとページ閲覧モードを切り替えることができる。</p>
+                <p><strong>このマニュアルにあるアルファベットにまつわる暗号は、すべて英語のアルファベット「ABCDEFGHIJKLMNOPQRSTUVWXYZ」に対応している。このマニュアルにおける「アルファベット位置」とは、特に断りのない限り、A=1,Z=26としたアルファベット上の位置の数字である。</strong></p>
+                <p><strong>1ページ目の右側のディスプレーは、常にミスカウンターが赤、モジュールIDが白で表示される。</strong></p>
+                <p>モジュールが送信モードでない状態におけるボタンの機能は以下の通りである。方向ボタンは中央の四角(内心)と外側の四角(外心)の間のボタンを表す。</p>
+                <ul>
+                 <li><strong>左：</strong>モジュールの1ページ目に移動する。</li>
+                  <li><strong>上：</strong>モジュールの2ページ目に移動する。</li>
+                  <li><strong>右：</strong>モジュールの3ページ目に移動する。</li>
+                  <li><strong>下：</strong> モジュールの4ページ目に移動する。</li>
+                  <li><strong>外心：</strong>送信ページと閲覧ページを切り替える。</li>
+                  <li><strong>内心：</strong>長押しすると、3ページと4ページに表示されている色の名前を表示する。<u>これは、ユーザーがこのモジュールの色覚モードを無効にしている場合でも使用できる。</u></li>
+                  <li><strong>右画面：</strong>右と上に表示される内容を入れ替える。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+             <h2>復号 - ステップ1：バイナリコードの取得とキー文字列の完成</h2>
+             <p>2ページ目では、上と右に長い文字列が表示される。以下の手順でバイナリ文字列を取得する。</p>
+             <ol>
+                 <li>2ページ目の上のディスプレーと右のディスプレーに表示されているテキストを順に連結する。これを1つの完全な文字列として扱う。</li>
+                 <li>以下の表を使用して二進数に変換し、置換された数字を獲得する。バイナリ文字列を得るためには、<strong>複数</strong>の置換が必要なことに注意すること。</li>
+                </ol>
+                <table class="smalltext centered">
+                    <tr><th>変換後の文字</th><th>元の文字</th><th>変換後の文字</th><th>元の文字</th><th>変換後の文字</th><th>元の文字</th></tr>
+                    <tr><td>0</td><th>A</th><td>1</td><th>B</th><td>AA</td><th>C</th></tr>
+                    <tr><td>BA</td><th>D</th><td>AB</td><th>E</th><td>BB</td><th>F</th></tr>
+                    <tr><td>CA</td><th>G</th><td>CB</td><th>H</th><td>DA</td><th>I</th></tr>
+                    <tr><td>DB</td><th>J</th><td>EA</td><th>K</th><td>EB</td><th>L</th></tr>
+                    <tr><td>FA</td><th>M</th><td>FB</td><th>N</th><td>AG</td><th>O</th></tr>
+                    <tr><td>BG</td><th>P</th><td>AH</td><th>Q</th><td>BH</td><th>R</th></tr>
+                    <tr><td>AI</td><th>S</th><td>BI</td><th>T</th><td>AJ</td><th>U</th></tr>
+                    <tr><td>BJ</td><th>V</th><td>AK</td><th>W</th><td>BK</td><th>X</th></tr>
+                    <tr><td>AL</td><th>Y</th><td>BL</td><th>Z</th></tr>
+                </table>
+                <ol start="3">
+                 <li>3ページ目では、両ディスプレーとも最大9つのキーワードがあり、各キーワードを連結して最初に出現した英字のみを考慮すると、キー文字列になり、これは作成したハフマンツリーを使用した復号に使用される。</li>
+                 <li>
+                  <ul>
+                      <li>連結は、読み順でキーワードを得た順で行い、一番上のディスプレーから始め、次に右のディスプレーに進む。</li>
+                      <li>連結の際に、キーワードがそれまでに使用された英字をすべて含んでいる場合、代わりにそのキーワードを破棄する。</li>
+                  </ul></li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+             <h2>復号 - ステップ2：赤色ハフマン暗号</h2>
+             <p class="comment">そもそも、どうやってグリフィンドールがここに来たんだ？ハッフルパフのゲームに何かあったのだろうか？</p>
+             <p>取得したバイナリ文字列を使用し、10個の葉を取得するまで、以下の手順を繰り返す。葉とは、ハフマン木の末端にある節のことである。各桁は左から右に一度だけ読み取られ、戻ることはない。</p>
+             <ol>
+                 <li>「0」と「1」の葉から開始する。</li>
+                 <li>バイナリの桁を、バイナリ文字列内の先頭にある一つの節に出会うまで読み続ける。</li>
+                 <li>その情報を部分的なバイナリ文字列として分離させ、バイナリ文字列から始まりそれぞれ「0」と「1」で終わるような2つの項目に変更する。分割の際、葉の順序は維持すること。</li>
+                 <li>上記の2ステップを繰り返す。</li>
+                </ol>
+                <p>ハフマン木の一部を獲得後、バイナリ文字列を使ってある数字を得なければならない。この数字は、3×3ヒル暗号に使われる。ハフマン木を構築し続ける前に、この方法で18桁を取得する必要がある。
+                 <ol>
+                     <li>0から始まる葉を優先して、それぞれの葉に0～9の数字を順に割り当てる。</li>
+                     <li> バイナリの桁を、いずれかの葉に出会うまで読み続ける。その桁をメモして取り除き、再び先頭からやり直す。</li>
+                     <li>この状態で十分な桁数が得られるまで、前のステップを繰り返す。</li>
+                     </ol>
+                 <p>18桁を取得したら、さらに16の葉が構築されるまで、ハフマン木の構築を再開する。この時点までに26の葉を作成する必要がある。0から始まる葉を優先して、それぞれの葉にキー文字列の各英字を割り当てる。
+                  <p>バイナリ文字列をもう1回読み、割り当てた英字に応じて4～8文字の単語を取得する。これが次のステップのキーワードとなる。残りのバイナリ文字列はまったく同じ英字になるはずであり、これは捨ててもよい。</p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>例 — 赤色ハフマン暗号の構築</h2>
+                <p>
+                 先頭8桁のみを示す。<br>
+                 初期バイナリ文字列： <strong>0111100000110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td class="invert">[0]</td><td>[1]</td></tr>
+             </table>
+             <p>
+                 1回目の分離後のバイナリ文字列： <strong>111100000110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td>[00]</td><td>[01]</td><td class="invert">[1]</td></tr>
+             </table>
+             <p>
+                 2回目の分離後のバイナリ文字列： <strong>11100000110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td>[00]</td><td>[01]</td><td>[10]</td><td class="invert">[11]</td></tr>
+             </table>
+             <p>
+                 3回目の分離後のバイナリ文字列： <strong>100000110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td>[00]</td><td>[01]</td><td class="invert">[10]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+             <p>
+                 4回目の分離後のバイナリ文字列： <strong>0000110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td class="invert">[00]</td><td>[01]</td><td>[100]</td><td>[101]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+             <p>
+                 5回目の分離後のバイナリ文字列： <strong>00110101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td>[000]</td><td class="invert">[001]</td><td>[01]</td><td>[100]</td><td>[101]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+             <p>
+                 6回目の分離後のバイナリ文字列： <strong>10101</strong><br>
+             </p>
+             <table class="centered">
+                 <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[01]</td><td>[100]</td><td class="invert">[101]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+             <p>
+                 7回目の分離後のバイナリ文字列： <strong>01</strong></p>
+             <table class="centered">
+                 <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td class="invert">[01]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+             <p>8回目の分離後の葉：</p>
+             <table class="centered">
+                 <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+             </table>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>例 — 赤色ハフマン暗号バイナリの読み取り</h2>
+                <p>この例では6桁だけ行う。</p>
+                <p class="centered">初期の残ったバイナリ文字列：<strong>0001011001100110010111</strong></p>
+                <table>
+                    <tr><td class="invert">[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th class="invert">0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+                <p class="centered squeeze">「000」, 0</p>
+                <p class="centered squeeze">1文字目読み取り後のバイナリ文字列：<strong>1011001100110010111</strong></p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td class="invert">[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th class="invert">7</th><th>8</th><th>9</th></tr>
+                </table>
+                <p class="centered squeeze">「1011」, 7</p>
+                <p class="centered squeeze">2文字目読み取り後のバイナリ文字列：<strong>001100110010111</strong></p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td class="invert">[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>0</th><th>1</th><th class="invert">2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+                <p class="centered squeeze">「0011」, 2</p>
+                <p class="centered squeeze">3文字目読み取り後のバイナリ文字列：<strong>00110010111</strong></p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td class="invert">[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>0</th><th>1</th><th class="invert">2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+                <p class="centered squeeze">「0011」, 2</p>
+                <p class="centered squeeze">4文字目読み取り後のバイナリ文字列：<strong>0010111</strong></p>
+                <table>
+                    <tr><td>[000]</td><td class="invert">[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>0</th><th class="invert">1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+                <p class="centered squeeze">「0010」, 1</p>
+                <p class="centered squeeze">5文字目読み取り後のバイナリ文字列：<strong>111</strong></p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td class="invert">[111]</td></tr>
+                    <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th class="invert">9</th></tr>
+                </table>
+                <p class="centered squeeze">「111」, 9</p>
+                <p class="centered">取得した数字：<strong>072219</strong></p>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-06 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>復号 — ステップ3：RGBA分解暗号</h2>
+                <svg class="chart centered-img" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 200 120.92" font-family="NotoSans" font-size="3" font-weight="bold" text-anchor="middle">
+                    <path d="M38.8 30.21v2.57h139.58V30.2z" />
+                    <path class="s" d="m32.48 109.15 1.2-1.2-4.2 1.2 4.2 1.2zm144.81 0-1.2 1.2 4.2-1.2-4.2-1.2z" fill-rule="evenodd" stroke="#000" stroke-width="2" transform="matrix(.95427 0 0 1 8.5 -77.65)" />
+                    <path d="M110.7 2.41q0 .76-.37 1.31t-1.08.82q.42.27.7.6.29.31.88 1.21l1.53 2.31h-1.48l-1.37-2.13q-.6-.97-1.06-1.3-.46-.34-.97-.34h-.56v3.77h-1.24V0h2.39q.82 0 1.42.34.6.32.9.88.3.55.3 1.2zm-1.27 0q0-.63-.38-.97-.37-.35-1.07-.35h-1.06V3.8h.8q.79 0 1.25-.29.46-.3.46-1.1z" aria-label="R" />
+                    <path class="s" d="M25.72 191.69v-2.25h5.73v2.25z" transform="matrix(1.85685 0 0 .53855 3.2 -81.36)" aria-label="-" stroke="#000" stroke-width="1.5" />
+                    <path class="s" d="M111.23 19.66q0 1.34-.38 2.36-.37 1-1.01 1.56-.63.54-1.4.54-.83 0-1.47-.56-.63-.56-.99-1.56-.35-1.01-.35-2.32 0-1.41.41-2.42.41-1 1.06-1.52.66-.5 1.38-.5.8 0 1.42.57.63.58.98 1.58t.35 2.27zm-2.81 3.32q.71 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8t-.56-1.13q-.36-.39-.8-.39-.44 0-.78.4-.35.38-.55 1.12-.2.74-.2 1.77 0 1.55.4 2.44.43.88 1.13.88z" stroke="#000" stroke-width=".8" aria-label="0" />
+                    <path d="M161.06 13.68h2.27v4.8h4.8v2.3h-4.8v4.79h-2.27v-4.8h-4.81V18.5h4.8z" aria-label="+" />
+                    <path d="M5.18 57.89q0 1.28-1.32 1.83.95.17 1.51.79.56.6.56 1.43 0 .81-.45 1.34-.45.54-1.17.78t-1.54.24H0v-8.66h2.5q1.28 0 1.98.62t.7 1.63zm-1.29.1q0-.66-.37-.96-.37-.3-1.23-.3H1.23v2.64h.88q.91 0 1.34-.39.44-.4.44-1zm.75 3.84q0-1.4-2.15-1.4H1.23v2.78h1.3q1.09 0 1.6-.34.52-.34.52-1.04z" aria-label="B" />
+                    <path d="M28.61 41.75h-2.57V80.8h2.57z" />
+                    <path class="s" d="m27.32 44.04 1.2 1.15-1.2-4.01-1.2 4zm0 34.47-1.2-1.14 1.2 4 1.2-4z" fill-rule="evenodd" stroke="#000" stroke-width="1.95" />
+                    <path class="s" d="M25.72 191.69v-2.25h5.73v2.25z" transform="matrix(1.85685 0 0 .53855 -37.57 -25.86)" aria-label="-" stroke="#000" stroke-width="1.5" />
+                    <path class="s" d="M18.47 60.7q0 1.35-.38 2.37-.37 1-1 1.55-.64.55-1.41.55-.83 0-1.47-.56-.63-.56-.98-1.56-.35-1.01-.35-2.32 0-1.41.4-2.42.42-1.01 1.07-1.52.65-.5 1.38-.5.8 0 1.42.57.62.58.97 1.58t.35 2.26zm-2.8 3.33q.7 0 1.13-.87.43-.87.43-2.42 0-1.05-.2-1.8-.21-.75-.57-1.13-.35-.39-.8-.39-.43 0-.78.4-.35.38-.55 1.12-.2.73-.2 1.76 0 1.56.41 2.45.42.88 1.12.88z" stroke="#000" stroke-width=".8" aria-label="0" />
+                    <path d="M14.81 38.26h2.27v4.8h4.81v2.3h-4.8v4.79H14.8v-4.8h-4.8v-2.28h4.8z" aria-label="+" />
+                    <path d="M75.03 90.63v-2.56H35.98v2.56z" />
+                    <path class="s" d="m72.74 89.35-1.14 1.2 4-1.2-4-1.2zm-34.47 0 1.15-1.2-4.01 1.2 4 1.2z" fill-rule="evenodd" stroke="#000" stroke-width="1.95" />
+                    <path d="M55.38 111.13q-.93 0-1.7.44-.77.44-1.22 1.2-.45.76-.45 1.7 0 .96.44 1.72t1.22 1.2q.78.44 1.76.44.48 0 .85-.08.37-.07 1.1-.3v-1.8h-1.66v-1.1h2.91v3.66q-1.55.7-3.17.7-1.57 0-2.63-.63-1.07-.64-1.6-1.64-.51-1.01-.51-2.09 0-1.22.58-2.26.59-1.03 1.66-1.65 1.08-.6 2.45-.6.75 0 1.42.15.67.16 1.62.58v1.26q-.73-.42-1.53-.66-.8-.24-1.54-.24z" aria-label="G" />
+                    <path d="M70.01 94.25h2.27v4.81h4.81v2.29h-4.8v4.8H70v-4.8h-4.8v-2.29H70z" aria-label="+" />
+                    <path class="s" d="M58.09 100.24q0 1.35-.38 2.36-.38 1.01-1.01 1.56-.64.54-1.41.54-.83 0-1.47-.55-.63-.56-.98-1.57-.35-1-.35-2.32 0-1.4.41-2.41.41-1.01 1.06-1.52.65-.51 1.38-.51.8 0 1.42.57.62.58.97 1.59.36 1 .36 2.26zm-2.82 3.32q.72 0 1.14-.86.43-.87.43-2.42 0-1.06-.2-1.8-.21-.76-.57-1.14-.35-.38-.8-.38-.43 0-.78.39-.34.39-.55 1.12-.2.74-.2 1.77 0 1.56.41 2.44.43.88 1.13.88z" stroke="#000" stroke-width=".8" aria-label="0" />
+                    <path class="s" d="M25.72 191.69v-2.25h5.73v2.25z" transform="matrix(1.85685 0 0 .53855 -13.58 -2.51)" aria-label="-" stroke="#000" stroke-width="1.5" />
+                </svg>
+                <p>上記の図は、このモジュールに表示されうる27色をすべて示している。モジュールの3ページにある6つのLEDは、各英字と演算子で使用する際に、同じ位置にある復号された英字に対応する。</p>
+                 <p>ステップ2で得られたキーワードを使用し、重複する英字をすべて削除し、それぞれの最初に出現する英字は保持する。アルファベットを作成し、キーワードから文字を除外する。</p>
+                 <p>1ページ目の右のディスプレーについて、モジュールIDに「MODULE ID:」が存在する場合、アルファベットをキーワードの末尾に置く<code>(FORGETABCDHIJKLMNPQSUVWXYZ)</code>。そうでなければ、アルファベットをキーワードの先頭に置く<code>(ABCDHIJKLMNPQSUVWXYZFORGET)</code>。
+                  <p>4ページでは、3つのLEDが赤、緑、青の異なる色合いで表示される。ただし、この順番で表示されるとは限らない。3つのLEDに対応するRGBチャネルは、「-」(消灯)、「0」(暗い)、「+」(明るい)の3つの値のいずれかを持っている。各LEDごとに、他2つのチャネルと異なる値を持つ。LEDを左から右に見ると、これらの固有値を持つチャネルは、英字を配置する順番を構成している。英字を配置する順序は、上記の図に従って、-から始まり+で終わる。また、この値をRGB順に並べ替えると、先ほど作成したキー文字列を配置するときにスキップすべき色に対応する。
+                <ul>
+                 <li>そのLEDに使われている値のいずれかに0がある場合、そのチャネルは0以外の値で表される。(例: <code>0+0</code>では、0以外の値は<code>+</code>)</li>
+                 <li>そうでなければ、そのチャネルは0として表される。</li>
+                </ul>
+
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+        <div class="page page-bg-07 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+             <h2>復号 - ステップ3: RGBA分解暗号(続き)</h2>
+              <p class="squeeze">ページ1の上のディスプレーから英字を色に変換し、それぞれ R, G, Bを表す3文字の文字列を6個生成する。基本メッセージから形成された6個の文字列を、各チャネルに対応する3つ別々の直角三角形になるように読み順で並べる。三角形の底辺と高さは、3文字分である。ページ4には、各チャネルの変換を示す3つの文字列がある。上のディスプレーに表示されている3つの文字列は、上から下へ、ポートの個数だけ右にシフトしたRGBの順（R -&gt; G -&gt; B）となり、Bの場合はRにループしている。チャネルが「NONE」の場合、そのチャネルには変換は適用されない。変換後の文字列と表示された色を組み合わせると、6組の文字列ができるはずである。
+                <ul class="squeeze">
+                    <li><strong>「TL」:</strong>そのチャネルの各段を水平方向に反転させる。</li>
+                    <li><strong>「TR」:</strong>そのチャネルの各列を垂直方向に反転させる。</li>
+                    <li><strong>「BL」:</strong>そのチャネルの段と列を入れ替える(B1 &lt;-&gt; A2)。</li>
+                    <li><strong>「BR」:</strong>そのチャネルを反転する。つまり、<code>-</code> -&gt; <code>+</code>やその逆を行う。<code>0</code>は反転させてはいけない。</li>
+                </ul>
+                <p>使用演算子はページ4の右のディスプレーに表示される。これらの演算子は、形成された文字列のペアへ順に適用され、最後の演算子を使ったら最初の演算子にループする、記号は正しく表示されないものがあるため、モジュールはそれぞれの記号を言葉で説明している。各説明は、ちょうど1つの演算子記号にのみ対応しなければならない。</p>
+                 <p>使用する表示された演算子は、復号に使用する表に対応する。これらの表は文字列の各ペアに適用され、ペアのどちらが段/列に対応するかは関係ない。</p>
+                <div class="hstack">
+                <table class="exempt">
+                    <tr><th>+</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>-</th><th>-</th><th>0</th></tr>
+                    <tr><th>0</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>+</th><th>0</th><th>+</th><th>+</th></tr>
+                </table>
+                <table class="exempt">
+                    <tr><th>×</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>+</th><th>0</th><th>-</th></tr>
+                    <tr><th>0</th><th>0</th><th>0</th><th>0</th></tr>
+                    <tr><th>+</th><th>-</th><th>0</th><th>+</th></tr>
+                </table>
+                <table class="exempt">
+                    <tr><th>&#x25cb;</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>-</th><th>+</th><th>0</th></tr>
+                    <tr><th>0</th><th>+</th><th>0</th><th>-</th></tr>
+                    <tr><th>+</th><th>0</th><th>-</th><th>+</th></tr>
+                </table>
+                <table class="exempt">
+                    <tr><th>m</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>-</th><th>-</th><th>-</th></tr>
+                    <tr><th>0</th><th>-</th><th>0</th><th>0</th></tr>
+                    <tr><th>+</th><th>-</th><th>0</th><th>+</th></tr>
+                </table>
+                <table class="exempt">
+                    <tr><th>M</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>0</th><th>0</th><th>0</th><th>+</th></tr>
+                    <tr><th>+</th><th>+</th><th>+</th><th>+</th></tr>
+                </table>
+                <table class="exempt">
+                    <tr><th>&empty;</th><th>-</th><th>0</th><th>+</th></tr>
+                    <tr><th>-</th><th>0</th><th>-</th><th>+</th></tr>
+                    <tr><th>0</th><th>-</th><th>0</th><th>-</th></tr>
+                    <tr><th>+</th><th>+</th><th>-</th><th>0</th></tr>
+                </table>
+                </div>
+                <table class="word">
+                 <tr><th>+</th><td>Add Symbol / Plus Sign / Plus Symbol / Symbol For Adding</td></tr>
+                 <tr><th>×</th><td>Multiply Symbol / x, literally / Times Symbol / Multiply Sign</td></tr>
+                 <tr><th>&#x25cb;</th><td>Circle / o, literally / Unfilled Circle / Lowercase O</td></tr>
+                 <tr><th>m</th><td>Lowercase M / M but Lowercase / Lowercase Mike</td></tr>
+                 <tr><th>M</th><td>Uppercase M / M but Uppercase / Uppercase Mike</td></tr>
+                 <tr><th>&empty;</th><td>Slashed Circle / / through O / Empty Set Symbol / O and /</td></tr>
+                 </table>
+            </div>
+            <div class="page-footer relative-footer">7</div>
+        </div>
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content sqz">
+             <p>最後に、先程作成したキー文字列を用いて各文字列を英字に変換すると、復号された文字列が得られるはずだ。</p>
+                <h2>例 — RGBA分解暗号</h2>
+                <p class="centered squeeze">ページ1の上のディスプレー：<strong>AEIPAZ</strong></p>
+                <p class="centered squeeze">キーワード：<strong>AMBITION</strong></p>
+                <p class="centered squeeze">ページ3の6つのLED：<strong>Mint, Plum, Indigo, Forest, Rose, Magenta</strong></p>
+                <p class="centered squeeze">ページ4の3つのLED：<strong>Mint(0+0), Red(+--), Indigo(--0)</strong></p>
+                <p class="centered squeeze">固有値(G: +, R: 0, B: -) = 順番はGRB</p>
+                <p class="centered squeeze">表示された変換：<strong>「TL, BR」; 「BR, TR」; 「BR, BL」</strong></p>
+                <p class="centered squeeze">ポートの個数を3で割った余り：<strong>1</strong></p>
+                <p class="centered squeeze">演算子：<strong>+, ○</strong> (Plus Symbol, Circle)</p>
+                <p class="centered squeeze"><strong>「Module ID」 は表示されている</strong></p>
+                <p class="centered">3つのLEDから求めた色：5行目をRGBの順に並べて、<strong>0+- (Lime)</strong></p>
+                <table class="smallertext">
+                 <tr>
+                     <th>G</th><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td>
+                     <td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th>R</th><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>-</td><td>-</td><td>-</td><td>0</td>
+                     <td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th>B</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>0</td>
+                     <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th class="empty"></th><td>A</td><td>M</td><td>B</td><td>I</td><td>T</td><td>!</td><td>O</td><td>N</td><td>C</td><td>D</td><td>E</td><td>F</td>
+                     <td>G</td><td>H</td><td>J</td><td>K</td><td>L</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td>
+                 </tr>
+             </table>
+             <p class="centered squeeze">RGBの順に並び替える：</p>
+             <table class="smallertext">
+                 <tr>
+                     <th>R</th><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>-</td><td>-</td><td>-</td><td>0</td>
+                     <td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th>G</th><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td>
+                     <td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td><td>-</td><td>0</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th>B</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>0</td><td>0</td><td>0</td><td>0</td>
+                     <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td><td>+</td>
+                 </tr>
+                 <tr>
+                     <th class="empty"></th><td>A</td><td>M</td><td>B</td><td>I</td><td>T</td><td>!</td><td>O</td><td>N</td><td>C</td><td>D</td><td>E</td><td>F</td>
+                     <td>G</td><td>H</td><td>J</td><td>K</td><td>L</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td>
+                 </tr>
+             </table>
+             <p class="centered"><strong>AEIPAZ</strong> = <strong>---, -00, 0--, ++0, ---, +++</strong> (RGB)</p>
+             <table>
+                 <tr>
+                     <th colspan="5">Rチャネルの転置</th>
+                 </tr>
+                 <tr>
+                     <td class="nohighlight"><table><tr><td>-</td><td>-</td><td>0</td></tr><tr><td>+</td><td>-</td></tr><tr><td>+</td></tr></table></td>
+                     <td class="nohighlight">BR</td>
+                     <td class="nohighlight"><table><tr><td>+</td><td>+</td><td>0</td></tr><tr><td>-</td><td>+</td></tr><tr><td>-</td></tr></table></td>
+                     <td class="nohighlight">BL</td>
+                     <td class="nohighlight"><table><tr><td>+</td><td>-</td><td>-</td></tr><tr><td>+</td><td>+</td></tr><tr><td>0</td></tr></table></td>
+                 </tr>
+                 <tr>
+                     <th colspan="5">Gチャネルの転置</th>
+                 </tr>
+                 <tr>
+                     <td class="nohighlight"><table><tr><td>-</td><td>0</td><td>-</td></tr><tr><td>+</td><td>-</td></tr><tr><td>+</td></tr></table></td>
+                     <td class="nohighlight">TL</td>
+                     <td class="nohighlight"><table><tr><td>-</td><td>0</td><td>-</td></tr><tr><td>-</td><td>+</td></tr><tr><td>+</td></tr></table></td>
+                     <td class="nohighlight">BR</td>
+                     <td class="nohighlight"><table><tr><td>+</td><td>0</td><td>+</td></tr><tr><td>+</td><td>-</td></tr><tr><td>-</td></tr></table></td>
+                 </tr>
+                 <tr>
+                     <th colspan="5">Bチャネルの転置</th>
+                 </tr>
+                 <tr>
+                     <td class="nohighlight"><table><tr><td>-</td><td>0</td><td>-</td></tr><tr><td>0</td><td>-</td></tr><tr><td>+</td></tr></table></td>
+                     <td class="nohighlight">BR</td>
+                     <td class="nohighlight"><table><tr><td>+</td><td>0</td><td>+</td></tr><tr><td>0</td><td>+</td></tr><tr><td>-</td></tr></table></td>
+                     <td class="nohighlight">TR</td>
+                     <td class="nohighlight"><table><tr><td>-</td><td>+</td><td>+</td></tr><tr><td>0</td><td>0</td></tr><tr><td>+</td></tr></table></td>
+                 </tr>
+             </table>
+             <p class="centered squeeze">順番通りに取得：<strong>++-, -0+, -++, ++0, +-0, 0-+</strong></p>
+             <p class="centered squeeze">6つのLEDを変換：<strong>0+0, 0-0, --0, -0-, +-0, +-+</strong></p>
+             <p class="centered squeeze">演算適用後の結果：<strong>++-, ++-, -0+, 0-+, +-0, --+</strong></p>
+             <p class="centered">復号後：<strong>++-, ++-, -0+, 0-+, +-0, --+</strong> = <strong>CCRUKQ</strong></p>
+            </div>
+            <div class="page-footer relative-footer">8</div>
+        </div>
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>復号 — ステップ4：3×3ヒル暗号</h2>
+                <p class="comment">やっぱり現れた。みんな今、それを復号するためにとんでもないツールを使おうとしている！なんてことをしているんだ！？</p>
+                <p class="squeeze">ステップ2で得られた18桁の数値は、読み順に3×3行列の一部となる2桁の数値セットを9つ形成する。本マニュアルでは、これらをa~iと表記する。復号するには、</p>
+                <p class="squeeze">3×3行列の行列式Xを、以下の式で求める：</p>
+                <img class="centered-img invertable" src="img/Unfair's Forgotten Ciphers/MatrixDet.svg" alt="3×3 Matrix Determinant">
+                <p class="squeeze">先ほど求めた行列式の逆数Yを求める。XをY倍し、アルファベットの長さP(26)で割った余りがすべて1に等しくなるような数を見つければよい。どのような方法を用いたとしても、以下の式は真となるはずである。</p>
+                <img class="centered-img invertable" src="img/Unfair's Forgotten Ciphers/MultInv.svg" alt="Multiplicative Inverse">
+            </div>
+            <div class="page-footer relative-footer">9</div>
+        </div>
+        <div class="page page-bg-03 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>復号 — ステップ4：3×3ヒル暗号(続き)</h2>
+                <p class="squeeze">元の行列の余因子行列は、3×3行列の余因子を求め、左上から右下の対角線に対して転置させることで求められる。</p>
+                <img class="centered-img invertable" style="height:800px" src="img/Unfair's Forgotten Ciphers/MatrixAdj.svg" alt="3×3 Matrix Adjugate">
+            </div>
+            <div class="page-footer relative-footer">10</div>
+        </div>
+        <div class="page page-bg-04 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>復号 — ステップ4：3×3ヒル暗号(続き)</h2>
+                <p class="squeeze">余因子行列にYを掛け、3×3行列内の2×2行列の行列式を計算すると逆行列が得られる。</p>
+                <img class="centered-img invertable" src="img/Unfair's Forgotten Ciphers/MatrixInv.svg" alt="3×3 Matrix Inverse">
+                <p class="squeeze">逆行列を使うには、ステップ3で復号した文字を3文字ずつにグループ分けし、それぞれのアルファベット位置を求める。Zは0とする。これを1×3行列として扱い、1×3行列に3×3逆行列を右から掛ける。1×3行列の最初の値は3×3行列の最初の列に掛け、1×3行列の2番目と3番目の値も同様に行う。積を行ごとに合計し、3つの別々の値を獲得する。その値をアルファベットの長さで割った余りを求め、アルファベットの位置を使ってそれぞれの英字に変換する。0はZとする。</p>
+            </div>
+            <div class="page-footer relative-footer">11</div>
+        </div>
+        <div class="page page-bg-05 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>例 — 3×3ヒル暗号における逆行列の取得</h2>
+                <p class="centered">取得した行列：</p>
+                <table>
+                    <tr><td>7, 22, 19</td></tr>
+                    <tr><td>21, 9, 15</td></tr>
+                    <tr><td>11, 16, 22</td></tr>
+                </table>
+                <p class="squeeze centered">行列式X: 7*9*22 + 22*15*11 + 19*21*16 - 7*15*16 - 22*21*22 - 19*9*11 = -2325</p>
+                <p class="squeeze centered">計算を簡略化するため、26で割った余りを使用 -2325 mod 26 = 15</p>
+                <p class="squeeze centered">15 * Y = 1 mod 26を満たすYは、 Y = 7</p>
+                <p class="squeeze centered">余因子行列：</p>
+                <table>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr><td>9, 15</td></tr>
+                                <tr><td>16, 22</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            -
+                            <table>
+                                <tr><td>22, 19</td></tr>
+                                <tr><td>16, 22</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table>
+                                <tr><td>22, 19</td></tr>
+                                <tr><td>9, 15</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            -
+                            <table>
+                                <tr><td>21, 15</td></tr>
+                                <tr><td>11, 22</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table>
+                                <tr><td>7, 19</td></tr>
+                                <tr><td>11, 22</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            -
+                            <table>
+                                <tr><td>7, 19</td></tr>
+                                <tr><td>21, 15</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr><td>21, 9</td></tr>
+                                <tr><td>11, 16</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            -
+                            <table>
+                                <tr><td>7, 22</td></tr>
+                                <tr><td>11, 16</td></tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table>
+                                <tr><td>7, 22</td></tr>
+                                <tr><td>21, 9</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <p class="centered">逆行列：</p>
+                <table class="centered">
+                    <tr>
+                        <td>7*(9*22-15*16)</td>
+                        <td>-7*(22*22-19*16)</td>
+                        <td>7*(22*15-19*9)</td>
+                    </tr>
+                    <tr>
+                        <td>-7*(21*22-11*15)</td>
+                        <td>7*(7*22-19*11)</td>
+                        <td>-7*(7*15-19*21)</td>
+                    </tr>
+                    <tr>
+                        <td>7*(21*16-9*11)</td>
+                        <td>-7*(7*16-22*11)</td>
+                        <td>7*(7*9-22*21)</td>
+                    </tr>
+                </table>
+                <br>
+                <table class="centered">
+                    <tr><td>-294, -1260, 1113</td></tr>
+                    <tr><td>-2079, -385, 2058</td></tr>
+                    <tr><td>1659, 910, -2793</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">12</div>
+        </div>
+        <div class="page page-bg-06 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>例 — 3×3ヒル暗号における行列の利用</h2>
+                <p>取得した逆行列(26で割った余り):</p>
+                <table class="centered">
+                    <tr><td>18, 14, 21</td></tr>
+                    <tr><td>1, 5, 4</td></tr>
+                    <tr><td>21, 0, 15</td></tr>
+                </table>
+                <p class="centered">暗号化された単語：<strong>CCRUKQ</strong></p>
+                <p class="centered">暗号化された単語の英字をアルファベット位置に変換：<strong>3, 3, 18, 21, 11, 17</strong></p>
+                <p class="centered squeeze">3*18 + 3*14 + 18*21 = 474, 474 mod 26 = 6, F</p>
+                <p class="centered squeeze">3*1 + 3*5 + 18*4 = 90, 90 mod 26 = 12, L</p>
+                <p class="centered squeeze">3*21 + 3*0 + 18*15 = 333, 333 mod 26 = 21, U</p>
+                <p class="centered squeeze">21*18 + 11*14 + 17*21 = 889, 889 mod 26 = 5, E</p>
+                <p class="centered squeeze">21*1 + 11*5 + 17*4 = 144, 144 mod 26 = 14, N</p>
+                <p class="centered squeeze">21*21 + 11*0 + 17*15 = 696, 696 mod 26 = 20, T</p>
+                <p class="centered">復号された単語：<strong>FLUENT</strong></p>
+            </div>
+            <div class="page-footer relative-footer">13</div>
+        </div>
+        <div class="page page-bg-07 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">忘れられしアンフェア暗号</span>
+            </div>
+            <div class="page-content">
+             <h2>単語の送信</h2>
+             <p class="comment">最後にもうひとつ。</p>
+             <p>
+                 外心を押して送信モードに入ると、内心と外心の間にある4つのボタンが異なる色合いに変化する。
+                 <br><strong>外心</strong>を押すと送信モードを終了し、これはいつでも押すことができる。
+             </p>
+             <p class="squeeze">送信モードはロックされているため、まず解除する必要がある。外心以外のいずれかのボタン(ディスプレーを除く)を押すと、送信モードが解禁されるが、正しいタイミングで押さないとミスが記録される。送信でミスが記録されても、送信モードは解禁されたままとなる。</p> 
+                <table>
+                    <tr>
+                        <td style="text-align:left" class="nohighlight">
+                            <ul>
+                             <li>シリアルナンバーの最後の数字から始め、モジュールIDを足す。</li>
+                              <li>点灯していないすべてのインジケーターに含まれている、Nを除いたNよりに前にアルファベットに現れる英字の個数を足す。</li>
+                                <li>現在の値に、もしページ1の2行目にあるミスカウンターが、数字の後ろに「STRIKE(S)」がある形式で現れていれば、点灯しているすべてのインジケーターに含まれている、Nを除いたNよりに前にアルファベットに現れる英字の個数を足す。そうでない場合、もしページ1の2行目にあるミスカウンターが、数字の前に「STRIKE(S):」がある形式で現れていれば、バッテリーの個数を足す。そうでない場合、バッテリーホルダーの個数とポートプレートの個数の和を加える。
+                                 <li>単語の一部または単語そのものとして、名前に「Fair」を含むモジュールの個数の3倍を引く。これは<strong>大文字小文字を区別しない</strong>。</li>
+                                 <li>3を足し、その結果を10で割った余りを求める。カウントダウンタイマーの秒の下一桁がその数字である場合、モジュール解禁時にミスが記録されない。</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+                <p class="squeeze">送信のロックが解除されると、右側のディスプレーには、どのボタンがモジュールのどの部分にアクセスできるかが表示される。</p>
+                 <p class="squeeze"><strong>左</strong>、<strong>上</strong>、<strong>右</strong>を押すと、それぞれ-、0、+が右のディスプレーに入力され、その文字が上のディスプレーに表示される。</p>
+                <p class="squeeze"><strong>下</strong>を押すと、右のディスプレーに表示されている入力があればそれを削除し、なければ上ディスプレーの最後の文字を削除する。</p>
+                <p class="squeeze"><strong>内心</strong>を押すと、上のディスプレーの文字を送信する。</p>
+                <p class="squeeze"><strong>外心</strong>を押すと、すべての入力が消去され、送信モードが終了する。
+                <p class="squeeze">送信された単語が正しければ、モジュールは解除される。そうでない場合、モジュールにはミスが記録され、最終的に送信モードが終了する。正しい単語は変化しない。
+                <p>参考までに、右側に表示されている入力内容の最初の文字は、-、0、+を入力すると、それぞれアルファベットのA～I、J～R、S～Zのセクションに入る。2番目の入力は1番目の入力における3文字ごとのサブセクションの位置を示し、3番目の入力が英字を示す。「?」は無効な文字を表すのに使われる。</p>
+            </div>
+            <div class="page-footer relative-footer">14</div>
+        </div>
+
+    </div>
+</body>
+</html>
