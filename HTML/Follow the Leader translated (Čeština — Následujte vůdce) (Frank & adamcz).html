@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Následujte vůdce — Keep Talking and Nobody Explodes modul</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        table.repeaters-table th {
+            white-space: nowrap;
+        }
+
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #footnote {
+            font-size: 10pt;
+            margin-top: .7cm;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let ports = ["paralelní port", "sériový port", "RJ-45 port", "PS/2 port", "DVI-D port", "Stereo RCA port"];
+            document.getElementById('rule-port').innerText = ports[rnd.next(0, ports.length)];
+
+            let startingPlugConditions = [
+                "počtu indikátorů na bombě",
+                "počtu rozsvícených indikátorů na bombě",
+                "počtu nerozsvícených indikátorů na bombě",
+                "počtu baterií na bombě",
+                "počtu držáků na baterie na bombě",
+                "počtu AA baterií na bombě",
+                "počtu D baterií na bombě",
+                "počtu portů na bombě",
+                "počtu držáků na porty na bombě",
+                "počtu různých portů na bombě",
+                "počtu modulů na bombě",
+                "počtu nehlídacích modulů na bombě",
+                "abecednímu pořadí prvního písmene sériového čísla",
+                "abecednímu pořadí druhého písmene sériového čísla",
+                "abecednímu pořadí posledního písmene sériového čísla",
+                "abecednímu pořadí předposledního písmene sériového čísla",
+                "poslední číslici sériového čísla",
+                "druhé číslici sériového čísla",
+                "první číslici sériového čísla"
+            ];
+
+            let startRule2 = rnd.next(0, startingPlugConditions.length);
+            document.getElementById('rule-start-2').innerText = startingPlugConditions[startRule2];
+
+            let startRule3 = rnd.next(0, startingPlugConditions.length - 1);
+            if (startRule3 >= startRule2)
+                startRule3++;
+            document.getElementById('rule-start-3').innerText = startingPlugConditions[startRule3];
+
+            let startPlug = rnd.next(1, 13);
+            document.getElementById('rule-plug-start').innerText = `zástrčky ${startPlug}`;
+
+            let indicators = "TRN,FRK,FRQ,BOB,IND,CAR,SIG,NSA,SND,CLR,MSA".split(',');
+            let indicator = indicators[rnd.next(0, indicators.length)];
+            document.getElementById('rule-indicator').innerText = indicator;
+
+            let endPlug = (rnd.next(startPlug + 1, startPlug + 3) - 1) % 12 + 1;
+            document.getElementById('rule-plug-end').innerText = `zástrčky ${endPlug}`;
+
+            let litUnlit = rnd.next(0, 2);
+            document.getElementById('rule-indicator-lit').innerText = litUnlit ? 'rozsvícený' : 'nerozsvícený';
+
+            let startAt = (rnd.next(0, 12) + 5) % 12;
+            document.getElementById('rule-else').innerText = startAt ? `o jedno po směru hodinových ručiček od drátu ${startAt}` : 's nejmenším číslem';
+
+            let startingRuleConditions = [
+                ["alphabetically first letter in any indicator", "If there are no indicators"],
+                ["alphabetically last letter in any indicator", "If there are no indicators"],
+                ["second letter in the serial number", "If the serial number contains no letters"],
+                ["second-last letter in the serial number", "If the serial number contains no letters"],
+                ["last letter in the serial number", "If the serial number contains no letters"],
+                ["first letter in the serial number", "If the serial number contains no letters"],
+            ];
+            let startingRuleIx = rnd.next(0, startingRuleConditions.length);
+
+            document.getElementById('rule-starting-step').innerText = startingRuleConditions[startingRuleIx][0];
+            document.getElementById('rule-starting-step-fallback').innerText = startingRuleConditions[startingRuleIx][1];
+            document.getElementById('rule-starting-step-fallback-step').innerText = String.fromCharCode(0x41 + (rnd.next(0, 26) + 17) % 26);
+
+            let colors = ["červený", "zelený", "modrý", "bílý", "černý", "žlutý"];
+            rnd.shuffleFisherYates(colors);
+            document.getElementById('rule-reverse-colors').innerText = `${colors[0]}, ${colors[1]}, nebo ${colors[2]}`;
+
+            let tableRules = [
+                "Přestřihněte tento drát.",
+                "Nestříhejte tento drát.",
+                "Předchozí drát vede do zástrčky označené sudým číslem.",
+                "Předchozí drát vede do zástrčky označené lichým číslem.",
+                "Předchozí drát vede do zástrčky označené prvočíslem.",
+                "Předchozí drát vede do zástrčky neoznačené prvočíslem.",
+                "Předchozí drát má být přestřihnut.",
+                "Předchozí drát nemá být přestřihnut.",
+                "Předchozí dva dráty mají stejnou barvu.",
+                "Předchozí dva dráty mají jinou barvu.",
+                "Alespoň dva z předchozích tří drátů mají stejnou barvu.",
+                "Předchozí tři dráty mají různé barvy.",
+                "Předchozí tři dráty mají všechny stejnou barvu.",
+                "Předchozí drát má stejnou barvu jako tento.",
+                "Předchozí drát má jinou bervu jako tento.",
+                "Žádný z předchozích dvou drátů nemá stejnou barvu jako tento.",
+                "Právě jeden z předchozích dvou drátů má stejnou barvu jako tento.",
+                "Oba z předchozích dvou drátů mají stejnou barvu jako tento.",
+                "Právě jeden, nebo žádný z předchozích dvou drátů nemá stejnou barvu jako tento.",
+                "Práve jeden, nebo oba z předchozích dvou drátů mají stejnou barvu jako tento.",
+                "Žádný, nebo oba z předchozích dvou drátů mají stejnou barvu jako tento.",
+                "Předchozí drát přeskakuje zástrčku.",
+                "Předchozí drát nepřeskakuje zástrčku.",
+                "Žádný z předchozích dvou drátů nepřeskakuje zástrčku.",
+                "Právě jeden z předchozích dvou drátů přeskakuje zástrčku.",
+                "Oba z předchozích dvou drátů přeskakují zástrčku.",
+                "Právě jeden, nebo žádný z předchozích dvou drátů nepřeskakuje zástrčku.",
+                "Právě jeden, nebo oba z předchozích dvou drátů přeskakují zástrčku.",
+                ['n12', n => `Předchozí drát vede do zástrčky ${n}, nebo méně.`],
+                ['n12', n => `Předchozí drát nevede do zástrčky ${n}, nebo méně.`],
+                ['n12', n => `Předchozí drát vede do zástrčky ${n}, nebo více.`],
+                ['n12', n => `Předchozí drát nevede do zástrčky ${n}, nebo více.`],
+                ['n6', n => `Na modulu je ${n}, nebo více drátů.`],
+                ['n6', n => `Na modulu je ${n}, nebo méně drátů.`],
+                ['c', c => `Předchozí drát je ${c[0]}, ${c[1]}, nebo ${c[2]}.`],
+                ['c', c => `Předchozí drát není ${c[0]}, ${c[1]}, nebo ${c[2]}.`],
+                ['c', c => `Předposlední drát je ${c[0]}, ${c[1]}, nebo ${c[2]}.`],
+                ['c', c => `Předposlední drát není ${c[0]}, ${c[1]}, nebo ${c[2]}.`],
+                ['c', c => `Žádný z předchozích dvou drátů není ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Právě jeden z předchozích dvou drátů je ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Oba z předchozích dvou drátů jsou ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Právě jeden, nebo žádný z předchozích dvou drátů není ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Právě jeden, nebo oba z předchozích dvou drátů jsou ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Žádný, nebo oba z předchozích dvou drátů jsou ${c[0]}, nebo ${c[1]}.`],
+                ['c', c => `Všechny předchozí ${c[0]} dráty po počátečním drátu by měly být přestřihnuty.\u00a0*`, true],
+                ['c', c => `Všechny předchozí ${c[0]} dráty po počátečním drátu by neměly být přestřihnuty.\u00a0*`, true],
+                "Více než půlka drátů, včetně počátečního, by měly být již přestřihnuta.",
+                "Méně než půlka drátů, včetně počátečního, by měly být již přestřihnuta.",
+                "Více než půlka drátů, kromě počátečního, by měly být již přestřihnuta.",
+                "Méně než půlka drátů, kromě počátečního, by měly být již přestřihnuta.",
+                "Předchozí drát má stejnou barvu jako počátečný drát.",
+                "Předchozí drát má jinou barvu jako počátečný drát.",
+            ];
+            let list = document.getElementsByClassName('table-rule');
+            let footnote = false;
+            if (rnd.seed === 1)
+            {
+                list[0].innerText = tableRules[35][1](['žlutý', 'modrý', 'zelený']);
+                list[1].innerText = tableRules[2];
+                list[2].innerText = tableRules[6];
+                list[3].innerText = tableRules[34][1](['červený', 'modrý', 'černý']);
+                list[4].innerText = tableRules[10];
+                list[5].innerText = tableRules[16];
+                list[6].innerText = tableRules[34][1](['žlutý', 'bílý', 'zelený']);
+                list[7].innerText = tableRules[7];
+                list[8].innerText = tableRules[21];
+                list[9].innerText = tableRules[35][1](['bílý', 'černý', 'červený']);
+                list[10].innerText = tableRules[9];
+                list[11].innerText = tableRules[29][1](6);
+                list[12].innerText = tableRules[41][1](['bílý', 'černý']);
+            }
+            else
+            {
+                rnd.shuffleFisherYates(tableRules);
+                for (let i = 0; i < 13; i++)
+                {
+                    let str = tableRules[i];
+                    if (Array.isArray(str))
+                    {
+                        if (str[2])
+                            footnote = true;
+                        if (str[0] === 'n12')
+                            str = str[1](rnd.next(2, 12));
+                        else if (str[0] === 'n6')
+                            str = str[1](rnd.next(9, 12));
+                        else if (str[0] === 'c')
+                        {
+                            rnd.shuffleFisherYates(colors);
+                            str = str[1](colors);
+                        }
+                    }
+                    list[i].innerText = str;
+                }
+            }
+            document.getElementById('footnote').style.display = footnote ? '' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Následujte vůdce</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Follow the Leader.svg">
+                <h2>Na téma Následujte vůdce</h2>
+
+                <p class="flavour-text">Dětská hra. Prostě následujte vůdce. Jenom pokud se vám to nepodaří, trest je poněkud vybuchující.</p>
+                <p>Tento modul obsahuje 8–12 drátů, které spojují očíslované zástrčky ve smyčce. Každý drát vede od jedné zástrčky do druhé po směru hodinových ručiček. V tomto manuálu jsou dráty očíslovány podle zástrčky, ze které vychází, takže drát, který vede ze zástrčky 1 do zástrčky 2 je brán jako „drát 1,“ zatímco drát ze zástrčky 12 do zástrčky 1 je brán jako „drát 12.“</p>
+                <p>Řešte modul tím, že přestřihnete počáteční drát a všechny platné drátů v pořadí sekvence. Každý drát se musí buď přestřihnout, nebo ne podle stavu minulého drátu/minulých drátů v sekvenci. Vyhněte se přestřihnutím drátů mimo pořadí.</p>
+
+                <h3>Zjišťování počátečního drátu</h3>
+                <p>Řiďte se prvním pravidlem, které platí:</p>
+
+                <ol>
+                    <li>Pokud bomba obsahuje <span class='rule' id='rule-port'>RJ-45 port</span> a na modulu je drát vedoucí ze <span class='rule' id='rule-plug-start'>zástrčky 4</span> <em>přímo</em> do <span class='rule' id='rule-plug-end'>zástrčky 5</span>, začněte tímto drátem.</li>
+                    <li>Jinak, pokud modul obsahuje drát vedoucí ze zástrčky rovné <span class='rule' id='rule-start-2'>počtu baterií na bombě</span>, začněte tímto drátem.</li>
+                    <li>Jinak, pokud modul obsahuje drát vedoucí ze zástrčky rovné <span class='rule' id='rule-start-3'>první číslici sériového čísla</span>, začněte tímto drátem.</li>
+                    <li>Jinak, pokud bomba obsahuje <span class='rule' id='rule-indicator-lit'>rozsvícený</span> indikátor s nápisem <span class='rule' id='rule-indicator'>CLR</span>, ignorujte všechny následující instrukce a přestřihněte všechny dráty v sestupném čísleném pořadí.</li>
+                    <li>Pokud nic z výše uvedeného neplatí, počáteční drát je ten, který vede ze zástrčky <span class='rule' id='rule-else'>s nejmenším číslem</span>.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Strana 1 ze 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Následujte vůdce</span>
+            </div>
+            <div class="page-content">
+                <h3>Stříhání drátů</h3>
+                <ul>
+                    <li><em>Vždy</em> stříhejte počáteční drát. Potom se přesuňte na další drát.</li>
+                    <li>Od této pozice stříhejte dráty tak, jak je řečeno kroky v následující tabulce. Počáteční krok je roven <span class='rule' id='rule-starting-step'>první cifře v sériovém čísle</span>. <span id='rule-starting-step-fallback'>Pokud sériové číslo neobsahuje žádná písmena</span>, začněte krokem <span class='rule' id='rule-starting-step-fallback-step'>A</span>.</li>
+                    <li>Když budete pokračovat k dalšímu drátu, také pokračujte na následující krok v abecedě, abyste zjistili, jestli přestřihnout drát.</li>
+                    <li>„Předchozí drát(y)“ může odkazovat na dráty mimo počáteční pozici v sekvenci.</li>
+                    <li>Pokud je počáteční drát <span class='rule' id='rule-reverse-colors'>červený, zelený, nebo bílý</span>, přesouvejte se na kroky v opačném pořadí v abecedě.</li>
+                </ul>
+                <table class="repeaters-table">
+                    <tr>
+                        <th>Krok</th>
+                        <th>Přestřihněte tento drát, pokud:</th>
+                    </tr>
+                    <tr>
+                        <th>A, nebo N</th>
+                        <td class='table-rule'>Předchozí drát není žlutý, modrý, nebo zelený.</td>
+                    </tr>
+                    <tr>
+                        <th>B, nebo O</th>
+                        <td class='table-rule'>Předchozí drát vede do zástrčky sudého čísla.</td>
+                    </tr>
+                    <tr>
+                        <th>C, nebo P</th>
+                        <td class='table-rule'>Předchozí drát má být přestřihnut.</td>
+                    </tr>
+                    <tr>
+                        <th>D, nebo Q</th>
+                        <td class='table-rule'>Předchozí drát je červený, modrý, nebo černý.</td>
+                    </tr>
+                    <tr>
+                        <th>E, nebo R</th>
+                        <td class='table-rule'>Alespoň dva z předchozích tří drátů mají stejnou barvu.</td>
+                    </tr>
+                    <tr>
+                        <th>F, nebo S</th>
+                        <td class='table-rule'>Přesně jeden z předchozích dvou drátů má stejnou barvu jako tento.</td>
+                    </tr>
+                    <tr>
+                        <th>G, nebo T</th>
+                        <td class='table-rule'>Předchozí drát je žlutý, bílý, nebo zelený.</td>
+                    </tr>
+                    <tr>
+                        <th>H, nebo U</th>
+                        <td class='table-rule'>Předchozí drát nemá být přestřihnut.</td>
+                    </tr>
+                    <tr>
+                        <th>I, nebo V</th>
+                        <td class='table-rule'>Předchozí drát přeskakuje zástrčku.</td>
+                    </tr>
+                    <tr>
+                        <th>J, nebo W</th>
+                        <td class='table-rule'>Předchozí drát není bílý, černý, nebo červený.</td>
+                    </tr>
+                    <tr>
+                        <th>K, nebo X</th>
+                        <td class='table-rule'>Předchozí dva dráty mají jinou barvu.</td>
+                    </tr>
+                    <tr>
+                        <th>L, nebo Y</th>
+                        <td class='table-rule'>Předchozí drát nevede do zástrčky s číslem 6 nebo méně.</td>
+                    </tr>
+                    <tr>
+                        <th>M, nebo Z</th>
+                        <td class='table-rule'>Přesně jeden, nebo žádný z předchozích dvou drátů je bílý nebo černý.</td>
+                    </tr>
+                </table>
+                <div id='footnote' style='display:none'>*&nbsp;Dávejte pozor na <a href='https://en.wikipedia.org/wiki/Vacuous_truth'>prázdnou pravdu</a>.</div>
+            </div>
+            <div class="page-footer relative-footer">Strana 2 ze 2</div>
+        </div>
+    </div>
+</body>
+</html>
