@@ -78,7 +78,7 @@ e.onload = function()
             if ($('#developer-mode-enabled').prop('checked'))
             {
                 $("body").addClass("developer-mode");
-                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (Alt-P)")).appendTo($("body"));
+                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (Alt-P)")).insertAfter($(".section"));
                 const flavourTextCounts = document.getElementsByClassName("flavour-text").length;
                 if (flavourTextCounts > 1) {
                     $(".flavour-text").addClass("developer-mode-warning");
@@ -475,10 +475,7 @@ e.onload = function()
                             });
                             elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
 
-                            if (mobileControls)
-                                highlight.insertAfter($('.ktane-highlight-btn').first());
-                            else
-                                highlight.appendTo(document.body);
+                            highlight.insertAfter($(".section"));
                         }
                     }
                     window.getSelection().removeAllRanges();
