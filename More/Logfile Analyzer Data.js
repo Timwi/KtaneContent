@@ -13857,6 +13857,20 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "PuzzwordModule",
+		loggingTag: "Puzzword",
+		matches: [
+			{
+				regex: /Solution: (.+)/,
+				handler: function(match, module) {
+					module.push({ label:"Solution: ", obj: `<span class="puzzword">${match[1]}</span><span> (hover to reveal)</span>` });
+					return true;
+				}
+			},
+			{ regex: /.+/ }			
+		]
+	},
+	{
 		displayName: "QR Code",
 		moduleID: "QRCode",
 		loggingTag: "NeedyQRCode",
