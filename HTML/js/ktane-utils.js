@@ -474,8 +474,8 @@ e.onload = function()
                                 return false;
                             });
                             elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
-
-                            highlight.insertAfter($(".section"));
+                            let sections = $(".section");
+                            highlight.insertAfter(sections[sections.length - 1]);
                         }
                     }
                     window.getSelection().removeAllRanges();
