@@ -4926,7 +4926,7 @@ let parseData = [
 					module.currentDropdown[1].push({nobullet: true, obj: $(`<p>Stage ${correctOrderMatches[1]}</p>`).addClass("discolored-squares-header")}, {obj: $('<hr>'), nobullet: true});
 					const format = formatArr.find(f => f.original == coordinates[0].tranformation);
 					const arrow = $('<img>').attr('src', `../HTML/img/Bakery/arrow.svg`).addClass("discolored-squares");
-					const div = $('<div>').append(orderSVG).append($('<div>').addClass("discolored-squares-centered").append(arrow).append($(`<p>${format ? format.new : "THIS SHOULD NOT BE HERE"}</p>`).addClass("discolored-squares"))).append(answerSVG).addClass("disolored-squares-parent");
+					const div = $('<div>').append(orderSVG).append($('<div>').addClass("discolored-squares-centered").append(arrow).append($(`<p>${format ? format.new : "THIS SHOULD NOT BE HERE"}</p>`).addClass("discolored-squares"))).append(answerSVG).addClass("discolored-squares-parent");
 					module.currentDropdown[1].push({ nobullet: true, obj: div });
 					return true;
 				}
