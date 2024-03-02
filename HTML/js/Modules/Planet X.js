@@ -8,8 +8,8 @@ const patternIds = ["solid", "stripes", "dots"];
 
 function drawChart() {
     const chartSvg = MakeSvgTag(210, 210, -105, -105, { class: "invertible chart" });
-    const outerGrid = new CircularGrid(12, 7, 100, 25, { style: "transform: rotate(-90deg)" });
-    const innerGrid = new CircularGrid(12, 1, 25, 2, { style: "transform: rotate(-90deg)" });
+    const outerGrid = new CircularGrid(12, 7, 100, 25, { style: "transform: rotate(-90deg)" }, false, false);
+    const innerGrid = new CircularGrid(12, 1, 25, 2, { style: "transform: rotate(-90deg)" }, false, false);
 
     chartSvg.append(getPatternDefs());
 
