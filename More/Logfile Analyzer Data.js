@@ -8070,15 +8070,15 @@ let parseData = [
 				regex: /^Final values for the violet quirk: \[H-wrap=\(([+-])([+-])(\\)?\); V-wrap=\(([+-])([+-])(?:\\)?\)\]\.$/,
 				handler: function (matches, module) {
 					let preText = "";
-					for (let dirIndexPair of [["horizontally", 1], ["vertically", 4]]) {
-						preText += `\nWrapping around ${dirIndexPair[0]} `;
-						if (matches[1] == "-" && matches[2] == "-") {
+					for (let [dir, index] of [["horizontally", 1], ["vertically", 4]]) {
+						preText += `\nWrapping around ${dir} `;
+						if (matches[index] == "-" && matches[index + 1] == "-") {
 							preText += "flips the grid both horizontally and vertically.";
 						}
-						else if (matches[1] == "-") {
+						else if (matches[index] == "-") {
 							preText += "flips the grid horizontally only.";
 						}
-						else if (matches[2] == "-") {
+						else if (matches[index + 1] == "-") {
 							preText += "flips the grid vertically only.";
 						}
 						else {
