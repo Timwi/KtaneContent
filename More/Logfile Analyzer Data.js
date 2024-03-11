@@ -14726,18 +14726,50 @@ let parseData = [
 		loggingTag: "Robot Programming",
 		matches: [
 			{
-				regex: /Top of the maze is (\d+)/,
+				regex: /The resulting maze:/,
+				handler: function(match, module) {
+					const colours = {
+						"X": "#FFFA",
+						"r": "#F00A",
+						"y": "#FF0A",
+						"g": "#0F0A",
+						"b": "#00FA",
+						".": "#000"
+					};
+					const mazeData = readLines(9)
+						.map(l => l.split(''));
+					const svg = $SVG(`<svg viewbox="-0.5 -0.5 10 10" class="robot-programming">`);
+					for (const [y, row] of mazeData.entries()) {
+						for (const [x, cell] of row.entries()) {
+							$SVG(`<rect x="${x}" y="${y}" width="1" height="1" fill="${colours[cell]}">`).appendTo(svg);
+						}
+					}
+					module.push({ label: match[0], obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /The robots in the initial order are: (.+)\./,
+				handler: function(matches, module) {
+					module.botAppearances = matches[1].split(", ");
+					module.botColours = module.botAppearances
+						.map(bot => bot.split(' ')[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The robot types are: (.+)\./,
 				handler: function (matches, module) {
 					module.push(matches[0]);
-					readTaggedLines(5).forEach(line => module.push(line));
 					module.attemptNum = 1;
+					module.botOrder = matches[1].split(", ");
 					module.currentDropdown = [
 						`Attempt ${module.attemptNum}`,
 						[
-							["R.O.B", []],
-							["HAL", []],
-							["R2D2", []],
-							["Fender", []]
+							[`${module.botOrder[0]} (${module.botAppearances[0]})`, []],
+							[`${module.botOrder[1]} (${module.botAppearances[1]})`, []],
+							[`${module.botOrder[2]} (${module.botAppearances[2]})`, []],
+							[`${module.botOrder[3]} (${module.botAppearances[3]})`, []]
 						]
 					];
 					module.push(module.currentDropdown);
@@ -14745,53 +14777,55 @@ let parseData = [
 				}
 			},
 			{
-				regex: /You pressed (.+)\./,
+				regex: /The (.+) robot, (.+), has rec(?:ei|ie)ved a (.+) press\./,
 				handler: function (matches, module) {
-					const botNameLine = readTaggedLine();
-					const botName = botNameLine.match(/You are controlling (.+)./)[1];
-					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(botName);
-					let lines = [matches[0],botNameLine];
-					const finalLine = "The robot will move";
-					do {
-						lines.push(readTaggedLine());
-					} while (!lines[lines.length - 1].includes(finalLine));
-					lines = lines.filter(line => !line.includes("You are controlling"));
-					lines.forEach(line => module.currentDropdown[1][botIndex][1].push(line));
+					const botName = matches[2];
+					const isDependent = botName == "R2D2" || botName == "Fender";
+					const botIndex = module.botOrder.indexOf(botName);
+					const thisMovement = [
+						`Pressed ${matches[3]}.`,
+						isDependent ? readTaggedLine() + " " : "",
+						`Resulting movement: ${/The (.+) robot will move (.+)\. Its new coordinates are (\d), (\d)\./
+							.exec(readTaggedLine())[2]}.`
+					];
+					const potentialCrashLine = readTaggedLine();
+
+					if (potentialCrashLine.includes("This move will cause the program to crash!"))
+						thisMovement.push(potentialCrashLine);
+					else
+						linen--;
+
+					module.currentDropdown[1][botIndex][1].push(thisMovement.join('\n'));
 					return true;
 				}
 			},
 			{
-				regex: /(.+) will no longer receive commands\./,
-				handler: function (matches, module) {
-					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(matches[1]);
-					module.currentDropdown[1][botIndex][1].push(matches[0]);
+				regex: /The (.+) robot cannot move! Skipping its turn\./,
+				handler: function(match, module) {
+					const botIndex = module.botColours.indexOf(match[1]);
+					module.currentDropdown[1][botIndex][1].push(match[0]);
 					return true;
 				}
 			},
 			{
-				regex: /Command sequence reset|ERROR: Robots' coordinates before strike: (.+)/,
-				handler: function (matches, module) {
-					if(matches[0].includes("ERROR: Robots' coordinates before strike:")) {
-						const indices = matches[1].split(" ");
-						const coordinates = [];
-						for(let i = 0; i < 4; i++) {
-							const number = parseInt(indices[i]);
-							const col = Math.floor(number % 9) - 1;
-							const row = Math.floor(number / 9) + 1;
-							coordinates.push(`${"ABCDEFG"[col]}${row}`);
-						}
-						module.push(`ERROR: Robots' coordinates before strike: ${coordinates.join(" ")}`);
-					} else {
-						module.push(matches[0]);
-					}
+				regex: /The color (.+) has been blocked\./,
+				handler: function (match, module) {
+					const botIndex = module.botColours.indexOf(match[1]);
+					module.currentDropdown[1][botIndex][1].push(match[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Running the program/,
+				handler: function (_, module) {
 					module.attemptNum++;
 					module.currentDropdown = [
 						`Attempt ${module.attemptNum}`,
 						[
-							["R.O.B", []],
-							["HAL", []],
-							["R2D2", []],
-							["Fender", []]
+							[`${module.botOrder[0]} (${module.botAppearances[0]})`, []],
+							[`${module.botOrder[1]} (${module.botAppearances[1]})`, []],
+							[`${module.botOrder[2]} (${module.botAppearances[2]})`, []],
+							[`${module.botOrder[3]} (${module.botAppearances[3]})`, []]
 						]
 					];
 					module.push(module.currentDropdown);
