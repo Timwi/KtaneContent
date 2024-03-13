@@ -15909,6 +15909,103 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "simonServes",
+		loggingTag: "Simon Serves",
+		matches: [
+			{
+				regex: /Course (\d): .+/,
+				handler: function (matches, module) {
+					if(!module.getFoodName)
+					{
+						module.getFoodNames = (courseNum, str) =>
+						{
+							const colors = ['Red', 'White', 'Blue', 'Brown', 'Green', 'Yellow', 'Orange', 'Pink'];
+							const food = [
+								['Cruelo Juice', 'Defuse Juice', 'Simon’s Special Mix', 'Boom Lager Beer', 'Forget Cocktail', 'Wire Shake', 'Deto Bull', 'Tasha’s Drink'], 
+								['Caesar Salad', 'Edgework Toast', 'Ticking Timecakes', 'Big Boom Tortellini', 'Status Light Rolls', 'Blast Shrimps', 'Blast Shrimps', 'Boolean Waffles'], 
+								['Forghetti Bombognese', 'NATO Shrimps', 'Wire Spaghetti', 'Indicator Tar Tar', 'Centurion Wings', 'Colored Spare Ribs', 'Omelette au Bombage', 'Veggie Blast Plate'], 
+								['Strike Pie', 'Blastwave Compote', 'Not Ice Cream', 'Defuse au Chocolat', 'Solve Cake', 'Baked Batterys', 'Bamboozling Waffles', 'Bomb Brûlée'], 
+							];
+							for(let i = 0; i < colors.length; i++)
+								str = str.replace(colors[i], food[courseNum][i]);
+							return str;
+						}
+
+						module.getNameColors = (str) =>
+						{
+							const names = ['Riley', 'Brandon', 'Veronica', 'Gabriel', 'Wendy', 'Kayle']
+							const colors = ['Red',    'Blue',   'Violet',  'Green',  'White',  'Black'];
+							for(let i = 0; i < names.length; i++)
+								str = str.replace(names[i], colors[i]);
+							return str;
+						}
+					}
+					module.courseNum = matches[1] - 1;
+					module.currentDropdown = [matches[0], []];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Food served \(clockwise\): (.+)/,
+				handler: function (matches, module) {
+					const str = module.getFoodNames(module.courseNum, matches[1]);
+					module.currentDropdown[1].push("Food served: " + str);
+					return true;
+				}
+			},
+			{
+				regex: /.+ Strike!/,
+				handler: function (matches, module) {
+					let str = module.getFoodNames(module.courseNum, matches[0]);
+					str = module.getNameColors(str);
+					module.currentDropdown[1].push(str);
+					return true;
+				}
+			},
+			{
+				regex: /(Wrong (Person|Food) current, right on:|Serving Order:) .+/,
+				handler: function (matches, _) {
+					if(matches[0].includes('Wrong'))
+						readTaggedLine()
+					return true;
+				}
+			},
+			{
+				regex: /Answer/,
+				handler: function (_, module) {
+					let answers = readTaggedLines(6);
+					for(let i = 0; i < answers.length; i++)
+						answers[i] = module.getFoodNames(module.courseNum, answers[i]);
+					for(let i = 0; i < answers.length; i++)
+						answers[i] = module.getNameColors(answers[i]);
+					module.currentDropdown[1].push(["Answer", answers, true]);
+					return true;
+				}
+			},
+			{
+				regex: /Serving Order: .+/,
+				handler: function (_, _) {
+					return true;
+				}
+			},
+			{
+				regex: /.+ should pay the bill/,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0]);
+					return true;
+				}
+			}	
+		]
+	},
+	{
 		moduleID: "SimonSignalsModule",
 		loggingTag: "Simon Signals",
 		matches: [
