@@ -8,9 +8,79 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(() => {
+            const rectProperties = (x, y, item) => {
+                return { "width": 1, "height": 1, "x": x, "y": y, "fill": item == "x" ? "#000" : "#E6E6E6" };
+            };
+            const numberProperties = (x, y) => {
+                return { "x": x + 0.5, "y": y + 0.8 }
+            }
+            const makeNumberSvg = () => {
+                return (MakeSvgTag(2,2).append(MakeSvgElem("path", { "d": "M1 0v2M0 1h2", "class": "divider" })));
+            }
+            const bitmapData = [
+                [ "x..x", ".xx.", ".xx.", "x..x" ],
+                [ ".xx.", "x..x", "x..x", ".xx." ],
+                [ "x..x", "....", "xxxx", "...." ],
+                [ "....", "x..x", "....", ".xx." ],
+                [ "xxxx", "x..x", "x..x", "xxxx" ],
+                [ "....", ".xx.", ".xx.", "...." ],
+                [ "....", "....", "....", "...." ],
+                [ "xxxx", "xxxx", "xxxx", "xxxx" ]
+            ];
+            const numberData = ["0142","3601","4020","5355","2468","7513","1234","9876"];
+
+            const diagrams = document.querySelectorAll(".pictionary-diagrams tr td:nth-child(odd)");
+            const numbers  = document.querySelectorAll(".pictionary-diagrams tr td:nth-child(even)");
+
+            for (const [ix, cell] of diagrams.entries()) {
+                const svg = MakeSvgTag(4,4).appendTo(cell);
+                for (const [y, row] of bitmapData[ix].entries()) {
+                    for (const [x, item] of row.split('').entries()) {
+                        svg.append(MakeSvgElem("rect", rectProperties(x, y, item)));
+                    }
+                }
+            }
+
+            for (const [ix, cell] of numbers.entries()) {
+                const svg = makeNumberSvg().appendTo(cell);
+                svg.append(MakeSvgElem("text", numberProperties(0, 0), numberData[ix][0]));
+                svg.append(MakeSvgElem("text", numberProperties(1, 0), numberData[ix][1]));
+                svg.append(MakeSvgElem("text", numberProperties(0, 1), numberData[ix][2]));
+                svg.append(MakeSvgElem("text", numberProperties(1, 1), numberData[ix][3]));
+                for (let x = 0; x < 2; x++) {
+                    for (let y = 0; y < 2; y++) {
+                        svg.append(MakeSvgElem("rect", {
+                            "x": x, "y": y, "width": 1, "height": 1, "class": "highlightable", "fill": "transparent" }));
+                    }
+                }
+            }
+        });
+    </script>
     <style>
-        .pictionary-diagram {
-            width: 3.5cm;
+        .pictionary-diagrams { margin: 0 auto; }
+        .pictionary-diagrams svg { width: 100%; }
+        .pictionary-diagrams svg text {
+            font-size: 0.8px;
+            font-family: "OCR";
+            vertical-align: middle;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        .pictionary-diagrams svg .divider {
+            stroke: #000;
+            stroke-width: 0.06;
+            fill: none;
+        }
+        .dark svg .divider { stroke: #DDD; }
+        .dark svg text { fill: #DDD; }
+        td {
+            width: 135px;
+            line-height: 0;
+            padding: 0.3em 0.6em;
         }
     </style>
 </head>
@@ -34,31 +104,11 @@
 
                 <h3>Pictures</h3>
                 <p>Each 2×2 corner of the screen will have part of a picture from below. Compare that corner with the same corner of each picture until a match is found. Once a match is found, use the number in the same corner as the number grid to the right of the picture to find part of the passcode.</p>
-                <table style='margin: .5cm auto;'>
-                    <tr>
-                    <td><img src="img/Pictionary/pos1.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num1.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/pos2.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num2.png" class="pictionary-diagram"></td>
-                    </tr>
-                    <tr>
-                    <td><img src="img/Pictionary/pos3.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num3.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/pos8.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num8.png" class="pictionary-diagram"></td>
-                    </tr>
-                    <tr>
-                    <td><img src="img/Pictionary/pos5.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num5.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/pos4.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num4.png" class="pictionary-diagram"></td>
-                    </tr>
-                    <tr>
-                    <td><img src="img/Pictionary/pos6.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num6.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/pos7.png" class="pictionary-diagram"></td>
-                    <td><img src="img/Pictionary/num7.png" class="pictionary-diagram"></td>
-                    </tr>
+                <table class="pictionary-diagrams">
+                    <tr><td></td><td></td><td></td><td></td></tr>
+                    <tr><td></td><td></td><td></td><td></td></tr>
+                    <tr><td></td><td></td><td></td><td></td></tr>
+                    <tr><td></td><td></td><td></td><td></td></tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
