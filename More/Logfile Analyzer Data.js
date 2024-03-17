@@ -14752,8 +14752,6 @@ let parseData = [
 				regex: /The robots in the initial order are: (.+)\./,
 				handler: function(matches, module) {
 					module.botAppearances = matches[1].split(", ");
-					module.botColours = module.botAppearances
-						.map(bot => bot.split(' ')[0]);
 					return true;
 				}
 			},
@@ -14777,7 +14775,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /The (.+) robot, (.+), has rec(?:ei|ie)ved a (.+) press\./,
+				regex: /The (.+) robot, (.+), has received a (.+) press\./,
 				handler: function (matches, module) {
 					const botName = matches[2];
 					const isDependent = botName == "R2D2" || botName == "Fender";
@@ -14800,18 +14798,10 @@ let parseData = [
 				}
 			},
 			{
-				regex: /The (.+) robot cannot move! Skipping its turn\./,
-				handler: function(match, module) {
-					const botIndex = module.botColours.indexOf(match[1]);
-					module.currentDropdown[1][botIndex][1].push(match[0]);
-					return true;
-				}
-			},
-			{
-				regex: /The color (.+) has been blocked\./,
-				handler: function (match, module) {
-					const botIndex = module.botColours.indexOf(match[1]);
-					module.currentDropdown[1][botIndex][1].push(match[0]);
+				regex: /(.+) \((.+)\) (?:has been blocked|cannot move! Skipping its turn)\./,
+				handler: function(matches, module) {
+					const botIndex = module.botOrder.indexOf(matches[1]);
+					module.currentDropdown[1][botIndex][1].push(matches[0]);
 					return true;
 				}
 			},
